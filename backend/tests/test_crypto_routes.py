@@ -5,6 +5,46 @@ from datetime import datetime, timedelta, timezone
 
 from backend.api.routes import crypto
 from backend.realtime.binance_ws import get_binance_derivatives_state
+from backend.services import crypto_market_service as cms
+
+
+def _universe_payload() -> list[dict]:
+    base = {
+        "BTC-USD": ("Bitcoin", 50000.0, 2.1, 1000.0, 1_000_000_000.0, "L1"),
+        "ETH-USD": ("Ethereum", 3000.0, 1.5, 800.0, 500_000_000.0, "L1"),
+        "UNI-USD": ("Uniswap", 12.0, -1.2, 3200.0, 50_000_000.0, "DeFi"),
+        "AAVE-USD": ("Aave", 95.0, 3.4, 700.0, 40_000_000.0, "DeFi"),
+        "DOGE-USD": ("Dogecoin", 0.18, -3.1, 25000.0, 30_000_000.0, "Memes"),
+    }
+    rows = []
+    for sym, (name, price, chg, vol, mcap, sector) in base.items():
+        rows.append({
+            "symbol": sym,
+            "name": name,
+            "price": price,
+            "change_24h": chg,
+            "volume_24h": vol,
+            "market_cap": mcap,
+            "sector": sector,
+            "day_high": price * 1.02,
+            "day_low": price * 0.98,
+        })
+    return rows
+
+
+def _patch_universe(monkeypatch, rows=None) -> None:
+    payload = _universe_payload() if rows is None else rows
+
+    async def _fake_load_universe(limit: int = 300):  # noqa: ARG001
+        return [dict(r) for r in payload]
+
+    async def _no_global():
+        return None
+
+    # Both the route's own loader and the service loader read this seam.
+    monkeypatch.setattr(crypto, "load_universe", _fake_load_universe)
+    monkeypatch.setattr(cms, "load_universe", _fake_load_universe)
+    monkeypatch.setattr(cms, "load_global", _no_global)
 
 
 def _chart_payload(days: int = 8, start_price: float = 40000.0) -> dict:
@@ -63,23 +103,10 @@ def _patch_fetcher(monkeypatch) -> None:
 
     monkeypatch.setattr(crypto, "get_unified_fetcher", _fake_get_unified_fetcher)
     monkeypatch.setattr(crypto.market_service, "_fetcher_factory", _fake_get_unified_fetcher)
+    # The crypto universe now comes from the shared loader (CoinGecko-backed),
+    # not Yahoo quotes — patch it so route tests are deterministic and offline.
+    _patch_universe(monkeypatch)
     return _FakeFetcher.yahoo
-
-
-def _clear_crypto_quote_cache(limit: int) -> None:
-    key = crypto.cache_instance.build_key("crypto_quotes", "universe", {"limit": limit})
-    stale_key = crypto.cache_instance.build_key("crypto_quotes", "universe_stale", {"limit": limit})
-
-    crypto.cache_instance._l1_cache.pop(key, None)
-    crypto.cache_instance._l1_cache.pop(stale_key, None)
-
-    if crypto.cache_instance._redis:
-        asyncio.run(crypto.cache_instance._redis.delete(key, stale_key))
-
-    if crypto.cache_instance._db_conn:
-        with crypto.cache_instance._db_lock:
-            crypto.cache_instance._db_conn.execute("DELETE FROM cache WHERE key IN (?, ?)", (key, stale_key))
-            crypto.cache_instance._db_conn.commit()
 
 
 def test_crypto_search_returns_matches(monkeypatch) -> None:
@@ -122,12 +149,12 @@ def test_crypto_markets_returns_normalized_items(monkeypatch) -> None:
     assert "count" in result
 
 
-def test_crypto_markets_is_cache_aware(monkeypatch) -> None:
-    fake_yahoo = _patch_fetcher(monkeypatch)
-    _clear_crypto_quote_cache(limit=17)
-    asyncio.run(crypto.crypto_markets(limit=17))
-    asyncio.run(crypto.crypto_markets(limit=17))
-    assert fake_yahoo.quote_calls == 1
+def test_crypto_markets_returns_deterministic_items(monkeypatch) -> None:
+    _patch_fetcher(monkeypatch)
+    first = asyncio.run(crypto.crypto_markets(limit=17))
+    second = asyncio.run(crypto.crypto_markets(limit=17))
+    assert first["items"] and second["items"]
+    assert {i["symbol"] for i in first["items"]} == {i["symbol"] for i in second["items"]}
 
 
 def test_crypto_markets_supports_filter_and_sort(monkeypatch) -> None:
@@ -209,38 +236,9 @@ def test_crypto_coin_detail_shape(monkeypatch) -> None:
     assert isinstance(detail["sparkline"], list)
 
 
-def test_crypto_markets_uses_stale_cache_when_rate_limited(monkeypatch) -> None:
-    class _RateLimitedYahoo:
-        async def get_quotes(self, symbols: list[str]):  # noqa: ARG002
-            raise RuntimeError("429 Too Many Requests")
-
-    class _FakeFetcher:
-        yahoo = _RateLimitedYahoo()
-
-    async def _fake_get_unified_fetcher():
-        return _FakeFetcher()
-
-    monkeypatch.setattr(crypto, "get_unified_fetcher", _fake_get_unified_fetcher)
-    crypto.cache_instance._l1_cache.clear()
-    stale_key = crypto.cache_instance.build_key("crypto_quotes", "universe_stale", {"limit": 12})
-    asyncio.run(
-        crypto.cache_instance.set(
-            stale_key,
-            [
-                {
-                    "symbol": "BTC-USD",
-                    "name": "Bitcoin",
-                    "price": 50000,
-                    "change_24h": 1.5,
-                    "volume_24h": 1000,
-                    "market_cap": 50000000,
-                    "sector": "L1",
-                }
-            ],
-            ttl=300,
-        )
-    )
-
+def test_crypto_markets_empty_when_all_sources_unavailable(monkeypatch) -> None:
+    # When the shared loader yields nothing (all providers down + no cache),
+    # the route degrades gracefully to an empty list rather than erroring.
+    _patch_universe(monkeypatch, rows=[])
     result = asyncio.run(crypto.crypto_markets(limit=12))
-    assert len(result["items"]) == 1
-    assert result["items"][0]["symbol"] == "BTC-USD"
+    assert result["items"] == []

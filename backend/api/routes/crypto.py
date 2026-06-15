@@ -8,12 +8,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from backend.api.deps import cache_instance, get_unified_fetcher
+from backend.api.deps import get_unified_fetcher
 from backend.api.routes.chart import _parse_yahoo_chart
 from backend.core.crypto_adapter import CryptoAdapter
 from backend.core.models import ChartResponse, OhlcvPoint
-from backend.core.ttl_policy import market_open_now, ttl_seconds
 from backend.services.crypto_market_service import CryptoMarketService
+from backend.services.crypto_universe import load_universe
 
 router = APIRouter()
 market_service = CryptoMarketService()
@@ -26,25 +26,6 @@ _SECTOR_WEIGHTS: dict[str, dict[str, float]] = {
     "Gaming": {"IMX-USD": 0.5, "GALA-USD": 0.5},
     "RWA": {"ONDO-USD": 0.5, "MKR-USD": 0.5},
 }
-
-_CRYPTO_META: dict[str, dict[str, str]] = {
-    "BTC-USD": {"id": "bitcoin", "name": "Bitcoin", "sector": "L1"},
-    "ETH-USD": {"id": "ethereum", "name": "Ethereum", "sector": "L1"},
-    "SOL-USD": {"id": "solana", "name": "Solana", "sector": "L1"},
-    "BNB-USD": {"id": "binancecoin", "name": "BNB", "sector": "L1"},
-    "XRP-USD": {"id": "xrp", "name": "XRP", "sector": "L1"},
-    "UNI-USD": {"id": "uniswap", "name": "Uniswap", "sector": "DeFi"},
-    "AAVE-USD": {"id": "aave", "name": "Aave", "sector": "DeFi"},
-    "DOGE-USD": {"id": "dogecoin", "name": "Dogecoin", "sector": "Memes"},
-    "SHIB-USD": {"id": "shiba-inu", "name": "Shiba Inu", "sector": "Memes"},
-    "RNDR-USD": {"id": "render-token", "name": "Render", "sector": "AI"},
-    "FET-USD": {"id": "fetch-ai", "name": "Fetch.ai", "sector": "AI"},
-    "IMX-USD": {"id": "immutable-x", "name": "Immutable", "sector": "Gaming"},
-    "GALA-USD": {"id": "gala", "name": "Gala", "sector": "Gaming"},
-    "ONDO-USD": {"id": "ondo-finance", "name": "Ondo", "sector": "RWA"},
-    "MKR-USD": {"id": "maker", "name": "Maker", "sector": "RWA"},
-}
-
 
 @dataclass
 class _Row:
@@ -227,11 +208,6 @@ def _clamp(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, v))
 
 
-def _is_rate_limited_error(exc: Exception) -> bool:
-    text = str(exc).lower()
-    return "429" in text or "rate limit" in text or "too many requests" in text
-
-
 def _depth_bucket(change_24h: float) -> str:
     if change_24h >= 5.0:
         return "surge"
@@ -277,95 +253,24 @@ def _corr(a: list[float], b: list[float]) -> float:
 
 
 async def _load_rows(limit: int = 100) -> list[_Row]:
-    capped_limit = max(1, min(300, limit))
-    symbols = list(_CRYPTO_META.keys())[:capped_limit]
-    cache_key = cache_instance.build_key("crypto_quotes", "universe", {"limit": capped_limit})
-    stale_key = cache_instance.build_key("crypto_quotes", "universe_stale", {"limit": capped_limit})
-    cached = await cache_instance.get(cache_key)
-    if isinstance(cached, list):
-        rows: list[_Row] = []
-        for item in cached:
-            if not isinstance(item, dict):
-                continue
-            rows.append(
-                _Row(
-                    symbol=str(item.get("symbol") or ""),
-                    name=str(item.get("name") or ""),
-                    price=_f(item.get("price")),
-                    change_24h=_f(item.get("change_24h")),
-                    volume_24h=_f(item.get("volume_24h")),
-                    market_cap=_f(item.get("market_cap")),
-                    sector=str(item.get("sector") or "Other"),
-                )
-            )
-        if rows:
-            return rows
-
-    try:
-        fetcher = await get_unified_fetcher()
-        quotes = await fetcher.yahoo.get_quotes(symbols)
-    except Exception as exc:
-        stale = await cache_instance.get(stale_key)
-        if isinstance(stale, list):
-            rows: list[_Row] = []
-            for item in stale:
-                if not isinstance(item, dict):
-                    continue
-                rows.append(
-                    _Row(
-                        symbol=str(item.get("symbol") or ""),
-                        name=str(item.get("name") or ""),
-                        price=_f(item.get("price")),
-                        change_24h=_f(item.get("change_24h")),
-                        volume_24h=_f(item.get("volume_24h")),
-                        market_cap=_f(item.get("market_cap")),
-                        sector=str(item.get("sector") or "Other"),
-                    )
-                )
-            if rows:
-                return rows
-        if _is_rate_limited_error(exc):
-            return []
-        raise
-    by_symbol = {(str(x.get("symbol") or "").upper()): x for x in quotes if isinstance(x, dict)}
-
+    # Shared loader: CoinGecko (real market caps + broad coverage) with a Yahoo
+    # fallback and caching. See backend.services.crypto_universe.
+    payload = await load_universe(max(1, min(300, limit)))
     rows: list[_Row] = []
-    for sym in symbols:
-        q = by_symbol.get(sym, {})
-        meta = _CRYPTO_META.get(sym, {})
-        price = _f(q.get("regularMarketPrice"))
-        if price <= 0:
+    for item in payload:
+        if not isinstance(item, dict):
             continue
-        change_pct = _f(q.get("regularMarketChangePercent"))
-        volume = _f(q.get("regularMarketVolume"))
-        market_cap_proxy = max(price * max(volume, 1.0), price * 1_000_000.0)
         rows.append(
             _Row(
-                symbol=sym,
-                name=str(meta.get("name") or sym),
-                price=price,
-                change_24h=change_pct,
-                volume_24h=volume,
-                market_cap=market_cap_proxy,
-                sector=str(meta.get("sector") or "Other"),
+                symbol=str(item.get("symbol") or ""),
+                name=str(item.get("name") or ""),
+                price=_f(item.get("price")),
+                change_24h=_f(item.get("change_24h")),
+                volume_24h=_f(item.get("volume_24h")),
+                market_cap=_f(item.get("market_cap")),
+                sector=str(item.get("sector") or "Other"),
             )
         )
-
-    payload = [
-        {
-            "symbol": row.symbol,
-            "name": row.name,
-            "price": row.price,
-            "change_24h": row.change_24h,
-            "volume_24h": row.volume_24h,
-            "market_cap": row.market_cap,
-            "sector": row.sector,
-        }
-        for row in rows
-    ]
-    ttl = ttl_seconds("crypto", market_open_now())
-    await cache_instance.set(cache_key, payload, ttl=ttl)
-    await cache_instance.set(stale_key, payload, ttl=max(ttl * 6, ttl))
     return rows
 
 

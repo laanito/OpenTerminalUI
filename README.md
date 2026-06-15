@@ -324,7 +324,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 +--------------------------+------------------------+
 |                 DATA PROVIDERS                    |
 |   Zerodha Kite | Finnhub | FMP | Yahoo Finance  |
-|   NSEPython (F&O, Corporate Actions)             |
+|   CoinGecko (crypto) | NSEPython (F&O, Corp Actions) |
 +--------------------------+------------------------+
                            |
 +--------------------------+------------------------+
