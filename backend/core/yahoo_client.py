@@ -8,6 +8,66 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# Yahoo's v8 chart API limits how much history it serves per request based on the
+# bar granularity. Requesting, e.g., 1-minute bars over a 1-month range returns
+# HTTP 422 ("Only 8 days worth of 1m granularity data are allowed to be fetched
+# per request"). We clamp the requested range down to what the interval permits.
+#
+# Max days of history per request, by interval. Intervals not listed (1d and
+# coarser) have no practical limit.
+_INTERVAL_MAX_DAYS: Dict[str, int] = {
+    "1m": 7,
+    "2m": 60,
+    "5m": 60,
+    "15m": 60,
+    "30m": 60,
+    "60m": 730,
+    "90m": 60,
+    "1h": 730,
+}
+
+# Approximate span, in days, of each Yahoo `range` token.
+_RANGE_DAYS: Dict[str, int] = {
+    "1d": 1,
+    "5d": 5,
+    "1mo": 30,
+    "3mo": 91,
+    "6mo": 182,
+    "1y": 365,
+    "2y": 730,
+    "5y": 1825,
+    "10y": 3650,
+    "ytd": 366,
+    "max": 100000,
+}
+# Range tokens ordered by ascending span, for picking the largest one that fits.
+_RANGE_TOKENS_BY_SPAN = sorted(_RANGE_DAYS.items(), key=lambda kv: kv[1])
+
+
+def _clamp_range_for_interval(range_str: str, interval: str) -> str:
+    """Return a `range` token compatible with `interval` for Yahoo's chart API.
+
+    If the requested range exceeds what the interval allows, return the largest
+    valid range token that fits; otherwise return the request unchanged.
+    """
+    max_days = _INTERVAL_MAX_DAYS.get(interval)
+    if max_days is None:
+        return range_str  # daily or coarser: no per-request limit
+    requested_days = _RANGE_DAYS.get(range_str, 10**9)
+    if requested_days <= max_days:
+        return range_str
+    clamped = range_str
+    for token, span in _RANGE_TOKENS_BY_SPAN:
+        if span <= max_days:
+            clamped = token
+    if clamped != range_str:
+        logger.info(
+            "Yahoo chart: clamped range %s -> %s for interval %s (max %d days)",
+            range_str, clamped, interval, max_days,
+        )
+    return clamped
+
+
 # Constants for Fundamental Timeseries modules
 ANNUAL_MODULES = [
     "annualTotalRevenue",
@@ -194,6 +254,9 @@ class YahooClient:
         Get chart data (OHLCV) with dividends and splits.
         """
         await self._ensure_client()
+
+        interval = (interval or "1d").strip()
+        range_str = _clamp_range_for_interval((range_str or "1y").strip(), interval)
 
         try:
             # v8/finance/chart
