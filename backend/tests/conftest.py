@@ -1,9 +1,21 @@
 from __future__ import annotations
 
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
+
+
+# Force the test suite onto an isolated, throwaway SQLite database BEFORE any
+# backend module imports settings/db. This keeps tests hermetic regardless of a
+# local `.env` (which may point DATABASE_URL at the Docker-only `postgres` host).
+# load_local_env() uses os.environ.setdefault, so setting it here wins.
+if not os.environ.get("OPENTERMINALUI_TEST_DB_INITIALIZED"):
+    _test_db = Path(tempfile.gettempdir()) / "openterminalui_pytest.db"
+    os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_test_db}"
+    os.environ["OPENTERMINALUI_TEST_DB_INITIALIZED"] = "1"
 
 
 # Ensure `import backend...` works even when pytest is launched from `backend/`.
