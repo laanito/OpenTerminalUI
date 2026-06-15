@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 class FinnhubWebSocket:
     WS_URL = "wss://ws.finnhub.io?token={token}"
 
+    # Reconnect backoff bounds (seconds). The Finnhub feed routinely drops idle
+    # connections, so we reconnect with exponential backoff instead of hammering.
+    _RECONNECT_BASE_DELAY = 5
+    _RECONNECT_MAX_DELAY = 60
+
     def __init__(self, on_trade: Callable[[str, float, float, int], Awaitable[None] | None]) -> None:
         self.api_key = os.getenv("FINNHUB_API_KEY", "").strip()
         self.enabled = (os.getenv("FINNHUB_WS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}) and bool(self.api_key)
@@ -25,6 +30,7 @@ class FinnhubWebSocket:
         self._running = False
         self._connected = False
         self._auth_failed = False
+        self._reconnect_delay = self._RECONNECT_BASE_DELAY
 
     @property
     def connected(self) -> bool:
@@ -80,7 +86,10 @@ class FinnhubWebSocket:
 
         url = self.WS_URL.format(token=self.api_key)
         try:
-            ws = await websockets.connect(url, ping_interval=20, ping_timeout=20)
+            # ping_timeout is generous: Finnhub does not always answer protocol
+            # pings promptly, and a tight timeout makes the client tear the
+            # connection down with "no close frame received or sent".
+            ws = await websockets.connect(url, ping_interval=20, ping_timeout=60)
         except Exception as exc:
             msg = str(exc)
             if "401" in msg or "403" in msg:
@@ -101,12 +110,18 @@ class FinnhubWebSocket:
             self._ws = ws
             self._connected = True
             self._sent_symbols.clear()
+            self._reconnect_delay = self._RECONNECT_BASE_DELAY
             self._listen_task = asyncio.create_task(self._listen_loop(), name="finnhub-ws-listen")
         await self._flush_subscriptions()
         logger.info("Finnhub WS connected")
 
     async def _reconnect_later(self) -> None:
-        await asyncio.sleep(5)
+        async with self._lock:
+            if not self._running:
+                return
+            delay = self._reconnect_delay
+            self._reconnect_delay = min(self._reconnect_delay * 2, self._RECONNECT_MAX_DELAY)
+        await asyncio.sleep(delay)
         async with self._lock:
             if not self._running:
                 return
@@ -176,7 +191,18 @@ class FinnhubWebSocket:
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            logger.warning("Finnhub WS listen loop failed: %s", exc)
+            # A dropped connection is routine for this feed — we reconnect below.
+            # Only surface genuinely unexpected errors at warning level.
+            try:
+                import websockets  # type: ignore
+
+                expected = isinstance(exc, websockets.exceptions.ConnectionClosed)
+            except Exception:
+                expected = False
+            if expected:
+                logger.info("Finnhub WS connection closed (%s); reconnecting", exc)
+            else:
+                logger.warning("Finnhub WS listen loop failed: %s", exc)
         finally:
             async with self._lock:
                 self._connected = False

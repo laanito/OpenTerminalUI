@@ -466,10 +466,15 @@ class UnifiedFetcher:
         history: list[dict[str, float | str]] = []
         warning: str | None = None
 
-        try:
-            raw = await self.nse.get_corp_info(symbol)
-        except Exception as exc:
-            warning = f"NSE shareholding unavailable: {exc}"
+        # NSE shareholding patterns only exist for Indian equities. For anything
+        # else, skip the NSE call (it would 403/404 from outside India anyway)
+        # and fall through to the Yahoo holders fallback below.
+        cls = await market_classifier.classify(symbol)
+        if cls.country_code == "IN":
+            try:
+                raw = await self.nse.get_corp_info(symbol)
+            except Exception as exc:
+                warning = f"NSE shareholding unavailable: {exc}"
 
         def _extract_patterns(payload: Dict[str, Any]) -> list[dict[str, Any]]:
             candidates = [
@@ -551,7 +556,18 @@ class UnifiedFetcher:
         return payload
 
     async def fetch_corporate_actions(self, ticker: str) -> Dict[str, Any]:
-        return await self.nse.get_corp_info(ticker.strip().upper())
+        symbol = ticker.strip().upper()
+        # Corporate actions here are sourced from NSE, which only covers Indian
+        # equities (and geo-blocks requests from outside India). Don't issue the
+        # call for non-Indian symbols.
+        cls = await market_classifier.classify(symbol)
+        if cls.country_code != "IN":
+            return {
+                "ticker": symbol,
+                "corporateActions": [],
+                "warning": "Corporate actions are sourced from NSE and only available for Indian equities.",
+            }
+        return await self.nse.get_corp_info(symbol)
 
     async def fetch_analyst_consensus(self, ticker: str) -> Dict[str, Any]:
         # Finnhub is good for this
