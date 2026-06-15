@@ -503,10 +503,10 @@ class ChartDataProvider:
         }
         mode = fmp_interval_map.get(interval, "daily")
         if mode == "daily":
-            url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}"
+            url = "https://financialmodelingprep.com/stable/historical-price-eod/full"
         else:
-            url = f"https://financialmodelingprep.com/api/v3/historical-chart/{mode}/{ticker}"
-        params: dict[str, str] = {"apikey": self.fmp_key}
+            url = f"https://financialmodelingprep.com/stable/historical-chart/{mode}"
+        params: dict[str, str] = {"symbol": ticker, "apikey": self.fmp_key}
         if start:
             params["from"] = start.strftime("%Y-%m-%d")
         if end:

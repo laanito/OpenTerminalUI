@@ -60,8 +60,10 @@ class USOptionsAdapter:
         if self.fmp_key:
             try:
                 async with httpx.AsyncClient(timeout=15.0) as client:
-                    url = f"https://financialmodelingprep.com/api/v4/option-chain/{symbol}"
-                    resp = await client.get(url, params={"apikey": self.fmp_key})
+                    # Paid feature on the stable API; non-200 falls through to the
+                    # yfinance fallback below.
+                    url = "https://financialmodelingprep.com/stable/options-chain"
+                    resp = await client.get(url, params={"symbol": symbol, "apikey": self.fmp_key})
                     if resp.status_code == 200:
                         raw_data = resp.json()
                         # FMP returns all expiries, filter for the one we want

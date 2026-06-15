@@ -26,7 +26,11 @@ def _known_us_symbols() -> set[str]:
     return out
 
 class FMPClient:
-    BASE_URL = "https://financialmodelingprep.com/api/v3"
+    # FMP retired the legacy /api/v3 (and /api/v4) endpoints on 2025-08-31 for
+    # accounts created after that date — they now return a "Legacy Endpoint"
+    # error. The current API lives under /stable and takes the symbol as a
+    # query parameter (?symbol=) rather than a path segment.
+    BASE_URL = "https://financialmodelingprep.com/stable"
 
     def __init__(self, api_key: Optional[str] = None, timeout: float = 12.0):
         self.api_key = api_key or os.getenv("FMP_API_KEY", "")
@@ -51,15 +55,11 @@ class FMPClient:
             self.client = None
 
     def _symbol(self, symbol: str) -> str:
-        # FMP usually expects .NS for NSE
-        symbol = symbol.strip().upper()
-        if "." in symbol:
-            return symbol
-        if symbol in _known_us_symbols():
-            return symbol
-        if not symbol.endswith(".NS"):
-            return f"{symbol}.NS"
-        return symbol
+        # Pass the symbol through as-is. Callers that want a specific exchange
+        # must supply the suffix explicitly (e.g. RELIANCE.NS, SAP.DE). We no
+        # longer force `.NS` on bare symbols — that mis-routed US/EU tickers to
+        # the Indian exchange.
+        return symbol.strip().upper()
 
     async def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
         if self.disabled:
@@ -70,84 +70,91 @@ class FMPClient:
         if not self.client:
             await self.initialize()
 
-        p = params or {}
+        p = dict(params or {})
         p["apikey"] = self.api_key
 
         try:
             url = f"{self.BASE_URL}{endpoint}"
             response = await self.client.get(url, params=p)
             response.raise_for_status()
-            return response.json()
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 403:
-                logger.error("FMP API Key Invalid or Limit Reached")
+            sc = e.response.status_code
+            if sc in (401, 403):
+                # Bad/invalid key — disable for the rest of the session.
+                logger.error("FMP API key invalid or unauthorized (HTTP %s); disabling FMP", sc)
                 self.disabled = True
-            logger.error(f"FMP Request Failed: {e}")
+            elif sc == 402:
+                # Endpoint/symbol not included in the current plan (e.g. free
+                # tier). Expected — caller falls back to another provider.
+                logger.debug("FMP endpoint requires a paid plan (HTTP 402): %s", endpoint)
+            else:
+                logger.warning("FMP request failed (HTTP %s): %s", sc, endpoint)
             return []
         except Exception as e:
-            logger.error(f"FMP Request Error: {e}")
+            logger.warning("FMP request error for %s: %s", endpoint, e)
             return []
 
+        # Plan-restricted responses sometimes arrive as HTTP 200 with a plain
+        # (non-JSON) message like "Premium Query Parameter ..." or "Restricted
+        # Endpoint ...". Treat any non-JSON / error payload as empty.
+        try:
+            data = response.json()
+        except ValueError:
+            logger.debug("FMP non-JSON response for %s (likely a plan restriction)", endpoint)
+            return []
+        if isinstance(data, dict) and ("Error Message" in data or "Error" in data):
+            logger.debug("FMP error payload for %s: %s", endpoint, data.get("Error Message") or data.get("Error"))
+            return []
+        return data
+
     async def get_quote(self, symbol: str) -> Dict[str, Any]:
-        data = await self._get(f"/quote/{self._symbol(symbol)}")
+        data = await self._get("/quote", {"symbol": self._symbol(symbol)})
         return data[0] if data and isinstance(data, list) else {}
 
     async def get_historical_price_full(self, symbol: str) -> Dict[str, Any]:
-        return await self._get(f"/historical-price-full/{self._symbol(symbol)}")
+        # Stable returns a flat array; wrap it in the legacy
+        # {"symbol", "historical": [...]} shape that existing callers expect.
+        sym = self._symbol(symbol)
+        rows = await self._get("/historical-price-eod/full", {"symbol": sym})
+        if isinstance(rows, dict):
+            return rows  # already wrapped (defensive)
+        return {"symbol": sym, "historical": rows if isinstance(rows, list) else []}
 
     async def get_income_statement(self, symbol: str, period: str = "annual", limit: int = 10) -> List[Dict[str, Any]]:
-        return await self._get(f"/income-statement/{self._symbol(symbol)}", {"period": period, "limit": limit})
+        return await self._get("/income-statement", {"symbol": self._symbol(symbol), "period": period, "limit": limit})
 
     async def get_balance_sheet(self, symbol: str, period: str = "annual", limit: int = 10) -> List[Dict[str, Any]]:
-        return await self._get(f"/balance-sheet-statement/{self._symbol(symbol)}", {"period": period, "limit": limit})
+        return await self._get("/balance-sheet-statement", {"symbol": self._symbol(symbol), "period": period, "limit": limit})
 
     async def get_cash_flow(self, symbol: str, period: str = "annual", limit: int = 10) -> List[Dict[str, Any]]:
-        return await self._get(f"/cash-flow-statement/{self._symbol(symbol)}", {"period": period, "limit": limit})
+        return await self._get("/cash-flow-statement", {"symbol": self._symbol(symbol), "period": period, "limit": limit})
 
     async def get_key_metrics_ttm(self, symbol: str) -> List[Dict[str, Any]]:
-        return await self._get(f"/key-metrics-ttm/{self._symbol(symbol)}")
+        return await self._get("/key-metrics-ttm", {"symbol": self._symbol(symbol)})
 
     async def get_ratios_ttm(self, symbol: str) -> List[Dict[str, Any]]:
-        return await self._get(f"/ratios-ttm/{self._symbol(symbol)}")
+        return await self._get("/ratios-ttm", {"symbol": self._symbol(symbol)})
 
     async def get_financial_growth(self, symbol: str, limit: int = 10) -> List[Dict[str, Any]]:
-        return await self._get(f"/financial-growth/{self._symbol(symbol)}", {"limit": limit})
+        return await self._get("/financial-growth", {"symbol": self._symbol(symbol), "limit": limit})
 
     async def get_dcf(self, symbol: str) -> List[Dict[str, Any]]:
-        return await self._get(f"/discounted-cash-flow/{self._symbol(symbol)}")
+        return await self._get("/discounted-cash-flow", {"symbol": self._symbol(symbol)})
 
     async def get_profile(self, symbol: str) -> Dict[str, Any]:
-        data = await self._get(f"/profile/{self._symbol(symbol)}")
+        data = await self._get("/profile", {"symbol": self._symbol(symbol)})
         return data[0] if data and isinstance(data, list) else {}
 
-    async def _get_symbol_list(self, endpoint_prefix: str, symbol: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        raw = symbol.strip().upper()
-        candidates = [raw]
-        ns = self._symbol(raw)
-        if ns not in candidates:
-            candidates.append(ns)
-        for candidate in candidates:
-            data = await self._get(f"{endpoint_prefix}/{candidate}", params)
-            if isinstance(data, list) and data:
-                return data
-        return []
-
     async def get_institutional_holders(self, symbol: str, limit: int = 50) -> List[Dict[str, Any]]:
-        rows = await self._get_symbol_list("/institutional-holder", symbol)
+        # Paid plans only on the stable API; returns [] gracefully on free tier.
+        rows = await self._get("/institutional-ownership/extract", {"symbol": self._symbol(symbol)})
         return rows[:limit] if isinstance(rows, list) else []
 
     async def get_analyst_estimates(self, symbol: str, limit: int = 20) -> List[Dict[str, Any]]:
-        rows = await self._get_symbol_list("/analyst-estimates", symbol, {"limit": limit})
+        rows = await self._get("/analyst-estimates", {"symbol": self._symbol(symbol), "limit": limit})
         return rows if isinstance(rows, list) else []
 
     async def get_esg_data(self, symbol: str, limit: int = 20) -> List[Dict[str, Any]]:
-        raw = symbol.strip().upper()
-        candidates = [raw]
-        ns = self._symbol(raw)
-        if ns not in candidates:
-            candidates.append(ns)
-        for candidate in candidates:
-            data = await self._get("/esg-environmental-social-governance-data", {"symbol": candidate, "limit": limit})
-            if isinstance(data, list) and data:
-                return data
-        return []
+        # Paid plans only on the stable API; returns [] gracefully on free tier.
+        rows = await self._get("/esg-disclosures", {"symbol": self._symbol(symbol), "limit": limit})
+        return rows if isinstance(rows, list) else []

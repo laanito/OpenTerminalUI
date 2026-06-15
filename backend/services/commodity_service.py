@@ -267,7 +267,7 @@ class CommodityService:
             previous_close = price
         if change is None:
             change = price - previous_close
-        change_pct = _coerce_float(row.get("changesPercentage"))
+        change_pct = _coerce_float(row.get("changePercentage") or row.get("changesPercentage"))
         if change_pct is None:
             change_pct = (change / previous_close) * 100.0 if previous_close else 0.0
         return CommodityQuote(
@@ -325,11 +325,6 @@ class CommodityService:
         fmp = getattr(fetcher, "fmp", None)
         if fmp is None:
             return {}
-        getter = getattr(fmp, "_get", None)
-        if callable(getter):
-            payload = await getter(f"/historical-price-full/{item.fmp_symbol}")
-            if isinstance(payload, dict):
-                return payload
         getter = getattr(fmp, "get_historical_price_full", None)
         if callable(getter):
             payload = await getter(item.fmp_symbol)
@@ -458,7 +453,7 @@ class CommodityService:
             previous_close = price
         if change is None:
             change = price - previous_close
-        change_pct = _coerce_float(row.get("changesPercentage"))
+        change_pct = _coerce_float(row.get("changePercentage") or row.get("changesPercentage"))
         if change_pct is None:
             change_pct = (change / previous_close) * 100.0 if previous_close else 0.0
         return CommodityFuturesPoint(
