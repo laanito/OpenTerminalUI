@@ -167,11 +167,11 @@ class ExtendedHoursService:
         interval = interval_map.get(timeframe, "5min")
 
         if interval == "daily":
-             url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{symbol}"
+             url = "https://financialmodelingprep.com/stable/historical-price-eod/full"
         else:
-             url = f"https://financialmodelingprep.com/api/v3/historical-chart/{interval}/{symbol}"
+             url = f"https://financialmodelingprep.com/stable/historical-chart/{interval}"
 
-        params = {"apikey": self.fmp_key}
+        params = {"symbol": symbol, "apikey": self.fmp_key}
         if extended and interval != "daily":
             params["extended"] = "true"
         if start_dt:

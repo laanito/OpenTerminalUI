@@ -491,10 +491,12 @@ class ShareholdingService:
         if not api_key:
             warning = "FMP_API_KEY not configured"
         else:
-            endpoint = f"https://financialmodelingprep.com/api/v3/institutional-holder/{symbol}"
+            # Stable institutional ownership is a paid feature; on the free tier
+            # this returns empty and the caller falls back to other sources.
+            endpoint = "https://financialmodelingprep.com/stable/institutional-ownership/extract"
             try:
                 async with httpx.AsyncClient(timeout=15.0, follow_redirects=True, trust_env=False) as client:
-                    response = await client.get(endpoint, params={"apikey": api_key})
+                    response = await client.get(endpoint, params={"symbol": symbol, "apikey": api_key})
                     response.raise_for_status()
                     payload = response.json()
                     if isinstance(payload, list):

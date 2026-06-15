@@ -54,7 +54,7 @@ class EconomicDataService:
         self.fmp_key = self.settings.fmp_api_key
         self.base_fred = "https://api.stlouisfed.org/fred"
         self.base_finnhub = "https://finnhub.io/api/v1"
-        self.base_fmp = "https://financialmodelingprep.com/api/v3"
+        self.base_fmp = "https://financialmodelingprep.com/stable"
 
     async def get_economic_calendar(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
         """Fetch and normalize economic calendar events."""
@@ -96,7 +96,7 @@ class EconomicDataService:
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.get(
-                        f"{self.base_fmp}/economic_calendar",
+                        f"{self.base_fmp}/economic-calendar",
                         params={"from": start_date, "to": end_date, "apikey": self.fmp_key}
                     )
                     if resp.status_code == 200:
