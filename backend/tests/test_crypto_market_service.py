@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 
+from backend.services import crypto_market_service as cms
 from backend.services.crypto_market_service import CryptoMarketService
 
 
@@ -21,30 +22,6 @@ class _FakeCache:
 
 
 class _FakeYahoo:
-    def __init__(self) -> None:
-        self.quote_calls = 0
-
-    async def get_quotes(self, symbols: list[str]):  # noqa: ARG002
-        self.quote_calls += 1
-        return [
-            {
-                "symbol": "BTC-USD",
-                "regularMarketPrice": 50000,
-                "regularMarketChangePercent": 2.1,
-                "regularMarketVolume": 1000,
-                "regularMarketDayHigh": 51000,
-                "regularMarketDayLow": 49000,
-            },
-            {
-                "symbol": "ETH-USD",
-                "regularMarketPrice": 3000,
-                "regularMarketChangePercent": -1.2,
-                "regularMarketVolume": 800,
-                "regularMarketDayHigh": 3200,
-                "regularMarketDayLow": 2800,
-            },
-        ]
-
     async def get_chart(self, symbol: str, range_str: str = "1mo", interval: str = "1d"):  # noqa: ARG002
         return {
             "chart": {
@@ -68,65 +45,66 @@ class _FakeYahoo:
         }
 
 
-class _RateLimitedYahoo:
-    async def get_quotes(self, symbols: list[str]):  # noqa: ARG002
-        raise RuntimeError("429 Too Many Requests")
-
-    async def get_chart(self, symbol: str, range_str: str = "1mo", interval: str = "1d"):  # noqa: ARG002
-        return {"chart": {"result": []}}
-
-
 class _FakeFetcher:
     def __init__(self, yahoo: _FakeYahoo) -> None:
         self.yahoo = yahoo
 
 
-def test_crypto_service_market_cache_reuses_quotes() -> None:
-    cache = _FakeCache()
+def _universe() -> list[dict]:
+    return [
+        {"symbol": "BTC-USD", "name": "Bitcoin", "price": 50000, "change_24h": 2.1,
+         "volume_24h": 1000, "market_cap": 1_000_000_000, "sector": "L1",
+         "day_high": 51000, "day_low": 49000},
+        {"symbol": "ETH-USD", "name": "Ethereum", "price": 3000, "change_24h": -1.2,
+         "volume_24h": 800, "market_cap": 500_000_000, "sector": "L1",
+         "day_high": 3200, "day_low": 2800},
+    ]
+
+
+def _patch_universe(monkeypatch, rows=None) -> None:
+    payload = _universe() if rows is None else rows
+
+    async def _fake_load_universe(limit: int = 300):  # noqa: ARG001
+        return [dict(r) for r in payload]
+
+    monkeypatch.setattr(cms, "load_universe", _fake_load_universe)
+
+
+def _service() -> CryptoMarketService:
     yahoo = _FakeYahoo()
 
     async def _fetcher():
         return _FakeFetcher(yahoo)
 
-    service = CryptoMarketService(cache_backend=cache, fetcher_factory=_fetcher)
-    first = asyncio.run(service.markets(limit=10))
-    second = asyncio.run(service.markets(limit=10))
-
-    assert first["items"]
-    assert second["items"]
-    assert yahoo.quote_calls == 1
+    return CryptoMarketService(cache_backend=_FakeCache(), fetcher_factory=_fetcher)
 
 
-def test_crypto_service_market_filter_and_sort() -> None:
-    cache = _FakeCache()
-    yahoo = _FakeYahoo()
+def test_crypto_service_markets_returns_items(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
+    service = _service()
+    result = asyncio.run(service.markets(limit=10))
+    assert {item["symbol"] for item in result["items"]} == {"BTC-USD", "ETH-USD"}
 
-    async def _fetcher():
-        return _FakeFetcher(yahoo)
 
-    service = CryptoMarketService(cache_backend=cache, fetcher_factory=_fetcher)
+def test_crypto_service_market_filter_and_sort(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
+    service = _service()
     result = asyncio.run(
-        service.markets(
-            limit=10,
-            q="ETH",
-            sector="L1",
-            sort_by="change_24h",
-            sort_order="asc",
-        )
+        service.markets(limit=10, q="ETH", sector="L1", sort_by="change_24h", sort_order="asc")
     )
     assert len(result["items"]) == 1
     assert result["items"][0]["symbol"] == "ETH-USD"
 
 
-def test_crypto_service_coin_detail_shape() -> None:
-    cache = _FakeCache()
+def test_crypto_service_coin_detail_shape(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
     yahoo = _FakeYahoo()
 
     async def _fetcher():
         return _FakeFetcher(yahoo)
 
     service = CryptoMarketService(
-        cache_backend=cache,
+        cache_backend=_FakeCache(),
         fetcher_factory=_fetcher,
         now_factory=lambda: datetime(2026, 3, 5, tzinfo=timezone.utc),
     )
@@ -138,29 +116,37 @@ def test_crypto_service_coin_detail_shape() -> None:
     assert detail["sparkline"] == [100.5, 101.5, 102.5]
 
 
-def test_crypto_service_uses_stale_cache_when_rate_limited() -> None:
-    cache = _FakeCache()
-    stale_payload = [
-        {
-            "symbol": "BTC-USD",
-            "name": "Bitcoin",
-            "price": 50000,
-            "change_24h": 1.2,
-            "volume_24h": 1000,
-            "market_cap": 50000000,
-            "sector": "L1",
-            "day_high": 51000,
-            "day_low": 49000,
-        }
-    ]
-    stale_key = cache.build_key("crypto_quotes", "universe_stale", {"limit": 300})
-    cache.data[stale_key] = stale_payload
+def test_crypto_service_dominance_prefers_global(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
 
-    async def _fetcher():
-        return _FakeFetcher(_RateLimitedYahoo())
+    async def _fake_global():
+        return {"btc_pct": 55.0, "eth_pct": 18.0, "total_market_cap": 2_000_000_000_000.0}
 
-    service = CryptoMarketService(cache_backend=cache, fetcher_factory=_fetcher)
+    monkeypatch.setattr(cms, "load_global", _fake_global)
+    service = _service()
+    result = asyncio.run(service.dominance())
+    assert result["btc_pct"] == 55.0
+    assert result["eth_pct"] == 18.0
+    assert abs(result["others_pct"] - 27.0) < 1e-9
+
+
+def test_crypto_service_dominance_falls_back_to_universe(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
+
+    async def _no_global():
+        return None
+
+    monkeypatch.setattr(cms, "load_global", _no_global)
+    service = _service()
+    result = asyncio.run(service.dominance())
+    # BTC 1e9 of 1.5e9 total -> ~66.7%, ETH ~33.3%
+    assert round(result["btc_pct"], 1) == 66.7
+    total = result["btc_pct"] + result["eth_pct"] + result["others_pct"]
+    assert 99.0 <= total <= 101.0
+
+
+def test_crypto_service_markets_empty_when_no_data(monkeypatch) -> None:
+    _patch_universe(monkeypatch, rows=[])
+    service = _service()
     result = asyncio.run(service.markets(limit=10))
-
-    assert len(result["items"]) == 1
-    assert result["items"][0]["symbol"] == "BTC-USD"
+    assert result["items"] == []

@@ -31,6 +31,7 @@ class AppSettings(BaseModel):
     fred_api_key: str | None = None
     fmp_api_key: str | None = None
     finnhub_api_key: str | None = None
+    coingecko_api_key: str | None = None
     ai_provider: str = "openai"  # openai or ollama
     openai_api_key: str | None = None
     ollama_base_url: str = "http://localhost:11434"
@@ -185,6 +186,11 @@ def get_settings() -> AppSettings:
             _env("OPENTERMINALUI_FINNHUB_API_KEY")
             or _env("FINNHUB_API_KEY")
             or app_cfg.get("finnhub_api_key")
+        ),
+        coingecko_api_key=(
+            _env("OPENTERMINALUI_COINGECKO_API_KEY")
+            or _env("COINGECKO_API_KEY")
+            or app_cfg.get("coingecko_api_key")
         ),
         ai_provider=(
             _env("OPENTERMINALUI_AI_PROVIDER")
