@@ -183,6 +183,43 @@ async def load_universe(limit: int = 300) -> list[dict[str, Any]]:
     return []
 
 
+async def search_universe(q: str, limit: int = 20) -> list[dict[str, str]]:
+    """Search the crypto universe by ticker, name or coin id.
+
+    Backed by :func:`load_universe` (CoinGecko, ~top-300 by market cap), so the
+    symbol searcher finds the full universe rather than a hardcoded handful.
+    Returns ``{"id", "symbol", "name"}`` rows ranked exact > prefix > substring,
+    preserving the market-cap ordering within each tier.
+    """
+    limit = max(1, min(100, limit))
+    rows = await load_universe(300)
+    term = q.strip().lower()
+
+    if not term:
+        return [
+            {"id": r.get("coin_id", ""), "symbol": r["symbol"], "name": r["name"]}
+            for r in rows[:limit]
+        ]
+
+    exact: list[dict[str, str]] = []
+    prefix: list[dict[str, str]] = []
+    substr: list[dict[str, str]] = []
+    for r in rows:
+        symbol = str(r.get("symbol") or "")
+        base = symbol.split("-")[0].lower()  # "BTC-USD" -> "btc"
+        name = str(r.get("name") or "")
+        coin_id = str(r.get("coin_id") or "")
+        item = {"id": coin_id, "symbol": symbol, "name": name}
+        if term == base or term == symbol.lower() or term == coin_id:
+            exact.append(item)
+        elif base.startswith(term) or name.lower().startswith(term):
+            prefix.append(item)
+        elif term in base or term in name.lower() or term in coin_id:
+            substr.append(item)
+
+    return (exact + prefix + substr)[:limit]
+
+
 async def load_global() -> dict[str, Any] | None:
     """Return real dominance/market-cap totals from CoinGecko /global, or None."""
     client = CoinGeckoClient(api_key=get_settings().coingecko_api_key)

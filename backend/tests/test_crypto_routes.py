@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from backend.api.routes import crypto
 from backend.realtime.binance_ws import get_binance_derivatives_state
 from backend.services import crypto_market_service as cms
+from backend.services import crypto_universe as cu
 
 
 def _universe_payload() -> list[dict]:
@@ -42,8 +43,11 @@ def _patch_universe(monkeypatch, rows=None) -> None:
         return None
 
     # Both the route's own loader and the service loader read this seam.
+    # ``search_universe`` calls the loader via the crypto_universe module, so
+    # patch it there too to keep the search route offline.
     monkeypatch.setattr(crypto, "load_universe", _fake_load_universe)
     monkeypatch.setattr(cms, "load_universe", _fake_load_universe)
+    monkeypatch.setattr(cu, "load_universe", _fake_load_universe)
     monkeypatch.setattr(cms, "load_global", _no_global)
 
 
@@ -110,18 +114,18 @@ def _patch_fetcher(monkeypatch) -> None:
 
 
 def test_crypto_search_returns_matches(monkeypatch) -> None:
-    class _FakeYahoo:
-        pass
+    # Now backed by the full CoinGecko-loaded universe, not a 5-coin hardcode.
+    _patch_universe(monkeypatch)
+    result = asyncio.run(crypto.search_crypto(q="uni", limit=10))
+    # "uni" is no longer in the hardcoded handful — it must come from the loader.
+    assert any(item["symbol"] == "UNI-USD" for item in result["items"])
+    assert all({"symbol", "name"} <= set(item) for item in result["items"])
 
-    class _FakeFetcher:
-        yahoo = _FakeYahoo()
 
-    async def _fake_get_unified_fetcher():
-        return _FakeFetcher()
-
-    monkeypatch.setattr(crypto, "get_unified_fetcher", _fake_get_unified_fetcher)
-    result = asyncio.run(crypto.search_crypto(q="btc", limit=10))
-    assert any(item["symbol"] == "BTC-USD" for item in result["items"])
+def test_crypto_search_empty_query_lists_universe(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
+    result = asyncio.run(crypto.search_crypto(q="", limit=3))
+    assert len(result["items"]) == 3
 
 
 def test_crypto_candles_returns_chart_response(monkeypatch) -> None:

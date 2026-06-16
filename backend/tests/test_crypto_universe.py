@@ -103,6 +103,51 @@ def test_load_universe_serves_stale_when_all_sources_fail(monkeypatch) -> None:
     assert len(rows) == 1 and rows[0]["symbol"] == "BTC-USD"
 
 
+def _patch_loaded(monkeypatch, rows) -> None:
+    async def _fake_load_universe(limit: int = 300):  # noqa: ARG001
+        return [dict(r) for r in rows]
+
+    monkeypatch.setattr(cu, "load_universe", _fake_load_universe)
+
+
+def _loaded_rows() -> list[dict]:
+    return [
+        {"symbol": "BTC-USD", "name": "Bitcoin", "coin_id": "bitcoin"},
+        {"symbol": "ETH-USD", "name": "Ethereum", "coin_id": "ethereum"},
+        {"symbol": "UNI-USD", "name": "Uniswap", "coin_id": "uniswap"},
+        {"symbol": "RNDR-USD", "name": "Render", "coin_id": "render-token"},
+    ]
+
+
+def test_search_universe_finds_non_hardcoded_coin(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, _loaded_rows())
+    rows = asyncio.run(cu.search_universe("uni", limit=10))
+    assert [r["symbol"] for r in rows] == ["UNI-USD"]
+    assert rows[0]["name"] == "Uniswap"
+
+
+def test_search_universe_matches_name(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, _loaded_rows())
+    rows = asyncio.run(cu.search_universe("render", limit=10))
+    assert [r["symbol"] for r in rows] == ["RNDR-USD"]
+
+
+def test_search_universe_ranks_exact_before_substring(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, [
+        {"symbol": "ETH-USD", "name": "Ethereum", "coin_id": "ethereum"},
+        {"symbol": "ETHFI-USD", "name": "Ether.fi", "coin_id": "ether-fi"},
+    ])
+    rows = asyncio.run(cu.search_universe("eth", limit=10))
+    # Exact ticker base "eth" outranks the substring match.
+    assert rows[0]["symbol"] == "ETH-USD"
+
+
+def test_search_universe_empty_query_returns_top_n(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, _loaded_rows())
+    rows = asyncio.run(cu.search_universe("", limit=2))
+    assert [r["symbol"] for r in rows] == ["BTC-USD", "ETH-USD"]
+
+
 def test_row_from_coingecko_maps_fields() -> None:
     row = cu._row_from_coingecko(_markets_rows()[0])
     assert row is not None
