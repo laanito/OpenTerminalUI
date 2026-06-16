@@ -148,6 +148,61 @@ def test_search_universe_empty_query_returns_top_n(monkeypatch) -> None:
     assert [r["symbol"] for r in rows] == ["BTC-USD", "ETH-USD"]
 
 
+class _FakeCG:
+    def __init__(self, ohlc, *_a, **_k) -> None:
+        self._ohlc = ohlc
+        self.seen_days = None
+
+    async def initialize(self) -> None:
+        pass
+
+    async def close(self) -> None:
+        pass
+
+    async def get_ohlc(self, coin_id, *, days=365, vs_currency="usd"):  # noqa: ARG002
+        self.seen_days = days
+        return self._ohlc
+
+
+def test_coin_id_for_symbol_uses_fallback_meta(monkeypatch) -> None:
+    # Known majors resolve without touching the network/universe.
+    async def _boom(limit: int = 300):  # noqa: ARG001
+        raise AssertionError("should not load universe for a known coin")
+
+    monkeypatch.setattr(cu, "load_universe", _boom)
+    assert asyncio.run(cu.coin_id_for_symbol("btc")) == "bitcoin"
+
+
+def test_coin_id_for_symbol_falls_back_to_universe(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, [
+        {"symbol": "RENDER-USD", "name": "Render", "coin_id": "render-token"},
+    ])
+    assert asyncio.run(cu.coin_id_for_symbol("RENDER-USD")) == "render-token"
+    assert asyncio.run(cu.coin_id_for_symbol("NOPE-USD")) == ""
+
+
+def test_load_candles_maps_ohlc_and_range(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, [
+        {"symbol": "RENDER-USD", "name": "Render", "coin_id": "render-token"},
+    ])
+    fake = _FakeCG([[1700000000000, 1.0, 1.5, 0.9, 1.2], [1700086400000, 1.2, 1.3, 1.1, 1.25]])
+    monkeypatch.setattr(cu, "CoinGeckoClient", lambda *a, **k: fake)
+    rows = asyncio.run(cu.load_candles("RENDER-USD", "1mo"))
+    assert len(rows) == 2
+    assert rows[0] == {"t": 1700000000, "o": 1.0, "h": 1.5, "l": 0.9, "c": 1.2, "v": 0.0}
+    assert fake.seen_days == 30  # "1mo" -> 30 days
+
+
+def test_load_candles_empty_when_no_coin_id(monkeypatch) -> None:
+    _patch_loaded(monkeypatch, [])
+
+    def _boom(*_a, **_k):
+        raise AssertionError("should not build a client without a coin id")
+
+    monkeypatch.setattr(cu, "CoinGeckoClient", _boom)
+    assert asyncio.run(cu.load_candles("NOPE-USD", "1y")) == []
+
+
 def test_row_from_coingecko_maps_fields() -> None:
     row = cu._row_from_coingecko(_markets_rows()[0])
     assert row is not None

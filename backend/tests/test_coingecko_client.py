@@ -54,6 +54,25 @@ def test_rate_limit_returns_empty():
     assert asyncio.run(c.get_global()) == {}
 
 
+def test_ohlc_parses_candle_array():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert "/coins/bitcoin/ohlc" in str(request.url)
+        assert "days=30" in str(request.url)
+        return httpx.Response(200, json=[[1700000000000, 100.0, 110.0, 95.0, 105.0]])
+
+    c = _client(handler)
+    out = asyncio.run(c.get_ohlc("bitcoin", days=30))
+    assert out == [[1700000000000, 100.0, 110.0, 95.0, 105.0]]
+
+
+def test_ohlc_empty_coin_id_skips_request():
+    def handler(request: httpx.Request) -> httpx.Response:  # noqa: ARG001
+        raise AssertionError("should not hit the network for an empty coin id")
+
+    c = _client(handler)
+    assert asyncio.run(c.get_ohlc("", days=30)) == []
+
+
 def test_global_unwraps_data_object():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"data": {"market_cap_percentage": {"btc": 50.0}}})

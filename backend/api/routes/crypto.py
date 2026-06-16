@@ -13,7 +13,7 @@ from backend.api.routes.chart import _parse_yahoo_chart
 from backend.core.crypto_adapter import CryptoAdapter
 from backend.core.models import ChartResponse, OhlcvPoint
 from backend.services.crypto_market_service import CryptoMarketService
-from backend.services.crypto_universe import load_universe, search_universe
+from backend.services.crypto_universe import load_candles, load_universe, search_universe
 
 router = APIRouter()
 market_service = CryptoMarketService()
@@ -311,8 +311,6 @@ async def crypto_candles(
     adapter = CryptoAdapter(fetcher.yahoo)
     payload = await adapter.candles(symbol=symbol, interval=interval, range_str=range)
     hist = _parse_yahoo_chart(payload if isinstance(payload, dict) else {})
-    if hist.empty:
-        raise HTTPException(status_code=404, detail="No crypto candle data available")
 
     rows: list[OhlcvPoint] = []
     for idx, row in hist.iterrows():
@@ -326,6 +324,15 @@ async def crypto_candles(
                 v=float(row.get("Volume", 0) or 0),
             )
         )
+
+    # Yahoo doesn't list most of the CoinGecko universe (RENDER, PEPE, ...), so
+    # fall back to CoinGecko OHLC for any symbol it can't chart.
+    if not rows:
+        for c in await load_candles(symbol, range):
+            rows.append(OhlcvPoint(t=c["t"], o=c["o"], h=c["h"], l=c["l"], c=c["c"], v=c["v"]))
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="No crypto candle data available")
     return ChartResponse(ticker=symbol.upper(), interval=interval, currency="USD", data=rows)
 
 

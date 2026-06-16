@@ -183,6 +183,71 @@ async def load_universe(limit: int = 300) -> list[dict[str, Any]]:
     return []
 
 
+# Map the app's range strings to a CoinGecko-OHLC-allowed `days` value. The
+# public endpoint only accepts this fixed set; snap to the nearest sensible one.
+_RANGE_TO_DAYS: dict[str, int] = {
+    "1d": 1,
+    "5d": 7,
+    "1w": 7,
+    "1mo": 30,
+    "1m": 30,
+    "3mo": 90,
+    "6mo": 180,
+    "1y": 365,
+    "ytd": 365,
+}
+
+
+async def coin_id_for_symbol(symbol: str) -> str:
+    """Resolve a ``BTC-USD``-style symbol to its CoinGecko coin id (or "")."""
+    norm = (symbol or "").strip().upper()
+    if not norm:
+        return ""
+    if "-" not in norm:
+        norm = f"{norm}-USD"
+    meta = FALLBACK_META.get(norm)
+    if meta:
+        return meta["id"]
+    for r in await load_universe(300):
+        if str(r.get("symbol") or "").upper() == norm:
+            cid = str(r.get("coin_id") or "")
+            if cid:
+                return cid
+    return ""
+
+
+async def load_candles(symbol: str, range_str: str = "1y") -> list[dict[str, float]]:
+    """Return OHLC candles for a symbol from CoinGecko, or [].
+
+    Used as the chart fallback for coins outside Yahoo's coverage. Rows are
+    ``{"t", "o", "h", "l", "c", "v"}`` with ``v`` always 0 (CoinGecko OHLC
+    carries no volume).
+    """
+    coin_id = await coin_id_for_symbol(symbol)
+    if not coin_id:
+        return []
+    days = _RANGE_TO_DAYS.get((range_str or "").strip().lower(), 365)
+    client = CoinGeckoClient(api_key=get_settings().coingecko_api_key)
+    try:
+        await client.initialize()
+        ohlc = await client.get_ohlc(coin_id, days=days)
+    finally:
+        await client.close()
+
+    rows: list[dict[str, float]] = []
+    for entry in ohlc:
+        if not isinstance(entry, (list, tuple)) or len(entry) < 5:
+            continue
+        ts_ms, o, h, l, c = entry[:5]
+        try:
+            rows.append(
+                {"t": int(float(ts_ms) / 1000), "o": _f(o), "h": _f(h), "l": _f(l), "c": _f(c), "v": 0.0}
+            )
+        except Exception:  # noqa: BLE001
+            continue
+    return rows
+
+
 async def search_universe(q: str, limit: int = 20) -> list[dict[str, str]]:
     """Search the crypto universe by ticker, name or coin id.
 

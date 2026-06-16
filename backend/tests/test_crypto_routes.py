@@ -145,6 +145,29 @@ def test_crypto_candles_returns_chart_response(monkeypatch) -> None:
     assert len(result.data) == 8
 
 
+def test_crypto_candles_falls_back_to_coingecko(monkeypatch) -> None:
+    # Yahoo lists nothing for long-tail coins; the route should use CoinGecko.
+    class _EmptyYahoo:
+        async def get_chart(self, symbol: str, range_str: str = "1y", interval: str = "1d"):  # noqa: ARG002
+            return {"chart": {"result": []}}
+
+    class _FakeFetcher:
+        yahoo = _EmptyYahoo()
+
+    async def _fake_get_unified_fetcher():
+        return _FakeFetcher()
+
+    async def _fake_load_candles(symbol: str, range_str: str = "1y"):  # noqa: ARG001
+        return [{"t": 1700000000, "o": 1.0, "h": 1.5, "l": 0.9, "c": 1.2, "v": 0.0}]
+
+    monkeypatch.setattr(crypto, "get_unified_fetcher", _fake_get_unified_fetcher)
+    monkeypatch.setattr(crypto, "load_candles", _fake_load_candles)
+    result = asyncio.run(crypto.crypto_candles(symbol="RENDER-USD", interval="1d", range="1y"))
+    assert result.ticker == "RENDER-USD"
+    assert len(result.data) == 1
+    assert result.data[0].c == 1.2
+
+
 def test_crypto_markets_returns_normalized_items(monkeypatch) -> None:
     _patch_fetcher(monkeypatch)
     result = asyncio.run(crypto.crypto_markets(limit=10))
