@@ -41,6 +41,7 @@ import type { ChartKind, ChartTimeframe, IndicatorConfig } from "../shared/chart
 import { quickAddToFirstPortfolio } from "../shared/portfolioQuickAdd";
 import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
+import { isCryptoSymbol } from "../utils/ticker";
 
 type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings";
 
@@ -354,7 +355,9 @@ export function StockDetailPage() {
     return Array.from(byTime.values()).sort((a, b) => a.t - b.t);
   };
   const backfillHistory = async (oldestTime: number) => {
-    if (!ticker || isBackfilling || !hasMoreHistory) return;
+    // getHistory() is the equity endpoint and 422s for crypto; the crypto
+    // candles endpoint isn't paginated, so we already load the full range.
+    if (!ticker || isBackfilling || !hasMoreHistory || isCryptoSymbol(ticker)) return;
     setIsBackfilling(true);
     try {
       const response = await getHistory(ticker, realtimeMarket, interval, range, 300, oldestTime);
