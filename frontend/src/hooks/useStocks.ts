@@ -35,7 +35,7 @@ import {
   searchSymbols,
 } from "../api/client";
 import { useSettingsStore } from "../store/settingsStore";
-import { isCryptoSymbol, normalizeTicker } from "../utils/ticker";
+import { isCryptoSymbol, isIndianSymbol, normalizeTicker } from "../utils/ticker";
 import type {
   ChartResponse,
   DcfResponse,
@@ -154,18 +154,20 @@ export function useDCF(ticker: string) {
 }
 
 export function useShareholding(ticker: string) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery({
     queryKey: ["shareholding", ticker],
     queryFn: () => fetchShareholding(ticker),
-    enabled: Boolean(ticker) && !isCryptoSymbol(ticker),
+    enabled: Boolean(ticker) && isIndianSymbol(ticker, selectedMarket),
   });
 }
 
 export function useCorporateActions(ticker: string) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery({
     queryKey: ["corporate-actions", ticker],
     queryFn: () => fetchCorporateActions(ticker),
-    enabled: Boolean(ticker) && !isCryptoSymbol(ticker),
+    enabled: Boolean(ticker) && isIndianSymbol(ticker, selectedMarket),
   });
 }
 
@@ -192,28 +194,31 @@ export function useEvents() {
 }
 
 export function useStockEvents(symbol: string, params?: { types?: string; from_date?: string; to_date?: string }) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery<CorporateEvent[]>({
     queryKey: ["stock-events", symbol, params?.types, params?.from_date, params?.to_date],
     queryFn: () => fetchStockEvents(symbol, params),
-    enabled: Boolean(symbol) && !isCryptoSymbol(symbol),
+    enabled: Boolean(symbol) && isIndianSymbol(symbol, selectedMarket),
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useUpcomingEvents(symbol: string, days = 90) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery<CorporateEvent[]>({
     queryKey: ["upcoming-events", symbol, days],
     queryFn: () => fetchUpcomingEvents(symbol, days),
-    enabled: Boolean(symbol) && !isCryptoSymbol(symbol),
+    enabled: Boolean(symbol) && isIndianSymbol(symbol, selectedMarket),
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useDividendHistory(symbol: string) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery<CorporateEvent[]>({
     queryKey: ["dividend-history", symbol],
     queryFn: () => fetchDividendHistory(symbol),
-    enabled: Boolean(symbol) && !isCryptoSymbol(symbol),
+    enabled: Boolean(symbol) && isIndianSymbol(symbol, selectedMarket),
     staleTime: 10 * 60 * 1000,
   });
 }
@@ -315,30 +320,33 @@ export function useEquityPerformance(ticker: string) {
 }
 
 export function usePromoterHoldings(ticker: string) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery<PromoterHoldingsResponse>({
     queryKey: ["promoter-holdings-v1", ticker],
     queryFn: () => fetchPromoterHoldings(ticker),
-    enabled: Boolean(ticker) && !isCryptoSymbol(ticker),
+    enabled: Boolean(ticker) && isIndianSymbol(ticker, selectedMarket),
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 }
 
 export function useShareholdingPattern(ticker: string, enabled = true) {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery<ShareholdingPatternResponse>({
     queryKey: ["shareholding-pattern", ticker],
     queryFn: () => fetchShareholdingPattern(ticker),
-    enabled: Boolean(ticker) && enabled && !isCryptoSymbol(ticker),
+    enabled: Boolean(ticker) && enabled && isIndianSymbol(ticker, selectedMarket),
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 }
 
 export function useDeliverySeries(ticker: string, interval = "1d", range = "1y") {
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   return useQuery<DeliverySeriesResponse>({
     queryKey: ["delivery-series", ticker, interval, range],
     queryFn: () => fetchDeliverySeries(ticker, interval, range),
-    enabled: Boolean(ticker) && !isCryptoSymbol(ticker),
+    enabled: Boolean(ticker) && isIndianSymbol(ticker, selectedMarket),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
