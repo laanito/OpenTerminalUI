@@ -13,7 +13,7 @@ from backend.api.routes.chart import _parse_yahoo_chart
 from backend.core.crypto_adapter import CryptoAdapter
 from backend.core.models import ChartResponse, OhlcvPoint
 from backend.services.crypto_market_service import CryptoMarketService
-from backend.services.crypto_universe import load_universe
+from backend.services.crypto_universe import load_universe, search_universe
 
 router = APIRouter()
 market_service = CryptoMarketService()
@@ -298,9 +298,7 @@ async def _returns_from_charts(symbol: str, window: int) -> list[float]:
 
 @router.get("/v1/crypto/search")
 async def search_crypto(q: str = Query(default=""), limit: int = Query(default=20, ge=1, le=100)):
-    fetcher = await get_unified_fetcher()
-    adapter = CryptoAdapter(fetcher.yahoo)
-    return {"items": adapter.search(q, limit=limit)}
+    return {"items": await search_universe(q, limit=limit)}
 
 
 @router.get("/v1/crypto/candles", response_model=ChartResponse)
