@@ -18,8 +18,11 @@ export async function fetchCryptoSearch(q: string): Promise<Array<{ ticker: stri
 }
 
 export async function fetchCryptoCandles(symbol: string, interval = "1d", range = "1y"): Promise<ChartResponse> {
-  const { data } = await api.get<ChartResponse>(`/v1/crypto/candles/${encodeURIComponent(symbol)}`, {
-    params: { interval, range },
+  // Backend expects symbol as a query param (GET /v1/crypto/candles?symbol=). A
+  // path segment (/candles/BTC-USD) misses the route, hits the SPA catch-all and
+  // returns HTML, so every crypto chart came back empty. See fetchCryptoIndex.
+  const { data } = await api.get<ChartResponse>("/v1/crypto/candles", {
+    params: { symbol, interval, range },
   });
   return data;
 }

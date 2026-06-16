@@ -7,7 +7,7 @@ from typing import Any, Awaitable, Callable
 from backend.api.deps import cache_instance, get_unified_fetcher
 from backend.api.routes.chart import _parse_yahoo_chart
 from backend.core.crypto_adapter import CryptoAdapter
-from backend.services.crypto_universe import load_global, load_universe
+from backend.services.crypto_universe import load_candles, load_global, load_universe
 
 _SECTOR_WEIGHTS: dict[str, dict[str, float]] = {
     "L1": {"BTC-USD": 0.65, "ETH-USD": 0.35},
@@ -234,6 +234,9 @@ class CryptoMarketService:
         sparkline: list[float] = []
         if not hist.empty:
             sparkline = [float(v) for v in hist["Close"].tail(30).tolist() if v == v]
+        if not sparkline:
+            # Yahoo has no series for this coin — use CoinGecko closes.
+            sparkline = [c["c"] for c in await load_candles(normalized, "1mo")][-30:]
 
         return {
             "symbol": row.symbol,

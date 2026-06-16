@@ -90,6 +90,28 @@ class CoinGeckoClient:
         )
         return data if isinstance(data, list) else []
 
+    async def get_ohlc(
+        self,
+        coin_id: str,
+        *,
+        days: Any = 365,
+        vs_currency: str = "usd",
+    ) -> List[List[float]]:
+        """Return OHLC candles for a coin: ``[[ts_ms, open, high, low, close], ...]``.
+
+        CoinGecko's public ``/coins/{id}/ohlc`` accepts a fixed set of ``days``
+        values and picks the candle granularity automatically (no volume). Used
+        as the chart source for coins Yahoo doesn't cover.
+        """
+        cid = (coin_id or "").strip().lower()
+        if not cid:
+            return []
+        data = await self._get(
+            f"/coins/{cid}/ohlc",
+            {"vs_currency": vs_currency, "days": str(days)},
+        )
+        return data if isinstance(data, list) else []
+
     async def get_global(self) -> Dict[str, Any]:
         """Return the /global ``data`` object (market cap %, totals)."""
         data = await self._get("/global")

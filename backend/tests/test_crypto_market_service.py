@@ -116,6 +116,27 @@ def test_crypto_service_coin_detail_shape(monkeypatch) -> None:
     assert detail["sparkline"] == [100.5, 101.5, 102.5]
 
 
+def test_crypto_service_coin_detail_sparkline_coingecko_fallback(monkeypatch) -> None:
+    _patch_universe(monkeypatch)
+
+    class _EmptyYahoo:
+        async def get_chart(self, symbol: str, range_str: str = "1mo", interval: str = "1d"):  # noqa: ARG002
+            return {"chart": {"result": []}}
+
+    async def _fetcher():
+        return _FakeFetcher(_EmptyYahoo())
+
+    async def _fake_load_candles(symbol: str, range_str: str = "1y"):  # noqa: ARG001
+        return [{"t": 1, "o": 1, "h": 1, "l": 1, "c": 9.0, "v": 0.0},
+                {"t": 2, "o": 1, "h": 1, "l": 1, "c": 9.5, "v": 0.0}]
+
+    monkeypatch.setattr(cms, "load_candles", _fake_load_candles)
+    service = CryptoMarketService(cache_backend=_FakeCache(), fetcher_factory=_fetcher)
+    detail = asyncio.run(service.coin_detail("btc"))
+    assert detail is not None
+    assert detail["sparkline"] == [9.0, 9.5]
+
+
 def test_crypto_service_dominance_prefers_global(monkeypatch) -> None:
     _patch_universe(monkeypatch)
 
