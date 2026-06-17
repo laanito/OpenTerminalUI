@@ -48,12 +48,26 @@ _prefetch_enabled = (
     or "0"
 ) == "1"
 
+# Auto-seed the instrument search universe on first boot if it's empty, so a
+# freshly built container comes up in a working state. On by default; tests
+# force it off (see conftest) since some enter the app lifespan.
+_instrument_autoseed = os.getenv("OPENTERMINALUI_INSTRUMENT_AUTOSEED", "1") == "1"
+_instrument_seed_task = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _prefetch_worker, _instruments_loader, _news_ingestor, _pcr_snapshot_service, _scanner_alert_scheduler
+    global _instrument_seed_task
     validate_runtime_secrets()
     init_db()
+
+    if _instrument_autoseed:
+        from backend.instruments.populate import seed_if_empty
+
+        # Fire-and-forget so a fresh container self-populates without blocking
+        # startup or failing the boot if a source is unreachable.
+        _instrument_seed_task = asyncio.create_task(seed_if_empty())
 
     from backend.api.deps import get_unified_fetcher
     fetcher = await get_unified_fetcher()
@@ -84,6 +98,8 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    if _instrument_seed_task and not _instrument_seed_task.done():
+        _instrument_seed_task.cancel()
     if _prefetch_worker:
         await _prefetch_worker.stop()
     if _instruments_loader:

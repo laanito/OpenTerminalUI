@@ -82,6 +82,32 @@ async def refresh_instrument_master(
     return counts
 
 
+async def seed_if_empty() -> None:
+    """Populate the universe on first boot if it's empty (best-effort).
+
+    Called as a background task from the app lifespan so a freshly built
+    container comes up with a working search universe without a manual CLI run.
+    Never blocks startup and never raises — a failed fetch just leaves the table
+    empty for the next boot / a manual `python -m backend.instruments.populate`.
+    """
+    def _count() -> int:
+        db = SessionLocal()
+        try:
+            return db.query(InstrumentMaster).count()
+        finally:
+            db.close()
+
+    try:
+        existing = await asyncio.to_thread(_count)
+        if existing:
+            logger.info("instrument_master already has %d rows; skipping auto-seed", existing)
+            return
+        logger.info("instrument_master is empty; auto-seeding from sources...")
+        await refresh_instrument_master()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("instrument_master auto-seed failed: %s", exc)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Populate instrument_master")
     parser.add_argument("--no-us", action="store_true", help="skip US equities/ETFs")

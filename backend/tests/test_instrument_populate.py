@@ -65,6 +65,63 @@ def test_replace_rows_empty_does_not_wipe():
         db.close()
 
 
+def test_seed_if_empty_populates_when_empty(monkeypatch):
+    init_db()
+    db = SessionLocal()
+    try:
+        _clear(db)
+    finally:
+        db.close()
+
+    called = {"n": 0}
+
+    async def _fake_refresh(**_kwargs):
+        called["n"] += 1
+        d = SessionLocal()
+        try:
+            populate.replace_rows(d, _us_rows(), populate.US_TYPES)
+        finally:
+            d.close()
+        return {"us": 2, "crypto": 0}
+
+    monkeypatch.setattr(populate, "refresh_instrument_master", _fake_refresh)
+    asyncio.run(populate.seed_if_empty())
+    assert called["n"] == 1
+
+    db = SessionLocal()
+    try:
+        assert db.query(InstrumentMaster).count() == 2
+    finally:
+        _clear(db)
+        db.close()
+
+
+def test_seed_if_empty_skips_when_populated(monkeypatch):
+    init_db()
+    db = SessionLocal()
+    try:
+        _clear(db)
+        populate.replace_rows(db, _us_rows(), populate.US_TYPES)
+    finally:
+        db.close()
+
+    called = {"n": 0}
+
+    async def _fake_refresh(**_kwargs):
+        called["n"] += 1
+        return {}
+
+    monkeypatch.setattr(populate, "refresh_instrument_master", _fake_refresh)
+    asyncio.run(populate.seed_if_empty())
+    assert called["n"] == 0  # already populated -> no fetch
+
+    db = SessionLocal()
+    try:
+        _clear(db)
+    finally:
+        db.close()
+
+
 def test_refresh_instrument_master_writes_both_sources(monkeypatch):
     init_db()
     db = SessionLocal()
