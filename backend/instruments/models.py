@@ -8,6 +8,7 @@ class InstrumentMaster(Base):
     display_symbol = Column(String, index=True)
     name = Column(String, index=True, nullable=True)  # company / security name
     type = Column(String)  # e.g., equity, etf, crypto, futures, options
+    source = Column(String, index=True, nullable=True)  # loader that owns the row: us | eu | crypto
     exchange = Column(String)
     currency = Column(String)
     tick_size = Column(String, nullable=True)

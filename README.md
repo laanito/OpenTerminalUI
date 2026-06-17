@@ -425,12 +425,14 @@ npm run dev
 
 The instrument search universe (`instrument_master`, served by
 `GET /api/instruments/search`) is populated from free sources — US equities/ETFs
-from the Nasdaq Trader listing files and crypto from CoinGecko. Build/refresh it
-with:
+from the Nasdaq Trader listing files, EU/UK equities from `pytickersymbols`
+(major index constituents), and crypto from CoinGecko. A freshly built container
+auto-seeds it on first boot (`OPENTERMINALUI_INSTRUMENT_AUTOSEED`, default on);
+build/refresh it manually with:
 
 ```bash
-PYTHONPATH=. python -m backend.instruments.populate              # US + crypto
-PYTHONPATH=. python -m backend.instruments.populate --no-us      # crypto only
+PYTHONPATH=. python -m backend.instruments.populate              # US + EU + crypto
+PYTHONPATH=. python -m backend.instruments.populate --no-eu      # skip EU
 PYTHONPATH=. python -m backend.instruments.populate --crypto-limit 100
 ```
 
