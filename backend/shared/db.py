@@ -37,6 +37,7 @@ def init_db() -> None:
     _ensure_backtest_columns()
     _ensure_fundamentals_pit_columns()
     _ensure_alerts_columns()
+    _ensure_instrument_master_columns()
 
 
 def _ensure_news_sentiment_columns() -> None:
@@ -96,6 +97,21 @@ def _ensure_fundamentals_pit_columns() -> None:
             if col in existing:
                 continue
             conn.execute(text(f"ALTER TABLE fundamentals_pit ADD COLUMN {col} {ddl}"))
+
+
+def _ensure_instrument_master_columns() -> None:
+    columns_to_add = {
+        "name": "VARCHAR(256)",
+    }
+    inspector = inspect(engine)
+    if not inspector.has_table("instrument_master"):
+        return
+    existing = {str(column["name"]) for column in inspector.get_columns("instrument_master")}
+    with engine.begin() as conn:
+        for col, ddl in columns_to_add.items():
+            if col in existing:
+                continue
+            conn.execute(text(f"ALTER TABLE instrument_master ADD COLUMN {col} {ddl}"))
 
 
 def _ensure_alerts_columns() -> None:
