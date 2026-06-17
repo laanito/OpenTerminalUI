@@ -56,6 +56,43 @@ def test_crypto_row_maps_fields():
     assert sources.crypto_row({"symbol": ""}) is None
 
 
+def test_eu_row_maps_suffix_to_exchange_and_currency():
+    ads = sources.eu_row(
+        {"name": "Adidas", "symbol": "ADS.DE", "country": "Germany", "isins": ["DE000A1EWWW0"]}
+    )
+    assert ads["canonical_id"] == "XETRA:ADS.DE"
+    assert ads["display_symbol"] == "ADS.DE"
+    assert ads["exchange"] == "XETRA"
+    assert ads["currency"] == "EUR"
+    assert ads["type"] == "equity"
+    assert ads["vendor_mappings_json"] == {"yahoo": "ADS.DE", "isin": "DE000A1EWWW0"}
+
+    uk = sources.eu_row({"name": "3i", "symbol": "III.L", "country": "United Kingdom", "isins": []})
+    assert uk["exchange"] == "LSE" and uk["currency"] == "GBP"
+    assert uk["vendor_mappings_json"] == {"yahoo": "III.L"}  # no isin -> omitted
+
+    swiss = sources.eu_row({"name": "Nestle", "symbol": "NESN.SW"})
+    assert swiss["exchange"] == "SIX Swiss" and swiss["currency"] == "CHF"
+
+
+def test_eu_row_skips_non_eu_symbols():
+    assert sources.eu_row({"symbol": "AAPL"}) is None          # bare US ticker
+    assert sources.eu_row({"symbol": "7203.T"}) is None         # Tokyo suffix
+    assert sources.eu_row({"symbol": "AIR.PA.DE"}) is None       # malformed double suffix
+    assert sources.eu_row({"symbol": ""}) is None
+
+
+def test_eu_rows_from_stocks_dedupes_across_indices():
+    stocks = [
+        {"name": "Adidas", "symbol": "ADS.DE", "isins": ["DE000A1EWWW0"]},
+        {"name": "Adidas", "symbol": "ADS.DE", "isins": ["DE000A1EWWW0"]},  # dup (other index)
+        {"name": "Accor", "symbol": "AC.PA"},
+        {"name": "Apple", "symbol": "AAPL"},  # filtered out
+    ]
+    rows = sources.eu_rows_from_stocks(stocks)
+    assert sorted(r["display_symbol"] for r in rows) == ["AC.PA", "ADS.DE"]
+
+
 def test_fetch_crypto_uses_universe(monkeypatch):
     async def _fake_universe(limit: int = 300):  # noqa: ARG001
         return [

@@ -10,6 +10,7 @@ Parsers are pure (text -> rows) so they're unit-testable without network; the
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -149,3 +150,89 @@ async def fetch_crypto(limit: int = 300) -> list[dict[str, Any]]:
         if row is not None:
             rows.append(row)
     return rows
+
+
+# Yahoo/home-exchange suffix -> (exchange, currency). pytickersymbols' `symbol`
+# field is the home-exchange ticker (e.g. ADS.DE, III.L, NESN.SW, AC.PA), which
+# doubles as a valid Yahoo ticker; the suffix identifies exchange + currency.
+# A symbol without a known EU suffix (bare US tickers, .T Tokyo, ...) is skipped,
+# so iterating every index still yields only the European universe.
+_EU_SUFFIX = {
+    "DE": ("XETRA", "EUR"),
+    "F": ("Frankfurt", "EUR"),
+    "PA": ("Euronext Paris", "EUR"),
+    "AS": ("Euronext Amsterdam", "EUR"),
+    "BR": ("Euronext Brussels", "EUR"),
+    "LS": ("Euronext Lisbon", "EUR"),
+    "MI": ("Borsa Italiana", "EUR"),
+    "MC": ("BME Madrid", "EUR"),
+    "VI": ("Wiener Borse", "EUR"),
+    "IR": ("Euronext Dublin", "EUR"),
+    "HE": ("Nasdaq Helsinki", "EUR"),
+    "L": ("LSE", "GBP"),
+    "SW": ("SIX Swiss", "CHF"),
+    "ST": ("Nasdaq Stockholm", "SEK"),
+    "CO": ("Nasdaq Copenhagen", "DKK"),
+    "OL": ("Oslo Bors", "NOK"),
+}
+
+
+def eu_row(stock: dict[str, Any]) -> dict[str, Any] | None:
+    symbol = str(stock.get("symbol") or "").strip().upper()
+    # A valid home ticker is TICKER.SUFFIX (exactly one dot); skip bare tickers
+    # and malformed double-suffixed source entries (e.g. "AIR.PA.DE").
+    if symbol.count(".") != 1:
+        return None
+    suffix = symbol.rsplit(".", 1)[1]
+    meta = _EU_SUFFIX.get(suffix)
+    if not meta:
+        return None
+    exchange, currency = meta
+    isins = stock.get("isins") or []
+    isin = str(isins[0]) if isins else ""
+    vendor: dict[str, str] = {"yahoo": symbol}
+    if isin:
+        vendor["isin"] = isin
+    return {
+        "canonical_id": f"{exchange}:{symbol}",
+        "display_symbol": symbol,
+        "name": str(stock.get("name") or symbol),
+        "type": "equity",
+        "exchange": exchange,
+        "currency": currency,
+        "tick_size": None,
+        "lot_size": None,
+        "vendor_mappings_json": vendor,
+    }
+
+
+def eu_rows_from_stocks(stocks: Any) -> list[dict[str, Any]]:
+    """Map an iterable of pytickersymbols stock dicts to EU instrument rows."""
+    rows: dict[str, dict[str, Any]] = {}
+    for stock in stocks:
+        r = eu_row(stock)
+        if r is not None and r["canonical_id"] not in rows:
+            rows[r["canonical_id"]] = r
+    return list(rows.values())
+
+
+async def fetch_eu_equities() -> list[dict[str, Any]]:
+    """EU/UK equities from pytickersymbols (curated index constituents)."""
+
+    def _collect() -> list[dict[str, Any]]:
+        try:
+            from pytickersymbols import PyTickerSymbols
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("pytickersymbols unavailable, skipping EU instruments: %s", exc)
+            return []
+        try:
+            store = PyTickerSymbols()
+            stocks: list[dict[str, Any]] = []
+            for index_name in store.get_all_indices():
+                stocks.extend(store.get_stocks_by_index(index_name))
+            return eu_rows_from_stocks(stocks)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("EU instrument load failed: %s", exc)
+            return []
+
+    return await asyncio.to_thread(_collect)

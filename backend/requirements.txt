@@ -34,6 +34,9 @@ reportlab
 # Imports under the same `empyrical` namespace.
 empyrical-reloaded
 pyarrow
+# pytickersymbols: bundled (offline) constituents of major global indices, used
+# to seed EU/UK equities into the instrument search universe.
+pytickersymbols
 hmmlearn
 optuna
 statsmodels
