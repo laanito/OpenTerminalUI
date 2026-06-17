@@ -6,7 +6,8 @@ class InstrumentMaster(Base):
 
     canonical_id = Column(String, primary_key=True)
     display_symbol = Column(String, index=True)
-    type = Column(String)  # e.g., spot, futures, options, crypto
+    name = Column(String, index=True, nullable=True)  # company / security name
+    type = Column(String)  # e.g., equity, etf, crypto, futures, options
     exchange = Column(String)
     currency = Column(String)
     tick_size = Column(String, nullable=True)

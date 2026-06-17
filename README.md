@@ -421,6 +421,22 @@ npm run dev
 - Backend API: `http://127.0.0.1:8000`
 - Frontend dev server: `http://127.0.0.1:5173`
 
+### Symbol Search Universe
+
+The instrument search universe (`instrument_master`, served by
+`GET /api/instruments/search`) is populated from free sources — US equities/ETFs
+from the Nasdaq Trader listing files and crypto from CoinGecko. Build/refresh it
+with:
+
+```bash
+PYTHONPATH=. python -m backend.instruments.populate              # US + crypto
+PYTHONPATH=. python -m backend.instruments.populate --no-us      # crypto only
+PYTHONPATH=. python -m backend.instruments.populate --crypto-limit 100
+```
+
+Each source is refreshed independently, so a failed fetch never wipes the
+existing universe. Re-run periodically to pick up new listings.
+
 ## Environment Variables
 
 The platform runs without API keys using fallback providers. Add keys to unlock full data access:

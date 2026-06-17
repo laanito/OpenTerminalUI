@@ -17,6 +17,10 @@ if not os.environ.get("OPENTERMINALUI_TEST_DB_INITIALIZED"):
     os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_test_db}"
     os.environ["OPENTERMINALUI_TEST_DB_INITIALIZED"] = "1"
 
+# Never auto-seed the instrument universe during tests: some tests enter the app
+# lifespan via `with TestClient(app)`, and seeding would hit the network.
+os.environ["OPENTERMINALUI_INSTRUMENT_AUTOSEED"] = "0"
+
 
 # Ensure `import backend...` works even when pytest is launched from `backend/`.
 REPO_ROOT = Path(__file__).resolve().parents[2]

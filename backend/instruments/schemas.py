@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class InstrumentSearchResult(BaseModel):
     canonical_id: str
     display_symbol: str
+    name: Optional[str] = None
     type: str
     exchange: str
     currency: Optional[str] = None

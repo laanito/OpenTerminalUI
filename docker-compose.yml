@@ -10,6 +10,7 @@ services:
       OPENTERMINALUI_ENV: "${OPENTERMINALUI_ENV:-development}"
       FMP_API_KEY: "${FMP_API_KEY:-}"
       FINNHUB_API_KEY: "${FINNHUB_API_KEY:-}"
+      COINGECKO_API_KEY: "${COINGECKO_API_KEY:-}"
       JWT_SECRET_KEY: "${JWT_SECRET_KEY:-}"
       CACHE_SIGNING_KEY: "${CACHE_SIGNING_KEY:-}"
       DATABASE_URL: "${DATABASE_URL:-postgresql://openterminalui:openterminalui@postgres:5432/openterminalui}"
@@ -18,6 +19,8 @@ services:
       KITE_ACCESS_TOKEN: "${KITE_ACCESS_TOKEN:-}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
       OPENTERMINALUI_PREFETCH_ENABLED: "${OPENTERMINALUI_PREFETCH_ENABLED:-${OPENSCREENS_PREFETCH_ENABLED:-0}}"
+      # Auto-populate the instrument search universe on first boot (set 0 to disable).
+      OPENTERMINALUI_INSTRUMENT_AUTOSEED: "${OPENTERMINALUI_INSTRUMENT_AUTOSEED:-1}"
       OPENTERMINALUI_SQLITE_URL: "${OPENTERMINALUI_SQLITE_URL:-${OPENSCREENS_SQLITE_URL:-sqlite:////data/openterminalui.db}}"
       OPENTERMINALUI_CORS_ORIGINS: "${OPENTERMINALUI_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}"
       LM_STUDIO_BASE_URL: "${LM_STUDIO_BASE_URL:-http://host.docker.internal:1234/v1}"
