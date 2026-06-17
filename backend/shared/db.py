@@ -103,6 +103,7 @@ def _ensure_instrument_master_columns() -> None:
     columns_to_add = {
         "name": "VARCHAR(256)",
         "source": "VARCHAR(16)",
+        "search_blob": "VARCHAR(300)",
     }
     inspector = inspect(engine)
     if not inspector.has_table("instrument_master"):
