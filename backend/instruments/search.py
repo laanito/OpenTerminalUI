@@ -3,6 +3,10 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from backend.instruments.models import InstrumentMaster
 from backend.instruments.schemas import InstrumentSearchResult
+from backend.instruments.text import fold_text
+
+# Cap on rows pulled from the DB before scoring (bounds work for broad substrings).
+_CANDIDATE_CAP = 200
 
 
 def _to_result(r: InstrumentMaster) -> InstrumentSearchResult:
@@ -32,51 +36,65 @@ def _to_result(r: InstrumentMaster) -> InstrumentSearchResult:
     )
 
 
+def _score(symbol_upper: str, name_folded: str, q_upper: str, q_folded: str) -> int:
+    """Relevance bands: exact ticker > ticker-prefix > name-prefix > name-word-
+    prefix > ticker-substring > name-substring. Name is scored separately from
+    the ticker (so "apple" -> AAPL via the name, not MLP via "Pine*apple*").
+    Shorter matches rank higher within a band; ties fall back to length/alpha."""
+    if symbol_upper == q_upper:
+        return 1000
+    if symbol_upper.startswith(q_upper):
+        return 700 - min(len(symbol_upper), 99)
+    if name_folded.startswith(q_folded):
+        return 600 - min(len(name_folded), 99)
+    if any(word.startswith(q_folded) for word in name_folded.split()):
+        return 500 - min(len(name_folded), 99)
+    if q_upper in symbol_upper:
+        return 400 - min(len(symbol_upper), 99)
+    if q_folded in name_folded:
+        return 150
+    return 0
+
+
 def search_instruments(db: Session, query: str, limit: int = 20) -> List[InstrumentSearchResult]:
-    query_upper = query.upper().strip()
-    if not query_upper:
+    q_upper = query.upper().strip()
+    if not q_upper:
         return []
+    q_folded = fold_text(query)
 
-    like = f"%{query_upper}%"
-    prefix_like = f"{query_upper}%"
-
-    # 1. Exact ticker match
-    exact = db.query(InstrumentMaster).filter(InstrumentMaster.display_symbol == query_upper).all()
-
-    # 2. Prefix match on ticker (excludes the exact hit)
-    prefix = (
-        db.query(InstrumentMaster)
-        .filter(
-            InstrumentMaster.display_symbol.like(prefix_like),
-            InstrumentMaster.display_symbol != query_upper,
-        )
-        .limit(limit)
-        .all()
-    )
-
-    # 3. Fuzzy match on ticker OR name (so "apple" finds AAPL), excluding
-    #    anything already covered by the ticker-prefix tier.
-    fuzzy = (
+    like_sym = f"%{q_upper}%"
+    like_blob = f"%{q_folded}%"
+    candidates = (
         db.query(InstrumentMaster)
         .filter(
             or_(
-                InstrumentMaster.display_symbol.like(like),
-                InstrumentMaster.name.ilike(like),
-            ),
-            ~InstrumentMaster.display_symbol.like(prefix_like),
+                InstrumentMaster.display_symbol.like(like_sym),
+                InstrumentMaster.search_blob.like(like_blob),
+                InstrumentMaster.name.ilike(like_sym),
+            )
         )
-        .limit(limit)
+        .limit(_CANDIDATE_CAP)
         .all()
     )
 
+    scored = []
+    for r in candidates:
+        symbol_upper = (r.display_symbol or "").upper()
+        name_folded = fold_text(r.name)
+        s = _score(symbol_upper, name_folded, q_upper, q_folded)
+        if s <= 0:
+            continue
+        scored.append((-s, len(symbol_upper), symbol_upper, r))
+
+    scored.sort(key=lambda t: (t[0], t[1], t[2]))
+
     seen = set()
     final: List[InstrumentSearchResult] = []
-    for r in exact + prefix + fuzzy:
+    for _, _, _, r in scored:
         if r.canonical_id in seen:
             continue
         seen.add(r.canonical_id)
         final.append(_to_result(r))
         if len(final) >= limit:
             break
-
     return final

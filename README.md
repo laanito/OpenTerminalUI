@@ -439,6 +439,12 @@ PYTHONPATH=. python -m backend.instruments.populate --crypto-limit 100
 Each source is refreshed independently, so a failed fetch never wipes the
 existing universe. Re-run periodically to pick up new listings.
 
+Search matches ticker and company name (accent-insensitive, e.g. `nestle` finds
+`Nestlé`) and ranks exact ticker → ticker-prefix → name-prefix → substring. For
+the long tail not in the seeded set, the search route falls back to Yahoo's
+symbol search and lazily caches the hits (`OPENTERMINALUI_INSTRUMENT_LIVE_SEARCH`,
+default on).
+
 ## Environment Variables
 
 The platform runs without API keys using fallback providers. Add keys to unlock full data access:

@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from backend.instruments.models import InstrumentMaster
 from backend.instruments.sources import fetch_crypto, fetch_eu_equities, fetch_us_equities
+from backend.instruments.text import search_blob as _build_blob
 from backend.shared.db import SessionLocal, init_db
 
 logger = logging.getLogger(__name__)
@@ -58,13 +59,42 @@ def replace_rows(db: Session, rows: list[dict[str, Any]], source: str) -> int:
     db.bulk_save_objects(
         [
             InstrumentMaster(
-                source=source, **{k: v for k, v in r.items() if k in _ALLOWED_COLUMNS}
+                source=source,
+                search_blob=_build_blob(r.get("display_symbol"), r.get("name")),
+                **{k: v for k, v in r.items() if k in _ALLOWED_COLUMNS},
             )
             for r in rows
         ]
     )
     db.commit()
     return len(rows)
+
+
+def persist_discovered(rows: list[dict[str, Any]], source: str = "yahoo") -> None:
+    """Upsert individually-discovered rows (e.g. from the live Yahoo fallback).
+
+    Uses merge (insert-or-update by canonical_id) rather than replace, so the
+    discovered cache accumulates and isn't wiped by a us/eu/crypto refresh.
+    Best-effort: never raises into the request path.
+    """
+    if not rows:
+        return
+    db = SessionLocal()
+    try:
+        for r in rows:
+            db.merge(
+                InstrumentMaster(
+                    source=source,
+                    search_blob=_build_blob(r.get("display_symbol"), r.get("name")),
+                    **{k: v for k, v in r.items() if k in _ALLOWED_COLUMNS},
+                )
+            )
+        db.commit()
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        logger.warning("persist_discovered failed: %s", exc)
+    finally:
+        db.close()
 
 
 async def refresh_instrument_master(

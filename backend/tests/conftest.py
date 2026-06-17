@@ -20,6 +20,9 @@ if not os.environ.get("OPENTERMINALUI_TEST_DB_INITIALIZED"):
 # Never auto-seed the instrument universe during tests: some tests enter the app
 # lifespan via `with TestClient(app)`, and seeding would hit the network.
 os.environ["OPENTERMINALUI_INSTRUMENT_AUTOSEED"] = "0"
+# Keep the live Yahoo search fallback offline in tests (route consults it when
+# the seeded DB has few hits); tests that exercise it monkeypatch explicitly.
+os.environ["OPENTERMINALUI_INSTRUMENT_LIVE_SEARCH"] = "0"
 
 
 # Ensure `import backend...` works even when pytest is launched from `backend/`.

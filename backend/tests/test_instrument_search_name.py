@@ -2,19 +2,25 @@ from __future__ import annotations
 
 from backend.instruments.models import InstrumentMaster
 from backend.instruments.search import search_instruments
+from backend.instruments.text import search_blob
 from backend.shared.db import SessionLocal, init_db
+
+
+def _im(canonical_id, symbol, name, type_, exchange, currency="USD"):
+    return InstrumentMaster(
+        canonical_id=canonical_id, display_symbol=symbol, name=name,
+        search_blob=search_blob(symbol, name), type=type_, exchange=exchange, currency=currency,
+    )
 
 
 def _seed(db):
     db.query(InstrumentMaster).delete()
     db.add_all([
-        InstrumentMaster(canonical_id="NASDAQ:AAPL", display_symbol="AAPL", name="Apple Inc.",
-                         type="equity", exchange="NASDAQ", currency="USD",
-                         vendor_mappings_json={"yahoo": "AAPL"}),
-        InstrumentMaster(canonical_id="NASDAQ:APP", display_symbol="APP", name="AppLovin Corp",
-                         type="equity", exchange="NASDAQ", currency="USD"),
-        InstrumentMaster(canonical_id="CRYPTO:BTC", display_symbol="BTC", name="Bitcoin",
-                         type="crypto", exchange="CRYPTO", currency="USD"),
+        _im("NASDAQ:AAPL", "AAPL", "Apple Inc.", "equity", "NASDAQ"),
+        _im("NASDAQ:APP", "APP", "AppLovin Corp", "equity", "NASDAQ"),
+        _im("CRYPTO:BTC-USD", "BTC-USD", "Bitcoin", "crypto", "CRYPTO"),
+        _im("NASDAQ:BTCS", "BTCS", "BTCS Inc.", "equity", "NASDAQ"),
+        _im("SIX Swiss:NESN.SW", "NESN.SW", "Nestlé SA", "equity", "SIX Swiss", "CHF"),
     ])
     db.commit()
 
@@ -33,12 +39,43 @@ def test_exact_ticker_ranks_first_and_carries_name():
         db.close()
 
 
-def test_search_matches_company_name_not_just_ticker():
+def test_accent_insensitive_name_match():
     init_db()
     db = SessionLocal()
     try:
         _seed(db)
-        assert any(r.display_symbol == "BTC" for r in search_instruments(db, "bitcoin"))
+        # ASCII query matches the accented name "Nestlé".
+        results = search_instruments(db, "nestle")
+        assert any(r.display_symbol == "NESN.SW" for r in results)
+    finally:
+        db.query(InstrumentMaster).delete()
+        db.commit()
+        db.close()
+
+
+def test_ranking_exact_then_prefix_shorter_first():
+    init_db()
+    db = SessionLocal()
+    try:
+        _seed(db)
+        # "BTC" → no exact ticker; prefix matches BTCS (4) and BTC-USD (7).
+        order = [r.display_symbol for r in search_instruments(db, "BTC")]
+        assert order.index("BTCS") < order.index("BTC-USD")  # shorter ranks higher
+        # An exact ticker always wins its band.
+        appres = search_instruments(db, "APP")
+        assert appres[0].display_symbol == "APP"
+    finally:
+        db.query(InstrumentMaster).delete()
+        db.commit()
+        db.close()
+
+
+def test_search_matches_company_name():
+    init_db()
+    db = SessionLocal()
+    try:
+        _seed(db)
+        assert any(r.display_symbol == "BTC-USD" for r in search_instruments(db, "bitcoin"))
         assert any(r.display_symbol == "APP" for r in search_instruments(db, "applovin"))
     finally:
         db.query(InstrumentMaster).delete()

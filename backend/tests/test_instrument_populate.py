@@ -133,6 +133,34 @@ def test_seed_if_empty_skips_when_populated(monkeypatch):
         db.close()
 
 
+def test_persist_discovered_upserts_and_keeps_source():
+    init_db()
+    db = SessionLocal()
+    try:
+        _clear(db)
+    finally:
+        db.close()
+
+    row = {"canonical_id": "YAHOO:RACE.MI", "display_symbol": "RACE.MI", "name": "Ferrari NV",
+           "type": "equity", "exchange": "Milan", "currency": None,
+           "tick_size": None, "lot_size": None, "vendor_mappings_json": {"yahoo": "RACE.MI"}}
+    populate.persist_discovered([row])
+    populate.persist_discovered([row])  # merge -> no duplicate
+
+    db = SessionLocal()
+    try:
+        rows = db.query(InstrumentMaster).filter(InstrumentMaster.source == "yahoo").all()
+        assert len(rows) == 1
+        assert rows[0].display_symbol == "RACE.MI"
+        assert rows[0].search_blob and "ferrari" in rows[0].search_blob
+        # A us/eu/crypto refresh must not wipe discovered rows.
+        populate.replace_rows(db, _us_rows(), populate.SOURCE_US)
+        assert db.query(InstrumentMaster).filter(InstrumentMaster.source == "yahoo").count() == 1
+    finally:
+        _clear(db)
+        db.close()
+
+
 def test_refresh_instrument_master_writes_all_sources(monkeypatch):
     init_db()
     db = SessionLocal()
