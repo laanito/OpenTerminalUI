@@ -81,9 +81,31 @@ export async function fetchPriceSeries(
   return data;
 }
 
-export async function searchSymbols(q: string, market: string): Promise<SearchSymbolItem[]> {
-  const { data } = await api.get<{ results: SearchSymbolItem[] }>("/search", { params: { q, market } });
-  return data.results;
+type InstrumentSearchResult = {
+  canonical_id: string;
+  display_symbol: string;
+  name?: string | null;
+  type: string;
+  exchange: string;
+  currency?: string | null;
+  country_code?: string | null;
+};
+
+// Unified symbol search over the instrument universe (US + EU + crypto, with a
+// live Yahoo fallback). `market` is accepted for call-site compatibility and
+// will drive context-weighted ranking in a later pass. Maps the instrument
+// response back onto SearchSymbolItem so existing callers are unaffected.
+export async function searchSymbols(q: string, market?: string): Promise<SearchSymbolItem[]> {
+  void market;
+  const { data } = await api.get<{ results: InstrumentSearchResult[] }>("/instruments/search", {
+    params: { q },
+  });
+  return (data?.results ?? []).map((r) => ({
+    ticker: r.display_symbol,
+    name: r.name ?? r.display_symbol,
+    exchange: r.exchange,
+    country_code: r.country_code ?? undefined,
+  }));
 }
 
 export async function fetchChart(ticker: string, interval = "1d", range = "1y", market = "NSE"): Promise<ChartResponse> {

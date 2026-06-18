@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { fetchCryptoSearch, searchSymbols, type SearchSymbolItem } from "../../api/client";
+import { searchSymbols, type SearchSymbolItem } from "../../api/client";
 import { CountryFlag } from "../common/CountryFlag";
 import { NotificationBell } from "../notifications/NotificationBell";
 import { useNavigationHistory } from "../../hooks/useNavigationHistory";
@@ -224,8 +224,8 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
     }
     const requestId = ++searchRequestRef.current;
     try {
-      const [equityRes, cryptoRes] = await Promise.all([searchSymbols(q, selectedMarket), fetchCryptoSearch(q)]);
-      const merged = [...equityRes, ...cryptoRes];
+      // Unified instrument search already covers crypto + EU + Yahoo fallback.
+      const merged = await searchSymbols(q, selectedMarket);
       const seen = new Set<string>();
       const res = merged.filter((item) => {
         const key = `${(item.ticker || "").toUpperCase()}::${(item.name || "").toUpperCase()}`;
