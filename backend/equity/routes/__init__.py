@@ -6,7 +6,7 @@ from backend.api.routes import (
     admin, backtest, backtests, chart, crypto, data,
     commodities, depth, export, forex, fundamentals, health, hotlists, indicators,
     kite, news, emotion, ai_insights, paper, peers, plugins, portfolio, quotes,
-    screener, scripting, search, shareholding, stocks,
+    screener, scripting, shareholding, stocks,
     stream, valuation, options, audit, data_layer, governance, patterns,
     user_layouts, portfolios,
     ops, risk,
@@ -30,7 +30,7 @@ equity_router.include_router(screener_v1_router, prefix="/api", tags=["screener-
 equity_router.include_router(valuation.router, prefix="/api", tags=["valuation"])
 equity_router.include_router(fundamentals.router, prefix="/api", tags=["fundamentals"])
 equity_router.include_router(peers.router, prefix="/api", tags=["peers"])
-equity_router.include_router(search.router, prefix="/api", tags=["search"])
+# Legacy NSE-CSV /api/search retired in favor of /api/instruments/search.
 equity_router.include_router(quotes.router, prefix="/api", tags=["quotes"])
 equity_router.include_router(portfolio.router, prefix="/api", tags=["portfolio"])
 equity_router.include_router(backtest.router, prefix="/api", tags=["backtest"])

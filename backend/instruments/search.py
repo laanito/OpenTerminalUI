@@ -8,6 +8,33 @@ from backend.instruments.text import fold_text
 # Cap on rows pulled from the DB before scoring (bounds work for broad substrings).
 _CANDIDATE_CAP = 200
 
+# Exchange -> ISO-3166-1 alpha-2, so the FE can render a flag. Crypto and
+# unknown (e.g. some Yahoo-fallback) exchanges map to None (no flag shown).
+_EXCHANGE_COUNTRY = {
+    "NASDAQ": "US", "NYSE": "US", "NYSE ARCA": "US", "AMEX": "US",
+    "CBOE BZX": "US", "IEX": "US", "US": "US",
+    "XETRA": "DE", "FRANKFURT": "DE",
+    "EURONEXT PARIS": "FR",
+    "EURONEXT AMSTERDAM": "NL",
+    "EURONEXT BRUSSELS": "BE",
+    "EURONEXT LISBON": "PT",
+    "EURONEXT DUBLIN": "IE",
+    "BORSA ITALIANA": "IT",
+    "BME MADRID": "ES",
+    "LSE": "GB",
+    "SIX SWISS": "CH",
+    "NASDAQ STOCKHOLM": "SE",
+    "NASDAQ HELSINKI": "FI",
+    "NASDAQ COPENHAGEN": "DK",
+    "OSLO BORS": "NO",
+    "WIENER BORSE": "AT",
+    "NSE": "IN", "BSE": "IN",
+}
+
+
+def country_for_exchange(exchange: str | None) -> str | None:
+    return _EXCHANGE_COUNTRY.get((exchange or "").strip().upper())
+
 
 def _to_result(r: InstrumentMaster) -> InstrumentSearchResult:
     # tick_size / lot_size are stored as strings; expose floats when parseable.
@@ -30,6 +57,7 @@ def _to_result(r: InstrumentMaster) -> InstrumentSearchResult:
         type=r.type,
         exchange=r.exchange,
         currency=r.currency,
+        country_code=country_for_exchange(r.exchange),
         vendor_ids=r.vendor_mappings_json or {},
         tick_size=tick,
         lot_size=lot,

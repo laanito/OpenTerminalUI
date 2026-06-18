@@ -9,6 +9,7 @@ class InstrumentSearchResult(BaseModel):
     type: str
     exchange: str
     currency: Optional[str] = None
+    country_code: Optional[str] = None  # ISO-3166-1 alpha-2, derived from exchange
     vendor_ids: Optional[dict] = None
     tick_size: Optional[float] = None
     lot_size: Optional[float] = None

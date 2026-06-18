@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchCryptoSearch, searchSymbols, type SearchSymbolItem } from "../../api/client";
+import { searchSymbols, type SearchSymbolItem } from "../../api/client";
 import { useNavigationHistory } from "../../hooks/useNavigationHistory";
 import { useSettingsStore } from "../../store/settingsStore";
 import { TerminalBadge, TerminalInput } from "../terminal";
@@ -138,12 +138,11 @@ export function CommandPalette() {
     const timer = setTimeout(() => {
       void (async () => {
         try {
-          const [equities, crypto] = await Promise.all([
-            searchSymbols(firstToken, selectedMarket),
-            fetchCryptoSearch(firstToken),
-          ]);
+          // Unified instrument search already includes crypto (+ EU + Yahoo
+          // fallback), so no separate crypto call is needed.
+          const matches = await searchSymbols(firstToken, selectedMarket);
           if (!active) return;
-          setSearchMatches(dedupeSearchMatches([...(equities || []), ...(crypto || [])]));
+          setSearchMatches(dedupeSearchMatches(matches || []));
         } catch {
           if (active) {
             setSearchMatches([]);

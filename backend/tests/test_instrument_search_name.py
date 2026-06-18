@@ -33,6 +33,11 @@ def test_exact_ticker_ranks_first_and_carries_name():
         results = search_instruments(db, "AAPL")
         assert results[0].display_symbol == "AAPL"
         assert results[0].name == "Apple Inc."
+        assert results[0].country_code == "US"  # derived from NASDAQ
+        nesn = next(r for r in search_instruments(db, "nestle") if r.display_symbol == "NESN.SW")
+        assert nesn.country_code == "CH"  # derived from SIX Swiss
+        btc = next(r for r in search_instruments(db, "BTC-USD") if r.type == "crypto")
+        assert btc.country_code is None  # crypto -> no flag
     finally:
         db.query(InstrumentMaster).delete()
         db.commit()
