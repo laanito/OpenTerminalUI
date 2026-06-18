@@ -92,13 +92,13 @@ type InstrumentSearchResult = {
 };
 
 // Unified symbol search over the instrument universe (US + EU + crypto, with a
-// live Yahoo fallback). `market` is accepted for call-site compatibility and
-// will drive context-weighted ranking in a later pass. Maps the instrument
-// response back onto SearchSymbolItem so existing callers are unaffected.
+// live Yahoo fallback). `market` is the active selector — passed through to
+// context-weight ranking (matching exchange/currency boosted), never to filter.
+// Maps the instrument response back onto SearchSymbolItem so callers are
+// unaffected.
 export async function searchSymbols(q: string, market?: string): Promise<SearchSymbolItem[]> {
-  void market;
   const { data } = await api.get<{ results: InstrumentSearchResult[] }>("/instruments/search", {
-    params: { q },
+    params: { q, market: market || undefined },
   });
   return (data?.results ?? []).map((r) => ({
     ticker: r.display_symbol,

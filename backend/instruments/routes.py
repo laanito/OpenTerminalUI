@@ -34,10 +34,11 @@ def _row_to_result(row: dict) -> InstrumentSearchResult:
 @router.get("/search", response_model=InstrumentSearchResponse)
 async def search_instruments(
     q: str = Query(..., min_length=1, description="Search query"),
+    market: str = Query(default="", description="Active market selector for context ranking"),
     db: Session = Depends(get_db),
     background_tasks: BackgroundTasks = None,
 ):
-    results = _search_instruments(db, q)
+    results = _search_instruments(db, q, market=market)
 
     # Long-tail fallback: if the seeded universe barely matches, resolve via
     # Yahoo and lazily persist the hits (source='yahoo') for next time.

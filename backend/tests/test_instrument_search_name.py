@@ -88,6 +88,31 @@ def test_search_matches_company_name():
         db.close()
 
 
+def test_context_market_boosts_matching_country():
+    init_db()
+    db = SessionLocal()
+    try:
+        db.query(InstrumentMaster).delete()
+        # Both prefix-match "XY"; the EU row is shorter so it wins by default,
+        # but a US-market context lifts the NASDAQ row above it — proving the
+        # boost while both stay in the results (search is never filtered).
+        db.add_all([
+            _im("XETRA:XYA", "XYA", "Alpha AG", "equity", "XETRA", "EUR"),
+            _im("NASDAQ:XYAB", "XYAB", "Beta Inc", "equity", "NASDAQ", "USD"),
+        ])
+        db.commit()
+
+        default_order = [r.display_symbol for r in search_instruments(db, "XY")]
+        us_order = [r.display_symbol for r in search_instruments(db, "XY", market="NASDAQ")]
+        assert default_order[0] == "XYA"              # shorter symbol wins by default
+        assert us_order[0] == "XYAB"                  # US context boosts the NASDAQ row
+        assert set(us_order) == {"XYA", "XYAB"}       # nothing filtered out
+    finally:
+        db.query(InstrumentMaster).delete()
+        db.commit()
+        db.close()
+
+
 def test_empty_query_returns_nothing():
     init_db()
     db = SessionLocal()
