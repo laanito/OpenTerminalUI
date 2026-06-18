@@ -36,6 +36,33 @@ def country_for_exchange(exchange: str | None) -> str | None:
     return _EXCHANGE_COUNTRY.get((exchange or "").strip().upper())
 
 
+# Active FE market selector -> (country, currency) used to context-weight
+# ranking. Search is never filtered; matching rows are just boosted so a
+# NASDAQ/USD context surfaces the US listing first. (NSE/BSE map to IN, which
+# has no rows in this de-India universe — a no-op until/if IN data returns.)
+_MARKET_CONTEXT = {
+    "NASDAQ": ("US", "USD"),
+    "NYSE": ("US", "USD"),
+    "NSE": ("IN", "INR"),
+    "BSE": ("IN", "INR"),
+}
+
+
+def _context_boost(exchange: str | None, currency: str | None, market: str) -> int:
+    ctx = _MARKET_CONTEXT.get((market or "").strip().upper())
+    if not ctx:
+        return 0
+    ctx_country, ctx_currency = ctx
+    boost = 0
+    if country_for_exchange(exchange) == ctx_country:
+        boost += 250  # same country as the selected market
+    if (exchange or "").strip().upper() == (market or "").strip().upper():
+        boost += 120  # exact selected exchange (NASDAQ row under NASDAQ context)
+    if (currency or "").strip().upper() == ctx_currency:
+        boost += 150  # matching quote currency (also lifts USD crypto under US)
+    return boost
+
+
 def _to_result(r: InstrumentMaster) -> InstrumentSearchResult:
     # tick_size / lot_size are stored as strings; expose floats when parseable.
     tick = None
@@ -84,7 +111,9 @@ def _score(symbol_upper: str, name_folded: str, q_upper: str, q_folded: str) -> 
     return 0
 
 
-def search_instruments(db: Session, query: str, limit: int = 20) -> List[InstrumentSearchResult]:
+def search_instruments(
+    db: Session, query: str, limit: int = 20, market: str = ""
+) -> List[InstrumentSearchResult]:
     q_upper = query.upper().strip()
     if not q_upper:
         return []
@@ -112,7 +141,8 @@ def search_instruments(db: Session, query: str, limit: int = 20) -> List[Instrum
         s = _score(symbol_upper, name_folded, q_upper, q_folded)
         if s <= 0:
             continue
-        scored.append((-s, len(symbol_upper), symbol_upper, r))
+        total = s + _context_boost(r.exchange, r.currency, market)
+        scored.append((-total, len(symbol_upper), symbol_upper, r))
 
     scored.sort(key=lambda t: (t[0], t[1], t[2]))
 
