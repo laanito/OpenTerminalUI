@@ -13,6 +13,7 @@ from fastapi import WebSocket
 from backend.api.deps import get_unified_fetcher
 from backend.core.ttl_policy import market_open_now
 from backend.services.candle_aggregator import CandleAggregator
+from backend.services.binance_ws import BinanceSpotWebSocket
 from backend.services.finnhub_ws import FinnhubWebSocket
 from backend.services.instrument_map import get_instrument_map_service
 from backend.services.kite_stream import KiteStreamAdapter
@@ -20,9 +21,10 @@ from backend.services.redis_quote_bus import get_quote_bus
 
 logger = logging.getLogger(__name__)
 
-SYMBOL_TOKEN_RE = re.compile(r"^(NSE|BSE|NFO|NYSE|NASDAQ):([A-Z0-9][A-Z0-9._-]{0,40})$")
+SYMBOL_TOKEN_RE = re.compile(r"^(NSE|BSE|NFO|NYSE|NASDAQ|CRYPTO):([A-Z0-9][A-Z0-9._-]{0,40})$")
 US_MARKETS = {"NYSE", "NASDAQ"}
 IN_MARKETS = {"NSE", "BSE", "NFO"}
+CRYPTO_MARKETS = {"CRYPTO"}
 NFO_OPTION_RE = re.compile(r"^([A-Z]+)\d{2}[A-Z]{3}(\d+)(CE|PE)$")
 NFO_FUT_RE = re.compile(r"^([A-Z]+)\d{2}[A-Z]{3}FUT$")
 
@@ -94,6 +96,7 @@ class MarketDataHub:
         self._alert_connections: set[WebSocket] = set()
         self._candle_aggregator = CandleAggregator()
         self._finnhub_ws = FinnhubWebSocket(self._on_finnhub_trade)
+        self._binance_ws = BinanceSpotWebSocket(self._on_binance_ticker)
 
         # Redis Quote Bus
         self._bus = get_quote_bus()
@@ -110,7 +113,7 @@ class MarketDataHub:
             await self._bus.connect()
 
             # Auto-subscribe to all supported markets
-            for m in list(US_MARKETS) + list(IN_MARKETS):
+            for m in list(US_MARKETS) + list(IN_MARKETS) + list(CRYPTO_MARKETS):
                 await self._bus.subscribe_market(m)
 
             self._poll_task = asyncio.create_task(self._poll_loop(), name="marketdata-hub-poll")
@@ -124,6 +127,7 @@ class MarketDataHub:
         self._kite_stream = KiteStreamAdapter(fetcher.kite, self._on_kite_tick)
         await self._kite_stream.start()
         await self._finnhub_ws.start()
+        await self._binance_ws.start()
         await self._sync_stream_subscriptions()
         logger.info("MarketDataHub started (Instance ID: %s)", self._instance_id)
 
@@ -179,6 +183,7 @@ class MarketDataHub:
             self._nfo_chain_last_fetch.clear()
             self._nfo_quote_cache.clear()
             finnhub_ws = self._finnhub_ws
+            binance_ws = self._binance_ws
 
         if task:
             task.cancel()
@@ -208,6 +213,8 @@ class MarketDataHub:
             self._kite_stream = None
         if finnhub_ws:
             await finnhub_ws.stop()
+        if binance_ws:
+            await binance_ws.stop()
 
         for ws in sockets:
             try:
@@ -416,6 +423,12 @@ class MarketDataHub:
                 if ":" in token and token.split(":", 1)[0] in US_MARKETS
             }
             await self._finnhub_ws.set_symbols(us_symbols)
+            crypto_symbols = {
+                token.split(":", 1)[1]
+                for token in subscriptions
+                if ":" in token and token.split(":", 1)[0] in CRYPTO_MARKETS
+            }
+            await self._binance_ws.set_symbols(crypto_symbols)
             return
         async with self._stream_sync_lock:
             subscriptions = await self._union_subscriptions()
@@ -432,6 +445,12 @@ class MarketDataHub:
                 if ":" in token and token.split(":", 1)[0] in US_MARKETS
             }
             await self._finnhub_ws.set_symbols(us_symbols)
+            crypto_symbols = {
+                token.split(":", 1)[1]
+                for token in subscriptions
+                if ":" in token and token.split(":", 1)[0] in CRYPTO_MARKETS
+            }
+            await self._binance_ws.set_symbols(crypto_symbols)
 
     async def _poll_loop(self) -> None:
         try:
@@ -445,6 +464,8 @@ class MarketDataHub:
                             stream_symbols = set(self._stream_symbols_to_token.keys())
                     if self._finnhub_ws.connected:
                         stream_symbols.update({t for t in tokens if t.split(":", 1)[0] in US_MARKETS})
+                    if self._binance_ws.connected:
+                        stream_symbols.update({t for t in tokens if t.split(":", 1)[0] in CRYPTO_MARKETS})
                     poll_tokens = sorted(tokens - stream_symbols)
                     if poll_tokens:
                         ticks = await self._fetch_ticks(poll_tokens)
@@ -515,6 +536,36 @@ class MarketDataHub:
             }
             market = symbol_token.split(":", 1)[0]
             await self._bus.publish_tick(market, payload)
+
+    async def _on_binance_ticker(self, app_symbol: str, price: float, change_pct: float, volume: float, ts_ms: int) -> None:
+        suffix = f":{app_symbol.strip().upper()}"
+        symbol_candidates: set[str] = set()
+        async with self._lock:
+            for subs in self._connections.values():
+                for token in subs:
+                    if token.endswith(suffix) and token.split(":", 1)[0] in CRYPTO_MARKETS:
+                        symbol_candidates.add(token)
+        if not symbol_candidates:
+            symbol_candidates.add(f"CRYPTO:{app_symbol.strip().upper()}")
+        ts_iso = (
+            datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc).isoformat()
+            if ts_ms > 0
+            else _now_iso()
+        )
+        change_abs = price * change_pct / 100.0 if change_pct else 0.0
+        for symbol_token in sorted(symbol_candidates):
+            payload = {
+                "type": "tick",
+                "symbol": symbol_token,
+                "ltp": float(price),
+                "change": change_abs,
+                "change_pct": float(change_pct),
+                "oi": None,
+                "volume": float(volume),
+                "ts": ts_iso,
+                "provider": "binance",
+            }
+            await self._bus.publish_tick("crypto", payload)
 
     async def _on_tick_for_candles(self, payload: dict[str, Any]) -> None:
         symbol = str(payload.get("symbol") or "").strip().upper()
