@@ -151,6 +151,27 @@ async def seed_if_empty() -> None:
         logger.warning("instrument_master auto-seed failed: %s", exc)
 
 
+async def run_refresh_loop(interval_seconds: int) -> None:
+    """Seed on boot (if empty), then refresh the whole universe every interval.
+
+    Run as a background task from the app lifespan. ``interval_seconds <= 0``
+    seeds once and returns (no periodic refresh). Best-effort: a failed refresh
+    is logged and the loop continues; cancellation propagates cleanly.
+    """
+    await seed_if_empty()
+    if interval_seconds <= 0:
+        return
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            counts = await refresh_instrument_master()
+            logger.info("instrument_master periodic refresh: %s", counts)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("instrument_master periodic refresh failed: %s", exc)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Populate instrument_master")
     parser.add_argument("--no-us", action="store_true", help="skip US equities/ETFs")
