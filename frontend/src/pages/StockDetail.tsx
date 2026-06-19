@@ -41,7 +41,7 @@ import type { ChartKind, ChartTimeframe, IndicatorConfig } from "../shared/chart
 import { quickAddToFirstPortfolio } from "../shared/portfolioQuickAdd";
 import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
-import { isCryptoSymbol } from "../utils/ticker";
+import { isCryptoSymbol, isIndianSymbol } from "../utils/ticker";
 
 type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings";
 
@@ -110,6 +110,15 @@ export function StockDetailPage() {
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
   const chartFullscreenRef = useRef<HTMLDivElement | null>(null);
 
+  // India-only panels (shareholding, NSE corporate events/dividends, promoter
+  // holdings) don't apply to US/EU/crypto; hide their tabs/cards for non-IN.
+  const isIndian = isIndianSymbol(ticker, selectedMarket);
+  const visibleTabs = useMemo<TabId[]>(() => {
+    const all: TabId[] = ["overview", "market-depth", "financials", "analysis", "peers", "valuation", "shareholding", "events", "earnings"];
+    const indiaOnly: TabId[] = ["shareholding", "events"];
+    return isIndian ? all : all.filter((t) => !indiaOnly.includes(t));
+  }, [isIndian]);
+
   const { data: stock } = useStock(ticker);
   const { data: returnsData } = useStockReturns(ticker);
   const { data: performanceData } = useEquityPerformance(ticker);
@@ -117,6 +126,12 @@ export function StockDetailPage() {
   const { data: deliverySeriesData } = useDeliverySeries(ticker, interval, range);
   const { data: financials, isLoading: isFinancialsLoading } = useFinancials(ticker, financialPeriod);
   const { data: nextEarnings } = useNextEarnings(ticker);
+
+  // If the active tab is hidden for this symbol (e.g. switching to a US ticker
+  // while on the Shareholding tab), fall back to Overview.
+  useEffect(() => {
+    if (!visibleTabs.includes(tab)) setTab("overview");
+  }, [visibleTabs, tab]);
 
   useEffect(() => {
     setSnapshotTick(null);
@@ -551,7 +566,7 @@ export function StockDetailPage() {
 
       <div className="border-b border-terminal-border">
         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {(["overview", "market-depth", "financials", "analysis", "peers", "valuation", "shareholding", "events", "earnings"] as TabId[]).map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -578,12 +593,12 @@ export function StockDetailPage() {
               fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
             />
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <PromoterHoldingsCard ticker={ticker} />
+              {isIndian && <PromoterHoldingsCard ticker={ticker} />}
               <CapexTrackerCard ticker={ticker} />
             </div>
             <ScoreCard ticker={ticker} />
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <ShareholdingChart ticker={ticker} market={selectedMarket} />
+              {isIndian && <ShareholdingChart ticker={ticker} market={selectedMarket} />}
               <FinancialTrend ticker={ticker} />
             </div>
           </div>
@@ -629,7 +644,7 @@ export function StockDetailPage() {
             <ScoreCard ticker={ticker} />
             <div className="grid grid-cols-1 gap-6">
               <QuarterlyResults ticker={ticker} />
-              <ShareholdingChart ticker={ticker} market={selectedMarket} />
+              {isIndian && <ShareholdingChart ticker={ticker} market={selectedMarket} />}
             </div>
             <FundamentalMetricsPanel ticker={ticker} />
             <PythonLabWidget />
