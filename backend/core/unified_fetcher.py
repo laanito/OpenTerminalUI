@@ -13,7 +13,7 @@ from backend.core.fmp_client import FMPClient
 from backend.core.kite_client import KiteClient
 from backend.core.nse_client import NSEClient
 from backend.core.yahoo_client import YahooClient
-from backend.shared.market_classifier import market_classifier
+from backend.shared.market_classifier import FOREIGN_SUFFIXES, market_classifier
 from backend.services.orderbook_service import service as orderbook_service
 from backend.api.schemas.market_data import MarketDepth, DepthLevel
 
@@ -47,7 +47,15 @@ def _to_float(value: Any) -> Optional[float]:
 
 
 def _is_yahoo_native_symbol(symbol: str) -> bool:
-    return symbol.startswith("^") or symbol.endswith("=F") or symbol.endswith("=X")
+    # Indices/futures/forex and foreign-exchange suffixes (.L/.DE/.MI/...) are
+    # served by Yahoo directly — route them there instead of the India/adapter
+    # path (which otherwise defaults to NSE and fires a wasted 403 quote call).
+    return (
+        symbol.startswith("^")
+        or symbol.endswith("=F")
+        or symbol.endswith("=X")
+        or symbol.endswith(FOREIGN_SUFFIXES)
+    )
 
 
 def _range_to_dates(range_str: str) -> tuple[date, date]:

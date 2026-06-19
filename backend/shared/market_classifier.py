@@ -47,6 +47,33 @@ _US_EXCHANGES = {"NYSE", "NASDAQ", "AMEX"}
 _NSE_SYMBOLS: set[str] | None = None
 _NSE_LOCK = asyncio.Lock()
 
+# Yahoo-style foreign exchange suffixes -> exchange + country. Used to classify
+# non-US/India symbols DETERMINISTICALLY (no FMP profile lookup), so e.g. III.L
+# is GB rather than falling through to the NASDAQ/India default when FMP is
+# rate-limited — which previously triggered a spurious NSE quote call.
+_FOREIGN_SUFFIX_META = {
+    ".L": {"exchange": "LSE", "country_code": "GB", "country_name": "United Kingdom", "flag_emoji": "", "currency": "GBP"},
+    ".DE": {"exchange": "XETRA", "country_code": "DE", "country_name": "Germany", "flag_emoji": "", "currency": "EUR"},
+    ".F": {"exchange": "XETRA", "country_code": "DE", "country_name": "Germany", "flag_emoji": "", "currency": "EUR"},
+    ".SW": {"exchange": "SIX", "country_code": "CH", "country_name": "Switzerland", "flag_emoji": "", "currency": "CHF"},
+    ".PA": {"exchange": "EURONEXT", "country_code": "FR", "country_name": "France", "flag_emoji": "", "currency": "EUR"},
+    ".AS": {"exchange": "EURONEXT", "country_code": "NL", "country_name": "Netherlands", "flag_emoji": "", "currency": "EUR"},
+    ".BR": {"exchange": "EURONEXT", "country_code": "BE", "country_name": "Belgium", "flag_emoji": "", "currency": "EUR"},
+    ".LS": {"exchange": "EURONEXT", "country_code": "PT", "country_name": "Portugal", "flag_emoji": "", "currency": "EUR"},
+    ".IR": {"exchange": "EURONEXT", "country_code": "IE", "country_name": "Ireland", "flag_emoji": "", "currency": "EUR"},
+    ".MI": {"exchange": "BIT", "country_code": "IT", "country_name": "Italy", "flag_emoji": "", "currency": "EUR"},
+    ".MC": {"exchange": "BME", "country_code": "ES", "country_name": "Spain", "flag_emoji": "", "currency": "EUR"},
+    ".ST": {"exchange": "OMX", "country_code": "SE", "country_name": "Sweden", "flag_emoji": "", "currency": "SEK"},
+    ".HE": {"exchange": "OMX", "country_code": "FI", "country_name": "Finland", "flag_emoji": "", "currency": "EUR"},
+    ".CO": {"exchange": "OMX", "country_code": "DK", "country_name": "Denmark", "flag_emoji": "", "currency": "DKK"},
+    ".OL": {"exchange": "OSE", "country_code": "NO", "country_name": "Norway", "flag_emoji": "", "currency": "NOK"},
+    ".VI": {"exchange": "WBAG", "country_code": "AT", "country_name": "Austria", "flag_emoji": "", "currency": "EUR"},
+}
+
+# Foreign Yahoo suffixes (.L/.DE/.MI/...) that Yahoo serves natively — callers
+# can route these straight to Yahoo and skip the India/adapter path.
+FOREIGN_SUFFIXES = tuple(_FOREIGN_SUFFIX_META.keys())
+
 
 def _country_flag_emoji(country_code: str) -> str:
     code = (country_code or "").strip().upper()
@@ -200,6 +227,7 @@ class MarketClassifier:
 
         base_symbol = input_symbol
         exchange = ""
+        forced_meta: dict[str, Any] | None = None
         profile: dict[str, Any] = {}
 
         if input_symbol.endswith(".NS"):
@@ -208,6 +236,16 @@ class MarketClassifier:
         elif input_symbol.endswith(".BO"):
             base_symbol = input_symbol[:-3]
             exchange = "BSE"
+
+        if not exchange:
+            # Known foreign suffix (.L/.DE/.SW/...) -> classify deterministically
+            # without an FMP lookup. Keep base_symbol as the full Yahoo ticker
+            # (e.g. III.L) so yfinance_symbol() still returns it verbatim.
+            for suffix, meta in _FOREIGN_SUFFIX_META.items():
+                if input_symbol.endswith(suffix):
+                    exchange = meta["exchange"]
+                    forced_meta = meta
+                    break
 
         if not exchange:
             nse_symbols = await self._load_nse_symbols()
@@ -221,7 +259,7 @@ class MarketClassifier:
         if not exchange:
             exchange = "NSE" if input_symbol in (await self._load_nse_symbols()) else "NASDAQ"
 
-        ex_meta = EXCHANGE_COUNTRY_MAP.get(exchange)
+        ex_meta = forced_meta or EXCHANGE_COUNTRY_MAP.get(exchange)
         if ex_meta is None and profile:
             ex_meta = self._country_meta_from_profile(profile)
         if ex_meta is None:
