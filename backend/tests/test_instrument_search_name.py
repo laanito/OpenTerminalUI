@@ -113,6 +113,49 @@ def test_context_market_boosts_matching_country():
         db.close()
 
 
+def test_crypto_context_boosts_coins():
+    init_db()
+    db = SessionLocal()
+    try:
+        db.query(InstrumentMaster).delete()
+        # A US ETF literally tickered "ABC" (exact) vs a coin "ABC-USD" (prefix).
+        db.add_all([
+            _im("NASDAQ:ABC", "ABC", "Abc Corp", "equity", "NASDAQ", "USD"),
+            _im("CRYPTO:ABC-USD", "ABC-USD", "AbcCoin", "crypto", "CRYPTO", "USD"),
+        ])
+        db.commit()
+        # No context: exact ticker "ABC" (equity) wins.
+        assert search_instruments(db, "ABC")[0].display_symbol == "ABC"
+        # Crypto context: the coin is boosted above the exact equity ticker.
+        crypto_ctx = search_instruments(db, "ABC", market="CRYPTO")
+        assert crypto_ctx[0].display_symbol == "ABC-USD"
+        assert {r.display_symbol for r in crypto_ctx} == {"ABC", "ABC-USD"}  # unfiltered
+    finally:
+        db.query(InstrumentMaster).delete()
+        db.commit()
+        db.close()
+
+
+def test_eu_context_boosts_european_rows():
+    init_db()
+    db = SessionLocal()
+    try:
+        db.query(InstrumentMaster).delete()
+        db.add_all([
+            _im("NASDAQ:XYZ", "XYZ", "Xyz Inc", "equity", "NASDAQ", "USD"),
+            _im("XETRA:XYZ.DE", "XYZ.DE", "Xyz AG", "equity", "XETRA", "EUR"),
+        ])
+        db.commit()
+        # Default: US "XYZ" (shorter, exact-ish prefix) leads.
+        assert search_instruments(db, "XYZ")[0].display_symbol == "XYZ"
+        # EU context lifts the XETRA row.
+        assert search_instruments(db, "XYZ", market="EU")[0].display_symbol == "XYZ.DE"
+    finally:
+        db.query(InstrumentMaster).delete()
+        db.commit()
+        db.close()
+
+
 def test_empty_query_returns_nothing():
     init_db()
     db = SessionLocal()

@@ -1,8 +1,9 @@
-type CurrencyCode = "INR" | "USD";
+type CurrencyCode = "INR" | "USD" | "EUR";
 
 const CURRENCY_LOCALE: Record<CurrencyCode, string> = {
   INR: "en-IN",
   USD: "en-US",
+  EUR: "en-IE",
 };
 
 export function formatMoney(value: number, currency: CurrencyCode): string {

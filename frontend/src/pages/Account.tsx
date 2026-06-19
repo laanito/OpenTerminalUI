@@ -7,7 +7,7 @@ import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { TerminalButton } from "../components/terminal/TerminalButton";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { useAuth } from "../contexts/AuthContext";
-import { useSettingsStore } from "../store/settingsStore";
+import { useSettingsStore, type DisplayCurrency } from "../store/settingsStore";
 import {
   COUNTRY_MARKETS,
   type AccountAggregatorSettings,
@@ -31,11 +31,15 @@ const INPUT_CLASS_NAME =
 const COUNTRY_NAME: Record<CountryCode, string> = {
   IN: "India",
   US: "United States",
+  EU: "Europe",
+  CRYPTO: "Crypto",
 };
 
 const COUNTRY_DEFAULT_EXCHANGE: Record<CountryCode, MarketCode> = {
   IN: "NSE",
   US: "NASDAQ",
+  EU: "EU",
+  CRYPTO: "CRYPTO",
 };
 
 const SHORTCUTS: readonly AccountShortcutCard[] = [
@@ -114,7 +118,7 @@ function buildDefaultProfile(): AccountProfile {
 function buildDefaultConnected(
   selectedCountry: CountryCode,
   selectedMarket: MarketCode,
-  displayCurrency: "INR" | "USD",
+  displayCurrency: DisplayCurrency,
 ): AccountConnectionSettings {
   return {
     brokerName: "Primary Broker",

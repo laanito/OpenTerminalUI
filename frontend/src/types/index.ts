@@ -1202,7 +1202,7 @@ export type AccountConnectionSettings = {
   accountAlias: string;
   preferredCountry: CountryCode;
   preferredExchange: MarketCode;
-  defaultCurrency: "INR" | "USD";
+  defaultCurrency: "INR" | "USD" | "EUR";
 };
 
 export type AccountAggregatorSettings = {
