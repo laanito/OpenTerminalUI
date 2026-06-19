@@ -82,7 +82,11 @@ export function StockDetailPage() {
   const { formatDisplayMoney } = useDisplayCurrency();
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   const realtimeMarket = normalizeRealtimeMarketCode(selectedMarket);
-  const { subscribe, unsubscribe, isConnected, connectionState } = useQuotesStream(realtimeMarket);
+  // Crypto realtime ticks come from the Binance feed under the CRYPTO market,
+  // independent of the equity market selector. Other realtimeMarket uses
+  // (quote batch, chart hint, order book) stay on the equity code.
+  const streamMarket = isCryptoSymbol(ticker) ? "CRYPTO" : realtimeMarket;
+  const { subscribe, unsubscribe, isConnected, connectionState } = useQuotesStream(streamMarket);
   const ticksByToken = useQuotesStore((s) => s.ticksByToken);
 
   const [chartType, setChartType] = useState<ChartKind>("candle");
@@ -138,7 +142,7 @@ export function StockDetailPage() {
     if (!ticker) return;
     subscribe([ticker]);
     return () => unsubscribe([ticker]);
-  }, [realtimeMarket, subscribe, ticker, unsubscribe]);
+  }, [streamMarket, subscribe, ticker, unsubscribe]);
 
   useEffect(() => {
     let active = true;
@@ -269,7 +273,7 @@ export function StockDetailPage() {
       : null;
   const derivedChangeFromSnapshot =
     latestPrice !== null && changePct !== null && changePct > -100 ? latestPrice - latestPrice / (1 + changePct / 100) : null;
-  const liveTick = ticker ? ticksByToken[`${realtimeMarket}:${ticker.toUpperCase()}`] : undefined;
+  const liveTick = ticker ? ticksByToken[`${streamMarket}:${ticker.toUpperCase()}`] : undefined;
   const displayedLatestPrice = realtimeTick?.ltp ?? liveTick?.ltp ?? snapshotTick?.ltp ?? latestPrice;
   const displayedChange = liveTick?.change ?? snapshotTick?.change ?? derivedChangeFromSnapshot;
   const displayedChangePct = realtimeTick?.change_pct ?? liveTick?.change_pct ?? snapshotTick?.change_pct ?? changePct;

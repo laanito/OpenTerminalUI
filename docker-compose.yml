@@ -25,6 +25,8 @@ services:
       OPENTERMINALUI_INSTRUMENT_REFRESH_HOURS: "${OPENTERMINALUI_INSTRUMENT_REFRESH_HOURS:-24}"
       # Live Yahoo symbol-search fallback for the long tail (set 0 to disable).
       OPENTERMINALUI_INSTRUMENT_LIVE_SEARCH: "${OPENTERMINALUI_INSTRUMENT_LIVE_SEARCH:-1}"
+      # Live crypto spot prices via Binance public WS (set 0 to disable).
+      OPENTERMINALUI_BINANCE_WS_ENABLED: "${OPENTERMINALUI_BINANCE_WS_ENABLED:-true}"
       OPENTERMINALUI_SQLITE_URL: "${OPENTERMINALUI_SQLITE_URL:-${OPENSCREENS_SQLITE_URL:-sqlite:////data/openterminalui.db}}"
       OPENTERMINALUI_CORS_ORIGINS: "${OPENTERMINALUI_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}"
       LM_STUDIO_BASE_URL: "${LM_STUDIO_BASE_URL:-http://host.docker.internal:1234/v1}"
