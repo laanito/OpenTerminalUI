@@ -161,6 +161,47 @@ def test_persist_discovered_upserts_and_keeps_source():
         db.close()
 
 
+def test_run_refresh_loop_zero_interval_seeds_once(monkeypatch):
+    calls = {"seed": 0, "refresh": 0}
+
+    async def _seed():
+        calls["seed"] += 1
+
+    async def _refresh(**_k):
+        calls["refresh"] += 1
+        return {}
+
+    monkeypatch.setattr(populate, "seed_if_empty", _seed)
+    monkeypatch.setattr(populate, "refresh_instrument_master", _refresh)
+    asyncio.run(populate.run_refresh_loop(0))
+    assert calls == {"seed": 1, "refresh": 0}  # seeded, no periodic loop
+
+
+def test_run_refresh_loop_refreshes_on_interval(monkeypatch):
+    calls = {"seed": 0, "refresh": 0}
+
+    async def _seed():
+        calls["seed"] += 1
+
+    async def _refresh(**_k):
+        calls["refresh"] += 1
+        # Break the otherwise-infinite loop after the first refresh.
+        raise asyncio.CancelledError
+
+    async def _sleep(_s):
+        return None
+
+    monkeypatch.setattr(populate, "seed_if_empty", _seed)
+    monkeypatch.setattr(populate, "refresh_instrument_master", _refresh)
+    monkeypatch.setattr(populate.asyncio, "sleep", _sleep)
+
+    try:
+        asyncio.run(populate.run_refresh_loop(3600))
+    except asyncio.CancelledError:
+        pass
+    assert calls == {"seed": 1, "refresh": 1}
+
+
 def test_refresh_instrument_master_writes_all_sources(monkeypatch):
     init_db()
     db = SessionLocal()

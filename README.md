@@ -427,8 +427,9 @@ The instrument search universe (`instrument_master`, served by
 `GET /api/instruments/search`) is populated from free sources — US equities/ETFs
 from the Nasdaq Trader listing files, EU/UK equities from `pytickersymbols`
 (major index constituents), and crypto from CoinGecko. A freshly built container
-auto-seeds it on first boot (`OPENTERMINALUI_INSTRUMENT_AUTOSEED`, default on);
-build/refresh it manually with:
+auto-seeds it on first boot (`OPENTERMINALUI_INSTRUMENT_AUTOSEED`, default on)
+and then refreshes it periodically (`OPENTERMINALUI_INSTRUMENT_REFRESH_HOURS`,
+default 24; 0 = boot only); build/refresh it manually with:
 
 ```bash
 PYTHONPATH=. python -m backend.instruments.populate              # US + EU + crypto

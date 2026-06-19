@@ -52,6 +52,16 @@ _prefetch_enabled = (
 # freshly built container comes up in a working state. On by default; tests
 # force it off (see conftest) since some enter the app lifespan.
 _instrument_autoseed = os.getenv("OPENTERMINALUI_INSTRUMENT_AUTOSEED", "1") == "1"
+
+
+def _instrument_refresh_seconds() -> int:
+    # Hours between full universe refreshes; 0 = seed-on-boot only (no loop).
+    try:
+        return max(0, int(os.getenv("OPENTERMINALUI_INSTRUMENT_REFRESH_HOURS", "24"))) * 3600
+    except ValueError:
+        return 24 * 3600
+
+
 _instrument_seed_task = None
 
 
@@ -63,11 +73,12 @@ async def lifespan(app: FastAPI):
     init_db()
 
     if _instrument_autoseed:
-        from backend.instruments.populate import seed_if_empty
+        from backend.instruments.populate import run_refresh_loop
 
-        # Fire-and-forget so a fresh container self-populates without blocking
-        # startup or failing the boot if a source is unreachable.
-        _instrument_seed_task = asyncio.create_task(seed_if_empty())
+        # Fire-and-forget: seeds the universe on first boot, then refreshes it
+        # periodically. Non-blocking so a slow/unreachable source can't delay or
+        # fail startup.
+        _instrument_seed_task = asyncio.create_task(run_refresh_loop(_instrument_refresh_seconds()))
 
     from backend.api.deps import get_unified_fetcher
     fetcher = await get_unified_fetcher()
