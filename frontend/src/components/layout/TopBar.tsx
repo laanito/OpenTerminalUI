@@ -18,11 +18,15 @@ type DisplayCurrency = "INR" | "USD";
 const COUNTRY_FLAGS: Record<CountryCode, string> = {
   IN: "🇮🇳",
   US: "🇺🇸",
+  EU: "🇪🇺",
+  CRYPTO: "🪙",
 };
 
 const COUNTRY_DEFAULT_MARKET: Record<CountryCode, MarketCode> = {
   IN: "NSE",
   US: "NASDAQ",
+  EU: "EU",
+  CRYPTO: "CRYPTO",
 };
 
 type TopBarProps = {
@@ -360,6 +364,8 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
           >
             <option value="IN">{COUNTRY_FLAGS.IN} IN</option>
             <option value="US">{COUNTRY_FLAGS.US} US</option>
+            <option value="EU">{COUNTRY_FLAGS.EU} EU</option>
+            <option value="CRYPTO">{COUNTRY_FLAGS.CRYPTO} CRYPTO</option>
           </select>
           <select
             className="w-[86px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"

@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { CountryCode, MarketCode } from "../types/markets";
 
-export type DisplayCurrency = "INR" | "USD";
+export type DisplayCurrency = "INR" | "USD" | "EUR";
 export type RealtimeMode = "polling" | "ws";
 export type ThemeVariant = "terminal-noir" | "classic-bloomberg" | "light-desk" | "custom";
 export type RecentSecurityAssetClass = "equity" | "fno" | "crypto" | "commodity" | "forex" | "etf" | "mf";
@@ -95,6 +95,8 @@ type SettingsState = {
 const countryDefaults: Record<CountryCode, { market: MarketCode; currency: DisplayCurrency }> = {
   IN: { market: "NSE", currency: "INR" },
   US: { market: "NASDAQ", currency: "USD" },
+  EU: { market: "EU", currency: "EUR" },
+  CRYPTO: { market: "CRYPTO", currency: "USD" },
 };
 
 const defaultCountry: CountryCode = "US";
@@ -104,7 +106,7 @@ function normalizePersistedMarket(value: unknown, country: CountryCode): MarketC
   const raw = String(value ?? "").trim().toUpperCase();
   if (raw === "IN") return "NSE";
   if (raw === "US") return "NASDAQ";
-  if (raw === "NSE" || raw === "BSE" || raw === "NYSE" || raw === "NASDAQ") return raw as MarketCode;
+  if (["NSE", "BSE", "NYSE", "NASDAQ", "EU", "CRYPTO"].includes(raw)) return raw as MarketCode;
   return countryDefaults[country].market;
 }
 

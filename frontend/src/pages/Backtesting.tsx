@@ -434,7 +434,12 @@ export function BacktestingPage() {
   const proWorkspaceEnabled = import.meta.env.VITE_BACKTEST_PRO_WORKSPACE === "1";
 
   useEffect(() => { if (storeTicker) setAsset(storeTicker.toUpperCase()); }, [storeTicker]);
-  useEffect(() => { if (selectedMarket) setMarket(selectedMarket); }, [selectedMarket]);
+  useEffect(() => {
+    // EU/CRYPTO selector contexts aren't backtestable markets; ignore them here.
+    if (selectedMarket && KNOWN_MARKETS.includes(selectedMarket as BacktestMarket)) {
+      setMarket(selectedMarket as BacktestMarket);
+    }
+  }, [selectedMarket]);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const ticker = String((location.state as { ticker?: string } | null)?.ticker || params.get("symbol") || params.get("ticker") || "").toUpperCase();

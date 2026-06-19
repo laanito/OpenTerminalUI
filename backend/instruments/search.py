@@ -47,16 +47,27 @@ _MARKET_CONTEXT = {
     "BSE": ("IN", "INR"),
 }
 
+# Countries treated as "Europe" for the EU selector context.
+_EU_COUNTRIES = {"DE", "FR", "NL", "BE", "PT", "IE", "IT", "ES", "GB", "CH", "SE", "FI", "DK", "NO", "AT"}
 
-def _context_boost(exchange: str | None, currency: str | None, market: str) -> int:
-    ctx = _MARKET_CONTEXT.get((market or "").strip().upper())
+
+def _context_boost(exchange: str | None, currency: str | None, type_: str | None, market: str) -> int:
+    m = (market or "").strip().upper()
+    if not m:
+        return 0
+    # Asset/region contexts that aren't a single country/exchange.
+    if m == "CRYPTO":
+        return 400 if (type_ or "").lower() == "crypto" else 0
+    if m == "EU":
+        return 400 if country_for_exchange(exchange) in _EU_COUNTRIES else 0
+    ctx = _MARKET_CONTEXT.get(m)
     if not ctx:
         return 0
     ctx_country, ctx_currency = ctx
     boost = 0
     if country_for_exchange(exchange) == ctx_country:
         boost += 250  # same country as the selected market
-    if (exchange or "").strip().upper() == (market or "").strip().upper():
+    if (exchange or "").strip().upper() == m:
         boost += 120  # exact selected exchange (NASDAQ row under NASDAQ context)
     if (currency or "").strip().upper() == ctx_currency:
         boost += 150  # matching quote currency (also lifts USD crypto under US)
@@ -141,7 +152,7 @@ def search_instruments(
         s = _score(symbol_upper, name_folded, q_upper, q_folded)
         if s <= 0:
             continue
-        total = s + _context_boost(r.exchange, r.currency, market)
+        total = s + _context_boost(r.exchange, r.currency, r.type, market)
         scored.append((-total, len(symbol_upper), symbol_upper, r))
 
     scored.sort(key=lambda t: (t[0], t[1], t[2]))
