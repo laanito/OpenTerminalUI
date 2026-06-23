@@ -76,7 +76,7 @@ function defaultSummary(): TapeSummaryResponse {
 
 export function TimeAndSales({ ticker, limit = 500, className = "" }: TimeAndSalesProps) {
   const storeTicker = useStockStore((state) => state.ticker);
-  const activeTicker = (ticker || storeTicker || "RELIANCE").toUpperCase();
+  const activeTicker = (ticker || storeTicker || "AAPL").toUpperCase();
   const [tradeFilter, setTradeFilter] = useState<TradeFilter>("all");
   const [minSize, setMinSize] = useState("0");
   const [paused, setPaused] = useState(false);

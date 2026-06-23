@@ -2,16 +2,16 @@ export const APP_NAME = "OpenTerminalUI";
 export const APP_VERSION = "0.4.0";
 
 export const MOMENTUM_ROTATION_BASKET = [
-  "RELIANCE",
-  "TCS",
-  "INFY",
-  "HDFCBANK",
-  "ICICIBANK",
-  "ITC",
-  "HINDUNILVR",
-  "SBIN",
-  "BHARTIARTL",
-  "LT",
+  "AAPL",
+  "MSFT",
+  "GOOGL",
+  "AMZN",
+  "NVDA",
+  "META",
+  "TSLA",
+  "JPM",
+  "V",
+  "WMT",
 ];
 
 export const MOMENTUM_ROTATION_BASKET_CSV = MOMENTUM_ROTATION_BASKET.join(",");

@@ -109,7 +109,7 @@ export function SecurityHubPage() {
   const storeTicker = useStockStore((s) => s.ticker);
   const setTicker = useStockStore((s) => s.setTicker);
   const loadTicker = useStockStore((s) => s.load);
-  const activeTicker = (tickerParam || searchParams.get("ticker") || storeTicker || "RELIANCE").toUpperCase();
+  const activeTicker = (tickerParam || searchParams.get("ticker") || storeTicker || "AAPL").toUpperCase();
   const tabFromUrl = (searchParams.get("tab") || "overview").toLowerCase() as HubTab;
   const tab = HUB_TABS.some((t) => t.id === tabFromUrl) ? tabFromUrl : "overview";
   const [newsSelectedIndex, setNewsSelectedIndex] = useState(0);

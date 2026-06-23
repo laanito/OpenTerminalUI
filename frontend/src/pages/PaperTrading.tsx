@@ -16,7 +16,7 @@ export function PaperTradingPage() {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>("");
   const [name, setName] = useState("Paper Portfolio");
   const [capital, setCapital] = useState(100000);
-  const [symbol, setSymbol] = useState("NSE:RELIANCE");
+  const [symbol, setSymbol] = useState("AAPL");
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [orderType, setOrderType] = useState<"market" | "limit" | "sl">("market");
   const [quantity, setQuantity] = useState(1);

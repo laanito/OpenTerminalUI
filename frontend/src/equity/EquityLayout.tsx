@@ -55,7 +55,7 @@ function EquityRightRail() {
 
   const newsQuery = useQuery({
     queryKey: ["right-rail", "news", selectedMarket, ticker],
-    queryFn: () => getSymbolNews({ symbol: (ticker || "RELIANCE").toUpperCase(), market: selectedMarket, limit: 5 }),
+    queryFn: () => getSymbolNews({ symbol: (ticker || "AAPL").toUpperCase(), market: selectedMarket, limit: 5 }),
     enabled: Boolean(ticker),
     staleTime: 30_000,
     refetchInterval: 60_000,
@@ -194,7 +194,7 @@ function EquityRightRail() {
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
               <div className="text-terminal-muted">Ticker</div>
-              <div className="text-terminal-text">{(ticker || "RELIANCE").toUpperCase()}</div>
+              <div className="text-terminal-text">{(ticker || "AAPL").toUpperCase()}</div>
             </div>
             <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
               <div className="text-terminal-muted">Alerts</div>
@@ -266,7 +266,7 @@ function EquityRightRail() {
           )}
         </TerminalPanel>
 
-        <TerminalPanel title="News" subtitle={`Latest for ${(ticker || "RELIANCE").toUpperCase()}`} bodyClassName="space-y-1">
+        <TerminalPanel title="News" subtitle={`Latest for ${(ticker || "AAPL").toUpperCase()}`} bodyClassName="space-y-1">
           {newsQuery.isLoading ? (
             <div className="text-[11px] text-terminal-muted">Loading news...</div>
           ) : symbolNews.length === 0 ? (

@@ -16,7 +16,7 @@ const CONDITION_OPTIONS = [
 ];
 
 export function AlertCreateForm({ onCreated }: Props) {
-  const [symbol, setSymbol] = useState("NSE:RELIANCE");
+  const [symbol, setSymbol] = useState("AAPL");
   const [conditionType, setConditionType] = useState("price_above");
   const [threshold, setThreshold] = useState(3000);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
@@ -65,7 +65,7 @@ export function AlertCreateForm({ onCreated }: Props) {
           className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs uppercase"
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
-          placeholder="NSE:RELIANCE"
+          placeholder="AAPL"
         />
         <select
           className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs"

@@ -170,10 +170,10 @@ function defaultPresets(): LaunchpadLayoutPreset[] {
       id: "trading-desk",
       name: "Trading Desk",
       panels: [
-        makePanel("td-chart", "chart", "Chart", 0, 0, 7, 6, "RELIANCE"),
+        makePanel("td-chart", "chart", "Chart", 0, 0, 7, 6, "AAPL"),
         makePanel("td-watch", "watchlist", "Watchlist", 7, 0, 5, 6),
-        makePanel("td-news", "news-feed", "News", 0, 6, 7, 4, "RELIANCE"),
-        makePanel("td-book", "order-book", "Order Book", 7, 6, 5, 4, "RELIANCE"),
+        makePanel("td-news", "news-feed", "News", 0, 6, 7, 4, "AAPL"),
+        makePanel("td-book", "order-book", "Order Book", 7, 6, 5, 4, "AAPL"),
       ],
     },
     {
@@ -188,8 +188,8 @@ function defaultPresets(): LaunchpadLayoutPreset[] {
       id: "monitoring",
       name: "Monitoring",
       panels: [
-        makePanel("m-chart-1", "chart", "Chart 1", 0, 0, 3, 5, "NIFTY"),
-        makePanel("m-chart-2", "chart", "Chart 2", 3, 0, 3, 5, "BANKNIFTY"),
+        makePanel("m-chart-1", "chart", "Chart 1", 0, 0, 3, 5, "AAPL"),
+        makePanel("m-chart-2", "chart", "Chart 2", 3, 0, 3, 5, "MSFT"),
         makePanel("m-chart-3", "chart", "Chart 3", 6, 0, 3, 5, "SPY"),
         makePanel("m-chart-4", "chart", "Chart 4", 9, 0, 3, 5, "QQQ"),
         makePanel("m-pulse", "market-pulse", "Market Pulse", 0, 5, 8, 5),
@@ -344,7 +344,7 @@ export function LaunchpadProvider({ children }: { children: ReactNode }) {
         const next: LaunchpadLayoutPreset = {
           id,
           name: `Layout ${savedLayouts.length + 1}`,
-          panels: [makePanel(`${id}-panel`, "chart", "Chart", 0, 0, 6, 6, "RELIANCE")],
+          panels: [makePanel(`${id}-panel`, "chart", "Chart", 0, 0, 6, 6, "AAPL")],
         };
         setSavedLayouts((prev) => [...prev, next]);
         setActiveLayoutId(id);

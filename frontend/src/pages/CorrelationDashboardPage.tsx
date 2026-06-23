@@ -34,10 +34,10 @@ type DashboardTab = "matrix" | "rolling" | "clusters";
 type MatrixPeriod = "1M" | "3M" | "6M" | "1Y" | "3Y";
 type RollingPeriod = "1Y" | "3Y";
 
-const DEFAULT_SYMBOLS = ["RELIANCE", "TCS", "HDFCBANK", "ICICIBANK", "INFY"];
-const BANK_STOCKS = ["HDFCBANK", "ICICIBANK", "SBIN", "AXISBANK", "KOTAKBANK"];
-const IT_STOCKS = ["TCS", "INFY", "WIPRO", "HCLTECH", "TECHM"];
-const NIFTY_TOP_10 = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "ITC", "SBIN", "LT", "BHARTIARTL"];
+const DEFAULT_SYMBOLS = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"];
+const BANK_STOCKS = ["JPM", "BAC", "WFC", "C", "GS"];
+const IT_STOCKS = ["AAPL", "MSFT", "GOOGL", "NVDA", "ORCL"];
+const SP500_TOP_10 = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "BRK-B", "JPM", "V"];
 const PERIOD_OPTIONS: MatrixPeriod[] = ["1M", "3M", "6M", "1Y", "3Y"];
 const WINDOW_OPTIONS = [20, 30, 60, 90, 120];
 const CLUSTER_COLORS = ["#5B8FF9", "#26A65B", "#F39C12", "#E84142", "#00B7C3", "#8E5AFF", "#F26B8A", "#8892B0"];
@@ -300,12 +300,12 @@ export function CorrelationDashboardPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <TerminalButton size="sm" onClick={() => addSymbolGroup(NIFTY_TOP_10)}>Nifty 50 Top 10</TerminalButton>
+            <TerminalButton size="sm" onClick={() => addSymbolGroup(SP500_TOP_10)}>S&amp;P 500 Top 10</TerminalButton>
             <TerminalButton size="sm" onClick={() => addSymbolGroup(portfolioSymbols)} disabled={loadingPortfolio || portfolioSymbols.length === 0}>
               My Portfolio
             </TerminalButton>
             <TerminalButton size="sm" onClick={() => addSymbolGroup(BANK_STOCKS)}>Bank Stocks</TerminalButton>
-            <TerminalButton size="sm" onClick={() => addSymbolGroup(IT_STOCKS)}>IT Stocks</TerminalButton>
+            <TerminalButton size="sm" onClick={() => addSymbolGroup(IT_STOCKS)}>Tech Stocks</TerminalButton>
           </div>
         </div>
       </TerminalPanel>

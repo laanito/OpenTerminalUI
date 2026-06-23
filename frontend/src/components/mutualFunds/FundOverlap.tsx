@@ -1,10 +1,10 @@
 export function FundOverlap() {
   const data = [
-    { stock: "HDFC Bank", fundA: "9.5", fundB: "8.2", overlap: "8.2" },
-    { stock: "ICICI Bank", fundA: "7.2", fundB: "6.5", overlap: "6.5" },
-    { stock: "Reliance Ind", fundA: "5.4", fundB: "5.8", overlap: "5.4" },
-    { stock: "Infosys", fundA: "4.8", fundB: "4.1", overlap: "4.1" },
-    { stock: "TCS", fundA: "3.9", fundB: "3.5", overlap: "3.5" },
+    { stock: "Apple", fundA: "9.5", fundB: "8.2", overlap: "8.2" },
+    { stock: "Microsoft", fundA: "7.2", fundB: "6.5", overlap: "6.5" },
+    { stock: "Amazon", fundA: "5.4", fundB: "5.8", overlap: "5.4" },
+    { stock: "Nvidia", fundA: "4.8", fundB: "4.1", overlap: "4.1" },
+    { stock: "Alphabet", fundA: "3.9", fundB: "3.5", overlap: "3.5" },
   ];
 
   const totalOverlap = data.reduce((sum, d) => sum + parseFloat(d.overlap), 0).toFixed(1);

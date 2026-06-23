@@ -282,7 +282,7 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
     );
     void handleLoad();
   }, [addRecent, handleLoad, selectedCountry, selectedMarket, setTicker]);
-  const safeTicker = (ticker || "NIFTY").toUpperCase();
+  const safeTicker = (ticker || "AAPL").toUpperCase();
 
   return (
     <div className="relative z-20 border-b border-terminal-border bg-terminal-panel">

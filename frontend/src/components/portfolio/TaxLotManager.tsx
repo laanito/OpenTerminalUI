@@ -5,7 +5,7 @@ import type { TaxLotSummary } from "../../types";
 import { formatInr } from "../../utils/formatters";
 
 export function TaxLotManager({ data, onRefresh }: { data: TaxLotSummary | null; onRefresh: () => Promise<void> }) {
-  const [ticker, setTicker] = useState("RELIANCE");
+  const [ticker, setTicker] = useState("AAPL");
   const [qty, setQty] = useState(10);
   const [buyPrice, setBuyPrice] = useState(1000);
   const [buyDate, setBuyDate] = useState(new Date().toISOString().slice(0, 10));

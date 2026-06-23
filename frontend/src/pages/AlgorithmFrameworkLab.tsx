@@ -35,8 +35,8 @@ import {
 
 export function AlgorithmFrameworkLab() {
   // --- Form State ---
-  const [tickers, setTickers] = useState("RELIANCE,TCS,INFY,HDFCBANK,ICICIBANK");
-  const [benchmark, setBenchmark] = useState("^NSEI");
+  const [tickers, setTickers] = useState("AAPL,MSFT,GOOGL,AMZN,NVDA");
+  const [benchmark, setBenchmark] = useState("^GSPC");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [rebalanceFreq, setRebalanceFreq] = useState("ME");

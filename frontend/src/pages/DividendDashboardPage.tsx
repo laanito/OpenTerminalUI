@@ -12,7 +12,7 @@ export function DividendDashboardPage() {
   const [income, setIncome] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [aristocrats, setAristocrats] = useState<any[]>([]);
-  const [symbol, setSymbol] = useState("RELIANCE");
+  const [symbol, setSymbol] = useState("AAPL");
   const [loading, setLoading] = useState(false);
 
   const loadData = async () => {

@@ -108,7 +108,7 @@ function buildRows(snapshot: DepthSnapshotResponse, levels: number, previous: De
 }
 
 export function DOMLadder({ symbol, market, className = "", onSnapshot }: Props) {
-  const normalizedSymbol = String(symbol || "").trim().toUpperCase() || "RELIANCE";
+  const normalizedSymbol = String(symbol || "").trim().toUpperCase() || "AAPL";
   const normalizedMarket = normalizeMarket(market);
   const [autoCenter, setAutoCenter] = useState(true);
   const [showCumulative, setShowCumulative] = useState(false);

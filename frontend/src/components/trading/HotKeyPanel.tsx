@@ -94,7 +94,7 @@ export function HotKeyPanel({
   const selectedMarket = useSettingsStore((state) => state.selectedMarket);
   const ticker = useStockStore((state) => state.ticker);
   const stock = useStockStore((state) => state.stock);
-  const tick = useQuotesStore((state) => state.ticksByToken[resolveQuoteToken(selectedMarket, ticker || "RELIANCE")]);
+  const tick = useQuotesStore((state) => state.ticksByToken[resolveQuoteToken(selectedMarket, ticker || "AAPL")]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>(() => readStoredPortfolioId());
   const [focused, setFocused] = useState(autoFocus);
   const [quantity, setQuantity] = useState(1);
@@ -102,7 +102,7 @@ export function HotKeyPanel({
   const [limitPrice, setLimitPrice] = useState(0);
   const [flash, setFlash] = useState<FlashState>(null);
 
-  const activeTicker = (ticker || "RELIANCE").toUpperCase();
+  const activeTicker = (ticker || "AAPL").toUpperCase();
 
   const portfoliosQuery = useQuery({
     queryKey: ["paper", "portfolios"],

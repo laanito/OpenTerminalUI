@@ -14,7 +14,6 @@ import type { AlertRule, CountryCode, MarketCode } from "../types";
 import type { ScheduledReport } from "../types";
 
 export function SettingsPage() {
-  console.log("Rendering SettingsPage");
   const selectedCountry = useSettingsStore((s) => s.selectedCountry);
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
@@ -29,7 +28,7 @@ export function SettingsPage() {
   const setNewsRefreshSec = useSettingsStore((s) => s.setNewsRefreshSec);
 
   const [alerts, setAlerts] = useState<AlertRule[]>([]);
-  const [ticker, setTicker] = useState("RELIANCE");
+  const [ticker, setTicker] = useState("AAPL");
   const [alertType, setAlertType] = useState("price");
   const [condition, setCondition] = useState("above");
   const [threshold, setThreshold] = useState(3000);
@@ -47,7 +46,6 @@ export function SettingsPage() {
     try {
       setError(null);
       const [alertsRes, reportsRes] = await Promise.all([fetchAlerts(), fetchScheduledReports()]);
-      console.log("Settings data loaded:", { alerts: alertsRes.length, reports: reportsRes.length });
       setAlerts(alertsRes || []);
       setScheduled(reportsRes || []);
     } catch (e) {

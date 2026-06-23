@@ -377,7 +377,7 @@ export function BacktestingPage() {
   const storeTicker = useStockStore((s) => s.ticker);
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
 
-  const [asset, setAsset] = useState((storeTicker || "RELIANCE").toUpperCase());
+  const [asset, setAsset] = useState((storeTicker || "AAPL").toUpperCase());
   const [assetSuggestions, setAssetSuggestions] = useState<SearchSymbolItem[]>([]);
   const [showAssetSuggestions, setShowAssetSuggestions] = useState(false);
   const [market, setMarket] = useState<BacktestMarket>((selectedMarket as BacktestMarket) || "NSE");
