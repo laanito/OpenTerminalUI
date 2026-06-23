@@ -23,7 +23,7 @@ export function DashboardPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="rounded border border-terminal-border bg-terminal-panel p-4">
-                            <div className="text-xs uppercase text-terminal-muted">NIFTY 50</div>
+                            <div className="text-xs uppercase text-terminal-muted">S&amp;P 500</div>
                             <div className="text-xl font-bold text-terminal-text">{hasMarketData ? "LIVE" : "NA"}</div>
                             <div className="text-sm text-terminal-pos">{hasMarketData ? "Feed Connected" : "Fallback Mode"}</div>
                         </div>
@@ -33,12 +33,12 @@ export function DashboardPage() {
                                 {(marketStatus as { error?: string } | undefined)?.error ? "Unavailable" : "Available"}
                             </div>
                             <div className={`text-sm ${(marketStatus as { error?: string } | undefined)?.error ? "text-terminal-neg" : "text-terminal-pos"}`}>
-                                {(marketStatus as { error?: string } | undefined)?.error ? "NSE endpoint failed" : "Realtime endpoint active"}
+                                {(marketStatus as { error?: string } | undefined)?.error ? "Market data endpoint failed" : "Realtime endpoint active"}
                             </div>
                         </div>
                         <div className="rounded border border-terminal-border bg-terminal-panel p-4">
                             <div className="text-xs uppercase text-terminal-muted">Data Vendor</div>
-                            <div className="text-xl font-bold text-terminal-text">NSE/Yahoo</div>
+                            <div className="text-xl font-bold text-terminal-text">Yahoo</div>
                             <div className="text-sm text-terminal-muted">Auto-fallback enabled</div>
                         </div>
                     </div>

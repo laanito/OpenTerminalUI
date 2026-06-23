@@ -124,9 +124,6 @@ export function TickerTape() {
     const payload = (marketStatus ?? {}) as Record<string, unknown>;
     const mapNum = (k: string) => (Number.isFinite(Number(payload[k])) ? Number(payload[k]) : null);
     return [
-      { key: "NIFTY50", symbol: "NIFTY", label: "NIFTY 50", market: "NSE", price: mapNum("nifty50"), change: null, changePct: mapNum("nifty50Pct") },
-      { key: "SENSEX", symbol: "SENSEX", label: "SENSEX", market: "BSE", price: mapNum("sensex"), change: null, changePct: mapNum("sensexPct") },
-      { key: "USDINR", symbol: "USDINR", label: "USD/INR", market: "FX", price: mapNum("usdInr"), change: null, changePct: mapNum("usdInrPct") },
       { key: "SPX", symbol: "SPX", label: "S&P 500", market: "NASDAQ", price: mapNum("sp500"), change: null, changePct: mapNum("sp500Pct") },
       { key: "IXIC", symbol: "IXIC", label: "NASDAQ", market: "NASDAQ", price: mapNum("nasdaq"), change: null, changePct: mapNum("nasdaqPct") },
       { key: "DJI", symbol: "DJI", label: "DOW", market: "NYSE", price: mapNum("dowjones"), change: null, changePct: mapNum("dowjonesPct") },

@@ -83,20 +83,16 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
     source?: { nseIndices?: boolean };
   } | undefined;
   const marketError = statusPayload?.error;
-  const nifty50 = typeof statusPayload?.nifty50 === "number" ? statusPayload.nifty50 : null;
-  const sensex = typeof statusPayload?.sensex === "number" ? statusPayload.sensex : null;
   const inrUsd = typeof statusPayload?.inrUsd === "number" ? statusPayload.inrUsd : null;
   const usdInr = typeof statusPayload?.usdInr === "number" ? statusPayload.usdInr : null;
   const sp500 = typeof statusPayload?.sp500 === "number" ? statusPayload.sp500 : null;
   const nikkei225 = typeof statusPayload?.nikkei225 === "number" ? statusPayload.nikkei225 : null;
   const hangseng = typeof statusPayload?.hangseng === "number" ? statusPayload.hangseng : null;
-  const nifty50Pct = typeof statusPayload?.nifty50Pct === "number" ? statusPayload.nifty50Pct : null;
-  const sensexPct = typeof statusPayload?.sensexPct === "number" ? statusPayload.sensexPct : null;
   const usdInrPct = typeof statusPayload?.usdInrPct === "number" ? statusPayload.usdInrPct : null;
   const sp500Pct = typeof statusPayload?.sp500Pct === "number" ? statusPayload.sp500Pct : null;
   const nikkei225Pct = typeof statusPayload?.nikkei225Pct === "number" ? statusPayload.nikkei225Pct : null;
   const hangsengPct = typeof statusPayload?.hangsengPct === "number" ? statusPayload.hangsengPct : null;
-  const hasIndexData = nifty50 !== null || sensex !== null;
+  const hasIndexData = sp500 !== null;
   const hasGlobalData = sp500 !== null || nikkei225 !== null || hangseng !== null;
   const hasFxData = usdInr !== null || inrUsd !== null;
   const isFallback = Boolean(statusPayload?.fallbackEnabled) || !statusPayload?.source?.nseIndices;
@@ -110,10 +106,6 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
     : "LIVE";
   const backendHealthLabel = hasGlobalData && hasFxData ? "stream ok" : "partial feed";
 
-  const formatIndex = (value: number | null) => {
-    if (value === null) return "0.00"; // Should not happen with backend fallbacks
-    return value.toLocaleString("en-IN", { maximumFractionDigits: 2 });
-  };
   const formatFx = (value: number | null) => {
     if (value === null) return "83.15";
     return value.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 6 });

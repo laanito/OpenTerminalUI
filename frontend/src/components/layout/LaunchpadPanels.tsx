@@ -528,9 +528,9 @@ export function LaunchpadMarketPulsePanel(_: PanelProps) {
   const status = useQuery({ queryKey: ["launchpad", "market-status"], queryFn: fetchMarketStatus, staleTime: 10_000, refetchInterval: 15_000 });
   const payload = (status.data ?? {}) as Record<string, unknown>;
   const rows = [
-    { label: "NIFTY", value: payload.nifty50, change: payload.nifty50Pct },
-    { label: "SENSEX", value: payload.sensex, change: payload.sensexPct },
     { label: "S&P 500", value: payload.sp500, change: payload.sp500Pct },
+    { label: "NASDAQ", value: payload.nasdaq, change: payload.nasdaqPct },
+    { label: "DOW", value: payload.dowjones, change: payload.dowjonesPct },
     { label: "NIKKEI", value: payload.nikkei225, change: payload.nikkei225Pct },
   ];
   return (
