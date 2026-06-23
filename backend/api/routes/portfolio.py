@@ -236,7 +236,11 @@ def realize_tax_lot(payload: TaxLotRealizeRequest, db: Session = Depends(get_db)
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@router.get("/watchlists")
+# Enriched, flattened watchlist items (per-symbol classification: country, flags,
+# F&O availability). Served at /watchlists/items so it does NOT collide with the
+# multi-watchlist router's GET /watchlists (which returns the lists themselves and
+# was shadowing this handler, leaving the items feed unreachable).
+@router.get("/watchlists/items")
 async def get_watchlists(db: Session = Depends(get_db)) -> dict[str, list[dict[str, object]]]:
     items = db.query(WatchlistItem).all()
     sem = asyncio.Semaphore(16)

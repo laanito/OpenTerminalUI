@@ -94,6 +94,11 @@ api_router.include_router(saved_views_router, prefix="/api")
 api_router.include_router(fixed_income_router)
 api_router.include_router(bonds_router)
 
+# Economics calendar + macro indicators. Router carries its own "/api/economics"
+# prefix internally. (Previously imported but never mounted, leaving every
+# /api/economics/* endpoint a 404 — same class as the fixed-income/bonds bug above.)
+api_router.include_router(economics_router)
+
 # Lean-inspired Algorithm Framework (modular alpha/PC/risk/execution backtest pipeline).
 # Router carries its own "/api/framework" prefix internally.
 api_router.include_router(framework_router)

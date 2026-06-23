@@ -36,14 +36,14 @@ export async function removeWatchlistSymbol(id: string, symbol: string): Promise
 }
 
 export async function fetchWatchlist(): Promise<WatchlistItem[]> {
-  const { data } = await api.get<{ items: WatchlistItem[] }>("/watchlist");
+  const { data } = await api.get<{ items: WatchlistItem[] }>("/watchlists/items");
   return Array.isArray(data?.items) ? data.items : [];
 }
 
 export async function addWatchlistItem(payload: { watchlist_name: string; ticker: string }): Promise<void> {
-  await api.post("/watchlist/items", payload);
+  await api.post("/watchlists/items", payload);
 }
 
 export async function deleteWatchlistItem(itemId: number): Promise<void> {
-  await api.delete(`/watchlist/items/${itemId}`);
+  await api.delete(`/watchlists/items/${itemId}`);
 }

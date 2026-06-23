@@ -25,6 +25,15 @@
 - **News pipeline wiring fix**: corrected the frontend news/sentiment/AI API
   paths (the FE called non-existent `/v1/...` routes) and fixed a backend route
   ordering bug that shadowed `/news/sentiment/summary`
+- **Full FE↔backend API audit**: cross-checked every `frontend/src/api/*.ts`
+  call against the served route table and fixed all remaining path/shape
+  mismatches in one pass — backtest job flow (`/v1/backtest/jobs` →
+  `submit`/`status`/`result`), crypto movers path param, mutual-fund namespace,
+  watchlist items (singular→plural), plugin enable/disable, fixed-income→bonds.
+  Also fixed two backend wiring bugs the audit surfaced: the `economics` router
+  was imported but never mounted (every `/api/economics/*` was a 404, plus a
+  dead `settings.fmp_key` attribute), and the enriched watchlist-items GET was
+  shadowed by the multi-watchlist router (moved to `/watchlists/items`)
 
 ## Fork: Next
 
@@ -32,6 +41,11 @@
   (upstream defaults to LM Studio / Gemma)
 - **EUR display currency** — wire FX conversion (and retire leftover `INR`
   formatting + `NIFTY50` benchmark-preset defaults)
+- **Scheduled reports + report generation backend** — the frontend
+  (`Settings.tsx` scheduled reports, `SecurityHub.tsx` report export) calls
+  `/reports/scheduled` and `/reports/generate`, but only a `ScheduledReportService`
+  exists — no HTTP routes are wired. Build the CRUD + generate endpoints. (Lower
+  priority; surfaced by the API audit, deferred to after Ollama.)
 - **Config/key management** — cleaner provider credential handling (deferred)
 
 ## Completed

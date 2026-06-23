@@ -141,7 +141,7 @@ export async function realizeTaxLots(payload: {
 }
 
 export async function fetchPortfolioMutualFunds(): Promise<PortfolioMutualFundsResponse> {
-  const { data } = await api.get<PortfolioMutualFundsResponse>("/portfolio/mutual-funds");
+  const { data } = await api.get<PortfolioMutualFundsResponse>("/mutual-funds/portfolio");
   return data;
 }
 
@@ -155,6 +155,8 @@ export async function fetchPaperPortfolios(): Promise<PaperPortfolio[]> {
   return Array.isArray(data?.items) ? data.items : [];
 }
 
+// NOTE: unused. Backend only serves the list endpoint /paper/portfolios (see
+// fetchPaperPortfolios); there is no single-portfolio /paper/portfolio route.
 export async function fetchPaperPortfolio(): Promise<PaperPortfolio> {
   const { data } = await api.get<PaperPortfolio>("/paper/portfolio");
   return data;
@@ -191,6 +193,8 @@ export async function fetchPaperOrders(portfolioId: string): Promise<PaperOrder[
   return Array.isArray(data?.items) ? data.items : [];
 }
 
+// NOTE: unused. Backend has no DELETE /paper/orders/{id} route (only POST /paper/orders);
+// will 404 until an order-cancel endpoint is added.
 export async function cancelPaperOrder(orderId: string): Promise<void> {
   await api.delete(`/paper/orders/${encodeURIComponent(orderId)}`);
 }

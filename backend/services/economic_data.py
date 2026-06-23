@@ -49,8 +49,6 @@ class EconomicDataService:
         self.settings = get_settings()
         self.fred_key = self.settings.fred_api_key
         self.finnhub_key = self.settings.finnhub_api_key
-        self.fmp_key = self.settings.fmp_key # wait, check AppSettings name
-        # Correct name is fmp_api_key from previous step
         self.fmp_key = self.settings.fmp_api_key
         self.base_fred = "https://api.stlouisfed.org/fred"
         self.base_finnhub = "https://finnhub.io/api/v1"
