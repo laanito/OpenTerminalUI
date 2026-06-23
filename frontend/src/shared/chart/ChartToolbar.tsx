@@ -4,7 +4,6 @@ import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 import { TerminalBadge } from "../../components/terminal/TerminalBadge";
 import { TerminalButton } from "../../components/terminal/TerminalButton";
 import { TerminalInput } from "../../components/terminal/TerminalInput";
-import { TerminalTooltip } from "../../components/terminal/TerminalTooltip";
 import {
   ALT_CHART_PARAMS_EVENT,
   ALT_CHART_PARAMS_STORAGE_KEY,
@@ -269,17 +268,6 @@ export function SharedChartToolbar({
             >
               Indicators
             </button>
-
-            <TerminalTooltip content="Drawing tools (stub)">
-              <span>
-                <button
-                  type="button"
-                  className="px-3 py-0.5 rounded-sm border border-terminal-border text-[10px] font-bold text-terminal-muted uppercase hover:text-terminal-text"
-                >
-                  Draw
-                </button>
-              </span>
-            </TerminalTooltip>
           </div>
         </div>
       </div>
