@@ -1,5 +1,39 @@
 # Roadmap
 
+> **Fork direction (US / EU / crypto).** This fork re-centres the platform away
+> from the NSE/India-first upstream toward US, EU, and crypto markets, on a
+> Postgres-first stack with a local LLM. NSE/BSE **F&O** stays supported.
+
+## Fork: Completed
+
+- **Postgres-first persistence** hardening (default DB; SQLite opt-in)
+- **De-India data layer**: retired the NSE-CSV `/search`; unified
+  `instrument_master` universe seeded from free sources — US (Nasdaq Trader
+  files), EU/UK (`pytickersymbols`), crypto (CoinGecko) — with auto-seed +
+  periodic refresh
+- **Search quality**: accent-insensitive matching, relevance bands, and
+  context-weighted ranking by the active market/asset selector; Yahoo
+  long-tail fallback
+- **Crypto coverage**: CoinGecko universe/search/candles + **Binance** public
+  WebSocket for live spot ticks
+- **Foreign-symbol routing**: EU Yahoo suffixes (`.L`/`.DE`/`.PA`/…) classify
+  deterministically and bypass the NSE/Kite path
+- **Market-overview de-India**: home/dashboard/ticker-tape index widgets show
+  S&P 500 / NASDAQ / DOW from the existing status payload
+- **Frontend cleanup**: removed dead UI and swapped India-default tickers/
+  baskets for US equivalents
+- **News pipeline wiring fix**: corrected the frontend news/sentiment/AI API
+  paths (the FE called non-existent `/v1/...` routes) and fixed a backend route
+  ordering bug that shadowed `/news/sentiment/summary`
+
+## Fork: Next
+
+- **Local LLM via Ollama** — make Ollama first-class for AI sentiment/insights
+  (upstream defaults to LM Studio / Gemma)
+- **EUR display currency** — wire FX conversion (and retire leftover `INR`
+  formatting + `NIFTY50` benchmark-preset defaults)
+- **Config/key management** — cleaner provider credential handling (deferred)
+
 ## Completed
 
 - Terminal Noir base shell + semantic theme tokens

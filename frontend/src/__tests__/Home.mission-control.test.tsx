@@ -1,41 +1,31 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { MissionControlGrid } from "../components/home/MissionControlGrid";
 
-const subscribeSpy = vi.fn();
-const unsubscribeSpy = vi.fn();
-
 vi.mock("../hooks/useStocks", () => ({
-  useMarketStatus: () => ({ data: { marketState: [{ marketStatus: "OPEN" }] } }),
+  useMarketStatus: () => ({
+    data: {
+      marketState: [{ marketStatus: "OPEN" }],
+      sp500: 5762.48,
+      sp500Pct: 0.83,
+      nasdaq: 18340.1,
+      nasdaqPct: -0.24,
+      dowjones: 42120.0,
+      dowjonesPct: 0.11,
+    },
+  }),
 }));
 
 vi.mock("../store/settingsStore", () => ({
   useSettingsStore: (selector: (state: { selectedMarket: string }) => unknown) =>
-    selector({ selectedMarket: "NSE" }),
-}));
-
-vi.mock("../realtime/useQuotesStream", () => ({
-  useQuotesStream: () => ({ subscribe: subscribeSpy, unsubscribe: unsubscribeSpy }),
-  useQuotesStore: (selector: (state: { ticksByToken: Record<string, { ltp: number; change_pct: number }> }) => unknown) =>
-    selector({
-      ticksByToken: {
-        "NSE:NIFTY": { ltp: 22400.5, change_pct: 0.83 },
-        "NSE:BANKNIFTY": { ltp: 47890.25, change_pct: -0.24 },
-        "NSE:INDIAVIX": { ltp: 12.35, change_pct: 0.11 },
-      },
-    }),
+    selector({ selectedMarket: "US" }),
 }));
 
 describe("MissionControlGrid", () => {
-  afterEach(() => {
-    subscribeSpy.mockClear();
-    unsubscribeSpy.mockClear();
-  });
-
-  it("renders mission panels and binds websocket subscriptions", () => {
-    const { unmount } = render(
+  it("renders mission panels with US index values from the market-status payload", () => {
+    render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <MissionControlGrid />
       </MemoryRouter>,
@@ -44,12 +34,8 @@ describe("MissionControlGrid", () => {
     expect(screen.getByText("Market Pulse")).toBeInTheDocument();
     expect(screen.getByText("Launch Matrix")).toBeInTheDocument();
     expect(screen.getByText("System Snapshot")).toBeInTheDocument();
-    expect(screen.getByText("22,400.50")).toBeInTheDocument();
+    expect(screen.getByText("S&P 500")).toBeInTheDocument();
+    expect(screen.getByText("5,762.48")).toBeInTheDocument();
     expect(screen.getByText("+0.83%")).toBeInTheDocument();
-
-    expect(subscribeSpy).toHaveBeenCalledWith(["NIFTY", "BANKNIFTY", "INDIAVIX"]);
-
-    unmount();
-    expect(unsubscribeSpy).toHaveBeenCalledWith(["NIFTY", "BANKNIFTY", "INDIAVIX"]);
   });
 });
