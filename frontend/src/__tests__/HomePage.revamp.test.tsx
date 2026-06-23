@@ -184,7 +184,7 @@ describe("HomePage mission-control revamp", () => {
       expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledTimes(1);
       expect(fetchLatestNews).toHaveBeenCalledWith(15);
       expect(fetchQuotesBatch).toHaveBeenCalledWith(
-        ["^NSEI", "^BSESN", "^IXIC", "^GSPC", "GC=F", "SI=F", "CL=F"],
+        ["^GSPC", "^IXIC", "^DJI", "GC=F", "SI=F", "CL=F"],
         "NSE",
       );
     });
