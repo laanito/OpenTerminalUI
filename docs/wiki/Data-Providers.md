@@ -14,13 +14,32 @@ OpenTerminalUI uses a **multi-provider waterfall architecture** — each data re
 
 ---
 
-## US Providers
+## US & EU Providers
 
 | Provider | Role | Data Types | Rate Limit | SLA | Auth Required |
 |---|---|---|---|---|---|
 | **FMP (Financial Modeling Prep)** | Primary historical | OHLCV, fundamentals, earnings, news | 250 calls/day (free tier); paid plans available | Yes — REST API with documented uptime | `FMP_API_KEY` |
 | **Finnhub** | Real-time WS + REST fallback | Real-time ticks (WebSocket), OHLCV, news | 60 calls/min REST; 50 symbol WS (free tier) | Yes — commercial API | `FINNHUB_API_KEY` |
 | **yfinance** | Last resort | OHLCV historical | ~2,000 calls/day per IP | None — scraping-based | None |
+
+EU/UK equities route through **yfinance** using home-exchange Yahoo suffixes
+(`.L` LSE, `.DE` XETRA, `.PA` Euronext Paris, `.SW` SIX, `.MI` Borsa Italiana,
+etc.); these symbols are classified deterministically and bypass the India path,
+so no broker account is needed for European coverage.
+
+---
+
+## Crypto Providers
+
+| Provider | Role | Data Types | Rate Limit | SLA | Auth Required |
+|---|---|---|---|---|---|
+| **CoinGecko** | Primary | Universe + market caps, symbol search, OHLC candles | ~30 calls/min (keyless free tier); higher with a demo key | None — public REST | Optional `COINGECKO_API_KEY` (demo key) |
+| **Binance** | Real-time WS | Live spot ticks (`<pair>@ticker` — 24h price + change %) | Public WS, no key | None — public WebSocket | None |
+| **yfinance** | Candle fallback | OHLCV for majors (`BTC-USD` format) | ~2,000 calls/day per IP | None — scraping-based | None |
+
+Crypto symbols use the `BASE-USD` convention (e.g. `BTC-USD`). CoinGecko backs the
+universe, symbol search, and the long-tail candle fallback; Binance provides the
+live spot ticks (toggle with `OPENTERMINALUI_BINANCE_WS_ENABLED`, default on).
 
 ---
 
@@ -40,6 +59,8 @@ Condensed from `QC_MASTER_PLAN.md`:
 | yfinance | ~2K calls/day per IP | Medium | Only triggered on fallback; add IP rotation if needed for batch jobs |
 | NSEPython | Scraping-based, no SLA | High | Pin version ≥ 2.97; test NSE scraping in CI with mocks |
 | NSEPython | NSE website structure changes | High | Monitor NSEPython GitHub; version-lock in requirements.txt |
+| CoinGecko | Keyless free-tier rate limit (~30/min) | Medium | Cache universe + candles; add `COINGECKO_API_KEY` demo key to raise limit |
+| Binance WS | Public-endpoint schema/geo changes | Low | Polling fallback when WS down; disable via `OPENTERMINALUI_BINANCE_WS_ENABLED=false` |
 
 ---
 
@@ -70,7 +91,7 @@ class MyProvider:
         ...
 ```
 
-2. Register it in `backend/providers/chart_data.py` in the appropriate waterfall chain (India or US).
+2. Register it in `backend/providers/chart_data.py` in the appropriate waterfall chain (India, US/EU, or crypto).
 
 3. Add a mock for CI in `backend/tests/mocks/mock_<provider>.py` following the pattern in `mock_kite.py`.
 
