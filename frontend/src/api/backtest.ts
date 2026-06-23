@@ -9,18 +9,18 @@ import type {
 } from "./types";
 
 export async function explainBacktest(
-  runId: string,
-  context?: Record<string, any>,
+  strategy: string,
+  metrics?: Record<string, any>,
 ): Promise<InsightData> {
-  const { data } = await api.post<InsightData>(`/v1/ai/explain-backtest/${encodeURIComponent(runId)}`, context);
+  const { data } = await api.post<InsightData>("/ai/backtest-explain", { strategy, metrics: metrics || {} });
   return data;
 }
 
 export async function fetchRiskInsights(
-  runId: string,
-  context?: Record<string, any>,
+  scope: string,
+  metrics?: Record<string, any>,
 ): Promise<InsightData> {
-  const { data } = await api.post<InsightData>(`/v1/ai/risk-insights/${encodeURIComponent(runId)}`, context);
+  const { data } = await api.post<InsightData>("/ai/risk-insights", { scope, metrics: metrics || {} });
   return data;
 }
 
