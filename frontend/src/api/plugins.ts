@@ -9,7 +9,8 @@ export async function fetchPlugins(): Promise<PluginManifestItem[]> {
 }
 
 export async function setPluginEnabled(pluginId: string, enabled: boolean): Promise<void> {
-  await api.post(`/plugins/${encodeURIComponent(pluginId)}/toggle`, { enabled });
+  // Backend exposes separate enable/disable verbs (no /toggle).
+  await api.post(`/plugins/${encodeURIComponent(pluginId)}/${enabled ? "enable" : "disable"}`);
 }
 
 export async function reloadPlugin(pluginId: string): Promise<void> {

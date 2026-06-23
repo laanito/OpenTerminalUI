@@ -8,17 +8,17 @@ import type {
 } from "../types";
 
 export async function fetchBondScreener(rating?: string, issuerType?: string): Promise<BondScreenerItem[]> {
-  const { data } = await api.get<{ items: BondScreenerItem[] }>("/fixed-income/screener", { params: { rating, issuer_type: issuerType } });
+  const { data } = await api.get<{ items: BondScreenerItem[] }>("/bonds/screener", { params: { rating, issuer_type: issuerType } });
   return Array.isArray(data?.items) ? data.items : [];
 }
 
 export async function fetchCreditSpreads(): Promise<{ history: CreditSpreadPoint[] }> {
-  const { data } = await api.get<{ history: CreditSpreadPoint[] }>("/fixed-income/credit-spreads");
+  const { data } = await api.get<{ history: CreditSpreadPoint[] }>("/bonds/credit-spreads");
   return data;
 }
 
 export async function fetchBondRatingsMigration(): Promise<RatingsMigrationItem[]> {
-  const { data } = await api.get<{ items: RatingsMigrationItem[] }>("/fixed-income/ratings-migration");
+  const { data } = await api.get<{ items: RatingsMigrationItem[] }>("/bonds/ratings-migration");
   return Array.isArray(data?.items) ? data.items : [];
 }
 
@@ -33,10 +33,12 @@ export async function fetchHistoricalYieldCurve(date: string): Promise<YieldCurv
 }
 
 export async function fetch2s10sHistory(): Promise<SpreadHistoryResponse> {
-  const { data } = await api.get<SpreadHistoryResponse>("/fixed-income/spreads/2s10s");
+  const { data } = await api.get<SpreadHistoryResponse>("/fixed-income/2s10s-spread-history");
   return data;
 }
 
+// NOTE: no backend route exists for a generic two-asset spread history; this is
+// currently unused and will 404 until the backend grows a /fixed-income/spread-history endpoint.
 export async function fetchSpreadHistory(assetA: string, assetB: string, days = 90): Promise<SpreadHistoryResponse> {
   const { data } = await api.get<SpreadHistoryResponse>("/fixed-income/spread-history", {
     params: { asset_a: assetA, asset_b: assetB, days },

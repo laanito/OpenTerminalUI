@@ -34,7 +34,9 @@ export async function fetchCryptoMarkets(query: number | CryptoMarketsQuery = 50
 }
 
 export async function fetchCryptoMovers(metric: string, limit = 20): Promise<CryptoMoverRow[]> {
-  const { data } = await api.get<{ items: CryptoMoverRow[] }>("/v1/crypto/movers", { params: { metric, limit } });
+  // Backend expects metric as a path segment (GET /v1/crypto/movers/{metric}?limit=),
+  // not a query param — a bare /v1/crypto/movers misses the route. See fetchCryptoIndex.
+  const { data } = await api.get<{ items: CryptoMoverRow[] }>(`/v1/crypto/movers/${encodeURIComponent(metric)}`, { params: { limit } });
   return Array.isArray(data?.items) ? data.items : [];
 }
 

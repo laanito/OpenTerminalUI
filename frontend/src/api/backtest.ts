@@ -25,37 +25,37 @@ export async function fetchRiskInsights(
 }
 
 export async function runBacktest(payload: BacktestPayload): Promise<BacktestResponse> {
-  const { data } = await api.post<BacktestResponse>("/v1/backtest/run", payload);
+  const { data } = await api.post<BacktestResponse>("/backtest/run", payload);
   return data;
 }
 
 export async function submitBacktestJob(payload: BacktestJobSubmitPayload): Promise<BacktestJobStatus> {
-  const { data } = await api.post<BacktestJobStatus>("/v1/backtest/jobs", payload);
+  const { data } = await api.post<BacktestJobStatus>("/v1/backtest/submit", payload);
   return data;
 }
 
 export async function fetchBacktestJobStatus(runId: string): Promise<BacktestJobStatus> {
-  const { data } = await api.get<BacktestJobStatus>(`/v1/backtest/jobs/${encodeURIComponent(runId)}`);
+  const { data } = await api.get<BacktestJobStatus>(`/v1/backtest/status/${encodeURIComponent(runId)}`);
   return data;
 }
 
 export async function fetchBacktestJobResult(runId: string): Promise<BacktestJobResult> {
-  const { data } = await api.get<BacktestJobResult>(`/v1/backtest/jobs/${encodeURIComponent(runId)}/result`);
+  const { data } = await api.get<BacktestJobResult>(`/v1/backtest/result/${encodeURIComponent(runId)}`);
   return data;
 }
 
 export async function submitBacktestV1(payload: BacktestJobSubmitPayload): Promise<BacktestJobStatus> {
-  const { data } = await api.post<BacktestJobStatus>("/v1/backtest/v1/jobs", payload);
+  const { data } = await api.post<BacktestJobStatus>("/v1/backtest/submit", payload);
   return data;
 }
 
 export async function fetchBacktestV1Status(runId: string): Promise<BacktestJobStatus> {
-  const { data } = await api.get<BacktestJobStatus>(`/v1/backtest/v1/jobs/${encodeURIComponent(runId)}`);
+  const { data } = await api.get<BacktestJobStatus>(`/v1/backtest/status/${encodeURIComponent(runId)}`);
   return data;
 }
 
 export async function fetchBacktestV1Result(runId: string): Promise<BacktestJobResult> {
-  const { data } = await api.get<BacktestJobResult>(`/v1/backtest/v1/jobs/${encodeURIComponent(runId)}/result`);
+  const { data } = await api.get<BacktestJobResult>(`/v1/backtest/result/${encodeURIComponent(runId)}`);
   return data;
 }
 
