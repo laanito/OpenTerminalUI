@@ -19,10 +19,12 @@
 ┌────────▼────────┐    ┌────────▼──────────────────────┐
 │  Data Providers │    │  Database / Cache              │
 │  ─────────────  │    │  ────────────────────────────  │
-│  Kite (NSE/BSE) │    │  SQLite  — OHLCV cache, app DB │
-│  Finnhub WS/REST│    │  PostgreSQL — optional prod DB  │
-│  FMP (US hist.) │    │  Redis   — optional L2 cache    │
-│  yfinance       │    └────────────────────────────────┘
+│  Finnhub WS/REST│    │  SQLite  — OHLCV cache, app DB │
+│  FMP (US/EU)    │    │  PostgreSQL — optional prod DB  │
+│  yfinance       │    │  Redis   — optional L2 cache    │
+│  CoinGecko      │    └────────────────────────────────┘
+│  Binance WS     │
+│  Kite (NSE/BSE) │
 │  NSEPython      │
 └─────────────────┘
 ```
@@ -42,6 +44,7 @@ Business logic and orchestration. Key services:
 | `marketdata_hub.py` | WebSocket tick/candle aggregation, quote stream fan-out |
 | `kite_stream.py` | NSE/BSE real-time ticks via Zerodha Kite WebSocket |
 | `finnhub_ws.py` | US real-time ticks via Finnhub WebSocket |
+| `binance_ws.py` | Crypto spot ticks via Binance public WebSocket |
 | `candle_aggregator.py` | Tick stream → interval OHLCV candle aggregation |
 | `extended_hours_service.py` | Pre/post-market hour candle handling for US symbols |
 | `instrument_map.py` | Symbol resolution: `RELIANCE` → `RELIANCE.NS`, etc. |
@@ -112,11 +115,18 @@ When a chart request arrives, `backend/providers/chart_data.py` follows this fal
 3. NSEPython     →  NSE website scraping (tertiary, last resort)
 ```
 
-**US:**
+**US & EU:**
 ```
 1. FMP           →  Financial Modeling Prep REST API (primary)
 2. Finnhub       →  Finnhub REST (fallback)
-3. yfinance      →  Yahoo Finance scraping (last resort)
+3. yfinance      →  Yahoo Finance (last resort; EU/UK via home-exchange suffixes)
+```
+
+**Crypto:**
+```
+1. yfinance      →  Yahoo Finance OHLCV for majors (primary, includes volume)
+2. CoinGecko     →  /coins/{id}/ohlc for the long tail (fallback)
+   (live spot ticks stream separately via the Binance WebSocket)
 ```
 
 All providers output a normalised `OHLCVBar` model before the response is cached and returned.

@@ -33,7 +33,7 @@
 
 OpenTerminalUI is a self-hosted, full-stack financial terminal that combines real-time market data, institutional-grade charting, derivatives analytics, portfolio management, and quant research into a single platform. Built with a terminal-style shell interface inspired by Bloomberg and Refinitiv, it delivers professional-grade workflows to anyone with a browser.
 
-**Multi-market coverage** across NSE, BSE, NYSE, NASDAQ, crypto, commodities, forex, bonds, ETFs, and mutual funds. **70+ technical indicators**, **multi-panel chart workstations**, **F&O option chains with live Greeks**, **backtesting with Model Lab**, **statistical arbitrage with Pair Trading Lab**, **portfolio analytics with risk engine**, and an **extensible plugin system** &mdash; all running on your own hardware.
+**Multi-market coverage** across NYSE, NASDAQ, major EU exchanges (LSE, XETRA, Euronext, SIX, Borsa Italiana), NSE/BSE, crypto, commodities, forex, bonds, ETFs, and mutual funds. **70+ technical indicators**, **multi-panel chart workstations**, **F&O option chains with live Greeks**, **backtesting with Model Lab**, **statistical arbitrage with Pair Trading Lab**, **portfolio analytics with risk engine**, and an **extensible plugin system** &mdash; all running on your own hardware.
 
 ## Screenshots
 
@@ -251,7 +251,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 
 - **Commodities** &mdash; energy, metals, agriculture with futures term structure and seasonal analysis
 - **Forex** &mdash; major pairs, cross rates matrix, central bank monitor (Fed, ECB, BoE, BoJ, RBI, and more)
-- **Cryptocurrency** &mdash; full workspace with markets, movers, sectors, DeFi, derivatives, heatmaps, and correlation
+- **Cryptocurrency** &mdash; full workspace with markets, movers, sectors, DeFi, derivatives, heatmaps, and correlation, powered by CoinGecko (universe/search/candles) with live spot ticks via Binance
 - **ETF Analytics** &mdash; holdings viewer, flow tracker, multi-ETF overlap analysis
 - **Mutual Funds** &mdash; search, comparison, rolling returns, SIP calculator, category rankings, fund overlap
 - **Bonds** &mdash; fixed income yields, spreads, and duration analytics
@@ -292,7 +292,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 
 ### Real-Time Data
 
-- **Multi-Provider WebSocket** &mdash; Zerodha Kite (India) and Finnhub (US) real-time ticks
+- **Multi-Provider WebSocket** &mdash; Finnhub (US), Binance (crypto), and Zerodha Kite (India F&O) real-time ticks
 - **Provider Waterfall** &mdash; automatic failover chain: primary → fallback → error
 - **Multi-Level Caching** &mdash; L1 SQLite + L2 Redis with TTL-based invalidation
 - **Candle Aggregation** &mdash; tick-by-tick to any interval with distributed bar construction
@@ -323,8 +323,9 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
                            |
 +--------------------------+------------------------+
 |                 DATA PROVIDERS                    |
-|   Zerodha Kite | Finnhub | FMP | Yahoo Finance  |
-|   CoinGecko (crypto) | NSEPython (F&O, Corp Actions) |
+|   Finnhub | FMP | Yahoo Finance (US/EU)         |
+|   CoinGecko + Binance (crypto)                   |
+|   Zerodha Kite | NSEPython (NSE/BSE F&O)         |
 +--------------------------+------------------------+
                            |
 +--------------------------+------------------------+
@@ -338,7 +339,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 
 Market data flows through a unified pipeline:
 
-1. **Exchange ticks** arrive via WebSocket adapters (Kite, Finnhub)
+1. **Exchange ticks** arrive via WebSocket adapters (Finnhub, Binance, Kite)
 2. **Quote Hub** fans out ticks to connected clients via `/api/ws/quotes`
 3. **Bar Aggregator** constructs OHLCV candles at all supported intervals
 4. **OHLCV Cache** persists bars in SQLite (L1) and Redis (L2)
@@ -454,7 +455,9 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 |----------|---------|
 | `FMP_API_KEY` | Financial Modeling Prep &mdash; US equities, fundamentals, earnings |
 | `FINNHUB_API_KEY` | Finnhub &mdash; US real-time WebSocket ticks |
-| `KITE_API_KEY` | Zerodha Kite &mdash; India NSE/BSE real-time + historical |
+| `COINGECKO_API_KEY` | CoinGecko demo key &mdash; raises the keyless crypto rate limit (optional) |
+| `OPENTERMINALUI_BINANCE_WS_ENABLED` | Toggle live crypto spot ticks via Binance WebSocket (default `true`) |
+| `KITE_API_KEY` | Zerodha Kite &mdash; India NSE/BSE F&O real-time + historical |
 | `KITE_API_SECRET` | Zerodha Kite secret |
 | `KITE_ACCESS_TOKEN` | Zerodha Kite session token |
 | `JWT_SECRET_KEY` | JWT signing key for authentication |

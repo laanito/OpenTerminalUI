@@ -150,10 +150,9 @@ const NAV_CARD_SECTIONS: Array<{ title: string; cards: NavCard[] }> = [
 ];
 
 const INITIAL_MARKET_ROWS: MarketRow[] = [
-  { symbol: "^NSEI", label: "NIFTY 50", ltp: 0, chg: 0, chgPct: 0, flash: null },
-  { symbol: "^BSESN", label: "SENSEX", ltp: 0, chg: 0, chgPct: 0, flash: null },
-  { symbol: "^IXIC", label: "NASDAQ", ltp: 0, chg: 0, chgPct: 0, flash: null },
   { symbol: "^GSPC", label: "S&P 500", ltp: 0, chg: 0, chgPct: 0, flash: null },
+  { symbol: "^IXIC", label: "NASDAQ", ltp: 0, chg: 0, chgPct: 0, flash: null },
+  { symbol: "^DJI", label: "DOW", ltp: 0, chg: 0, chgPct: 0, flash: null },
   { symbol: "GC=F", label: "GOLD", ltp: 0, chg: 0, chgPct: 0, flash: null },
   { symbol: "SI=F", label: "SILVER", ltp: 0, chg: 0, chgPct: 0, flash: null },
   { symbol: "CL=F", label: "CRUDE OIL", ltp: 0, chg: 0, chgPct: 0, flash: null },

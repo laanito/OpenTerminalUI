@@ -1,26 +1,26 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useMarketStatus } from "../../hooks/useStocks";
-import { useQuotesStore, useQuotesStream } from "../../realtime/useQuotesStream";
 import { useSettingsStore } from "../../store/settingsStore";
 import { MissionControlPanel } from "./MissionControlPanel";
 
 type MarketCell = {
   key: string;
   label: string;
-  token: string;
+  valueKey: string;
+  pctKey: string;
 };
 
 const MARKET_CELLS: MarketCell[] = [
-  { key: "nifty", label: "NIFTY 50", token: "NIFTY" },
-  { key: "banknifty", label: "BANK NIFTY", token: "BANKNIFTY" },
-  { key: "vix", label: "INDIA VIX", token: "INDIAVIX" },
+  { key: "sp500", label: "S&P 500", valueKey: "sp500", pctKey: "sp500Pct" },
+  { key: "nasdaq", label: "NASDAQ", valueKey: "nasdaq", pctKey: "nasdaqPct" },
+  { key: "dow", label: "DOW JONES", valueKey: "dowjones", pctKey: "dowjonesPct" },
 ];
 
 function formatNum(value: number | null | undefined, digits = 2): string {
   if (value == null || !Number.isFinite(value)) return "--";
-  return value.toLocaleString("en-IN", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return value.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
 function pctClass(value: number | null | undefined): string {
@@ -32,26 +32,15 @@ export function MissionControlGrid() {
   const navigate = useNavigate();
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   const { data: marketStatus } = useMarketStatus();
-  const { subscribe, unsubscribe } = useQuotesStream(selectedMarket);
-  const ticksByToken = useQuotesStore((s) => s.ticksByToken);
 
-  useEffect(() => {
-    const tokens = MARKET_CELLS.map((cell) => cell.token);
-    subscribe(tokens);
-    return () => unsubscribe(tokens);
-  }, [subscribe, unsubscribe]);
-
-  const marketRows = useMemo(
-    () =>
-      MARKET_CELLS.map((cell) => {
-        const streamKey = `${selectedMarket.toUpperCase()}:${cell.token}`;
-        const tick = ticksByToken[streamKey];
-        const ltp = Number.isFinite(Number(tick?.ltp)) ? Number(tick?.ltp) : null;
-        const changePct = Number.isFinite(Number(tick?.change_pct)) ? Number(tick?.change_pct) : null;
-        return { ...cell, ltp, changePct };
-      }),
-    [selectedMarket, ticksByToken],
-  );
+  const marketRows = useMemo(() => {
+    const payload = (marketStatus ?? {}) as Record<string, unknown>;
+    return MARKET_CELLS.map((cell) => {
+      const ltp = Number.isFinite(Number(payload[cell.valueKey])) ? Number(payload[cell.valueKey]) : null;
+      const changePct = Number.isFinite(Number(payload[cell.pctKey])) ? Number(payload[cell.pctKey]) : null;
+      return { ...cell, ltp, changePct };
+    });
+  }, [marketStatus]);
 
   const marketState = String(
     (marketStatus as { marketState?: Array<{ marketStatus?: string }> } | undefined)?.marketState?.[0]?.marketStatus ??

@@ -1,6 +1,6 @@
 # OpenTerminalUI Wiki
 
-OpenTerminalUI is a terminal-first market analysis platform for India and US markets.
+OpenTerminalUI is a terminal-first market analysis platform for US, EU, and crypto markets, with NSE/BSE F&O support.
 
 ## Current Product Focus
 
