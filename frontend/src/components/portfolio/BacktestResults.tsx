@@ -113,7 +113,7 @@ export function BacktestResults({ initialTickers }: Props) {
               void (async () => {
                 try {
                   const tickersList = tickers.split(",").map((t) => t.trim()).filter(Boolean);
-                  const first = tickersList[0] || "RELIANCE";
+                  const first = tickersList[0] || "AAPL";
                   const deployed = await deployBacktestToPaper({
                     name: `Backtest ${new Date().toLocaleDateString()}`,
                     initial_capital: 100000,

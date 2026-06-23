@@ -144,7 +144,7 @@ export function JournalEntryForm({
               required
               value={state.symbol}
               onChange={(event) => setState((current) => ({ ...current, symbol: event.target.value.toUpperCase() }))}
-              placeholder="RELIANCE"
+              placeholder="AAPL"
             />
           </label>
           <div className="space-y-1">

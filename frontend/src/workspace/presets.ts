@@ -40,10 +40,10 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
     ],
     launchpadLayoutId: "preset-trader",
     launchpadPanels: [
-      { type: "chart", title: "Active Chart", x: 0, y: 0, w: 7, h: 6, symbol: "RELIANCE" },
+      { type: "chart", title: "Active Chart", x: 0, y: 0, w: 7, h: 6, symbol: "AAPL" },
       { type: "watchlist", title: "Watchlist", x: 7, y: 0, w: 5, h: 4 },
-      { type: "order-book", title: "Order Book", x: 7, y: 4, w: 5, h: 3, symbol: "RELIANCE" },
-      { type: "news-feed", title: "News", x: 0, y: 6, w: 7, h: 4, symbol: "RELIANCE" },
+      { type: "order-book", title: "Order Book", x: 7, y: 4, w: 5, h: 3, symbol: "AAPL" },
+      { type: "news-feed", title: "News", x: 0, y: 6, w: 7, h: 4, symbol: "AAPL" },
       { type: "alerts", title: "Alerts", x: 7, y: 7, w: 5, h: 3 },
     ],
   },

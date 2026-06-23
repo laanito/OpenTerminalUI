@@ -23,7 +23,7 @@ type StockState = {
 export const useStockStore = create<StockState>()(
   persist(
     (set, get) => ({
-      ticker: "RELIANCE",
+      ticker: "AAPL",
       interval: "1d",
       range: "1y",
       stock: null,

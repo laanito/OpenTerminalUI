@@ -56,7 +56,7 @@ function normalizeAlert(alert?: AlertRule | null, defaults?: Record<string, stri
         ? [{ field: "price", operator: alert.condition || "above", value: alert.threshold, params: {} }]
         : [DEFAULT_CONDITION];
   return {
-    symbol: alert?.symbol || alert?.ticker || "NSE:RELIANCE",
+    symbol: alert?.symbol || alert?.ticker || "AAPL",
     conditions,
     logic: alert?.logic || "AND",
     delivery_channels: alert?.delivery_channels || alert?.channels || ["in_app"],
@@ -81,7 +81,7 @@ export function AlertBuilder({
   onSave,
   onTestChannel,
 }: Props) {
-  const [symbol, setSymbol] = useState("NSE:RELIANCE");
+  const [symbol, setSymbol] = useState("AAPL");
   const [conditions, setConditions] = useState<AlertCondition[]>([DEFAULT_CONDITION]);
   const [logic, setLogic] = useState("AND");
   const [deliveryChannels, setDeliveryChannels] = useState<string[]>(["in_app"]);
@@ -168,7 +168,7 @@ export function AlertBuilder({
             className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-2 uppercase"
             value={symbol}
             onChange={(event) => setSymbol(event.target.value)}
-            placeholder="NSE:RELIANCE"
+            placeholder="AAPL"
           />
         </section>
 

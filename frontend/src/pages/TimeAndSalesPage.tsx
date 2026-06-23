@@ -17,7 +17,7 @@ export function TimeAndSalesPage() {
   const stock = useStockStore((state) => state.stock);
   const setTicker = useStockStore((state) => state.setTicker);
   const loadTicker = useStockStore((state) => state.load);
-  const activeTicker = (ticker || "RELIANCE").toUpperCase();
+  const activeTicker = (ticker || "AAPL").toUpperCase();
 
   useEffect(() => {
     setTicker(activeTicker);

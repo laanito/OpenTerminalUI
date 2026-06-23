@@ -538,7 +538,7 @@ export function MultiTimeframePage() {
   const selectedMarket = useSettingsStore((state) => state.selectedMarket);
   const persistedTicker = useStockStore((state) => state.ticker);
   const setPersistedTicker = useStockStore((state) => state.setTicker);
-  const [symbol, setSymbol] = useState(() => normalizeTicker(persistedTicker || "RELIANCE"));
+  const [symbol, setSymbol] = useState(() => normalizeTicker(persistedTicker || "AAPL"));
   const [presetKey, setPresetKey] = useState<PresetKey>("swing");
   const [syncEnabled, setSyncEnabled] = useState(true);
   const [sharedCrosshairTime, setSharedCrosshairTime] = useState<number | null>(null);

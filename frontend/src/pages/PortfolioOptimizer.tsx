@@ -30,7 +30,7 @@ import {
 
 export function PortfolioOptimizer() {
   // --- Form State ---
-  const [tickers, setTickers] = useState("RELIANCE,TCS,INFY,HDFCBANK,ICICIBANK,SBIN");
+  const [tickers, setTickers] = useState("AAPL,MSFT,GOOGL,AMZN,NVDA,META");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [model, setModel] = useState("");

@@ -4,7 +4,7 @@ import { createOmsOrder, fetchAuditEvents, fetchOmsOrders, setRestrictedSymbol }
 import type { AuditEvent, OmsOrder } from "../types";
 
 export function OmsCompliancePage() {
-  const [symbol, setSymbol] = useState("RELIANCE");
+  const [symbol, setSymbol] = useState("AAPL");
   const [side, setSide] = useState<"buy" | "sell" | "long" | "short">("buy");
   const [quantity, setQuantity] = useState(10);
   const [orders, setOrders] = useState<OmsOrder[]>([]);

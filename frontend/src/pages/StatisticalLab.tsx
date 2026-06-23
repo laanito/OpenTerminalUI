@@ -60,38 +60,38 @@ export function StatisticalLab() {
   const [activeTab, setActiveTab] = useState<TabType>("forecast");
 
   // --- Forecast State ---
-  const [forecastTicker, setForecastTicker] = useState("RELIANCE");
+  const [forecastTicker, setForecastTicker] = useState("AAPL");
   const [forecastMethod, setForecastMethod] = useState("");
   const [forecastHorizon, setForecastHorizon] = useState(30);
 
   // --- Coint State ---
-  const [cointTickerA, setCointTickerA] = useState("RELIANCE");
-  const [cointTickerB, setCointTickerB] = useState("HDFCBANK");
+  const [cointTickerA, setCointTickerA] = useState("AAPL");
+  const [cointTickerB, setCointTickerB] = useState("MSFT");
 
   // --- Stationarity State ---
-  const [statTicker, setStatTicker] = useState("RELIANCE");
+  const [statTicker, setStatTicker] = useState("AAPL");
 
   // --- Decomposition State ---
-  const [decompTicker, setDecompTicker] = useState("RELIANCE");
+  const [decompTicker, setDecompTicker] = useState("AAPL");
   const [decompPeriod, setDecompPeriod] = useState(21);
 
   // --- Regression State ---
-  const [regTicker, setRegTicker] = useState("RELIANCE");
-  const [regBenchmark, setRegBenchmark] = useState("^NSEI");
+  const [regTicker, setRegTicker] = useState("AAPL");
+  const [regBenchmark, setRegBenchmark] = useState("^GSPC");
   const [regWindow, setRegWindow] = useState(63);
 
   // --- Autocorr State ---
-  const [autoTicker, setAutoTicker] = useState("RELIANCE");
+  const [autoTicker, setAutoTicker] = useState("AAPL");
   const [autoLags, setAutoLags] = useState(30);
   const [autoUseReturns, setAutoUseReturns] = useState(true);
 
   // --- Causality State ---
-  const [causTickerA, setCausTickerA] = useState("RELIANCE");
-  const [causTickerB, setCausTickerB] = useState("HDFCBANK");
+  const [causTickerA, setCausTickerA] = useState("AAPL");
+  const [causTickerB, setCausTickerB] = useState("MSFT");
   const [causMaxLag, setCausMaxLag] = useState(5);
 
   // --- Regimes State ---
-  const [regimesTicker, setRegimesTicker] = useState("RELIANCE");
+  const [regimesTicker, setRegimesTicker] = useState("AAPL");
 
   // --- Data Fetching ---
   const { data: methods, isPending: isPendingMethods } = useQuery({

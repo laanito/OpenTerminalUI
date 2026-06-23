@@ -6,13 +6,13 @@ type TickerEntry = {
 };
 
 const TICKER_DATA: TickerEntry[] = [
-  { symbol: "NIFTY", value: "24,856.50", delta: "124.30", up: true },
-  { symbol: "SENSEX", value: "81,234.10", delta: "89.40", up: false },
-  { symbol: "BANKNIFTY", value: "52,120.00", delta: "310.55", up: true },
-  { symbol: "RELIANCE", value: "2,891.50", delta: "12.30", up: true },
-  { symbol: "TCS", value: "4,120.80", delta: "18.90", up: false },
-  { symbol: "INFY", value: "1,890.20", delta: "8.45", up: true },
-  { symbol: "USDINR", value: "83.42", delta: "0.08", up: false },
+  { symbol: "S&P 500", value: "5,762.48", delta: "24.30", up: true },
+  { symbol: "NASDAQ", value: "18,340.10", delta: "89.40", up: false },
+  { symbol: "DOW", value: "42,120.00", delta: "310.55", up: true },
+  { symbol: "AAPL", value: "227.50", delta: "1.30", up: true },
+  { symbol: "MSFT", value: "415.80", delta: "2.90", up: false },
+  { symbol: "NVDA", value: "120.20", delta: "1.45", up: true },
+  { symbol: "EURUSD", value: "1.0842", delta: "0.0008", up: false },
 ];
 
 function TickerRow() {

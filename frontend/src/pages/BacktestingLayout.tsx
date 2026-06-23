@@ -37,7 +37,7 @@ function BacktestingRightRail() {
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
               <div className="text-terminal-muted">Symbol</div>
-              <div>{(ticker || "RELIANCE").toUpperCase()}</div>
+              <div>{(ticker || "AAPL").toUpperCase()}</div>
             </div>
             <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
               <div className="text-terminal-muted">Mode</div>

@@ -25,18 +25,18 @@ export function DOMPage() {
   const stock = useStockStore((state) => state.stock);
   const setTicker = useStockStore((state) => state.setTicker);
   const loadTicker = useStockStore((state) => state.load);
-  const [inputValue, setInputValue] = useState((ticker || "RELIANCE").toUpperCase());
+  const [inputValue, setInputValue] = useState((ticker || "AAPL").toUpperCase());
   const [depthSnapshot, setDepthSnapshot] = useState<DepthSnapshotResponse | null>(null);
 
   useEffect(() => {
-    setInputValue((ticker || "RELIANCE").toUpperCase());
+    setInputValue((ticker || "AAPL").toUpperCase());
   }, [ticker]);
 
   useEffect(() => {
     void loadTicker();
   }, [loadTicker, selectedMarket, ticker]);
 
-  const activeTicker = (ticker || "RELIANCE").toUpperCase();
+  const activeTicker = (ticker || "AAPL").toUpperCase();
   const lastPrice = Number(stock?.current_price ?? depthSnapshot?.last_price ?? 0);
   const changePct = Number(stock?.change_pct ?? 0);
   const previousClose = changePct !== -100 && lastPrice > 0 ? lastPrice / (1 + changePct / 100) : 0;

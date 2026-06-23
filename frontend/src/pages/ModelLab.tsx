@@ -7,7 +7,7 @@ import { createModelExperiment, listModelExperiments } from "../api/client";
 import { api } from "../api/base";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 
-const DEFAULT_JSON = '{"tickers":["RELIANCE"]}';
+const DEFAULT_JSON = '{"tickers":["AAPL"]}';
 const DEFAULT_PARAMS = '{"short_window":20,"long_window":50}';
 type LeaderboardSortKey = "sharpe" | "cagr" | "max_drawdown" | "turnover" | "stability" | "recency" | "governance";
 type LeaderboardRow = {

@@ -12,7 +12,7 @@ export function RelativeStrengthPage() {
   const [sectorRS, setSectorRS] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [highs, setHighs] = useState<any[]>([]);
-  const [symbol, setSymbol] = useState("RELIANCE");
+  const [symbol, setSymbol] = useState("AAPL");
   const [universe, setUniverse] = useState("Nifty 50");
   const [loading, setLoading] = useState(false);
 
