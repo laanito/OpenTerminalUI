@@ -51,6 +51,13 @@
   `/reports/scheduled` and `/reports/generate`, but only a `ScheduledReportService`
   exists — no HTTP routes are wired. Build the CRUD + generate endpoints. (Lower
   priority; surfaced by the API audit, deferred to after Ollama.)
+- **LLM-based per-article sentiment** (nice-to-have) — the News feed's per-article
+  bullish/bearish/neutral classification currently uses the local non-LLM engine
+  (FinBERT → TextBlob → lexicon, `backend/services/sentiment_engine.py`). Optionally
+  route it through the local LLM by reusing the Emotion Indicator pipeline
+  (`stock_emotion.py` already returns a per-article breakdown). Because sentiment is
+  persisted per article, the inference cost is paid once and shouldn't be prohibitive.
+  Keep the classical engine as the offline/disabled fallback.
 - **Config/key management** — cleaner provider credential handling (deferred)
 
 ## Completed

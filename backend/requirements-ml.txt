@@ -1,0 +1,16 @@
+# Optional ML extras — the high-accuracy FinBERT tier of the news sentiment
+# engine (backend/services/sentiment_engine.py).
+#
+# These are intentionally kept OUT of the core requirements.txt because `torch`
+# pulls a multi-GB download (and platform-specific wheels). The sentiment engine
+# lazily imports `transformers` and degrades gracefully to the TextBlob tier
+# (then the lexical tier) when these are absent, so installing them is purely an
+# accuracy upgrade.
+#
+# Install on top of the core deps:
+#   pip install -r backend/requirements.txt -r backend/requirements-ml.txt
+#
+# First use downloads the `ProsusAI/finbert` weights from Hugging Face (~440 MB),
+# cached under ~/.cache/huggingface afterwards.
+transformers
+torch

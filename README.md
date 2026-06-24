@@ -278,7 +278,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 ### News & Sentiment
 
 - **Ticker-Specific News** &mdash; per-symbol news feed with multi-period filtering, scoped strictly to the selected ticker
-- **Sentiment Analysis** &mdash; bullish/bearish/neutral classification with confidence scores
+- **Sentiment Analysis** &mdash; per-article bullish/bearish/neutral classification with confidence scores, from a local engine that prefers FinBERT, falls back to TextBlob, then a finance lexicon &mdash; no LLM or network call required (FinBERT is an optional extra, see [Sentiment engine](#sentiment-engine))
 - **Market-Wide Feed** &mdash; latest headlines with source attribution and sentiment trends
 - **AI Emotion Indicator** &mdash; per-stock fear/greed gauge powered by a local **LLM** (Ollama by default), surfacing a 0&ndash;100 emotion index, dominant emotion (panic &rarr; euphoria), emotion mix, and per-article bullish/bearish breakdown
 - **Local & Private** &mdash; LLM sentiment runs entirely on your own machine; gracefully falls back to the lexical/FinBERT engine when the LLM is offline
@@ -564,6 +564,36 @@ These can also be set under `app:` in `config/settings.yaml`. The legacy
 > **Performance:** large models are slow on consumer hardware &mdash; the first
 > analysis for a ticker can take a minute or more (results are then cached). For a
 > snappier experience, use a smaller instruct model and point `LLM_MODEL` at it.
+
+## Sentiment engine
+
+The **per-article** sentiment shown on the News feed (the bullish/bearish/neutral
+badge and confidence score) is computed by a small **local** engine
+(`backend/services/sentiment_engine.py`) &mdash; **not** the LLM. It is a graceful
+three-tier ladder, picking the best tier whose dependency is available:
+
+1. **FinBERT** (`ProsusAI/finbert`) &mdash; a finance-tuned transformer classifier.
+   Highest accuracy. Requires the optional ML extras (`transformers` + `torch`).
+2. **TextBlob** &mdash; lightweight polarity analysis, nudged by a finance lexicon.
+   Installed by default; this is the realistic default tier.
+3. **Lexicon fallback** &mdash; pure keyword counting over a small finance term set.
+   Always available, no dependencies; used only if the tiers above are absent.
+
+Scores are **persisted** with the ingested article, so analysis runs once per
+article rather than on every request.
+
+To enable the top FinBERT tier, install the optional extras on top of the core
+requirements:
+
+```bash
+pip install -r backend/requirements.txt -r backend/requirements-ml.txt
+```
+
+First use downloads the FinBERT weights (~440 MB) from Hugging Face and caches
+them locally. Without these extras the engine simply uses TextBlob.
+
+> Routing per-article sentiment through the local LLM (reusing the Emotion
+> Indicator pipeline) is on the [roadmap](docs/wiki/Roadmap.md) as a nice-to-have.
 
 ## Testing
 
