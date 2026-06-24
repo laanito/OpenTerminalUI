@@ -46,3 +46,10 @@ websockets>=12.0
 python-multipart
 scipy
 scikit-learn
+# textblob: lightweight polarity analyzer for the news per-article sentiment
+# engine (backend/services/sentiment_engine.py). It's the realistic default tier
+# of the FinBERT -> TextBlob -> lexical ladder; without it the engine silently
+# degrades to the ~20-word keyword fallback. Polarity uses the bundled pattern
+# analyzer, so no extra corpora download is required. The heavier FinBERT tier is
+# optional (see requirements-ml.txt).
+textblob
