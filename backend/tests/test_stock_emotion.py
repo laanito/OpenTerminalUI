@@ -8,11 +8,11 @@ from types import SimpleNamespace
 import pytest
 
 from backend.services import stock_emotion
-from backend.services.lm_studio_client import LMStudioError, parse_json_response
+from backend.services.llm_client import LLMError, parse_json_response
 
 
 def _fake_settings(enabled: bool = False) -> SimpleNamespace:
-    return SimpleNamespace(lm_studio_enabled=enabled, lm_studio_model="google/gemma-4-26b-a4b")
+    return SimpleNamespace(llm_enabled=enabled, llm_model="google/gemma-4-26b-a4b")
 
 
 def _stub_sentiment(text: str) -> dict:
@@ -54,7 +54,7 @@ def test_parse_json_response_handles_code_fences() -> None:
 
 
 def test_parse_json_response_raises_on_garbage() -> None:
-    with pytest.raises(LMStudioError):
+    with pytest.raises(LLMError):
         parse_json_response("there is no json here")
 
 
@@ -86,14 +86,14 @@ def test_analyze_stock_emotion_empty(monkeypatch) -> None:
 
 def test_analyze_stock_emotion_lmstudio(monkeypatch) -> None:
     monkeypatch.setattr(stock_emotion, "get_settings", lambda: _fake_settings(enabled=True))
-    monkeypatch.setattr(stock_emotion, "get_lm_studio_client", _FakeClient)
+    monkeypatch.setattr(stock_emotion, "get_llm_client", _FakeClient)
     monkeypatch.setattr(stock_emotion, "score_article_sentiment", _stub_sentiment)
     articles = [
         {"title": "Upbeat outlook lifts shares", "summary": "", "source": "Wire",
          "url": "u1", "published_at": "2026-05-12"},
     ]
     result = asyncio.run(stock_emotion.analyze_stock_emotion("TEST", articles, period_days=7))
-    assert result["engine"] == "lmstudio"
+    assert result["engine"] == "llm"
     assert result["dominant_emotion"] == "optimism"
     assert result["sentiment_label"] == "Bullish"
     assert result["narrative"].startswith("TEST")

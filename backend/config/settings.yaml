@@ -2,11 +2,14 @@ app:
   name: "OpenTerminalUI API"
   environment: "local"
   default_exchange_suffix: ".NS"
-  # LM Studio hosted Gemma model used for news sentiment & emotion analysis.
-  lm_studio_base_url: "http://localhost:1234/v1"
-  lm_studio_model: "google/gemma-4-26b-a4b"
-  lm_studio_enabled: true
-  lm_studio_timeout_seconds: 240.0
+  # OpenAI-compatible LLM endpoint for news sentiment, emotion & insights.
+  # Defaults to a local Ollama server; works with LM Studio, OpenAI, OpenRouter,
+  # etc. by overriding llm_base_url / llm_model / llm_api_key (env or here).
+  llm_base_url: "http://localhost:11434/v1"
+  llm_model: "llama3.1"
+  llm_enabled: true
+  llm_timeout_seconds: 240.0
+  llm_structured_output: "auto"  # auto | json_schema | json | none
 
 data_sources:
   market_data:

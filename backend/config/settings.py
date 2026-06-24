@@ -32,15 +32,37 @@ class AppSettings(BaseModel):
     fmp_api_key: str | None = None
     finnhub_api_key: str | None = None
     coingecko_api_key: str | None = None
-    ai_provider: str = "openai"  # openai or ollama
+    ai_provider: str = "openai"  # legacy hint; the LLM client is provider-agnostic
     openai_api_key: str | None = None
     ollama_base_url: str = "http://localhost:11434"
-    lm_studio_base_url: str = "http://localhost:1234/v1"
-    lm_studio_model: str = "google/gemma-4-26b-a4b"
-    lm_studio_enabled: bool = True
-    lm_studio_timeout_seconds: float = 240.0
+    # OpenAI-compatible LLM endpoint. Defaults to a local Ollama server, but works
+    # with LM Studio, OpenAI, OpenRouter, Groq, vLLM, … by overriding base_url /
+    # model / api_key. Local servers ignore api_key; hosted providers require it.
+    llm_base_url: str = "http://localhost:11434/v1"
+    llm_model: str = "llama3.1"
+    llm_enabled: bool = True
+    llm_timeout_seconds: float = 240.0
+    llm_api_key: str | None = None
+    llm_structured_output: str = "auto"  # auto | json_schema | json | none
     price_cache_ttl_seconds: int = 60
     fundamentals_cache_ttl_seconds: int = 1800
+
+    # Back-compat aliases for the former lm_studio_* settings.
+    @property
+    def lm_studio_base_url(self) -> str:
+        return self.llm_base_url
+
+    @property
+    def lm_studio_model(self) -> str:
+        return self.llm_model
+
+    @property
+    def lm_studio_enabled(self) -> bool:
+        return self.llm_enabled
+
+    @property
+    def lm_studio_timeout_seconds(self) -> float:
+        return self.llm_timeout_seconds
 
 
 def _workspace_root() -> Path:
@@ -207,25 +229,50 @@ def get_settings() -> AppSettings:
             or _env("OLLAMA_BASE_URL")
             or app_cfg.get("ollama_base_url", "http://localhost:11434")
         ),
-        lm_studio_base_url=(
-            _env("OPENTERMINALUI_LM_STUDIO_BASE_URL")
+        llm_base_url=(
+            _env("OPENTERMINALUI_LLM_BASE_URL")
+            or _env("LLM_BASE_URL")
+            # Legacy LM Studio config still honored.
+            or _env("OPENTERMINALUI_LM_STUDIO_BASE_URL")
             or _env("LM_STUDIO_BASE_URL")
-            or app_cfg.get("lm_studio_base_url", "http://localhost:1234/v1")
+            or app_cfg.get("llm_base_url")
+            or app_cfg.get("lm_studio_base_url")
+            or "http://localhost:11434/v1"
         ),
-        lm_studio_model=(
-            _env("OPENTERMINALUI_LM_STUDIO_MODEL")
+        llm_model=(
+            _env("OPENTERMINALUI_LLM_MODEL")
+            or _env("LLM_MODEL")
+            or _env("OPENTERMINALUI_LM_STUDIO_MODEL")
             or _env("LM_STUDIO_MODEL")
-            or app_cfg.get("lm_studio_model", "google/gemma-4-26b-a4b")
+            or app_cfg.get("llm_model")
+            or app_cfg.get("lm_studio_model")
+            or "llama3.1"
         ),
-        lm_studio_enabled=_as_bool(
-            _env("OPENTERMINALUI_LM_STUDIO_ENABLED")
+        llm_enabled=_as_bool(
+            _env("OPENTERMINALUI_LLM_ENABLED")
+            or _env("LLM_ENABLED")
+            or _env("OPENTERMINALUI_LM_STUDIO_ENABLED")
             or _env("LM_STUDIO_ENABLED")
-            or app_cfg.get("lm_studio_enabled", True),
+            or app_cfg.get("llm_enabled", app_cfg.get("lm_studio_enabled", True)),
             default=True,
         ),
-        lm_studio_timeout_seconds=float(
-            _env("OPENTERMINALUI_LM_STUDIO_TIMEOUT_SECONDS")
-            or app_cfg.get("lm_studio_timeout_seconds", 30.0)
+        llm_timeout_seconds=float(
+            _env("OPENTERMINALUI_LLM_TIMEOUT_SECONDS")
+            or _env("OPENTERMINALUI_LM_STUDIO_TIMEOUT_SECONDS")
+            or app_cfg.get("llm_timeout_seconds", app_cfg.get("lm_studio_timeout_seconds", 240.0))
+        ),
+        llm_api_key=(
+            _env("OPENTERMINALUI_LLM_API_KEY")
+            or _env("LLM_API_KEY")
+            # Fall back to the OpenAI key so OpenAI works out of the box.
+            or _env("OPENTERMINALUI_OPENAI_API_KEY")
+            or _env("OPENAI_API_KEY")
+            or app_cfg.get("llm_api_key")
+        ),
+        llm_structured_output=(
+            _env("OPENTERMINALUI_LLM_STRUCTURED_OUTPUT")
+            or _env("LLM_STRUCTURED_OUTPUT")
+            or app_cfg.get("llm_structured_output", "auto")
         ),
         price_cache_ttl_seconds=int(
             _env("OPENTERMINALUI_PRICE_CACHE_TTL_SECONDS")

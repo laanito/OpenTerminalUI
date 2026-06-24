@@ -1,11 +1,11 @@
-"""Per-stock news emotion analysis backed by a locally hosted Gemma model.
+"""Per-stock news emotion analysis backed by a local LLM.
 
-Each recent news item for a ticker is scored by the LM Studio model for both
+Each recent news item for a ticker is scored by the LLM model for both
 financial sentiment and the market *emotion* it conveys. The per-article
 results are aggregated into an emotion index (a 0-100 fear<->greed scale), a
 dominant emotion, an emotion distribution and a short narrative.
 
-When LM Studio is disabled or unreachable the module degrades gracefully to the
+When LLM is disabled or unreachable the module degrades gracefully to the
 existing lexical sentiment engine so the endpoint always returns a usable
 payload.
 """
@@ -19,10 +19,10 @@ from datetime import datetime, timezone
 from typing import Any
 
 from backend.config.settings import get_settings
-from backend.services.lm_studio_client import (
-    LMStudioClient,
-    LMStudioError,
-    get_lm_studio_client,
+from backend.services.llm_client import (
+    LLMClient,
+    LLMError,
+    get_llm_client,
     parse_json_response,
 )
 from backend.services.sentiment_engine import score_article_sentiment
@@ -50,7 +50,7 @@ _SYSTEM_PROMPT = (
     "Respond ONLY with a compact JSON object, no prose, no code fences."
 )
 
-# LM Studio structured-output schema for a single article analysis.
+# LLM structured-output schema for a single article analysis.
 _ANALYSIS_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -211,12 +211,12 @@ def _fallback_analysis(title: str, summary: str) -> dict[str, Any]:
         "confidence": round(confidence, 4),
         "emotion": _emotion_from_score(score),
         "emotion_intensity": round(abs(score), 4),
-        "rationale": "Lexical fallback (LM Studio unavailable).",
+        "rationale": "Lexical fallback (LLM unavailable).",
     }
 
 
 async def _analyze_batch(
-    client: LMStudioClient, ticker: str, articles: list[dict[str, Any]]
+    client: LLMClient, ticker: str, articles: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     """Analyze every article in a single model call; returns the raw analyses."""
     numbered: list[str] = []
@@ -241,7 +241,7 @@ async def _analyze_batch(
     parsed = parse_json_response(content)
     analyses = parsed.get("analyses")
     if not isinstance(analyses, list):
-        raise LMStudioError("LM Studio batch response missing 'analyses' array")
+        raise LLMError("LLM batch response missing 'analyses' array")
     return analyses
 
 
@@ -348,7 +348,7 @@ async def analyze_stock_emotion(
     """Analyze recent news for a ticker and return an aggregated emotion profile."""
     symbol = ticker.strip().upper()
     settings = get_settings()
-    model = settings.lm_studio_model
+    model = settings.llm_model
 
     selected = [a for a in (articles or []) if str(a.get("title") or "").strip()][:limit]
     if not selected:
@@ -356,15 +356,15 @@ async def analyze_stock_emotion(
 
     engine = "fallback"
     analyzed: list[dict[str, Any]] = []
-    client = get_lm_studio_client()
+    client = get_llm_client()
 
     raw_analyses: list[Any] = []
-    use_llm = settings.lm_studio_enabled and await client.health()
+    use_llm = settings.llm_enabled and await client.health()
     if use_llm:
         try:
             raw_analyses = await _analyze_batch(client, symbol, selected)
-            engine = "lmstudio"
-        except (LMStudioError, asyncio.TimeoutError):
+            engine = "llm"
+        except (LLMError, asyncio.TimeoutError):
             raw_analyses = []
             engine = "fallback"
 
@@ -372,7 +372,7 @@ async def analyze_stock_emotion(
         title = str(article.get("title") or "")
         summary = str(article.get("summary") or "")
         raw = raw_analyses[idx] if idx < len(raw_analyses) else None
-        if engine == "lmstudio" and isinstance(raw, dict):
+        if engine == "llm" and isinstance(raw, dict):
             fallback_score = _coerce_float(
                 (score_article_sentiment(_compose_text(title, summary)) or {}).get("score"), 0.0
             )
@@ -381,7 +381,7 @@ async def analyze_stock_emotion(
             analyzed.append(_fallback_analysis(title, summary))
 
     # If the model returned too few usable entries, mark the run as fallback.
-    if engine == "lmstudio":
+    if engine == "llm":
         llm_hits = sum(1 for r in analyzed if "Lexical fallback" not in r["rationale"])
         if llm_hits < max(1, len(analyzed) // 2):
             engine = "fallback"

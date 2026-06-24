@@ -10,7 +10,7 @@ import httpx
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from backend.services.lm_studio_client import LMStudioError, get_lm_studio_client, parse_json_response
+from backend.services.llm_client import LLMError, get_llm_client, parse_json_response
 from backend.shared.sql_compat import autoincrement_pk
 
 _CATALYST_WORDS = {
@@ -170,7 +170,7 @@ def _lexical_extract(symbol: str, documents: list[dict[str, Any]]) -> dict[str, 
 
 
 async def _llm_extract(symbol: str, documents: list[dict[str, Any]]) -> dict[str, Any]:
-    client = get_lm_studio_client()
+    client = get_llm_client()
     content = "\n\n".join(
         f"TITLE: {doc.get('title') or ''}\nDATE: {doc.get('published_at') or doc.get('date') or ''}\nTEXT: {str(doc.get('text') or doc.get('summary') or '')[:4000]}"
         for doc in documents[:8]
@@ -284,7 +284,7 @@ async def parse_filing_documents(symbol: str, documents: list[dict[str, Any]], *
     if use_llm:
         try:
             return await asyncio.wait_for(_llm_extract(symbol, documents), timeout=20.0)
-        except (LMStudioError, asyncio.TimeoutError, ValueError, TypeError, KeyError):
+        except (LLMError, asyncio.TimeoutError, ValueError, TypeError, KeyError):
             pass
     return _lexical_extract(symbol, documents)
 

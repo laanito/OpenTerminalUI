@@ -14,9 +14,10 @@ ships assuming SQLite + Zerodha Kite + Indian data providers. This fork diverges
    is to swap NSE-centric data sources for providers that work outside India and
    add EUR-denominated / European instruments. Many upstream API calls 404/403
    from outside India. **Not yet implemented** — see `TODO.md`.
-3. **Local LLM provider** — upstream uses LM Studio + Gemma; we run Ollama locally.
-   This is a config-only choice (`LM_STUDIO_BASE_URL` / `LM_STUDIO_MODEL`) and is
-   left at upstream defaults in committed files. Override in your local `.env`.
+3. **Local LLM provider** — the LLM client is OpenAI-compatible and provider-agnostic.
+   Committed defaults point at a local **Ollama** (`LLM_BASE_URL` / `LLM_MODEL`);
+   it also works with LM Studio, OpenAI, OpenRouter, etc. (set `LLM_API_KEY` for
+   hosted providers). Override in your local `.env`.
 
 ## Branches
 

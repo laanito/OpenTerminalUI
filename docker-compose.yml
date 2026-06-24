@@ -29,9 +29,13 @@ services:
       OPENTERMINALUI_BINANCE_WS_ENABLED: "${OPENTERMINALUI_BINANCE_WS_ENABLED:-true}"
       OPENTERMINALUI_SQLITE_URL: "${OPENTERMINALUI_SQLITE_URL:-${OPENSCREENS_SQLITE_URL:-sqlite:////data/openterminalui.db}}"
       OPENTERMINALUI_CORS_ORIGINS: "${OPENTERMINALUI_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}"
-      LM_STUDIO_BASE_URL: "${LM_STUDIO_BASE_URL:-http://host.docker.internal:1234/v1}"
-      LM_STUDIO_MODEL: "${LM_STUDIO_MODEL:-google/gemma-4-26b-a4b}"
-      LM_STUDIO_ENABLED: "${LM_STUDIO_ENABLED:-true}"
+      # OpenAI-compatible LLM endpoint. Defaults to a local Ollama on the host;
+      # override to use LM Studio, OpenAI, OpenRouter, etc. (LLM_API_KEY only for
+      # hosted providers). Legacy LM_STUDIO_* vars are still honored by the backend.
+      LLM_BASE_URL: "${LLM_BASE_URL:-http://host.docker.internal:11434/v1}"
+      LLM_MODEL: "${LLM_MODEL:-llama3.1}"
+      LLM_API_KEY: "${LLM_API_KEY:-}"
+      LLM_ENABLED: "${LLM_ENABLED:-true}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
