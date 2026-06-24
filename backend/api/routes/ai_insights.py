@@ -1,14 +1,14 @@
-"""Gemma-powered AI insight endpoints.
+"""LLM-powered AI insight endpoints.
 
 Three read-only analytical endpoints that turn structured terminal data into a
-concise, sectioned narrative via the locally hosted Gemma model:
+concise, sectioned narrative via a local LLM:
 
 * ``GET  /api/ai/briefing/{ticker}`` - investment briefing for a stock
 * ``POST /api/ai/backtest-explain``  - plain-English assessment of a backtest
 * ``POST /api/ai/risk-insights``     - narrative interpretation of portfolio risk
 
 All three share one structured-output schema (``llm_insights.INSIGHT_SCHEMA``)
-and degrade gracefully when LM Studio is unavailable.
+and degrade gracefully when LLM is unavailable.
 """
 
 from __future__ import annotations
@@ -85,7 +85,7 @@ async def stock_briefing(
         user_content,
         max_tokens=900,
         unavailable_summary=(
-            f"AI briefing for {symbol} is unavailable - start LM Studio with a Gemma "
+            f"AI briefing for {symbol} is unavailable - start your local LLM (Ollama) "
             "model to enable it."
         ),
     )
@@ -117,7 +117,7 @@ async def backtest_explain(payload: dict[str, Any]) -> dict[str, Any]:
         system_prompt,
         user_content,
         max_tokens=900,
-        unavailable_summary="AI backtest analysis is unavailable - start LM Studio with a Gemma model.",
+        unavailable_summary="AI backtest analysis is unavailable - start your local LLM (e.g. Ollama).",
     )
 
 
@@ -149,7 +149,7 @@ async def collection_briefing(payload: dict[str, Any]) -> dict[str, Any]:
         system_prompt,
         user_content,
         max_tokens=900,
-        unavailable_summary=f"AI {scope} analysis is unavailable - start LM Studio with a Gemma model.",
+        unavailable_summary=f"AI {scope} analysis is unavailable - start your local LLM (e.g. Ollama).",
     )
 
 
@@ -175,5 +175,5 @@ async def risk_insights(payload: dict[str, Any]) -> dict[str, Any]:
         system_prompt,
         user_content,
         max_tokens=900,
-        unavailable_summary="AI risk analysis is unavailable - start LM Studio with a Gemma model.",
+        unavailable_summary="AI risk analysis is unavailable - start your local LLM (e.g. Ollama).",
     )

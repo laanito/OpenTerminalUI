@@ -34,11 +34,16 @@
   was imported but never mounted (every `/api/economics/*` was a 404, plus a
   dead `settings.fmp_key` attribute), and the enriched watchlist-items GET was
   shadowed by the multi-watchlist router (moved to `/watchlists/items`)
+- **Provider-agnostic LLM layer**: replaced the LM Studio-specific client with a
+  generic OpenAI-compatible `LLMClient` (default **Ollama** at
+  `localhost:11434/v1`, also works with LM Studio, OpenAI, OpenRouter, Groq,
+  vLLM, …). Added optional Bearer `api_key`, a structured-output fallback ladder
+  (`json_schema` → `json_object` → text), and collapsed the old
+  LM Studio/OpenAI/Ollama-native fork in `ai_service` into one path. Config via
+  `LLM_BASE_URL`/`LLM_MODEL`/`LLM_API_KEY` (legacy `LM_STUDIO_*` still honored).
 
 ## Fork: Next
 
-- **Local LLM via Ollama** — make Ollama first-class for AI sentiment/insights
-  (upstream defaults to LM Studio / Gemma)
 - **EUR display currency** — wire FX conversion (and retire leftover `INR`
   formatting + `NIFTY50` benchmark-preset defaults)
 - **Scheduled reports + report generation backend** — the frontend

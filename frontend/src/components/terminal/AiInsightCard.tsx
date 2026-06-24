@@ -30,7 +30,7 @@ function toneColor(tone: InsightSection["tone"]): string {
 }
 
 /**
- * On-demand AI analysis card backed by the local Gemma model. Kept lazy because
+ * On-demand AI analysis card backed by the local LLM. Kept lazy because
  * local LLM inference is slow — nothing runs until the user asks for it.
  */
 export function AiInsightCard({ title, description, fetcher }: Props) {
@@ -49,8 +49,8 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
     }
   }, [fetcher]);
 
-  const engineLive = data?.engine === "lmstudio";
-  const engineLabel = engineLive ? `Gemma · ${data?.model}` : "Gemma offline — lexical fallback";
+  const engineLive = data?.engine === "llm";
+  const engineLabel = engineLive ? data?.model ?? "LLM" : "LLM offline — lexical fallback";
 
   return (
     <section className="rounded border border-terminal-border bg-terminal-panel p-3">
@@ -83,14 +83,14 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
 
       {status === "idle" && (
         <div className="mt-2 text-[11px] text-terminal-muted">
-          Runs locally on the Gemma model via LM Studio — analysis can take a minute.
+          Runs locally via your LLM endpoint (Ollama by default) — analysis can take a minute.
         </div>
       )}
 
       {status === "loading" && (
         <div className="mt-3 space-y-2">
           <div className="text-[11px] text-terminal-muted">
-            Generating analysis with the local Gemma model…
+            Generating analysis with the local LLM…
           </div>
           <div className="h-24 animate-pulse rounded bg-terminal-bg" />
         </div>
@@ -98,7 +98,7 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
 
       {status === "error" && (
         <div className="mt-3 rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">
-          Could not generate AI analysis. Check that LM Studio is running, then retry.
+          Could not generate AI analysis. Check that your LLM endpoint is running, then retry.
         </div>
       )}
 
@@ -127,9 +127,9 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
               </ul>
             </div>
           ))}
-          {data.engine !== "lmstudio" && !data.sections.length && (
+          {data.engine !== "llm" && !data.sections.length && (
             <div className="text-[11px] text-terminal-muted">
-              Start LM Studio with a Gemma model loaded, then click Regenerate.
+              Start your LLM endpoint (e.g. Ollama), then click Regenerate.
             </div>
           )}
         </div>

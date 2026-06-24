@@ -1,7 +1,7 @@
 """Per-stock news emotion endpoint.
 
 Surfaces a fear<->greed style emotion indicator for a specific ticker, derived
-from recent news analyzed by a locally hosted Gemma model (via LM Studio).
+from recent news analyzed by a local LLM (Ollama by default).
 """
 
 from __future__ import annotations

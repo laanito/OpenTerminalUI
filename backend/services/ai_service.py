@@ -5,12 +5,11 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-import httpx
 from backend.config.settings import get_settings
 from backend.api.deps import get_unified_fetcher
-from backend.services.lm_studio_client import (
-    LMStudioError,
-    get_lm_studio_client,
+from backend.services.llm_client import (
+    LLMError,
+    get_llm_client,
     parse_json_response,
 )
 
@@ -115,20 +114,13 @@ class AIQueryService:
         }
 
     async def _call_llm(self, query: str) -> str:
-        # Prefer the locally hosted Gemma model via LM Studio; no API key needed.
-        if self.settings.lm_studio_enabled:
-            try:
-                return await self._call_lmstudio(query)
-            except Exception as exc:  # noqa: BLE001 - fall through to other providers
-                logger.warning(f"LM Studio call failed, falling back: {exc}")
-        if self.settings.ai_provider == "openai" and self.settings.openai_api_key:
-            return await self._call_openai(query)
-        return await self._call_ollama(query)
-
-    async def _call_lmstudio(self, query: str) -> str:
-        client = get_lm_studio_client()
+        # Single OpenAI-compatible path — works with Ollama (default), LM Studio,
+        # OpenAI, OpenRouter, etc. depending on the configured llm_base_url/api_key.
+        if not self.settings.llm_enabled:
+            raise LLMError("LLM is disabled (set llm_enabled / LLM_ENABLED)")
+        client = get_llm_client()
         if not await client.health():
-            raise LMStudioError("LM Studio is not reachable")
+            raise LLMError(f"LLM endpoint not reachable at {client.base_url}")
         return await client.chat(
             [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -179,43 +171,6 @@ class AIQueryService:
         except Exception as exc:  # noqa: BLE001 - screener failures degrade to empty
             logger.error(f"AI screener execution failed: {exc}")
             return []
-
-    async def _call_openai(self, query: str) -> str:
-        if not self.settings.openai_api_key:
-            raise ValueError("OpenAI API Key not set")
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.settings.openai_api_key}"},
-                json={
-                    "model": "gpt-4-turbo-preview",
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": query}
-                    ],
-                    "response_format": {"type": "json_object"}
-                }
-            )
-            resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
-
-    async def _call_ollama(self, query: str) -> str:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                f"{self.settings.ollama_base_url}/api/chat",
-                json={
-                    "model": "llama3", # or configurable
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": query}
-                    ],
-                    "stream": False,
-                    "format": "json"
-                }
-            )
-            resp.raise_for_status()
-            return resp.json()["message"]["content"]
 
     def _check_rate_limit(self, user_id: str) -> bool:
         now = time.time()

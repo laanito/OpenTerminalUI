@@ -101,7 +101,7 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
       <section className="rounded border border-terminal-border bg-terminal-panel p-3">
         <div className="text-sm font-semibold">Emotion Indicator</div>
         <div className="mt-1 text-[11px] text-terminal-muted">
-          Analyzing {ticker} news with the local Gemma model — this can take a minute…
+          Analyzing {ticker} news with the local LLM — this can take a minute…
         </div>
         <div className="mt-2 h-28 animate-pulse rounded bg-terminal-bg" />
       </section>
@@ -116,7 +116,7 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
   }
 
   const dominant = emotionMeta(data.dominant_emotion);
-  const engineLabel = data.engine === "lmstudio" ? `Gemma · ${data.model}` : "Lexical fallback";
+  const engineLabel = data.engine === "llm" ? data.model : "Lexical fallback";
   const articles = data.articles ?? [];
 
   return (
@@ -131,8 +131,8 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
         <span
           className="rounded border px-1.5 py-0.5 text-[10px] font-semibold"
           style={{
-            borderColor: data.engine === "lmstudio" ? terminalColors.accent : terminalColors.border,
-            color: data.engine === "lmstudio" ? terminalColors.accent : terminalColors.muted,
+            borderColor: data.engine === "llm" ? terminalColors.accent : terminalColors.border,
+            color: data.engine === "llm" ? terminalColors.accent : terminalColors.muted,
           }}
           title={engineLabel}
         >

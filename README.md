@@ -89,7 +89,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 <p align="center">
   <img src="assets/screenshots/news-sentiment.png" alt="News & Sentiment" width="900" />
 </p>
-<p align="center"><em>News &amp; Sentiment with the AI Emotion Indicator powered by a local Gemma model via LM Studio.</em></p>
+<p align="center"><em>News &amp; Sentiment with the AI Emotion Indicator powered by a local LLM (Ollama by default).</em></p>
 
 <p align="center">
   <img src="assets/screenshots/intelligence-timeline.png" alt="Intelligence Timeline" width="900" />
@@ -111,7 +111,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 <p align="center">
   <img src="assets/screenshots/risk-dashboard.png" alt="Risk Dashboard" width="900" />
 </p>
-<p align="center"><em>Risk dashboard with statistical risk metrics, factor/exposure heatmaps, and AI Risk Insights powered by Gemma.</em></p>
+<p align="center"><em>Risk dashboard with statistical risk metrics, factor/exposure heatmaps, and AI Risk Insights powered by a local LLM.</em></p>
 
 <p align="center">
   <img src="assets/screenshots/backtesting.png" alt="Backtesting Lab" width="900" />
@@ -245,7 +245,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 - **Exposure Heatmaps** &mdash; sector, factor, currency, and correlation exposure maps across Home, Cockpit, and Risk
 - **Workspace Presets** &mdash; Trader / Quant / PM / Risk / Ops presets that reconfigure dashboards, panels, and quick links
 - **Saved Views** &mdash; capture and restore page, filters, ticker, tabs, columns, and chart layout across major workflows
-- **AI Insight Cards** &mdash; Gemma-powered insights embedded consistently across Home, Cockpit, Screener, Portfolio, and Security Hub, with graceful offline fallback
+- **AI Insight Cards** &mdash; LLM-powered insights embedded consistently across Home, Cockpit, Screener, Portfolio, and Security Hub, with graceful offline fallback
 
 ### Cross-Asset & Macro
 
@@ -280,8 +280,8 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 - **Ticker-Specific News** &mdash; per-symbol news feed with multi-period filtering, scoped strictly to the selected ticker
 - **Sentiment Analysis** &mdash; bullish/bearish/neutral classification with confidence scores
 - **Market-Wide Feed** &mdash; latest headlines with source attribution and sentiment trends
-- **AI Emotion Indicator** &mdash; per-stock fear/greed gauge powered by a locally hosted **Gemma** model via **LM Studio**, surfacing a 0&ndash;100 emotion index, dominant emotion (panic &rarr; euphoria), emotion mix, and per-article bullish/bearish breakdown
-- **Local & Private** &mdash; LLM sentiment runs entirely on your own machine; gracefully falls back to the lexical/FinBERT engine when LM Studio is offline
+- **AI Emotion Indicator** &mdash; per-stock fear/greed gauge powered by a local **LLM** (Ollama by default), surfacing a 0&ndash;100 emotion index, dominant emotion (panic &rarr; euphoria), emotion mix, and per-article bullish/bearish breakdown
+- **Local & Private** &mdash; LLM sentiment runs entirely on your own machine; gracefully falls back to the lexical/FinBERT engine when the LLM is offline
 
 ### Plugin System & Scripting
 
@@ -466,19 +466,25 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | `REDIS_URL` | Redis connection for caching and pub/sub |
 | `OPENTERMINALUI_CORS_ORIGINS` | Allowed CORS origins |
 | `OPENTERMINALUI_PREFETCH_ENABLED` | Enable background data prefetch |
-| `LM_STUDIO_BASE_URL` | LM Studio OpenAI-compatible endpoint (default `http://localhost:1234/v1`; use `http://host.docker.internal:1234/v1` from Docker) |
-| `LM_STUDIO_MODEL` | Gemma model id loaded in LM Studio (default `google/gemma-4-26b-a4b`) |
-| `LM_STUDIO_ENABLED` | Toggle the LLM emotion analysis (default `true`; falls back to lexical sentiment when off) |
+| `LLM_BASE_URL` | OpenAI-compatible LLM endpoint (default `http://localhost:11434/v1` for Ollama; use `http://host.docker.internal:11434/v1` from Docker). Also works with LM Studio, OpenAI, OpenRouter, etc. |
+| `LLM_MODEL` | Model id served by the endpoint (default `llama3.1`) |
+| `LLM_API_KEY` | API key for hosted providers (OpenAI/OpenRouter/…); leave empty for local Ollama / LM Studio |
+| `LLM_ENABLED` | Toggle the LLM analysis (default `true`; falls back to lexical sentiment when off) |
 
-## AI News Sentiment with Gemma 4 (LM Studio)
+## AI News Sentiment & Insights (local LLM)
 
-OpenTerminalUI integrates a locally hosted **Google Gemma 4** model, served through
-[LM Studio](https://lmstudio.ai/), to power the per-stock **AI Emotion Indicator**
-on the News workspace. The model reads recent headlines for a ticker and returns a
+OpenTerminalUI talks to any **OpenAI-compatible** chat endpoint, so the AI features
+&mdash; the per-stock **AI Emotion Indicator** and the **AI Insight Cards** (briefings,
+backtest explainers, risk insights) &mdash; run against whatever provider you point
+them at. The default is a local **[Ollama](https://ollama.com/)** server, so inference
+stays on your own machine and no news or prompt data leaves your hardware; the same
+config also works with **LM Studio**, **OpenAI**, **OpenRouter**, **Groq**, **vLLM**,
+**llama.cpp**, etc.
+
+For the Emotion Indicator, the model reads recent headlines for a ticker and returns a
 structured judgement &mdash; sentiment, confidence, and a market emotion &mdash; which
 the backend aggregates into a 0&ndash;100 fear/greed index, a dominant emotion, an
-emotion mix, and per-article bullish/bearish signals. All inference runs on your own
-machine; no news or prompt data leaves your hardware.
+emotion mix, and per-article bullish/bearish signals.
 
 ### How it works
 
@@ -486,66 +492,78 @@ machine; no news or prompt data leaves your hardware.
 News (DB / Yahoo / Google RSS)
         │
         ▼
-backend/services/stock_emotion.py ──▶ backend/services/lm_studio_client.py
+backend/services/stock_emotion.py ──▶ backend/services/llm_client.py
    (batch prompt + JSON schema)          (OpenAI-compatible /v1/chat/completions)
         │                                          │
         │                                          ▼
-        │                                   LM Studio  ·  Gemma 4
+        │                            Ollama / LM Studio / OpenAI / …
         ▼
 GET /api/sentiment/emotion/{ticker}  ──▶  Emotion Indicator (News page)
 ```
 
-- All articles for a ticker are analyzed in a **single batched request** (large local
-  models are slow &mdash; per-article calls would pay the latency N times over).
-- The request uses LM Studio **structured output** (`json_schema`) so the model is
-  constrained to valid, parseable JSON.
-- If LM Studio is disabled or unreachable, the feature **falls back** to the built-in
+- All articles for a ticker are analyzed in a **single batched request** (local models
+  are slow &mdash; per-article calls would pay the latency N times over).
+- JSON requests use **structured output** with a graceful ladder: strict `json_schema`
+  → `json_object` → plain text, stepping down whenever a provider doesn't support a
+  given form (Ollama's strict-schema support varies by version; OpenAI/LM Studio support it).
+- If the LLM is disabled or unreachable, the feature **falls back** to the built-in
   lexical / FinBERT sentiment engine, so the endpoint always returns a result.
 
-### Integration procedure
+### Integration procedure (Ollama, the default)
 
-1. **Install LM Studio** &mdash; download from [lmstudio.ai](https://lmstudio.ai/) (macOS,
-   Windows, Linux).
-2. **Download a Gemma model** &mdash; in LM Studio's *Discover* tab, search for and
-   download a **Gemma** model (e.g. `google/gemma-4-26b-a4b`, or a smaller Gemma
-   variant for faster responses).
-3. **Load the model and start the server** &mdash; load the model, open the
-   *Developer / Local Server* tab, and click **Start Server**. It listens on
-   `http://localhost:1234` and exposes the OpenAI-compatible API at `/v1`.
-4. **Note the model id** &mdash; copy the exact model id shown by LM Studio
-   (visible at `http://localhost:1234/v1/models`); you will set it as `LM_STUDIO_MODEL`.
-5. **Configure OpenTerminalUI**:
-   - **Local development** &mdash; add to `.env` (defaults already point at localhost):
+1. **Install Ollama** &mdash; download from [ollama.com](https://ollama.com/) (macOS,
+   Windows, Linux). It serves an OpenAI-compatible API at `http://localhost:11434/v1`.
+2. **Pull a model** &mdash; e.g. `ollama pull llama3.1` (or `qwen2.5`, `gemma2`, …).
+   A smaller model responds faster; a larger one is more capable.
+3. **Configure OpenTerminalUI**:
+   - **Local development** &mdash; defaults already point at localhost; override in `.env`
+     only if needed:
      ```bash
-     LM_STUDIO_BASE_URL=http://localhost:1234/v1
-     LM_STUDIO_MODEL=google/gemma-4-26b-a4b
-     LM_STUDIO_ENABLED=true
+     LLM_BASE_URL=http://localhost:11434/v1
+     LLM_MODEL=llama3.1
+     LLM_ENABLED=true
      ```
-   - **Docker** &mdash; the container must reach LM Studio on the *host*. `docker-compose.yml`
-     already defaults `LM_STUDIO_BASE_URL` to `http://host.docker.internal:1234/v1` and
-     maps `host.docker.internal`. Override `LM_STUDIO_MODEL` via `.env` if your model id
-     differs.
-6. **Restart the backend** (or `docker compose up -d`) so the new settings load.
-7. **Verify** &mdash; open the **News** workspace, select any ticker, and check the
+   - **Docker** &mdash; the container must reach Ollama on the *host*; set
+     `LLM_BASE_URL=http://host.docker.internal:11434/v1`.
+4. **Restart the backend** (or `docker compose up -d`) so the new settings load.
+5. **Verify** &mdash; open the **News** workspace, select any ticker, and check the
    *Emotion Indicator* badge:
-   - `Gemma · <model id>` &mdash; the model is live and analyzing.
-   - `Lexical fallback` &mdash; LM Studio was unreachable; the built-in engine was used.
+   - `<model id>` &mdash; the model is live and analyzing.
+   - `Lexical fallback` &mdash; the LLM was unreachable; the built-in engine was used.
+
+### Using a different provider
+
+Point the same three variables at any OpenAI-compatible endpoint (hosted providers
+also need `LLM_API_KEY`):
+
+```bash
+# OpenAI
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sk-...
+
+# LM Studio (local) — start its server, then:
+LLM_BASE_URL=http://localhost:1234/v1
+LLM_MODEL=<loaded-model-id>
+```
 
 ### Configuration
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `LM_STUDIO_BASE_URL` | `http://localhost:1234/v1` | LM Studio OpenAI-compatible endpoint. Use `http://host.docker.internal:1234/v1` from Docker. |
-| `LM_STUDIO_MODEL` | `google/gemma-4-26b-a4b` | Model id loaded in LM Studio. Must match exactly. |
-| `LM_STUDIO_ENABLED` | `true` | Master toggle for LLM emotion analysis. |
-| `LM_STUDIO_TIMEOUT_SECONDS` | `240` | Per-request timeout for the model call. |
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible endpoint. Use `http://host.docker.internal:11434/v1` from Docker. |
+| `LLM_MODEL` | `llama3.1` | Model id served by the endpoint. |
+| `LLM_API_KEY` | _(empty)_ | API key for hosted providers; local servers ignore it. |
+| `LLM_ENABLED` | `true` | Master toggle for LLM analysis. |
+| `LLM_TIMEOUT_SECONDS` | `240` | Per-request timeout for the model call. |
+| `LLM_STRUCTURED_OUTPUT` | `auto` | JSON request mode: `auto` \| `json_schema` \| `json` \| `none`. |
 
-These can also be set under `app:` in `config/settings.yaml`.
+These can also be set under `app:` in `config/settings.yaml`. The legacy
+`LM_STUDIO_*` / `OLLAMA_BASE_URL` / `OPENAI_API_KEY` variables are still honored.
 
-> **Performance:** large models such as `gemma-4-26b-a4b` are slow on consumer
-> hardware &mdash; the first analysis for a ticker can take a minute or more (results
-> are then cached). For a snappier experience, load a smaller Gemma / instruct model
-> in LM Studio and point `LM_STUDIO_MODEL` at it.
+> **Performance:** large models are slow on consumer hardware &mdash; the first
+> analysis for a ticker can take a minute or more (results are then cached). For a
+> snappier experience, use a smaller instruct model and point `LLM_MODEL` at it.
 
 ## Testing
 

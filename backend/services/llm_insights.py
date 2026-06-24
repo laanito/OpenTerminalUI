@@ -1,9 +1,9 @@
-"""Shared LLM insight helper backed by the locally hosted Gemma model.
+"""Shared LLM insight helper backed by a local LLM.
 
 Several read-heavy screens (stock briefing, backtest explainer, risk insights)
 need the same thing: hand the model some structured data, get back a concise,
 sectioned analysis. This module centralises that so every feature uses one
-LM Studio client, one schema, and one graceful-fallback path.
+LLM client, one schema, and one graceful-fallback path.
 """
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 from backend.config.settings import get_settings
-from backend.services.lm_studio_client import (
-    LMStudioError,
-    get_lm_studio_client,
+from backend.services.llm_client import (
+    LLMError,
+    get_llm_client,
     parse_json_response,
 )
 
@@ -52,7 +52,7 @@ INSIGHT_SCHEMA: dict[str, Any] = {
 
 
 def current_model() -> str:
-    return get_settings().lm_studio_model
+    return get_settings().llm_model
 
 
 def _sanitize_sections(raw: Any) -> list[dict[str, Any]]:
@@ -82,15 +82,15 @@ async def run_insight(
     user_content: str,
     *,
     max_tokens: int = 900,
-    unavailable_summary: str = "AI analysis is unavailable — start LM Studio with a Gemma model to enable it.",
+    unavailable_summary: str = "AI analysis is unavailable — start your local LLM (e.g. Ollama) to enable it.",
 ) -> dict[str, Any]:
     """Produce a `{summary, sections}` insight, falling back gracefully.
 
-    Returns ``engine: "lmstudio"`` when the model answered, ``"unavailable"``
-    when LM Studio is off/unreachable or the response could not be used.
+    Returns ``engine: "llm"`` when the model answered, ``"unavailable"``
+    when LLM is off/unreachable or the response could not be used.
     """
     settings = get_settings()
-    model = settings.lm_studio_model
+    model = settings.llm_model
     generated_at = datetime.now(timezone.utc).isoformat()
     base = {
         "engine": "unavailable",
@@ -100,8 +100,8 @@ async def run_insight(
         "generated_at": generated_at,
     }
 
-    client = get_lm_studio_client()
-    if not settings.lm_studio_enabled or not await client.health():
+    client = get_llm_client()
+    if not settings.llm_enabled or not await client.health():
         return base
 
     messages = [
@@ -117,7 +117,7 @@ async def run_insight(
             frequency_penalty=0.3,
         )
         parsed = parse_json_response(content)
-    except (LMStudioError, asyncio.TimeoutError):
+    except (LLMError, asyncio.TimeoutError):
         return base
 
     summary = str(parsed.get("summary") or "").strip()
@@ -125,7 +125,7 @@ async def run_insight(
     if not summary and not sections:
         return base
     return {
-        "engine": "lmstudio",
+        "engine": "llm",
         "model": model,
         "summary": summary,
         "sections": sections,
