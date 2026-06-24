@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from typing import List
 
 from backend.core.unified_fetcher import UnifiedFetcher
@@ -12,19 +13,19 @@ from backend.db.models import Holding, WatchlistItem
 
 logger = logging.getLogger(__name__)
 
-MARKET_START = (9, 15)
-MARKET_END = (15, 30)
+# Regular US cash-session hours, in US Eastern (DST-aware via zoneinfo).
+_MARKET_TZ = ZoneInfo("America/New_York")
+MARKET_START = (9, 30)
+MARKET_END = (16, 0)
 
 def is_market_hours() -> bool:
-    # IST = UTC + 5:30
-    now_utc = datetime.now(timezone.utc)
-    now_ist = now_utc + timedelta(hours=5, minutes=30)
+    now_et = datetime.now(timezone.utc).astimezone(_MARKET_TZ)
 
     # Weekends
-    if now_ist.weekday() >= 5:
+    if now_et.weekday() >= 5:
         return False
 
-    t = now_ist.time()
+    t = now_et.time()
     start = t.replace(hour=MARKET_START[0], minute=MARKET_START[1], second=0, microsecond=0)
     end = t.replace(hour=MARKET_END[0], minute=MARKET_END[1], second=0, microsecond=0)
 
@@ -42,14 +43,13 @@ def get_db_tickers() -> List[str]:
     finally:
         db.close()
 
-# Hardcoded indices for robustness (could be fetched dynamically)
-NIFTY_50 = [
-    "RELIANCE", "TCS", "HDFCBANK", "ICICIBANK", "INFY", "BHARTIARTL", "ITC", "LTIM", "HINDUNILVR", "LT",
-    "SBIN", "BAJFINANCE", "AXISBANK", "ASIANPAINT", "MARUTI", "TITAN", "SUNPHARMA", "ULTRACEMCO", "KOTAKBANK",
-    "TATASTEEL", "NTPC", "TATAMOTORS", "POWERGRID", "ADANIENT", "M&M", "HCLTECH", "JSWSTEEL", "COALINDIA",
-    "ADANIPORTS", "WIPRO", "ONGC", "NESTLEIND", "BPCL", "TECHM", "GRASIM", "BRITANNIA", "CIPLA", "HDFCLIFE",
-    "BAJAJFINSV", "SBILIFE", "DRREDDY", "INDUSINDBK", "EICHERMOT", "DIVISLAB", "TATACONSUM", "HINDALCO",
-    "APOLLOHOSP", "HEROMOTOCO", "UPL"
+# Default cache-warming universe: large, liquid US names that resolve cleanly via
+# Yahoo without an exchange suffix. Used alongside the user's tracked DB tickers.
+DEFAULT_PREFETCH_UNIVERSE = [
+    "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "BRK-B", "TSLA", "AVGO", "JPM",
+    "V", "LLY", "UNH", "XOM", "MA", "JNJ", "PG", "HD", "COST", "ORCL",
+    "MRK", "ABBV", "CVX", "BAC", "KO", "PEP", "AMD", "NFLX", "ADBE", "CRM",
+    "WMT", "TMO", "MCD", "CSCO", "ACN", "ABT", "INTC", "QCOM", "TXN", "DIS",
 ]
 
 class PrefetchWorker:
@@ -89,7 +89,7 @@ class PrefetchWorker:
 
     async def _prefetch(self):
         # 1. Gather tickers
-        targets = set(NIFTY_50)
+        targets = set(DEFAULT_PREFETCH_UNIVERSE)
         targets.update(get_db_tickers())
         ticker_list = list(targets)
 
