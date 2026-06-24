@@ -145,8 +145,8 @@ class ModelLabService:
             if isinstance(tickers, list) and tickers:
                 symbol = str(tickers[0]).strip().upper()
             if not symbol:
-                symbol = "RELIANCE"
-            market = str(universe.get("market") or universe.get("exchange") or "NSE").strip().upper() if isinstance(universe, dict) else "NSE"
+                symbol = "AAPL"
+            market = str(universe.get("market") or universe.get("exchange") or "NASDAQ").strip().upper() if isinstance(universe, dict) else "NASDAQ"
             if market not in {"NSE", "BSE", "NASDAQ", "NYSE", "AMEX"}:
                 market = "NSE"
 
@@ -418,8 +418,8 @@ class ModelLabService:
 
             universe = experiment.universe_json or {}
             tickers = universe.get("tickers") if isinstance(universe, dict) else None
-            symbol = str(tickers[0]).strip().upper() if isinstance(tickers, list) and tickers else "RELIANCE"
-            market = str(universe.get("market") or universe.get("exchange") or "NSE").strip().upper() if isinstance(universe, dict) else "NSE"
+            symbol = str(tickers[0]).strip().upper() if isinstance(tickers, list) and tickers else "AAPL"
+            market = str(universe.get("market") or universe.get("exchange") or "NASDAQ").strip().upper() if isinstance(universe, dict) else "NASDAQ"
             if market not in {"NSE", "BSE", "NASDAQ", "NYSE", "AMEX"}:
                 market = "NSE"
             strategy = experiment.model_key if ":" in experiment.model_key else f"example:{experiment.model_key}"
