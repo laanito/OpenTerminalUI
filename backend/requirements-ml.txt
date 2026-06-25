@@ -14,3 +14,11 @@
 # cached under ~/.cache/huggingface afterwards.
 transformers
 torch
+
+# Local fallback embedder for the private "second brain" RAG
+# (backend/services/embeddings.py). The default embedding tier is the
+# OpenAI-compatible /embeddings endpoint (Ollama's nomic-embed-text, etc.); this
+# sentence-transformers model is used only when that endpoint has no embeddings
+# route and BRAIN_EMBED_FALLBACK is on. First use downloads all-MiniLM-L6-v2
+# (~90 MB). Depends on torch (above).
+sentence-transformers

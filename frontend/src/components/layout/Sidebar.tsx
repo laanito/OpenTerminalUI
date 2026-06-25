@@ -35,6 +35,7 @@ export function Sidebar() {
     { label: "Paper", path: "/equity/paper", key: "P" },
     { label: "Position Sizer", path: "/equity/position-sizer", key: "PS", hint: "Trading" },
     { label: "Journal", path: "/equity/journal", key: "J", hint: "Trading" },
+    { label: "Second Brain", path: "/equity/brain", key: "BR", hint: "AI Research" },
     { label: "Watchlist", path: "/equity/watchlist", key: "F4" },
     { label: "News", path: "/equity/news", key: "F5" },
     { label: "Alerts", path: "/equity/alerts", key: "A" },

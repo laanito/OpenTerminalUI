@@ -42,6 +42,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 This fork re-centres OpenTerminalUI toward **US / EU / crypto** markets on a **Postgres-first** stack with a **local, provider-agnostic LLM** (Ollama by default), and toward a clear mission: give a serious *individual* &mdash; not just an institution &mdash; the tools to understand markets and avoid being misled. Rather than chase Bloomberg-terminal parity (pursued only "just enough to be credible"), it leans into what a closed, five-figure-per-seat terminal structurally can't be:
 
 - **AI-native & private** &mdash; research, news sentiment, and an emotion gauge that run on *your* machine via a local LLM; nothing about what you search or hold leaves your hardware.
+- **A private "second brain" that grows** &mdash; an ask-anything research partner grounded *only* in your own trade journal, portfolio theses, and notes. It retrieves the relevant entries, synthesizes an answer with citations back to your own writing, and acts as a check against your biases ("what setups lose me money when I'm anxious?"). Local embeddings (Ollama `nomic-embed-text` by default, `sentence-transformers` fallback) and a dialect-aware vector store (pgvector on Postgres, numpy cosine on SQLite) keep it fully on-machine.
 - **Don't-get-fooled by design** &mdash; features that separate real signal from hype (e.g. crypto fundamentals: supply dilution, on-chain TVL & fee revenue, plain-language "what to watch" cues) and that help you check your own behaviour.
 - **Open & extensible** &mdash; self-hosted, MIT-licensed, bring-your-own provider keys, with a plugin/Python scripting layer.
 - **Multi-asset, unified** &mdash; equities, ETFs, FX, bonds, and **crypto as a first-class citizen**, with a display-currency selector (USD/EUR/INR).
@@ -571,6 +572,14 @@ LLM_MODEL=<loaded-model-id>
 | `LLM_ENABLED` | `true` | Master toggle for LLM analysis. |
 | `LLM_TIMEOUT_SECONDS` | `240` | Per-request timeout for the model call. |
 | `LLM_STRUCTURED_OUTPUT` | `auto` | JSON request mode: `auto` \| `json_schema` \| `json` \| `none`. |
+| `LLM_EMBED_MODEL` | `nomic-embed-text` | Embedding model for the second-brain RAG (same OpenAI-compatible endpoint). For OpenAI use e.g. `text-embedding-3-small`. |
+| `BRAIN_EMBED_DIM` | `768` | Vector dimension hint for the pgvector column (`nomic-embed-text` is 768). |
+| `BRAIN_EMBED_FALLBACK` | `true` | If the endpoint has no `/embeddings` route, fall back to a local `sentence-transformers` model (requires `requirements-ml.txt`). |
+
+The second brain needs an embedding model. With the default Ollama setup, pull it
+once: `ollama pull nomic-embed-text`. On Postgres the index uses **pgvector**
+(`CREATE EXTENSION vector` is attempted automatically; it falls back to numpy
+cosine if unavailable); on SQLite it uses an in-process numpy cosine search.
 
 These can also be set under `app:` in `config/settings.yaml`. The legacy
 `LM_STUDIO_*` / `OLLAMA_BASE_URL` / `OPENAI_API_KEY` variables are still honored.

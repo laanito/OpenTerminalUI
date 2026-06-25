@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from backend.api.routes.ai import router as ai_router
 from backend.api.routes.analytics import router as analytics_router
+from backend.api.routes.brain import router as brain_router
 from backend.api.routes.bonds import router as bonds_router
 from backend.api.routes.commodities import router as commodities_router
 from backend.api.routes.correlation import router as correlation_router
@@ -52,6 +53,9 @@ api_router.include_router(commodities_router, prefix="/api")
 api_router.include_router(forex_router, prefix="/api")
 api_router.include_router(factor_analysis_router, prefix="/api")
 api_router.include_router(ai_router, prefix="/api")
+# Private second-brain RAG (per-user, authed). Router carries "/brain"; the "/api"
+# prefix here resolves it to /api/brain/{ask,reindex,status}.
+api_router.include_router(brain_router, prefix="/api")
 # These routers already carry their full "/api/..." prefix internally,
 # so they must be included WITHOUT an extra prefix (avoids "/api/api/...").
 api_router.include_router(analytics_router)

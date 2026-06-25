@@ -63,6 +63,17 @@
   CoinGecko + on-chain TVL and fee revenue (MCap/TVL, price/fees) from keyless
   **DefiLlama**, each metric annotated in plain language with conservative
   "investigate this" cues. New `GET /api/v1/crypto/fundamentals/{symbol}`.
+- **Private second brain (RAG)** — *the flagship north-star feature.* An
+  ask-anything research partner grounded **only in your own writing**: it indexes
+  your trade journal, portfolio theses, and position/transaction notes, embeds
+  them locally, and answers questions with inline citations back to the source
+  notes (e.g. "what setups lose me money when I'm anxious?"). Designed as a check
+  against your own biases, not a cheerleader, and it never leaves the machine.
+  Embeddings use the same provider-agnostic OpenAI-compatible endpoint as chat
+  (Ollama `nomic-embed-text` by default), with a local `sentence-transformers`
+  fallback. Storage is dialect-aware: **pgvector** (ANN cosine index) on Postgres,
+  in-process **numpy cosine** on SQLite. New authed `POST /api/brain/ask`,
+  `POST /api/brain/reindex`, `GET /api/brain/status` + a Second Brain page.
 - **Scheduled reports + report generation backend**: wired the per-user CRUD
   routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
   `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand

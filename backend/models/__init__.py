@@ -68,6 +68,7 @@ from backend.instruments.models import InstrumentMaster
 from backend.saved_views.models import SavedViewORM
 from backend.models.user import RefreshToken, User, UserRole
 from backend.models.journal import JournalEntry
+from backend.models.brain import BrainChunkORM
 from backend.models.notification import Notification
 
 __all__ = [
@@ -141,4 +142,5 @@ __all__ = [
     "ExperimentArtifact",
     "InstrumentMaster",
     "JournalEntry",
+    "BrainChunkORM",
 ]

@@ -45,6 +45,7 @@ class LLMClient:
         settings = get_settings()
         self.base_url = (base_url or settings.llm_base_url).rstrip("/")
         self.model = model or settings.llm_model
+        self.embed_model = settings.llm_embed_model
         self.timeout = float(timeout or settings.llm_timeout_seconds)
         self.api_key = api_key if api_key is not None else settings.llm_api_key
         # auto | json_schema | json | none — how to request JSON from this provider.
@@ -124,6 +125,42 @@ class LLMClient:
 
         # Exhausted the ladder (every structured form was rejected).
         raise LLMError("LLM rejected all response formats") from last_exc
+
+    async def embed(self, texts: list[str], *, model: str | None = None) -> list[list[float]]:
+        """Embed texts via the OpenAI-compatible ``POST {base_url}/embeddings`` spec.
+
+        This is the embeddings sibling of :meth:`chat` and is just as
+        provider-agnostic — Ollama (``nomic-embed-text``), OpenAI
+        (``text-embedding-3-*``), vLLM, LM Studio, etc. all implement it. Returns
+        one vector per input text, in order. Raises :class:`LLMError` when the
+        endpoint is unreachable, lacks an embeddings route, or returns bad data —
+        callers can catch this to fall back to a local embedder.
+        """
+        if not texts:
+            return []
+        url = f"{self.base_url}/embeddings"
+        payload: dict[str, Any] = {"model": model or self.embed_model, "input": texts}
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
+                resp = await client.post(url, json=payload, headers=self._headers())
+                resp.raise_for_status()
+                data = resp.json()
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code if exc.response is not None else "?"
+            raise LLMError(f"LLM embeddings HTTP {status}") from exc
+        except (httpx.HTTPError, ValueError) as exc:
+            raise LLMError(f"LLM embeddings request failed: {exc}") from exc
+
+        try:
+            rows = data["data"]
+            # The spec returns rows out of order in theory; sort by index to be safe.
+            ordered = sorted(rows, key=lambda r: int(r.get("index", 0)))
+            vectors = [[float(x) for x in row["embedding"]] for row in ordered]
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise LLMError("LLM embeddings returned an unexpected payload") from exc
+        if len(vectors) != len(texts):
+            raise LLMError("LLM embeddings count did not match input count")
+        return vectors
 
     async def health(self) -> bool:
         """Return True when the model endpoint is reachable."""

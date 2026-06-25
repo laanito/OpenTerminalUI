@@ -33,6 +33,7 @@ const AlertsPage = lazyWithRetry(() => import("./pages/Alerts").then((m) => ({ d
 const PaperTradingPage = lazyWithRetry(() => import("./pages/PaperTrading").then((m) => ({ default: m.PaperTradingPage })));
 const PositionSizerPage = lazyWithRetry(() => import("./pages/PositionSizerPage").then((m) => ({ default: m.PositionSizerPage })));
 const TradeJournalPage = lazyWithRetry(() => import("./pages/TradeJournalPage").then((m) => ({ default: m.TradeJournalPage })));
+const SecondBrainPage = lazyWithRetry(() => import("./pages/SecondBrain").then((m) => ({ default: m.SecondBrainPage })));
 const RiskDashboardPage = lazyWithRetry(() => import("./pages/RiskDashboard").then((m) => ({ default: m.RiskDashboardPage })));
 const CorrelationDashboardPage = lazyWithRetry(() => import("./pages/CorrelationDashboardPage").then((m) => ({ default: m.CorrelationDashboardPage })));
 const OmsCompliancePage = lazyWithRetry(() => import("./pages/OmsCompliance").then((m) => ({ default: m.OmsCompliancePage })));
@@ -149,6 +150,7 @@ function App() {
             <Route path="paper" element={<PaperTradingPage />} />
             <Route path="position-sizer" element={<PositionSizerPage />} />
             <Route path="journal" element={<TradeJournalPage />} />
+            <Route path="brain" element={<SecondBrainPage />} />
             <Route path="risk" element={<RiskDashboardPage />} />
             <Route path="correlation" element={<CorrelationDashboardPage />} />
             <Route path="stat-lab" element={<StatisticalLab />} />
