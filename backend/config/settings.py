@@ -40,6 +40,12 @@ class AppSettings(BaseModel):
     # model / api_key. Local servers ignore api_key; hosted providers require it.
     llm_base_url: str = "http://localhost:11434/v1"
     llm_model: str = "llama3.1"
+    # Embedding model for the private "second brain" RAG (OpenAI-compatible
+    # /embeddings). Defaults to Ollama's nomic-embed-text (768-dim). Override with
+    # LLM_EMBED_MODEL (e.g. text-embedding-3-small for OpenAI).
+    llm_embed_model: str = "nomic-embed-text"
+    brain_embed_dim: int = 768
+    brain_embed_fallback: bool = True  # use local sentence-transformers if the endpoint has no /embeddings
     llm_enabled: bool = True
     llm_timeout_seconds: float = 240.0
     llm_api_key: str | None = None
@@ -247,6 +253,22 @@ def get_settings() -> AppSettings:
             or app_cfg.get("llm_model")
             or app_cfg.get("lm_studio_model")
             or "llama3.1"
+        ),
+        llm_embed_model=(
+            _env("OPENTERMINALUI_LLM_EMBED_MODEL")
+            or _env("LLM_EMBED_MODEL")
+            or app_cfg.get("llm_embed_model", "nomic-embed-text")
+        ),
+        brain_embed_dim=int(
+            _env("OPENTERMINALUI_BRAIN_EMBED_DIM")
+            or _env("BRAIN_EMBED_DIM")
+            or app_cfg.get("brain_embed_dim", 768)
+        ),
+        brain_embed_fallback=_as_bool(
+            _env("OPENTERMINALUI_BRAIN_EMBED_FALLBACK")
+            or _env("BRAIN_EMBED_FALLBACK")
+            or app_cfg.get("brain_embed_fallback", True),
+            default=True,
         ),
         llm_enabled=_as_bool(
             _env("OPENTERMINALUI_LLM_ENABLED")

@@ -23,6 +23,7 @@ import { FuturesPanel } from "../components/market/FuturesPanel";
 import { OrderBookPanel } from "../components/market/OrderBookPanel";
 import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { NotesPanel } from "../components/notes/NotesPanel";
 import { CountryFlag } from "../components/common/CountryFlag";
 import { InstrumentBadges } from "../components/common/InstrumentBadges";
 import { EarningsDateBadge } from "../components/EarningsDateBadge";
@@ -45,7 +46,7 @@ import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
 import { isCryptoSymbol, isIndianSymbol } from "../utils/ticker";
 
-type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings" | "crypto-fundamentals";
+type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings" | "crypto-fundamentals" | "notes";
 
 const TIMEFRAME_TO_INTERVAL: Record<ChartTimeframe, { interval: string; range: string }> = {
   "1m": { interval: "1m", range: "5d" },
@@ -123,8 +124,8 @@ export function StockDetailPage() {
   const visibleTabs = useMemo<TabId[]>(() => {
     // Crypto gets its own relevant tab set (the equity-centric financials/peers/
     // valuation tabs don't apply); fundamentals here means tokenomics + on-chain.
-    if (isCrypto) return ["overview", "market-depth", "crypto-fundamentals"];
-    const all: TabId[] = ["overview", "market-depth", "financials", "analysis", "peers", "valuation", "shareholding", "events", "earnings"];
+    if (isCrypto) return ["overview", "market-depth", "crypto-fundamentals", "notes"];
+    const all: TabId[] = ["overview", "market-depth", "financials", "analysis", "peers", "valuation", "shareholding", "events", "earnings", "notes"];
     const indiaOnly: TabId[] = ["shareholding", "events"];
     return isIndian ? all : all.filter((t) => !indiaOnly.includes(t));
   }, [isCrypto, isIndian]);
@@ -684,6 +685,11 @@ export function StockDetailPage() {
             <QuarterlyFinancialsChart symbol={ticker} />
             <EarningsTrendTable symbol={ticker} />
           </div>
+        )}
+        {tab === "notes" && (
+          <TerminalPanel title={`Notes · ${ticker}`} subtitle="Your research notes on this symbol — indexed by the Second Brain" className="rounded-sm">
+            <NotesPanel symbol={ticker} context="security" />
+          </TerminalPanel>
         )}
       </div>
       <Link
