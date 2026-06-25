@@ -5,8 +5,10 @@ import { TerminalTable } from "../components/terminal/TerminalTable";
 import { TerminalInput } from "../components/terminal/TerminalInput";
 import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { api } from "../api/client";
+import { useDisplayCurrency } from "../hooks/useDisplayCurrency";
 
 export function DividendDashboardPage() {
+  const { formatMoney } = useDisplayCurrency();
   const [activeTab, setTab] = useState<"calendar" | "income" | "analysis" | "aristocrats">("calendar");
   const [calendar, setCalendar] = useState<any[]>([]);
   const [income, setIncome] = useState<any>(null);
@@ -90,7 +92,7 @@ export function DividendDashboardPage() {
         <div className="grid gap-3 lg:grid-cols-3">
           <TerminalPanel title="Annual Projection" className="lg:col-span-1">
             <div className="text-3xl font-bold text-terminal-pos mt-4">
-              ₹{income.annual_income.toLocaleString()}
+              {formatMoney(income.annual_income)}
             </div>
             <p className="text-xs text-terminal-muted mt-2">Projected income based on current holdings</p>
           </TerminalPanel>

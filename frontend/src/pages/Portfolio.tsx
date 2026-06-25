@@ -53,7 +53,7 @@ import type {
   TaxLotSummary,
 } from "../types";
 import { MOMENTUM_ROTATION_BASKET } from "../utils/constants";
-import { formatInr } from "../utils/formatters";
+import { useDisplayCurrency } from "../hooks/useDisplayCurrency";
 import { consumePendingSavedView } from "../workspace/savedViewRestore";
 
 const AttributionPanel = lazy(() => import("../components/portfolio/AttributionPanel"));
@@ -199,6 +199,7 @@ function daysSince(dateString: string): number | null {
 }
 
 export function PortfolioPage() {
+  const { formatMoney, nativeFor } = useDisplayCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const [portfolioView, setPortfolioView] = useState<"legacy" | "manager">(
     () => (searchParams.get("view") === "manager" ? "manager" : "legacy"),
@@ -932,19 +933,19 @@ export function PortfolioPage() {
               <div className="rounded border border-terminal-accent/50 bg-terminal-bg px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Portfolio Value</div>
                 <div className="mt-1 text-sm font-semibold leading-none text-terminal-text md:text-base [font-variant-numeric:tabular-nums]">
-                  {formatInr(totalValue)}
+                  {formatMoney(totalValue)}
                 </div>
               </div>
               <div className="rounded border border-terminal-border/80 bg-terminal-bg px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Invested</div>
                 <div className="mt-1 text-sm font-semibold leading-none text-terminal-text md:text-base [font-variant-numeric:tabular-nums]">
-                  {formatInr(totalCost)}
+                  {formatMoney(totalCost)}
                 </div>
               </div>
               <div className={`rounded border bg-terminal-bg px-3 py-2 ${overallPnl >= 0 ? "border-terminal-pos/60" : "border-terminal-neg/60"}`}>
                 <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Unrealized P&L</div>
                 <div className={`mt-1 text-sm font-semibold leading-none md:text-base [font-variant-numeric:tabular-nums] ${performanceToneClass}`}>
-                  {formatInr(overallPnl)}
+                  {formatMoney(overallPnl)}
                 </div>
               </div>
               <div className={`rounded border bg-terminal-bg px-3 py-2 ${lifetimePct >= 0 ? "border-terminal-pos/60" : "border-terminal-neg/60"}`}>
@@ -973,13 +974,13 @@ export function PortfolioPage() {
               <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-terminal-muted">
                 Best Contributor:{" "}
                 <span className="text-terminal-pos">
-                  {bestHolding ? `${bestHolding.ticker} (${formatInr(bestHolding.pnl ?? 0)})` : "-"}
+                  {bestHolding ? `${bestHolding.ticker} (${formatMoney(bestHolding.pnl ?? 0, nativeFor(bestHolding.ticker, bestHolding.exchange))})` : "-"}
                 </span>
               </div>
               <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-terminal-muted">
                 Worst Contributor:{" "}
                 <span className="text-terminal-neg">
-                  {worstHolding ? `${worstHolding.ticker} (${formatInr(worstHolding.pnl ?? 0)})` : "-"}
+                  {worstHolding ? `${worstHolding.ticker} (${formatMoney(worstHolding.pnl ?? 0, nativeFor(worstHolding.ticker, worstHolding.exchange))})` : "-"}
                 </span>
               </div>
               <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-terminal-muted">
@@ -1100,7 +1101,7 @@ export function PortfolioPage() {
                         contentStyle={{ border: "1px solid #2a2f3a", background: "#0c0f14", color: "#d8dde7" }}
                         formatter={(value: number | string | undefined, name: string | undefined) =>
                           name === "Portfolio Value" || name === "Invested Baseline"
-                            ? [formatInr(Number(value ?? 0)), name]
+                            ? [formatMoney(Number(value ?? 0)), name]
                             : name === "Return %"
                             ? [`${Number(value ?? 0).toFixed(2)}%`, "Return %"]
                             : [String(value ?? "-"), name ?? "Value"]
@@ -1111,10 +1112,10 @@ export function PortfolioPage() {
                           return (
                             <div className="rounded border border-terminal-border bg-terminal-panel px-3 py-2 text-xs text-terminal-text">
                               <div className="mb-1 font-semibold">Month: {label}</div>
-                              <div>Portfolio Value: {formatInr(row?.value ?? 0)}</div>
-                              <div>Invested Baseline: {formatInr(row?.invested ?? 0)}</div>
+                              <div>Portfolio Value: {formatMoney(row?.value ?? 0)}</div>
+                              <div>Invested Baseline: {formatMoney(row?.invested ?? 0)}</div>
                               <div className={row && row.pnl >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
-                                Return: {formatInr(row?.pnl ?? 0)} ({row?.pct == null ? "-" : `${row.pct.toFixed(2)}%`})
+                                Return: {formatMoney(row?.pnl ?? 0)} ({row?.pct == null ? "-" : `${row.pct.toFixed(2)}%`})
                               </div>
                               {row && row.investments.length > 0 && (
                                 <div className="mt-1 border-t border-terminal-border pt-1 text-terminal-accent">
@@ -1213,13 +1214,13 @@ export function PortfolioPage() {
                     Total Holdings: <span className="text-terminal-text">{holdingsCount}</span>
                   </span>
                   <span className="rounded border border-terminal-border/80 bg-terminal-bg px-2 py-1 text-terminal-text">
-                    Net Invested: <span className="text-terminal-text">{formatInr(totalCost)}</span>
+                    Net Invested: <span className="text-terminal-text">{formatMoney(totalCost)}</span>
                   </span>
                   <span className="rounded border border-terminal-border/80 bg-terminal-bg px-2 py-1 text-terminal-text">
-                    Net Current: <span className="text-terminal-text">{formatInr(totalValue)}</span>
+                    Net Current: <span className="text-terminal-text">{formatMoney(totalValue)}</span>
                   </span>
                   <span className={`rounded border px-2 py-1 ${overallPnl >= 0 ? "border-terminal-pos/60 bg-terminal-pos/10 text-terminal-pos" : "border-terminal-neg/60 bg-terminal-neg/10 text-terminal-neg"}`}>
-                    Net P&L: {formatInr(overallPnl)} ({lifetimePct.toFixed(2)}%)
+                    Net P&L: {formatMoney(overallPnl)} ({lifetimePct.toFixed(2)}%)
                   </span>
                 </div>
                 <div className="overflow-auto">
@@ -1277,15 +1278,15 @@ export function PortfolioPage() {
                           <InstrumentBadges exchange={row.exchange} hasFutures={row.has_futures} hasOptions={row.has_options} />
                         </td>
                         <td className="px-2 py-1 text-right">{row.quantity}</td>
-                        <td className="px-2 py-1 text-right">{formatInr(row.avg_buy_price)}</td>
+                        <td className="px-2 py-1 text-right">{formatMoney(row.avg_buy_price, nativeFor(row.ticker, row.exchange))}</td>
                         <td className="px-2 py-1">{row.sector || "-"}</td>
                         <td className="px-2 py-1 text-right">{heldDays == null ? "-" : heldDays}</td>
-                        <td className="px-2 py-1 text-right">{formatInr(row.current_price ?? undefined)}</td>
-                        <td className="px-2 py-1 text-right">{formatInr(row.current_value ?? undefined)}</td>
+                        <td className="px-2 py-1 text-right">{formatMoney(row.current_price, nativeFor(row.ticker, row.exchange))}</td>
+                        <td className="px-2 py-1 text-right">{formatMoney(row.current_value, nativeFor(row.ticker, row.exchange))}</td>
                         <td className="px-2 py-1 text-right text-terminal-text">{formatPctValue(weightPct, 2)}</td>
                         <td className={`px-2 py-1 text-right ${pctClass}`}>{formatPctValue(pctChange, 2)}</td>
                         <td className={`px-2 py-1 text-right ${contribClass}`}>{formatPctValue(pnlContribPct, 2)}</td>
-                        <td className={`px-2 py-1 text-right ${pnlClass}`}>{formatInr(row.pnl ?? undefined)}</td>
+                        <td className={`px-2 py-1 text-right ${pnlClass}`}>{formatMoney(row.pnl, nativeFor(row.ticker, row.exchange))}</td>
                         <td className="px-2 py-1 text-right">
                           <button
                             className="rounded border border-terminal-border px-2 py-1"
@@ -1318,13 +1319,13 @@ export function PortfolioPage() {
                   <div className="rounded border border-terminal-border bg-terminal-bg p-2">
                     <div className="text-terminal-muted">MoM</div>
                     <div className={mom.growth >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
-                      {formatInr(mom.growth)} ({formatPctValue(mom.pct)})
+                      {formatMoney(mom.growth)} ({formatPctValue(mom.pct)})
                     </div>
                   </div>
                   <div className="rounded border border-terminal-border bg-terminal-bg p-2">
                     <div className="text-terminal-muted">YoY</div>
                     <div className={yoy.growth >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
-                      {formatInr(yoy.growth)} ({formatPctValue(yoy.pct)})
+                      {formatMoney(yoy.growth)} ({formatPctValue(yoy.pct)})
                     </div>
                   </div>
                   <div className="rounded border border-terminal-border bg-terminal-bg p-2">

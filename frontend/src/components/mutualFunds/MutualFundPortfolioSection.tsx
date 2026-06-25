@@ -3,7 +3,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { deleteMutualFundHolding, fetchMutualFundPortfolio } from "../../api/client";
 import type { PortfolioMutualFund } from "../../types";
-import { formatInr } from "../../utils/formatters";
+import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 
 const COLORS = ["#ff9f1a", "#00c176", "#4f91ff", "#ff4d4f", "#ffb74d", "#8e98a8"];
 
@@ -12,6 +12,8 @@ type Props = {
 };
 
 export function MutualFundPortfolioSection({ refreshToken = 0 }: Props) {
+  // Indian mutual funds (AMFI) are denominated in INR; convert to display currency.
+  const { formatMoney } = useDisplayCurrency();
   const [items, setItems] = useState<PortfolioMutualFund[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -66,16 +68,16 @@ export function MutualFundPortfolioSection({ refreshToken = 0 }: Props) {
         <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
           <div className="rounded border border-terminal-accent/50 bg-terminal-bg px-3 py-2 text-xs">
             <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Total Invested</div>
-            <div className="mt-1 text-sm font-semibold text-terminal-text">{formatInr(summary.total_invested)}</div>
+            <div className="mt-1 text-sm font-semibold text-terminal-text">{formatMoney(summary.total_invested, "INR")}</div>
           </div>
           <div className="rounded border border-terminal-border/80 bg-terminal-bg px-3 py-2 text-xs">
             <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Current Value</div>
-            <div className="mt-1 text-sm font-semibold text-terminal-text">{formatInr(summary.total_current_value)}</div>
+            <div className="mt-1 text-sm font-semibold text-terminal-text">{formatMoney(summary.total_current_value, "INR")}</div>
           </div>
           <div className={`rounded border bg-terminal-bg px-3 py-2 text-xs ${summary.total_pnl >= 0 ? "border-terminal-pos/60" : "border-terminal-neg/60"}`}>
             <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Unrealized P&L</div>
             <div className={`mt-1 text-sm font-semibold ${summary.total_pnl >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-              {formatInr(summary.total_pnl)}
+              {formatMoney(summary.total_pnl, "INR")}
             </div>
           </div>
           <div className={`rounded border bg-terminal-bg px-3 py-2 text-xs ${summary.total_pnl_pct >= 0 ? "border-terminal-pos/60" : "border-terminal-neg/60"}`}>
@@ -116,9 +118,9 @@ export function MutualFundPortfolioSection({ refreshToken = 0 }: Props) {
                       <td className="px-2 py-1 text-right">{row.units.toFixed(2)}</td>
                       <td className="px-2 py-1 text-right">{row.avg_nav.toFixed(2)}</td>
                       <td className="px-2 py-1 text-right">{row.current_nav.toFixed(2)}</td>
-                      <td className="px-2 py-1 text-right">{formatInr(row.invested_amount)}</td>
-                      <td className="px-2 py-1 text-right">{formatInr(row.current_value)}</td>
-                      <td className={`px-2 py-1 text-right ${row.pnl >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>{formatInr(row.pnl)}</td>
+                      <td className="px-2 py-1 text-right">{formatMoney(row.invested_amount, "INR")}</td>
+                      <td className="px-2 py-1 text-right">{formatMoney(row.current_value, "INR")}</td>
+                      <td className={`px-2 py-1 text-right ${row.pnl >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>{formatMoney(row.pnl, "INR")}</td>
                       <td className={`px-2 py-1 text-right ${row.pnl_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>{row.pnl_pct.toFixed(2)}%</td>
                       <td className="px-2 py-1 text-right">
                         <button
