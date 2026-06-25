@@ -41,11 +41,24 @@
   (`json_schema` → `json_object` → text), and collapsed the old
   LM Studio/OpenAI/Ollama-native fork in `ai_service` into one path. Config via
   `LLM_BASE_URL`/`LLM_MODEL`/`LLM_API_KEY` (legacy `LM_STUDIO_*` still honored).
+- **EUR display currency**: a cross-rates-driven, instrument-currency-aware
+  display engine (`lib/currency.ts` + `useDisplayCurrency`). USD/EUR/INR selectable
+  with correct per-currency symbol/locale/compaction (no more ₹-for-everything),
+  converting from each instrument's native currency via the existing
+  `/api/forex/cross-rates` matrix; retired the hardcoded `formatInr`.
+- **Sentiment engine deps**: declared the intended classifier dependencies
+  (`textblob` core; FinBERT extras in `requirements-ml.txt`) so the news
+  per-article sentiment runs its designed FinBERT → TextBlob → lexicon ladder
+  instead of silently degrading to keyword-only.
 
 ## Fork: Next
 
-- **EUR display currency** — wire FX conversion (and retire leftover `INR`
-  formatting + `NIFTY50` benchmark-preset defaults)
+- **EUR display-currency follow-ups** — the multi-currency engine shipped
+  (cross-rates-driven, instrument-currency aware), but three refinements remain:
+  the `-USD` hardcoding for EUR-quoted crypto (e.g. `BTC-EUR`); threading the
+  viewed symbol's currency into StockDetail's financial/analysis panels (they use
+  the market-native default today); and the leftover `en-IN` digit grouping in
+  NSE-by-design F&O panels and a few screener/chart number formatters.
 - **Scheduled reports + report generation backend** — the frontend
   (`Settings.tsx` scheduled reports, `SecurityHub.tsx` report export) calls
   `/reports/scheduled` and `/reports/generate`, but only a `ScheduledReportService`
