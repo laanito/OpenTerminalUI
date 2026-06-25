@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -206,6 +206,55 @@ class CorporateActionsService:
             except Exception:
                 continue
         return events
+
+    async def _fetch_yahoo_chart_dividends(self, symbol: str) -> list[CorporateEvent]:
+        """Historical dividends from Yahoo's chart `events=div` feed.
+
+        Far richer than ``calendarEvents`` (which only ever holds the single
+        next ex-date, and is empty for many ETFs / EU names like JEIP.DE). This
+        is the workhorse for dividend history and feeds next-payment projection.
+        """
+        fetcher = await get_unified_fetcher()
+        candidates = [symbol.upper()]
+        if "." not in symbol:
+            candidates.append(f"{symbol.upper()}.NS")
+            candidates.append(f"{symbol.upper()}.BO")
+
+        for cand in candidates:
+            try:
+                chart = await fetcher.yahoo.get_chart(cand, range_str="2y", interval="1d")
+            except Exception:
+                continue
+            result = (chart.get("chart", {}).get("result") or [None])[0]
+            if not result:
+                continue
+            divs = (result.get("events", {}) or {}).get("dividends", {}) or {}
+            events: list[CorporateEvent] = []
+            for entry in divs.values():
+                ts = entry.get("date")
+                amt = entry.get("amount")
+                if ts is None or amt is None:
+                    continue
+                try:
+                    d = datetime.fromtimestamp(int(ts), tz=timezone.utc).date()
+                except (ValueError, OSError, OverflowError):
+                    continue
+                events.append(
+                    CorporateEvent(
+                        symbol=symbol.upper(),
+                        event_type=EventType.DIVIDEND,
+                        title="Dividend",
+                        description="Dividend (Yahoo history)",
+                        event_date=d,
+                        ex_date=d,
+                        value=f"{amt} per share",
+                        source="yahoo",
+                        impact="positive",
+                    )
+                )
+            if events:
+                return events
+        return []
 
     async def _fetch_nse_events(self, symbol: str) -> list[CorporateEvent]:
         fetcher = await get_unified_fetcher()
@@ -442,6 +491,7 @@ class CorporateActionsService:
         gathered = await asyncio.gather(
             self._fetch_nse_events(clean),
             self._fetch_yahoo_events(clean),
+            self._fetch_yahoo_chart_dividends(clean),
             self._fetch_fmp_dividends_splits(clean),
             self._fetch_fmp_ipo(clean),
             self._fetch_news_mentions(clean),
@@ -501,6 +551,81 @@ class CorporateActionsService:
     async def get_dividend_history(self, symbol: str) -> list[CorporateEvent]:
         events = await self.get_events(symbol=symbol, event_types=[EventType.DIVIDEND], include_upcoming=True)
         return [x for x in events if x.event_type == EventType.DIVIDEND]
+
+    async def project_next_dividend(self, symbol: str, days_ahead: int) -> Optional[CorporateEvent]:
+        """Estimate the next ex-date for a regular distributor from its cadence.
+
+        For monthly/quarterly payers (many ETFs, e.g. JEIP.DE) no free source
+        publishes a forward ex-date, so a clearly-labelled projection from the
+        historical interval is the only way they appear in the calendar. Only
+        projects when the history is regular enough to be meaningful.
+        """
+        history = await self.get_dividend_history(symbol)
+        dates = sorted({(e.ex_date or e.event_date) for e in history if (e.ex_date or e.event_date)})
+        if len(dates) < 4:
+            return None
+
+        intervals = [(dates[i] - dates[i - 1]).days for i in range(1, len(dates))]
+        intervals = [d for d in intervals if d > 0]
+        if len(intervals) < 3:
+            return None
+        intervals.sort()
+        median = intervals[len(intervals) // 2]
+        # Only monthly..annual cadences; skip irregular/one-off (e.g. specials).
+        if not (20 <= median <= 400):
+            return None
+
+        last = dates[-1]
+        last_amt = extract_amount(
+            next((e.value for e in history if (e.ex_date or e.event_date) == last), None)
+        )
+        today = date.today()
+        next_date = last + timedelta(days=median)
+        guard = 0
+        while next_date < today and guard < 64:
+            next_date += timedelta(days=median)
+            guard += 1
+        if (next_date - today).days > max(1, days_ahead):
+            return None
+
+        return CorporateEvent(
+            symbol=symbol.upper(),
+            event_type=EventType.DIVIDEND,
+            title="Dividend (estimated)",
+            description=f"Projected from a ~{median}-day historical cadence; not yet announced.",
+            event_date=next_date,
+            ex_date=next_date,
+            value=f"{last_amt} per share" if last_amt is not None else None,
+            source="projection",
+            impact="positive",
+        )
+
+    async def get_upcoming_dividends(
+        self, symbols: list[str], days_ahead: int = 30, project: bool = True
+    ) -> list[CorporateEvent]:
+        """Upcoming dividends for a set of symbols, with projection fallback.
+
+        Real announced ex-dates take precedence; symbols with none in the window
+        fall back to a labelled estimate (``source == "projection"``).
+        """
+        events = await self.get_portfolio_events(symbols, days_ahead=days_ahead)
+        divs = [e for e in events if e.event_type == EventType.DIVIDEND]
+        if project:
+            have = {e.symbol.upper() for e in divs}
+            todo = [s for s in {x.strip().upper() for x in symbols if x and x.strip()} if s not in have]
+            sem = asyncio.Semaphore(5)
+
+            async def _proj(sym: str) -> Optional[CorporateEvent]:
+                async with sem:
+                    try:
+                        return await self.project_next_dividend(sym, days_ahead)
+                    except Exception:
+                        return None
+
+            projected = await asyncio.gather(*[_proj(s) for s in todo])
+            divs.extend([p for p in projected if p is not None])
+        divs.sort(key=lambda x: (x.ex_date or x.event_date))
+        return divs
 
 
 corporate_actions_service = CorporateActionsService()

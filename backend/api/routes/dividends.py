@@ -74,18 +74,18 @@ async def get_dividend_calendar(
     else:
         universe = _portfolio_symbols(db) or _DEFAULT_UNIVERSE
 
-    events = await corporate_actions_service.get_portfolio_events(universe, days_ahead=days)
+    events = await corporate_actions_service.get_upcoming_dividends(universe, days_ahead=days)
     out: list[dict[str, Any]] = []
     for evt in events:
-        if evt.event_type != EventType.DIVIDEND:
-            continue
         ex = evt.ex_date or evt.event_date
+        estimated = evt.source == "projection"
         out.append(
             {
                 "symbol": evt.symbol,
                 "ex_date": ex.isoformat() if ex else None,
                 "amount": extract_amount(evt.value) or 0.0,
-                "type": _dividend_type(evt.title),
+                "type": "Estimated" if estimated else _dividend_type(evt.title),
+                "estimated": estimated,
             }
         )
     out.sort(key=lambda r: r.get("ex_date") or "")

@@ -580,6 +580,7 @@ export type EconomicEvent = {
   previous?: number | string | null;
   unit?: string;
   currency?: string;
+  sample?: boolean;
 };
 
 export type MacroIndicator = {

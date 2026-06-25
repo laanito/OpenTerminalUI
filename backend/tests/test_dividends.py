@@ -8,10 +8,17 @@ currency-agnostic amount parser and the region filtering.
 
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 import pytest
 
 from backend.api.routes.dividends import _dividend_type
-from backend.equity.services.corporate_actions import extract_amount
+from backend.equity.services.corporate_actions import (
+    CorporateEvent,
+    EventType,
+    corporate_actions_service,
+    extract_amount,
+)
 from backend.services.economic_data import MACRO_CONFIG, EconomicDataService
 
 
@@ -64,3 +71,53 @@ async def _async_none(*args, **kwargs):
 
 async def _async_noop(*args, **kwargs):
     return None
+
+
+def _div(d: date, amt: float) -> CorporateEvent:
+    return CorporateEvent(
+        symbol="JEIP.DE",
+        event_type=EventType.DIVIDEND,
+        title="Dividend",
+        description="x",
+        event_date=d,
+        ex_date=d,
+        value=f"{amt} per share",
+        source="yahoo",
+        impact="positive",
+    )
+
+
+@pytest.mark.asyncio
+async def test_project_next_dividend_monthly(monkeypatch):
+    """A regular ~monthly payer with no announced forward date gets a labelled
+    projection within the window (the JEIP.DE case)."""
+    today = date.today()
+    history = [_div(today - timedelta(days=30 * i), 0.18) for i in range(1, 7)]
+
+    async def fake_history(symbol):
+        return history
+
+    monkeypatch.setattr(corporate_actions_service, "get_dividend_history", fake_history)
+    proj = await corporate_actions_service.project_next_dividend("JEIP.DE", days_ahead=35)
+    assert proj is not None
+    assert proj.source == "projection"
+    assert proj.title == "Dividend (estimated)"
+    assert proj.ex_date >= today
+
+
+@pytest.mark.asyncio
+async def test_project_next_dividend_skips_irregular(monkeypatch):
+    """One-off / sparse history must not be projected."""
+
+    async def fake_history(symbol):
+        return [_div(date(2020, 1, 1), 5.0), _div(date(2024, 6, 1), 1.0)]
+
+    monkeypatch.setattr(corporate_actions_service, "get_dividend_history", fake_history)
+    assert await corporate_actions_service.project_next_dividend("X", days_ahead=30) is None
+
+
+def test_mock_calendar_is_flagged_sample():
+    svc = EconomicDataService()
+    events = svc._get_mock_calendar("2026-06-01", "2026-06-30")
+    assert events and all(ev.get("sample") is True for ev in events)
+    assert "IN" not in {ev["country"] for ev in events}

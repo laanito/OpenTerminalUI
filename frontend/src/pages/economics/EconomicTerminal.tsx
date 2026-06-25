@@ -55,6 +55,8 @@ export function EconomicTerminal() {
     refetchInterval: 600_000
   });
 
+  const isSampleData = useMemo(() => Boolean(events?.some(ev => ev.sample)), [events]);
+
   const filteredEvents = useMemo(() => {
     if (!events) return [];
     return events.filter(ev => {
@@ -99,6 +101,15 @@ export function EconomicTerminal() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 h-full">
             {/* Calendar Main View */}
             <div className="lg:col-span-3 flex flex-col gap-4 h-full">
+              {isSampleData && (
+                <div className="flex items-center gap-2 rounded border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-[11px] text-orange-300">
+                  <Info size={13} className="shrink-0" />
+                  <span>
+                    Showing <strong>sample data</strong> — no live economic-calendar source available.
+                    Set <code className="font-mono">FINNHUB_API_KEY</code> or <code className="font-mono">FMP_API_KEY</code> (and check provider rate limits) for live events.
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="text-terminal-muted hover:text-terminal-accent">
