@@ -13,6 +13,7 @@ import {
   type HeatmapSizeBy,
 } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { useSettingsStore } from "../store/settingsStore";
 
 type TooltipState = {
   x: number;
@@ -119,7 +120,10 @@ function buildTreemap(groups: HeatmapGroup[], width: number, height: number): Tr
 export function MarketHeatmapPage() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [market, setMarket] = useState<HeatmapMarket>("IN");
+  // Default the heatmap to the user's selected market (US for the de-India fork),
+  // not a hardcoded India. Only IN/US are supported, so EU/crypto fall back to US.
+  const selectedCountry = useSettingsStore((s) => s.selectedCountry);
+  const [market, setMarket] = useState<HeatmapMarket>(selectedCountry === "IN" ? "IN" : "US");
   const [period, setPeriod] = useState<HeatmapPeriod>("1d");
   const [group, setGroup] = useState<HeatmapGroupBy>("sector");
   const [sizeBy, setSizeBy] = useState<HeatmapSizeBy>("market_cap");
