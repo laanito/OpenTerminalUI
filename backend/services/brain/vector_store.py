@@ -20,6 +20,7 @@ back to the numpy path rather than erroring.
 from __future__ import annotations
 
 import logging
+import threading
 from dataclasses import dataclass
 
 from sqlalchemy import bindparam, text
@@ -212,11 +213,19 @@ class VectorStore:
 
 
 def _pgvector_ready(engine, dim: int) -> bool:
-    """Enable the pgvector extension + ensure the embedding column/index exist."""
+    """Enable the pgvector extension + ensure the embedding column/index exist.
+
+    Runs idempotent DDL (CREATE EXTENSION / ADD COLUMN / CREATE INDEX). The
+    ALTER/CREATE INDEX take heavy table locks, so a short ``lock_timeout`` makes
+    this fail fast to the numpy fallback rather than block behind another
+    transaction. Must only be called once per process (see make_vector_store).
+    """
     if engine.dialect.name != "postgresql":
         return False
     try:
         with engine.begin() as conn:
+            # Fail fast instead of queueing behind a conflicting lock for minutes.
+            conn.execute(text("SET LOCAL lock_timeout = '5s'"))
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             conn.execute(
                 text(f"ALTER TABLE brain_chunks ADD COLUMN IF NOT EXISTS embedding vector({dim})")
@@ -228,11 +237,29 @@ def _pgvector_ready(engine, dim: int) -> bool:
                 )
             )
         return True
-    except Exception as exc:  # noqa: BLE001 - no pgvector → numpy fallback
+    except Exception as exc:  # noqa: BLE001 - no pgvector / lock contention → numpy fallback
         logger.info("pgvector unavailable (%s); second brain will use numpy cosine.", exc)
         return False
 
 
+# The pgvector setup runs idempotent DDL with table-level locks, so it must run
+# ONCE per process — not on every request. Memoize the store per (dialect, dim)
+# and serialize first-init so concurrent brain requests can't issue overlapping
+# ALTER/CREATE INDEX (which deadlock each other on ACCESS EXCLUSIVE).
+_store_cache: dict[tuple[str, int], VectorStore] = {}
+_store_lock = threading.Lock()
+
+
 def make_vector_store(engine, dim: int) -> VectorStore:
-    """Build the right store for the active DB, preferring pgvector on Postgres."""
-    return VectorStore(use_pgvector=_pgvector_ready(engine, dim))
+    """Build (once) the right store for the active DB, preferring pgvector on Postgres."""
+    key = (engine.dialect.name, int(dim))
+    cached = _store_cache.get(key)
+    if cached is not None:
+        return cached
+    with _store_lock:
+        cached = _store_cache.get(key)
+        if cached is not None:
+            return cached
+        store = VectorStore(use_pgvector=_pgvector_ready(engine, dim))
+        _store_cache[key] = store
+        return store
