@@ -18,6 +18,7 @@ import { ShareholdingChart } from "../components/analysis/ShareholdingChart";
 import { ShareholdingPanel } from "../components/ShareholdingPanel";
 import { ValuationPanel } from "../components/analysis/ValuationPanel";
 import { CryptoFundamentalsPanel } from "../components/crypto/CryptoFundamentalsPanel";
+import { CryptoOverviewPanel } from "../components/crypto/CryptoOverviewPanel";
 import { FuturesPanel } from "../components/market/FuturesPanel";
 import { OrderBookPanel } from "../components/market/OrderBookPanel";
 import { TerminalBadge } from "../components/terminal/TerminalBadge";
@@ -480,6 +481,7 @@ export function StockDetailPage() {
               </div>
             )}
           </div>
+          {!isCrypto && (
           <TerminalPanel title="Performance Strip" className="rounded-sm">
             <div className="grid grid-cols-3 gap-2 text-xs md:grid-cols-6">
               {(["1D", "1W", "1M", "3M", "6M", "1Y"] as const).map((key) => {
@@ -511,6 +513,7 @@ export function StockDetailPage() {
               </div>
             </div>
           </TerminalPanel>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -588,7 +591,18 @@ export function StockDetailPage() {
       </div>
 
       <div className="min-h-[300px] pb-4">
-        {tab === "overview" && (
+        {tab === "overview" && isCrypto && (
+          <div className="space-y-6">
+            <CryptoOverviewPanel symbol={ticker} />
+            <AiInsightCard
+              title="AI Investment Briefing"
+              description={`${ticker} · AI-synthesized bull/bear thesis from market context and news`}
+              fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
+            />
+          </div>
+        )}
+
+        {tab === "overview" && !isCrypto && (
           <div className="space-y-6">
             <OverviewPanel
               stock={stockForOverview}
@@ -598,7 +612,7 @@ export function StockDetailPage() {
             />
             <AiInsightCard
               title="AI Investment Briefing"
-              description={`${ticker} · Gemma-synthesized bull/bear thesis from fundamentals and news`}
+              description={`${ticker} · AI-synthesized bull/bear thesis from fundamentals and news`}
               fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
             />
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
