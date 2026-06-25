@@ -468,7 +468,8 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | Variable | Purpose |
 |----------|---------|
 | `FMP_API_KEY` | Financial Modeling Prep &mdash; US equities, fundamentals, earnings |
-| `FINNHUB_API_KEY` | Finnhub &mdash; US real-time WebSocket ticks |
+| `FINNHUB_API_KEY` | Finnhub &mdash; US real-time WebSocket ticks + economic calendar events |
+| `FRED_API_KEY` | FRED (St. Louis Fed) &mdash; macro indicators dashboard (US/EU/China); falls back to mock values if unset |
 | `COINGECKO_API_KEY` | CoinGecko demo key &mdash; raises the keyless crypto rate limit (optional) |
 | `OPENTERMINALUI_BINANCE_WS_ENABLED` | Toggle live crypto spot ticks via Binance WebSocket (default `true`) |
 | `KITE_API_KEY` | Zerodha Kite &mdash; India NSE/BSE F&O real-time + historical |
