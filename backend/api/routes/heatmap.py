@@ -161,7 +161,7 @@ def _cache_key(market: str, group: str, period: str, size_by: str) -> str:
 
 @router.get("/treemap")
 async def heatmap_treemap(
-    market: MarketCode = Query(default="IN"),
+    market: MarketCode = Query(default="US"),
     group: GroupBy = Query(default="sector"),
     period: PeriodCode = Query(default="1d"),
     size_by: SizeBy = Query(default="market_cap"),

@@ -14,29 +14,33 @@ from backend.shared.sql_compat import autoincrement_pk
 class PCRTracker:
     """Tracks Put-Call Ratio trends over time."""
 
+    # US-optionable default basket for the background PCR snapshot. The fork's
+    # default market is US, so the option-chain fetcher classifies bare symbols as
+    # US and routes them to the yfinance options adapter; an Indian basket here
+    # produced startup 404 noise ("Quote not found for symbol: NIFTY"). NSE F&O
+    # (NIFTY/BANKNIFTY/...) still works on demand via the NSE/Kite path when a
+    # symbol classifies as Indian. Mirrors the de-India prefetch basket.
     DEFAULT_SYMBOLS = [
-        "NIFTY",
-        "BANKNIFTY",
-        "RELIANCE",
-        "TCS",
-        "INFY",
-        "HDFCBANK",
-        "ICICIBANK",
-        "SBIN",
-        "LT",
-        "AXISBANK",
-        "KOTAKBANK",
-        "ITC",
-        "BAJFINANCE",
-        "MARUTI",
-        "TATAMOTORS",
-        "BHARTIARTL",
-        "SUNPHARMA",
-        "HCLTECH",
-        "WIPRO",
-        "ADANIPORTS",
-        "NTPC",
-        "ONGC",
+        "SPY",
+        "QQQ",
+        "IWM",
+        "DIA",
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "AMZN",
+        "META",
+        "GOOGL",
+        "TSLA",
+        "AMD",
+        "NFLX",
+        "AVGO",
+        "JPM",
+        "BAC",
+        "XOM",
+        "INTC",
+        "DIS",
+        "BABA",
     ]
 
     def __init__(self) -> None:
