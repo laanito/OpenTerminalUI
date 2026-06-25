@@ -342,20 +342,35 @@ class PortfolioAnalyticsService:
     async def correlation_matrix(self, holdings: Iterable[Holding], window: int = 60) -> dict[str, Any]:
         symbols: list[str] = []
         returns: list[pd.Series] = []
+        seen: set[str] = set()
         for h in holdings:
+            # Multiple lots of the same ticker (e.g. a second purchase) are the same
+            # instrument for correlation. De-dupe so the returns frame has unique
+            # columns — duplicate labels make df.corr().loc[i, c] return a Series
+            # instead of a scalar, which blows up float() below.
+            if h.ticker in seen:
+                continue
             close = await self._close_series(h.ticker, range_str="1y")
             ret = close.pct_change().dropna()
             if ret.empty:
                 continue
+            seen.add(h.ticker)
             symbols.append(h.ticker)
             returns.append(ret.rename(h.ticker))
         if not returns:
             return {"symbols": [], "matrix": [], "rolling": []}
         df = pd.concat(returns, axis=1).dropna(how="all").fillna(0.0)
         corr = df.corr().fillna(0.0)
+        # Index positionally off the underlying array rather than by label: robust
+        # even if a duplicate label slips through (label .loc would return a Series).
+        corr_cols = [str(c) for c in corr.columns]
+        corr_values = corr.to_numpy()
         matrix = [
-            [{"x": c, "y": i, "value": float(corr.loc[i, c])} for c in corr.columns]
-            for i in corr.index
+            [
+                {"x": corr_cols[ci], "y": corr_cols[ri], "value": float(corr_values[ri, ci])}
+                for ci in range(len(corr_cols))
+            ]
+            for ri in range(len(corr_cols))
         ]
         rolling_rows: list[dict[str, Any]] = []
         if len(df) >= window and len(df.columns) >= 2:
