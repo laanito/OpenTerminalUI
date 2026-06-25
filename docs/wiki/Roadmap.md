@@ -41,16 +41,30 @@
   (`json_schema` → `json_object` → text), and collapsed the old
   LM Studio/OpenAI/Ollama-native fork in `ai_service` into one path. Config via
   `LLM_BASE_URL`/`LLM_MODEL`/`LLM_API_KEY` (legacy `LM_STUDIO_*` still honored).
+- **EUR display currency**: a cross-rates-driven, instrument-currency-aware
+  display engine (`lib/currency.ts` + `useDisplayCurrency`). USD/EUR/INR selectable
+  with correct per-currency symbol/locale/compaction (no more ₹-for-everything),
+  converting from each instrument's native currency via the existing
+  `/api/forex/cross-rates` matrix; retired the hardcoded `formatInr`.
+- **Sentiment engine deps**: declared the intended classifier dependencies
+  (`textblob` core; FinBERT extras in `requirements-ml.txt`) so the news
+  per-article sentiment runs its designed FinBERT → TextBlob → lexicon ladder
+  instead of silently degrading to keyword-only.
+- **Scheduled reports + report generation backend**: wired the per-user CRUD
+  routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
+  `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand
+  `POST /api/reports/generate` returning a PDF (portfolio / stock / backtest).
+  Scheduled delivery emails the report via SMTP, degrading gracefully when SMTP
+  env isn't configured. Unblocks the Settings scheduler + SecurityHub export.
 
 ## Fork: Next
 
-- **EUR display currency** — wire FX conversion (and retire leftover `INR`
-  formatting + `NIFTY50` benchmark-preset defaults)
-- **Scheduled reports + report generation backend** — the frontend
-  (`Settings.tsx` scheduled reports, `SecurityHub.tsx` report export) calls
-  `/reports/scheduled` and `/reports/generate`, but only a `ScheduledReportService`
-  exists — no HTTP routes are wired. Build the CRUD + generate endpoints. (Lower
-  priority; surfaced by the API audit, deferred to after Ollama.)
+- **EUR display-currency follow-ups** — the multi-currency engine shipped
+  (cross-rates-driven, instrument-currency aware), but three refinements remain:
+  the `-USD` hardcoding for EUR-quoted crypto (e.g. `BTC-EUR`); threading the
+  viewed symbol's currency into StockDetail's financial/analysis panels (they use
+  the market-native default today); and the leftover `en-IN` digit grouping in
+  NSE-by-design F&O panels and a few screener/chart number formatters.
 - **LLM-based per-article sentiment** (nice-to-have) — the News feed's per-article
   bullish/bearish/neutral classification currently uses the local non-LLM engine
   (FinBERT → TextBlob → lexicon, `backend/services/sentiment_engine.py`). Optionally

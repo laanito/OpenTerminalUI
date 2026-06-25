@@ -33,6 +33,7 @@ from backend.models.core import (
     OmsOrderORM,
     OpsKillSwitchORM,
     PriceEodORM,
+    ScheduledReportORM,
     TaxLot,
     NewsArticle,
     PortfolioMutualFundHolding,
@@ -72,6 +73,7 @@ from backend.models.notification import Notification
 __all__ = [
     "Holding",
     "TaxLot",
+    "ScheduledReportORM",
     "WatchlistItem",
     "AlertRuleORM",
     "AlertHistoryORM",

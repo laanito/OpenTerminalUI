@@ -1,30 +1,29 @@
 from __future__ import annotations
 
+import logging
 import os
 import smtplib
-import uuid
-from dataclasses import dataclass
 from email.message import EmailMessage
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from sqlalchemy.orm import Session
 
-
-@dataclass
-class ScheduledReportConfig:
-    id: str
-    report_type: str
-    frequency: str
-    email: str
-    enabled: bool = True
-    data_type: str = "positions"
+logger = logging.getLogger(__name__)
 
 
 class ScheduledReportsService:
+    """DB-backed scheduled-report registry.
+
+    Configs are persisted per-user in the ``scheduled_reports`` table so they
+    survive restarts; APScheduler holds the live cron jobs and is rehydrated from
+    the DB on boot. Delivery generates the report and emails it, degrading
+    gracefully (logged, not raised) when SMTP isn't configured.
+    """
+
     def __init__(self) -> None:
         self._scheduler = BackgroundScheduler(timezone="UTC")
         self._started = False
-        self._configs: dict[str, ScheduledReportConfig] = {}
 
     def start(self) -> None:
         if not self._started:
@@ -36,37 +35,83 @@ class ScheduledReportsService:
             self._scheduler.shutdown(wait=False)
             self._started = False
 
-    def list(self) -> list[ScheduledReportConfig]:
-        return sorted(self._configs.values(), key=lambda x: x.id)
+    # --- DB-backed CRUD ---------------------------------------------------
 
-    def upsert(self, report_type: str, frequency: str, email: str, data_type: str = "positions") -> ScheduledReportConfig:
-        self.start()
-        cfg = ScheduledReportConfig(
-            id=str(uuid.uuid4()),
+    def list(self, db: Session, user_id: str) -> list:
+        from backend.models import ScheduledReportORM
+
+        return (
+            db.query(ScheduledReportORM)
+            .filter(ScheduledReportORM.user_id == user_id)
+            .order_by(ScheduledReportORM.created_at)
+            .all()
+        )
+
+    def create(
+        self,
+        db: Session,
+        user_id: str,
+        report_type: str,
+        frequency: str,
+        email: str,
+        data_type: str = "positions",
+    ):
+        from backend.models import ScheduledReportORM
+
+        row = ScheduledReportORM(
+            user_id=user_id,
             report_type=report_type,
             frequency=frequency,
             email=email,
             data_type=data_type,
+            enabled=True,
         )
-        self._configs[cfg.id] = cfg
-        trigger = self._trigger_for_frequency(frequency)
-        self._scheduler.add_job(
-            self._noop_delivery,
-            trigger=trigger,
-            id=cfg.id,
-            replace_existing=True,
-            kwargs={"config_id": cfg.id},
-        )
-        return cfg
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        self._schedule_job(row.id, frequency)
+        return row
 
-    def delete(self, config_id: str) -> bool:
-        existed = config_id in self._configs
-        self._configs.pop(config_id, None)
+    def delete(self, db: Session, user_id: str, config_id: str) -> bool:
+        from backend.models import ScheduledReportORM
+
+        row = (
+            db.query(ScheduledReportORM)
+            .filter(ScheduledReportORM.id == config_id, ScheduledReportORM.user_id == user_id)
+            .first()
+        )
+        if row is None:
+            return False
+        db.delete(row)
+        db.commit()
+        self._remove_job(config_id)
+        return True
+
+    def rehydrate(self, db: Session) -> None:
+        """Re-register cron jobs for every enabled config (called on startup)."""
+        from backend.models import ScheduledReportORM
+
+        self.start()
+        for row in db.query(ScheduledReportORM).filter(ScheduledReportORM.enabled.is_(True)).all():
+            self._schedule_job(row.id, row.frequency)
+
+    # --- scheduling -------------------------------------------------------
+
+    def _schedule_job(self, config_id: str, frequency: str) -> None:
+        self.start()
+        self._scheduler.add_job(
+            self._deliver,
+            trigger=self._trigger_for_frequency(frequency),
+            id=config_id,
+            replace_existing=True,
+            kwargs={"config_id": config_id},
+        )
+
+    def _remove_job(self, config_id: str) -> None:
         try:
             self._scheduler.remove_job(config_id)
         except Exception:
             pass
-        return existed
 
     def _trigger_for_frequency(self, frequency: str) -> CronTrigger:
         low = frequency.strip().lower()
@@ -76,9 +121,37 @@ class ScheduledReportsService:
             return CronTrigger(day_of_week="fri", hour=18, minute=0)
         return CronTrigger(hour="*/12")
 
-    def _noop_delivery(self, config_id: str) -> None:
-        # Execution hook; actual API-triggered delivery can call send_email directly.
-        _ = config_id
+    def _deliver(self, config_id: str) -> None:
+        """Generate and email a scheduled report. Runs in the scheduler thread."""
+        from backend.reports.generator import generate_pdf_report, rows_for_data_type
+        from backend.models import ScheduledReportORM
+        from backend.shared.db import SessionLocal
+
+        db = SessionLocal()
+        try:
+            row = (
+                db.query(ScheduledReportORM)
+                .filter(ScheduledReportORM.id == config_id, ScheduledReportORM.enabled.is_(True))
+                .first()
+            )
+            if row is None:
+                return
+            rows = rows_for_data_type(db, row.data_type)
+            pdf = generate_pdf_report(rows, title=f"{row.report_type} report")
+            self.send_email(
+                row.email,
+                f"OpenTerminalUI scheduled report: {row.report_type}",
+                "Your scheduled report is attached.",
+                f"{row.report_type}.pdf",
+                pdf,
+            )
+        except RuntimeError as exc:
+            # SMTP not configured -- expected in self-hosted setups without mail.
+            logger.warning("Scheduled report %s not delivered: %s", config_id, exc)
+        except Exception:
+            logger.exception("Scheduled report %s delivery failed", config_id)
+        finally:
+            db.close()
 
     def send_email(self, to_email: str, subject: str, body: str, attachment_name: str, attachment_bytes: bytes) -> None:
         host = os.getenv("SMTP_HOST")

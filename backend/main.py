@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
@@ -107,6 +108,19 @@ async def lifespan(app: FastAPI):
     if _scanner_alert_scheduler:
         await _scanner_alert_scheduler.start(hub, interval_seconds=900)
 
+    # Scheduled reports: start the cron scheduler and rehydrate persisted jobs.
+    try:
+        from backend.reports.scheduler import scheduled_reports_service
+        from backend.shared.db import SessionLocal
+
+        _reports_db = SessionLocal()
+        try:
+            scheduled_reports_service.rehydrate(_reports_db)
+        finally:
+            _reports_db.close()
+    except Exception:
+        logging.getLogger(__name__).exception("Scheduled-reports rehydrate failed")
+
     yield
 
     if _instrument_seed_task and not _instrument_seed_task.done():
@@ -121,6 +135,13 @@ async def lifespan(app: FastAPI):
         await _pcr_snapshot_service.stop()
     if _scanner_alert_scheduler:
         await _scanner_alert_scheduler.stop()
+
+    try:
+        from backend.reports.scheduler import scheduled_reports_service
+
+        scheduled_reports_service.stop()
+    except Exception:
+        pass
 
     await hub.shutdown()
     await shutdown_unified_fetcher()

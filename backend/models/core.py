@@ -31,6 +31,19 @@ class TaxLot(Base):
     buy_date: Mapped[str] = mapped_column(String(16), index=True)
 
 
+class ScheduledReportORM(Base):
+    __tablename__ = "scheduled_reports"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    report_type: Mapped[str] = mapped_column(String(64))
+    frequency: Mapped[str] = mapped_column(String(32))
+    email: Mapped[str] = mapped_column(String(255))
+    data_type: Mapped[str] = mapped_column(String(64), default="positions")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class WatchlistORM(Base):
     __tablename__ = "watchlists"
 
