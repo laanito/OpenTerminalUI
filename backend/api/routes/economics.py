@@ -21,10 +21,11 @@ async def get_economic_calendar(
 
 @router.get("/indicators", response_model=Dict[str, Any])
 async def get_macro_indicators(
+    country: str | None = Query(default=None),
     service: EconomicDataService = Depends(get_economic_data_service)
 ):
-    """Fetch key macro indicators for main regions."""
-    data = await service.get_macro_indicators()
+    """Fetch key macro indicators, optionally filtered to one region."""
+    data = await service.get_macro_indicators(country)
     if isinstance(data, dict) and "error" in data:
         raise HTTPException(status_code=500, detail=data["error"])
     return data

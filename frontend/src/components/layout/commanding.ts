@@ -28,6 +28,7 @@ export type CommandFunctionCode =
   | "YCURVE"
   | "ECAL"
   | "ECOF"
+  | "DVD"
   | "FRED"
   | "RRG"
   | "CRYP"
@@ -127,6 +128,7 @@ export const COMMAND_FUNCTIONS: CommandFunctionSpec[] = [
   { code: "YCURVE", label: "Yield Curve", description: "Open US Treasury yield curve dashboard", aliases: ["GC", "YIELD", "CURVE"] },
   { code: "ECAL", label: "Economic Calendar", description: "Open global economic calendar", aliases: ["CALENDAR"] },
   { code: "ECOF", label: "Macro Dashboard", description: "Open macro indicators dashboard", aliases: ["MACRO", "INDICATORS"] },
+  { code: "DVD", label: "Dividends", description: "Open dividend calendar & income tracker", aliases: ["DIV", "DIVIDEND", "DIVIDENDS"] },
   { code: "FRED", label: "FRED Series", description: "Chart a FRED economic series", aliases: ["SERIES"] },
   { code: "RRG", label: "Sector Rotation Map", description: "Relative Rotation Graph (RRG)", aliases: ["SROT", "SECTOR"] },
   { code: "CRYP", label: "Crypto Workspace", description: "Open dedicated crypto workspace", aliases: ["CRYPTO"] },
@@ -488,6 +490,9 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
       case "ECOF":
         navigate("/equity/economics?tab=macro");
         return { ok: true, target: "/equity/economics" };
+      case "DVD":
+        navigate("/equity/dividends");
+        return { ok: true, target: "/equity/dividends" };
       case "FRED": {
         const series = mod0 || "CPIAUCSL";
         navigate(`/equity/security/FRED:${series.toUpperCase()}?tab=chart`);

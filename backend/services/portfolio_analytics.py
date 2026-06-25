@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_unified_fetcher
 from backend.db.models import Holding, PortfolioHoldingORM, PortfolioORM, TaxLot
-from backend.equity.services.corporate_actions import corporate_actions_service
+from backend.equity.services.corporate_actions import corporate_actions_service, extract_amount
 from backend.shared.db import init_db
 
 TRADING_DAYS = 252
@@ -394,12 +394,10 @@ class PortfolioAnalyticsService:
         annual_income = 0.0
         for evt in dividends:
             q = qty.get(evt.symbol.upper(), 0.0)
-            amt = 0.0
-            raw_value = str(evt.value or "").strip()
-            try:
-                amt = float(raw_value.replace("INR", "").replace(",", "").strip())
-            except Exception:
-                amt = 0.0
+            # Currency-agnostic: handles "0.25 per share" (FMP), "$0.96",
+            # "€1.20", "INR 10" alike — the old INR-only strip parsed USD/EUR
+            # dividends to 0.0.
+            amt = extract_amount(evt.value) or 0.0
             projected = amt * q
             annual_income += projected
             rows.append(

@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Macro Indicator Series IDs (mostly FRED)
 # US: GDP (GDPC1), CPI (CPIAUCSL), Unemployment (UNRATE), Fed Funds (FEDFUNDS), PMI (MANPMI), Consumer Confidence (UMCSENT)
-# India: GDP (CPMNIND898S), CPI (INNCPIALLMINMEI), Repo Rate (INNRIRR), PMI (not directly on FRED easily, use mock/placeholder)
-# EU: GDP (CLVMEURSCAB1GQEA19), CPI (CP0000EZ19M086NEST), ECB Rate (ECBDFR), PMI
+# EU: GDP (CLVMEURSCAB1GQEA19), CPI (CP0000EZ19M086NEST), ECB Rate (ECBDFR), Unemployment (LRHUTTTTEZM156S)
 # China: GDP (CHNGDPNQDSMEI), CPI (CHNCPIALLMINMEI), Rate (CHNPRIME)
 
 MACRO_CONFIG = {
@@ -26,22 +25,24 @@ MACRO_CONFIG = {
         "pmi": "MANPMI",
         "confidence": "UMCSENT"
     },
-    "india": {
-        "gdp": "CPMNIND898S",
-        "cpi": "INNCPIALLMINMEI",
-        "rate": "INNRIRR",
-        "pmi": "INNPCPIALLMINMEI" # Placeholder
-    },
     "eu": {
         "gdp": "CLVMEURSCAB1GQEA19",
         "cpi": "CP0000EZ19M086NEST",
-        "rate": "ECBDFR"
+        "rate": "ECBDFR",
+        "unemployment": "LRHUTTTTEZM156S"
     },
     "china": {
         "gdp": "CHNGDPNQDSMEI",
         "cpi": "CHNCPIALLMINMEI",
         "rate": "CHNPRIME"
     }
+}
+
+# Map a frontend country/region code to a MACRO_CONFIG region key.
+_COUNTRY_TO_REGION = {
+    "US": "us", "USA": "us",
+    "EU": "eu", "EZ": "eu", "DE": "eu", "FR": "eu", "ES": "eu", "IT": "eu",
+    "CN": "china", "CHINA": "china",
 }
 
 class EconomicDataService:
@@ -125,9 +126,20 @@ class EconomicDataService:
         await cache.set(cache_key, events, ttl=3600)
         return events
 
-    async def get_macro_indicators(self) -> Dict[str, Any]:
-        """Fetch key macro indicators for main regions."""
-        cache_key = cache.build_key("econ", "indicators", {"type": "current"})
+    async def get_macro_indicators(self, country: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch key macro indicators, optionally filtered to one region.
+
+        ``country`` accepts a country/region code (e.g. ``US``, ``EU``, ``CN``);
+        unknown or empty values return every region.
+        """
+        region_filter = _COUNTRY_TO_REGION.get((country or "").strip().upper())
+        config = (
+            {region_filter: MACRO_CONFIG[region_filter]}
+            if region_filter in MACRO_CONFIG
+            else MACRO_CONFIG
+        )
+
+        cache_key = cache.build_key("econ", "indicators", {"region": region_filter or "all"})
         cached = await cache.get(cache_key)
         if cached:
             return cached
@@ -135,7 +147,7 @@ class EconomicDataService:
         results = {}
         if self.fred_key:
             tasks = []
-            for region, series_map in MACRO_CONFIG.items():
+            for region, series_map in config.items():
                 for label, series_id in series_map.items():
                     tasks.append(self._fetch_fred_indicator(region, label, series_id))
 
@@ -153,7 +165,8 @@ class EconomicDataService:
                         "history": item["history"]
                     }
         else:
-            results = self._get_mock_macro()
+            mock = self._get_mock_macro()
+            results = {r: mock[r] for r in config if r in mock} or mock
 
         await cache.set(cache_key, results, ttl=14400) # 4 hours
         return results
@@ -225,15 +238,27 @@ class EconomicDataService:
             },
             {
                 "date": (d_start + timedelta(days=2)).strftime("%Y-%m-%d"),
-                "time": "10:30:00",
-                "country": "IN",
-                "event_name": "RBI Interest Rate Decision",
+                "time": "12:45:00",
+                "country": "EU",
+                "event_name": "ECB Interest Rate Decision",
                 "impact": "high",
-                "actual": 6.5,
-                "forecast": 6.5,
-                "previous": 6.5,
+                "actual": None,
+                "forecast": 2.5,
+                "previous": 2.5,
                 "unit": "%",
-                "currency": "INR"
+                "currency": "EUR"
+            },
+            {
+                "date": (d_start + timedelta(days=3)).strftime("%Y-%m-%d"),
+                "time": "13:30:00",
+                "country": "US",
+                "event_name": "CPI (YoY)",
+                "impact": "high",
+                "actual": None,
+                "forecast": 3.1,
+                "previous": 3.4,
+                "unit": "%",
+                "currency": "USD"
             }
         ]
 
@@ -243,8 +268,9 @@ class EconomicDataService:
                 "gdp": {"value": 2.1, "last_value": 2.0, "date": "2024-Q3", "history": []},
                 "cpi": {"value": 3.4, "last_value": 3.7, "date": "2024-12", "history": []}
             },
-            "india": {
-                "gdp": {"value": 7.2, "last_value": 7.0, "date": "2024-Q3", "history": []}
+            "eu": {
+                "gdp": {"value": 0.9, "last_value": 0.6, "date": "2024-Q3", "history": []},
+                "cpi": {"value": 2.4, "last_value": 2.9, "date": "2024-12", "history": []}
             }
         }
 
