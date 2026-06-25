@@ -17,6 +17,7 @@ import { ScoreCard } from "../components/analysis/ScoreCard";
 import { ShareholdingChart } from "../components/analysis/ShareholdingChart";
 import { ShareholdingPanel } from "../components/ShareholdingPanel";
 import { ValuationPanel } from "../components/analysis/ValuationPanel";
+import { CryptoFundamentalsPanel } from "../components/crypto/CryptoFundamentalsPanel";
 import { FuturesPanel } from "../components/market/FuturesPanel";
 import { OrderBookPanel } from "../components/market/OrderBookPanel";
 import { TerminalBadge } from "../components/terminal/TerminalBadge";
@@ -43,7 +44,7 @@ import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
 import { isCryptoSymbol, isIndianSymbol } from "../utils/ticker";
 
-type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings";
+type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings" | "crypto-fundamentals";
 
 const TIMEFRAME_TO_INTERVAL: Record<ChartTimeframe, { interval: string; range: string }> = {
   "1m": { interval: "1m", range: "5d" },
@@ -117,11 +118,15 @@ export function StockDetailPage() {
   // India-only panels (shareholding, NSE corporate events/dividends, promoter
   // holdings) don't apply to US/EU/crypto; hide their tabs/cards for non-IN.
   const isIndian = isIndianSymbol(ticker, selectedMarket);
+  const isCrypto = isCryptoSymbol(ticker);
   const visibleTabs = useMemo<TabId[]>(() => {
+    // Crypto gets its own relevant tab set (the equity-centric financials/peers/
+    // valuation tabs don't apply); fundamentals here means tokenomics + on-chain.
+    if (isCrypto) return ["overview", "market-depth", "crypto-fundamentals"];
     const all: TabId[] = ["overview", "market-depth", "financials", "analysis", "peers", "valuation", "shareholding", "events", "earnings"];
     const indiaOnly: TabId[] = ["shareholding", "events"];
     return isIndian ? all : all.filter((t) => !indiaOnly.includes(t));
-  }, [isIndian]);
+  }, [isCrypto, isIndian]);
 
   const { data: stock } = useStock(ticker);
   const { data: returnsData } = useStockReturns(ticker);
@@ -576,7 +581,7 @@ export function StockDetailPage() {
               onClick={() => setTab(t)}
               className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors ${tab === t ? "border-terminal-accent text-terminal-accent" : "border-transparent text-terminal-muted hover:text-terminal-text"}`}
             >
-              {t === "market-depth" ? "Market Depth" : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === "market-depth" ? "Market Depth" : t === "crypto-fundamentals" ? "Fundamentals" : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </nav>
@@ -657,6 +662,7 @@ export function StockDetailPage() {
 
         {tab === "peers" && <PeersComparison ticker={ticker} />}
         {tab === "valuation" && <ValuationPanel ticker={ticker} />}
+        {tab === "crypto-fundamentals" && <CryptoFundamentalsPanel symbol={ticker} />}
         {tab === "shareholding" && <ShareholdingPanel ticker={ticker} enabled={shareholdingTabLoaded} />}
         {tab === "events" && <EventsTimeline symbol={ticker} />}
         {tab === "earnings" && (

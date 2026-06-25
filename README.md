@@ -35,6 +35,19 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 
 **Multi-market coverage** across NYSE, NASDAQ, major EU exchanges (LSE, XETRA, Euronext, SIX, Borsa Italiana), NSE/BSE, crypto, commodities, forex, bonds, ETFs, and mutual funds. **70+ technical indicators**, **multi-panel chart workstations**, **F&O option chains with live Greeks**, **backtesting with Model Lab**, **statistical arbitrage with Pair Trading Lab**, **portfolio analytics with risk engine**, and an **extensible plugin system** &mdash; all running on your own hardware.
 
+## Project direction
+
+> **North star.** An open, private terminal that helps an individual invest *without being fooled* &mdash; by markets, by hype, or by themselves &mdash; through **AI-native research you can grow privately**.
+
+This fork re-centres OpenTerminalUI toward **US / EU / crypto** markets on a **Postgres-first** stack with a **local, provider-agnostic LLM** (Ollama by default), and toward a clear mission: give a serious *individual* &mdash; not just an institution &mdash; the tools to understand markets and avoid being misled. Rather than chase Bloomberg-terminal parity (pursued only "just enough to be credible"), it leans into what a closed, five-figure-per-seat terminal structurally can't be:
+
+- **AI-native & private** &mdash; research, news sentiment, and an emotion gauge that run on *your* machine via a local LLM; nothing about what you search or hold leaves your hardware.
+- **Don't-get-fooled by design** &mdash; features that separate real signal from hype (e.g. crypto fundamentals: supply dilution, on-chain TVL & fee revenue, plain-language "what to watch" cues) and that help you check your own behaviour.
+- **Open & extensible** &mdash; self-hosted, MIT-licensed, bring-your-own provider keys, with a plugin/Python scripting layer.
+- **Multi-asset, unified** &mdash; equities, ETFs, FX, bonds, and **crypto as a first-class citizen**, with a display-currency selector (USD/EUR/INR).
+
+NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
+
 ## Screenshots
 
 ### Workspace & Markets
@@ -251,7 +264,7 @@ OpenTerminalUI is a self-hosted, full-stack financial terminal that combines rea
 
 - **Commodities** &mdash; energy, metals, agriculture with futures term structure and seasonal analysis
 - **Forex** &mdash; major pairs, cross rates matrix, central bank monitor (Fed, ECB, BoE, BoJ, RBI, and more)
-- **Cryptocurrency** &mdash; full workspace with markets, movers, sectors, DeFi, derivatives, heatmaps, and correlation, powered by CoinGecko (universe/search/candles) with live spot ticks via Binance
+- **Cryptocurrency** &mdash; full workspace with markets, movers, sectors, DeFi, derivatives, heatmaps, correlation, and **per-coin fundamentals** (tokenomics & supply dilution, on-chain TVL & fee revenue, valuation ratios, with plain-language "what to watch" cues), powered by CoinGecko + DefiLlama with live spot ticks via Binance
 - **ETF Analytics** &mdash; holdings viewer, flow tracker, multi-ETF overlap analysis
 - **Mutual Funds** &mdash; search, comparison, rolling returns, SIP calculator, category rankings, fund overlap
 - **Bonds** &mdash; fixed income yields, spreads, and duration analytics

@@ -12,6 +12,7 @@ from backend.api.deps import get_unified_fetcher
 from backend.api.routes.chart import _parse_yahoo_chart
 from backend.core.crypto_adapter import CryptoAdapter
 from backend.core.models import ChartResponse, OhlcvPoint
+from backend.services.crypto_fundamentals import get_fundamentals
 from backend.services.crypto_market_service import CryptoMarketService
 from backend.services.crypto_universe import load_candles, load_universe, search_universe
 
@@ -187,6 +188,43 @@ class CryptoCoinDetailResponse(BaseModel):
     high_24h: float
     low_24h: float
     sparkline: list[float]
+    ts: str
+
+
+class CryptoTokenomics(BaseModel):
+    circulating_supply: float | None = None
+    total_supply: float | None = None
+    max_supply: float | None = None
+    circulating_pct: float | None = None
+
+
+class CryptoValuation(BaseModel):
+    market_cap: float | None = None
+    fully_diluted_valuation: float | None = None
+    fdv_mcap_ratio: float | None = None
+    ath: float | None = None
+    ath_change_pct: float | None = None
+    mcap_tvl_ratio: float | None = None
+    price_to_fees_ratio: float | None = None
+
+
+class CryptoOnchain(BaseModel):
+    tvl: float | None = None
+    fees_24h: float | None = None
+    fees_30d: float | None = None
+    fees_annualized: float | None = None
+    category: str | None = None
+    chains: list[str] | None = None
+    tracked: bool = False
+
+
+class CryptoFundamentalsResponse(BaseModel):
+    symbol: str
+    name: str
+    tokenomics: CryptoTokenomics
+    valuation: CryptoValuation
+    onchain: CryptoOnchain
+    sources: list[str]
     ts: str
 
 
@@ -626,3 +664,11 @@ async def crypto_coin_detail(symbol: str) -> CryptoCoinDetailResponse:
     if detail is None:
         raise HTTPException(status_code=404, detail="Crypto asset not found")
     return detail
+
+
+@router.get("/v1/crypto/fundamentals/{symbol}", response_model=CryptoFundamentalsResponse)
+async def crypto_fundamentals(symbol: str) -> CryptoFundamentalsResponse:
+    data = await get_fundamentals(symbol)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Crypto fundamentals not found")
+    return data
