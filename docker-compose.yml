@@ -66,7 +66,12 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
+    # pgvector/pgvector ships the official Postgres image + the pgvector
+    # extension preinstalled. Pinned to pg16 so the existing data volume is reused
+    # as-is (same major version → no dump/restore migration). The second-brain RAG
+    # runs `CREATE EXTENSION vector` on startup; on plain postgres:16 that fails
+    # and the index silently falls back to numpy cosine.
+    image: pgvector/pgvector:0.8.3-pg16-trixie
     environment:
       POSTGRES_DB: "${POSTGRES_DB:-openterminalui}"
       POSTGRES_USER: "${POSTGRES_USER:-openterminalui}"
