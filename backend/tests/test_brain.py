@@ -121,6 +121,55 @@ async def test_ask_empty_brain_is_graceful(monkeypatch):
     assert out["citations"] == []
 
 
+# ---- notes indexing -------------------------------------------------------
+
+class _FakeQuery:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def filter(self, *a, **k):
+        return self
+
+    def all(self):
+        return self._rows
+
+
+class _FakeDB:
+    def __init__(self, mapping):
+        self._m = mapping
+
+    def query(self, model):
+        return _FakeQuery(self._m.get(model, []))
+
+
+def test_collect_chunks_indexes_notes():
+    from backend.models.journal import JournalEntry
+    from backend.models.notes import NoteORM
+    from backend.models.core import PortfolioORM
+    from backend.services.brain.indexer import _collect_chunks
+
+    note = SimpleNamespace(
+        id="n1", body="Margins peaking, watch Q3 guidance.", symbol="AAPL",
+        context="security", title="Thesis check", tags=["margins"],
+    )
+    empty = SimpleNamespace(id="n2", body="   ", symbol=None, context="general", title="", tags=[])
+    db = _FakeDB({NoteORM: [note, empty], JournalEntry: [], PortfolioORM: []})
+
+    chunks = _collect_chunks(db, "user1")
+
+    # Only the non-empty note is indexed.
+    note_chunks = [c for c in chunks if c["source"] == "note"]
+    assert len(note_chunks) == 1
+    c = note_chunks[0]
+    assert c["ref_id"] == "n1"
+    assert c["symbol"] == "AAPL"
+    assert "Margins peaking" in c["chunk_text"]
+    assert "Thesis check" in c["chunk_text"]
+    # security note with a symbol deep-links to the security page.
+    assert c["meta_json"]["route"] == "/equity/security/AAPL"
+    assert c["content_hash"]  # hashed for incremental skip
+
+
 @pytest.mark.asyncio
 async def test_ask_no_matches(monkeypatch):
     class Store:

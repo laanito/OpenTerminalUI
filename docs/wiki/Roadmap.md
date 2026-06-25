@@ -74,6 +74,14 @@
   fallback. Storage is dialect-aware: **pgvector** (ANN cosine index) on Postgres,
   in-process **numpy cosine** on SQLite. New authed `POST /api/brain/ask`,
   `POST /api/brain/reindex`, `GET /api/brain/status` + a Second Brain page.
+- **Generic notes capture (feeds the second brain)** — a one-step way to jot a
+  thought *anywhere* so the brain has something to remember without requiring a
+  full journal trade. One per-user `notes` table (symbol-optional, context tag,
+  optional source link) with authed CRUD `GET/POST/PUT/DELETE /api/notes`, indexed
+  as a first-class brain source. A reusable composer is wired into the
+  stock/crypto detail page (Notes tab), watchlist rows, the news page (per-symbol
+  reactions), and Portfolio Lab positions, plus a standalone **Notes** hub
+  (`/equity/notes`, `NOTES` command).
 - **Scheduled reports + report generation backend**: wired the per-user CRUD
   routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
   `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand

@@ -14,6 +14,7 @@ import {
   type MultiPortfolioHolding,
 } from "../../api/client";
 import { DenseTable } from "../terminal/DenseTable";
+import { NotesPanel } from "../notes/NotesPanel";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 
@@ -28,6 +29,7 @@ export function PortfolioManager() {
   const [portfolios, setPortfolios] = useState<MultiPortfolio[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [holdings, setHoldings] = useState<MultiPortfolioHolding[]>([]);
+  const [notesSymbol, setNotesSymbol] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<MultiPortfolioAnalytics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -298,6 +300,25 @@ export function PortfolioManager() {
             ]}
           />
         </div>
+
+        {holdings.length > 0 ? (
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2">
+            <div className="mb-2 text-xs text-terminal-muted">Position notes — your thesis per holding, indexed by the Second Brain</div>
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {holdings.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => setNotesSymbol(notesSymbol === h.symbol ? null : h.symbol)}
+                  className={`rounded-sm border px-2 py-0.5 text-[11px] transition-colors ${notesSymbol === h.symbol ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted hover:text-terminal-text"}`}
+                >
+                  {h.symbol}
+                </button>
+              ))}
+            </div>
+            {notesSymbol ? <NotesPanel symbol={notesSymbol} context="holding" /> : null}
+          </div>
+        ) : null}
 
         <div className="grid gap-2 xl:grid-cols-2">
           <div className="rounded border border-terminal-border bg-terminal-panel p-2">

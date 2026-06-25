@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { MoreHorizontal, Plus, Table, Grid3X3, Trash2 } from "lucide-react";
+import { Fragment, useState, useEffect, useMemo, useRef } from "react";
+import { MoreHorizontal, Plus, Table, Grid3X3, Trash2, StickyNote } from "lucide-react";
+import { NotesPanel } from "../notes/NotesPanel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -38,6 +39,7 @@ export function WatchlistManager() {
   const [tickerResults, setTickerResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ symbol: string; x: number; y: number } | null>(null);
+  const [notesFor, setNotesFor] = useState<string | null>(null);
 
   // Pull-to-refresh state
   const [pullY, setPullY] = useState(0);
@@ -331,8 +333,8 @@ export function WatchlistManager() {
                         const live = ticksByToken[`${selectedMarket}:${s}`];
                         const changePct = live?.change_pct || 0;
                         return (
+                          <Fragment key={s}>
                           <tr
-                            key={s}
                             className="cursor-pointer hover:bg-terminal-accent/5 focus-within:bg-terminal-accent/5"
                             tabIndex={0}
                             onClick={() => navigate(`/equity/stocks?ticker=${s}`)}
@@ -362,6 +364,14 @@ export function WatchlistManager() {
                             <td className="px-3 py-2 text-center">
                               <button
                                 type="button"
+                                onClick={(e) => { e.stopPropagation(); setNotesFor(notesFor === s ? null : s); }}
+                                className={`mr-2 ${notesFor === s ? "text-terminal-accent" : "text-terminal-muted hover:text-terminal-accent"}`}
+                                aria-label={`Notes for ${s}`}
+                              >
+                                <StickyNote size={12} />
+                              </button>
+                              <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const rect = e.currentTarget.getBoundingClientRect();
@@ -382,6 +392,14 @@ export function WatchlistManager() {
                               </button>
                             </td>
                           </tr>
+                          {notesFor === s && (
+                            <tr>
+                              <td colSpan={5} className="bg-terminal-bg/40 px-3 py-3">
+                                <NotesPanel symbol={s} context="watchlist" />
+                              </td>
+                            </tr>
+                          )}
+                          </Fragment>
                         );
                       })}
                     </tbody>

@@ -19,6 +19,7 @@ const RAIL_ITEMS: RailItem[] = [
   { id: "screener", label: "Screener", glyph: "SC", to: "/equity/screener" },
   { id: "portfolio", label: "Portfolio", glyph: "PF", to: "/equity/portfolio" },
   { id: "brain", label: "Brain", glyph: "BR", to: "/equity/brain" },
+  { id: "notes", label: "Notes", glyph: "NT", to: "/equity/notes" },
   { id: "views", label: "Views", glyph: "SV", to: "/equity/saved-views" },
   { id: "watchlist", label: "Watchlist", glyph: "WL", to: "/equity/watchlist" },
   { id: "news", label: "News", glyph: "NW", to: "/equity/news" },

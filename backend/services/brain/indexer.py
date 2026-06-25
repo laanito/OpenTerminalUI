@@ -25,6 +25,7 @@ from backend.models.core import (
     PortfolioTransactionORM,
 )
 from backend.models.journal import JournalEntry
+from backend.models.notes import NoteORM
 from backend.services.brain.vector_store import VectorStore, make_vector_store
 from backend.services.embeddings import get_embedding_service
 from backend.shared.db import engine
@@ -69,8 +70,56 @@ def _journal_text(row: JournalEntry) -> str:
     return " ".join(parts)
 
 
+_NOTE_CONTEXT_LABELS = {
+    "general": "Note",
+    "security": "Note",
+    "watchlist": "Watchlist note",
+    "news": "News note",
+    "holding": "Position note",
+    "transaction": "Transaction note",
+}
+
+# A note's context maps to a route the citation can deep-link to.
+_NOTE_CONTEXT_ROUTES = {
+    "watchlist": "/equity/watchlist",
+    "news": "/equity/news",
+    "holding": "/equity/portfolio/lab",
+    "transaction": "/equity/portfolio/lab",
+}
+
+
 def _collect_chunks(db: Session, user_id: str) -> list[dict]:
     chunks: list[dict] = []
+
+    # 0. Free-form notes — the frictionless capture layer (Notes hub + per-symbol
+    #    composers on security/watchlist/news/portfolio). The richest brain source.
+    for row in db.query(NoteORM).filter(NoteORM.user_id == user_id).all():
+        body = (row.body or "").strip()
+        if not body:
+            continue
+        label = _NOTE_CONTEXT_LABELS.get(row.context, "Note")
+        sym = (row.symbol or "").strip()
+        heading = " ".join(p for p in [label, "·", sym, (row.title or "").strip()] if p).strip(" ·")
+        text = f"{label}{f' on {sym}' if sym else ''}: "
+        if row.title:
+            text += f"{row.title.strip()} — "
+        text += body
+        if row.tags:
+            text += " Tags: " + ", ".join(str(t) for t in row.tags) + "."
+        route = _NOTE_CONTEXT_ROUTES.get(row.context)
+        if row.context in ("security", "general") and sym:
+            route = f"/equity/security/{sym}"
+        chunks.append(
+            {
+                "source": "note",
+                "ref_id": row.id,
+                "symbol": sym or None,
+                "title": heading or "Note",
+                "chunk_text": text,
+                "content_hash": _hash(text),
+                "meta_json": {"context": row.context, "symbol": sym or None, "route": route},
+            }
+        )
 
     # 1. Journal entries — always embed (structured context is meaningful even without notes).
     for row in db.query(JournalEntry).filter(JournalEntry.user_id == user_id).all():

@@ -39,7 +39,8 @@ export type CommandFunctionCode =
   | "TCA"
   | "COMM"
   | "DEPTH"
-  | "BRAIN";
+  | "BRAIN"
+  | "NOTES";
 
 export type CommandFinancialSubFunctionCode = "INCOME" | "BALANCE" | "CASHFLOW" | "MARGINS" | "RATIOS";
 
@@ -115,6 +116,7 @@ export const COMMAND_FUNCTIONS: CommandFunctionSpec[] = [
   { code: "EQS", label: "Equity Screener", description: "Open equity screener", aliases: ["SCREENER"] },
   { code: "PORT", label: "Portfolio", description: "Open portfolio", aliases: ["PF", "PORTFOLIO"] },
   { code: "BRAIN", label: "Second Brain", description: "Open the private RAG over your journal, theses & notes", aliases: ["BR", "RAG", "MEMORY"] },
+  { code: "NOTES", label: "Notes", description: "Open the notes hub (capture thoughts that feed the Second Brain)", aliases: ["NOTE", "NT"] },
   { code: "WL", label: "Watchlist", description: "Open watchlist", aliases: ["WATCHLIST"] },
   { code: "TOP", label: "Top Stories", description: "Open top market stories", aliases: ["HEADLINES"] },
   { code: "BT", label: "Backtesting", description: "Open backtesting workspace", aliases: ["BACKTEST"] },
@@ -445,6 +447,9 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
       case "BRAIN":
         navigate("/equity/brain");
         return { ok: true, target: "/equity/brain" };
+      case "NOTES":
+        navigate("/equity/notes");
+        return { ok: true, target: "/equity/notes" };
       case "WL": {
         const name = mod0 || "";
         const target = name ? `/equity/watchlist?name=${encodeURIComponent(name)}` : "/equity/watchlist";

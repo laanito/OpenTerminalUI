@@ -30,6 +30,7 @@ const SUGGESTIONS = [
 ];
 
 const sourceLabels: Record<string, string> = {
+  note: "Note",
   journal: "Journal",
   portfolio: "Portfolio",
   holding: "Position",

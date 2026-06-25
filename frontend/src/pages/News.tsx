@@ -4,6 +4,7 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 
 import { fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchStockEmotion, searchLatestNews, type NewsLatestApiItem } from "../api/client";
 import { EmotionIndicator } from "../components/terminal/EmotionIndicator";
+import { NotesPanel } from "../components/notes/NotesPanel";
 import { SentimentBadge } from "../components/terminal/SentimentBadge";
 import { useStock } from "../hooks/useStocks";
 import { useStockStore } from "../store/stockStore";
@@ -547,6 +548,15 @@ export function NewsPage() {
           isLoading={emotionQuery.isLoading}
           isError={emotionQuery.isError}
         />
+      )}
+
+      {isTickerMode && currentTicker && (
+        <section className="rounded border border-terminal-border bg-terminal-panel p-3">
+          <div className="mb-2 text-[10px] uppercase tracking-wide text-terminal-muted">
+            Your notes on {currentTicker} — captured into the Second Brain
+          </div>
+          <NotesPanel symbol={currentTicker} context="news" />
+        </section>
       )}
 
       {(newsQuery.isLoading || (isTickerMode && sentimentQuery.isLoading)) && (
