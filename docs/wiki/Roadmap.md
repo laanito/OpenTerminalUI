@@ -50,6 +50,12 @@
   (`textblob` core; FinBERT extras in `requirements-ml.txt`) so the news
   per-article sentiment runs its designed FinBERT → TextBlob → lexicon ladder
   instead of silently degrading to keyword-only.
+- **Scheduled reports + report generation backend**: wired the per-user CRUD
+  routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
+  `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand
+  `POST /api/reports/generate` returning a PDF (portfolio / stock / backtest).
+  Scheduled delivery emails the report via SMTP, degrading gracefully when SMTP
+  env isn't configured. Unblocks the Settings scheduler + SecurityHub export.
 
 ## Fork: Next
 
@@ -59,11 +65,6 @@
   viewed symbol's currency into StockDetail's financial/analysis panels (they use
   the market-native default today); and the leftover `en-IN` digit grouping in
   NSE-by-design F&O panels and a few screener/chart number formatters.
-- **Scheduled reports + report generation backend** — the frontend
-  (`Settings.tsx` scheduled reports, `SecurityHub.tsx` report export) calls
-  `/reports/scheduled` and `/reports/generate`, but only a `ScheduledReportService`
-  exists — no HTTP routes are wired. Build the CRUD + generate endpoints. (Lower
-  priority; surfaced by the API audit, deferred to after Ollama.)
 - **LLM-based per-article sentiment** (nice-to-have) — the News feed's per-article
   bullish/bearish/neutral classification currently uses the local non-LLM engine
   (FinBERT → TextBlob → lexicon, `backend/services/sentiment_engine.py`). Optionally

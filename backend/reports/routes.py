@@ -5,9 +5,15 @@ import hashlib
 from datetime import date, datetime, timezone
 from typing import Any, List, Dict
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
-from backend.api.deps import get_unified_fetcher
+from backend.api.deps import get_db, get_unified_fetcher
+from backend.auth.deps import get_current_user
+from backend.models.user import User
+from backend.reports.generator import generate_pdf_report, rows_for_data_type
+from backend.reports.scheduler import scheduled_reports_service
 
 router = APIRouter()
 US_MARKETS = {"NASDAQ", "NYSE"}
@@ -305,3 +311,103 @@ async def quarterly_reports(
 
     items.sort(key=lambda item: item["publishedAt"], reverse=True)
     return {"items": items[:limit]}
+
+
+# --- Scheduled reports + on-demand generation -----------------------------
+
+
+def _serialize_scheduled(row: Any) -> Dict[str, Any]:
+    return {
+        "id": row.id,
+        "report_type": row.report_type,
+        "frequency": row.frequency,
+        "email": row.email,
+        "data_type": row.data_type,
+        "enabled": bool(row.enabled),
+    }
+
+
+class ScheduledReportCreate(BaseModel):
+    report_type: str = Field(min_length=1, max_length=64)
+    frequency: str = Field(default="daily", max_length=32)
+    email: str = Field(min_length=3, max_length=255)
+    data_type: str = Field(default="positions", max_length=64)
+
+
+class GenerateReportRequest(BaseModel):
+    type: str = Field(default="portfolio", max_length=32)
+    params: Dict[str, Any] = Field(default_factory=dict)
+
+
+@router.get("/reports/scheduled")
+def list_scheduled_reports(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    rows = scheduled_reports_service.list(db, current_user.id)
+    return {"items": [_serialize_scheduled(r) for r in rows]}
+
+
+@router.post("/reports/scheduled")
+def create_scheduled_report(
+    payload: ScheduledReportCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    row = scheduled_reports_service.create(
+        db,
+        current_user.id,
+        report_type=payload.report_type.strip(),
+        frequency=payload.frequency.strip().lower(),
+        email=payload.email.strip(),
+        data_type=payload.data_type.strip().lower(),
+    )
+    return _serialize_scheduled(row)
+
+
+@router.delete("/reports/scheduled/{config_id}")
+def delete_scheduled_report(
+    config_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    deleted = scheduled_reports_service.delete(db, current_user.id, config_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Scheduled report not found")
+    return {"status": "deleted", "id": config_id}
+
+
+# Maps a requested report type to the underlying data rows. Reuses the generator's
+# data-type row builders; "stock" narrows the holdings/lots to a single ticker.
+def _rows_for_report(db: Session, report_type: str, params: Dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
+    key = (report_type or "portfolio").strip().lower()
+    if key == "portfolio":
+        return "Portfolio Report", rows_for_data_type(db, "positions")
+    if key == "backtest":
+        return "Backtest Report", rows_for_data_type(db, "screening_results")
+    if key == "stock":
+        ticker = str(params.get("ticker", "")).strip().upper()
+        positions = [r for r in rows_for_data_type(db, "positions") if str(r.get("ticker", "")).upper() == ticker]
+        lots = [r for r in rows_for_data_type(db, "tax_lots") if str(r.get("ticker", "")).upper() == ticker]
+        return f"Stock Report - {ticker or 'N/A'}", positions + lots
+    # Unknown type: fall back to portfolio positions rather than erroring.
+    return f"{key.title()} Report", rows_for_data_type(db, "positions")
+
+
+@router.post("/reports/generate")
+def generate_report(
+    payload: GenerateReportRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    title, rows = _rows_for_report(db, payload.type, payload.params)
+    try:
+        pdf = generate_pdf_report(rows, title=title)
+    except RuntimeError as exc:  # reportlab missing
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    filename = f"{title.lower().replace(' ', '_').replace('-', '')}.pdf"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

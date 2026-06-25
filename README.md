@@ -466,6 +466,7 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | `REDIS_URL` | Redis connection for caching and pub/sub |
 | `OPENTERMINALUI_CORS_ORIGINS` | Allowed CORS origins |
 | `OPENTERMINALUI_PREFETCH_ENABLED` | Enable background data prefetch |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` | Optional SMTP config for emailing scheduled reports. Without it, reports are still created and downloadable on demand; only scheduled email delivery is skipped. |
 | `LLM_BASE_URL` | OpenAI-compatible LLM endpoint (default `http://localhost:11434/v1` for Ollama; use `http://host.docker.internal:11434/v1` from Docker). Also works with LM Studio, OpenAI, OpenRouter, etc. |
 | `LLM_MODEL` | Model id served by the endpoint (default `llama3.1`) |
 | `LLM_API_KEY` | API key for hosted providers (OpenAI/OpenRouter/…); leave empty for local Ollama / LM Studio |

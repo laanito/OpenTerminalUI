@@ -11,17 +11,9 @@ export async function downloadExport(dataType: string, format: "csv" | "xlsx" | 
   return data as Blob;
 }
 
-// NOTE: scheduled-report endpoints (/reports/scheduled, /reports/generate) are not
-// yet served by the backend — a ScheduledReportService exists but no HTTP routes are
-// wired. These will 404 until that backend work lands (tracked on the roadmap).
 export async function fetchScheduledReports(): Promise<ScheduledReport[]> {
-  try {
-    const { data } = await api.get<{ items: ScheduledReport[] }>("/reports/scheduled");
-    return Array.isArray(data?.items) ? data.items : [];
-  } catch (e) {
-    console.error("fetchScheduledReports failed", e);
-    return [];
-  }
+  const { data } = await api.get<{ items: ScheduledReport[] }>("/reports/scheduled");
+  return Array.isArray(data?.items) ? data.items : [];
 }
 
 export async function createScheduledReport(payload: { report_type: string; frequency: string; email: string; data_type: string }): Promise<ScheduledReport> {
