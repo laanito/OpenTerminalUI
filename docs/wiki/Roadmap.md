@@ -85,6 +85,23 @@
   (`stock_emotion.py` already returns a per-article breakdown). Because sentiment is
   persisted per article, the inference cost is paid once and shouldn't be prohibitive.
   Keep the classical engine as the offline/disabled fallback.
+- **Heatmap EU / crypto coverage** — the Market Heatmap supports only IN/US
+  (`HeatmapMarket = "IN" | "US"`; `IN_UNIVERSE`/`US_UNIVERSE` in
+  `backend/api/routes/heatmap.py`). Add **EU** and **Crypto** universes + selector
+  options (reuse the `instrument_master` EU rows and the crypto universe) so the
+  heatmap covers the fork's full asset set.
+- **Crypto Market Depth tab** — the Market Depth tab on the crypto detail page
+  doesn't work for crypto: `OrderBookPanel` is wired to the equity `realtimeMarket`
+  rather than the Binance CRYPTO depth feed. Wire a crypto order-book / depth source
+  so the tab populates for coins.
+- **Watchlist India default** — the watchlist appears to default to Indian symbols
+  (e.g. `WatchlistManager` symbol search falls back to NSE when the market isn't
+  NASDAQ; check any seeded/default watchlist symbols too). De-India the defaults to
+  follow the selected market.
+- **Portfolio asset classification gaps** — crypto holdings and EU ETPs show up as
+  "unknown" in the portfolio (country / exchange / asset-class classification).
+  Investigate the market classifier / instrument mapping for non-US/India
+  instruments — likely broader than these two cases.
 - **Config/key management** — cleaner provider credential handling (deferred)
 
 ## Completed
