@@ -7,8 +7,41 @@ from typing import Any, List, Dict, Optional
 
 import httpx
 
+from backend.shared.cache import cache
+
 logger = logging.getLogger(__name__)
 _US_SYMBOLS_CACHE: set[str] | None = None
+
+# Persistent response cache TTLs (seconds), keyed by endpoint prefix. FMP's free
+# tier depletes quickly, so successful responses are cached in the shared
+# multi-tier cache (incl. the SQLite L3 tier, which survives restarts) to avoid
+# re-spending quota on identical requests. Slow-moving data gets long TTLs;
+# quotes stay short. Errors (429/5xx) are never cached.
+_FMP_TTL_RULES: tuple[tuple[str, int], ...] = (
+    ("/quote", 60),                       # live-ish price
+    ("/historical-price", 86400),         # OHLC / dividends / splits — daily
+    ("/income-statement", 86400),
+    ("/balance-sheet-statement", 86400),
+    ("/cash-flow-statement", 86400),
+    ("/key-metrics", 86400),
+    ("/ratios", 86400),
+    ("/financial-growth", 86400),
+    ("/discounted-cash-flow", 43200),
+    ("/profile", 86400),
+    ("/analyst-estimates", 43200),
+    ("/esg-disclosures", 86400),
+    ("/institutional-ownership", 86400),
+    ("/ipo_calendar", 21600),             # 6h
+    ("/economic-calendar", 21600),
+)
+_FMP_TTL_DEFAULT = 3600  # 1h
+
+
+def _fmp_ttl_for(endpoint: str) -> int:
+    for prefix, ttl in _FMP_TTL_RULES:
+        if endpoint.startswith(prefix):
+            return ttl
+    return _FMP_TTL_DEFAULT
 
 
 def _known_us_symbols() -> set[str]:
@@ -71,6 +104,13 @@ class FMPClient:
             await self.initialize()
 
         p = dict(params or {})
+        # Cache key is built from the endpoint + params *without* the api key, so
+        # the same logical request hits one cache entry regardless of key.
+        cache_key = cache.build_key("fmp", endpoint, p)
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         p["apikey"] = self.api_key
 
         try:
@@ -85,9 +125,12 @@ class FMPClient:
                 self.disabled = True
             elif sc == 402:
                 # Endpoint/symbol not included in the current plan (e.g. free
-                # tier). Expected — caller falls back to another provider.
+                # tier). Plan status is stable, so cache the empty result for a
+                # while to stop re-hitting a known-unavailable endpoint.
                 logger.debug("FMP endpoint requires a paid plan (HTTP 402): %s", endpoint)
+                await cache.set(cache_key, [], ttl=_FMP_TTL_DEFAULT)
             else:
+                # 429 / 5xx etc. — transient. Never cache, so a retry can succeed.
                 logger.warning("FMP request failed (HTTP %s): %s", sc, endpoint)
             return []
         except Exception as e:
@@ -101,10 +144,14 @@ class FMPClient:
             data = response.json()
         except ValueError:
             logger.debug("FMP non-JSON response for %s (likely a plan restriction)", endpoint)
+            await cache.set(cache_key, [], ttl=_FMP_TTL_DEFAULT)
             return []
         if isinstance(data, dict) and ("Error Message" in data or "Error" in data):
             logger.debug("FMP error payload for %s: %s", endpoint, data.get("Error Message") or data.get("Error"))
             return []
+
+        # Successful response (including a genuine empty result) — persist it.
+        await cache.set(cache_key, data, ttl=_fmp_ttl_for(endpoint))
         return data
 
     async def get_quote(self, symbol: str) -> Dict[str, Any]:

@@ -61,6 +61,34 @@ def mock_adapter_registry(monkeypatch, mock_adapter):
 
 
 @pytest.fixture(autouse=True)
+def _isolate_cache(monkeypatch):
+    """Keep the shared multi-tier cache hermetic per test.
+
+    The FMP client now persists successful responses in the shared cache (incl.
+    the SQLite L3 tier that survives restarts). In tests that would let one
+    test's cached response satisfy another's request and write a db file, so
+    here we disable the Redis (L2) and SQLite (L3) tiers and clear the in-memory
+    L1 tier around each test. Tests that exercise caching deliberately still see
+    L1 working within a single test.
+    """
+    from backend.shared.cache import cache
+
+    async def _noop_get(_key):
+        return None
+
+    async def _noop_set(_key, _value, _ttl=300):
+        return None
+
+    cache._l1_cache.clear()  # noqa: SLF001
+    monkeypatch.setattr(cache, "_get_l2", _noop_get)
+    monkeypatch.setattr(cache, "_set_l2", _noop_set)
+    monkeypatch.setattr(cache, "_get_l3", _noop_get)
+    monkeypatch.setattr(cache, "_set_l3", _noop_set)
+    yield
+    cache._l1_cache.clear()  # noqa: SLF001
+
+
+@pytest.fixture(autouse=True)
 def ensure_mock_adapter_registered():
     from backend.adapters.mock import MockDataAdapter
     from backend.adapters.registry import get_adapter_registry

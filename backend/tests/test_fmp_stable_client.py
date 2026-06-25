@@ -95,3 +95,33 @@ def test_http_403_disables_client():
     c = _client(handler)
     assert asyncio.run(c.get_quote("AAPL")) == {}
     assert c.disabled is True
+
+
+def test_get_caches_successful_response():
+    """A second identical request is served from cache, not the network —
+    this is what stops FMP quota from depleting on repeated calls."""
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return httpx.Response(200, json=[{"symbol": "ZZZ", "price": 1.0}])
+
+    c = _client(handler)
+    out1 = asyncio.run(c.get_quote("ZZZ"))
+    out2 = asyncio.run(c.get_quote("ZZZ"))
+    assert calls["n"] == 1  # only the first call hit the network
+    assert out1 == out2 == {"symbol": "ZZZ", "price": 1.0}
+
+
+def test_get_does_not_cache_rate_limit():
+    """A 429 must never be cached, so a later call can still succeed."""
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return httpx.Response(429, text="Limit Reached")
+
+    c = _client(handler)
+    assert asyncio.run(c.get_quote("ZZZ")) == {}
+    assert asyncio.run(c.get_quote("ZZZ")) == {}
+    assert calls["n"] == 2  # both calls hit the network — no poisoned cache entry
