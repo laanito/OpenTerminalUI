@@ -88,17 +88,23 @@
   corporate-actions service (Yahoo/FMP), so the calendar now covers the user's
   holdings ∪ watchlist (or a default US basket), history is real per-symbol,
   aristocrats is the S&P 500 index list with **live** trailing yields, and
-  portfolio income is bucketed by month. Added a currency-agnostic amount parser
-  (`extract_amount`) — the portfolio dividend tracker used to strip only "INR",
-  parsing every USD/EUR dividend to 0.0 — and a `DVD`/`DIV` GO command. Yahoo
-  corporate-action lookups now try the bare symbol first and only fall back to
-  `.NS`/`.BO` when it yields nothing.
+  portfolio income is bucketed by month. Added Yahoo's chart `events=div` feed as
+  a dividend source (far richer than the next-ex-date-only `calendarEvents`, and
+  works for ETFs / EU names like JEIP.DE that the old path missed), plus a
+  labelled next-ex-date **projection** from historical cadence for regular
+  distributors that have no free forward calendar (`type: "Estimated"`). Added a
+  currency-agnostic amount parser (`extract_amount`) — the portfolio dividend
+  tracker used to strip only "INR", parsing every USD/EUR dividend to 0.0 — and a
+  `DVD`/`DIV` GO command. Yahoo corporate-action lookups now try the bare symbol
+  first and only fall back to `.NS`/`.BO` when it yields nothing.
 - **Economic calendar — de-India + empty-results fix**: the calendar always
   rendered empty because the frontend read `data.items` while the backend
   returns a bare array (now tolerant of both). De-Indianized the macro config
   and mock fallbacks (dropped the India/RBI series and events; US/EU/China
   remain), and the `/economics/indicators` route now honors the `country`
-  filter the frontend already sent.
+  filter the frontend already sent. When no live source is available (no key or
+  a rate-limited provider) the sample fallback is flagged `sample: true` and the
+  UI shows a banner, so placeholder events are never mistaken for live data.
 - **Scheduled reports + report generation backend**: wired the per-user CRUD
   routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
   `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand
@@ -138,6 +144,14 @@
   "unknown" in the portfolio (country / exchange / asset-class classification).
   Investigate the market classifier / instrument mapping for non-US/India
   instruments — likely broader than these two cases.
+- **429 backoff / circuit-breaker for external APIs** — free FMP quotas deplete
+  fast; once hit, every call returns `HTTP 429` and features silently degrade
+  (dividend calendar → projection, economic calendar → sample data). Add shared
+  retry-with-jitter + short circuit-breaking on 429/5xx across the HTTP clients
+  (FMP, Finnhub, Yahoo) so a rate-limited provider backs off instead of hammering.
+- **Live economic-calendar source** — Finnhub's economic calendar is premium-only
+  and FMP's free quota depletes, so the calendar often shows labelled *sample*
+  data. Find a free/cheap forward calendar feed (or accept the sample fallback).
 - **Config/key management** — cleaner provider credential handling (deferred)
 
 ## Completed

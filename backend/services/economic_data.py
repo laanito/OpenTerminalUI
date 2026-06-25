@@ -221,9 +221,11 @@ class EconomicDataService:
         return "low"
 
     def _get_mock_calendar(self, start: str, end: str) -> List[Dict[str, Any]]:
-        # Generate some mock events
+        # Placeholder sample events shown only when no live source is available
+        # (no Finnhub/FMP key, or the provider is rate-limited). Each is flagged
+        # `sample: True` so the UI can label it and never pass it off as live.
         d_start = datetime.strptime(start, "%Y-%m-%d")
-        return [
+        events = [
             {
                 "date": (d_start + timedelta(days=1)).strftime("%Y-%m-%d"),
                 "time": "14:00:00",
@@ -261,6 +263,9 @@ class EconomicDataService:
                 "currency": "USD"
             }
         ]
+        for ev in events:
+            ev["sample"] = True
+        return events
 
     def _get_mock_macro(self) -> Dict[str, Any]:
         return {
