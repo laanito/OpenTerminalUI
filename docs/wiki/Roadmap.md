@@ -144,11 +144,12 @@
   "unknown" in the portfolio (country / exchange / asset-class classification).
   Investigate the market classifier / instrument mapping for non-US/India
   instruments — likely broader than these two cases.
-- **429 backoff / circuit-breaker for external APIs** — free FMP quotas deplete
-  fast; once hit, every call returns `HTTP 429` and features silently degrade
-  (dividend calendar → projection, economic calendar → sample data). Add shared
+- **429 backoff / circuit-breaker for external APIs** — FMP responses are now
+  cached persistently (shared multi-tier cache incl. SQLite L3), which stops
+  repeated identical requests from re-spending quota. Still TODO: shared
   retry-with-jitter + short circuit-breaking on 429/5xx across the HTTP clients
-  (FMP, Finnhub, Yahoo) so a rate-limited provider backs off instead of hammering.
+  (FMP, Finnhub, Yahoo) so that on a *cold* cache a rate-limited provider backs
+  off instead of hammering, and extend the same response caching to Finnhub.
 - **Live economic-calendar source** — Finnhub's economic calendar is premium-only
   and FMP's free quota depletes, so the calendar often shows labelled *sample*
   data. Find a free/cheap forward calendar feed (or accept the sample fallback).
