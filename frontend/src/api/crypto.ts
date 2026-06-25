@@ -12,6 +12,42 @@ import type {
   CryptoCoinDetail,
 } from "./types";
 
+export type CryptoFundamentals = {
+  symbol: string;
+  name: string;
+  tokenomics: {
+    circulating_supply: number | null;
+    total_supply: number | null;
+    max_supply: number | null;
+    circulating_pct: number | null;
+  };
+  valuation: {
+    market_cap: number | null;
+    fully_diluted_valuation: number | null;
+    fdv_mcap_ratio: number | null;
+    ath: number | null;
+    ath_change_pct: number | null;
+    mcap_tvl_ratio: number | null;
+    price_to_fees_ratio: number | null;
+  };
+  onchain: {
+    tvl: number | null;
+    fees_24h: number | null;
+    fees_30d: number | null;
+    fees_annualized: number | null;
+    category: string | null;
+    chains: string[] | null;
+    tracked: boolean;
+  };
+  sources: string[];
+  ts: string;
+};
+
+export async function fetchCryptoFundamentals(symbol: string): Promise<CryptoFundamentals> {
+  const { data } = await api.get<CryptoFundamentals>(`/v1/crypto/fundamentals/${encodeURIComponent(symbol)}`);
+  return data;
+}
+
 export async function fetchCryptoSearch(q: string): Promise<Array<{ ticker: string; name: string }>> {
   const { data } = await api.get<{ items: Array<{ symbol: string; name: string }> }>("/v1/crypto/search", { params: { q } });
   return (data?.items ?? []).map(item => ({ ticker: item.symbol, name: item.name }));

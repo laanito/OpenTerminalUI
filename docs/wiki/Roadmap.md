@@ -1,8 +1,15 @@
 # Roadmap
 
-> **Fork direction (US / EU / crypto).** This fork re-centres the platform away
-> from the NSE/India-first upstream toward US, EU, and crypto markets, on a
-> Postgres-first stack with a local LLM. NSE/BSE **F&O** stays supported.
+> **North star.** An open, private terminal that helps an individual invest
+> *without being fooled* — by markets, by hype, or by themselves — through
+> AI-native research you can grow privately. The foundational fork goals
+> (Postgres-first, frontend↔backend wiring, de-India data layer) are complete;
+> new work serves that mission. Bloomberg parity is pursued only "just enough to
+> be credible" — the differentiation is AI-native, private, open, multi-asset.
+>
+> **Fork direction (US / EU / crypto).** Re-centres the platform away from the
+> NSE/India-first upstream toward US, EU, and crypto markets, on a Postgres-first
+> stack with a local LLM. NSE/BSE **F&O** stays supported.
 
 ## Fork: Completed
 
@@ -50,6 +57,12 @@
   (`textblob` core; FinBERT extras in `requirements-ml.txt`) so the news
   per-article sentiment runs its designed FinBERT → TextBlob → lexicon ladder
   instead of silently degrading to keyword-only.
+- **Crypto fundamentals** (first feature built *from* the north star): a new
+  Fundamentals tab on the crypto detail page answering "is the price backed by
+  real usage, or just a story?" — tokenomics (supply %, FDV/MCap dilution) from
+  CoinGecko + on-chain TVL and fee revenue (MCap/TVL, price/fees) from keyless
+  **DefiLlama**, each metric annotated in plain language with conservative
+  "investigate this" cues. New `GET /api/v1/crypto/fundamentals/{symbol}`.
 - **Scheduled reports + report generation backend**: wired the per-user CRUD
   routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
   `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand

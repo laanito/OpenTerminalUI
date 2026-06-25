@@ -90,6 +90,26 @@ class CoinGeckoClient:
         )
         return data if isinstance(data, list) else []
 
+    async def get_market_by_id(self, coin_id: str, *, vs_currency: str = "usd") -> Optional[Dict[str, Any]]:
+        """Return the ``/coins/markets`` row for a single coin id (supply, FDV, ATH...), or None."""
+        cid = (coin_id or "").strip().lower()
+        if not cid:
+            return None
+        data = await self._get(
+            "/coins/markets",
+            {
+                "vs_currency": vs_currency,
+                "ids": cid,
+                "per_page": 1,
+                "page": 1,
+                "price_change_percentage": "24h",
+                "sparkline": "false",
+            },
+        )
+        if isinstance(data, list) and data and isinstance(data[0], dict):
+            return data[0]
+        return None
+
     async def get_ohlc(
         self,
         coin_id: str,
