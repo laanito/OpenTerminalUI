@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
@@ -78,6 +79,33 @@ def _parse_date(raw: Any) -> Optional[date]:
         return None
 
 
+_AMOUNT_RE = re.compile(r"-?\d[\d,]*\.?\d*")
+
+
+def extract_amount(value: Any) -> Optional[float]:
+    """Pull the first numeric amount out of a free-form dividend value.
+
+    Handles the many shapes the upstream sources emit, currency-agnostically:
+    ``"0.25 per share"`` (FMP), ``"INR 10"`` / ``"₹10"`` (NSE legacy),
+    ``"$0.96"``, ``"€1.20"``, ``"Rs. 8.5 Final"``. Returns ``None`` when no
+    number is present (e.g. a bonus ratio like ``"1:1"`` handled elsewhere).
+    """
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    match = _AMOUNT_RE.search(text.replace(",", ""))
+    if not match:
+        return None
+    try:
+        return float(match.group(0))
+    except ValueError:
+        return None
+
+
 def _infer_event_type(text: str) -> EventType:
     low = text.lower()
     if "dividend" in low:
@@ -128,7 +156,9 @@ class CorporateActionsService:
 
     async def _fetch_yahoo_events(self, symbol: str) -> list[CorporateEvent]:
         fetcher = await get_unified_fetcher()
-        # For Indian stocks, try with .NS suffix if not present
+        # Try the symbol as given first (US/EU/explicit-suffix resolve here);
+        # only fall back to NSE/BSE suffixes if the bare symbol yields nothing,
+        # so US/EU tickers never get mislabelled as Indian.
         candidates = [symbol.upper()]
         if "." not in symbol:
             candidates.append(f"{symbol.upper()}.NS")
@@ -136,6 +166,8 @@ class CorporateActionsService:
 
         events: list[CorporateEvent] = []
         for cand in candidates:
+            if events:
+                break
             try:
                 summary = await fetcher.yahoo.get_quote_summary(cand, ["calendarEvents"])
                 cal = summary.get("calendarEvents", {})

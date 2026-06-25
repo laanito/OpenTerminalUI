@@ -141,7 +141,7 @@ export function DividendDashboardPage() {
             columns={[
               { key: "symbol", label: "Symbol", render: (r) => r.symbol },
               { key: "years_growth", label: "Years of Growth", align: "right", render: (r) => r.years_growth },
-              { key: "yield", label: "Yield %", align: "right", render: (r) => `${r.yield}%` },
+              { key: "yield", label: "Yield %", align: "right", render: (r) => (typeof r.yield === "number" ? `${r.yield.toFixed(2)}%` : "—") },
             ]}
           />
         </TerminalPanel>

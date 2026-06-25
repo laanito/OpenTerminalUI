@@ -82,6 +82,23 @@
   stock/crypto detail page (Notes tab), watchlist rows, the news page (per-symbol
   reactions), and Portfolio Lab positions, plus a standalone **Notes** hub
   (`/equity/notes`, `NOTES` command).
+- **Dividend calendar — real, market-agnostic data**: the `/dividends` page
+  previously returned hardcoded NSE mock rows (RELIANCE/TCS/INFY). Rewired all
+  four routes (`calendar`/`history`/`aristocrats`/`portfolio-income`) to the
+  corporate-actions service (Yahoo/FMP), so the calendar now covers the user's
+  holdings ∪ watchlist (or a default US basket), history is real per-symbol,
+  aristocrats is the S&P 500 index list with **live** trailing yields, and
+  portfolio income is bucketed by month. Added a currency-agnostic amount parser
+  (`extract_amount`) — the portfolio dividend tracker used to strip only "INR",
+  parsing every USD/EUR dividend to 0.0 — and a `DVD`/`DIV` GO command. Yahoo
+  corporate-action lookups now try the bare symbol first and only fall back to
+  `.NS`/`.BO` when it yields nothing.
+- **Economic calendar — de-India + empty-results fix**: the calendar always
+  rendered empty because the frontend read `data.items` while the backend
+  returns a bare array (now tolerant of both). De-Indianized the macro config
+  and mock fallbacks (dropped the India/RBI series and events; US/EU/China
+  remain), and the `/economics/indicators` route now honors the `country`
+  filter the frontend already sent.
 - **Scheduled reports + report generation backend**: wired the per-user CRUD
   routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
   `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand
