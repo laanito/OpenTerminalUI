@@ -12,8 +12,7 @@ import { useSettingsStore } from "../../store/settingsStore";
 import { useStockStore } from "../../store/stockStore";
 import { COUNTRY_MARKETS } from "../../types";
 import type { CountryCode, MarketCode } from "../../types";
-
-type DisplayCurrency = "INR" | "USD";
+import type { DisplayCurrency } from "../../store/settingsStore";
 
 const COUNTRY_FLAGS: Record<CountryCode, string> = {
   IN: "🇮🇳",
@@ -379,8 +378,9 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
             title="Display currency"
             aria-label="Display currency"
           >
-            <option value="INR">INR</option>
             <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="INR">INR</option>
           </select>
         </div>
         <div className="inline-flex shrink-0 items-center gap-1 border-l border-terminal-border pl-2 text-[11px] uppercase tracking-wide text-terminal-muted">

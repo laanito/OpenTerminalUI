@@ -81,6 +81,24 @@ vi.mock("../fno/api/fnoApi", () => ({
   fetchChainSummary: vi.fn(),
 }));
 
+// Layout-focused test: stub the currency hook so it doesn't pull react-query
+// (cross-rates / market-status) into the render without a QueryClientProvider.
+vi.mock("../hooks/useDisplayCurrency", () => ({
+  useDisplayCurrency: () => ({
+    displayCurrency: "USD",
+    marketNative: "USD",
+    nativeFor: () => "USD",
+    convertAmount: (v: number) => v,
+    formatMoney: (v: number | null | undefined) => (v == null ? "-" : `$${v}`),
+    formatSignedMoney: (v: number | null | undefined) => (v == null ? "-" : `$${v}`),
+    formatCompactMoney: (v: number | null | undefined) => (v == null ? "-" : `$${v}`),
+    formatDisplayMoney: (v: number | null | undefined) => (v == null ? "-" : `$${v}`),
+    financialUnit: "M",
+    scaleFinancialAmount: (v: number) => v,
+    formatFinancialCompact: (v: number | null | undefined) => (v == null ? "-" : `$${v}`),
+  }),
+}));
+
 function renderPage() {
   return render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -195,9 +213,8 @@ describe("HomePage mission-control revamp", () => {
     expect(screen.getByRole("region", { name: "System Health" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Launch Matrix" })).toBeInTheDocument();
 
-    const equityValueLabel = `INR ${2480000..toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-    expect(screen.getAllByText(equityValueLabel).length).toBeGreaterThan(0);
-    expect(screen.getByText("+INR 1,70,000 (+7.36%)")).toBeInTheDocument();
+    expect(screen.getAllByText("$2480000").length).toBeGreaterThan(0);
+    expect(screen.getByText("$170000 (+7.36%)")).toBeInTheDocument();
     expect(screen.getByText("RBI signals steady liquidity support for domestic markets")).toBeInTheDocument();
     expect(screen.getByText("Bullish 87%")).toBeInTheDocument();
 

@@ -25,6 +25,7 @@ import { SystemHealthBar, type SystemHealthItem } from "../components/home/Syste
 import { AiInsightCard } from "../components/terminal/AiInsightCard";
 import { TerminalShell } from "../components/layout/TerminalShell";
 import { useAuth } from "../contexts/AuthContext";
+import { useDisplayCurrency } from "../hooks/useDisplayCurrency";
 import { fetchChainSummary } from "../fno/api/fnoApi";
 import { fetchCollectionBriefing } from "../api/client";
 import { useSettingsStore } from "../store/settingsStore";
@@ -181,23 +182,12 @@ const EMPTY_SNAPSHOT: DashboardSnapshot = {
 };
 
 function formatPrice(value: number): string {
-  return value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatPercent(value: number | null, digits = 2): string {
   if (value == null || !Number.isFinite(value)) return "--";
   return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
-}
-
-function formatInr(value: number | null): string {
-  if (value == null || !Number.isFinite(value)) return "INR --";
-  return `INR ${value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
-
-function formatSignedInr(value: number | null): string {
-  if (value == null || !Number.isFinite(value)) return "INR --";
-  const sign = value >= 0 ? "+" : "-";
-  return `${sign}INR ${Math.abs(value).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
 function formatCompactDateLabel(date: string): string {
@@ -240,6 +230,7 @@ function getSentimentClass(label?: string): string {
 export function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatMoney, formatSignedMoney } = useDisplayCurrency();
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   const displayCurrency = useSettingsStore((s) => s.displayCurrency);
   const realtimeMode = useSettingsStore((s) => s.realtimeMode);
@@ -725,13 +716,13 @@ export function HomePage() {
                 <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
                   <MetricCard
                     label="Net Liquidation"
-                    value={formatInr(snapshot.equityValue)}
+                    value={formatMoney(snapshot.equityValue)}
                     tone={getMetricTone(snapshot.equityPnl)}
                     delta={
                       snapshot.equityPnl == null
                         ? undefined
                         : {
-                            label: `${formatSignedInr(snapshot.equityPnl)} (${formatPercent(equityPnlPct)})`,
+                            label: `${formatSignedMoney(snapshot.equityPnl)} (${formatPercent(equityPnlPct)})`,
                             tone: getMetricTone(snapshot.equityPnl),
                           }
                     }
@@ -848,7 +839,7 @@ export function HomePage() {
                     points={performanceSeries}
                     benchmarkPoints={benchmarkSeries}
                     ariaLabel="Portfolio HQ chart"
-                    valueFormatter={(value) => formatInr(value)}
+                    valueFormatter={(value) => formatMoney(value)}
                   />
                 </div>
               </div>
