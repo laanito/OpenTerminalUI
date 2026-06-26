@@ -144,12 +144,41 @@
   "unknown" in the portfolio (country / exchange / asset-class classification).
   Investigate the market classifier / instrument mapping for non-US/India
   instruments — likely broader than these two cases.
-- **429 backoff / circuit-breaker for external APIs** — FMP responses are now
-  cached persistently (shared multi-tier cache incl. SQLite L3), which stops
-  repeated identical requests from re-spending quota. Still TODO: shared
-  retry-with-jitter + short circuit-breaking on 429/5xx across the HTTP clients
-  (FMP, Finnhub, Yahoo) so that on a *cold* cache a rate-limited provider backs
-  off instead of hammering, and extend the same response caching to Finnhub.
+- **429 backoff / circuit-breaker + wider response caching** — FMP responses are
+  now cached persistently (shared multi-tier cache incl. SQLite L3), which stops
+  repeated identical requests from re-spending quota and is working well. Next:
+  (1) extend the same persistent response caching to the other external clients
+  (Finnhub, Yahoo, etc. — the cache layer is generic, so it's mostly wiring each
+  client's `_get` through `cache.get/set` with sensible TTLs); (2) add shared
+  retry-with-jitter + short circuit-breaking on 429/5xx so that on a *cold* cache
+  a rate-limited provider backs off instead of hammering. Clients live in
+  `backend/core/*_client.py`.
+- **Economic calendar — daily & weekly views** — the Economic Terminal calendar
+  is month-grid only. Add day and week granularities (the data is already
+  date-stamped; this is a frontend view/range addition in
+  `frontend/src/pages/economics/EconomicTerminal.tsx`).
+- **Portfolio Movement & Historical Return — sub-1Y timeframes + currency axis**
+  — the chart only offers 1Y with monthly datapoints; add shorter ranges (1M/3M/
+  6M with finer granularity). Also the value axis has **INR hardcoded** — route
+  it through the display-currency engine (`useDisplayCurrency`) like the rest of
+  the app (related to the EUR display-currency follow-ups above).
+- **Dividends in the Portfolio Events Calendar** — upcoming dividend ex-dates
+  (now available via the corporate-actions service / `get_upcoming_dividends`,
+  incl. labelled projections) should also surface in the portfolio events
+  calendar, not just the dedicated Dividends page.
+- **Portfolio Holdings — currency conversion / correct symbol** — the holdings
+  table (`PortfolioManager.tsx`, Avg Cost / Current columns use `type:
+  "currency"`) renders values in the active display currency **without
+  converting** from each holding's native currency, so a EUR/INR holding shows
+  the wrong magnitude/symbol. Either convert via the cross-rates engine or render
+  each row in its instrument's native currency symbol.
+- **Notes capture from the News feed** — notes can be added per-symbol in News
+  *ticker* mode, but not from the general latest/search feed. Allow attaching a
+  note to an individual article (or the current view) from any News mode so the
+  second brain captures reactions to non-watchlist stories too.
+- **Crypto news sources** — review/extend the news ingestion sources to add
+  crypto-focused outlets, so crypto detail/news pages have real coverage beyond
+  the equity-centric feeds.
 - **Live economic-calendar source** — Finnhub's economic calendar is premium-only
   and FMP's free quota depletes, so the calendar often shows labelled *sample*
   data. Find a free/cheap forward calendar feed (or accept the sample fallback).
