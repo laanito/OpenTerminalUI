@@ -120,71 +120,125 @@
   Scheduled delivery emails the report via SMTP, degrading gracefully when SMTP
   env isn't configured. Unblocks the Settings scheduler + SecurityHub export.
 
-## Fork: Next
+## Release plan
 
-- **EUR display-currency follow-ups** — the multi-currency engine shipped
-  (cross-rates-driven, instrument-currency aware), but two refinements remain:
-  threading the viewed symbol's currency into StockDetail's financial/analysis
-  panels (they use the market-native default today); and the leftover `en-IN`
-  digit grouping in NSE-by-design F&O panels and a few screener/chart number
-  formatters. *(The `-USD` hardcoding for EUR-quoted crypto like `BTC-EUR` is
-  fixed — `nativeCurrencyForSymbol` now reads the crypto pair's quote leg.)*
-- **LLM-based per-article sentiment** (nice-to-have) — the News feed's per-article
-  bullish/bearish/neutral classification currently uses the local non-LLM engine
-  (FinBERT → TextBlob → lexicon, `backend/services/sentiment_engine.py`). Optionally
-  route it through the local LLM by reusing the Emotion Indicator pipeline
-  (`stock_emotion.py` already returns a per-article breakdown). Because sentiment is
-  persisted per article, the inference cost is paid once and shouldn't be prohibitive.
-  Keep the classical engine as the offline/disabled fallback.
-- **Heatmap EU / crypto coverage** — the Market Heatmap supports only IN/US
-  (`HeatmapMarket = "IN" | "US"`; `IN_UNIVERSE`/`US_UNIVERSE` in
-  `backend/api/routes/heatmap.py`). Add **EU** and **Crypto** universes + selector
-  options (reuse the `instrument_master` EU rows and the crypto universe) so the
-  heatmap covers the fork's full asset set.
-- **Crypto Market Depth tab** — the Market Depth tab on the crypto detail page
-  doesn't work for crypto: `OrderBookPanel` is wired to the equity `realtimeMarket`
-  rather than the Binance CRYPTO depth feed. Wire a crypto order-book / depth source
-  so the tab populates for coins.
-- **Watchlist India default** — the watchlist appears to default to Indian symbols
-  (e.g. `WatchlistManager` symbol search falls back to NSE when the market isn't
-  NASDAQ; check any seeded/default watchlist symbols too). De-India the defaults to
-  follow the selected market.
-- **Portfolio asset classification gaps** — crypto holdings and EU ETPs show up as
-  "unknown" in the portfolio (country / exchange / asset-class classification).
-  Investigate the market classifier / instrument mapping for non-US/India
-  instruments — likely broader than these two cases.
-- **429 backoff / circuit-breaker + wider response caching** — FMP responses are
-  now cached persistently (shared multi-tier cache incl. SQLite L3), which stops
-  repeated identical requests from re-spending quota and is working well. Next:
-  (1) extend the same persistent response caching to the other external clients
-  (Finnhub, Yahoo, etc. — the cache layer is generic, so it's mostly wiring each
-  client's `_get` through `cache.get/set` with sensible TTLs); (2) add shared
-  retry-with-jitter + short circuit-breaking on 429/5xx so that on a *cold* cache
-  a rate-limited provider backs off instead of hammering. Clients live in
-  `backend/core/*_client.py`.
-- **Economic calendar — daily & weekly views** — the Economic Terminal calendar
-  is month-grid only. Add day and week granularities (the data is already
-  date-stamped; this is a frontend view/range addition in
-  `frontend/src/pages/economics/EconomicTerminal.tsx`).
-- **Portfolio Movement & Historical Return — sub-1Y timeframes** — the chart
-  only offers 1Y with monthly datapoints; add shorter ranges (1M/3M/6M with finer
-  granularity). *(The INR-hardcoded value axis is fixed — it now routes through
-  `useDisplayCurrency` / `formatCompactMoney`.)*
-- **Dividends in the Portfolio Events Calendar** — upcoming dividend ex-dates
-  (now available via the corporate-actions service / `get_upcoming_dividends`,
-  incl. labelled projections) should also surface in the portfolio events
-  calendar, not just the dedicated Dividends page.
-- **Notes capture from the News feed** — notes can be added per-symbol in News
-  *ticker* mode, but not from the general latest/search feed. Allow attaching a
-  note to an individual article (or the current view) from any News mode so the
-  second brain captures reactions to non-watchlist stories too.
-- **Crypto news sources** — review/extend the news ingestion sources to add
-  crypto-focused outlets, so crypto detail/news pages have real coverage beyond
-  the equity-centric feeds.
-- **Live economic-calendar source** — Finnhub's economic calendar is premium-only
-  and FMP's free quota depletes, so the calendar often shows labelled *sample*
-  data. Find a free/cheap forward calendar feed (or accept the sample fallback).
-- **Config/key management** — cleaner provider credential handling (deferred)
+The fork has shipped a large feature set but never cut a tagged release. The plan
+below draws the line: **v1.0.0 is a *hardening* milestone, not a feature one** —
+its job is a coherent, honest, installable product where every advertised feature
+works or is explicitly labelled degraded, with a real version contract and docs.
+New surfaces are deferred to v1.1+. See [Releasing](Releasing.md) for the
+mechanics and the `CHANGELOG.md` for curated history.
+
+> **What "stable" means here.** For a private-investing terminal whose north star
+> is *don't get fooled*, integrity outranks feature count: no silent mock data
+> masquerading as live, no broken links, no wrong-currency numbers, honest
+> limitations. 1.0 finishes that pass.
+
+### v1.0.0 — Stable (in progress)
+
+Release-blocking only. Grouped by intent; treat as the release checklist.
+
+**A. Integrity — the "don't get fooled" bar**
+- [ ] **Silent-mock audit** — sweep services that fabricate data on a failed
+  fetch (the commodity bug served `2100.0 + random` as a live gold price). Audit
+  the `random`/`mock`/`placeholder` paths under `backend/services` &
+  `backend/api/routes`; wire real data, or label it degraded (generalise the
+  econ-calendar `sample: true` + banner pattern). Nothing fabricated may look live.
+- [ ] **Portfolio asset classification** — crypto holdings & EU ETPs show as
+  "unknown" (country/exchange/asset-class). Fix the market classifier / instrument
+  mapping for non-US/India instruments (likely broader than these two cases).
+- [ ] **Index detail page** — clicking a headline index (`^GSPC`/`^IXIC`/`^DJI`)
+  from the ticker tape must land somewhere sensible. Confirm the ticker-tape
+  ghost-click fix resolved the "missing" report, or ship a chart-first /
+  index-aware detail view.
+- [ ] **Scheduled-report 422** — `POST /api/reports/scheduled` rejects a missing
+  `email` (`Field(min_length=3)`). Default to the authenticated user's account
+  email; only skip delivery when there's genuinely no address.
+
+**B. De-India defaults — the western-oriented release identity**
+- [ ] **Watchlist default** — `WatchlistManager` symbol search falls back to NSE
+  when the market isn't NASDAQ; de-India the default + any seeded watchlist symbols
+  to follow the selected market.
+- [ ] **F&O India defaults** — home/sidebar F&O widgets default to `NIFTY`
+  (`HomePage.tsx`, `Sidebar.tsx`) and the Portfolio risk benchmark defaults to
+  `NIFTY50`. Pick western defaults (F&O stays India-*supported*, just not the
+  default). Note: a bare `NIFTY` request 404s under the US-default classifier.
+
+**C. Robustness**
+- [ ] **429 backoff / circuit-breaker + wider caching** — extend the working FMP
+  persistent response cache to the other external clients (Finnhub, Yahoo — the
+  cache layer is generic), and add shared retry-with-jitter + short
+  circuit-breaking on 429/5xx so a *cold*-cache burst backs off instead of
+  hammering. Clients live in `backend/core/*_client.py`.
+- [ ] **Config/key clarity** — document which features need which keys; ensure
+  every keyless/rate-limited degradation is honestly labelled in-UI (no silent
+  fallbacks). See bucket E.
+
+**D. Release mechanics**
+- [ ] **Single version source of truth** — reconcile the mismatched
+  `frontend/package.json` (`0.4.0`) and `backend` `app_version` (`0.2.0`) to
+  `1.0.0`; surface it in `/api` health + the UI footer.
+- [ ] **`CHANGELOG.md`** — curate from the fork history (Keep a Changelog format).
+- [ ] **Tag `v1.0.0` + GitHub release** notes.
+- [ ] **Release smoke matrix** — SQLite vs Postgres(+pgvector) × with-keys vs
+  no-keys; confirm CI (pytest+coverage, Vitest, Playwright smoke) green.
+
+**E. Docs (ship-with-release)**
+- [ ] **"Out-of-the-box vs needs-keys" matrix** in README/wiki (FMP/Finnhub/FRED/
+  LLM) — what works keyless vs what degrades.
+- [ ] **Honest Limitations section** — no live economic-calendar source (sample
+  fallback); dividend forward dates are *estimates*; commodities/econ need keys;
+  index detail is chart-only (until fixed in A).
+- [ ] **`Releasing.md`** (this checklist + version-bump steps) and **upgrade
+  notes** (the `pgvector/pgvector:0.8.3-pg16-trixie` image swap).
+
+### v1.1 — Multi-asset depth
+
+Round out the western/crypto pivot's coverage gaps (the first feature release).
+
+- **Heatmap EU / crypto coverage** — `HeatmapMarket` is IN|US only
+  (`backend/api/routes/heatmap.py`); add EU + Crypto universes/selector (reuse the
+  `instrument_master` EU rows + crypto universe).
+- **Crypto Market Depth tab** — `OrderBookPanel` is wired to the equity
+  `realtimeMarket`, not the Binance CRYPTO depth feed; wire a crypto depth source.
+- **Dividends in the Portfolio Events Calendar** — surface upcoming ex-dates
+  (`corporate_actions_service.get_upcoming_dividends`, incl. labelled projections)
+  in the events calendar, not just the dedicated Dividends page.
+- **Economic calendar — daily & weekly views** — currently month-grid only
+  (`EconomicTerminal.tsx`); data is date-stamped, so add day/week ranges.
+- **Crypto news sources** — extend news ingestion with crypto-focused outlets so
+  crypto detail/news pages have real coverage.
+
+### v1.2 — AI-native deepening
+
+Lean into the north-star spine.
+
+- **LLM-based per-article sentiment** — optionally route the News feed's
+  per-article classification through the local LLM (reuse the Emotion Indicator
+  pipeline; sentiment is persisted, so inference is paid once). Keep the classical
+  FinBERT → TextBlob → lexicon engine as the offline fallback.
+- **Second-brain enhancements** — chunk long notes, proactively surface "what to
+  journal" gaps, add market-data/news to the corpus, streaming answers, a
+  per-source filter in the UI.
+- **Consistent explain / interrogate affordance** — a uniform "explain this /
+  what am I missing / is this hype?" layer across surfaces.
+
+### Backlog / unscheduled
+
+Real but unscheduled; pull into a milestone when it fits.
+
+- **EUR display-currency leftovers** — thread the viewed symbol's currency into
+  StockDetail's financial/analysis panels (market-native default today); clear the
+  `en-IN` digit grouping in NSE-by-design F&O panels and a few screener/chart
+  formatters.
+- **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
+  granularity (the chart is 1Y/monthly only).
+- **Notes capture from the general News feed** — notes work in News *ticker* mode
+  only; allow per-article capture from any News mode.
+- **Live economic-calendar source** — find a free/cheap forward calendar feed
+  (Finnhub's is premium-only, FMP's free quota depletes); until then 1.0 ships the
+  labelled sample fallback.
+- **Config/key management** — cleaner provider credential handling (deferred).
 
 ## Completed
 
