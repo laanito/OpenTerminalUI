@@ -168,6 +168,15 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
   - Remaining (out of scope, separate concern): `OpsDashboard` batch-backtest
     universe label and the screener default universe (`screener/engine.py`) still
     read `NIFTY50`/`nse_500`.
+- [ ] **F&O Heatmap still reads India-only** — the `/fno/heatmap` page
+  (`frontend/src/fno/pages/HeatmapPage.tsx`) is India-centric: its empty/error
+  copy hard-codes "Kite API key required" / "Connect a live Kite API key", even
+  though the backend OI/IV basket is already US-optionable (`pcr_tracker.
+  DEFAULT_SYMBOLS` = SPY/QQQ/AAPL/…). Make the copy market-neutral, and **verify
+  the OI/IV pipeline actually populates for the US basket** end-to-end
+  (`fno/services/option_chain_fetcher.py` `/api/option-chain-equities` path +
+  `iv_engine`) — if US options don't flow through, the heatmap is India-only in
+  practice and needs the US option source wired (us_options_adapter).
 
 **C. Robustness**
 - [ ] **429 backoff / circuit-breaker + wider caching** — extend the working FMP
