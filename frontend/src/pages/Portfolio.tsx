@@ -354,11 +354,11 @@ export function PortfolioPage() {
       );
       setPortfolioTrend(computePortfolioTrend(res.items, Object.fromEntries(chartEntries)));
       const [riskRes, corrRes, divRes, taxRes, benchRes] = await Promise.all([
-        fetchPortfolioRiskMetrics({ benchmark: "NIFTY50", risk_free_rate: 0.06 }).catch(() => null),
+        fetchPortfolioRiskMetrics({ benchmark: "S&P500", risk_free_rate: 0.04 }).catch(() => null),
         fetchPortfolioCorrelation({ window: 60 }).catch(() => null),
         fetchPortfolioDividends({ days: 180 }).catch(() => null),
         fetchTaxLots().catch(() => null),
-        fetchPortfolioBenchmarkOverlay({ benchmark: "NIFTY50" }).catch(() => null),
+        fetchPortfolioBenchmarkOverlay({ benchmark: "S&P500" }).catch(() => null),
       ]);
       setRiskMetrics(riskRes);
       setCorrelation(corrRes);

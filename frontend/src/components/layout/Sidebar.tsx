@@ -59,14 +59,14 @@ export function Sidebar() {
         <img src={logo} alt="OpenTerminalUI" className="h-8 w-auto object-contain" />
       </div>
       <div className="border-b border-terminal-border px-3 py-2 text-[11px] text-terminal-muted">
-        NSE EQUITY ANALYTICS
+        EQUITY ANALYTICS
       </div>
       <div className="space-y-1 border-b border-terminal-border p-2 text-xs">
         <NavLink to="/" className="block rounded px-2 py-2 text-terminal-muted hover:bg-terminal-bg hover:text-terminal-text">
           Home
         </NavLink>
         <NavLink
-          to={`/fno?symbol=${encodeURIComponent((ticker || "NIFTY").toUpperCase())}`}
+          to={`/fno?symbol=${encodeURIComponent((ticker || "SPY").toUpperCase())}`}
           className="block rounded px-2 py-2 text-terminal-muted hover:bg-terminal-bg hover:text-terminal-text"
         >
           Switch To F&O {"->"}

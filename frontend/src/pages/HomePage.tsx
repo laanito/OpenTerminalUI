@@ -255,7 +255,7 @@ export function HomePage() {
       fetchPortfolio(),
       fetchWatchlist(),
       fetchBacktestV1Presets(),
-      fetchChainSummary("NIFTY"),
+      fetchChainSummary("SPY"),
       fetchPortfolioBenchmarkOverlay(),
     ]);
 

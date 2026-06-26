@@ -156,13 +156,18 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
   email; only skip delivery when there's genuinely no address.
 
 **B. De-India defaults — the western-oriented release identity**
-- [ ] **Watchlist default** — `WatchlistManager` symbol search falls back to NSE
-  when the market isn't NASDAQ; de-India the default + any seeded watchlist symbols
-  to follow the selected market.
-- [ ] **F&O India defaults** — home/sidebar F&O widgets default to `NIFTY`
-  (`HomePage.tsx`, `Sidebar.tsx`) and the Portfolio risk benchmark defaults to
-  `NIFTY50`. Pick western defaults (F&O stays India-*supported*, just not the
-  default). Note: a bare `NIFTY` request 404s under the US-default classifier.
+- [x] **Watchlist default** — `WatchlistManager` symbol search no longer forces
+  NSE for non-NASDAQ markets; it passes the selected market through for context
+  ranking (default country is US → NASDAQ).
+- [x] **F&O India defaults** — home/sidebar F&O widgets now default to `SPY`
+  (`HomePage.tsx`, `Sidebar.tsx`); the sidebar label is market-neutral ("EQUITY
+  ANALYTICS"). Portfolio/Attribution/ModelLab/PortfolioLab risk benchmark now
+  defaults to `S&P500` (FE + backend route/service defaults; risk-free rate
+  0.06 → 0.04). `NIFTY50`/`SENSEX` remain selectable options; F&O stays
+  India-*supported*, just not the default.
+  - Remaining (out of scope, separate concern): `OpsDashboard` batch-backtest
+    universe label and the screener default universe (`screener/engine.py`) still
+    read `NIFTY50`/`nse_500`.
 
 **C. Robustness**
 - [ ] **429 backoff / circuit-breaker + wider caching** — extend the working FMP
@@ -249,11 +254,14 @@ isn't worth keeping). Pull into a milestone as data sources are chosen.
 - **Tape / Time & Sales** (`/api/tape/*`) — needs a real trade/tick feed adapter
   (`get_recent_trades`). Without it the tape is empty + degraded; we deliberately
   do **not** synthesize ticks or buy/sell order flow.
-- **Crypto market depth & derivatives** (`/v1/crypto/heatmap` depth fields,
-  `/v1/crypto/derivatives`) — currently still derive depth from `volume*price`
-  and funding/liquidations from `change_24h` (deferred from #42). Wire a real
-  orderbook/derivatives source (Binance depth + funding/OI/liquidations) or make
-  them explicitly degraded + redesign the response models.
+- **Crypto market depth & derivatives** — DONE (real Binance source): heatmap
+  depth is now real top-of-book from spot `bookTicker`; derivatives funding +
+  open interest are real from futures `premiumIndex` + `openInterest`. Both flag
+  `degraded` when Binance is unreachable. **Remaining**: 24h **liquidations** have
+  no Binance REST endpoint (the old `allForceOrders` was removed) — they require
+  the live `!forceOrder@arr` WebSocket stream feeding `BinanceDerivativesState`;
+  until that runner is wired, liquidations read 0 and the response is flagged
+  `no_live_source`. Wiring that WS runner is the open follow-up.
 
 **Key-gated, not stubs** (these work today once a key is set — no new source
 needed, just configuration): the **yield curve / 2s10s** and **macro indicators**
