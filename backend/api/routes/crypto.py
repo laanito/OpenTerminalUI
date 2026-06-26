@@ -15,7 +15,12 @@ from backend.core.models import ChartResponse, OhlcvPoint
 from backend.services.crypto_fundamentals import get_fundamentals
 from backend.services.crypto_market_service import CryptoMarketService
 from backend.services.crypto_universe import load_candles, load_universe, search_universe
-from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
+from backend.services.crypto_derivatives_service import load_depth_map, load_funding_oi
+from backend.shared.degraded import (
+    REASON_NO_LIVE_SOURCE,
+    REASON_NO_PROVIDER_DATA,
+    degraded_marker,
+)
 
 router = APIRouter()
 market_service = CryptoMarketService()
@@ -123,6 +128,7 @@ class CryptoHeatmapRow(BaseModel):
 class CryptoHeatmapResponse(BaseModel):
     items: list[CryptoHeatmapRow]
     ts: str
+    degraded: dict | None = None
 
 
 class CryptoDerivativesRow(BaseModel):
@@ -146,6 +152,7 @@ class CryptoDerivativesResponse(BaseModel):
     items: list[CryptoDerivativesRow]
     totals: CryptoDerivativesTotals
     ts: str
+    degraded: dict | None = None
 
 
 class CryptoDefiHeadline(BaseModel):
@@ -510,11 +517,14 @@ async def crypto_sectors() -> CryptoSectorsResponse:
 async def crypto_heatmap(limit: int = Query(default=80, ge=1, le=200)) -> CryptoHeatmapResponse:
     rows = await _load_rows(limit=max(60, limit))
     rows.sort(key=lambda x: x.market_cap, reverse=True)
+    # Real top-of-book depth from the Binance spot order book (one call, cached).
+    depth_map = await load_depth_map()
     items: list[dict[str, Any]] = []
     for row in rows[:limit]:
-        depth_bid = max(1.0, row.volume_24h * row.price * (1.0 + max(0.0, row.change_24h) / 100.0))
-        depth_ask = max(1.0, row.volume_24h * row.price * (1.0 + max(0.0, -row.change_24h) / 100.0))
-        imbalance = _clamp((depth_bid - depth_ask) / (depth_bid + depth_ask), -1.0, 1.0)
+        depth = depth_map.get(row.symbol)
+        depth_bid = depth["bid_notional"] if depth else 0.0
+        depth_ask = depth["ask_notional"] if depth else 0.0
+        imbalance = depth["imbalance"] if depth else 0.0
         items.append(
             {
                 "symbol": row.symbol,
@@ -529,7 +539,17 @@ async def crypto_heatmap(limit: int = Query(default=80, ge=1, le=200)) -> Crypto
                 "bucket": _depth_bucket(row.change_24h),
             }
         )
-    return {"items": items, "ts": _now_iso()}
+    # No depth coverage at all means the Binance order book is unreachable; flag
+    # it rather than letting the all-zero depth read as a real flat book.
+    degraded = (
+        None
+        if depth_map
+        else degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail="Binance order-book depth unavailable; depth fields are empty",
+        )
+    )
+    return {"items": items, "ts": _now_iso(), "degraded": degraded}
 
 
 @router.get("/v1/crypto/derivatives", response_model=CryptoDerivativesResponse)
@@ -537,36 +557,63 @@ async def crypto_derivatives(limit: int = Query(default=40, ge=1, le=200)) -> Cr
     from backend.realtime.binance_ws import get_binance_derivatives_state
 
     rows = await _load_rows(limit=max(60, limit))
-    rows.sort(key=lambda x: abs(x.change_24h), reverse=True)
+    rows.sort(key=lambda x: x.market_cap, reverse=True)
+    top = rows[:limit]
+
+    # Real funding rates + open interest from Binance USDⓈ-M futures (cached).
+    funding_oi = await load_funding_oi([r.symbol for r in top])
+
+    # Liquidations come only from the live forceOrder WebSocket stream (Binance
+    # has no REST endpoint for 24h totals). Read whatever the stream has buffered;
+    # it is empty unless that stream is running.
     stream_state = get_binance_derivatives_state()
-    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    liq_snapshot = stream_state.snapshot(limit=10_000)
+    liq_by_symbol = {item["symbol"]: item for item in liq_snapshot["items"]}
 
-    for row in rows[:limit]:
-        funding_rate_8h = _clamp(row.change_24h / 2400.0, -0.003, 0.003)
-        liq_scale = max(1.0, row.volume_24h * row.price * abs(row.change_24h) * 0.0001)
-        if row.change_24h >= 0:
-            long_liq = liq_scale * 0.35
-            short_liq = liq_scale * 0.65
-        else:
-            long_liq = liq_scale * 0.65
-            short_liq = liq_scale * 0.35
-        stream_state.ingest_event(row.symbol, funding_rate_8h, long_liq, side="long", ts_ms=now_ms)
-        stream_state.ingest_event(row.symbol, funding_rate_8h, short_liq, side="short", ts_ms=now_ms)
+    items: list[dict[str, Any]] = []
+    for row in top:
+        fo = funding_oi.get(row.symbol)
+        if fo is None:
+            continue  # no Binance perp for this asset — omit rather than show zeros
+        liq = liq_by_symbol.get(row.symbol, {})
+        items.append(
+            {
+                "symbol": row.symbol,
+                "funding_rate_8h": fo["funding_rate_8h"],
+                "open_interest_usd": fo["open_interest_usd"],
+                "long_liquidations_24h": _f(liq.get("long_liquidations_24h")),
+                "short_liquidations_24h": _f(liq.get("short_liquidations_24h")),
+                "liquidations_24h": _f(liq.get("liquidations_24h")),
+                "updated_at": _now_iso(),
+            }
+        )
 
-    snapshot = stream_state.snapshot(limit=limit)
-    items = [
-        {
-            "symbol": item["symbol"],
-            "funding_rate_8h": item["funding_rate_8h"],
-            "open_interest_usd": item["open_interest_usd"],
-            "long_liquidations_24h": item["long_liquidations_24h"],
-            "short_liquidations_24h": item["short_liquidations_24h"],
-            "liquidations_24h": item["liquidations_24h"],
-            "updated_at": item["updated_at"],
-        }
-        for item in snapshot["items"]
-    ]
-    return {"items": items, "totals": snapshot["totals"], "ts": _now_iso()}
+    items.sort(key=lambda it: it["open_interest_usd"], reverse=True)
+    totals = {
+        "open_interest_usd": sum(it["open_interest_usd"] for it in items),
+        "long_liquidations_24h": sum(it["long_liquidations_24h"] for it in items),
+        "short_liquidations_24h": sum(it["short_liquidations_24h"] for it in items),
+        "liquidations_24h": sum(it["liquidations_24h"] for it in items),
+    }
+
+    if not funding_oi:
+        degraded = degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail="Binance futures funding/open-interest unavailable",
+        )
+    elif totals["liquidations_24h"] <= 0:
+        # Funding + OI are live; only liquidations lack a source.
+        degraded = degraded_marker(
+            REASON_NO_LIVE_SOURCE,
+            detail=(
+                "Funding & open interest are live from Binance; 24h liquidations "
+                "require the real-time forceOrder stream (not yet wired)"
+            ),
+        )
+    else:
+        degraded = None
+
+    return {"items": items, "totals": totals, "ts": _now_iso(), "degraded": degraded}
 
 
 @router.get("/v1/crypto/defi", response_model=CryptoDefiResponse)
