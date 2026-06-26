@@ -98,7 +98,8 @@ def test_chart_cursor_moves_window_backward(monkeypatch) -> None:
     assert second.data[-1].t < first.data[0].t
 
 
-def test_chart_legacy_route_uses_synthetic_fallback_when_history_empty(monkeypatch) -> None:
+def test_chart_legacy_route_is_empty_and_degraded_when_history_empty(monkeypatch) -> None:
+    # Integrity: empty history must NOT be backfilled with a synthetic series.
     class _FakeFetcher:
         async def fetch_history(self, ticker: str, range_str: str = "1y", interval: str = "1d"):  # noqa: ARG002
             return {}
@@ -119,6 +120,6 @@ def test_chart_legacy_route_uses_synthetic_fallback_when_history_empty(monkeypat
     result = asyncio.run(chart.get_chart("RELIANCE", interval="1d", range="1y", limit=10, cursor=None))
 
     assert result.ticker == "RELIANCE"
-    assert len(result.data) == 10
-    assert result.meta.warnings
-    assert result.meta.warnings[0].code == "chart_data_fallback"
+    assert result.data == []
+    assert result.meta.degraded is not None
+    assert result.meta.degraded["reason"] == "no_provider_data"

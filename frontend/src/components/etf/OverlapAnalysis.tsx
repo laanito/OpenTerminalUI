@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { TerminalTable, type TerminalTableColumn } from "../terminal/TerminalTable";
 import { formatPercent } from "../../lib/format";
+import { api } from "../../api/base";
+import type { DegradedInfo } from "../../api/types";
+import { DegradedBanner } from "../common/DegradedBanner";
 
 interface CommonHolding {
   symbol: string;
@@ -12,6 +15,7 @@ interface OverlapData {
   tickers: string[];
   overlap_pct: number;
   common_holdings: CommonHolding[];
+  degraded?: DegradedInfo;
 }
 
 interface Props {
@@ -30,9 +34,10 @@ export function OverlapAnalysis({ tickers }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/etf/overlap?tickers=${tickers.join(",")}`);
-        if (!response.ok) throw new Error("Failed to fetch overlap analysis");
-        const json = await response.json();
+        // Shared api client → bearer token attached (raw fetch 401'd on /api/etf/*).
+        const { data: json } = await api.get<OverlapData>("/etf/overlap", {
+          params: { tickers: tickers.join(",") },
+        });
         setData(json);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -81,6 +86,7 @@ export function OverlapAnalysis({ tickers }: Props) {
           {formatPercent(data.overlap_pct)} Overlap
         </div>
       </div>
+      <DegradedBanner info={data.degraded} className="mx-3 mb-2" />
       <TerminalTable
         columns={columns}
         rows={data.common_holdings}

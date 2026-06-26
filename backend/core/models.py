@@ -14,6 +14,7 @@ class APIWarning(BaseModel):
 class APIResponseMeta(BaseModel):
     warnings: list[APIWarning] = Field(default_factory=list)
     pagination: dict[str, Any] | None = None
+    degraded: dict[str, Any] | None = None
 
 
 class OhlcvPoint(BaseModel):
@@ -260,12 +261,14 @@ class ETFScreenerResponse(BaseModel):
 class ETFHoldingsResponse(BaseModel):
     ticker: str
     holdings: list[ETFHolding]
+    degraded: dict | None = None
 
 
 class ETFOverlapResponse(BaseModel):
     tickers: list[str]
     overlap_pct: float
     common_holdings: list[ETFHolding]
+    degraded: dict | None = None
 
 
 class ETFFlowPoint(BaseModel):
@@ -276,6 +279,7 @@ class ETFFlowPoint(BaseModel):
 class ETFFlowResponse(BaseModel):
     ticker: str
     flows: list[ETFFlowPoint]
+    degraded: dict | None = None
 
 
 class ErrorPayload(BaseModel):

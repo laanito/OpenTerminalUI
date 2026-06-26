@@ -708,6 +708,7 @@ export type SectorRotationData = {
     current: { date: string; x: number; y: number };
     trail: Array<{ date: string; x: number; y: number }>;
   }>;
+  degraded?: DegradedInfo;
 };
 
 export type ChartComparisonResponse = {

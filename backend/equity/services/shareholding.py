@@ -12,6 +12,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from backend.shared.cache import cache
+from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
 
 
 class ShareholdingCategory(BaseModel):
@@ -36,6 +37,7 @@ class ShareholdingPattern(BaseModel):
     source: str = "nse"
     institutional_holders: list[dict[str, Any]] = Field(default_factory=list)
     warning: Optional[str] = None
+    degraded: Optional[dict[str, Any]] = None
 
 
 def _to_float(value: Any) -> float:
@@ -90,41 +92,28 @@ def _model_to_dict(model: BaseModel) -> dict[str, Any]:
 
 
 def _default_pattern_payload(symbol: str, warning: Optional[str] = None) -> dict[str, Any]:
+    # Integrity: when no shareholding source is available, return an empty
+    # pattern flagged degraded — NOT a fabricated "100% public, 0% promoter/FII/
+    # DII" cap table, which read as a real (and wrong) ownership structure
+    # (v1.0 silent-mock audit). The frontend shows a "data unavailable" banner.
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     quarter = "Latest"
-    categories = [
-        {
-            "category": "Public Shareholders",
-            "percentage": 100.0,
-            "shares": None,
-            "quarter": quarter,
-        }
-    ]
-    historical = [
-        {
-            "quarter": quarter,
-            "promoter": 0.0,
-            "fii": 0.0,
-            "dii": 0.0,
-            "public": 100.0,
-            "government": 0.0,
-        }
-    ]
     return {
         "symbol": symbol,
         "total_shares": 0,
         "promoter_holding": 0.0,
         "fii_holding": 0.0,
         "dii_holding": 0.0,
-        "public_holding": 100.0,
+        "public_holding": 0.0,
         "government_holding": 0.0,
-        "categories": categories,
+        "categories": [],
         "quarter": quarter,
         "as_of_date": today,
-        "historical": historical,
+        "historical": [],
         "source": "fallback",
         "institutional_holders": [],
         "warning": warning,
+        "degraded": degraded_marker(REASON_NO_PROVIDER_DATA, detail=warning or None),
     }
 
 

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from backend.services.hotlist_service import HotlistService, get_hotlist_service
+from backend.shared.degraded import REASON_NO_LIVE_SOURCE, degraded_marker
 
 router = APIRouter()
 
@@ -25,12 +26,13 @@ class HotlistResponse(BaseModel):
     market: str
     items: list[HotlistItem] = Field(default_factory=list)
     updated_at: datetime
+    degraded: dict | None = None
 
 
 @router.get("/hotlists", response_model=HotlistResponse)
 async def get_hotlist(
     list_type: str = Query(...),
-    market: str = Query("IN"),
+    market: str = Query("US"),
     limit: int = Query(20, ge=1, le=50),
     service: HotlistService = Depends(get_hotlist_service),
 ) -> HotlistResponse:
@@ -44,4 +46,5 @@ async def get_hotlist(
         market=str(market).strip().upper(),
         items=[HotlistItem(**row) for row in items],
         updated_at=datetime.now(timezone.utc),
+        degraded=None if items else degraded_marker(REASON_NO_LIVE_SOURCE),
     )

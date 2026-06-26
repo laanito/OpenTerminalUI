@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { TerminalTable, type TerminalTableColumn } from "../terminal/TerminalTable";
-import { formatCurrency } from "../../lib/format";
+import { api } from "../../api/base";
+import type { DegradedInfo } from "../../api/types";
+import { DegradedBanner } from "../common/DegradedBanner";
 
 interface FlowPoint {
   date: string;
@@ -10,6 +12,7 @@ interface FlowPoint {
 interface FlowData {
   ticker: string;
   flows: FlowPoint[];
+  degraded?: DegradedInfo;
 }
 
 interface Props {
@@ -28,9 +31,8 @@ export function FlowTracker({ ticker }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/etf/flows?ticker=${ticker}`);
-        if (!response.ok) throw new Error("Failed to fetch flows");
-        const json = await response.json();
+        // Shared api client → bearer token attached (raw fetch 401'd on /api/etf/*).
+        const { data: json } = await api.get<FlowData>("/etf/flows", { params: { ticker } });
         setData(json);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -71,6 +73,7 @@ export function FlowTracker({ ticker }: Props) {
       <div className="mb-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-terminal-muted">
         Fund Flows: {ticker} (Last 30 Days)
       </div>
+      <DegradedBanner info={data.degraded} className="mx-3 mb-2" />
       <TerminalTable
         columns={columns}
         rows={data.flows}

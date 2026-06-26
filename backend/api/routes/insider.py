@@ -10,30 +10,9 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db
 from backend.models.core import InsiderTrade
+from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
 
 router = APIRouter(prefix="/api/insider", tags=["insider"])
-
-_SAMPLE_STOCKS: list[dict[str, Any]] = [
-    {"symbol": "RELIANCE", "name": "Reliance Industries", "base_price": 2860.0},
-    {"symbol": "TCS", "name": "Tata Consultancy Services", "base_price": 4135.0},
-    {"symbol": "INFY", "name": "Infosys", "base_price": 1585.0},
-    {"symbol": "HDFCBANK", "name": "HDFC Bank", "base_price": 1685.0},
-    {"symbol": "ICICIBANK", "name": "ICICI Bank", "base_price": 1140.0},
-    {"symbol": "BHARTIARTL", "name": "Bharti Airtel", "base_price": 1242.0},
-    {"symbol": "LT", "name": "Larsen & Toubro", "base_price": 3680.0},
-    {"symbol": "SUNPHARMA", "name": "Sun Pharmaceutical", "base_price": 1525.0},
-    {"symbol": "TITAN", "name": "Titan Company", "base_price": 3480.0},
-    {"symbol": "MARUTI", "name": "Maruti Suzuki", "base_price": 12120.0},
-]
-
-_SAMPLE_INSIDERS: list[dict[str, str]] = [
-    {"name": "Mukesh D Ambani", "designation": "Chairman"},
-    {"name": "N V Subramanian", "designation": "Managing Director"},
-    {"name": "Vinit Sambre", "designation": "Whole-Time Director"},
-    {"name": "Sandeep Batra", "designation": "Executive Director"},
-    {"name": "Roshni Nadar", "designation": "Non-Executive Director"},
-    {"name": "Keki M Mistry", "designation": "Independent Director"},
-]
 
 
 def _today_utc() -> datetime:
@@ -41,10 +20,17 @@ def _today_utc() -> datetime:
 
 
 def _symbol_name(symbol: str) -> str:
-    for item in _SAMPLE_STOCKS:
-        if item["symbol"] == symbol:
-            return str(item["name"])
     return symbol
+
+
+def _degraded_if_empty(items: list[Any]) -> dict[str, Any] | None:
+    # Insider trades come only from the InsiderTrade table (populated by a real
+    # ingest). When empty we flag degraded rather than the old behaviour of
+    # auto-seeding a fabricated India-only universe (`source="SEEDED"`) and
+    # serving it as live (v1.0 silent-mock audit).
+    if items:
+        return None
+    return degraded_marker(REASON_NO_PROVIDER_DATA, detail="no insider-trade data ingested")
 
 
 def _trade_payload(trade: InsiderTrade) -> dict[str, Any]:
@@ -63,40 +49,6 @@ def _trade_payload(trade: InsiderTrade) -> dict[str, Any]:
     }
 
 
-def _seed_sample_data_if_empty(db: Session) -> None:
-    count = db.query(func.count(InsiderTrade.id)).scalar() or 0
-    if count > 0:
-        return
-
-    today = _today_utc()
-    rows: list[InsiderTrade] = []
-    for stock_index, stock in enumerate(_SAMPLE_STOCKS):
-        for offset in range(6):
-            insider = _SAMPLE_INSIDERS[(stock_index + offset) % len(_SAMPLE_INSIDERS)]
-            is_cluster_buy = stock_index < 4 and offset < 3
-            trade_type = "buy" if is_cluster_buy or (offset + stock_index) % 3 != 0 else "sell"
-            trade_date = today - timedelta(days=stock_index * 3 + offset * 6 + (stock_index % 2))
-            quantity = 1400 + stock_index * 320 + offset * 175
-            price = round(float(stock["base_price"]) * (0.92 + (offset * 0.035)), 2)
-            value = round(quantity * price, 2)
-            rows.append(
-                InsiderTrade(
-                    symbol=str(stock["symbol"]),
-                    insider_name=str(insider["name"]),
-                    insider_title=str(insider["designation"]),
-                    transaction_type=trade_type,
-                    shares=quantity,
-                    price=price,
-                    value=value,
-                    date=trade_date,
-                    filing_date=trade_date + timedelta(days=1),
-                    source="SEEDED",
-                )
-            )
-    db.add_all(rows)
-    db.commit()
-
-
 def _load_filtered_trades(
     db: Session,
     *,
@@ -106,7 +58,6 @@ def _load_filtered_trades(
     symbol: str | None = None,
     limit: int | None = None,
 ) -> list[InsiderTrade]:
-    _seed_sample_data_if_empty(db)
     start_date = _today_utc() - timedelta(days=max(days, 1))
     query = db.query(InsiderTrade).filter(InsiderTrade.date >= start_date)
     if min_value > 0:
@@ -130,7 +81,7 @@ def get_recent_insider_trades(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     trades = _load_filtered_trades(db, days=days, min_value=min_value, trade_type=type, limit=limit)
-    return {"trades": [_trade_payload(trade) for trade in trades]}
+    return {"trades": [_trade_payload(trade) for trade in trades], "degraded": _degraded_if_empty(trades)}
 
 
 @router.get("/stock/{symbol}")
@@ -151,6 +102,7 @@ def get_insider_stock_detail(
             "net_value": round(total_buys - total_sells, 2),
             "insider_count": insider_count,
         },
+        "degraded": _degraded_if_empty(trades),
     }
 
 
@@ -207,7 +159,8 @@ def get_top_buyers(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    return {"buyers": _build_top_activity(db, days=days, limit=limit, trade_type="buy")}
+    buyers = _build_top_activity(db, days=days, limit=limit, trade_type="buy")
+    return {"buyers": buyers, "degraded": _degraded_if_empty(buyers)}
 
 
 @router.get("/top-sellers")
@@ -216,7 +169,8 @@ def get_top_sellers(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    return {"sellers": _build_top_activity(db, days=days, limit=limit, trade_type="sell")}
+    sellers = _build_top_activity(db, days=days, limit=limit, trade_type="sell")
+    return {"sellers": sellers, "degraded": _degraded_if_empty(sellers)}
 
 
 @router.get("/cluster-buys")
@@ -271,4 +225,4 @@ def get_cluster_buys(
         )
 
     clusters.sort(key=lambda item: (-float(item["insider_count"]), -float(item["total_value"]), str(item["symbol"])))
-    return {"clusters": clusters}
+    return {"clusters": clusters, "degraded": _degraded_if_empty(clusters)}
