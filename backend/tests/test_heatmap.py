@@ -19,7 +19,7 @@ def test_heatmap_treemap_returns_ranked_rows() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["market"] == "IN"
+    assert payload["market"] == "US"  # de-India default
     assert payload["group"] == "sector"
     assert payload["size_by"] == "market_cap"
     assert payload["data"]

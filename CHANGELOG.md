@@ -41,6 +41,26 @@ backoff, version reconcile, docs).
   L3) to stop free-tier quota burn; 429/5xx never cached.
 
 ### Fixed
+- **Silent-mock integrity sweep (1.0 bucket A, part 1).** Audited the backend for
+  code that fabricated plausible market data when a real source was unavailable
+  and presented it as live. Established a standard `degraded: {reason, source}`
+  marker (`backend/shared/degraded.py`) + a reusable `DegradedBanner` so the UI
+  always flags non-live data. Fixed the 7 critical sites:
+  - **Market status** (`/reports/market-status`): removed the hardcoded
+    index/commodity values + `random` jitter (NIFTY/SP500/gold/silver/crude…);
+    missing quotes now stay null and the response is flagged degraded.
+  - **Heatmap treemap**: stopped seeding synthetic price/change/volume per tile;
+    tiles with no live quote render neutral and the response is flagged degraded.
+  - **Tape** (`/tape/*`): removed synthetic bars and invented buy/sell order
+    flow; only real trade-feed data is shown, otherwise empty + degraded.
+  - **Historical OHLCV** (`historical_data_service`): removed the synthetic
+    random-walk fallback so backtests/charts never run on fabricated history.
+  - **Macro indicators**: the no-`FRED_API_KEY` fallback is now flagged degraded
+    (previously only the calendar carried a `sample` flag, the macro dash didn't).
+  - **Yield curve / 2s10s** (`fixed_income`): no-key/error paths return empty +
+    degraded instead of a hardcoded curve.
+  - **Bonds** (`/bonds/*`): replaced the hardcoded India-only bond universe,
+    spreads, and ratings with empty + degraded (no live source wired yet).
 - Full FE↔backend API audit (`/v1/...` path/shape mismatches; unmounted economics
   router; shadowed watchlist-items route).
 - Ticker tape: real commodity values (GC=F/SI=F/CL=F were missing from the fetch

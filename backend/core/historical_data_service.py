@@ -4,10 +4,8 @@ from dataclasses import dataclass
 from datetime import date
 from datetime import datetime, timezone
 from datetime import timedelta
-import math
 import os
 from pathlib import Path
-import random
 from typing import Protocol
 
 import pandas as pd
@@ -174,8 +172,9 @@ class HistoricalDataService:
         end_val = end or date.today().isoformat()
         start_val = start or "2000-01-01"
         bars = self._provider.get_daily_ohlcv(symbol, start=start_val, end=end_val)
-        if not bars:
-            bars = _synthetic_ohlcv(symbol.canonical, start_val, end_val)
+        # Integrity: never substitute a synthetic random-walk series when the
+        # provider has no data. Backtests / tearsheets / charts must run on real
+        # history or none at all — callers handle the empty case.
         if limit > 0:
             bars = bars[-limit:]
         return symbol, bars
@@ -198,117 +197,10 @@ class HistoricalDataService:
         except Exception:
             bars = []
 
-        if not bars:
-            # Fallback to synthetic intraday
-            bars = _synthetic_intraday_ohlcv(symbol.canonical, start_val, end_val, timeframe, market)
-
+        # Integrity: no synthetic-intraday substitution. Empty means "no data".
         if limit > 0:
             bars = bars[-limit:]
         return symbol, bars
-
-
-def _synthetic_intraday_ohlcv(symbol: str, start: str, end: str, timeframe: str, market: str) -> list[OhlcvBar]:
-    start_dt = datetime.fromisoformat(start)
-    if start_dt.tzinfo is None:
-        start_dt = start_dt.replace(tzinfo=timezone.utc)
-
-    try:
-        end_dt = datetime.fromisoformat(end)
-    except Exception:
-        end_dt = datetime.now(timezone.utc)
-    if end_dt.tzinfo is None:
-        end_dt = end_dt.replace(tzinfo=timezone.utc)
-
-    if end_dt < start_dt:
-        return []
-
-    tf_map = {"1m": 1, "5m": 5, "15m": 15, "1h": 60}
-    minutes = tf_map.get(timeframe, 1)
-
-    # Session hours
-    if market == "US":
-        start_hr, start_min = 9, 30
-        end_hr, end_min = 16, 0
-    else:
-        # NSE
-        start_hr, start_min = 9, 15
-        end_hr, end_min = 15, 30
-
-    seed = abs(hash(f"{symbol}:{start}:{end}:{timeframe}")) % (2**32)
-    rng = random.Random(seed)
-    base = 100.0 + rng.uniform(-20.0, 20.0)
-    out: list[OhlcvBar] = []
-    px = base
-
-    curr = start_dt
-    while curr <= end_dt:
-        if curr.weekday() < 5:
-            # Only generate within market hours
-            curr_time = curr.time()
-            if (curr_time.hour > start_hr or (curr_time.hour == start_hr and curr_time.minute >= start_min)) and \
-               (curr_time.hour < end_hr or (curr_time.hour == end_hr and curr_time.minute <= end_min)):
-
-                drift = 0.05 * math.sin(len(out) / 50.0) + rng.uniform(-0.3, 0.3)
-                open_px = max(1.0, px)
-                close_px = max(1.0, open_px + drift)
-                high_px = max(open_px, close_px) + abs(rng.uniform(0.01, 0.2))
-                low_px = max(0.5, min(open_px, close_px) - abs(rng.uniform(0.01, 0.2)))
-                vol = int(max(100, 10_000 + rng.uniform(-5_000, 5_000)))
-
-                out.append(
-                    OhlcvBar(
-                        date=curr.strftime("%Y-%m-%d %H:%M:%S"),
-                        open=float(open_px),
-                        high=float(high_px),
-                        low=float(low_px),
-                        close=float(close_px),
-                        volume=vol,
-                    )
-                )
-                px = close_px
-        curr += timedelta(minutes=minutes)
-        if len(out) > 100_000:  # Safety limit
-            break
-    return out
-
-
-def _synthetic_ohlcv(symbol: str, start: str, end: str) -> list[OhlcvBar]:
-    start_dt = datetime.fromisoformat(start).date()
-    end_dt = datetime.fromisoformat(end).date()
-    if end_dt < start_dt:
-        return []
-    days = max((end_dt - start_dt).days + 1, 20)
-    points = min(days, 1500)
-    seed = abs(hash(f"{symbol}:{start}:{end}")) % (2**32)
-    rng = random.Random(seed)
-    base = 100.0 + rng.uniform(-20.0, 20.0)
-    out: list[OhlcvBar] = []
-    px = base
-    for i in range(points):
-        d = start_dt + timedelta(days=i)
-        if d > end_dt:
-            break
-        # Skip weekends for daily market bars.
-        if d.weekday() >= 5:
-            continue
-        drift = 0.15 * math.sin(i / 17.0) + rng.uniform(-1.2, 1.2)
-        open_px = max(1.0, px)
-        close_px = max(1.0, open_px + drift)
-        high_px = max(open_px, close_px) + abs(rng.uniform(0.1, 1.4))
-        low_px = max(0.5, min(open_px, close_px) - abs(rng.uniform(0.1, 1.4)))
-        vol = int(max(1_000, 1_000_000 + rng.uniform(-300_000, 300_000)))
-        out.append(
-            OhlcvBar(
-                date=d.isoformat(),
-                open=float(open_px),
-                high=float(high_px),
-                low=float(low_px),
-                close=float(close_px),
-                volume=vol,
-            )
-        )
-        px = close_px
-    return out
 
 
 _historical_data_service = HistoricalDataService()

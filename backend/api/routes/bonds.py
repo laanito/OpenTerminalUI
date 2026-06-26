@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Query
 from backend.services.bond_service import BondService, get_bond_service
 
 router = APIRouter(prefix="/api/bonds", tags=["bonds"])
 
-@router.get("/screener", response_model=List[Dict[str, Any]])
+@router.get("/screener", response_model=Dict[str, Any])
 async def get_bond_screener(
     rating: Optional[str] = Query(None),
     issuer_type: Optional[str] = Query(None),
@@ -23,7 +23,7 @@ async def get_credit_spreads(
     """Timeline of IG vs HY spreads."""
     return await service.get_credit_spreads()
 
-@router.get("/ratings-migration", response_model=List[Dict[str, Any]])
+@router.get("/ratings-migration", response_model=Dict[str, Any])
 async def get_ratings_migration(
     service: BondService = Depends(get_bond_service)
 ):

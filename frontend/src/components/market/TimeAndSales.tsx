@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { fetchTapeRecent, fetchTapeSummary, type TapeSummaryResponse, type TapeTrade } from "../../api/client";
 import { TerminalPanel } from "../terminal/TerminalPanel";
+import { DegradedBanner } from "../common/DegradedBanner";
 import { useStockStore } from "../../store/stockStore";
 
 type TradeFilter = "all" | "buy" | "sell" | "large";
@@ -156,6 +157,7 @@ export function TimeAndSales({ ticker, limit = 500, className = "" }: TimeAndSal
       bodyClassName="flex h-full min-h-0 flex-col gap-3"
       actions={paused ? <span className="rounded-sm border border-yellow-400/50 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-yellow-300">Paused</span> : null}
     >
+      <DegradedBanner info={recentQuery.data?.degraded ?? summaryQuery.data?.degraded} />
       <div className="grid gap-3">
         <div className="rounded-sm border border-terminal-border bg-terminal-panel px-3 py-3">
           <div className="grid gap-3 lg:grid-cols-[1.2fr_repeat(5,minmax(0,1fr))]">

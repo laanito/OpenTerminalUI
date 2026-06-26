@@ -8,6 +8,13 @@ from typing import Any, Dict, List, Optional
 import httpx
 from backend.config.settings import get_settings
 from backend.shared.cache import cache
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_MISSING_API_KEY,
+    REASON_PROVIDER_ERROR,
+    SOURCE_FALLBACK,
+    degraded_marker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +151,7 @@ class EconomicDataService:
         if cached:
             return cached
 
-        results = {}
+        results: Dict[str, Any] = {}
         if self.fred_key:
             tasks = []
             for region, series_map in config.items():
@@ -164,9 +171,18 @@ class EconomicDataService:
                         "date": item["date"],
                         "history": item["history"]
                     }
+            if not results:
+                # Key present but every series failed — don't fabricate, flag it.
+                results[DEGRADED_KEY] = degraded_marker(REASON_PROVIDER_ERROR, source=SOURCE_FALLBACK)
         else:
             mock = self._get_mock_macro()
-            results = {r: mock[r] for r in config if r in mock} or mock
+            results = {r: mock[r] for r in config if r in mock} or dict(mock)
+            # Mock macro values must never read as live (the calendar already
+            # flags itself; macro used to omit any signal). See shared/degraded.
+            results[DEGRADED_KEY] = degraded_marker(
+                REASON_MISSING_API_KEY,
+                detail="set FRED_API_KEY for live macro indicators",
+            )
 
         await cache.set(cache_key, results, ttl=14400) # 4 hours
         return results

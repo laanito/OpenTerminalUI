@@ -563,10 +563,12 @@ export type YieldCurveResponse = {
   date: string;
   data: YieldCurveDataPoint[];
   spreads?: Record<string, number>;
+  degraded?: import("../api/types").DegradedInfo;
 };
 
 export type SpreadHistoryResponse = {
   history: Array<{ date: string; value: number }>;
+  degraded?: import("../api/types").DegradedInfo;
 };
 
 export type EconomicEvent = {

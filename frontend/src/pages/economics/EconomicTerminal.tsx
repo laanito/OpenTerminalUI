@@ -13,6 +13,8 @@ import { ResponsiveContainer, AreaChart, Area } from "recharts";
 
 import { fetchEconomicCalendar, fetchMacroIndicators } from "../../api/client";
 import { TerminalPanel } from "../../components/terminal/TerminalPanel";
+import { DegradedBanner } from "../../components/common/DegradedBanner";
+import type { DegradedInfo } from "../../api/types";
 import { EconomicEvent, MacroIndicator } from "../../types";
 
 export function EconomicTerminal() {
@@ -56,6 +58,7 @@ export function EconomicTerminal() {
   });
 
   const isSampleData = useMemo(() => Boolean(events?.some(ev => ev.sample)), [events]);
+  const macroDegraded = (macro as Record<string, unknown> | undefined)?.degraded as DegradedInfo | undefined;
 
   const filteredEvents = useMemo(() => {
     if (!events) return [];
@@ -227,8 +230,10 @@ export function EconomicTerminal() {
           </div>
         ) : (
           /* Macro Dashboard View */
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {macro && Object.entries(macro).map(([region, indicators]) => (
+          <div className="flex flex-col gap-4">
+            <DegradedBanner info={macroDegraded} />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {macro && Object.entries(macro).filter(([region]) => region !== "degraded").map(([region, indicators]) => (
               <TerminalPanel key={region} title={`${region.toUpperCase()} MACRO`}>
                 <div className="flex flex-col gap-3 p-1">
                   {Object.entries(indicators as Record<string, MacroIndicator>).map(([name, data]) => {
@@ -271,6 +276,7 @@ export function EconomicTerminal() {
                 </div>
               </TerminalPanel>
             ))}
+            </div>
           </div>
         )}
       </div>

@@ -11,6 +11,7 @@ import { format, isValid, parseISO, subDays } from "date-fns";
 
 import { fetchYieldCurve, fetchHistoricalYieldCurve, fetch2s10sHistory } from "../../api/client";
 import { TerminalPanel } from "../../components/terminal/TerminalPanel";
+import { DegradedBanner } from "../../components/common/DegradedBanner";
 
 function safeFormatIso(input: unknown, pattern: string, fallback = "-"): string {
   if (typeof input !== "string" || !input.trim()) return fallback;
@@ -124,6 +125,8 @@ export function YieldCurveDashboard() {
           </button>
         </div>
       </div>
+
+      <DegradedBanner info={currentCurve?.degraded ?? spread2s10s?.degraded} />
 
       {/* Main Yield Curve Chart */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">

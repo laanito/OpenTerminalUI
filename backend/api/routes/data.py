@@ -6,6 +6,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.core.historical_data_service import get_historical_data_service
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_NO_PROVIDER_DATA,
+    degraded_marker,
+)
 
 router = APIRouter()
 
@@ -34,7 +39,7 @@ async def get_ohlcv(
     except Exception as exc:  # pragma: no cover - defensive route guard
         raise HTTPException(status_code=400, detail=f"Failed to fetch OHLCV: {exc}") from exc
 
-    return {
+    payload: dict[str, Any] = {
         "symbol": normalized.canonical,
         "market": normalized.market,
         "provider_symbol": normalized.provider_symbol,
@@ -52,3 +57,9 @@ async def get_ohlcv(
             for b in bars
         ],
     }
+    if not bars:
+        payload[DEGRADED_KEY] = degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail="no historical data available for this symbol/range",
+        )
+    return payload

@@ -13,6 +13,7 @@ import {
   type HeatmapSizeBy,
 } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { DegradedBanner } from "../components/common/DegradedBanner";
 import { useSettingsStore } from "../store/settingsStore";
 
 type TooltipState = {
@@ -49,14 +50,16 @@ const SIZE_OPTIONS: Array<{ value: HeatmapSizeBy; label: string }> = [
   { value: "turnover", label: "Turnover" },
 ];
 
-function formatCompact(value: number): string {
+function formatCompact(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return "NA";
   return new Intl.NumberFormat("en-US", {
     notation: "compact",
     maximumFractionDigits: 2,
   }).format(value);
 }
 
-function formatCurrency(value: number, market: HeatmapMarket): string {
+function formatCurrency(value: number | null | undefined, market: HeatmapMarket): string {
+  if (value == null || !Number.isFinite(value)) return "NA";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: market === "IN" ? "INR" : "USD",
@@ -64,7 +67,15 @@ function formatCurrency(value: number, market: HeatmapMarket): string {
   }).format(value);
 }
 
-function heatColor(changePct: number): string {
+function formatPct(changePct: number | null | undefined): string {
+  if (changePct == null || !Number.isFinite(changePct)) return "NA";
+  return `${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%`;
+}
+
+// Tiles with no live quote (change_pct null) render neutral grey, never an
+// invented colour.
+function heatColor(changePct: number | null | undefined): string {
+  if (changePct == null || !Number.isFinite(changePct)) return "#6b7280";
   if (changePct <= -5) return "#dc2626";
   if (changePct <= -3) return "#ef4444";
   if (changePct <= -1) return "#f97316";
@@ -182,6 +193,7 @@ export function MarketHeatmapPage() {
         className="min-h-[760px]"
         bodyClassName="space-y-4"
       >
+        <DegradedBanner info={query.data?.degraded} />
         <div className="flex flex-wrap items-center gap-3 rounded border border-terminal-border bg-terminal-bg/40 px-3 py-3 text-xs">
           <div className="flex items-center gap-2">
             <span className="text-terminal-muted">Market</span>
@@ -287,16 +299,15 @@ export function MarketHeatmapPage() {
                           <div className="font-semibold text-terminal-text">{item.symbol}</div>
                           <div className="text-[11px] text-terminal-muted">{item.name}</div>
                         </div>
-                        <div className={`text-sm font-semibold ${item.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                          {item.change_pct >= 0 ? "+" : ""}
-                          {item.change_pct.toFixed(2)}%
+                        <div className={`text-sm font-semibold ${item.change_pct == null ? "text-terminal-muted" : item.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
+                          {formatPct(item.change_pct)}
                         </div>
                       </div>
                       <div className="mt-2 h-2 overflow-hidden rounded bg-terminal-border/20">
                         <div
                           className="h-full rounded"
                           style={{
-                            width: `${Math.min(100, Math.max(8, Math.abs(item.change_pct) * 12))}%`,
+                            width: `${Math.min(100, Math.max(8, Math.abs(item.change_pct ?? 0) * 12))}%`,
                             backgroundColor: heatColor(item.change_pct),
                           }}
                         />
@@ -357,8 +368,7 @@ export function MarketHeatmapPage() {
                         ) : null}
                         {rectWidth > 72 && rectHeight > 50 ? (
                           <text x={8} y={34} fill="#e5e7eb" fontSize={11}>
-                            {item.change_pct >= 0 ? "+" : ""}
-                            {item.change_pct.toFixed(2)}%
+                            {formatPct(item.change_pct)}
                           </text>
                         ) : null}
                         {rectWidth > 120 && rectHeight > 68 ? (
@@ -387,7 +397,7 @@ export function MarketHeatmapPage() {
                   <span className="text-terminal-muted">Price</span>
                   <span>{formatCurrency(tooltip.item.price, market)}</span>
                   <span className="text-terminal-muted">Change</span>
-                  <span>{tooltip.item.change_pct >= 0 ? "+" : ""}{tooltip.item.change_pct.toFixed(2)}%</span>
+                  <span>{formatPct(tooltip.item.change_pct)}</span>
                   <span className="text-terminal-muted">Volume</span>
                   <span>{formatCompact(tooltip.item.volume)}</span>
                   <span className="text-terminal-muted">Mkt Cap</span>
@@ -410,9 +420,8 @@ export function MarketHeatmapPage() {
                     <div className="font-semibold text-terminal-text">{item.symbol}</div>
                     <div className="text-[10px] text-terminal-muted">{group === "sector" ? item.sector : item.industry}</div>
                   </div>
-                  <div className={`font-semibold ${item.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                    {item.change_pct >= 0 ? "+" : ""}
-                    {item.change_pct.toFixed(2)}%
+                  <div className={`font-semibold ${item.change_pct == null ? "text-terminal-muted" : item.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
+                    {formatPct(item.change_pct)}
                   </div>
                 </button>
               ))}
