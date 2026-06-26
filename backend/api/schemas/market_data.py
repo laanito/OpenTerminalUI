@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 
 class DepthLevel(BaseModel):
     price: float
-    size: int
+    # float (not int): crypto order-book quantities are fractional (e.g. 0.5 BTC).
+    size: float
     orders: Optional[int] = None
 
 
@@ -18,8 +19,12 @@ class MarketDepth(BaseModel):
     as_of: datetime
     bids: List[DepthLevel] = Field(default_factory=list)
     asks: List[DepthLevel] = Field(default_factory=list)
-    total_bid_quantity: int = 0
-    total_ask_quantity: int = 0
+    total_bid_quantity: float = 0.0
+    total_ask_quantity: float = 0.0
+    # Provider that supplied the book ("binance"/"kite"/"nse"), or None when degraded.
+    source: Optional[str] = None
+    # Standard degraded marker when no live source is wired (e.g. US/EU equity L2).
+    degraded: Optional[Dict[str, Any]] = None
 
 
 class DepthUpdate(BaseModel):

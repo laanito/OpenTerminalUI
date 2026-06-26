@@ -62,6 +62,39 @@ def test_load_funding_oi_combines_premium_and_open_interest(monkeypatch) -> None
     assert set(oi_calls) == {"BTCUSDT", "ETHUSDT"}
 
 
+def test_binance_get_order_book_snaps_limit_and_parses(monkeypatch) -> None:
+    import asyncio as _asyncio
+
+    from backend.core import binance_client as bc
+
+    captured: dict = {}
+
+    class _FakeResp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"bids": [["100.0", "0.5"]], "asks": [["101.0", "0.4"]]}
+
+    class _FakeHttp:
+        async def get(self, url, params=None):
+            captured["url"] = url
+            captured["params"] = params
+            return _FakeResp()
+
+        async def aclose(self):
+            return None
+
+    client = bc.BinanceClient()
+    client.client = _FakeHttp()
+    book = _asyncio.run(client.get_order_book("BTCUSDT", limit=12))
+
+    assert book["bids"] == [["100.0", "0.5"]]
+    # 12 is snapped UP to the nearest Binance-allowed depth (20).
+    assert captured["params"]["limit"] == 20
+    assert captured["params"]["symbol"] == "BTCUSDT"
+
+
 def test_load_funding_oi_empty_when_no_premium(monkeypatch) -> None:
     class _FakeClient:
         async def get_premium_index(self):

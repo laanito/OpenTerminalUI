@@ -97,6 +97,22 @@ backoff, version reconcile, docs).
     live `forceOrder` WebSocket stream (`BinanceDerivativesState`); until that
     runner is wired they read 0 and the response is flagged `no_live_source`
     instead of being fabricated. `DegradedBanner` wired into both crypto tabs.
+- **Silent-mock integrity sweep (1.0 bucket A, part 4) — real order-book depth.**
+  The `/api/depth/{symbol}` REST route and the `/ws/depth` stream returned a
+  fully **synthetic** order book for every market — prices, sizes, spread and
+  imbalance were all derived from a `sha256(symbol:market:levels)` hash (a site
+  the earlier audit missed). Both now serve real depth via `unified_fetcher.
+  fetch_depth`:
+  - **Crypto** → real Binance spot order book (`/api/v3/depth`, new
+    `BinanceClient.get_order_book`); the FE panel detects crypto symbols so a
+    crypto detail page no longer requests depth as an equity market.
+  - **India** → already had real Kite/NSE depth in `fetch_depth`, but the route
+    bypassed it; it's now wired through (real).
+  - **US / EU equity** → no free Level-2 source, so the book is empty +
+    `degraded` (`no_live_source`) instead of fabricated; `OrderBookPanel` shows
+    the degraded banner. Real US/EU L2 is a roadmap item (Interactive Brokers).
+  - Depth quantities widened to floats (crypto books are fractional); the
+    synthetic `orderbook_service` generator was deleted.
 - **De-India defaults (1.0 bucket B).** Western-oriented defaults across the app
   (India markets stay *supported*, just not the default): watchlist symbol search
   passes the selected market through instead of forcing NSE; home/sidebar F&O

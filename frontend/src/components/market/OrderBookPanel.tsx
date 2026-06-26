@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { api } from "../../api/base";
+import type { DegradedInfo } from "../../api/types";
+import { DegradedBanner } from "../common/DegradedBanner";
 import { useStock } from "../../hooks/useStocks";
 import { useQuotesStore, useQuotesStream } from "../../realtime/useQuotesStream";
 import { isUSMarketCode, useUSQuotesStore, useUSQuotesStream } from "../../realtime/useUsQuotesStream";
@@ -38,6 +40,7 @@ type DepthSnapshot = {
   totalAskQuantity: number;
   bids: DepthSideLevel[];
   asks: DepthSideLevel[];
+  degraded?: DegradedInfo | null;
 };
 
 type LadderRow = {
@@ -106,8 +109,10 @@ function normalizeDepthSide(raw: unknown): DepthSideLevel[] {
       const orders = Number(record.orders);
       if (!Number.isFinite(price) || !Number.isFinite(size)) return null;
       return {
+        // Keep fractional sizes (crypto books are in fractional base units); only
+        // order counts are whole numbers.
         price,
-        size: Math.max(0, Math.round(size)),
+        size: Math.max(0, size),
         orders: Number.isFinite(orders) ? Math.max(0, Math.round(orders)) : 0,
       };
     })
@@ -137,6 +142,7 @@ function normalizeDepthSnapshot(raw: unknown): DepthSnapshot | null {
       : 0,
     bids: normalizeDepthSide(payload.bids),
     asks: normalizeDepthSide(payload.asks),
+    degraded: (payload.degraded ?? null) as DegradedInfo | null,
   };
 }
 
@@ -147,7 +153,9 @@ function formatPrice(price: number): string {
 
 function formatCompactNumber(value: number): string {
   if (!Number.isFinite(value)) return "--";
-  return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  // Show decimals for fractional crypto sizes; whole numbers for equity shares.
+  const maximumFractionDigits = value !== 0 && Math.abs(value) < 10 ? 4 : Math.abs(value) < 1000 ? 2 : 0;
+  return value.toLocaleString("en-US", { maximumFractionDigits });
 }
 
 function buildChartLevels(snapshot: DepthSnapshot | null): DepthLevel[] {
@@ -245,7 +253,9 @@ export function OrderBookPanel({
 }: Props) {
   const normalizedSymbol = normalizeSymbol(symbol);
   const normalizedMarket = String(market || "").trim().toUpperCase() || "NASDAQ";
-  const depthMarket = normalizeMarket(normalizedMarket);
+  // Crypto detail pages can pass an equity market (e.g. "US") for a BTC-USD
+  // symbol; detect crypto from the symbol so depth routes to the Binance book.
+  const depthMarket = normalizedSymbol.endsWith("-USD") ? "CRYPTO" : normalizeMarket(normalizedMarket);
   const isUS = isUSMarketCode(normalizedMarket);
   const { data: stock } = useStock(normalizedSymbol);
   const quoteToken = `${normalizedMarket}:${normalizedSymbol}`;
@@ -544,6 +554,8 @@ export function OrderBookPanel({
           ))}
         </div>
       </div>
+
+      <DegradedBanner info={depthSnapshot?.degraded} className="mb-2" />
 
       <div className="mb-2 grid grid-cols-4 gap-2 text-[10px] uppercase tracking-[0.14em]">
         <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">

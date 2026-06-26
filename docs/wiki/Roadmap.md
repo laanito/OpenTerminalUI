@@ -204,8 +204,21 @@ Round out the western/crypto pivot's coverage gaps (the first feature release).
 - **Heatmap EU / crypto coverage** — `HeatmapMarket` is IN|US only
   (`backend/api/routes/heatmap.py`); add EU + Crypto universes/selector (reuse the
   `instrument_master` EU rows + crypto universe).
-- **Crypto Market Depth tab** — `OrderBookPanel` is wired to the equity
-  `realtimeMarket`, not the Binance CRYPTO depth feed; wire a crypto depth source.
+- **Crypto Market Depth tab** — DONE: `/api/depth` + `/ws/depth` now serve real
+  Binance spot order-book depth for crypto (and the panel detects crypto symbols
+  so it routes there). Previously the whole depth endpoint was a synthetic
+  hash-seeded book for every market.
+- **Equity Level-2 depth via Interactive Brokers** — US & EU equity depth has no
+  free real source, so `/api/depth` returns empty + `degraded` for those markets
+  today (India already has real depth via Kite/NSE). Commit: add an **IBKR**
+  adapter (`reqMktDepth` through the IB Gateway/TWS API) as the equity L2 source
+  for **both US and EU**, gated on the user's per-exchange IBKR market-data
+  subscriptions — mirroring how Kite is wired for India. Rationale: one account
+  covers US + EU + more; full L2 elsewhere is paid/per-exchange. Alternatives
+  considered and rejected as the primary path: Databento (US-only, pay-per-use),
+  Polygon (mostly top-of-book for stocks), IEX DEEP (free but IEX-venue-only),
+  direct Xetra/Euronext feeds (enterprise pricing). Watch item: the MiFIR EU
+  consolidated tape (not live yet) could later provide a single EU source.
 - **Dividends in the Portfolio Events Calendar** — surface upcoming ex-dates
   (`corporate_actions_service.get_upcoming_dividends`, incl. labelled projections)
   in the events calendar, not just the dedicated Dividends page.

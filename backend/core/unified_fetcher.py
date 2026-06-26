@@ -14,8 +14,12 @@ from backend.core.kite_client import KiteClient
 from backend.core.nse_client import NSEClient
 from backend.core.yahoo_client import YahooClient
 from backend.shared.market_classifier import FOREIGN_SUFFIXES, market_classifier
-from backend.services.orderbook_service import service as orderbook_service
 from backend.api.schemas.market_data import MarketDepth, DepthLevel
+from backend.shared.degraded import (
+    REASON_NO_LIVE_SOURCE,
+    REASON_PROVIDER_ERROR,
+    degraded_marker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -614,8 +618,22 @@ class UnifiedFetcher:
             logger.debug("Finnhub market news failed for %s: %s", category, exc)
             return []
 
-    async def fetch_depth(self, ticker: str, levels: int = 10) -> MarketDepth:
+    async def fetch_depth(self, ticker: str, levels: int = 10, market_hint: str | None = None) -> MarketDepth:
         symbol = ticker.strip().upper()
+        hint = (market_hint or "").strip().upper()
+
+        # Crypto: real Binance spot order book. Detect by hint or symbol shape so a
+        # mislabelled market_hint (e.g. the FE passing market=US for BTC-USD) still
+        # routes correctly.
+        is_crypto = (
+            hint in {"CRYPTO", "BINANCE"}
+            or symbol.startswith("CRYPTO:")
+            or symbol.endswith("-USD")
+            or symbol.endswith("USDT")
+        )
+        if is_crypto:
+            return await self._fetch_crypto_depth(symbol, levels)
+
         cls = await market_classifier.classify(symbol)
         kite_token = self.kite.resolve_access_token()
 
@@ -645,6 +663,7 @@ class UnifiedFetcher:
                             asks=asks[:levels],
                             total_bid_quantity=sum(b.size for b in bids),
                             total_ask_quantity=sum(a.size for a in asks),
+                            source="kite",
                         )
             except Exception as e:
                 logger.debug(f"Kite depth failed for {symbol}: {e}")
@@ -673,18 +692,88 @@ class UnifiedFetcher:
                             asks=asks[:levels],
                             total_bid_quantity=sum(b.size for b in bids),
                             total_ask_quantity=sum(a.size for a in asks),
+                            source="nse",
                         )
             except Exception as e:
                 logger.debug(f"NSE depth failed for {symbol}: {e}")
 
-        # 3. Fallback to Synthetic
-        snap = orderbook_service.get_snapshot(symbol, market_hint=cls.country_code, levels=levels)
+        # 3. No live Level-2 source for this market (US / EU equity). We do NOT
+        # fabricate a book — return empty + degraded. Real equity depth needs a
+        # broker L2 feed (IBKR planned; see roadmap).
+        if cls.country_code == "IN":
+            # IN reached here means both Kite and NSE depth failed/were empty.
+            reason = REASON_PROVIDER_ERROR
+            detail = "NSE/Kite depth unavailable"
+        else:
+            reason = REASON_NO_LIVE_SOURCE
+            detail = "Real equity order-book depth needs a broker L2 feed (IBKR planned); not wired yet"
         return MarketDepth(
             symbol=symbol,
-            market=snap.market,
-            as_of=snap.as_of,
-            bids=[DepthLevel(price=b.price, size=b.size, orders=b.orders) for b in snap.bids],
-            asks=[DepthLevel(price=a.price, size=a.size, orders=a.orders) for a in snap.asks],
-            total_bid_quantity=snap.total_bid_quantity,
-            total_ask_quantity=snap.total_ask_quantity,
+            market=(hint or cls.country_code or "US"),
+            as_of=datetime.now(timezone.utc),
+            bids=[],
+            asks=[],
+            total_bid_quantity=0.0,
+            total_ask_quantity=0.0,
+            source=None,
+            degraded=degraded_marker(reason, detail=detail),
+        )
+
+    async def _fetch_crypto_depth(self, symbol: str, levels: int) -> MarketDepth:
+        from backend.core.binance_client import BinanceClient
+        from backend.services.binance_ws import to_binance_stream
+
+        base = symbol.replace("CRYPTO:", "").strip().upper()
+        if base.endswith("USDT"):
+            base = f"{base[:-4]}-USD"
+        elif not base.endswith("-USD"):
+            base = f"{base}-USD"
+        stream = to_binance_stream(base)  # e.g. BTC-USD -> "btcusdt"
+
+        book = None
+        if stream:
+            client = BinanceClient()
+            try:
+                book = await client.get_order_book(stream.upper(), limit=levels)
+            except Exception as e:  # noqa: BLE001
+                logger.debug("Binance depth failed for %s: %s", base, e)
+            finally:
+                await client.close()
+
+        if book:
+            bids = [
+                DepthLevel(price=_to_float(row[0]) or 0.0, size=_to_float(row[1]) or 0.0)
+                for row in book.get("bids", [])
+                if isinstance(row, (list, tuple)) and len(row) >= 2
+            ][:levels]
+            asks = [
+                DepthLevel(price=_to_float(row[0]) or 0.0, size=_to_float(row[1]) or 0.0)
+                for row in book.get("asks", [])
+                if isinstance(row, (list, tuple)) and len(row) >= 2
+            ][:levels]
+            if bids or asks:
+                return MarketDepth(
+                    symbol=base,
+                    market="CRYPTO",
+                    as_of=datetime.now(timezone.utc),
+                    bids=bids,
+                    asks=asks,
+                    total_bid_quantity=sum(b.size for b in bids),
+                    total_ask_quantity=sum(a.size for a in asks),
+                    source="binance",
+                )
+
+        return MarketDepth(
+            symbol=base,
+            market="CRYPTO",
+            as_of=datetime.now(timezone.utc),
+            bids=[],
+            asks=[],
+            total_bid_quantity=0.0,
+            total_ask_quantity=0.0,
+            source=None,
+            degraded=degraded_marker(
+                REASON_PROVIDER_ERROR,
+                detail="Binance order book unavailable for this symbol",
+            ),
         )
