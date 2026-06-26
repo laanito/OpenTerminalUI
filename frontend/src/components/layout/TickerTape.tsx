@@ -10,6 +10,9 @@ import { useStockStore } from "../../store/stockStore";
 type TapeItem = {
   key: string;
   symbol: string;
+  // Canonical symbol to navigate to (e.g. "^GSPC" for SPX, "^N225" for Nikkei).
+  // Defaults to `symbol` for plain equities / pinned tickers.
+  loadSymbol: string;
   label: string;
   market: string;
   price: number | null;
@@ -124,16 +127,16 @@ export function TickerTape() {
     const payload = (marketStatus ?? {}) as Record<string, unknown>;
     const mapNum = (k: string) => (Number.isFinite(Number(payload[k])) ? Number(payload[k]) : null);
     return [
-      { key: "SPX", symbol: "SPX", label: "S&P 500", market: "NASDAQ", price: mapNum("sp500"), change: null, changePct: mapNum("sp500Pct") },
-      { key: "IXIC", symbol: "IXIC", label: "NASDAQ", market: "NASDAQ", price: mapNum("nasdaq"), change: null, changePct: mapNum("nasdaqPct") },
-      { key: "DJI", symbol: "DJI", label: "DOW", market: "NYSE", price: mapNum("dowjones"), change: null, changePct: mapNum("dowjonesPct") },
-      { key: "FTSE", symbol: "FTSE", label: "FTSE 100", market: "LSE", price: mapNum("ftse100"), change: null, changePct: mapNum("ftse100Pct") },
-      { key: "DAX", symbol: "DAX", label: "DAX", market: "XETRA", price: mapNum("dax"), change: null, changePct: mapNum("daxPct") },
-      { key: "NIKKEI", symbol: "N225", label: "Nikkei 225", market: "JPX", price: mapNum("nikkei225"), change: null, changePct: mapNum("nikkei225Pct") },
+      { key: "SPX", symbol: "SPX", loadSymbol: "^GSPC", label: "S&P 500", market: "NASDAQ", price: mapNum("sp500"), change: null, changePct: mapNum("sp500Pct") },
+      { key: "IXIC", symbol: "IXIC", loadSymbol: "^IXIC", label: "NASDAQ", market: "NASDAQ", price: mapNum("nasdaq"), change: null, changePct: mapNum("nasdaqPct") },
+      { key: "DJI", symbol: "DJI", loadSymbol: "^DJI", label: "DOW", market: "NYSE", price: mapNum("dowjones"), change: null, changePct: mapNum("dowjonesPct") },
+      { key: "FTSE", symbol: "FTSE", loadSymbol: "^FTSE", label: "FTSE 100", market: "LSE", price: mapNum("ftse100"), change: null, changePct: mapNum("ftse100Pct") },
+      { key: "DAX", symbol: "DAX", loadSymbol: "^GDAXI", label: "DAX", market: "XETRA", price: mapNum("dax"), change: null, changePct: mapNum("daxPct") },
+      { key: "NIKKEI", symbol: "N225", loadSymbol: "^N225", label: "Nikkei 225", market: "JPX", price: mapNum("nikkei225"), change: null, changePct: mapNum("nikkei225Pct") },
       // Added from topIndicators
-      { key: "GOLD", symbol: "GC=F", label: "GOLD", market: "COMEX", price: mapNum("gold"), change: null, changePct: mapNum("goldPct") },
-      { key: "SILVER", symbol: "SI=F", label: "SILVER", market: "COMEX", price: mapNum("silver"), change: null, changePct: mapNum("silverPct") },
-      { key: "CRUDE", symbol: "CL=F", label: "CRUDE OIL", market: "NYMEX", price: mapNum("crude"), change: null, changePct: mapNum("crudePct") },
+      { key: "GOLD", symbol: "GC=F", loadSymbol: "GC=F", label: "GOLD", market: "COMEX", price: mapNum("gold"), change: null, changePct: mapNum("goldPct") },
+      { key: "SILVER", symbol: "SI=F", loadSymbol: "SI=F", label: "SILVER", market: "COMEX", price: mapNum("silver"), change: null, changePct: mapNum("silverPct") },
+      { key: "CRUDE", symbol: "CL=F", loadSymbol: "CL=F", label: "CRUDE OIL", market: "NYMEX", price: mapNum("crude"), change: null, changePct: mapNum("crudePct") },
     ];
   }, [marketStatus]);
 
@@ -142,6 +145,7 @@ export function TickerTape() {
       pinnedSymbols.map((symbol) => ({
         key: `pin:${symbol}`,
         symbol,
+        loadSymbol: symbol,
         label: symbol,
         market: selectedMarket,
         price: Number.isFinite(Number(pinnedQuotes[symbol]?.last)) ? Number(pinnedQuotes[symbol]?.last) : null,
@@ -154,66 +158,49 @@ export function TickerTape() {
   const items = [...indexItems, ...pinnedItems];
 
   const handleClick = (item: TapeItem) => {
-    const loadSymbol =
-      item.symbol === "SPX" ? "^GSPC" :
-      item.symbol === "DJI" ? "^DJI" :
-      item.symbol === "IXIC" ? "^IXIC" :
-      item.symbol === "FTSE" ? "^FTSE" :
-      item.symbol === "DAX" ? "^GDAXI" :
-      item.symbol;
+    const loadSymbol = item.loadSymbol || item.symbol;
     setTicker(loadSymbol);
     void loadTicker();
     navigate(`/equity/security/${encodeURIComponent(loadSymbol)}?tab=chart`);
   };
 
+  const renderItem = (item: TapeItem, keySuffix?: string) => {
+    const pctClass =
+      item.changePct == null ? "text-terminal-muted" : item.changePct >= 0 ? "text-terminal-pos" : "text-terminal-neg";
+    const flash = flashes[item.symbol];
+    return (
+      <button
+        key={keySuffix ? `${item.key}:${keySuffix}` : item.key}
+        type="button"
+        onClick={() => handleClick(item)}
+        className={[
+          "inline-flex h-6 items-center gap-2 rounded-sm border border-transparent px-2 ot-type-data text-[12px] hover:border-terminal-border",
+          selectedTicker?.toUpperCase() === item.symbol ? "text-terminal-accent" : "text-terminal-text",
+          flash === "up" ? "bg-emerald-500/10" : flash === "down" ? "bg-rose-500/10" : "",
+        ].join(" ")}
+        title={`Load ${item.label} in active chart`}
+      >
+        <span className="text-[#FF6B00]">{item.label}</span>
+        <span>{formatPrice(item.price)}</span>
+        <span className={item.change != null && item.change >= 0 ? "text-terminal-pos" : item.change != null ? "text-terminal-neg" : "text-terminal-muted"}>
+          {formatChange(item.change)}
+        </span>
+        <span className={pctClass}>{formatPct(item.changePct)}</span>
+      </button>
+    );
+  };
+
   return (
     <div className="relative z-30 h-8 overflow-hidden border-b border-terminal-border bg-terminal-bg text-[12px]">
       <div className="ticker-tape-track h-full hover:[animation-play-state:paused]">
+        {/* The track is duplicated for a seamless infinite scroll; the second
+            copy must be clickable too, otherwise ~half the on-screen tickers are
+            dead (the old copy rendered non-interactive <div>s). */}
         <div className="ticker-tape-segment">
-          {items.map((item) => {
-            const pctClass =
-              item.changePct == null ? "text-terminal-muted" : item.changePct >= 0 ? "text-terminal-pos" : "text-terminal-neg";
-            const flash = flashes[item.symbol];
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => handleClick(item)}
-                className={[
-                  "inline-flex h-6 items-center gap-2 rounded-sm border border-transparent px-2 ot-type-data text-[12px] hover:border-terminal-border",
-                  selectedTicker?.toUpperCase() === item.symbol ? "text-terminal-accent" : "text-terminal-text",
-                  flash === "up" ? "bg-emerald-500/10" : flash === "down" ? "bg-rose-500/10" : "",
-                ].join(" ")}
-                title={`Load ${item.label} in active chart`}
-              >
-                <span className="text-[#FF6B00]">{item.label}</span>
-                <span>{formatPrice(item.price)}</span>
-                <span className={item.change != null && item.change >= 0 ? "text-terminal-pos" : item.change != null ? "text-terminal-neg" : "text-terminal-muted"}>
-                  {formatChange(item.change)}
-                </span>
-                <span className={pctClass}>{formatPct(item.changePct)}</span>
-              </button>
-            );
-          })}
+          {items.map((item) => renderItem(item))}
         </div>
-        <div className="ticker-tape-segment" aria-hidden="true">
-          {items.map((item) => {
-            const pctClass =
-              item.changePct == null ? "text-terminal-muted" : item.changePct >= 0 ? "text-terminal-pos" : "text-terminal-neg";
-            return (
-              <div
-                key={`${item.key}:ghost`}
-                className="inline-flex h-6 items-center gap-2 px-2 ot-type-data text-[12px] text-terminal-text"
-              >
-                <span className="text-[#FF6B00]">{item.label}</span>
-                <span>{formatPrice(item.price)}</span>
-                <span className={item.change != null && item.change >= 0 ? "text-terminal-pos" : item.change != null ? "text-terminal-neg" : "text-terminal-muted"}>
-                  {formatChange(item.change)}
-                </span>
-                <span className={pctClass}>{formatPct(item.changePct)}</span>
-              </div>
-            );
-          })}
+        <div className="ticker-tape-segment">
+          {items.map((item) => renderItem(item, "dup"))}
         </div>
       </div>
       <style>{`
