@@ -17,6 +17,8 @@ import { DenseTable } from "../terminal/DenseTable";
 import { NotesPanel } from "../notes/NotesPanel";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
+import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import { useSettingsStore } from "../../store/settingsStore";
 
 const BENCHMARKS = ["NIFTY50", "S&P500", "NASDAQ", "DOW", "MSCIWI"];
 
@@ -26,6 +28,13 @@ function metricFmt(v: number | null | undefined) {
 }
 
 export function PortfolioManager() {
+  const { formatMoney, formatCompactMoney, nativeFor } = useDisplayCurrency();
+  const selectedMarket = useSettingsStore((s) => s.selectedMarket);
+  // Each holding's price is in its instrument's native currency; convert to the
+  // active display currency (and show the right symbol) instead of rendering
+  // bare numbers. Suffixed symbols (e.g. .DE -> EUR) resolve precisely; bare
+  // symbols fall back to the selected market's currency.
+  const currencyFor = (symbol: string) => nativeFor(symbol, selectedMarket);
   const [portfolios, setPortfolios] = useState<MultiPortfolio[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [holdings, setHoldings] = useState<MultiPortfolioHolding[]>([]);
@@ -292,10 +301,10 @@ export function PortfolioManager() {
             columns={[
               { key: "symbol", title: "Symbol", type: "text", frozen: true, width: 100, sortable: true, getValue: (r) => r.symbol },
               { key: "shares", title: "Shares", type: "number", align: "right", sortable: true, getValue: (r) => r.shares },
-              { key: "avgCost", title: "Avg Cost", type: "currency", align: "right", sortable: true, getValue: (r) => r.cost_basis_per_share },
-              { key: "current", title: "Current", type: "currency", align: "right", sortable: true, getValue: (r) => r.current_price || 0 },
-              { key: "value", title: "Market Value", type: "large-number", align: "right", sortable: true, getValue: (r) => (r.current_price || 0) * r.shares },
-              { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => ((r.current_price || 0) - r.cost_basis_per_share) * r.shares },
+              { key: "avgCost", title: "Avg Cost", type: "currency", align: "right", sortable: true, getValue: (r) => r.cost_basis_per_share, render: (r) => formatMoney(r.cost_basis_per_share, currencyFor(r.symbol)) },
+              { key: "current", title: "Current", type: "currency", align: "right", sortable: true, getValue: (r) => r.current_price || 0, render: (r) => formatMoney(r.current_price || 0, currencyFor(r.symbol)) },
+              { key: "value", title: "Market Value", type: "large-number", align: "right", sortable: true, getValue: (r) => (r.current_price || 0) * r.shares, render: (r) => formatCompactMoney((r.current_price || 0) * r.shares, currencyFor(r.symbol)) },
+              { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => ((r.current_price || 0) - r.cost_basis_per_share) * r.shares, render: (r) => formatCompactMoney(((r.current_price || 0) - r.cost_basis_per_share) * r.shares, currencyFor(r.symbol)) },
               { key: "pnlPct", title: "P&L%", type: "percent", align: "right", sortable: true, getValue: (r) => (r.cost_basis_per_share > 0 ? (((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100 : 0) },
             ]}
           />
