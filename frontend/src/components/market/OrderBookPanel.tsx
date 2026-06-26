@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 
+import { api } from "../../api/base";
 import { useStock } from "../../hooks/useStocks";
 import { useQuotesStore, useQuotesStream } from "../../realtime/useQuotesStream";
 import { isUSMarketCode, useUSQuotesStore, useUSQuotesStream } from "../../realtime/useUsQuotesStream";
@@ -68,10 +69,6 @@ const DEPTH_BAR_WIDTH_CLASSES = [
   "w-[90%]",
   "w-full",
 ] as const;
-
-function apiBase(): string {
-  return String(import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/+$/, "") || "/api";
-}
 
 function buildDepthWsUrl(): string {
   const base = String(import.meta.env.VITE_API_BASE_URL || "/api").trim();
@@ -231,15 +228,12 @@ function barWidthClass(size: number, maxSize: number): string {
 }
 
 async function fetchDepthSnapshot(symbol: string, market: string, levels = DEFAULT_DEPTH_LEVELS): Promise<DepthSnapshot | null> {
-  const params = new URLSearchParams({
-    market,
-    levels: String(levels),
+  // Shared api client → bearer token attached (raw fetch 401'd: /api/depth/* is
+  // not an auth-exempt path).
+  const { data } = await api.get(`/depth/${encodeURIComponent(symbol)}`, {
+    params: { market, levels },
   });
-  const response = await fetch(`${apiBase()}/depth/${encodeURIComponent(symbol)}?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`Depth snapshot failed: ${response.status}`);
-  }
-  return normalizeDepthSnapshot(await response.json());
+  return normalizeDepthSnapshot(data);
 }
 
 export function OrderBookPanel({
