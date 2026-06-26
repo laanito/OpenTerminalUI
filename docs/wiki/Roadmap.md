@@ -123,11 +123,12 @@
 ## Fork: Next
 
 - **EUR display-currency follow-ups** — the multi-currency engine shipped
-  (cross-rates-driven, instrument-currency aware), but three refinements remain:
-  the `-USD` hardcoding for EUR-quoted crypto (e.g. `BTC-EUR`); threading the
-  viewed symbol's currency into StockDetail's financial/analysis panels (they use
-  the market-native default today); and the leftover `en-IN` digit grouping in
-  NSE-by-design F&O panels and a few screener/chart number formatters.
+  (cross-rates-driven, instrument-currency aware), but two refinements remain:
+  threading the viewed symbol's currency into StockDetail's financial/analysis
+  panels (they use the market-native default today); and the leftover `en-IN`
+  digit grouping in NSE-by-design F&O panels and a few screener/chart number
+  formatters. *(The `-USD` hardcoding for EUR-quoted crypto like `BTC-EUR` is
+  fixed — `nativeCurrencyForSymbol` now reads the crypto pair's quote leg.)*
 - **LLM-based per-article sentiment** (nice-to-have) — the News feed's per-article
   bullish/bearish/neutral classification currently uses the local non-LLM engine
   (FinBERT → TextBlob → lexicon, `backend/services/sentiment_engine.py`). Optionally

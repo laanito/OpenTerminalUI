@@ -21,8 +21,14 @@ const PAIRS: PairQuotes = {
 };
 
 describe("nativeCurrencyForSymbol", () => {
-  it("treats crypto as USD-quoted", () => {
+  it("reads the crypto pair's quote currency", () => {
     expect(nativeCurrencyForSymbol("BTC-USD")).toBe("USD");
+    expect(nativeCurrencyForSymbol("BTC-EUR")).toBe("EUR");
+    expect(nativeCurrencyForSymbol("ETH-GBP")).toBe("GBP");
+  });
+  it("ignores non-currency dashed suffixes (class shares)", () => {
+    // BRK-B is not a EUR/USD pair — must not be read as a currency leg.
+    expect(nativeCurrencyForSymbol("BRK-B", "NASDAQ")).toBe("USD");
   });
   it("maps Indian symbols to INR", () => {
     expect(nativeCurrencyForSymbol("RELIANCE.NS")).toBe("INR");
