@@ -756,6 +756,7 @@ export type ShareholdingPatternResponse = {
   source?: "nse" | "fmp" | string;
   institutional_holders?: InstitutionalHolder[];
   warning?: string | null;
+  degraded?: import("../api/types").DegradedInfo | null;
 };
 
 export type DeliverySeriesPoint = {

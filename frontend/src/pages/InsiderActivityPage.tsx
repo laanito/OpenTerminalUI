@@ -14,6 +14,7 @@ import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { TerminalInput } from "../components/terminal/TerminalInput";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { TerminalTabs, type TerminalTabItem } from "../components/terminal/TerminalTabs";
+import { DegradedBanner } from "../components/common/DegradedBanner";
 import type { InsiderClusterRow, InsiderTopActivityRow, InsiderTrade } from "../types";
 
 type InsiderTab = "recent" | "buyers" | "sellers" | "clusters";
@@ -201,6 +202,7 @@ export function InsiderActivityPage() {
   return (
     <div className="h-full min-h-0 overflow-auto p-2">
       <div className="grid gap-2">
+        <DegradedBanner info={recentQuery.data?.degraded ?? summaryQuery.data?.degraded} />
         <div className="grid gap-2 lg:grid-cols-4">
           <SummaryCard label="Total Buy Value (30d)" value={formatCurrency(totalBuyValue)} positive />
           <SummaryCard label="Total Sell Value (30d)" value={formatCurrency(totalSellValue)} positive={false} />

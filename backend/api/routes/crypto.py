@@ -15,6 +15,7 @@ from backend.core.models import ChartResponse, OhlcvPoint
 from backend.services.crypto_fundamentals import get_fundamentals
 from backend.services.crypto_market_service import CryptoMarketService
 from backend.services.crypto_universe import load_candles, load_universe, search_universe
+from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
 
 router = APIRouter()
 market_service = CryptoMarketService()
@@ -175,6 +176,7 @@ class CryptoCorrelationResponse(BaseModel):
     window: int
     matrix: list[list[float]]
     ts: str
+    degraded: dict | None = None
 
 
 class CryptoCoinDetailResponse(BaseModel):
@@ -260,17 +262,6 @@ def _depth_bucket(change_24h: float) -> str:
     if change_24h <= -0.5:
         return "down"
     return "flat"
-
-
-def _synthetic_returns(symbol: str, change_24h: float, window: int) -> list[float]:
-    seed = sum(ord(c) for c in symbol) % 17
-    drift = _clamp(change_24h / 2400.0, -0.03, 0.03)
-    out: list[float] = []
-    for i in range(max(2, window)):
-        wave = math.sin((i + seed) * 0.45) * 0.004
-        phase = math.cos((i + 3 + seed) * 0.19) * 0.0025
-        out.append(_clamp(drift + wave + phase, -0.09, 0.09))
-    return out
 
 
 def _corr(a: list[float], b: list[float]) -> float:
@@ -631,14 +622,19 @@ async def crypto_correlation_matrix(
     rows = await _load_rows(limit=120)
     rows.sort(key=lambda x: x.market_cap, reverse=True)
     selected = rows[:limit]
-    symbols = [r.symbol for r in selected]
     returns_by_symbol: dict[str, list[float]] = {}
 
+    # Integrity: only correlate symbols with REAL return history. Symbols without
+    # it are dropped rather than back-filled with a synthetic sine/cosine series
+    # (which produced fake correlations); the response is flagged degraded so the
+    # UI can say the matrix is partial/unavailable (v1.0 silent-mock audit).
+    requested = len(selected)
     for row in selected:
         returns = await _returns_from_charts(row.symbol, window)
-        if len(returns) < 2:
-            returns = _synthetic_returns(row.symbol, row.change_24h, window)
-        returns_by_symbol[row.symbol] = returns[-window:]
+        if len(returns) >= 2:
+            returns_by_symbol[row.symbol] = returns[-window:]
+
+    symbols = [r.symbol for r in selected if r.symbol in returns_by_symbol]
 
     matrix: list[list[float]] = []
     for left in symbols:
@@ -650,11 +646,19 @@ async def crypto_correlation_matrix(
                 row_vals.append(_corr(returns_by_symbol[left], returns_by_symbol[right]))
         matrix.append(row_vals)
 
+    degraded = None
+    if len(symbols) < requested:
+        degraded = degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail=f"{requested - len(symbols)} of {requested} assets lacked return history",
+        )
+
     return {
         "symbols": symbols,
         "window": window,
         "matrix": matrix,
         "ts": _now_iso(),
+        "degraded": degraded,
     }
 
 

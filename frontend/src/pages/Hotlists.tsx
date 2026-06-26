@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { api } from "../api/base";
+import type { DegradedInfo } from "../api/types";
+import { DegradedBanner } from "../components/common/DegradedBanner";
 import { DenseTable, type DenseTableColumn } from "../components/terminal/DenseTable";
 
 type HotlistType = "gainers" | "losers" | "most_active" | "52w_high" | "52w_low" | "gap_up" | "gap_down" | "unusual_volume";
@@ -21,11 +24,10 @@ type HotlistResponse = {
   market: string;
   items: HotlistItem[];
   updated_at: string;
+  degraded?: DegradedInfo;
 };
 
 type HotlistRow = HotlistItem & { rank: number };
-
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "") || "/api";
 
 const HOTLIST_TABS: Array<{ id: HotlistType; label: string }> = [
   { id: "gainers", label: "Gainers" },
@@ -72,12 +74,13 @@ function toRow(item: HotlistItem, index: number): HotlistRow {
 
 export function HotlistsPage() {
   const navigate = useNavigate();
-  const [market, setMarket] = useState<HotlistMarket>("IN");
+  const [market, setMarket] = useState<HotlistMarket>("US");
   const [listType, setListType] = useState<HotlistType>("gainers");
   const [rows, setRows] = useState<HotlistRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [degraded, setDegraded] = useState<DegradedInfo | undefined>(undefined);
 
   useEffect(() => {
     let active = true;
@@ -88,20 +91,14 @@ export function HotlistsPage() {
           setLoading(true);
           setError(null);
         }
-        const params = new URLSearchParams({
-          list_type: listType,
-          market,
-          limit: "25",
+        // Use the shared api client so the bearer token (and refresh-on-401) is
+        // attached — a raw fetch() bypassed auth and always 401'd.
+        const { data: payload } = await api.get<HotlistResponse>("/hotlists", {
+          params: { list_type: listType, market, limit: 25 },
         });
-        const response = await fetch(`${API_BASE}/hotlists?${params.toString()}`, {
-          headers: { Accept: "application/json" },
-        });
-        if (!response.ok) {
-          throw new Error(`hotlists fetch failed (${response.status})`);
-        }
-        const payload = (await response.json()) as HotlistResponse;
         if (!active) return;
         setRows((payload.items || []).map(toRow));
+        setDegraded(payload.degraded);
         setUpdatedAt(payload.updated_at || new Date().toISOString());
       } catch (err) {
         if (!active) return;
@@ -214,6 +211,8 @@ export function HotlistsPage() {
       {error ? (
         <div className="rounded border border-terminal-neg/40 bg-terminal-neg/10 px-3 py-2 text-xs text-terminal-neg">{error}</div>
       ) : null}
+
+      <DegradedBanner info={degraded} className="mb-2" />
 
       <DenseTable<HotlistRow>
         id="hotlists-main"

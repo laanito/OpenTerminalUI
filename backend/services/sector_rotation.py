@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import math
+import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
@@ -10,28 +10,20 @@ import pandas as pd
 import requests
 import yfinance as yf
 from backend.shared.cache import cache
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_NO_PROVIDER_DATA,
+    REASON_PROVIDER_ERROR,
+    degraded_marker,
+)
+
+logger = logging.getLogger(__name__)
 
 if os.getenv("LTS_DISABLE_PROXY", "1") == "1":
     for proxy_key in ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"]:
         os.environ.pop(proxy_key, None)
     os.environ["NO_PROXY"] = "*"
     os.environ["no_proxy"] = "*"
-
-def _generate_mock_rrg(benchmark: str, tickers: list[str]) -> pd.DataFrame:
-    # Generate synthetic weekly price data for testing if yfinance fails
-    dates = pd.date_range(end=datetime.now(), periods=104, freq="W")
-    df = pd.DataFrame(index=dates)
-    df[benchmark] = 100.0 * (1 + 0.001 * pd.Series(range(104), index=dates))
-
-    import random
-    for i, t in enumerate(tickers):
-        if t == benchmark: continue
-        seed = hash(t) % 100
-        # Create some sine wave rotation
-        phase = (seed / 100.0) * math.pi * 2
-        df[t] = 100.0 * (1 + 0.001 * pd.Series(range(104), index=dates)) * (1 + 0.1 * pd.Series([math.sin(phase + j/10.0) for j in range(104)], index=dates))
-
-    return df
 
 def _calculate_rrg_metrics(prices: pd.DataFrame, benchmark_sym: str, window: int = 14) -> Dict[str, Any]:
     # prices: DataFrame with Date index, columns are tickers.
@@ -135,8 +127,16 @@ async def fetch_sector_rotation(benchmark: str) -> Dict[str, Any]:
             if isinstance(close_data, pd.Series):
                 raise ValueError("Insufficient ticker data")
         except Exception as e:
-            print(f"yfinance download failed: {e}. Falling back to mock data.")
-            close_data = _generate_mock_rrg(benchmark, tickers)
+            # Integrity: never synthesize a sine-wave RRG from hashed seeds. When
+            # the price source is unavailable, return no sectors + degraded so
+            # the UI shows "data unavailable" rather than a fabricated rotation.
+            logger.warning("sector rotation download failed: %s", e)
+            return {
+                "benchmark": benchmark,
+                "sectors": [],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                DEGRADED_KEY: degraded_marker(REASON_PROVIDER_ERROR),
+            }
 
         # Drop naive timezone if present
         if close_data.index.tz is not None:
@@ -149,10 +149,12 @@ async def fetch_sector_rotation(benchmark: str) -> Dict[str, Any]:
             "sectors": list(results.values()),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+        if not results:
+            response[DEGRADED_KEY] = degraded_marker(REASON_NO_PROVIDER_DATA)
 
         await cache.set(cache_key, response, ttl=14400) # 4 hours cache
         return response
 
     except Exception as e:
         import traceback
-        return {"error": str(e), "trace": traceback.format_exc()}
+        return {"error": str(e), "trace": traceback.format_exc(), DEGRADED_KEY: degraded_marker(REASON_PROVIDER_ERROR)}

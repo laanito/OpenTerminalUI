@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { TerminalTable, type TerminalTableColumn } from "../terminal/TerminalTable";
-import { formatCurrency, formatPercent } from "../../lib/format";
+import { formatPercent } from "../../lib/format";
+import { api } from "../../api/base";
+import type { DegradedInfo } from "../../api/types";
+import { DegradedBanner } from "../common/DegradedBanner";
 
 interface Holding {
   symbol: string;
@@ -14,6 +17,7 @@ interface Props {
 
 export function HoldingsViewer({ ticker }: Props) {
   const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [degraded, setDegraded] = useState<DegradedInfo | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,10 +28,13 @@ export function HoldingsViewer({ ticker }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/etf/holdings?ticker=${ticker}`);
-        if (!response.ok) throw new Error("Failed to fetch holdings");
-        const data = await response.json();
-        setHoldings(data.holdings);
+        // Use the shared api client so the bearer token is attached (a raw
+        // fetch bypassed auth and 401'd on /api/etf/*).
+        const { data } = await api.get<{ holdings: Holding[]; degraded?: DegradedInfo }>("/etf/holdings", {
+          params: { ticker },
+        });
+        setHoldings(data.holdings ?? []);
+        setDegraded(data.degraded);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -68,6 +75,7 @@ export function HoldingsViewer({ ticker }: Props) {
       <div className="mb-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-terminal-muted">
         Top Holdings: {ticker}
       </div>
+      <DegradedBanner info={degraded} className="mx-3 mb-2" />
       <TerminalTable
         columns={columns}
         rows={holdings}

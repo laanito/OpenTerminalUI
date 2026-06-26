@@ -61,6 +61,27 @@ backoff, version reconcile, docs).
     degraded instead of a hardcoded curve.
   - **Bonds** (`/bonds/*`): replaced the hardcoded India-only bond universe,
     spreads, and ratings with empty + degraded (no live source wired yet).
+- **Silent-mock integrity sweep (1.0 bucket A, part 2).** Extended the audit to
+  the high-severity sites and a few the first pass missed:
+  - **Hotlists** (`/api/hotlists`): the page 401'd because it used a raw `fetch()`
+    that bypassed the bearer-token client — now routed through the authed `api`
+    client. The endpoint itself was 100% fabricated (hardcoded prices + seeded
+    sparklines) → now empty + degraded; default market de-India'd to `US`.
+  - **Insider** (`/api/insider/*`): removed the auto-seeded fabricated India
+    insider universe (`source="SEEDED"`); serves only ingested trades, else
+    empty + degraded. Deleted the dead, mock-only `insider_monitor.py`.
+  - **ETF** (`/api/etf/*`): removed the hardcoded screener (incl. NIFTYBEES),
+    the AAPL/MSFT holdings placeholder, and the `random` fund-flows; empty +
+    degraded instead. ETF FE components routed through the authed `api` client
+    (same latent 401 as hotlists).
+  - **Shareholding**: the no-source fallback no longer fabricates a "100%
+    public" cap table — returns zeros + degraded.
+  - **Sector rotation (RRG)**: removed the hashed-seed synthetic price series;
+    empty + degraded when the price source is unavailable.
+  - **Charts** (`/chart/{ticker}` + indicators): removed the synthetic
+    random-walk fallback; empty + degraded instead of a fake series.
+  - **Crypto correlation**: drops assets without real return history rather than
+    back-filling a synthetic sine/cosine series; flags degraded when partial.
 - Full FE↔backend API audit (`/v1/...` path/shape mismatches; unmounted economics
   router; shadowed watchlist-items route).
 - Ticker tape: real commodity values (GC=F/SI=F/CL=F were missing from the fetch

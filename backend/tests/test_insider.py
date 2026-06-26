@@ -1,89 +1,119 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
+from backend.api.deps import get_db
 from backend.api.routes import insider as insider_routes
+from backend.models.core import InsiderTrade
+from backend.shared.db import Base
 
 
-def _build_client() -> TestClient:
+def _build_client():
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base.metadata.create_all(bind=engine)
+
     app = FastAPI()
     app.include_router(insider_routes.router)
-    return TestClient(app)
+
+    def _db_override():
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = _db_override
+    return TestClient(app), SessionLocal
 
 
-def test_recent_returns_trades_array() -> None:
-    client = _build_client()
+def _seed(SessionLocal) -> None:
+    """Insert a small set of REAL insider trades (not the old fabricated seed)."""
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    db = SessionLocal()
+    try:
+        rows = []
+        for i, sym in enumerate(["AAPL", "AAPL", "AAPL", "MSFT"]):
+            rows.append(
+                InsiderTrade(
+                    symbol=sym,
+                    insider_name=f"Person {i}",
+                    insider_title="Director",
+                    transaction_type="buy",
+                    shares=1000 + i * 100,
+                    price=100.0 + i,
+                    value=(1000 + i * 100) * (100.0 + i),
+                    date=today - timedelta(days=i),
+                    filing_date=today - timedelta(days=i),
+                    source="TEST",
+                )
+            )
+        db.add_all(rows)
+        db.commit()
+    finally:
+        db.close()
 
-    response = client.get("/api/insider/recent")
+
+def test_recent_empty_db_is_degraded() -> None:
+    client, _ = _build_client()
+
+    response = client.get("/api/insider/recent", params={"min_value": 0})
 
     assert response.status_code == 200
     payload = response.json()
-    assert isinstance(payload["trades"], list)
+    assert payload["trades"] == []
+    assert payload["degraded"]["reason"] == "no_provider_data"
+
+
+def test_recent_returns_real_trades() -> None:
+    client, SessionLocal = _build_client()
+    _seed(SessionLocal)
+
+    response = client.get("/api/insider/recent", params={"min_value": 0})
+
+    assert response.status_code == 200
+    payload = response.json()
     assert payload["trades"]
-    assert {
-        "date",
-        "symbol",
-        "name",
-        "insider_name",
-        "designation",
-        "type",
-        "quantity",
-        "price",
-        "value",
-        "post_holding_pct",
-    } <= set(payload["trades"][0])
+    assert payload["degraded"] is None
+    assert {"date", "symbol", "name", "insider_name", "designation", "type", "quantity", "price", "value"} <= set(
+        payload["trades"][0]
+    )
 
 
 def test_stock_returns_trades_and_summary() -> None:
-    client = _build_client()
+    client, SessionLocal = _build_client()
+    _seed(SessionLocal)
 
-    response = client.get("/api/insider/stock/RELIANCE", params={"days": 365})
+    response = client.get("/api/insider/stock/AAPL", params={"days": 365})
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["trades"]
-    assert payload["summary"]["total_buys"] >= 0
-    assert payload["summary"]["total_sells"] >= 0
     assert payload["summary"]["insider_count"] >= 1
-    assert all(row["symbol"] == "RELIANCE" for row in payload["trades"])
+    assert all(row["symbol"] == "AAPL" for row in payload["trades"])
 
 
-def test_top_buyers_returns_ranked_list() -> None:
-    client = _build_client()
+def test_top_buyers_ranked_and_cluster_detection() -> None:
+    client, SessionLocal = _build_client()
+    _seed(SessionLocal)
 
-    response = client.get("/api/insider/top-buyers", params={"days": 90, "limit": 5})
-
-    assert response.status_code == 200
-    buyers = response.json()["buyers"]
-    assert buyers
-    assert len(buyers) <= 5
+    buyers = client.get("/api/insider/top-buyers", params={"days": 90, "limit": 5}).json()["buyers"]
     assert buyers == sorted(buyers, key=lambda item: item["total_value"], reverse=True)
-    assert {"symbol", "name", "total_value", "trade_count", "avg_price", "latest_date"} <= set(buyers[0])
+
+    clusters = client.get("/api/insider/cluster-buys", params={"days": 365, "min_insiders": 3}).json()["clusters"]
+    # AAPL has 3 distinct insiders -> a cluster; MSFT (1) should not appear.
+    assert any(c["symbol"] == "AAPL" and c["insider_count"] >= 3 for c in clusters)
 
 
-def test_cluster_buys_returns_stocks_with_minimum_insiders() -> None:
-    client = _build_client()
+def test_empty_db_endpoints_are_degraded() -> None:
+    client, _ = _build_client()
 
-    response = client.get("/api/insider/cluster-buys", params={"days": 30, "min_insiders": 3})
-
-    assert response.status_code == 200
-    clusters = response.json()["clusters"]
-    assert clusters
-    assert all(cluster["insider_count"] >= 3 for cluster in clusters)
-    assert all(len(cluster["insiders"]) >= 3 for cluster in clusters)
-
-
-def test_recent_filters_support_min_value_type_and_days() -> None:
-    client = _build_client()
-
-    response = client.get(
-        "/api/insider/recent",
-        params={"days": 14, "min_value": 4_000_000, "type": "buy", "limit": 100},
-    )
-
-    assert response.status_code == 200
-    trades = response.json()["trades"]
-    assert trades
-    assert all(trade["type"] == "buy" for trade in trades)
-    assert all(float(trade["value"]) >= 4_000_000 for trade in trades)
+    for path in ("/api/insider/top-buyers", "/api/insider/top-sellers", "/api/insider/cluster-buys"):
+        payload = client.get(path).json()
+        assert payload["degraded"]["reason"] == "no_provider_data"

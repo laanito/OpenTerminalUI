@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 import { useShareholdingPattern } from "../hooks/useStocks";
+import { DegradedBanner } from "./common/DegradedBanner";
 import type { ShareholdingPatternResponse, ShareholdingTrendPoint } from "../types";
 
 type Props = {
@@ -173,6 +174,8 @@ function ShareholdingPanelBody({ data }: { data: ShareholdingPatternResponse }) 
         </div>
         {data.warning ? <div className="text-xs text-terminal-warn">{String(data.warning)}</div> : null}
       </div>
+
+      <DegradedBanner info={data.degraded} />
 
       {data.source === "fmp" ? (
         <HoldingsFallback data={data} />

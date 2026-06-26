@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchSectorRotation } from "../../api/client";
 import { useNavigate } from "react-router-dom";
 import { TerminalPanel } from "../terminal/TerminalPanel";
+import { DegradedBanner } from "../common/DegradedBanner";
 import { Play, Pause } from "lucide-react";
 
 type Props = {
@@ -83,6 +84,7 @@ export function SectorRotationMap({ defaultBenchmark = "SPY", width = "100%", he
 
   return (
     <div className="flex h-full flex-col">
+      <DegradedBanner info={data?.degraded} className="m-2" />
       <div className="flex items-center justify-between p-2 border-b border-terminal-border bg-terminal-panel">
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase text-terminal-muted font-bold tracking-wider">Benchmark</span>

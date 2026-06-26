@@ -16,58 +16,37 @@ def _build_test_app(service: HotlistService) -> TestClient:
     return TestClient(app)
 
 
-def test_hotlist_route_returns_expected_shape() -> None:
+def test_hotlist_route_is_empty_and_degraded() -> None:
+    # No live screener source is wired, so the route returns empty + degraded
+    # rather than a fabricated universe of movers (v1.0 silent-mock audit).
     service = HotlistService(now_factory=lambda: datetime(2026, 3, 20, 14, 45, tzinfo=timezone.utc))
     client = _build_test_app(service)
 
-    response = client.get("/api/hotlists", params={"list_type": "gainers", "market": "IN", "limit": 5})
+    response = client.get("/api/hotlists", params={"list_type": "gainers", "market": "US", "limit": 5})
 
     assert response.status_code == 200
     body = response.json()
     assert body["list_type"] == "gainers"
-    assert body["market"] == "IN"
-    assert len(body["items"]) == 5
-    first = body["items"][0]
-    assert {"symbol", "name", "price", "change", "change_pct", "volume", "sparkline"} <= set(first.keys())
-    assert isinstance(first["sparkline"], list)
-    assert len(first["sparkline"]) == 5
+    assert body["market"] == "US"
+    assert body["items"] == []
+    assert body["degraded"]["reason"] == "no_live_source"
 
 
-def test_hotlist_sorting_rules() -> None:
-    service = HotlistService(now_factory=lambda: datetime(2026, 3, 20, 14, 45, tzinfo=timezone.utc))
-
-    gainers = service._rank("gainers", [service._row_to_item(row) for row in service._universes["US"]])  # type: ignore[attr-defined]
-    losers = service._rank("losers", [service._row_to_item(row) for row in service._universes["US"]])  # type: ignore[attr-defined]
-    active = service._rank("most_active", [service._row_to_item(row) for row in service._universes["US"]])  # type: ignore[attr-defined]
-
-    assert gainers[0]["change_pct"] >= gainers[1]["change_pct"]
-    assert losers[0]["change_pct"] <= losers[1]["change_pct"]
-    assert active[0]["volume"] >= active[1]["volume"]
-
-
-def test_hotlist_limit_and_market_filtering() -> None:
+def test_hotlist_market_default_is_us() -> None:
     service = HotlistService(now_factory=lambda: datetime(2026, 3, 20, 14, 45, tzinfo=timezone.utc))
     client = _build_test_app(service)
 
-    response_in = client.get("/api/hotlists", params={"list_type": "most_active", "market": "IN", "limit": 3})
-    response_us = client.get("/api/hotlists", params={"list_type": "most_active", "market": "US", "limit": 3})
+    response = client.get("/api/hotlists", params={"list_type": "gainers"})
 
-    assert response_in.status_code == 200
-    assert response_us.status_code == 200
-    body_in = response_in.json()
-    body_us = response_us.json()
-    assert body_in["market"] == "IN"
-    assert body_us["market"] == "US"
-    assert len(body_in["items"]) == 3
-    assert len(body_us["items"]) == 3
-    assert body_in["items"][0]["symbol"] != body_us["items"][0]["symbol"]
+    assert response.status_code == 200
+    assert response.json()["market"] == "US"
 
 
 def test_hotlist_rejects_invalid_inputs() -> None:
     service = HotlistService(now_factory=lambda: datetime(2026, 3, 20, 14, 45, tzinfo=timezone.utc))
     client = _build_test_app(service)
 
-    bad_type = client.get("/api/hotlists", params={"list_type": "invalid", "market": "IN"})
+    bad_type = client.get("/api/hotlists", params={"list_type": "invalid", "market": "US"})
     bad_market = client.get("/api/hotlists", params={"list_type": "gainers", "market": "EU"})
 
     assert bad_type.status_code == 400

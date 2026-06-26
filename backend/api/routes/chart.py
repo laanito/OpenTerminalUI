@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import random
 from datetime import date, datetime, timedelta, timezone
 from time import perf_counter
 from typing import Any, Dict, Optional
@@ -16,6 +15,7 @@ from backend.api.deps import get_db
 from backend.auth.deps import get_current_user
 from backend.core.models import ChartResponse, IndicatorPoint, IndicatorResponse, OhlcvPoint
 from backend.core.technicals import compute_indicator
+from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
 from backend.models import ChartDrawing, ChartTemplate, User
 from backend.services.footprint_aggregator import FootprintAggregator, serialize_footprint_candle
 from backend.services.volume_profile_service import compute_volume_profile, parse_period_to_days
@@ -351,40 +351,6 @@ def _parse_iso_datetime_or_400(value: str | None, field_name: str) -> datetime |
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=f"Invalid ISO date for {field_name}: {value}") from exc
 
-def _synthetic_history(ticker: str, interval: str, range_val: str) -> pd.DataFrame:
-    # Deterministic synthetic series for UI continuity when upstream market data is unavailable.
-    seed = abs(hash(f"{ticker}:{interval}:{range_val}")) % (2**32)
-    rng = random.Random(seed)
-    interval_map = {
-        "1m": ("minutes", 1, 360),
-        "5m": ("minutes", 5, 360),
-        "15m": ("minutes", 15, 360),
-        "30m": ("minutes", 30, 360),
-        "1h": ("hours", 1, 360),
-        "4h": ("hours", 4, 360),
-        "1d": ("days", 1, 365),
-        "1wk": ("days", 7, 260),
-        "1mo": ("days", 30, 120),
-    }
-    unit, step, points = interval_map.get(interval, ("days", 1, 365))
-    now = datetime.now(timezone.utc)
-    dt_list: list[datetime] = []
-    price = 1000.0 + rng.uniform(-150, 150)
-    rows: list[dict[str, float]] = []
-    for i in range(points):
-        dt = now - timedelta(**{unit: step * (points - i)})
-        drift = 0.3 * math.sin(i / 18.0) + rng.uniform(-1.8, 1.8)
-        open_p = price
-        close_p = max(50.0, open_p + drift)
-        high_p = max(open_p, close_p) + abs(rng.uniform(0.4, 3.6))
-        low_p = min(open_p, close_p) - abs(rng.uniform(0.4, 3.6))
-        volume = max(1000.0, 1_000_000 + rng.uniform(-250_000, 250_000))
-        rows.append({"Open": open_p, "High": high_p, "Low": low_p, "Close": close_p, "Volume": volume})
-        dt_list.append(dt)
-        price = close_p
-    df = pd.DataFrame(rows, index=pd.DatetimeIndex(dt_list))
-    return df
-
 def _parse_yahoo_chart(data: Dict[str, Any]) -> pd.DataFrame:
     # Parses the raw Yahoo Chart API response into a DataFrame
     # Expected structure: {"chart": {"result": [{"timestamp": [...], "indicators": {"quote": [...]}}]}}
@@ -555,17 +521,13 @@ async def get_chart(
             elif raw_data and "historical" in raw_data:  # FMP style currently unsupported in this parser
                 pass
 
+        # Integrity: no synthetic random-walk fallback. When live data is
+        # unavailable, return an empty series flagged degraded so the UI shows
+        # "no data" instead of a convincing fake chart (v1.0 silent-mock audit).
         warnings: list[Dict[str, str]] = []
+        degraded: Dict[str, Any] | None = None
         if hist.empty:
-            hist = _synthetic_history(ticker=ticker, interval=interval, range_val=range)
-            warnings.append(
-                {
-                    "code": "chart_data_fallback",
-                    "message": "Live data unavailable; displaying synthetic fallback series.",
-                }
-            )
-        if hist.empty:
-            raise HTTPException(status_code=404, detail="No chart data available")
+            degraded = degraded_marker(REASON_NO_PROVIDER_DATA)
 
         data: list[OhlcvPoint] = []
         for idx, row in hist.iterrows():
@@ -585,9 +547,11 @@ async def get_chart(
             "interval": interval,
             "currency": "INR",
             "data": [d.model_dump() for d in data],
-            "meta": {"warnings": warnings},
+            "meta": {"warnings": warnings, "degraded": degraded},
         }
-        await cache_instance.set(key, payload, ttl=300)
+        # Don't cache an empty/degraded series — retry live next request.
+        if data:
+            await cache_instance.set(key, payload, ttl=300)
 
     all_points = [OhlcvPoint(**point) if not isinstance(point, OhlcvPoint) else point for point in payload.get("data", [])]
     # Keep deterministic oldest->newest ordering before slicing.
@@ -609,6 +573,7 @@ async def get_chart(
         data=filtered_points,
         meta={
             "warnings": (payload.get("meta") or {}).get("warnings", []),
+            "degraded": (payload.get("meta") or {}).get("degraded"),
             "pagination": {
                 "cursor": next_cursor,
                 "has_more": has_more,
@@ -643,16 +608,17 @@ async def get_indicator(
     if raw_data and "chart" in raw_data:
         hist = _parse_yahoo_chart(raw_data)
 
-    warnings: list[Dict[str, str]] = []
+    # Integrity: never compute an indicator on a synthetic series. If there's no
+    # real history, return no points flagged degraded rather than indicators that
+    # masquerade as live (v1.0 silent-mock audit).
     if hist.empty:
-        hist = _synthetic_history(ticker=ticker, interval=interval, range_val=range)
-        warnings.append({
-            "code": "indicator_data_fallback",
-            "message": "Live data unavailable; indicator computed on synthetic fallback series.",
-        })
-
-    if hist.empty:
-        raise HTTPException(status_code=404, detail="No chart data available")
+        return IndicatorResponse(
+            ticker=ticker.upper(),
+            indicator=type,
+            params={},
+            data=[],
+            meta={"degraded": degraded_marker(REASON_NO_PROVIDER_DATA)},
+        )
 
     params: dict[str, int | float] = {}
     for key, val in {"period": period, "std_dev": std_dev, "fast": fast, "slow": slow, "signal": signal}.items():
@@ -673,7 +639,7 @@ async def get_indicator(
         values = {col: (float(v) if v == v else None) for col, v in row.items()}
         points.append(IndicatorPoint(t=ts_int, values=values))
 
-    return IndicatorResponse(ticker=ticker.upper(), indicator=type, params=params, data=points, meta={"warnings": warnings})
+    return IndicatorResponse(ticker=ticker.upper(), indicator=type, params=params, data=points)
 
 
 @router.post("/chart-drawings/{symbol}")
