@@ -5,13 +5,13 @@ from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from backend.api.deps import get_unified_fetcher
+from backend.services.depth_view import market_depth_to_wire
 from backend.services.marketdata_hub import get_marketdata_hub
-from backend.services.orderbook_service import service as orderbook_service
 from backend.services.us_tick_stream import get_us_tick_stream_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-service = orderbook_service
 
 
 def _symbols_from_payload(payload: dict[str, Any]) -> list[str]:
@@ -47,9 +47,19 @@ def _market_from_payload(payload: dict[str, Any]) -> str:
 
 
 async def _send_depth_snapshots(websocket: WebSocket, symbols: list[str], market: str, levels: int = 10) -> None:
+    fetcher = await get_unified_fetcher()
     for symbol in symbols:
-        snapshot = service.stream_message(symbol, market_hint=market, levels=levels)
-        await websocket.send_json(snapshot)
+        depth = await fetcher.fetch_depth(symbol.strip().upper(), levels=levels, market_hint=market)
+        wire = market_depth_to_wire(depth, levels)
+        await websocket.send_json(
+            {
+                "type": "depth",
+                "symbol": depth.symbol,
+                "market": depth.market,
+                "provider_key": wire["provider_key"],
+                "snapshot": wire,
+            }
+        )
 
 
 @router.websocket("/ws/quotes")

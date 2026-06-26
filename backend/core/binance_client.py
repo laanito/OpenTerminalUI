@@ -76,6 +76,24 @@ class BinanceClient:
         data = await self._get(self.SPOT_URL, "/api/v3/ticker/bookTicker")
         return data if isinstance(data, list) else []
 
+    # Binance only accepts this fixed set of order-book depth limits.
+    _VALID_DEPTH_LIMITS = (5, 10, 20, 50, 100, 500, 1000, 5000)
+
+    async def get_order_book(self, symbol: str, limit: int = 20) -> Optional[Dict[str, Any]]:
+        """Return the real spot order book for one symbol: ``{bids, asks}`` where
+        each side is ``[[price, qty], ...]`` (strings). ``limit`` is snapped up to
+        the nearest Binance-allowed depth. Returns None on error / bad payload.
+        """
+        sym = (symbol or "").strip().upper()
+        if not sym:
+            return None
+        want = max(1, int(limit))
+        snapped = next((v for v in self._VALID_DEPTH_LIMITS if v >= want), self._VALID_DEPTH_LIMITS[-1])
+        data = await self._get(self.SPOT_URL, "/api/v3/depth", {"symbol": sym, "limit": snapped})
+        if isinstance(data, dict) and isinstance(data.get("bids"), list) and isinstance(data.get("asks"), list):
+            return data
+        return None
+
     async def get_premium_index(self) -> List[Dict[str, Any]]:
         """Return the funding/mark-price index for every USDⓈ-M perp in one call.
 
