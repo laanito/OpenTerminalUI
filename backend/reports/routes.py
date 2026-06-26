@@ -14,6 +14,11 @@ from backend.auth.deps import get_current_user
 from backend.models.user import User
 from backend.reports.generator import generate_pdf_report, rows_for_data_type
 from backend.reports.scheduler import scheduled_reports_service
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_NO_PROVIDER_DATA,
+    degraded_marker,
+)
 
 router = APIRouter()
 US_MARKETS = {"NASDAQ", "NYSE"}
@@ -127,7 +132,6 @@ async def block_deals() -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e), "data": []}
 
-import random
 
 @router.get("/reports/market-status")
 async def market_status() -> Dict[str, Any]:
@@ -209,25 +213,21 @@ async def market_status() -> Dict[str, Any]:
     crude = _to_float(yahoo_map.get("CL=F", {}).get("regularMarketPrice"))
     crude_pct = _to_float(yahoo_map.get("CL=F", {}).get("regularMarketChangePercent"))
 
-    # Final Mock Fallback
-    if nifty is None: nifty, nifty_pct = 22450.0 + random.uniform(-10, 10), random.uniform(-0.5, 0.5)
-    if sensex is None: sensex, sensex_pct = 73800.0 + random.uniform(-30, 30), random.uniform(-0.4, 0.4)
-    if sp500 is None: sp500, sp500_pct = 5100.0 + random.uniform(-2, 2), random.uniform(-0.2, 0.2)
-    if nasdaq is None: nasdaq, nasdaq_pct = 16000.0 + random.uniform(-10, 10), random.uniform(-0.3, 0.3)
-    if dow is None: dow, dow_pct = 39000.0 + random.uniform(-20, 20), random.uniform(-0.2, 0.2)
-    if ftse is None: ftse, ftse_pct = 7600.0 + random.uniform(-5, 5), random.uniform(-0.1, 0.1)
-    if dax is None: dax, dax_pct = 17800.0 + random.uniform(-15, 15), random.uniform(-0.2, 0.2)
-    if nikkei is None: nikkei, nikkei_pct = 39000.0 + random.uniform(-50, 50), random.uniform(-0.8, 0.8)
-    if hangseng is None: hangseng, hangseng_pct = 16500.0 + random.uniform(-20, 20), random.uniform(-0.6, 0.6)
-    if usd_inr is None: usd_inr, usd_inr_pct = 83.15 + random.uniform(-0.01, 0.01), random.uniform(-0.05, 0.05)
-
-    if gold is None: gold, gold_pct = 2100.0 + random.uniform(-2, 2), random.uniform(-0.1, 0.1)
-    if silver is None: silver, silver_pct = 23.5 + random.uniform(-0.1, 0.1), random.uniform(-0.2, 0.2)
-    if crude is None: crude, crude_pct = 78.0 + random.uniform(-0.5, 0.5), random.uniform(-0.3, 0.3)
+    # Integrity: never fabricate index/commodity quotes. When a quote is
+    # unavailable it stays None and the frontend renders "NA" rather than a
+    # convincing fake number. If *any* quote is missing we attach the standard
+    # degraded marker so the UI can show a "live data unavailable" banner.
+    quotes = {
+        "nifty50": nifty, "sensex": sensex, "sp500": sp500, "nasdaq": nasdaq,
+        "dowjones": dow, "ftse100": ftse, "dax": dax, "nikkei225": nikkei,
+        "hangseng": hangseng, "usdInr": usd_inr, "gold": gold, "silver": silver,
+        "crude": crude,
+    }
+    missing = [k for k, v in quotes.items() if v is None]
 
     market_state = nse_market_raw.get("marketState", []) if isinstance(nse_market_raw, dict) else []
 
-    return {
+    payload: Dict[str, Any] = {
         "marketState": market_state,
         "nifty50": nifty,
         "nifty50Pct": nifty_pct,
@@ -255,21 +255,25 @@ async def market_status() -> Dict[str, Any]:
         "silverPct": silver_pct,
         "crude": crude,
         "crudePct": crude_pct,
-        "fallbackEnabled": nifty is None or sensex is None,
+        # Back-compat flag (kept for existing consumers); `degraded` is the
+        # canonical signal.
+        "fallbackEnabled": bool(missing),
         "ts": datetime.now(timezone.utc).isoformat()
     }
+    if missing:
+        payload[DEGRADED_KEY] = degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail=f"no live quote for: {', '.join(missing)}",
+        )
+    return payload
 
 @router.get("/reports/events")
 async def events() -> List[Dict[str, Any]]:
-    # Mock events for now or fetch from a calendar source if available
-    # NSE doesn't have a simple public "calendar" endpoint without scraping
-    # We will return some mock upcoming results/events for demo
-    return [
-        {"date": "2024-10-15", "ticker": "RELIANCE", "event": "Q2 Earnings"},
-        {"date": "2024-10-16", "ticker": "INFY", "event": "AGM"},
-        {"date": "2024-10-18", "ticker": "TCS", "event": "Dividend Ex-Date"},
-        {"date": "2024-10-20", "ticker": "HDFCBANK", "event": "Q2 Earnings"},
-    ]
+    # No live corporate-events calendar is wired to this legacy endpoint. Return
+    # an empty list rather than the previous hardcoded India earnings/AGM dates,
+    # which masqueraded as real events; the UI shows "No upcoming events found."
+    # (The real per-symbol events live under the corporate-actions service.)
+    return []
 
 
 @router.get("/reports/quarterly")

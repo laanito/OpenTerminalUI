@@ -327,6 +327,7 @@ export interface TapeTrade {
 
 export interface TapeRecentResponse {
   trades: TapeTrade[];
+  degraded?: DegradedInfo;
 }
 
 export interface TapeSummaryResponse {
@@ -337,6 +338,7 @@ export interface TapeSummaryResponse {
   large_trade_count: number;
   avg_trade_size: number;
   trades_per_min: number;
+  degraded?: DegradedInfo;
 }
 
 export type ChartBatchSource = "batch" | "fallback";
@@ -748,16 +750,28 @@ export type HeatmapPeriod = "1d" | "1w" | "1m" | "3m" | "ytd" | "1y";
 export type HeatmapSizeBy = "market_cap" | "volume" | "turnover";
 export type HeatmapMarket = "IN" | "US";
 
+/**
+ * Standard marker the backend attaches (top-level key `degraded`) to any
+ * response that is NOT backed by a live source. See backend/shared/degraded.py.
+ */
+export type DegradedInfo = {
+  reason: string;
+  source: string;
+  detail?: string;
+};
+
 export type HeatmapLeaf = {
   symbol: string;
   name: string;
   sector: string;
   industry: string;
   market_cap: number;
-  price: number;
-  change_pct: number;
-  volume: number;
-  turnover: number;
+  // Live metrics are null when no quote/history was available for the tile.
+  price: number | null;
+  change_pct: number | null;
+  volume: number | null;
+  turnover: number | null;
+  live?: boolean;
   value: number;
 };
 
@@ -777,6 +791,7 @@ export type HeatmapTreemapResponse = {
   total_value: number;
   data: HeatmapLeaf[];
   groups: HeatmapGroup[];
+  degraded?: DegradedInfo;
 };
 
 export type ExperimentCreate = {

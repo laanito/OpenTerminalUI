@@ -8,6 +8,12 @@ from typing import Any, Dict, List, Optional
 import httpx
 from backend.config.settings import get_settings
 from backend.shared.cache import cache
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_MISSING_API_KEY,
+    REASON_PROVIDER_ERROR,
+    degraded_marker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +41,16 @@ class FixedIncomeService:
     async def get_yield_curve(self) -> Dict[str, Any]:
         """Fetch current yield curve data."""
         if not self.api_key:
-            logger.warning("FRED_API_KEY not set. Returning mock data.")
-            return self._get_mock_yield_curve()
+            logger.warning("FRED_API_KEY not set; yield curve unavailable (no fabrication).")
+            return {
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "data": [],
+                "spreads": {},
+                DEGRADED_KEY: degraded_marker(
+                    REASON_MISSING_API_KEY,
+                    detail="set FRED_API_KEY for the live US Treasury yield curve",
+                ),
+            }
 
         cache_key = cache.build_key("fixed_income", "yield_curve", {"type": "current"})
         cached = await cache.get(cache_key)
@@ -57,11 +71,13 @@ class FixedIncomeService:
         # Calculate spreads (e.g., 2s10s)
         spreads = self._calculate_spreads(results)
 
-        response = {
+        response: Dict[str, Any] = {
             "date": datetime.now().strftime("%Y-%m-%d"),
             "data": results,
             "spreads": spreads
         }
+        if not results:
+            response[DEGRADED_KEY] = degraded_marker(REASON_PROVIDER_ERROR)
 
         await cache.set(cache_key, response, ttl=3600)  # 1 hour cache
         return response
@@ -69,7 +85,14 @@ class FixedIncomeService:
     async def get_historical_yield_curve(self, date_str: str) -> Dict[str, Any]:
         """Fetch yield curve data for a specific date."""
         if not self.api_key:
-            return self._get_mock_yield_curve(date_str)
+            return {
+                "date": date_str,
+                "data": [],
+                DEGRADED_KEY: degraded_marker(
+                    REASON_MISSING_API_KEY,
+                    detail="set FRED_API_KEY for the live US Treasury yield curve",
+                ),
+            }
 
         cache_key = cache.build_key("fixed_income", "yield_curve_hist", {"date": date_str})
         cached = await cache.get(cache_key)
@@ -224,7 +247,13 @@ class FixedIncomeService:
     async def get_2s10s_history(self) -> Dict[str, Any]:
         """Fetch historical 2s10s spread data for the chart."""
         if not self.api_key:
-            return self._get_mock_2s10s_history()
+            return {
+                "history": [],
+                DEGRADED_KEY: degraded_marker(
+                    REASON_MISSING_API_KEY,
+                    detail="set FRED_API_KEY for the live 2s10s spread series",
+                ),
+            }
 
         cache_key = cache.build_key("fixed_income", "spread_2s10s", {"type": "history"})
         cached = await cache.get(cache_key)
@@ -261,49 +290,12 @@ class FixedIncomeService:
             return response
         except Exception as e:
             logger.error(f"Error fetching 2s10s history: {e}")
-            return {"error": str(e)}
+            return {
+                "history": [],
+                "error": str(e),
+                DEGRADED_KEY: degraded_marker(REASON_PROVIDER_ERROR),
+            }
 
-    def _get_mock_yield_curve(self, date_str: Optional[str] = None) -> Dict[str, Any]:
-        """Generate mock yield curve data."""
-        base_yields = {
-            "1M": 5.38, "2M": 5.39, "3M": 5.42, "6M": 5.35, "1Y": 4.98,
-            "2Y": 4.65, "3Y": 4.45, "5Y": 4.32, "7Y": 4.31, "10Y": 4.30,
-            "20Y": 4.55, "30Y": 4.45
-        }
-
-        # Invert if date is current-ish (mocking current inverted curve)
-        if not date_str:
-            date_str = datetime.now().strftime("%Y-%m-%d")
-
-        results = []
-        for m in MATURITIES:
-            y = base_yields.get(m["label"], 4.0)
-            results.append({
-                "label": m["label"],
-                "series_id": m["series_id"],
-                "order": m["order"],
-                "yield": y,
-                "date": date_str,
-                "chg_1d": -0.01,
-                "chg_1w": 0.05,
-                "chg_1m": -0.12,
-                "chg_1y": 1.2
-            })
-
-        spreads = {"2s10s": 4.30 - 4.65, "3m10y": 4.30 - 5.42}
-        return {"date": date_str, "data": results, "spreads": spreads, "mock": True}
-
-    def _get_mock_2s10s_history(self) -> Dict[str, Any]:
-        """Generate mock 2s10s history."""
-        history = []
-        start_date = datetime.now() - timedelta(days=730)
-        for i in range(730):
-            d = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
-            # Sine wave to mock inversion
-            val = 0.5 * (1.5 - (i / 100)) + 0.2 * (i % 30 / 30)
-            if i > 400: val -= 1.0 # Simulate inversion
-            history.append({"date": d, "value": val})
-        return {"history": history, "mock": True}
 
 _fixed_income_service: Optional[FixedIncomeService] = None
 

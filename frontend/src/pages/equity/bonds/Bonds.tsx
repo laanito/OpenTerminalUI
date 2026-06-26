@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { TerminalPanel } from "../../../components/terminal/TerminalPanel";
+import { DegradedBanner } from "../../../components/common/DegradedBanner";
+import type { DegradedInfo } from "../../../api/types";
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -37,25 +39,29 @@ export function BondsPage() {
   const [migrations, setMigrations] = useState<RatingMigration[]>([]);
   const [ratingFilter, setRatingFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [degraded, setDegraded] = useState<DegradedInfo | undefined>(undefined);
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (ratingFilter) params.set("rating", ratingFilter);
     if (typeFilter) params.set("issuer_type", typeFilter);
     axios
-      .get<Bond[]>(`${BASE}/bonds/screener?${params.toString()}`)
-      .then((r) => setBonds(r.data))
+      .get<{ bonds: Bond[]; degraded?: DegradedInfo }>(`${BASE}/bonds/screener?${params.toString()}`)
+      .then((r) => {
+        setBonds(r.data.bonds ?? []);
+        setDegraded(r.data.degraded);
+      })
       .catch(() => {});
   }, [ratingFilter, typeFilter]);
 
   useEffect(() => {
     axios
-      .get<{ history: CreditSpreadPoint[] }>(`${BASE}/bonds/credit-spreads`)
+      .get<{ history: CreditSpreadPoint[]; degraded?: DegradedInfo }>(`${BASE}/bonds/credit-spreads`)
       .then((r) => setCreditSpreads(r.data.history ?? []))
       .catch(() => {});
     axios
-      .get<RatingMigration[]>(`${BASE}/bonds/ratings-migration`)
-      .then((r) => setMigrations(r.data))
+      .get<{ migrations: RatingMigration[]; degraded?: DegradedInfo }>(`${BASE}/bonds/ratings-migration`)
+      .then((r) => setMigrations(r.data.migrations ?? []))
       .catch(() => {});
   }, []);
 
@@ -84,6 +90,8 @@ export function BondsPage() {
           ))}
         </div>
       </div>
+
+      <DegradedBanner info={degraded} />
 
       {section === "screener" && (
         <div className="space-y-4">

@@ -1,4 +1,9 @@
-"""Tests for bond service and routes."""
+"""Tests for bond service and routes.
+
+There is no live fixed-income data source wired yet, so every endpoint returns
+an empty result flagged ``degraded`` rather than a hardcoded India-only bond
+universe presented as live market data (v1.0 silent-mock audit).
+"""
 from __future__ import annotations
 
 import pytest
@@ -27,81 +32,45 @@ def client(bond_service: BondService):
 
 
 @pytest.mark.asyncio
-async def test_bond_screener_returns_all(bond_service: BondService):
+async def test_bond_screener_is_empty_and_degraded(bond_service: BondService):
     result = await bond_service.get_bond_screener()
-    assert isinstance(result, list)
-    assert len(result) >= 3
-    for bond in result:
-        assert "isin" in bond
-        assert "issuer" in bond
-        assert "coupon" in bond
-        assert "rating" in bond
+    assert result["bonds"] == []
+    assert result["degraded"]["reason"] == "no_live_source"
 
 
 @pytest.mark.asyncio
-async def test_bond_screener_filter_rating(bond_service: BondService):
-    result = await bond_service.get_bond_screener(rating="AAA")
-    assert all(b["rating"] == "AAA" for b in result)
-
-
-@pytest.mark.asyncio
-async def test_bond_screener_filter_type(bond_service: BondService):
-    result = await bond_service.get_bond_screener(issuer_type="Corporate")
-    assert all(b["type"] == "Corporate" for b in result)
-
-
-@pytest.mark.asyncio
-async def test_credit_spreads(bond_service: BondService):
+async def test_credit_spreads_is_empty_and_degraded(bond_service: BondService):
     result = await bond_service.get_credit_spreads()
-    assert "history" in result
-    assert len(result["history"]) == 90
-    point = result["history"][0]
-    assert "date" in point
-    assert "ig_yield" in point
-    assert "hy_yield" in point
-    assert "spread" in point
-    assert point["hy_yield"] > point["ig_yield"]
+    assert result["history"] == []
+    assert result["degraded"]["reason"] == "no_live_source"
 
 
 @pytest.mark.asyncio
-async def test_ratings_migration(bond_service: BondService):
+async def test_ratings_migration_is_empty_and_degraded(bond_service: BondService):
     result = await bond_service.get_ratings_migration()
-    assert isinstance(result, list)
-    assert len(result) >= 2
-    for entry in result:
-        assert "issuer" in entry
-        assert "old_rating" in entry
-        assert "new_rating" in entry
-        assert "action" in entry
-        assert entry["action"] in ("Upgrade", "Downgrade")
+    assert result["migrations"] == []
+    assert result["degraded"]["reason"] == "no_live_source"
 
 
 def test_bond_screener_route(client: TestClient):
     resp = client.get("/api/bonds/screener")
     assert resp.status_code == 200
     data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) >= 3
-
-
-def test_bond_screener_route_filter(client: TestClient):
-    resp = client.get("/api/bonds/screener?rating=AAA")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert all(b["rating"] == "AAA" for b in data)
+    assert data["bonds"] == []
+    assert data["degraded"]["reason"] == "no_live_source"
 
 
 def test_credit_spreads_route(client: TestClient):
     resp = client.get("/api/bonds/credit-spreads")
     assert resp.status_code == 200
     data = resp.json()
-    assert "history" in data
-    assert len(data["history"]) == 90
+    assert data["history"] == []
+    assert data["degraded"]
 
 
 def test_ratings_migration_route(client: TestClient):
     resp = client.get("/api/bonds/ratings-migration")
     assert resp.status_code == 200
     data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) >= 2
+    assert data["migrations"] == []
+    assert data["degraded"]

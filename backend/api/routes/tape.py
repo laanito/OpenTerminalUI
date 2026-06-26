@@ -1,22 +1,23 @@
 from __future__ import annotations
 
 import inspect
-import math
-import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from backend.adapters.registry import get_adapter_registry
-from backend.api.deps import get_chart_provider
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_NO_PROVIDER_DATA,
+    degraded_marker,
+)
 
 router = APIRouter(tags=["tape"])
 
 DEFAULT_LIMIT = 500
 MAX_LIMIT = 2_000
-TRADES_PER_BAR = 10
 
 
 class TradeRecord(BaseModel):
@@ -25,15 +26,6 @@ class TradeRecord(BaseModel):
     quantity: int
     value: float
     side: str
-
-
-class _SyntheticBar(BaseModel):
-    timestamp: datetime
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: float
 
 
 def _utc_iso(value: datetime) -> str:
@@ -53,45 +45,6 @@ def _guess_exchange(symbol: str) -> str:
     if normalized.endswith(".BO"):
         return "BSE"
     return "NSE"
-
-
-def _seed_price(symbol: str) -> float:
-    base_prices = {
-        "RELIANCE": 2950.0,
-        "INFY": 1820.0,
-        "TCS": 4100.0,
-        "AAPL": 242.0,
-        "MSFT": 430.0,
-    }
-    normalized = symbol.split(":")[-1].removesuffix(".NS").removesuffix(".BO")
-    return base_prices.get(normalized, 100.0 + (sum(ord(char) for char in normalized) % 200))
-
-
-def _fallback_bars(symbol: str, bar_count: int) -> list[_SyntheticBar]:
-    now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-    rng = random.Random(f"fallback:{symbol}:{bar_count}")
-    price = _seed_price(symbol)
-    bars: list[_SyntheticBar] = []
-    for offset in range(bar_count, 0, -1):
-        timestamp = now.replace(second=0, microsecond=0) - timedelta(minutes=offset)
-        open_price = price
-        move = rng.uniform(-0.004, 0.004) * max(10.0, price)
-        close_price = max(1.0, open_price + move)
-        high_price = max(open_price, close_price) + rng.uniform(0.1, 0.8) * max(0.2, price * 0.0015)
-        low_price = min(open_price, close_price) - rng.uniform(0.1, 0.8) * max(0.2, price * 0.0015)
-        volume = int(rng.uniform(30_000, 250_000))
-        bars.append(
-            _SyntheticBar(
-                timestamp=timestamp,
-                open=round(open_price, 2),
-                high=round(high_price, 2),
-                low=round(low_price, 2),
-                close=round(close_price, 2),
-                volume=volume,
-            )
-        )
-        price = close_price
-    return bars
 
 
 def _normalized_symbol(symbol: str) -> str:
@@ -180,98 +133,55 @@ async def _fetch_live_trades(symbol: str, limit: int) -> list[TradeRecord]:
     return _coerce_trade_rows(raw_rows, limit)
 
 
-def _simulate_bar_trades(symbol: str, bars: list[Any], limit: int) -> list[TradeRecord]:
-    trades: list[TradeRecord] = []
-    previous_price: float | None = None
-    for bar in bars:
-        if not all(hasattr(bar, attr) for attr in ("timestamp", "open", "high", "low", "close", "volume")):
-            continue
-        volume = max(0, int(float(bar.volume)))
-        if volume <= 0:
-            continue
-        bar_ts = bar.timestamp if bar.timestamp.tzinfo else bar.timestamp.replace(tzinfo=timezone.utc)
-        bar_seed = int(bar_ts.timestamp())
-        rng = random.Random(f"{symbol}:{bar_seed}:{volume}")
-        price_low = min(float(bar.low), float(bar.high))
-        price_high = max(float(bar.low), float(bar.high))
-        trade_count = max(1, min(TRADES_PER_BAR, volume))
-        weights = [rng.random() or 0.01 for _ in range(trade_count)]
-        weight_total = sum(weights) or float(trade_count)
-        remaining_volume = volume
-        for index in range(trade_count):
-            if index == trade_count - 1:
-                quantity = remaining_volume
-            else:
-                quantity = max(1, int(round(volume * weights[index] / weight_total)))
-                max_remaining = remaining_volume - (trade_count - index - 1)
-                quantity = min(quantity, max_remaining)
-            remaining_volume -= quantity
-            fraction = (index + 1) / trade_count
-            anchor = float(bar.open) + (float(bar.close) - float(bar.open)) * fraction
-            jitter = rng.uniform(-1.0, 1.0) * max(0.01, (price_high - price_low) * 0.35)
-            price = round(min(price_high, max(price_low, anchor + jitter)), 2)
-            if previous_price is None:
-                side = "neutral"
-            elif price > previous_price:
-                side = "buy"
-            elif price < previous_price:
-                side = "sell"
-            else:
-                side = "neutral"
-            trade_ts = bar_ts.replace(microsecond=0)
-            trade_ts = trade_ts.replace(second=min(59, math.floor((60 / trade_count) * index)))
-            previous_price = price
-            trades.append(
-                TradeRecord(
-                    timestamp=_utc_iso(trade_ts),
-                    price=price,
-                    quantity=quantity,
-                    value=round(price * quantity, 2),
-                    side=side,
-                )
-            )
-    trades.sort(key=lambda trade: trade.timestamp, reverse=True)
-    return trades[:limit]
-
-
 async def _load_recent_trades(symbol: str, limit: int) -> list[TradeRecord]:
-    live_trades = await _fetch_live_trades(symbol, limit)
-    if live_trades:
-        return live_trades[:limit]
+    """Return real recent trades only.
 
-    provider = await get_chart_provider()
-    bar_count = max(12, math.ceil(limit / TRADES_PER_BAR) + 4)
-    try:
-        bars = await provider.get_ohlcv(
-            symbol.strip().upper(),
-            interval="1m",
-            period="7d",
-            market_hint=_guess_exchange(symbol),
-        )
-    except Exception:
-        bars = []
-    if not bars:
-        bars = _fallback_bars(symbol.strip().upper(), bar_count)
-    return _simulate_bar_trades(symbol.strip().upper(), bars[-bar_count:], limit)
+    Integrity: a tape's live source is a tick/trade feed. When no adapter
+    exposes one we return no trades rather than fabricating a tape from a
+    seeded random walk (the old behaviour) or inventing buy/sell sides from
+    OHLCV bars — both of which presented invented order flow as real.
+    """
+    live_trades = await _fetch_live_trades(symbol, limit)
+    return live_trades[:limit]
 
 
 @router.get("/{symbol}/recent")
 async def get_recent_tape(
     symbol: str,
     limit: int = Query(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, Any]:
     trades = await _load_recent_trades(symbol, limit)
-    return {"trades": [trade.model_dump() for trade in trades]}
+    payload: dict[str, Any] = {"trades": [trade.model_dump() for trade in trades]}
+    if not trades:
+        payload[DEGRADED_KEY] = degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail="no live trade feed for this symbol",
+        )
+    return payload
 
 
 @router.get("/{symbol}/summary")
 async def get_tape_summary(
     symbol: str,
     limit: int = Query(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
-) -> dict[str, float | int]:
+) -> dict[str, Any]:
     trades = await _load_recent_trades(symbol, limit)
     if not trades:
-        raise HTTPException(status_code=404, detail="No tape data available")
+        # No live tape — return zeroed metrics flagged degraded rather than
+        # fabricated order-flow stats. The UI shows a banner + empty state.
+        return {
+            "total_volume": 0,
+            "buy_volume": 0,
+            "sell_volume": 0,
+            "buy_pct": 0.0,
+            "large_trade_count": 0,
+            "avg_trade_size": 0.0,
+            "trades_per_min": 0.0,
+            DEGRADED_KEY: degraded_marker(
+                REASON_NO_PROVIDER_DATA,
+                detail="no live trade feed for this symbol",
+            ),
+        }
 
     total_volume = sum(trade.quantity for trade in trades)
     buy_volume = sum(trade.quantity for trade in trades if trade.side == "buy")

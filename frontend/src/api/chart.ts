@@ -64,6 +64,7 @@ export async function fetchTapeRecent(symbol: string, limit = 500): Promise<Tape
   });
   return {
     trades: Array.isArray(data?.trades) ? data.trades : [],
+    degraded: data?.degraded,
   };
 }
 

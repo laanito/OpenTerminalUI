@@ -9,6 +9,11 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.adapters.registry import get_adapter_registry
+from backend.shared.degraded import (
+    DEGRADED_KEY,
+    REASON_NO_PROVIDER_DATA,
+    degraded_marker,
+)
 
 router = APIRouter()
 
@@ -77,36 +82,17 @@ def _period_window(period: PeriodCode) -> tuple[date, date]:
     return today - timedelta(days=370), today
 
 
-def _seed(symbol: str) -> int:
-    return sum((idx + 1) * ord(ch) for idx, ch in enumerate(symbol.upper()))
-
-
-def _fallback_snapshot(item: HeatmapUniverseRow, period: PeriodCode) -> dict[str, float]:
-    seed = _seed(item.symbol)
-    drift = ((seed % 1100) - 550) / 100.0
-    multiplier = {
-        "1d": 0.35,
-        "1w": 0.75,
-        "1m": 1.15,
-        "3m": 1.85,
-        "ytd": 2.25,
-        "1y": 3.25,
-    }[period]
-    change_pct = round(max(-9.5, min(9.5, drift * multiplier)), 2)
-    volume = float(250_000 + (seed % 7_500_000))
-    price = round(max(12.0, item.market_cap / 1_000_000_000 / 10 + (seed % 200)), 2)
-    turnover = round(volume * price, 2)
-    return {
-        "price": price,
-        "change_pct": change_pct,
-        "volume": volume,
-        "turnover": turnover,
-    }
-
-
 async def _fetch_snapshot(item: HeatmapUniverseRow, period: PeriodCode) -> dict[str, Any]:
+    """Snapshot one universe row.
+
+    Integrity: never fabricate the live metrics. ``market_cap`` is static
+    universe metadata (always present), but ``price`` / ``change_pct`` /
+    ``volume`` / ``turnover`` come only from a real quote or history. When the
+    source is unavailable they stay ``None`` and ``live`` is ``False`` so the
+    caller can flag the tile and the response as degraded rather than colour the
+    heatmap from invented movements.
+    """
     registry = get_adapter_registry()
-    fallback = _fallback_snapshot(item, period)
     quote_symbol = item.symbol
 
     try:
@@ -114,13 +100,14 @@ async def _fetch_snapshot(item: HeatmapUniverseRow, period: PeriodCode) -> dict[
     except Exception:
         quote = None
 
-    price = fallback["price"]
-    change_pct = fallback["change_pct"]
-    volume = fallback["volume"]
-    turnover = fallback["turnover"]
+    price: float | None = None
+    change_pct: float | None = None
+    volume: float | None = None
+    live = False
 
     if quote is not None:
         price = float(quote.price)
+        live = True
         if period == "1d":
             change_pct = round(float(quote.change_pct), 2)
 
@@ -135,8 +122,12 @@ async def _fetch_snapshot(item: HeatmapUniverseRow, period: PeriodCode) -> dict[
             last_close = float(history[-1].c)
             if first_close > 0:
                 change_pct = round(((last_close - first_close) / first_close) * 100.0, 2)
-            volume = float(sum(float(c.v or 0.0) for c in history[-20:]) or volume)
-            turnover = round(volume * price, 2)
+            volume = float(sum(float(c.v or 0.0) for c in history[-20:]))
+            if price is None and last_close > 0:
+                price = last_close
+            live = True
+
+    turnover = round(volume * price, 2) if (volume is not None and price is not None) else None
 
     return {
         "symbol": item.symbol,
@@ -148,6 +139,7 @@ async def _fetch_snapshot(item: HeatmapUniverseRow, period: PeriodCode) -> dict[
         "change_pct": change_pct,
         "volume": volume,
         "turnover": turnover,
+        "live": live,
     }
 
 
@@ -207,5 +199,11 @@ async def heatmap_treemap(
         "data": sorted(rows, key=lambda item: float(item.get(size_by) or 0.0), reverse=True),
         "groups": sorted(groups.values(), key=lambda item: float(item.get("value") or 0.0), reverse=True),
     }
+    stale = sum(1 for row in rows if not row.get("live"))
+    if stale:
+        data[DEGRADED_KEY] = degraded_marker(
+            REASON_NO_PROVIDER_DATA,
+            detail=f"{stale}/{len(rows)} tiles have no live quote",
+        )
     _CACHE[key] = (now, data)
     return data
