@@ -137,7 +137,13 @@ async def market_status() -> Dict[str, Any]:
     nse_market_task = fetcher.nse.get_market_status()
     nse_indices_task = fetcher.nse.get_index_quote("NIFTY 50")
     yahoo_quotes_task = fetcher.yahoo.get_quotes(
-        ["^NSEI", "^BSESN", "^GSPC", "^IXIC", "^DJI", "^FTSE", "^GDAXI", "^N225", "^HSI", "INRUSD=X", "USDINR=X", "BTC-USD", "ETH-USD"]
+        [
+            "^NSEI", "^BSESN", "^GSPC", "^IXIC", "^DJI", "^FTSE", "^GDAXI", "^N225", "^HSI",
+            "INRUSD=X", "USDINR=X", "BTC-USD", "ETH-USD",
+            # Commodity futures — without these GC=F/SI=F/CL=F never resolve and the
+            # ticker tape silently served the hardcoded mock fallbacks below.
+            "GC=F", "SI=F", "CL=F",
+        ]
     )
 
     results = await asyncio.gather(
