@@ -223,6 +223,44 @@ Lean into the north-star spine.
 - **Consistent explain / interrogate affordance** — a uniform "explain this /
   what am I missing / is this hype?" layer across surfaces.
 
+### Degraded stubs → real data
+
+The silent-mock sweep (#41/#42) replaced fabricated data with honest
+`empty + degraded` responses. That stops the integrity problem but leaves these
+surfaces as **stubs until a real source is wired** — they must not stay stubs
+forever. Each needs a live integration (or removal if we decide the surface
+isn't worth keeping). Pull into a milestone as data sources are chosen.
+
+- **Bonds & fixed income** (`/api/bonds/*` — screener, credit spreads, ratings
+  migration) — no live provider. Needs a fixed-income feed (e.g. FRED for
+  rates/spreads, a bond reference-data provider for the screener/ratings). Until
+  then the Bonds page is empty + degraded.
+- **Hotlists / movers** (`/api/hotlists`) — needs a market screener feed exposing
+  the fields a basic quote lacks: volume, avg volume, 52-week high/low, prior
+  close/open (for gainers/losers/most-active/52w/gap/unusual-volume). `QuoteResponse`
+  alone can't drive it.
+- **Insider trades** (`/api/insider/*`) — needs an ingest pipeline populating
+  `InsiderTrade` (e.g. SEC Form 4 for US; Finnhub/FMP insider endpoints). Routes,
+  filtering, ranking, and cluster detection already work on real rows — only the
+  data feed is missing.
+- **ETF screener & fund flows** (`/api/etf/screener`, `/api/etf/flows`) — need an
+  ETF data provider. (ETF **holdings**/**overlap** already use real Yahoo
+  `topHoldings`; they degrade only when Yahoo returns nothing.)
+- **Tape / Time & Sales** (`/api/tape/*`) — needs a real trade/tick feed adapter
+  (`get_recent_trades`). Without it the tape is empty + degraded; we deliberately
+  do **not** synthesize ticks or buy/sell order flow.
+- **Crypto market depth & derivatives** (`/v1/crypto/heatmap` depth fields,
+  `/v1/crypto/derivatives`) — currently still derive depth from `volume*price`
+  and funding/liquidations from `change_24h` (deferred from #42). Wire a real
+  orderbook/derivatives source (Binance depth + funding/OI/liquidations) or make
+  them explicitly degraded + redesign the response models.
+
+**Key-gated, not stubs** (these work today once a key is set — no new source
+needed, just configuration): the **yield curve / 2s10s** and **macro indicators**
+return live data with `FRED_API_KEY`, and **market status / heatmap / charts /
+sector-rotation** return live data from Yahoo/adapters — they only show
+`degraded` when the key is absent or the upstream fetch fails.
+
 ### Backlog / unscheduled
 
 Real but unscheduled; pull into a milestone when it fits.
