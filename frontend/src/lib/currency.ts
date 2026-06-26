@@ -95,6 +95,16 @@ function marketNativeCurrency(market?: string | null): CurrencyCode {
 export function nativeCurrencyForSymbol(symbol?: string | null, market?: string | null): CurrencyCode {
   const t = normalizeTicker(symbol || "");
   if (!t) return marketNativeCurrency(market);
+  // Crypto pairs are BASE-QUOTE (BTC-USD, BTC-EUR, ETH-GBP). The quote leg is the
+  // currency the price is denominated in — don't assume USD, or a EUR-quoted coin
+  // shows EUR magnitudes under a $ symbol with no conversion.
+  const dash = t.lastIndexOf("-");
+  if (dash > 0) {
+    const quote = t.slice(dash + 1);
+    if (Object.prototype.hasOwnProperty.call(CURRENCY_META, quote)) {
+      return quote as CurrencyCode;
+    }
+  }
   if (isCryptoSymbol(t)) return "USD";
   if (isIndianSymbol(t, market)) return "INR";
   const dot = t.lastIndexOf(".");
