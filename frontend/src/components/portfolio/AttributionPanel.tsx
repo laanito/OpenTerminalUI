@@ -44,7 +44,7 @@ type Props = {
 };
 
 const PERIODS = ["1W", "1M", "3M", "6M", "1Y", "YTD"] as const;
-const BENCHMARKS = ["NIFTY50", "SENSEX", "S&P500", "CUSTOM"] as const;
+const BENCHMARKS = ["S&P500", "NIFTY50", "SENSEX", "CUSTOM"] as const;
 
 function formatPct(value: number | null | undefined, digits = 2): string {
   if (value == null || !Number.isFinite(value)) return "-";
@@ -58,14 +58,14 @@ function formatWeight(value: number | null | undefined): string {
 
 export function AttributionPanel({ portfolioId }: Props) {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>("1M");
-  const [benchmarkPreset, setBenchmarkPreset] = useState<(typeof BENCHMARKS)[number]>("NIFTY50");
+  const [benchmarkPreset, setBenchmarkPreset] = useState<(typeof BENCHMARKS)[number]>("S&P500");
   const [customBenchmark, setCustomBenchmark] = useState("SPY");
   const [data, setData] = useState<AttributionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const benchmark = useMemo(
-    () => (benchmarkPreset === "CUSTOM" ? customBenchmark.trim() || "NIFTY50" : benchmarkPreset),
+    () => (benchmarkPreset === "CUSTOM" ? customBenchmark.trim() || "S&P500" : benchmarkPreset),
     [benchmarkPreset, customBenchmark],
   );
 

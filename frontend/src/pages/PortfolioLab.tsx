@@ -43,7 +43,7 @@ export function PortfolioLabPage() {
   const [tickers, setTickers] = useState("AAPL,MSFT,GOOGL,AMZN");
   const [startDate, setStartDate] = useState("2025-01-01");
   const [endDate, setEndDate] = useState("2025-12-31");
-  const [benchmark, setBenchmark] = useState("NIFTY50");
+  const [benchmark, setBenchmark] = useState("S&P500");
   const [rebalanceFrequency, setRebalanceFrequency] = useState<RebalanceFrequency>("WEEKLY");
   const [weightingMethod, setWeightingMethod] = useState<WeightingMethod>("RISK_PARITY");
   const [maxWeight, setMaxWeight] = useState(0.25);

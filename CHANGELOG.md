@@ -82,6 +82,28 @@ backoff, version reconcile, docs).
     random-walk fallback; empty + degraded instead of a fake series.
   - **Crypto correlation**: drops assets without real return history rather than
     back-filling a synthetic sine/cosine series; flags degraded when partial.
+- **Silent-mock integrity sweep (1.0 bucket A, part 3) — real Binance crypto
+  microstructure + derivatives.** Replaced the last synthesized-crypto sites with
+  real Binance public-REST data (new `backend/core/binance_client.py` +
+  `backend/services/crypto_derivatives_service.py`):
+  - **Crypto heatmap depth** (`/v1/crypto/heatmap`): `depth_bid/ask_notional` +
+    `depth_imbalance` are now the real best bid/ask from the spot order book
+    (`bookTicker`, one call, cached), not `volume*price`. Symbols Binance doesn't
+    list read as empty depth; no order-book coverage at all flags degraded.
+  - **Crypto derivatives** (`/v1/crypto/derivatives`): `funding_rate_8h` is the
+    real last funding rate (futures `premiumIndex`) and `open_interest_usd` is
+    real (`openInterest` × mark price), no longer derived from `change_24h`.
+    24h liquidations have no Binance REST endpoint, so they are read only from the
+    live `forceOrder` WebSocket stream (`BinanceDerivativesState`); until that
+    runner is wired they read 0 and the response is flagged `no_live_source`
+    instead of being fabricated. `DegradedBanner` wired into both crypto tabs.
+- **De-India defaults (1.0 bucket B).** Western-oriented defaults across the app
+  (India markets stay *supported*, just not the default): watchlist symbol search
+  passes the selected market through instead of forcing NSE; home/sidebar F&O
+  widgets default to `SPY` (sidebar label → "EQUITY ANALYTICS"); the portfolio
+  risk/attribution/lab benchmark defaults to `S&P500` (FE + backend route &
+  service defaults) and the default risk-free rate is `0.04` (was `0.06`).
+  `NIFTY50`/`SENSEX` remain selectable benchmark options.
 - Full FE↔backend API audit (`/v1/...` path/shape mismatches; unmounted economics
   router; shadowed watchlist-items route).
 - Ticker tape: real commodity values (GC=F/SI=F/CL=F were missing from the fetch

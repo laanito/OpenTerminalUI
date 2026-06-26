@@ -46,7 +46,7 @@ export function ModelLabPage() {
   const [description, setDescription] = useState("Baseline trend model");
   const [tags, setTags] = useState("baseline,trend");
   const [modelKey, setModelKey] = useState("sma_crossover");
-  const [benchmark, setBenchmark] = useState("NIFTY50");
+  const [benchmark, setBenchmark] = useState("S&P500");
   const [startDate, setStartDate] = useState("2025-01-01");
   const [endDate, setEndDate] = useState("2025-12-31");
   const [universeJson, setUniverseJson] = useState(DEFAULT_JSON);

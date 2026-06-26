@@ -205,28 +205,100 @@ def test_crypto_dominance_fields_exist(monkeypatch) -> None:
     assert 99.0 <= total <= 101.0
 
 
-def test_crypto_heatmap_has_buckets_and_depth(monkeypatch) -> None:
+def test_crypto_heatmap_uses_real_binance_depth(monkeypatch) -> None:
     _patch_fetcher(monkeypatch)
+
+    async def _fake_depth():
+        return {
+            "BTC-USD": {"bid_notional": 2_000_000.0, "ask_notional": 1_000_000.0, "imbalance": 0.3333},
+            "ETH-USD": {"bid_notional": 500_000.0, "ask_notional": 600_000.0, "imbalance": -0.0909},
+        }
+
+    monkeypatch.setattr(crypto, "load_depth_map", _fake_depth)
     result = asyncio.run(crypto.crypto_heatmap(limit=5))
-    assert len(result["items"]) >= 2
-    first = result["items"][0]
-    assert first["bucket"] in {"surge", "bullish", "up", "flat", "down", "bearish", "flush"}
-    assert -1.0 <= float(first["depth_imbalance"]) <= 1.0
-    assert float(first["depth_bid_notional"]) > 0
-    assert float(first["depth_ask_notional"]) > 0
+    assert result["degraded"] is None
+    by_sym = {it["symbol"]: it for it in result["items"]}
+    btc = by_sym["BTC-USD"]
+    assert btc["depth_bid_notional"] == 2_000_000.0
+    assert btc["depth_ask_notional"] == 1_000_000.0
+    assert -1.0 <= btc["depth_imbalance"] <= 1.0
+    assert btc["bucket"] in {"surge", "bullish", "up", "flat", "down", "bearish", "flush"}
+    # A symbol with no Binance book reads as empty depth, never fabricated.
+    assert by_sym["UNI-USD"]["depth_bid_notional"] == 0.0
+    assert by_sym["UNI-USD"]["depth_imbalance"] == 0.0
 
 
-def test_crypto_derivatives_aggregates_liquidations(monkeypatch) -> None:
+def test_crypto_heatmap_degraded_when_depth_unavailable(monkeypatch) -> None:
+    _patch_fetcher(monkeypatch)
+
+    async def _empty_depth():
+        return {}
+
+    monkeypatch.setattr(crypto, "load_depth_map", _empty_depth)
+    result = asyncio.run(crypto.crypto_heatmap(limit=5))
+    assert result["degraded"] is not None
+    assert result["degraded"]["reason"] == "no_provider_data"
+    assert all(it["depth_bid_notional"] == 0.0 for it in result["items"])
+
+
+def test_crypto_derivatives_uses_real_funding_and_oi(monkeypatch) -> None:
     _patch_fetcher(monkeypatch)
     state = get_binance_derivatives_state()
     state.reset()
 
+    async def _fake_funding_oi(symbols):  # noqa: ARG001
+        return {
+            "BTC-USD": {"funding_rate_8h": 0.0001, "open_interest_usd": 9_000_000.0},
+            "ETH-USD": {"funding_rate_8h": -0.00005, "open_interest_usd": 4_000_000.0},
+        }
+
+    monkeypatch.setattr(crypto, "load_funding_oi", _fake_funding_oi)
     result = asyncio.run(crypto.crypto_derivatives(limit=4))
-    assert len(result["items"]) >= 2
+    # Only assets Binance lists as perps appear; others are omitted, not zeroed.
+    assert {it["symbol"] for it in result["items"]} == {"BTC-USD", "ETH-USD"}
+    # Rows are ordered by open interest (desc).
+    assert result["items"][0]["symbol"] == "BTC-USD"
+    assert result["totals"]["open_interest_usd"] == 13_000_000.0
+    assert any(it["funding_rate_8h"] != 0 for it in result["items"])
+    # No live forceOrder stream → liquidations are 0 and the response is flagged.
+    assert result["totals"]["liquidations_24h"] == 0.0
+    assert result["degraded"]["reason"] == "no_live_source"
+
+
+def test_crypto_derivatives_includes_stream_liquidations(monkeypatch) -> None:
+    _patch_fetcher(monkeypatch)
+    state = get_binance_derivatives_state()
+    state.reset()
+    state.ingest_event("BTC-USD", 0.0001, 500_000.0, side="long", ts_ms=1)
+    state.ingest_event("BTC-USD", 0.0001, 250_000.0, side="short", ts_ms=1)
+
+    async def _fake_funding_oi(symbols):  # noqa: ARG001
+        return {"BTC-USD": {"funding_rate_8h": 0.0001, "open_interest_usd": 9_000_000.0}}
+
+    monkeypatch.setattr(crypto, "load_funding_oi", _fake_funding_oi)
+    result = asyncio.run(crypto.crypto_derivatives(limit=4))
+    btc = next(it for it in result["items"] if it["symbol"] == "BTC-USD")
+    assert btc["long_liquidations_24h"] == 500_000.0
+    assert btc["short_liquidations_24h"] == 250_000.0
     assert result["totals"]["liquidations_24h"] == (
         result["totals"]["long_liquidations_24h"] + result["totals"]["short_liquidations_24h"]
     )
-    assert any(item["funding_rate_8h"] != 0 for item in result["items"])
+    # Real liquidations present → no longer degraded.
+    assert result["degraded"] is None
+
+
+def test_crypto_derivatives_degraded_when_no_futures(monkeypatch) -> None:
+    _patch_fetcher(monkeypatch)
+    state = get_binance_derivatives_state()
+    state.reset()
+
+    async def _empty(symbols):  # noqa: ARG001
+        return {}
+
+    monkeypatch.setattr(crypto, "load_funding_oi", _empty)
+    result = asyncio.run(crypto.crypto_derivatives(limit=4))
+    assert result["items"] == []
+    assert result["degraded"]["reason"] == "no_provider_data"
 
 
 def test_crypto_defi_dashboard_headline_and_protocols(monkeypatch) -> None:

@@ -120,8 +120,8 @@ async def get_sector_allocation(db: Session = Depends(get_db)) -> dict[str, obje
 
 @router.get("/portfolio/analytics/risk-metrics")
 async def get_risk_metrics(
-    risk_free_rate: float = Query(default=0.06, ge=0, le=0.25),
-    benchmark: str = Query(default="NIFTY50"),
+    risk_free_rate: float = Query(default=0.04, ge=0, le=0.25),
+    benchmark: str = Query(default="S&P500"),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     holdings = db.query(Holding).all()
@@ -148,7 +148,7 @@ async def get_dividend_tracker(
 
 @router.get("/portfolio/analytics/benchmark-overlay")
 async def get_benchmark_overlay(
-    benchmark: str = Query(default="NIFTY50"),
+    benchmark: str = Query(default="S&P500"),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     holdings = db.query(Holding).all()
@@ -159,7 +159,7 @@ async def get_benchmark_overlay(
 async def get_portfolio_attribution(
     portfolio_id: str,
     period: str = Query(default="1M"),
-    benchmark: str = Query(default="NIFTY50"),
+    benchmark: str = Query(default="S&P500"),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     try:

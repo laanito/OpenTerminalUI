@@ -20,7 +20,7 @@ import { TerminalInput } from "../terminal/TerminalInput";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 import { useSettingsStore } from "../../store/settingsStore";
 
-const BENCHMARKS = ["NIFTY50", "S&P500", "NASDAQ", "DOW", "MSCIWI"];
+const BENCHMARKS = ["S&P500", "NASDAQ", "DOW", "MSCIWI", "NIFTY50"];
 
 function metricFmt(v: number | null | undefined) {
   if (v == null || !Number.isFinite(v)) return "-";

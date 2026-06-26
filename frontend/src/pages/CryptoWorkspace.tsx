@@ -12,6 +12,8 @@ import {
   type CryptoMarketsQuery,
   type CryptoMoverRow,
 } from "../api/client";
+import { DegradedBanner } from "../components/common/DegradedBanner";
+import type { DegradedInfo } from "../api/types";
 import { CryptoCorrelationMatrixPanel } from "../components/crypto/CryptoCorrelationMatrixPanel";
 import { CryptoDefiPanel } from "../components/crypto/CryptoDefiPanel";
 import { CryptoDerivativesPanel } from "../components/crypto/CryptoDerivativesPanel";
@@ -34,6 +36,7 @@ type HeatmapResponse = {
     depth_imbalance: number;
     bucket: string;
   }>;
+  degraded?: DegradedInfo | null;
 };
 
 type DerivativesResponse = {
@@ -51,6 +54,7 @@ type DerivativesResponse = {
     short_liquidations_24h: number;
     liquidations_24h: number;
   };
+  degraded?: DegradedInfo | null;
 };
 
 type DefiResponse = {
@@ -538,6 +542,7 @@ export function CryptoWorkspacePage() {
     if (tab === "heatmap") {
       return (
         <TerminalPanel title={activeMeta.title} subtitle={activeMeta.subtitle}>
+          <DegradedBanner info={heatmapQuery.data?.degraded} className="mb-2" />
           <CryptoHeatmapPanel items={heatmapQuery.data?.items || []} onSelect={openChart} />
         </TerminalPanel>
       );
@@ -546,6 +551,7 @@ export function CryptoWorkspacePage() {
     if (tab === "derivatives") {
       return (
         <TerminalPanel title={activeMeta.title} subtitle={activeMeta.subtitle}>
+          <DegradedBanner info={derivativesQuery.data?.degraded} className="mb-2" />
           <CryptoDerivativesPanel
             rows={derivativesQuery.data?.items || []}
             totals={

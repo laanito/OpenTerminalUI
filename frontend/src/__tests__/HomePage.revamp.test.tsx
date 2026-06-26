@@ -198,7 +198,7 @@ describe("HomePage mission-control revamp", () => {
       expect(fetchPortfolio).toHaveBeenCalledTimes(1);
       expect(fetchWatchlist).toHaveBeenCalledTimes(1);
       expect(fetchBacktestV1Presets).toHaveBeenCalledTimes(1);
-      expect(fetchChainSummary).toHaveBeenCalledWith("NIFTY");
+      expect(fetchChainSummary).toHaveBeenCalledWith("SPY");
       expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledTimes(1);
       expect(fetchLatestNews).toHaveBeenCalledWith(15);
       expect(fetchQuotesBatch).toHaveBeenCalledWith(
