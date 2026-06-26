@@ -105,6 +105,14 @@
   filter the frontend already sent. When no live source is available (no key or
   a rate-limited provider) the sample fallback is flagged `sample: true` and the
   UI shows a banner, so placeholder events are never mistaken for live data.
+- **Portfolio currency display fixes**: the Movement & Historical Return chart
+  axis was hardcoded to INR (`formatCompactInr` with Cr/L) — now routed through
+  the display-currency engine (`formatCompactMoney`). The holdings table Avg Cost
+  / Current / Market Value / P&L columns rendered bare numbers (DenseTable's
+  `type: "currency"` emits no symbol and no conversion), so mixed-currency
+  holdings were misleading; they now convert each holding from its native
+  currency (suffix-aware, e.g. `.DE` → EUR; market fallback otherwise) into the
+  active display currency with the correct symbol.
 - **Scheduled reports + report generation backend**: wired the per-user CRUD
   routes (`GET/POST/DELETE /api/reports/scheduled`) on a new DB-backed
   `scheduled_reports` table (rehydrated into APScheduler on boot) plus on-demand
@@ -157,21 +165,14 @@
   is month-grid only. Add day and week granularities (the data is already
   date-stamped; this is a frontend view/range addition in
   `frontend/src/pages/economics/EconomicTerminal.tsx`).
-- **Portfolio Movement & Historical Return — sub-1Y timeframes + currency axis**
-  — the chart only offers 1Y with monthly datapoints; add shorter ranges (1M/3M/
-  6M with finer granularity). Also the value axis has **INR hardcoded** — route
-  it through the display-currency engine (`useDisplayCurrency`) like the rest of
-  the app (related to the EUR display-currency follow-ups above).
+- **Portfolio Movement & Historical Return — sub-1Y timeframes** — the chart
+  only offers 1Y with monthly datapoints; add shorter ranges (1M/3M/6M with finer
+  granularity). *(The INR-hardcoded value axis is fixed — it now routes through
+  `useDisplayCurrency` / `formatCompactMoney`.)*
 - **Dividends in the Portfolio Events Calendar** — upcoming dividend ex-dates
   (now available via the corporate-actions service / `get_upcoming_dividends`,
   incl. labelled projections) should also surface in the portfolio events
   calendar, not just the dedicated Dividends page.
-- **Portfolio Holdings — currency conversion / correct symbol** — the holdings
-  table (`PortfolioManager.tsx`, Avg Cost / Current columns use `type:
-  "currency"`) renders values in the active display currency **without
-  converting** from each holding's native currency, so a EUR/INR holding shows
-  the wrong magnitude/symbol. Either convert via the cross-rates engine or render
-  each row in its instrument's native currency symbol.
 - **Notes capture from the News feed** — notes can be added per-symbol in News
   *ticker* mode, but not from the general latest/search feed. Allow attaching a
   note to an individual article (or the current view) from any News mode so the
