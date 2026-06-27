@@ -14,8 +14,21 @@ from backend.api.deps import fetch_stock_snapshot_coalesced, get_unified_fetcher
 from backend.db.models import Holding, PortfolioHoldingORM, PortfolioORM, TaxLot
 from backend.equity.services.corporate_actions import corporate_actions_service, extract_amount
 from backend.shared.db import init_db
+from backend.shared.market_classifier import is_crypto_symbol
 
 TRADING_DAYS = 252
+
+
+def _sector_for(snap: dict[str, Any], symbol: str) -> str:
+    """Sector bucket for allocation/attribution. Crypto has no equity sector, so
+    instead of grouping every coin under "Unknown" it gets its own "Crypto"
+    bucket (the asset-class is the meaningful grouping there)."""
+    sector = str(snap.get("sector") or snap.get("industry") or "").strip()
+    if sector:
+        return sector
+    if is_crypto_symbol(symbol):
+        return "Crypto"
+    return "Unknown"
 BENCHMARK_MAP = {
     "NIFTY50": "^NSEI",
     "NIFTY 50": "^NSEI",
@@ -232,8 +245,8 @@ class PortfolioAnalyticsService:
         total = 0.0
         for h in holdings:
             snap = await fetch_stock_snapshot_coalesced(h.ticker)
-            sector = str(snap.get("sector") or snap.get("industry") or "Unknown").strip() or "Unknown"
-            industry = str(snap.get("industry") or "Unknown").strip() or "Unknown"
+            sector = _sector_for(snap, str(h.ticker))
+            industry = str(snap.get("industry") or "").strip() or sector
             price = snap.get("current_price")
             current = float(h.quantity) * float(price) if isinstance(price, (int, float)) else float(h.quantity) * float(h.avg_buy_price)
             total += current
@@ -520,7 +533,7 @@ class PortfolioAnalyticsService:
                 current_price = float(price) if isinstance(price, (int, float)) else float(row.avg_buy_price)
                 current_value = max(0.0, float(row.quantity)) * current_price
                 total_value += current_value
-                sector = str(snap.get("sector") or snap.get("industry") or "Unknown").strip() or "Unknown"
+                sector = _sector_for(snap, symbol)
                 holdings.append(
                     {
                         "symbol": symbol,

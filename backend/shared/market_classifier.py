@@ -74,6 +74,58 @@ _FOREIGN_SUFFIX_META = {
 # can route these straight to Yahoo and skip the India/adapter path.
 FOREIGN_SUFFIXES = tuple(_FOREIGN_SUFFIX_META.keys())
 
+# Fiat legs a crypto pair can quote in (BTC-USD, BTC-EUR, ...). Stablecoins map
+# to the fiat they track so the display currency stays a real currency symbol.
+_CRYPTO_QUOTE_FIATS = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "INR", "BRL", "TRY"}
+_CRYPTO_STABLE_TO_FIAT = {"USDT": "USD", "USDC": "USD", "BUSD": "USD", "DAI": "USD", "TUSD": "USD", "FDUSD": "USD"}
+
+
+def is_crypto_symbol(symbol: str) -> bool:
+    """Canonical crypto-symbol test, mirroring the adapter routing convention
+    (``CRYPTO:`` prefix, a ``-USD``/``-EUR``-style fiat pair, or a ``…USDT`` pair).
+    """
+    s = (symbol or "").strip().upper()
+    if not s:
+        return False
+    if s.startswith("CRYPTO:"):
+        return True
+    if "-" in s:
+        quote = s.rsplit("-", 1)[-1]
+        return quote in _CRYPTO_QUOTE_FIATS or quote in _CRYPTO_STABLE_TO_FIAT
+    for stable in _CRYPTO_STABLE_TO_FIAT:
+        if s.endswith(stable) and len(s) > len(stable):
+            return True
+    return False
+
+
+def crypto_quote_currency(symbol: str) -> str:
+    """Display currency for a crypto pair — the quote leg (BTC-EUR → EUR),
+    with stablecoins resolved to the fiat they track (…USDT → USD). USD default."""
+    s = (symbol or "").strip().upper()
+    if s.startswith("CRYPTO:"):
+        s = s[len("CRYPTO:"):]
+    if "-" in s:
+        quote = s.rsplit("-", 1)[-1]
+    else:
+        quote = next((st for st in _CRYPTO_STABLE_TO_FIAT if s.endswith(st) and len(s) > len(st)), "")
+    if quote in _CRYPTO_STABLE_TO_FIAT:
+        return _CRYPTO_STABLE_TO_FIAT[quote]
+    if quote in _CRYPTO_QUOTE_FIATS:
+        return quote
+    return "USD"
+
+
+def _crypto_base_symbol(symbol: str) -> str:
+    s = (symbol or "").strip().upper()
+    if s.startswith("CRYPTO:"):
+        s = s[len("CRYPTO:"):]
+    if "-" in s:
+        return s.rsplit("-", 1)[0]
+    for stable in _CRYPTO_STABLE_TO_FIAT:
+        if s.endswith(stable) and len(s) > len(stable):
+            return s[: -len(stable)]
+    return s
+
 
 def _country_flag_emoji(country_code: str) -> str:
     code = (country_code or "").strip().upper()
@@ -224,6 +276,29 @@ class MarketClassifier:
             cached = self._cache.get(input_symbol)
             if cached and cached[0] > now:
                 return cached[1]
+
+        # Crypto pairs (BTC-USD, ETH-USD, BTC-EUR, …) are not exchange-listed
+        # equities — without this they fall through to the NASDAQ/India default
+        # and render with a (wrong) US flag. Classify them deterministically as a
+        # global, 24/7 asset whose currency is the pair's quote leg.
+        if is_crypto_symbol(input_symbol):
+            base_symbol = _crypto_base_symbol(input_symbol)
+            currency = crypto_quote_currency(input_symbol)
+            classified = StockClassification(
+                symbol=base_symbol,
+                display_name=base_symbol,
+                exchange="CRYPTO",
+                country_code="",
+                country_name="Global",
+                flag_emoji="🌐",
+                currency=currency,
+                has_futures=False,
+                has_options=False,
+                market_status="open",
+            )
+            async with self._cache_lock:
+                self._cache[input_symbol] = (now + self._cache_ttl, classified)
+            return classified
 
         base_symbol = input_symbol
         exchange = ""

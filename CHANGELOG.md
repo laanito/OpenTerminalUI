@@ -120,6 +120,16 @@ backoff, version reconcile, docs).
   risk/attribution/lab benchmark defaults to `S&P500` (FE + backend route &
   service defaults) and the default risk-free rate is `0.04` (was `0.06`).
   `NIFTY50`/`SENSEX` remain selectable benchmark options.
+- **Portfolio asset classification for crypto (1.0 bucket A).** Crypto holdings
+  (BTC-USD, ETH-USD, …) previously fell through the market classifier to the
+  NASDAQ/US default — rendering a wrong US flag and collapsing into the "Unknown"
+  sector. The classifier is now crypto-aware (`is_crypto_symbol` /
+  `crypto_quote_currency` in `backend/shared/market_classifier.py`): crypto pairs
+  classify as a global, 24/7 asset (exchange `CRYPTO`, 🌐 flag) whose display
+  currency is the pair's quote leg (so BTC-EUR reads EUR, …USDT → USD), and
+  portfolio sector allocation/attribution bucket them under "Crypto" instead of
+  "Unknown". EU ETPs were already classified correctly via the deterministic
+  foreign-suffix map.
 - Full FE↔backend API audit (`/v1/...` path/shape mismatches; unmounted economics
   router; shadowed watchlist-items route).
 - Ticker tape: real commodity values (GC=F/SI=F/CL=F were missing from the fetch
