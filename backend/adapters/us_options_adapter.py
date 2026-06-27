@@ -31,6 +31,12 @@ class USOptionsAdapter:
         except (TypeError, ValueError):
             return default
 
+    def _to_int(self, value: Any, default: int = 0) -> int:
+        # yfinance returns NaN (a float) for missing volume/openInterest, so a
+        # bare int(opt.get("volume", 0)) raises "cannot convert float NaN to
+        # integer" — route through _to_float so NaN/None/garbage become 0.
+        return int(self._to_float(value, float(default)))
+
     async def get_expiry_dates(self, symbol: str) -> List[str]:
         """Fetch available expiry dates for a US stock."""
         try:
@@ -127,9 +133,9 @@ class USOptionsAdapter:
                 iv = greeks_engine.compute_iv(spot, strike, dte, ltp, mibian_type)
 
             leg = {
-                "oi": int(opt.get("openInterest", 0)),
+                "oi": self._to_int(opt.get("openInterest")),
                 "oi_change": 0, # US sources don't always give daily OI change in chain
-                "volume": int(opt.get("volume", 0)),
+                "volume": self._to_int(opt.get("volume")),
                 "iv": round(iv, 4),
                 "ltp": ltp,
                 "bid": self._to_float(opt.get("bid")),

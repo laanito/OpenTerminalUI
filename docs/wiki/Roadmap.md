@@ -159,6 +159,13 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
 - [ ] **Scheduled-report 422** — `POST /api/reports/scheduled` rejects a missing
   `email` (`Field(min_length=3)`). Default to the authenticated user's account
   email; only skip delivery when there's genuinely no address.
+- [ ] **Relative Strength API is fully mocked + India-only** — every `/rs/*`
+  endpoint (`backend/api/routes/rs.py`: rankings, sector-rs, chart, new-highs)
+  returns hardcoded fake Indian data (RELIANCE/TCS/INFY…) presented as live, and
+  the FE defaults the universe to "Nifty 50" (`RelativeStrengthPage.tsx`). v1.0
+  fix = stop fabricating: return empty + `degraded` on all four endpoints and
+  default the universe to a US set (S&P 500). The real computation is a follow-up
+  (see "Relative Strength engine" under Degraded stubs → real data).
 
 **B. De-India defaults — the western-oriented release identity**
 - [x] **Watchlist default** — `WatchlistManager` symbol search no longer forces
@@ -287,6 +294,14 @@ isn't worth keeping). Pull into a milestone as data sources are chosen.
   `InsiderTrade` (e.g. SEC Form 4 for US; Finnhub/FMP insider endpoints). Routes,
   filtering, ranking, and cluster detection already work on real rows — only the
   data feed is missing.
+- **Relative Strength engine** (`/rs/*`) — once v1.0 stops the mock (empty +
+  degraded, see bucket A), build the real computation from price data we already
+  fetch: *rankings* = N-month relative-performance percentile (IBD-style RS rating)
+  across a US universe (`us_sp500_symbols.txt`/`us_nasdaq100_symbols.txt`) via
+  `fetch_history`, cached; *sector RS* = reuse the real `sector_rotation` service
+  (sector ETFs vs SPY); *RS chart* = real price ÷ benchmark series, normalized;
+  *new-highs* = universe members at/near their 52-week high with a high RS rating.
+  Needs batch-history caching for the universe scan (the perf concern).
 - **ETF screener & fund flows** (`/api/etf/screener`, `/api/etf/flows`) — need an
   ETF data provider. (ETF **holdings**/**overlap** already use real Yahoo
   `topHoldings`; they degrade only when Yahoo returns nothing.)
