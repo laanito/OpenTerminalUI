@@ -228,6 +228,18 @@ Round out the western/crypto pivot's coverage gaps (the first feature release).
   Polygon (mostly top-of-book for stocks), IEX DEEP (free but IEX-venue-only),
   direct Xetra/Euronext feeds (enterprise pricing). Watch item: the MiFIR EU
   consolidated tape (not live yet) could later provide a single EU source.
+- **Portfolio cash & transactions** — today a holding can only be *deleted*;
+  there's no notion of cash or of recording a trade. Build the transaction spine:
+  - *Cash / currency as a holding* — let users hold currency balances (USD/EUR/…)
+    as portfolio positions, valued via the existing cross-rates engine and shown
+    alongside instruments (this also fixes the "unknown" classification path for
+    bare currency).
+  - *Sell / exchange action* — add a Sell/Exchange button next to Delete that
+    *records the transaction* (qty, price, date) rather than silently removing the
+    lot, and ideally credits the proceeds back into the matching cash holding.
+  - *Buy debits cash* — when adding a position (a purchase), offer to reduce the
+    matching currency holding by the cost basis, so cash and holdings stay
+    consistent across buys and sells.
 - **Dividends in the Portfolio Events Calendar** — surface upcoming ex-dates
   (`corporate_actions_service.get_upcoming_dividends`, incl. labelled projections)
   in the events calendar, not just the dedicated Dividends page.
