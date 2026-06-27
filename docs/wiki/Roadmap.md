@@ -144,9 +144,14 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
   the `random`/`mock`/`placeholder` paths under `backend/services` &
   `backend/api/routes`; wire real data, or label it degraded (generalise the
   econ-calendar `sample: true` + banner pattern). Nothing fabricated may look live.
-- [ ] **Portfolio asset classification** — crypto holdings & EU ETPs show as
-  "unknown" (country/exchange/asset-class). Fix the market classifier / instrument
-  mapping for non-US/India instruments (likely broader than these two cases).
+- [x] **Portfolio asset classification** — crypto holdings used to fall through
+  to the NASDAQ/US default (wrong US flag + "Unknown" sector). The market
+  classifier is now crypto-aware (`is_crypto_symbol`/`crypto_quote_currency` in
+  `backend/shared/market_classifier.py`): crypto pairs classify as a global, 24/7
+  asset (exchange `CRYPTO`, 🌐 flag, currency = the pair's quote leg, so BTC-EUR is
+  EUR), and portfolio sector allocation buckets them under "Crypto" rather than
+  "Unknown". EU ETPs already classified correctly via the deterministic foreign
+  suffix map (`.DE`/`.PA`/…).
 - [ ] **Index detail page** — clicking a headline index (`^GSPC`/`^IXIC`/`^DJI`)
   from the ticker tape must land somewhere sensible. Confirm the ticker-tape
   ghost-click fix resolved the "missing" report, or ship a chart-first /

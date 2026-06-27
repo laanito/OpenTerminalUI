@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_db
 from backend.db.models import Holding, WatchlistItem
 from backend.services.portfolio_analytics import portfolio_analytics_service
-from backend.shared.market_classifier import market_classifier
+from backend.shared.market_classifier import is_crypto_symbol, market_classifier
 
 router = APIRouter()
 
@@ -78,7 +78,7 @@ async def get_portfolio(db: Session = Depends(get_db)) -> dict[str, object]:
         classification = snapshot.get("_classification") if isinstance(snapshot.get("_classification"), dict) else {}
         raw_price = snapshot.get("current_price")
         price = float(raw_price) if isinstance(raw_price, (int, float)) else None
-        sector = str(snapshot.get("sector") or "").strip() or None
+        sector = str(snapshot.get("sector") or "").strip() or ("Crypto" if is_crypto_symbol(h.ticker) else None)
         current_value = float(h.quantity) * float(price) if isinstance(price, (int, float)) else None
         if current_value is not None:
             total_value += current_value
