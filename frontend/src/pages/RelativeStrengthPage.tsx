@@ -4,6 +4,8 @@ import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { TerminalTable } from "../components/terminal/TerminalTable";
 import { TerminalInput } from "../components/terminal/TerminalInput";
 import { TerminalBadge } from "../components/terminal/TerminalBadge";
+import { DegradedBanner } from "../components/common/DegradedBanner";
+import type { DegradedInfo } from "../api/types";
 import { api } from "../api/client";
 
 export function RelativeStrengthPage() {
@@ -13,24 +15,29 @@ export function RelativeStrengthPage() {
   const [chartData, setChartData] = useState<any[]>([]);
   const [highs, setHighs] = useState<any[]>([]);
   const [symbol, setSymbol] = useState("AAPL");
-  const [universe, setUniverse] = useState("Nifty 50");
+  const [universe, setUniverse] = useState("S&P 500");
   const [loading, setLoading] = useState(false);
+  const [degraded, setDegraded] = useState<DegradedInfo | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
       if (activeTab === "rankings") {
         const res = await api.get(`/rs/rankings?universe=${universe}`);
-        setRankings(res.data);
+        setRankings(res.data?.items ?? []);
+        setDegraded(res.data?.degraded ?? null);
       } else if (activeTab === "sector") {
         const res = await api.get("/rs/sector-rs");
-        setSectorRS(res.data);
+        setSectorRS(res.data?.sectors ?? []);
+        setDegraded(res.data?.degraded ?? null);
       } else if (activeTab === "chart") {
         const res = await api.get(`/rs/chart/${symbol}`);
-        setChartData(res.data);
+        setChartData(res.data?.series ?? []);
+        setDegraded(res.data?.degraded ?? null);
       } else if (activeTab === "highs") {
         const res = await api.get("/rs/new-highs");
-        setHighs(res.data);
+        setHighs(res.data?.items ?? []);
+        setDegraded(res.data?.degraded ?? null);
       }
     } catch (e) {
       console.error("Failed to load RS data", e);
@@ -71,6 +78,8 @@ export function RelativeStrengthPage() {
           New Highs
         </button>
       </div>
+
+      <DegradedBanner info={degraded} />
 
       {activeTab === "rankings" && (
         <TerminalPanel title="Relative Strength Rankings" actions={
