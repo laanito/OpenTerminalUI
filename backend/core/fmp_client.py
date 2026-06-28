@@ -8,9 +8,14 @@ from typing import Any, List, Dict, Optional
 import httpx
 
 from backend.shared.cache import cache
+from backend.shared.http_resilience import CircuitBreaker, CircuitOpenError, retry_request
 
 logger = logging.getLogger(__name__)
 _US_SYMBOLS_CACHE: set[str] | None = None
+
+# One breaker shared across all FMP requests: a sustained burst of 429/5xx opens
+# it so we stop hammering a depleted free tier until it has time to recover.
+_FMP_BREAKER = CircuitBreaker(name="fmp")
 
 # Persistent response cache TTLs (seconds), keyed by endpoint prefix. FMP's free
 # tier depletes quickly, so successful responses are cached in the shared
@@ -115,8 +120,15 @@ class FMPClient:
 
         try:
             url = f"{self.BASE_URL}{endpoint}"
-            response = await self.client.get(url, params=p)
+            # retry_request backs off (with jitter) on 429/5xx before giving up,
+            # and the shared breaker short-circuits once the tier is clearly down.
+            response = await retry_request(
+                lambda: self.client.get(url, params=p), breaker=_FMP_BREAKER
+            )
             response.raise_for_status()
+        except CircuitOpenError:
+            logger.warning("FMP circuit open; skipping request: %s", endpoint)
+            return []
         except httpx.HTTPStatusError as e:
             sc = e.response.status_code
             if sc in (401, 403):

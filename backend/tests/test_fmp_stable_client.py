@@ -114,7 +114,13 @@ def test_get_caches_successful_response():
 
 
 def test_get_does_not_cache_rate_limit():
-    """A 429 must never be cached, so a later call can still succeed."""
+    """A 429 must never be cached, so a later call can still hit the network.
+
+    Each call now also retries the 429 (with jittered backoff, no-op'd in tests)
+    before giving up, so the exact hit count is > 2; the invariant we assert is
+    that the *second* user call still reaches the network — i.e. no poisoned
+    cache entry — and both return empty.
+    """
     calls = {"n": 0}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -124,4 +130,4 @@ def test_get_does_not_cache_rate_limit():
     c = _client(handler)
     assert asyncio.run(c.get_quote("ZZZ")) == {}
     assert asyncio.run(c.get_quote("ZZZ")) == {}
-    assert calls["n"] == 2  # both calls hit the network — no poisoned cache entry
+    assert calls["n"] >= 4  # >1 attempt per call → second call was not served from cache

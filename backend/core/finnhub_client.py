@@ -7,7 +7,38 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from backend.shared.cache import cache
+from backend.shared.http_resilience import CircuitBreaker, CircuitOpenError, retry_request
+
 logger = logging.getLogger(__name__)
+
+# Persistent response-cache TTLs (seconds) by endpoint prefix, mirroring the FMP
+# client: Finnhub's free tier is rate-limited, so successful responses are cached
+# in the shared multi-tier cache (incl. SQLite L3) to avoid re-spending quota on
+# identical requests. Errors are never cached. Slow-moving data gets long TTLs.
+_FINNHUB_TTL_RULES: tuple[tuple[str, int], ...] = (
+    ("/quote", 60),                       # live-ish price
+    ("/stock/profile2", 86400),           # company profile — daily
+    ("/stock/metric", 86400),             # basic financials
+    ("/stock/recommendation", 86400),
+    ("/stock/price-target", 43200),
+    ("/stock/insider-transactions", 21600),  # 6h
+    ("/company-news", 1800),              # 30m
+    ("/news", 900),                       # 15m
+)
+_FINNHUB_TTL_DEFAULT = 3600  # 1h
+
+
+def _finnhub_ttl_for(endpoint: str) -> int:
+    for prefix, ttl in _FINNHUB_TTL_RULES:
+        if endpoint.startswith(prefix):
+            return ttl
+    return _FINNHUB_TTL_DEFAULT
+
+
+# One breaker shared across all Finnhub requests (see fmp_client for rationale).
+_FINNHUB_BREAKER = CircuitBreaker(name="finnhub")
+
 
 class FinnhubClient:
     BASE_URL = "https://finnhub.io/api/v1"
@@ -49,14 +80,26 @@ class FinnhubClient:
         if not self.client:
             await self.initialize()
 
-        p = params or {}
+        p = dict(params or {})
+        # Cache key excludes the token, so the same logical request maps to one
+        # cache entry regardless of key.
+        cache_key = cache.build_key("finnhub", endpoint, p)
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         p["token"] = self.api_key
 
         try:
             url = f"{self.BASE_URL}{endpoint}"
-            response = await self.client.get(url, params=p)
+            response = await retry_request(
+                lambda: self.client.get(url, params=p), breaker=_FINNHUB_BREAKER
+            )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+        except CircuitOpenError:
+            logger.warning("Finnhub circuit open; skipping request: %s", endpoint)
+            return {}
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 403 or e.response.status_code == 429:
                 logger.warning(f"Finnhub Limit/Error: {e}")
@@ -66,6 +109,10 @@ class FinnhubClient:
         except Exception as e:
             logger.error(f"Finnhub Request Error: {e}")
             return {}
+
+        # Successful response (incl. a genuine empty result) — persist it.
+        await cache.set(cache_key, data, ttl=_finnhub_ttl_for(endpoint))
+        return data
 
     async def get_company_profile(self, symbol: str) -> Dict[str, Any]:
         return await self._get("/stock/profile2", {"symbol": self._symbol(symbol)})
