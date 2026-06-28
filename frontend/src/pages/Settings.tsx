@@ -170,7 +170,7 @@ export function SettingsPage() {
             <option value="daily">daily</option>
             <option value="weekly">weekly</option>
           </TerminalInput>
-          <TerminalInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
+          <TerminalInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email (defaults to your account)" />
           <TerminalInput as="select" value={dataType} onChange={(e) => setDataType(e.target.value)}>
             <option value="positions">positions</option>
             <option value="watchlist">watchlist</option>

@@ -340,7 +340,10 @@ def _serialize_scheduled(row: Any) -> Dict[str, Any]:
 class ScheduledReportCreate(BaseModel):
     report_type: str = Field(min_length=1, max_length=64)
     frequency: str = Field(default="daily", max_length=32)
-    email: str = Field(min_length=3, max_length=255)
+    # Optional: when omitted, delivery falls back to the authenticated user's
+    # account email (see create_scheduled_report). Previously this was required
+    # (min_length=3), so omitting it 422'd even though we know the user's email.
+    email: str | None = Field(default=None, max_length=255)
     data_type: str = Field(default="positions", max_length=64)
 
 
@@ -364,12 +367,17 @@ def create_scheduled_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
+    # Fall back to the authenticated user's account email when none is supplied,
+    # so the common "just schedule it for me" case works without a 422.
+    email = (payload.email or "").strip() or (current_user.email or "").strip()
+    if not email:
+        raise HTTPException(status_code=400, detail="No delivery email available")
     row = scheduled_reports_service.create(
         db,
         current_user.id,
         report_type=payload.report_type.strip(),
         frequency=payload.frequency.strip().lower(),
-        email=payload.email.strip(),
+        email=email,
         data_type=payload.data_type.strip().lower(),
     )
     return _serialize_scheduled(row)

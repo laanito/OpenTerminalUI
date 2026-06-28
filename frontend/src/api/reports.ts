@@ -16,7 +16,7 @@ export async function fetchScheduledReports(): Promise<ScheduledReport[]> {
   return Array.isArray(data?.items) ? data.items : [];
 }
 
-export async function createScheduledReport(payload: { report_type: string; frequency: string; email: string; data_type: string }): Promise<ScheduledReport> {
+export async function createScheduledReport(payload: { report_type: string; frequency: string; email?: string; data_type: string }): Promise<ScheduledReport> {
   const { data } = await api.post<ScheduledReport>("/reports/scheduled", payload);
   return data;
 }

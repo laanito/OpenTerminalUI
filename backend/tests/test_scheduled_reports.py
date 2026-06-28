@@ -51,6 +51,32 @@ def test_scheduled_report_crud_and_user_scoping() -> None:
     assert client.delete(f"/api/reports/scheduled/{config_id}", headers=headers).status_code == 404
 
 
+def test_scheduled_report_defaults_email_to_account() -> None:
+    # Omitting `email` must NOT 422 — it falls back to the authenticated user's
+    # account email so the common "schedule it for me" case just works.
+    init_db()
+    client = TestClient(app)
+    user_email = "reports-default-email@example.com"
+    headers = _auth_headers(client, user_email)
+
+    created = client.post(
+        "/api/reports/scheduled",
+        headers=headers,
+        json={"report_type": "portfolio_summary", "frequency": "weekly"},
+    )
+    assert created.status_code == 200
+    assert created.json()["email"] == user_email
+
+    # An explicit email still wins over the account default.
+    explicit = client.post(
+        "/api/reports/scheduled",
+        headers=headers,
+        json={"report_type": "portfolio_summary", "email": "elsewhere@example.com"},
+    )
+    assert explicit.status_code == 200
+    assert explicit.json()["email"] == "elsewhere@example.com"
+
+
 def test_generate_report_returns_pdf() -> None:
     init_db()
     client = TestClient(app)
