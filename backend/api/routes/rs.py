@@ -1,48 +1,57 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
-from typing import List, Optional
-from datetime import date, datetime, timedelta
+from fastapi import APIRouter
+
+from backend.shared.degraded import REASON_NO_LIVE_SOURCE, degraded_marker
 
 router = APIRouter()
 
+# NOTE: The Relative Strength engine is not yet wired to a live source. The
+# previous implementation returned hardcoded Indian data (RELIANCE/TCS/INFY,
+# NIFTY50) dressed up as live, which violates the fork's "never pass fabricated
+# data off as live" rule and was India-centric to boot.
+#
+# Until the real RS engine lands (US-universe perf-percentile rankings via
+# fetch_history, sector RS reusing sector_rotation, RS line = price / benchmark,
+# 52w-high scan — tracked as a future roadmap item), every endpoint returns an
+# empty payload plus the standard `degraded` marker so the UI flags it clearly
+# instead of showing a convincing fake. Defaults are de-India'd (S&P 500 / SPY).
+
+
 @router.get("/rs/rankings")
-async def get_rs_rankings(universe: str = "Nifty 50"):
-    """Get RS rankings for a universe."""
-    return [
-        {"symbol": "RELIANCE", "rs_score": 92, "rank": 1, "prev_rank": 3},
-        {"symbol": "TCS", "rs_score": 88, "rank": 2, "prev_rank": 1},
-        {"symbol": "INFY", "rs_score": 85, "rank": 3, "prev_rank": 5},
-        {"symbol": "HDFCBANK", "rs_score": 82, "rank": 4, "prev_rank": 2},
-        {"symbol": "ICICIBANK", "rs_score": 79, "rank": 5, "prev_rank": 4},
-    ]
+async def get_rs_rankings(universe: str = "S&P 500"):
+    """RS rankings for a universe (no live engine yet → empty + degraded)."""
+    return {
+        "universe": universe,
+        "items": [],
+        "degraded": degraded_marker(REASON_NO_LIVE_SOURCE),
+    }
+
 
 @router.get("/rs/sector-rs")
 async def get_sector_rs():
-    """Get RS scores by sector."""
-    return [
-        {"sector": "Technology", "rs_score": 85},
-        {"sector": "Banking", "rs_score": 78},
-        {"sector": "Energy", "rs_score": 92},
-        {"sector": "Consumer", "rs_score": 65},
-        {"sector": "Pharma", "rs_score": 72},
-    ]
+    """RS scores by sector (no live engine yet → empty + degraded)."""
+    return {
+        "sectors": [],
+        "degraded": degraded_marker(REASON_NO_LIVE_SOURCE),
+    }
+
 
 @router.get("/rs/chart/{symbol}")
-async def get_rs_chart_data(symbol: str, benchmark: str = "NIFTY50"):
-    """Get RS line data for a chart."""
-    base = 100.0
-    data = []
-    for i in range(30):
-        date_str = (datetime.now() - timedelta(days=30-i)).strftime("%Y-%m-%d")
-        base += (i % 5 - 2) * 0.5
-        data.append({"date": date_str, "rs_line": base, "price": 2500 + i*10})
-    return data
+async def get_rs_chart_data(symbol: str, benchmark: str = "SPY"):
+    """RS line vs price (no live engine yet → empty + degraded)."""
+    return {
+        "symbol": symbol.upper(),
+        "benchmark": benchmark.upper(),
+        "series": [],
+        "degraded": degraded_marker(REASON_NO_LIVE_SOURCE),
+    }
+
 
 @router.get("/rs/new-highs")
 async def get_rs_new_highs():
-    """Stocks hitting new 52-week highs with high RS."""
-    return [
-        {"symbol": "RELIANCE", "price": 2950, "rs_score": 95, "high_52w": 2955},
-        {"symbol": "BHARTIARTL", "price": 1200, "rs_score": 91, "high_52w": 1205},
-    ]
+    """Stocks at new 52w highs with high RS (no live engine yet → empty + degraded)."""
+    return {
+        "items": [],
+        "degraded": degraded_marker(REASON_NO_LIVE_SOURCE),
+    }
