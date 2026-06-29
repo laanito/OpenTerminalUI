@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isCryptoSymbol, isIndianSymbol, normalizeTicker } from "../utils/ticker";
+import { isCryptoSymbol, isIndexSymbol, isIndianSymbol, normalizeTicker } from "../utils/ticker";
 
 describe("isCryptoSymbol", () => {
   it("treats -USD quoted symbols as crypto", () => {
@@ -52,5 +52,29 @@ describe("isIndianSymbol", () => {
     expect(isIndianSymbol("", "NSE")).toBe(false);
     expect(isIndianSymbol(null, "NSE")).toBe(false);
     expect(isIndianSymbol(undefined, undefined)).toBe(false);
+  });
+
+  it("never treats an index as Indian, even under an Indian market", () => {
+    // ^NSEI is the Nifty 50 index, not an NSE-listed equity; it must not route
+    // to NSE-bound equity panels (shareholding/promoter/delivery).
+    expect(isIndianSymbol("^NSEI", "NSE")).toBe(false);
+  });
+});
+
+describe("isIndexSymbol", () => {
+  it("detects Yahoo caret-notation indices", () => {
+    for (const sym of ["^GSPC", "^NSEI", "^IXIC", "^DJI", "^N225", "^FTSE", "^GDAXI"]) {
+      expect(isIndexSymbol(sym)).toBe(true);
+    }
+  });
+
+  it("tolerates surrounding whitespace", () => {
+    expect(isIndexSymbol("  ^GSPC ")).toBe(true);
+  });
+
+  it("does not flag equities, crypto or nullish input", () => {
+    for (const sym of ["AAPL", "RELIANCE.NS", "SAP.DE", "BTC-USD", "", null, undefined]) {
+      expect(isIndexSymbol(sym)).toBe(false);
+    }
   });
 });
