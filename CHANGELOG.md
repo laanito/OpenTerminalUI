@@ -7,9 +7,9 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased] — targeting 1.0.0 (Stable)
 
 The first tagged release. A hardening milestone: a coherent, honest, installable
-product. See `docs/wiki/Roadmap.md` → *Release plan* for the remaining 1.0
-checklist (silent-mock audit, portfolio classification, de-India defaults, 429
-backoff, version reconcile, docs).
+product. Integrity (A), de-India defaults (B), robustness (C) and the version
+contract (D) are done; what remains before the cut is the ship-with docs (bucket
+E) and the release smoke matrix. See `docs/wiki/Roadmap.md` → *Release plan*.
 
 ### Added
 - **Private second brain (RAG)** — flagship: ask-anything research grounded only
@@ -37,8 +37,12 @@ backoff, version reconcile, docs).
 - **De-India data layer** — unified `instrument_master` (US/EU/crypto sources),
   accent-insensitive search, EU Yahoo-suffix routing; market-overview/ticker-tape
   show US indices. NSE/BSE F&O stays supported.
-- **FMP responses cached** in the shared multi-tier cache (incl. persistent SQLite
-  L3) to stop free-tier quota burn; 429/5xx never cached.
+- **External-client robustness (1.0 bucket C).** A shared retry-with-jitter +
+  per-client circuit breaker (`backend/shared/http_resilience.py`) backs off on
+  429/5xx instead of hammering a depleted provider, and response caching now
+  covers **Finnhub** and **Yahoo** as well as FMP (the shared multi-tier cache
+  incl. the persistent SQLite L3) to stop free-tier quota burn; 429/5xx never
+  cached. Finnhub no longer force-appends `.NS` to bare symbols.
 
 ### Fixed
 - **Silent-mock integrity sweep (1.0 bucket A, part 1).** Audited the backend for
@@ -119,7 +123,30 @@ backoff, version reconcile, docs).
   widgets default to `SPY` (sidebar label → "EQUITY ANALYTICS"); the portfolio
   risk/attribution/lab benchmark defaults to `S&P500` (FE + backend route &
   service defaults) and the default risk-free rate is `0.04` (was `0.06`).
-  `NIFTY50`/`SENSEX` remain selectable benchmark options.
+  `NIFTY50`/`SENSEX` remain selectable benchmark options. The F&O heatmap's
+  empty/error copy is now market-neutral ("F&O options data feed") instead of
+  hard-coding "Kite API key required".
+- **Relative Strength stub de-India'd + degraded (1.0 bucket A).** Every `/rs/*`
+  endpoint (rankings, sector-rs, chart, new-highs) previously returned hardcoded
+  fake Indian rows (RELIANCE/TCS/INFY…) presented as live; they now return empty
+  + `degraded` and the FE defaults the universe to S&P 500. The real RS
+  computation is a tracked post-1.0 follow-up.
+- **Scheduled-report 422 on missing email (1.0 bucket A).** `POST
+  /api/reports/scheduled` rejected a blank `email`; it now defaults to the
+  authenticated user's account email and only errors when there's genuinely no
+  address.
+- **Index detail page (1.0 bucket A).** Navigating to a market index (`^GSPC`,
+  `^NSEI`, …) rendered the full equity tab set — Financials/Peers/Valuation/
+  Earnings/Shareholding — all blank, since an index has no issuer fundamentals.
+  An index now shows only the chart-backed overview + notes, with an explicit
+  "fundamentals don't apply to an index" note; price/chart/performance (which do
+  apply) are unchanged. `isIndexSymbol` also keeps `^NSEI` from being treated as
+  an NSE equity.
+- **FMP corporate-actions migrated to `/stable`.** `corporate_actions.py` was
+  missed in the original `/stable` migration and still used legacy `/api/v3`
+  path-segment URLs that 404'd (dividends/splits/IPO calendar). Now uses the
+  stable `/dividends`, `/splits`, `/ipos-calendar` shapes, skips crypto, and
+  caches 404s as empty to stop log noise.
 - **Portfolio asset classification for crypto (1.0 bucket A).** Crypto holdings
   (BTC-USD, ETH-USD, …) previously fell through the market classifier to the
   NASDAQ/US default — rendering a wrong US flag and collapsing into the "Unknown"

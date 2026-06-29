@@ -3,8 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useMarketStatus } from "../../hooks/useStocks";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useStockStore } from "../../store/stockStore";
-import { APP_VERSION } from "../../utils/constants";
 import { TerminalBadge } from "./TerminalBadge";
+
+// Single source of truth: package.json version, injected by Vite at build time.
+const APP_VERSION = (typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0").trim();
 
 function nowLabel(now: Date): string {
   const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });

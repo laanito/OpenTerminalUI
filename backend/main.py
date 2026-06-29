@@ -165,7 +165,7 @@ app.include_router(api_router)
 
 @app.get("/health", tags=["health"])
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "version": settings.app_version}
 
 
 @app.get("/healthz", tags=["health"])
