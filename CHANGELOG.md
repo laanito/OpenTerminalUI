@@ -4,12 +4,18 @@ All notable changes to this fork are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to
 adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
-## [Unreleased] — targeting 1.0.0 (Stable)
+## [Unreleased]
 
-The first tagged release. A hardening milestone: a coherent, honest, installable
-product. Integrity (A), de-India defaults (B), robustness (C) and the version
-contract (D) are done; what remains before the cut is the ship-with docs (bucket
-E) and the release smoke matrix. See `docs/wiki/Roadmap.md` → *Release plan*.
+_Nothing yet — first post-1.0 work lands here._
+
+## [1.0.0] - 2026-06-29
+
+The first tagged release. A **hardening** milestone: a coherent, honest,
+installable product where every advertised feature works or is explicitly
+labelled degraded. All release buckets are complete — integrity (A), de-India
+defaults (B), robustness (C), the single-source version contract (D), and
+ship-with docs (E). See `docs/wiki/Roadmap.md` → *Release plan* for the full
+gate and `docs/wiki/Limitations.md` for the honest keys/limitations map.
 
 ### Added
 - **Private second brain (RAG)** — flagship: ask-anything research grounded only

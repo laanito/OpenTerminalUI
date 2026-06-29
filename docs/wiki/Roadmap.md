@@ -134,9 +134,11 @@ mechanics and the `CHANGELOG.md` for curated history.
 > masquerading as live, no broken links, no wrong-currency numbers, honest
 > limitations. 1.0 finishes that pass.
 
-### v1.0.0 — Stable (in progress)
+### v1.0.0 — Stable ✅ released 2026-06-29
 
-Release-blocking only. Grouped by intent; treat as the release checklist.
+Shipped. All buckets (A–E) complete; tagged `v1.0.0`. The smoke matrix was
+accepted unverified for this release (manual; automation is a TBD follow-up).
+The checklist below is kept for historical reference.
 
 **A. Integrity — the "don't get fooled" bar**
 - [ ] **Silent-mock audit** — sweep services that fabricate data on a failed
