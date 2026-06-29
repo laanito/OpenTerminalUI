@@ -487,6 +487,29 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | `LLM_API_KEY` | API key for hosted providers (OpenAI/OpenRouter/…); leave empty for local Ollama / LM Studio |
 | `LLM_ENABLED` | Toggle the LLM analysis (default `true`; falls back to lexical sentiment when off) |
 
+## What works out of the box (vs. needs keys)
+
+A core principle here is **integrity over feature count**: nothing fabricated is
+ever shown as live. When a feature has no live source (missing key, rate-limited
+provider, or no free feed), the API returns empty + a `degraded` marker and the UI
+shows a banner. Highlights:
+
+| Area | Keyless | Add a key for |
+|---|---|---|
+| Charts & quotes (US/EU/crypto), symbol search | ✅ Yahoo / CoinGecko / Binance | — |
+| Fundamentals, financials, earnings, commodities | partial (Yahoo) | `FMP_API_KEY` (full US fundamentals) |
+| Real-time US ticks | delayed quotes | `FINNHUB_API_KEY` (live WS) |
+| Macro indicators / yield curve | degraded banner | `FRED_API_KEY` |
+| AI insights, news emotion, second-brain RAG | ✅ local Ollama (on-device) | `LLM_API_KEY` only for hosted LLMs |
+| Crypto fundamentals (tokenomics/TVL/fees) | ✅ CoinGecko + DefiLlama | — |
+| India NSE/BSE F&O | degraded banner | `KITE_*` |
+
+The full feature matrix, honest **Limitations** (no live econ-calendar source;
+dividend forward dates are estimates; RS / bonds / hotlists / insider / tape are
+degraded stubs; US/EU L2 depth has no free source; crypto liquidations until the
+WS runner is wired), and **upgrade notes** (the pgvector image swap) live in the
+[Limitations](docs/wiki/Limitations.md) wiki page.
+
 ## AI News Sentiment & Insights (local LLM)
 
 OpenTerminalUI talks to any **OpenAI-compatible** chat endpoint, so the AI features
