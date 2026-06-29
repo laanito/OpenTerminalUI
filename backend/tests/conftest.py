@@ -117,6 +117,12 @@ def _reset_http_resilience(monkeypatch):
         _FINNHUB_BREAKER.reset()
     except Exception:  # pragma: no cover - import guard
         pass
+    try:
+        from backend.core.yahoo_client import _YAHOO_BREAKER
+
+        _YAHOO_BREAKER.reset()
+    except Exception:  # pragma: no cover - import guard
+        pass
     yield
 
 

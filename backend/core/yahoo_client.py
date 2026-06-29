@@ -6,7 +6,24 @@ from typing import Any, List, Dict, Optional
 
 import httpx
 
+from backend.shared.cache import cache
+from backend.shared.http_resilience import CircuitBreaker, CircuitOpenError, retry_request
+
 logger = logging.getLogger(__name__)
+
+# Persistent response-cache TTLs (seconds), mirroring the FMP/Finnhub clients.
+# Yahoo's public endpoints rate-limit (HTTP 429) under bursts, so successful
+# responses are cached in the shared multi-tier cache to avoid re-fetching the
+# same data. Quotes stay short; fundamentals/profile are slow-moving.
+_YAHOO_TTL_QUOTE = 30           # batch quotes — live-ish
+_YAHOO_TTL_SUMMARY = 21600      # quoteSummary modules (financials/profile) — 6h
+_YAHOO_TTL_TIMESERIES = 86400   # historical fundamentals — daily
+_YAHOO_TTL_SEARCH = 300         # news / symbol search — 5m
+_YAHOO_TTL_CHART_INTRADAY = 300     # intraday bars update fast — 5m
+_YAHOO_TTL_CHART_DAILY = 3600       # daily+ history is slow-moving — 1h
+
+# One breaker shared across all Yahoo requests (see fmp_client for rationale).
+_YAHOO_BREAKER = CircuitBreaker(name="yahoo")
 
 # Yahoo's v8 chart API limits how much history it serves per request based on the
 # bar granularity. Requesting, e.g., 1-minute bars over a 1-month range returns
@@ -173,6 +190,17 @@ class YahooClient:
         if not self.client:
             await self.initialize()
 
+    async def _send(self, url: str, params: Optional[Dict[str, Any]] = None) -> httpx.Response:
+        """GET with shared retry-on-429/5xx backoff + circuit breaker.
+
+        401 is intentionally NOT retried here — callers handle it by refreshing
+        the Yahoo crumb and re-issuing the request (also through this helper).
+        """
+        return await retry_request(
+            lambda: self.client.get(url, params=params or {}),
+            breaker=_YAHOO_BREAKER,
+        )
+
     async def _ensure_crumb(self):
         """Fetch Yahoo cookie + crumb for authenticated API requests."""
         if self._crumb:
@@ -200,22 +228,33 @@ class YahooClient:
 
         # Chunk into batches of 20
         chunk_size = 20
+        url = "https://query1.finance.yahoo.com/v7/finance/quote"
         for i in range(0, len(symbols), chunk_size):
             batch = symbols[i : i + chunk_size]
+            # Cache per-batch (short TTL): a repeated watchlist refresh hits the
+            # same batch and is served without re-querying Yahoo.
+            cache_key = cache.build_key("yahoo:quote", ",".join(sorted(batch)), {})
+            cached = await cache.get(cache_key)
+            if cached is not None:
+                results.extend(cached)
+                continue
             try:
                 params: Dict[str, str] = {"symbols": ",".join(batch)}
-                response = await self.client.get("https://query1.finance.yahoo.com/v7/finance/quote", params=params)
+                response = await self._send(url, params)
                 if response.status_code == 401:
                     self._crumb = None
                     await self._ensure_crumb()
                     if self._crumb:
                         params["crumb"] = self._crumb
-                        response = await self.client.get("https://query1.finance.yahoo.com/v7/finance/quote", params=params)
+                        response = await self._send(url, params)
                 response.raise_for_status()
                 data = response.json()
                 quotes = (data.get("quoteResponse") or {}).get("result") or []
+                await cache.set(cache_key, quotes, ttl=_YAHOO_TTL_QUOTE)
                 results.extend(quotes)
 
+            except CircuitOpenError:
+                logger.warning("Yahoo circuit open; skipping quotes batch %s", batch)
             except Exception as e:
                 logger.error(f"Failed to fetch Yahoo quotes for batch {batch}: {e}")
 
@@ -226,25 +265,29 @@ class YahooClient:
         await self._ensure_client()
         if modules is None:
             modules = ["financialData", "summaryDetail", "defaultKeyStatistics", "assetProfile"]
+        cache_key = cache.build_key("yahoo:summary", symbol, {"modules": sorted(modules)})
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+        url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
         try:
             params: Dict[str, str] = {"modules": ",".join(modules)}
-            response = await self.client.get(
-                f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}",
-                params=params,
-            )
+            response = await self._send(url, params)
             if response.status_code == 401:
                 self._crumb = None
                 await self._ensure_crumb()
                 if self._crumb:
                     params["crumb"] = self._crumb
-                    response = await self.client.get(
-                        f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}",
-                        params=params,
-                    )
+                    response = await self._send(url, params)
             response.raise_for_status()
             data = response.json()
             results = (data.get("quoteSummary") or {}).get("result") or [{}]
-            return results[0] if results else {}
+            out = results[0] if results else {}
+            await cache.set(cache_key, out, ttl=_YAHOO_TTL_SUMMARY)
+            return out
+        except CircuitOpenError:
+            logger.warning("Yahoo circuit open; skipping quoteSummary for %s", symbol)
+            return {}
         except Exception as e:
             logger.warning(f"Yahoo quoteSummary failed for {symbol}: {e}")
             return {}
@@ -258,19 +301,28 @@ class YahooClient:
         interval = (interval or "1d").strip()
         range_str = _clamp_range_for_interval((range_str or "1y").strip(), interval)
 
+        cache_key = cache.build_key("yahoo:chart", symbol, {"range": range_str, "interval": interval})
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+        # Intraday bars move fast; daily+ history is slow-moving.
+        ttl = _YAHOO_TTL_CHART_INTRADAY if interval in _INTERVAL_MAX_DAYS else _YAHOO_TTL_CHART_DAILY
+
         try:
             # v8/finance/chart
-            response = await self.client.get(
+            response = await self._send(
                 f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-                params={
+                {
                     "range": range_str,
                     "interval": interval,
                     "events": "div,splits",
-                    "includePrePost": "false"
-                }
+                    "includePrePost": "false",
+                },
             )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            await cache.set(cache_key, data, ttl=ttl)
+            return data
         except Exception as e:
             logger.error(f"Failed to fetch Yahoo chart for {symbol}: {e}")
             raise
@@ -281,6 +333,14 @@ class YahooClient:
         Combined wrapper for fetching both ANNUAL and QUARTERLY modules.
         """
         await self._ensure_client()
+
+        cache_key = cache.build_key(
+            "yahoo:timeseries", symbol, {"p1": period1, "p2": period2}
+        )
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         await self._ensure_crumb()
 
         all_modules = ANNUAL_MODULES + QUARTERLY_MODULES
@@ -297,9 +357,9 @@ class YahooClient:
                 }
                 if self._crumb:
                     params["crumb"] = self._crumb
-                response = await self.client.get(
+                response = await self._send(
                     f"https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
-                    params=params,
+                    params,
                 )
                 if response.status_code == 200:
                     data = response.json()
@@ -335,6 +395,10 @@ class YahooClient:
                             "value": item[type_key]
                         }
 
+        # Only cache a genuine (non-empty) result, so a transient all-chunks
+        # failure isn't frozen in for a day.
+        if result_data:
+            await cache.set(cache_key, result_data, ttl=_YAHOO_TTL_TIMESERIES)
         return result_data
 
     async def get_asset_profile(self, symbol: str) -> Dict[str, Any]:
@@ -351,37 +415,36 @@ class YahooClient:
         q = (query or "").strip()
         if not q:
             return []
+        cache_key = cache.build_key("yahoo:news", q, {"limit": limit})
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+        url = "https://query1.finance.yahoo.com/v1/finance/search"
+        params = {
+            "q": q,
+            "newsCount": max(1, min(limit, 100)),
+            "quotesCount": 0,
+            "listsCount": 0,
+        }
         try:
-            response = await self.client.get(
-                "https://query1.finance.yahoo.com/v1/finance/search",
-                params={
-                    "q": q,
-                    "newsCount": max(1, min(limit, 100)),
-                    "quotesCount": 0,
-                    "listsCount": 0,
-                },
-            )
+            response = await self._send(url, params)
             if response.status_code == 401:
                 self._crumb = None
                 await self._ensure_crumb()
-                params = {
-                    "q": q,
-                    "newsCount": max(1, min(limit, 100)),
-                    "quotesCount": 0,
-                    "listsCount": 0,
-                }
                 if self._crumb:
                     params["crumb"] = self._crumb
-                response = await self.client.get(
-                    "https://query1.finance.yahoo.com/v1/finance/search",
-                    params=params,
-                )
+                response = await self._send(url, params)
             response.raise_for_status()
             payload = response.json()
             rows = payload.get("news") if isinstance(payload, dict) else []
             if not isinstance(rows, list):
                 return []
-            return [x for x in rows if isinstance(x, dict)][:limit]
+            out = [x for x in rows if isinstance(x, dict)][:limit]
+            await cache.set(cache_key, out, ttl=_YAHOO_TTL_SEARCH)
+            return out
+        except CircuitOpenError:
+            logger.warning("Yahoo circuit open; skipping news search for %s", q)
+            return []
         except Exception as e:
             logger.warning(f"Yahoo news search failed for {q}: {e}")
             return []
@@ -394,10 +457,14 @@ class YahooClient:
         q = (query or "").strip()
         if not q or len(q) < 2:
             return []
+        cache_key = cache.build_key("yahoo:symsearch", q, {"limit": limit})
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
         try:
-            response = await self.client.get(
+            response = await self._send(
                 "https://query2.finance.yahoo.com/v1/finance/search",
-                params={
+                {
                     "q": q,
                     "quotesCount": max(1, min(limit, 20)),
                     "newsCount": 0,
@@ -409,7 +476,12 @@ class YahooClient:
             quotes = payload.get("quotes") if isinstance(payload, dict) else []
             if not isinstance(quotes, list):
                 return []
-            return [x for x in quotes if isinstance(x, dict)][:limit]
+            out = [x for x in quotes if isinstance(x, dict)][:limit]
+            await cache.set(cache_key, out, ttl=_YAHOO_TTL_SEARCH)
+            return out
+        except CircuitOpenError:
+            logger.warning("Yahoo circuit open; skipping symbol search for %s", q)
+            return []
         except Exception as e:
             logger.warning(f"Yahoo symbol search failed for {q}: {e}")
             return []
