@@ -15,10 +15,13 @@ broken links, no wrong-currency numbers. Feature growth resumes in `1.1+`.
 - **SemVer** from `1.0.0`: `MAJOR` = breaking change to the deployment/config
   contract or DB schema requiring manual migration; `MINOR` = new
   features/surfaces; `PATCH` = fixes.
-- **Single source of truth.** Today the version is split and mismatched
-  (`frontend/package.json` = `0.4.0`, backend `app_version` = `0.2.0`). Reconcile
-  both to the release version and keep them in lockstep; surface it in the `/api`
-  health payload and the UI footer.
+- **Single source of truth.** Two values, kept in lockstep at the release
+  version: backend `app_version` (`backend/config/settings.py`, overridable via
+  `OPENTERMINALUI_APP_VERSION`) and `frontend/package.json`. The frontend derives
+  its version *only* from `package.json` (Vite injects it as `__APP_VERSION__`) —
+  don't reintroduce a hardcoded copy. Surfaced in the `/health` payload and the
+  UI footer (`StatusBar`). On a bump, change both and grep for stragglers
+  (README badge, `docs/site/index.html`).
 
 ## Pre-release checklist
 

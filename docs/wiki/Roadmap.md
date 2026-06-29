@@ -152,20 +152,20 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
   EUR), and portfolio sector allocation buckets them under "Crypto" rather than
   "Unknown". EU ETPs already classified correctly via the deterministic foreign
   suffix map (`.DE`/`.PA`/…).
-- [ ] **Index detail page** — clicking a headline index (`^GSPC`/`^IXIC`/`^DJI`)
-  from the ticker tape must land somewhere sensible. Confirm the ticker-tape
-  ghost-click fix resolved the "missing" report, or ship a chart-first /
-  index-aware detail view.
-- [ ] **Scheduled-report 422** — `POST /api/reports/scheduled` rejects a missing
-  `email` (`Field(min_length=3)`). Default to the authenticated user's account
-  email; only skip delivery when there's genuinely no address.
-- [ ] **Relative Strength API is fully mocked + India-only** — every `/rs/*`
-  endpoint (`backend/api/routes/rs.py`: rankings, sector-rs, chart, new-highs)
-  returns hardcoded fake Indian data (RELIANCE/TCS/INFY…) presented as live, and
-  the FE defaults the universe to "Nifty 50" (`RelativeStrengthPage.tsx`). v1.0
-  fix = stop fabricating: return empty + `degraded` on all four endpoints and
-  default the universe to a US set (S&P 500). The real computation is a follow-up
-  (see "Relative Strength engine" under Degraded stubs → real data).
+- [x] **Index detail page** — an index (`^GSPC`/`^IXIC`/`^NSEI`…) now renders an
+  index-aware detail view: chart/price/performance (which apply) plus an explicit
+  "issuer fundamentals don't apply to an index" note, with the blank equity tabs
+  (Financials/Peers/Valuation/Earnings/Shareholding) hidden. `isIndexSymbol` also
+  keeps `^NSEI` off the NSE-equity path.
+- [x] **Scheduled-report 422** — `POST /api/reports/scheduled` now defaults a
+  missing `email` to the authenticated user's account email and only errors when
+  there's genuinely no address.
+- [x] **Relative Strength API is fully mocked + India-only** — all four `/rs/*`
+  endpoints (`backend/api/routes/rs.py`: rankings, sector-rs, chart, new-highs)
+  now return empty + `degraded` instead of hardcoded fake Indian data, and the FE
+  defaults the universe to S&P 500 (`RelativeStrengthPage.tsx`). The real
+  computation is a tracked follow-up (see "Relative Strength engine" under
+  Degraded stubs → real data).
 
 **B. De-India defaults — the western-oriented release identity**
 - [x] **Watchlist default** — `WatchlistManager` symbol search no longer forces
@@ -180,32 +180,37 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
   - Remaining (out of scope, separate concern): `OpsDashboard` batch-backtest
     universe label and the screener default universe (`screener/engine.py`) still
     read `NIFTY50`/`nse_500`.
-- [ ] **F&O Heatmap still reads India-only** — the `/fno/heatmap` page
-  (`frontend/src/fno/pages/HeatmapPage.tsx`) is India-centric: its empty/error
-  copy hard-codes "Kite API key required" / "Connect a live Kite API key", even
-  though the backend OI/IV basket is already US-optionable (`pcr_tracker.
-  DEFAULT_SYMBOLS` = SPY/QQQ/AAPL/…). Make the copy market-neutral, and **verify
-  the OI/IV pipeline actually populates for the US basket** end-to-end
-  (`fno/services/option_chain_fetcher.py` `/api/option-chain-equities` path +
-  `iv_engine`) — if US options don't flow through, the heatmap is India-only in
-  practice and needs the US option source wired (us_options_adapter).
+- [x] **F&O Heatmap copy de-India'd** — the `/fno/heatmap` page
+  (`frontend/src/fno/pages/HeatmapPage.tsx`) empty/error copy is now
+  market-neutral ("F&O options data feed") instead of hard-coding "Kite API key
+  required"; the backend OI/IV basket is already US-optionable (`pcr_tracker.
+  DEFAULT_SYMBOLS` = SPY/QQQ/AAPL/…).
+  - Remaining (verification, not blocking): confirm the OI/IV pipeline actually
+    populates end-to-end for the US basket
+    (`fno/services/option_chain_fetcher.py` `/api/option-chain-equities` +
+    `iv_engine`); if US options don't flow through, wire the US option source
+    (us_options_adapter). Tracked as a post-1.0 verify item.
 
 **C. Robustness**
-- [ ] **429 backoff / circuit-breaker + wider caching** — extend the working FMP
-  persistent response cache to the other external clients (Finnhub, Yahoo — the
-  cache layer is generic), and add shared retry-with-jitter + short
-  circuit-breaking on 429/5xx so a *cold*-cache burst backs off instead of
-  hammering. Clients live in `backend/core/*_client.py`.
+- [x] **429 backoff / circuit-breaker + wider caching** — done: a shared
+  retry-with-jitter + per-client circuit breaker
+  (`backend/shared/http_resilience.py`) backs off on 429/5xx, and persistent
+  response caching now covers FMP, **Finnhub** and **Yahoo**
+  (`backend/core/*_client.py`).
 - [ ] **Config/key clarity** — document which features need which keys; ensure
   every keyless/rate-limited degradation is honestly labelled in-UI (no silent
   fallbacks). See bucket E.
 
 **D. Release mechanics**
-- [ ] **Single version source of truth** — reconcile the mismatched
-  `frontend/package.json` (`0.4.0`) and `backend` `app_version` (`0.2.0`) to
-  `1.0.0`; surface it in `/api` health + the UI footer.
-- [ ] **`CHANGELOG.md`** — curate from the fork history (Keep a Changelog format).
-- [ ] **Tag `v1.0.0` + GitHub release** notes.
+- [x] **Single version source of truth** — backend `app_version` and
+  `frontend/package.json` reconciled to `1.0.0`. The frontend now derives its
+  version solely from `package.json` (Vite `__APP_VERSION__`) — the duplicate
+  `constants.ts` `APP_VERSION` was removed so the footer can't drift. Surfaced in
+  the `/health` payload and the UI footer (`StatusBar`).
+- [x] **`CHANGELOG.md`** — curated from the fork history (Keep a Changelog
+  format); `[Unreleased]` covers the full road to 1.0.
+- [ ] **Tag `v1.0.0` + GitHub release** notes — the final cut, after bucket E +
+  green CI (see `Releasing.md`).
 - [ ] **Release smoke matrix** — SQLite vs Postgres(+pgvector) × with-keys vs
   no-keys; confirm CI (pytest+coverage, Vitest, Playwright smoke) green.
 

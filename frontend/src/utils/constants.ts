@@ -1,5 +1,7 @@
 export const APP_NAME = "OpenTerminalUI";
-export const APP_VERSION = "0.4.0";
+// Version is sourced from package.json at build time via Vite's `__APP_VERSION__`
+// global (see vite.config.ts) — the single frontend source of truth. Don't add a
+// hardcoded version constant here; it drifts out of lockstep with package.json.
 
 export const MOMENTUM_ROTATION_BASKET = [
   "AAPL",
