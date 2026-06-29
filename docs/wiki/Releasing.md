@@ -32,8 +32,8 @@ Work the **v1.0.0** checklist in [Roadmap](Roadmap.md) (buckets A–E) to done, 
 2. **CHANGELOG** — move `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`; start a fresh
    `[Unreleased]`.
 3. **Docs** — README quickstart verified end-to-end; the out-of-the-box-vs-keys
-   matrix and Limitations section current; upgrade notes for any schema/image
-   change (e.g. the pgvector image swap).
+   matrix, Limitations, and upgrade notes (e.g. the pgvector image swap) current
+   in [Limitations](Limitations) (mirrored condensed in the README).
 4. **Green CI** — `ci.yml` must pass: backend `pytest` + coverage gate, frontend
    build + Vitest, Playwright smoke.
 5. **Smoke matrix** — manually verify the core flows on each combination:

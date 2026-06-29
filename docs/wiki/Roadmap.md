@@ -214,14 +214,18 @@ Release-blocking only. Grouped by intent; treat as the release checklist.
 - [ ] **Release smoke matrix** — SQLite vs Postgres(+pgvector) × with-keys vs
   no-keys; confirm CI (pytest+coverage, Vitest, Playwright smoke) green.
 
-**E. Docs (ship-with-release)**
-- [ ] **"Out-of-the-box vs needs-keys" matrix** in README/wiki (FMP/Finnhub/FRED/
-  LLM) — what works keyless vs what degrades.
-- [ ] **Honest Limitations section** — no live economic-calendar source (sample
-  fallback); dividend forward dates are *estimates*; commodities/econ need keys;
-  index detail is chart-only (until fixed in A).
-- [ ] **`Releasing.md`** (this checklist + version-bump steps) and **upgrade
-  notes** (the `pgvector/pgvector:0.8.3-pg16-trixie` image swap).
+**E. Docs (ship-with-release)** — all in [Limitations](Limitations) (canonical) +
+condensed in the README.
+- [x] **"Out-of-the-box vs needs-keys" matrix** — per-feature table (FMP/Finnhub/
+  FRED/LLM/Kite/…): what works keyless vs what unlocks with a key vs how it
+  degrades.
+- [x] **Honest Limitations section** — no live economic-calendar source (sample
+  fallback); dividend forward dates are *estimates*; RS/bonds/hotlists/insider/
+  tape degraded stubs; US/EU L2 depth has no free source; crypto liquidations
+  until the WS runner; index detail is index-aware (chart/perf + notes, no
+  inapplicable fundamentals).
+- [x] **`Releasing.md`** (checklist + version-bump steps) and **upgrade notes**
+  (the `pgvector/pgvector:0.8.3-pg16-trixie` image swap).
 
 ### v1.1 — Multi-asset depth
 
