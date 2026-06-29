@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from backend.api.deps import get_db, get_unified_fetcher
 from backend.db.models import NewsArticle
 from backend.shared.cache import cache
+from backend.shared.market_classifier import is_crypto_symbol
 
 
 class EventType(str, Enum):
@@ -305,13 +306,30 @@ class CorporateActionsService:
             )
         return events
 
+    @staticmethod
+    def _fmp_rows(payload: Any) -> list[dict]:
+        # The /stable endpoints return a flat array; older /api/v3 endpoints
+        # returned {"historical": [...]}. Accept either, defensively.
+        if isinstance(payload, list):
+            return [r for r in payload if isinstance(r, dict)]
+        if isinstance(payload, dict):
+            return [r for r in (payload.get("historical") or []) if isinstance(r, dict)]
+        return []
+
     async def _fetch_fmp_dividends_splits(self, symbol: str) -> list[CorporateEvent]:
+        # Crypto has no dividends/splits — don't waste an FMP call (and the BTC-USD
+        # symbol would just 404/empty upstream).
+        if is_crypto_symbol(symbol):
+            return []
         fetcher = await get_unified_fetcher()
-        dividends = await fetcher.fmp._get(f"/historical-price-full/stock_dividend/{fetcher.fmp._symbol(symbol)}")
-        splits = await fetcher.fmp._get(f"/historical-price-full/stock_split/{fetcher.fmp._symbol(symbol)}")
+        # /stable takes the symbol as a query param (the legacy
+        # /historical-price-full/stock_{dividend,split}/{symbol} paths 404 on /stable).
+        sym = fetcher.fmp._symbol(symbol)
+        dividends = await fetcher.fmp._get("/dividends", {"symbol": sym})
+        splits = await fetcher.fmp._get("/splits", {"symbol": sym})
 
         events: list[CorporateEvent] = []
-        for row in (dividends or {}).get("historical", []) if isinstance(dividends, dict) else []:
+        for row in self._fmp_rows(dividends):
             if not isinstance(row, dict):
                 continue
             event_date = _parse_date(row.get("date"))
@@ -335,7 +353,7 @@ class CorporateActionsService:
                 )
             )
 
-        for row in (splits or {}).get("historical", []) if isinstance(splits, dict) else []:
+        for row in self._fmp_rows(splits):
             if not isinstance(row, dict):
                 continue
             event_date = _parse_date(row.get("date"))
@@ -360,8 +378,17 @@ class CorporateActionsService:
         return events
 
     async def _fetch_fmp_ipo(self, symbol: str) -> list[CorporateEvent]:
+        if is_crypto_symbol(symbol):
+            return []
         fetcher = await get_unified_fetcher()
-        payload = await fetcher.fmp._get("/ipo_calendar")
+        # /stable endpoint is `ipos-calendar` (legacy `/ipo_calendar` 404s) and
+        # requires a from/to window (max 3 months). Look back ~3 months so a
+        # recently-listed symbol still matches.
+        today = date.today()
+        payload = await fetcher.fmp._get(
+            "/ipos-calendar",
+            {"from": (today - timedelta(days=90)).isoformat(), "to": today.isoformat()},
+        )
         rows = payload if isinstance(payload, list) else []
         out: list[CorporateEvent] = []
         for row in rows:

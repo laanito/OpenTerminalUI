@@ -25,6 +25,8 @@ _FMP_BREAKER = CircuitBreaker(name="fmp")
 _FMP_TTL_RULES: tuple[tuple[str, int], ...] = (
     ("/quote", 60),                       # live-ish price
     ("/historical-price", 86400),         # OHLC / dividends / splits — daily
+    ("/dividends", 86400),                # per-symbol dividend history — daily
+    ("/splits", 86400),                   # per-symbol split history — daily
     ("/income-statement", 86400),
     ("/balance-sheet-statement", 86400),
     ("/cash-flow-statement", 86400),
@@ -36,7 +38,7 @@ _FMP_TTL_RULES: tuple[tuple[str, int], ...] = (
     ("/analyst-estimates", 43200),
     ("/esg-disclosures", 86400),
     ("/institutional-ownership", 86400),
-    ("/ipo_calendar", 21600),             # 6h
+    ("/ipos-calendar", 21600),            # 6h (stable name; legacy was /ipo_calendar)
     ("/economic-calendar", 21600),
 )
 _FMP_TTL_DEFAULT = 3600  # 1h
@@ -140,6 +142,12 @@ class FMPClient:
                 # tier). Plan status is stable, so cache the empty result for a
                 # while to stop re-hitting a known-unavailable endpoint.
                 logger.debug("FMP endpoint requires a paid plan (HTTP 402): %s", endpoint)
+                await cache.set(cache_key, [], ttl=_FMP_TTL_DEFAULT)
+            elif sc == 404:
+                # Endpoint/symbol genuinely not found (e.g. FMP has no split
+                # history for an EU ticker). This is stable, not transient, so
+                # cache the empty result to stop re-hitting (and re-logging) it.
+                logger.debug("FMP not found (HTTP 404): %s", endpoint)
                 await cache.set(cache_key, [], ttl=_FMP_TTL_DEFAULT)
             else:
                 # 429 / 5xx etc. — transient. Never cache, so a retry can succeed.
