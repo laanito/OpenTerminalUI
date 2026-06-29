@@ -89,6 +89,38 @@ def _isolate_cache(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _reset_http_resilience(monkeypatch):
+    """Keep the shared HTTP-resilience layer hermetic per test.
+
+    The keyed clients (FMP, Finnhub) share a module-level circuit breaker, so one
+    test's simulated 429 burst could otherwise leave the circuit open for the
+    next test. We reset both breakers around each test, and no-op the backoff
+    sleep so retry paths run instantly (the dedicated unit tests inject their own
+    sleep/clock and are unaffected).
+    """
+    import backend.shared.http_resilience as hr
+
+    async def _instant(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(hr, "_default_sleep", _instant)
+
+    try:
+        from backend.core.fmp_client import _FMP_BREAKER
+
+        _FMP_BREAKER.reset()
+    except Exception:  # pragma: no cover - import guard
+        pass
+    try:
+        from backend.core.finnhub_client import _FINNHUB_BREAKER
+
+        _FINNHUB_BREAKER.reset()
+    except Exception:  # pragma: no cover - import guard
+        pass
+    yield
+
+
+@pytest.fixture(autouse=True)
 def ensure_mock_adapter_registered():
     from backend.adapters.mock import MockDataAdapter
     from backend.adapters.registry import get_adapter_registry
