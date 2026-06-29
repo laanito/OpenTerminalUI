@@ -66,10 +66,12 @@ class FinnhubClient:
             self.client = None
 
     def _symbol(self, symbol: str) -> str:
-        symbol = symbol.strip().upper()
-        if not symbol.endswith(".NS"):
-            return f"{symbol}.NS"
-        return symbol
+        # Pass the symbol through as-is (matching FMPClient). We no longer force
+        # `.NS` on bare symbols — that mis-routed US/EU tickers to the Indian
+        # exchange, so profile/financials/recommendations came back empty for
+        # e.g. AAPL (queried as AAPL.NS). Callers wanting a specific exchange
+        # must supply the suffix explicitly.
+        return symbol.strip().upper()
 
     async def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
         if self.disabled:

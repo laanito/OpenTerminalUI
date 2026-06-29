@@ -62,6 +62,21 @@ def test_rate_limit_not_cached_and_retried():
     assert calls["n"] >= 4  # retried + second call not served from a poisoned cache
 
 
+def test_symbol_not_forced_to_ns():
+    # De-India: bare symbols must NOT be rewritten to the Indian exchange
+    # (AAPL, not AAPL.NS), or US/EU profiles come back empty.
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        return httpx.Response(200, json={"name": "Apple Inc"})
+
+    c = _client(handler)
+    asyncio.run(c.get_company_profile("AAPL"))
+    assert "symbol=AAPL" in seen["url"]
+    assert ".NS" not in seen["url"]
+
+
 def test_403_disables_client():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(403, text="You don't have access")
