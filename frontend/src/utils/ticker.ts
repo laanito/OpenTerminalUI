@@ -16,6 +16,14 @@ export function isCryptoSymbol(ticker: string | null | undefined): boolean {
   return /-USD$/i.test(normalizeTicker(ticker || ""));
 }
 
+// Market indices use Yahoo's caret notation (^GSPC, ^NSEI, ^IXIC, ^N225, ...).
+// An index has no fundamentals (P/E, market cap, financials, peers, shareholding)
+// and no order book, so callers gate those equity-only panels off with this to
+// avoid presenting blank fields as if the data were merely missing.
+export function isIndexSymbol(ticker: string | null | undefined): boolean {
+  return (ticker || "").trim().startsWith("^");
+}
+
 // India-only panels (delivery-series, shareholding/promoter holdings, corporate
 // actions, NSE events/dividends) hit NSE-bound endpoints that 404/error for
 // non-India symbols. Treat a symbol as Indian when it carries an explicit
@@ -29,6 +37,7 @@ export function isIndianSymbol(
   const t = normalizeTicker(ticker || "");
   if (!t) return false;
   if (isCryptoSymbol(t)) return false;
+  if (isIndexSymbol(t)) return false;
   if (/\.(NS|BO)$/i.test(t)) return true;
   return market === "NSE" || market === "BSE";
 }

@@ -44,7 +44,7 @@ import type { ChartKind, ChartTimeframe, IndicatorConfig } from "../shared/chart
 import { quickAddToFirstPortfolio } from "../shared/portfolioQuickAdd";
 import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
-import { isCryptoSymbol, isIndianSymbol } from "../utils/ticker";
+import { isCryptoSymbol, isIndexSymbol, isIndianSymbol } from "../utils/ticker";
 
 type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings" | "crypto-fundamentals" | "notes";
 
@@ -121,14 +121,19 @@ export function StockDetailPage() {
   // holdings) don't apply to US/EU/crypto; hide their tabs/cards for non-IN.
   const isIndian = isIndianSymbol(ticker, selectedMarket);
   const isCrypto = isCryptoSymbol(ticker);
+  const isIndex = isIndexSymbol(ticker);
   const visibleTabs = useMemo<TabId[]>(() => {
     // Crypto gets its own relevant tab set (the equity-centric financials/peers/
     // valuation tabs don't apply); fundamentals here means tokenomics + on-chain.
     if (isCrypto) return ["overview", "market-depth", "crypto-fundamentals", "notes"];
+    // An index has no issuer fundamentals (financials/peers/valuation/earnings),
+    // no shareholding/events, and no order book — only price action applies. Show
+    // the chart-backed overview and notes; everything else would render blank.
+    if (isIndex) return ["overview", "notes"];
     const all: TabId[] = ["overview", "market-depth", "financials", "analysis", "peers", "valuation", "shareholding", "events", "earnings", "notes"];
     const indiaOnly: TabId[] = ["shareholding", "events"];
     return isIndian ? all : all.filter((t) => !indiaOnly.includes(t));
-  }, [isCrypto, isIndian]);
+  }, [isCrypto, isIndex, isIndian]);
 
   const { data: stock } = useStock(ticker);
   const { data: returnsData } = useStockReturns(ticker);
@@ -603,7 +608,23 @@ export function StockDetailPage() {
           </div>
         )}
 
-        {tab === "overview" && !isCrypto && (
+        {tab === "overview" && isIndex && (
+          <div className="space-y-6">
+            <div className="rounded border border-terminal-border bg-terminal-bg p-3 text-sm text-terminal-muted">
+              <span className="font-semibold text-terminal-text">{ticker.toUpperCase()} is a market index.</span>{" "}
+              Issuer fundamentals — P/E, market cap, financial statements, peers, valuation,
+              shareholding and earnings — don't apply to an index, so those panels are hidden.
+              Price action, performance and the chart above reflect the index level.
+            </div>
+            <AiInsightCard
+              title="AI Investment Briefing"
+              description={`${ticker} · AI-synthesized read on the index from market context and news`}
+              fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
+            />
+          </div>
+        )}
+
+        {tab === "overview" && !isCrypto && !isIndex && (
           <div className="space-y-6">
             <OverviewPanel
               stock={stockForOverview}
