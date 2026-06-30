@@ -316,6 +316,31 @@ users actually hit, across whichever release is in flight.
   routes there). Previously the whole depth endpoint was a synthetic hash-seeded
   book for every market.
 
+### Integrity invariants (continuing the 1.0 sweep)
+
+1.0's silent-mock audit was a **one-time manual pass** that found ~17+ fabrication
+sites across four sweeps. Because they kept surfacing in successive passes, we
+patched every site we found but **never proved there were no more**. These items
+turn that into an enforced, ongoing guarantee.
+
+- **Mock-detection guard (near-term integrity item).** A CI/lint check over the
+  service + route layers that **fails the build** on fabrication patterns —
+  `random`/`randint`, hardcoded price-like constants, `sha256(...)`-seeded
+  generators, `mock`/`placeholder`/`fake`. Two jobs: surface whatever the manual
+  sweep missed, and stop new mocks from sneaking back in. Cheap, directly serves
+  the north star, and is the honest continuation of the 1.0 audit (a one-time
+  audit → an invariant). Ships on its own merit, independent of v1.1/v1.2.
+- **Data provenance / freshness UI — PARKED, gated on the guard above.** "Live ·
+  Yahoo · 14:32"-style badges are tempting (extend "don't get fooled" past *fake*
+  to *stale*), but provenance is a **force-multiplier on whatever is actually
+  behind the number**: on honest data it builds trust; on a *missed* mock it
+  stamps a credibility label on a lie — strictly worse than no badge. So it is
+  unsafe until (a) fabrication is **provably** gone (the guard), and (b) it is
+  derived **structurally from the fetch layer** (which provider answered,
+  timestamp, cache-hit — riding the same machinery as the `degraded` marker, which
+  already carries `source`), **never** a hand-written per-panel label that can lie.
+  Build only after both hold. (Decided 2026-06-30.)
+
 ### Degraded stubs → real data
 
 The silent-mock sweep (#41/#42) replaced fabricated data with honest
