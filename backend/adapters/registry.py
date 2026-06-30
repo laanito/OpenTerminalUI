@@ -10,7 +10,6 @@ from backend.adapters.base import DataAdapter
 from backend.adapters.alpaca import AlpacaAdapter
 from backend.adapters.crypto import CryptoDataAdapter
 from backend.adapters.kite import KiteAdapter
-from backend.adapters.mock import MockDataAdapter
 from backend.adapters.yahoo import YahooFinanceAdapter
 from backend.adapters.us_options_adapter import USOptionsAdapter
 from backend.core.failover import FailoverSlot, call_with_failover
@@ -36,8 +35,10 @@ class AdapterRegistry:
             "yahoo": lambda: YahooFinanceAdapter(),
             "us_options": lambda: USOptionsAdapter(),
             "crypto": lambda: CryptoDataAdapter(),
-            "mock": lambda: MockDataAdapter(),
         }
+        # No "mock" adapter in production: when there's no live source we return
+        # empty + degraded, never fabricated data. Tests inject a fake via the
+        # `mock_adapter_registry` fixture (backend/tests/mocks/mock_adapter.py).
 
     def _load_config(self) -> dict[str, Any]:
         if not self.config_path.exists():

@@ -29,6 +29,9 @@ jobs:
       - name: Python compileall
         run: python -m compileall backend
 
+      - name: Mock-detection guard (no fabricated data in production)
+        run: python scripts/check_no_production_mocks.py
+
       - name: Run pytest with coverage
         run: PYTHONPATH=. pytest backend/tests -q --cov=backend --cov-fail-under=45 --cov-report=xml --junitxml=pytest-report.xml
 
