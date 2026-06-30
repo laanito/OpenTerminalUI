@@ -39,7 +39,7 @@ def fixtures_dir() -> Path:
 
 @pytest.fixture
 def mock_adapter():
-    from backend.adapters.mock import MockDataAdapter
+    from backend.tests.mocks.mock_adapter import MockDataAdapter
 
     return MockDataAdapter(seed=42)
 
@@ -128,7 +128,7 @@ def _reset_http_resilience(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def ensure_mock_adapter_registered():
-    from backend.adapters.mock import MockDataAdapter
+    from backend.tests.mocks.mock_adapter import MockDataAdapter
     from backend.adapters.registry import get_adapter_registry
 
     registry = get_adapter_registry()

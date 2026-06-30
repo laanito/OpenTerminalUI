@@ -1,4 +1,10 @@
-"""Mock adapter for testing and demo mode — no external API calls."""
+"""Mock adapter — TEST-ONLY fake data, no external API calls.
+
+Lives under ``backend/tests/`` on purpose: it must never be importable from a
+production code path. When there's no live source, production returns empty +
+a ``degraded`` marker (see ``backend/shared/degraded.py``) instead of fabricating
+data. The ``check_no_production_mocks.py`` guard enforces this.
+"""
 from __future__ import annotations
 
 import random

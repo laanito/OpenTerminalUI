@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from backend.adapters.mock import MockDataAdapter
+from backend.tests.mocks.mock_adapter import MockDataAdapter
 
 
 @pytest.fixture
