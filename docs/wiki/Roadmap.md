@@ -229,17 +229,72 @@ condensed in the README.
 - [x] **`Releasing.md`** (checklist + version-bump steps) and **upgrade notes**
   (the `pgvector/pgvector:0.8.3-pg16-trixie` image swap).
 
-### v1.1 — Multi-asset depth
+> **Sequencing principle (decided 2026-06-30).** Post-1.0 releases are cut by
+> **north-star half**, not by engineering theme. The north star has two halves —
+> *don't get fooled* (research/integrity) and *grow privately* (portfolio/second
+> brain) — and 1.0 only finished the *passive* integrity side. So v1.1 makes the
+> portfolio real and v1.2 makes the research interrogate, while depth/coverage
+> work flows continuously underneath (it's "fill the map," not a release theme).
 
-Round out the western/crypto pivot's coverage gaps (the first feature release).
+### v1.1 — Portfolio becomes real
 
-- **Heatmap EU / crypto coverage** — `HeatmapMarket` is IN|US only
-  (`backend/api/routes/heatmap.py`); add EU + Crypto universes/selector (reuse the
-  `instrument_master` EU rows + crypto universe).
-- **Crypto Market Depth tab** — DONE: `/api/depth` + `/ws/depth` now serve real
-  Binance spot order-book depth for crypto (and the panel detects crypto symbols
-  so it routes there). Previously the whole depth endpoint was a synthetic
-  hash-seeded book for every market.
+The first additive release after the 1.0 hardening pass, and the one that makes
+the **"grow privately"** half usable. Today a holding can only be *deleted* —
+there's no cash, no recorded trade, no realized P&L — so the private-portfolio
+side is still a demo. v1.1 builds the transaction spine.
+
+- **Portfolio cash & transactions** — the spine:
+  - *Cash / currency as a holding* — let users hold currency balances (USD/EUR/…)
+    as portfolio positions, valued via the existing cross-rates engine and shown
+    alongside instruments (this also fixes the "unknown" classification path for
+    bare currency).
+  - *Sell / exchange action* — add a Sell/Exchange button next to Delete that
+    *records the transaction* (qty, price, date) rather than silently removing the
+    lot, and credits the proceeds back into the matching cash holding.
+  - *Buy debits cash* — when adding a position (a purchase), reduce the matching
+    currency holding by the cost basis, so cash and holdings stay consistent
+    across buys and sells.
+- **Realized vs. unrealized P&L** — derive realized gains/losses from the
+  transaction history once the spine exists (this is *why* the spine comes first).
+- **Dividends in the Portfolio Events Calendar** — surface upcoming ex-dates
+  (`corporate_actions_service.get_upcoming_dividends`, incl. labelled projections)
+  in the events calendar, not just the dedicated Dividends page.
+
+> **Explicitly out of scope (removed from the timeline 2026-06-30):** tax lots /
+> cost-basis accounting. It's a rabbit hole where a *wrong* number is worse than
+> no number — high effort, high correctness risk, jurisdiction-specific, and easy
+> to mistake for tax advice. Not scheduled; revisit only with a narrow, low-risk
+> scope.
+
+### v1.2 — Research interrogates
+
+The active **"don't get fooled"** half: 1.0 made the data honest *passively* (no
+fabrication); v1.2 makes the product *challenge you* rather than just store your
+notes.
+
+- **Consistent explain / interrogate affordance** — a uniform "explain this /
+  what am I missing / is this hype?" layer across surfaces. The actual
+  differentiator: it uses the LLM + your second brain + market data adversarially,
+  not as a cheerleader.
+- **Crypto news sources** — extend news ingestion with crypto-focused outlets so
+  crypto detail/news pages have real coverage. *(Moved here from the old v1.1.)*
+- **LLM-based per-article sentiment** — optionally route the News feed's
+  per-article classification through the local LLM (reuse the Emotion Indicator
+  pipeline; sentiment is persisted, so inference is paid once). Keep the classical
+  FinBERT → TextBlob → lexicon engine as the offline fallback.
+- **Second-brain enhancements** — chunk long notes, proactively surface "what to
+  journal" gaps, add market-data/news to the corpus, streaming answers, a
+  per-source filter in the UI.
+- **Relative Strength engine** — strong candidate to fold in here: replace the
+  degraded `/rs/*` stub with the real IBD-style computation (detailed under
+  *Degraded stubs → real data* below). RS is core "don't chase momentum blindly"
+  research, so it fits the interrogation theme.
+
+### Continuous — depth & coverage (demand-pulled, not a release theme)
+
+Real work, but "fill the map" rather than a north-star arc — thread it in by what
+users actually hit, across whichever release is in flight.
+
 - **Equity Level-2 depth via Interactive Brokers** — US & EU equity depth has no
   free real source, so `/api/depth` returns empty + `degraded` for those markets
   today (India already has real depth via Kite/NSE). Commit: add an **IBKR**
@@ -251,39 +306,15 @@ Round out the western/crypto pivot's coverage gaps (the first feature release).
   Polygon (mostly top-of-book for stocks), IEX DEEP (free but IEX-venue-only),
   direct Xetra/Euronext feeds (enterprise pricing). Watch item: the MiFIR EU
   consolidated tape (not live yet) could later provide a single EU source.
-- **Portfolio cash & transactions** — today a holding can only be *deleted*;
-  there's no notion of cash or of recording a trade. Build the transaction spine:
-  - *Cash / currency as a holding* — let users hold currency balances (USD/EUR/…)
-    as portfolio positions, valued via the existing cross-rates engine and shown
-    alongside instruments (this also fixes the "unknown" classification path for
-    bare currency).
-  - *Sell / exchange action* — add a Sell/Exchange button next to Delete that
-    *records the transaction* (qty, price, date) rather than silently removing the
-    lot, and ideally credits the proceeds back into the matching cash holding.
-  - *Buy debits cash* — when adding a position (a purchase), offer to reduce the
-    matching currency holding by the cost basis, so cash and holdings stay
-    consistent across buys and sells.
-- **Dividends in the Portfolio Events Calendar** — surface upcoming ex-dates
-  (`corporate_actions_service.get_upcoming_dividends`, incl. labelled projections)
-  in the events calendar, not just the dedicated Dividends page.
+- **Heatmap EU / crypto coverage** — `HeatmapMarket` is IN|US only
+  (`backend/api/routes/heatmap.py`); add EU + Crypto universes/selector (reuse the
+  `instrument_master` EU rows + crypto universe).
 - **Economic calendar — daily & weekly views** — currently month-grid only
   (`EconomicTerminal.tsx`); data is date-stamped, so add day/week ranges.
-- **Crypto news sources** — extend news ingestion with crypto-focused outlets so
-  crypto detail/news pages have real coverage.
-
-### v1.2 — AI-native deepening
-
-Lean into the north-star spine.
-
-- **LLM-based per-article sentiment** — optionally route the News feed's
-  per-article classification through the local LLM (reuse the Emotion Indicator
-  pipeline; sentiment is persisted, so inference is paid once). Keep the classical
-  FinBERT → TextBlob → lexicon engine as the offline fallback.
-- **Second-brain enhancements** — chunk long notes, proactively surface "what to
-  journal" gaps, add market-data/news to the corpus, streaming answers, a
-  per-source filter in the UI.
-- **Consistent explain / interrogate affordance** — a uniform "explain this /
-  what am I missing / is this hype?" layer across surfaces.
+- **Crypto Market Depth tab** — DONE: `/api/depth` + `/ws/depth` serve real
+  Binance spot order-book depth for crypto (the panel detects crypto symbols and
+  routes there). Previously the whole depth endpoint was a synthetic hash-seeded
+  book for every market.
 
 ### Degraded stubs → real data
 
