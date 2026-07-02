@@ -18,6 +18,7 @@ from backend.models import (
 )
 from backend.services.portfolio_analytics import portfolio_analytics_service
 from backend.services.portfolio_cash import cash_balance
+from backend.services.portfolio_pnl import realized_pnl
 
 router = APIRouter()
 
@@ -397,12 +398,10 @@ async def get_portfolio_analytics(
         )
 
     unrealized = total_value - total_cost
-    realized = 0.0
-    for tx in transactions:
-        if tx.type == "sell":
-            realized += float(tx.shares) * float(tx.price) - float(tx.fees or 0.0)
-        if tx.type == "dividend":
-            realized += float(tx.price) - float(tx.fees or 0.0)
+    # Realized P&L = capital gains from sells (cost basis subtracted), NOT proceeds.
+    # Dividend income is tracked separately in `dividend_income_ytd`.
+    realized = realized_pnl(transactions)
+    cash = cash_balance(portfolio.starting_cash, transactions)
 
     top_gainers = sorted(top_rows, key=lambda x: x["pnl_pct"], reverse=True)[:5]
     top_losers = sorted(top_rows, key=lambda x: x["pnl_pct"])[:5]
@@ -415,22 +414,30 @@ async def get_portfolio_analytics(
         day_change += mv * (chg_pct / 100.0)
     day_change_pct = (day_change / total_value) * 100.0 if total_value > 0 else 0.0
 
-    inception_candidates: list[datetime] = [portfolio.created_at]
+    def _as_utc(dt: datetime) -> datetime:
+        # Bare date strings parse to naive datetimes; treat them as UTC so they
+        # compare/subtract cleanly against tz-aware timestamps.
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+    now = datetime.now(timezone.utc)
+    inception_candidates: list[datetime] = [_as_utc(portfolio.created_at)]
     for h in holdings:
         try:
             if h.purchase_date:
-                inception_candidates.append(datetime.fromisoformat(str(h.purchase_date)))
+                inception_candidates.append(_as_utc(datetime.fromisoformat(str(h.purchase_date))))
         except Exception:
             pass
     for tx in transactions:
         try:
-            inception_candidates.append(datetime.fromisoformat(str(tx.date)))
+            inception_candidates.append(_as_utc(datetime.fromisoformat(str(tx.date))))
         except Exception:
             pass
-    inception = min(inception_candidates) if inception_candidates else datetime.now(timezone.utc)
-    years = max((datetime.now(timezone.utc) - inception).days / 365.25, 1 / 365.25)
+    inception = min(inception_candidates) if inception_candidates else now
+    years = max((now - inception).days / 365.25, 1 / 365.25)
     initial_capital = float(portfolio.starting_cash or 0.0)
-    final_equity = float(total_value + realized)
+    # Current equity = holdings marked to market + cash (which already reflects
+    # proceeds, dividends, deposits and buys via the ledger).
+    final_equity = float(total_value + cash)
     if initial_capital > 0 and final_equity > 0:
         annualized_return = ((final_equity / initial_capital) ** (1 / years) - 1.0) * 100.0
     else:
@@ -447,7 +454,6 @@ async def get_portfolio_analytics(
             sharpe_ratio = 0.0
             max_drawdown = 0.0
 
-    cash = cash_balance(portfolio.starting_cash, transactions)
     return {
         "portfolio_id": portfolio_id,
         "total_value": total_value,
