@@ -57,7 +57,7 @@ export async function addPortfolioHolding(portfolioId: string, payload: { symbol
   return data;
 }
 
-export async function addPortfolioTransaction(portfolioId: string, payload: { symbol: string; type: "buy" | "sell" | "dividend"; shares?: number; price?: number; date: string; fees?: number; lot_id?: string; notes?: string }): Promise<{ id: string; status: string }> {
+export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: "buy" | "sell" | "dividend" | "deposit" | "withdrawal"; shares?: number; price?: number; date: string; fees?: number; lot_id?: string; notes?: string }): Promise<{ id: string; status: string }> {
   const { data } = await api.post<{ id: string; status: string }>(`/portfolios/${encodeURIComponent(portfolioId)}/transactions`, payload);
   return data;
 }

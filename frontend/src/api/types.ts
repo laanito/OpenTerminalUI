@@ -214,6 +214,9 @@ export type MultiPortfolio = {
   benchmark_symbol?: string | null;
   currency?: string;
   total_value?: number;
+  cash_balance?: number;
+  net_liquidation_value?: number;
+  starting_cash?: number;
   created_at?: string;
 };
 
@@ -232,6 +235,8 @@ export type MultiPortfolioAnalytics = {
   portfolio_id: string;
   total_value: number;
   total_cost: number;
+  cash_balance?: number;
+  net_liquidation_value?: number;
   unrealized_pnl: number;
   unrealized_pnl_pct: number;
   realized_pnl: number;

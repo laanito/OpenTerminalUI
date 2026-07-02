@@ -6,7 +6,17 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
-_Nothing yet — first post-1.0 work lands here._
+### Added
+- **Portfolio cash ledger** (v1.1 "portfolio becomes real", spine) — cash is now
+  derived from the transaction ledger as the single source of truth: a buy debits
+  cash, a sell/dividend/deposit credits it, a withdrawal debits it, and fees always
+  cost cash. New `deposit`/`withdrawal` transaction types (cash-only, no symbol).
+  `GET /api/portfolios`, `/api/portfolios/{id}`, and `/api/portfolios/{id}/analytics`
+  now report `cash_balance` and `net_liquidation_value` (holdings + cash).
+
+### Fixed
+- Multi-portfolio analytics used India defaults for risk metrics (risk-free `0.06`,
+  benchmark `NIFTY50`); now `0.04` / `S&P500` in line with the de-India defaults.
 
 ## [1.0.0] - 2026-06-29
 
