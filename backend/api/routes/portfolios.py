@@ -3,9 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 from types import SimpleNamespace
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_db
@@ -193,7 +195,11 @@ def add_portfolio_holding(
 ) -> dict[str, Any]:
     _portfolio_for_user(db, portfolio_id, current_user.id)
     symbol = payload.symbol.strip().upper()
-    lot_id = payload.lot_id.strip() or datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    # Each holding is its own lot. The auto lot_id must be unique per row, or a
+    # bulk add of the same symbol (e.g. Import from Legacy, or two lots bought the
+    # same day) collides on the (portfolio_id, symbol, lot_id) constraint. A bare
+    # second-resolution timestamp is not enough — add a random suffix.
+    lot_id = payload.lot_id.strip() or f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid4().hex[:8]}"
     row = PortfolioHoldingORM(
         portfolio_id=portfolio_id,
         symbol=symbol,
@@ -217,7 +223,13 @@ def add_portfolio_holding(
             notes=payload.notes,
         )
     )
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # A holding with this (symbol, lot_id) already exists in the portfolio —
+        # return a clean conflict rather than a 500.
+        db.rollback()
+        raise HTTPException(status_code=409, detail=f"A lot for {symbol} with lot_id '{lot_id}' already exists")
     db.refresh(row)
     return {"id": row.id, "symbol": row.symbol}
 
