@@ -231,6 +231,20 @@ export type MultiPortfolioHolding = {
   current_price?: number;
 };
 
+export type PortfolioTransactionType = "buy" | "sell" | "dividend" | "deposit" | "withdrawal";
+
+export type MultiPortfolioTransaction = {
+  id: string;
+  symbol: string;
+  type: PortfolioTransactionType;
+  shares: number;
+  price: number;
+  date: string;
+  fees: number;
+  lot_id?: string;
+  notes?: string;
+};
+
 export type MultiPortfolioAnalytics = {
   portfolio_id: string;
   total_value: number;

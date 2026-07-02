@@ -13,6 +13,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cost cash. New `deposit`/`withdrawal` transaction types (cash-only, no symbol).
   `GET /api/portfolios`, `/api/portfolios/{id}`, and `/api/portfolios/{id}/analytics`
   now report `cash_balance` and `net_liquidation_value` (holdings + cash).
+- **Portfolio transaction UI** (v1.1) — the Portfolio Manager can now record
+  buy/sell/dividend/deposit/withdrawal transactions (the endpoints existed but no
+  UI ever called them), with a live cash-impact preview and a trade-history table.
+  New Net Liquidation and Cash metric cards surface the ledger balance.
 
 ### Fixed
 - Multi-portfolio analytics used India defaults for risk metrics (risk-free `0.06`,
