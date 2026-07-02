@@ -725,6 +725,13 @@ export function PortfolioPage() {
           <button className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted" onClick={() => switchPortfolioMode("mutual_funds")}>
             Mutual Funds
           </button>
+          <button
+            className="rounded border border-terminal-accent px-2 py-1 text-xs font-semibold text-terminal-accent hover:bg-terminal-accent/10"
+            onClick={() => switchPortfolioView("manager")}
+            title="Multi-portfolio manager with cash, transactions and realized P&L"
+          >
+            Portfolio Manager →
+          </button>
           <Link className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent" to="/equity/portfolio/lab">
             Open Portfolio Lab
           </Link>

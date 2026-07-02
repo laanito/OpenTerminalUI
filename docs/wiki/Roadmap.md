@@ -239,26 +239,38 @@ condensed in the README.
 ### v1.1 — Portfolio becomes real
 
 The first additive release after the 1.0 hardening pass, and the one that makes
-the **"grow privately"** half usable. Today a holding can only be *deleted* —
-there's no cash, no recorded trade, no realized P&L — so the private-portfolio
-side is still a demo. v1.1 builds the transaction spine.
+the **"grow privately"** half usable. Built on the **Portfolio Manager** (the
+per-user, multi-portfolio `/portfolios` system), which now has a real transaction
+ledger. Core scope **SHIPPED** (PRs #61/#63/#64):
 
-- **Portfolio cash & transactions** — the spine:
-  - *Cash / currency as a holding* — let users hold currency balances (USD/EUR/…)
-    as portfolio positions, valued via the existing cross-rates engine and shown
-    alongside instruments (this also fixes the "unknown" classification path for
-    bare currency).
-  - *Sell / exchange action* — add a Sell/Exchange button next to Delete that
-    *records the transaction* (qty, price, date) rather than silently removing the
-    lot, and credits the proceeds back into the matching cash holding.
-  - *Buy debits cash* — when adding a position (a purchase), reduce the matching
-    currency holding by the cost basis, so cash and holdings stay consistent
-    across buys and sells.
-- **Realized vs. unrealized P&L** — derive realized gains/losses from the
-  transaction history once the spine exists (this is *why* the spine comes first).
-- **Dividends in the Portfolio Events Calendar** — surface upcoming ex-dates
-  (`corporate_actions_service.get_upcoming_dividends`, incl. labelled projections)
-  in the events calendar, not just the dedicated Dividends page.
+- ✅ **Portfolio cash & transactions** — the spine. Cash is *derived from the
+  transaction ledger* as the single source of truth (`backend/services/
+  portfolio_cash.py`): a buy debits cash, sell/dividend/deposit credit it, a
+  withdrawal debits it, fees always cost cash. `deposit`/`withdrawal` transaction
+  types added; `cash_balance` + `net_liquidation_value` on list/detail/analytics;
+  a Record-Transaction form + trade-history table in the Manager.
+- ✅ **Realized vs. unrealized P&L** — realized is now capital gains (cost basis
+  subtracted via chronological ledger replay, `portfolio_pnl.py`), *not* proceeds;
+  dividends stay as income. Cards relabelled Unrealized / Realized.
+- ✅ **Dividends in the Portfolio Events Calendar** — the events calendar now
+  renders in the Manager, fed by its holdings.
+
+**Portfolio consolidation (legacy → Manager)** — the remaining v1.1-adjacent work.
+The pre-fork **legacy** `/portfolio` is a single, *global* holdings table
+(`Holding`: no `user_id`, no cash, no transactions) shared by every user of an
+instance — a privacy leak in any multi-user deploy and a feature split (rich
+analytics live on legacy; real accounting lives on the Manager). Plan:
+  - ✅ **A. Reachability** — the Manager was only reachable via `?view=manager`;
+    added a two-way toggle so the default legacy view links to it. *(shipped)*
+  - ✅ **B. Migration/import** — one-click "Import from Legacy" in the Manager
+    (copies legacy holdings into the selected portfolio, cost basis preserved) +
+    the CSV importer now accepts the legacy export's `avg_buy_price` column so the
+    export→import round trip works. *(shipped)*
+  - ⏳ **C. Retire the global model** — once users can migrate, port the rich
+    analytics (attribution/risk/correlation/dividends/tax-lots) onto the per-user
+    Manager, migrate any remaining legacy holdings into a default per-user
+    portfolio, then delete the global `Holding` table and the legacy view. Removes
+    the shared-portfolio privacy leak. (Larger effort; v1.2-scale.)
 
 > **Explicitly out of scope (removed from the timeline 2026-06-30):** tax lots /
 > cost-basis accounting. It's a rabbit hole where a *wrong* number is worse than

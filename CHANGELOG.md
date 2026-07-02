@@ -20,6 +20,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 - **Upcoming events in the Portfolio Manager** (v1.1) — dividends, earnings and
   corporate actions for your holdings now show in the Manager's events calendar,
   not only on the legacy view / dedicated Dividends page.
+- **Reach & migrate the Portfolio Manager** (v1.1) — the Manager was only
+  reachable via a `?view=manager` URL; the default legacy view now has a
+  "Portfolio Manager" button. New one-click **Import from Legacy** copies the
+  legacy portfolio's holdings into the selected Manager portfolio (cost basis
+  preserved), and the CSV importer now accepts the legacy export's `avg_buy_price`
+  column so an export→import round trip works. First step toward retiring the
+  global legacy portfolio (see `docs/wiki/Roadmap.md` → v1.1 *Portfolio consolidation*).
 
 ### Fixed
 - **Realized P&L was proceeds, not gains** (v1.1) — analytics summed
