@@ -17,8 +17,21 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   buy/sell/dividend/deposit/withdrawal transactions (the endpoints existed but no
   UI ever called them), with a live cash-impact preview and a trade-history table.
   New Net Liquidation and Cash metric cards surface the ledger balance.
+- **Upcoming events in the Portfolio Manager** (v1.1) — dividends, earnings and
+  corporate actions for your holdings now show in the Manager's events calendar,
+  not only on the legacy view / dedicated Dividends page.
 
 ### Fixed
+- **Realized P&L was proceeds, not gains** (v1.1) — analytics summed
+  `shares * sell_price - fees`, overstating realized P&L by the entire cost basis.
+  Now computed by replaying the ledger chronologically (running average cost per
+  symbol): `shares_sold * (sell_price - avg_cost) - fees`, dividends excluded
+  (they remain in `dividend_income_ytd`). New pure `backend/services/portfolio_pnl.py`.
+  Annualized return now uses net liquidation (holdings + cash) as current equity.
+  The "Total P&L" card is relabelled "Unrealized P&L" to match what it shows.
+- Multi-portfolio analytics annualized-return crashed on portfolios whose
+  transactions carried bare `YYYY-MM-DD` dates (naive vs. tz-aware datetime
+  subtraction); inception dates are now normalised to UTC.
 - Multi-portfolio analytics used India defaults for risk metrics (risk-free `0.06`,
   benchmark `NIFTY50`); now `0.04` / `S&P500` in line with the de-India defaults.
 

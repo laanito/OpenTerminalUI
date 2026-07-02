@@ -19,6 +19,7 @@ import {
 } from "../../api/client";
 import { DenseTable } from "../terminal/DenseTable";
 import { NotesPanel } from "../notes/NotesPanel";
+import { PortfolioEventsCalendar } from "../PortfolioEventsCalendar";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
@@ -133,6 +134,7 @@ export function PortfolioManager() {
 
   const selectedPortfolio = useMemo(() => portfolios.find((p) => p.id === selectedId) || null, [portfolios, selectedId]);
   const cashCurrency = toCurrencyCode(selectedPortfolio?.currency);
+  const portfolioSymbols = useMemo(() => Array.from(new Set(holdings.map((h) => h.symbol).filter(Boolean))), [holdings]);
   const txPreview = cashDeltaPreview(txType, txShares, txPrice, txFees);
 
   const handleRecordTransaction = async () => {
@@ -267,12 +269,12 @@ export function PortfolioManager() {
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Cash</div><div className={Number(analytics?.cash_balance ?? 0) >= 0 ? "text-terminal-text" : "text-terminal-neg"}>{analytics?.cash_balance != null ? formatMoney(analytics.cash_balance, cashCurrency) : "-"}</div><div className="text-[10px] text-terminal-muted">from ledger</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Holdings Value</div><div className="text-terminal-text">{metricFmt(analytics?.total_value)}</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Day P&L</div><div className={Number(analytics?.day_change || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{metricFmt(analytics?.day_change)} ({metricFmt(analytics?.day_change_pct)}%)</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Total P&L</div><div className={Number(analytics?.unrealized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{metricFmt(analytics?.unrealized_pnl)} ({metricFmt(analytics?.unrealized_pnl_pct)}%)</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Unrealized P&L</div><div className={Number(analytics?.unrealized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{metricFmt(analytics?.unrealized_pnl)} ({metricFmt(analytics?.unrealized_pnl_pct)}%)</div><div className="text-[10px] text-terminal-muted">open positions</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Sharpe</div><div className="text-terminal-text">{metricFmt(analytics?.sharpe_ratio)}</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Annualized Return</div><div className="text-terminal-text">{metricFmt(analytics?.annualized_return)}%</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Max Drawdown</div><div className="text-terminal-neg">{metricFmt(analytics?.max_drawdown)}%</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Dividend YTD</div><div className="text-terminal-text">{metricFmt(analytics?.dividend_income_ytd)}</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Realized P&L</div><div className={Number(analytics?.realized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{metricFmt(analytics?.realized_pnl)}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Realized P&L</div><div className={Number(analytics?.realized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{metricFmt(analytics?.realized_pnl)}</div><div className="text-[10px] text-terminal-muted">booked gains</div></div>
         </div>
 
         <div className="rounded border border-terminal-border bg-terminal-panel p-2">
@@ -492,6 +494,13 @@ export function PortfolioManager() {
             </div>
           </div>
         </div>
+
+        {portfolioSymbols.length > 0 ? (
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2">
+            <div className="mb-2 text-xs text-terminal-muted">Upcoming events — dividends, earnings & corporate actions for your holdings</div>
+            <PortfolioEventsCalendar symbols={portfolioSymbols} days={30} />
+          </div>
+        ) : null}
       </section>
     </div>
   );
