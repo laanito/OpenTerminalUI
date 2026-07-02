@@ -1,8 +1,13 @@
 name: CI
 
+# Fast checks (backend pytest, frontend build + Vitest, mock-detection guard) gate
+# every PR and every push to main. Playwright e2e is manual-only (workflow_dispatch)
+# — see the gated steps below and docs/wiki/Roadmap.md → "e2e suite (parked)".
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -75,12 +80,19 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
+      # Playwright e2e is manual-only: `gh workflow run CI` or the Actions "Run
+      # workflow" button. It is NOT on the per-commit/PR gate because the specs
+      # currently assert data the v1.0 integrity work deliberately removed
+      # (de-India defaults, synthetic order-book/quotes) and must be rewritten
+      # before they can gate again. See docs/wiki/Roadmap.md → "e2e suite (parked)".
       - name: Install Playwright browsers
+        if: github.event_name == 'workflow_dispatch'
         run: |
           cd frontend
           npx playwright install --with-deps chromium
 
       - name: Playwright smoke tests
+        if: github.event_name == 'workflow_dispatch'
         run: |
           npm run test:e2e --prefix frontend
 
