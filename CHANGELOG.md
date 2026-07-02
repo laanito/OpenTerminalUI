@@ -29,6 +29,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   global legacy portfolio (see `docs/wiki/Roadmap.md` → v1.1 *Portfolio consolidation*).
 
 ### Fixed
+- **Import from Legacy / bulk add crashed with a 500** (v1.1) — adding a holding
+  auto-generated its `lot_id` from a second-resolution timestamp, so adding the
+  same symbol more than once within a second (as the legacy import does) collided
+  on the `(portfolio_id, symbol, lot_id)` unique constraint. Auto lot_ids now
+  carry a random suffix, and a genuine duplicate `lot_id` returns a clean `409`
+  instead of an unhandled `500`.
 - **Realized P&L was proceeds, not gains** (v1.1) — analytics summed
   `shares * sell_price - fees`, overstating realized P&L by the entire cost basis.
   Now computed by replaying the ledger chronologically (running average cost per
