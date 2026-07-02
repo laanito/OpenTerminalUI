@@ -17,6 +17,7 @@ from backend.models import (
     User,
 )
 from backend.services.portfolio_analytics import portfolio_analytics_service
+from backend.services.portfolio_cash import cash_balance
 
 router = APIRouter()
 
@@ -46,8 +47,10 @@ class PortfolioHoldingCreateRequest(BaseModel):
 
 
 class PortfolioTransactionCreateRequest(BaseModel):
-    symbol: str
-    type: str = Field(pattern="^(buy|sell|dividend)$")
+    # Trades (buy/sell) carry a symbol + shares; cash-only rows (dividend/deposit/
+    # withdrawal) carry the amount in `price` with shares = 0. See portfolio_cash.
+    symbol: str = ""
+    type: str = Field(pattern="^(buy|sell|dividend|deposit|withdrawal)$")
     shares: float = Field(default=0.0, ge=0)
     price: float = Field(default=0.0, ge=0)
     date: str
@@ -110,6 +113,8 @@ async def list_portfolios(
         for h in holdings:
             px = float((quotes.get(h.symbol, {}) or {}).get("current_price") or 0.0)
             total_value += float(h.shares) * px
+        transactions = db.query(PortfolioTransactionORM).filter(PortfolioTransactionORM.portfolio_id == row.id).all()
+        cash = cash_balance(row.starting_cash, transactions)
         out.append(
             {
                 "id": row.id,
@@ -119,6 +124,8 @@ async def list_portfolios(
                 "currency": row.currency,
                 "created_at": row.created_at.isoformat(),
                 "total_value": total_value,
+                "cash_balance": cash,
+                "net_liquidation_value": total_value + cash,
             }
         )
     return {"items": out}
@@ -131,6 +138,7 @@ def get_portfolio(
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     row = _portfolio_for_user(db, portfolio_id, current_user.id)
+    transactions = db.query(PortfolioTransactionORM).filter(PortfolioTransactionORM.portfolio_id == portfolio_id).all()
     return {
         "id": row.id,
         "name": row.name,
@@ -138,6 +146,7 @@ def get_portfolio(
         "benchmark_symbol": row.benchmark_symbol,
         "currency": row.currency,
         "starting_cash": row.starting_cash,
+        "cash_balance": cash_balance(row.starting_cash, transactions),
         "created_at": row.created_at.isoformat(),
     }
 
@@ -253,6 +262,13 @@ def add_portfolio_transaction(
 ) -> dict[str, Any]:
     _portfolio_for_user(db, portfolio_id, current_user.id)
     symbol = payload.symbol.strip().upper()
+    if payload.type in {"deposit", "withdrawal"}:
+        # Cash-only movement: no security, amount lives in `price`.
+        symbol = symbol or "CASH"
+        if payload.price <= 0:
+            raise HTTPException(status_code=422, detail=f"{payload.type} requires a positive amount")
+    elif not symbol:
+        raise HTTPException(status_code=422, detail=f"{payload.type} requires a symbol")
     tx = PortfolioTransactionORM(
         portfolio_id=portfolio_id,
         symbol=symbol,
@@ -424,17 +440,20 @@ async def get_portfolio_analytics(
     max_drawdown = 0.0
     if holding_views:
         try:
-            risk = await portfolio_analytics_service.risk_metrics(holding_views, risk_free_rate=0.06, benchmark=portfolio.benchmark_symbol or "NIFTY50")
+            risk = await portfolio_analytics_service.risk_metrics(holding_views, risk_free_rate=0.04, benchmark=portfolio.benchmark_symbol or "S&P500")
             sharpe_ratio = float(risk.get("sharpe_ratio") or 0.0)
             max_drawdown = float(risk.get("max_drawdown") or 0.0)
         except Exception:
             sharpe_ratio = 0.0
             max_drawdown = 0.0
 
+    cash = cash_balance(portfolio.starting_cash, transactions)
     return {
         "portfolio_id": portfolio_id,
         "total_value": total_value,
         "total_cost": total_cost,
+        "cash_balance": cash,
+        "net_liquidation_value": total_value + cash,
         "unrealized_pnl": unrealized,
         "unrealized_pnl_pct": (unrealized / total_cost * 100.0) if total_cost > 0 else 0.0,
         "realized_pnl": realized,
