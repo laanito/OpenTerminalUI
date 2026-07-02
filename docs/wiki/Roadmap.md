@@ -341,6 +341,24 @@ turn that into an enforced, ongoing guarantee.
   already carries `source`), **never** a hand-written per-panel label that can lie.
   Build only after both hold. (Decided 2026-06-30.)
 
+### e2e suite (parked — needs rewrite, 2026-07-02)
+
+The Playwright e2e specs (`frontend/tests/e2e/`) are **manual-only** in CI
+(`workflow_dispatch`), not on the per-commit/PR gate. They were written against
+pre-1.0 behaviour and now assert exactly what the 1.0 integrity work removed:
+
+- `hotkey-trading` / `multi-timeframe` expect India defaults (`RELIANCE`, `TCS`)
+  — changed by the de-India work; the shell now defaults to US symbols.
+- `dom-ladder` expects hardcoded synthetic bid/ask (`120`/`110`) — the fabricated
+  order book was deleted (PR #45); US depth is now honestly empty + `degraded`.
+- `correlation-dashboard`, `statlab-v2-tabs`, `terminal-shell-go-bar` depend on
+  live data unavailable in headless CI (NSE 403s, Binance 451, no API keys).
+
+The fast gate (backend pytest + coverage, frontend build + Vitest, mock-detection
+guard) still runs on every PR and push to main. **Follow-up:** rewrite the specs
+against post-de-India reality with deterministic fixtures / seeded auth so they
+don't require live upstreams, then re-enable on the PR gate.
+
 ### Degraded stubs → real data
 
 The silent-mock sweep (#41/#42) replaced fabricated data with honest
