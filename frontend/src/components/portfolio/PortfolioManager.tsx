@@ -10,6 +10,7 @@ import {
   fetchPortfolioHoldings,
   fetchPortfolioTransactions,
   fetchPortfolios,
+  fetchPortfolio,
   updatePortfolioById,
   type MultiPortfolio,
   type MultiPortfolioAnalytics,
@@ -26,6 +27,13 @@ import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { CurrencyCode } from "../../lib/currency";
 import { TX_TYPES, TX_NEEDS_SYMBOL, TX_NEEDS_SHARES, cashDeltaPreview } from "../../utils/portfolioCash";
+import {
+  legacyHoldingToPayload,
+  CSV_SYMBOL_COLUMNS,
+  CSV_SHARES_COLUMNS,
+  CSV_COST_COLUMNS,
+  CSV_DATE_COLUMNS,
+} from "../../utils/portfolioMigration";
 
 const BENCHMARKS = ["S&P500", "NASDAQ", "DOW", "MSCIWI", "NIFTY50"];
 
@@ -190,10 +198,10 @@ export function PortfolioManager() {
       }
       const headers = lines[0].split(",").map((x) => x.trim().toLowerCase());
       const findIdx = (names: string[]) => headers.findIndex((h) => names.includes(h));
-      const symbolIdx = findIdx(["symbol", "ticker"]);
-      const sharesIdx = findIdx(["shares", "qty", "quantity"]);
-      const costIdx = findIdx(["cost_basis_per_share", "avg_cost", "price", "cost"]);
-      const dateIdx = findIdx(["purchase_date", "date", "buy_date"]);
+      const symbolIdx = findIdx(CSV_SYMBOL_COLUMNS);
+      const sharesIdx = findIdx(CSV_SHARES_COLUMNS);
+      const costIdx = findIdx(CSV_COST_COLUMNS);
+      const dateIdx = findIdx(CSV_DATE_COLUMNS);
       if (symbolIdx < 0 || sharesIdx < 0 || costIdx < 0) {
         setError("CSV header requires symbol, shares, and cost columns");
         return;
@@ -219,6 +227,38 @@ export function PortfolioManager() {
       await loadAll(selectedId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to import CSV");
+    }
+  };
+
+  // Migrate the (global, single) legacy portfolio into the selected Manager
+  // portfolio. Cost basis is preserved; each holding creates a buy transaction,
+  // which debits cash — migrated positions were bought historically, so we flag
+  // that rather than silently inventing cash to cover them.
+  const handleImportFromLegacy = async () => {
+    if (!selectedId) return;
+    setStatus(null);
+    setError(null);
+    try {
+      const legacy = await fetchPortfolio();
+      const payloads = (legacy.items || []).map(legacyHoldingToPayload).filter(Boolean) as ReturnType<typeof legacyHoldingToPayload>[];
+      if (!payloads.length) {
+        setStatus("No legacy holdings to import");
+        return;
+      }
+      let imported = 0;
+      for (const payload of payloads) {
+        if (!payload) continue;
+        await addPortfolioHolding(selectedId, payload);
+        imported += 1;
+      }
+      setStatus(
+        imported > 0
+          ? `Imported ${imported} holdings from legacy — cost basis preserved. Cash was debited for the purchases; record a deposit if you funded the account separately.`
+          : "No valid legacy holdings imported",
+      );
+      await loadAll(selectedId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import from legacy portfolio");
     }
   };
 
@@ -362,6 +402,15 @@ export function PortfolioManager() {
                 }}
               />
             </label>
+            <TerminalButton
+              size="sm"
+              variant="default"
+              disabled={!selectedId}
+              title="Copy holdings from the legacy portfolio into this one"
+              onClick={() => void handleImportFromLegacy()}
+            >
+              Import from Legacy
+            </TerminalButton>
             {loading ? <span className="text-terminal-muted">Loading...</span> : null}
           </div>
           {error ? <div className="mb-2 rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{error}</div> : null}
