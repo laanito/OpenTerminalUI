@@ -6,7 +6,7 @@ from typing import Any
 from types import SimpleNamespace
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -109,6 +109,41 @@ def _primary_portfolio(db: Session, user_id: str, *, create: bool = True) -> Por
     db.commit()
     db.refresh(row)
     return row
+
+
+def _manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[SimpleNamespace]:
+    """Adapt Manager holdings to the ``Holding``-shaped objects the analytics
+    service reads (``.ticker``/``.quantity``/``.avg_buy_price``/``.buy_date``).
+
+    Aggregated per symbol on purpose: ``_portfolio_returns`` and
+    ``benchmark_overlay`` key intermediate dicts by ticker, so passing raw
+    per-lot rows would let a later lot silently overwrite an earlier lot's
+    quantity. buy_date is the earliest lot's date (equity curve "since first
+    bought").
+    """
+    agg: dict[str, dict[str, Any]] = {}
+    for h in holdings:
+        sym = (h.symbol or "").strip().upper()
+        if not sym:
+            continue
+        b = agg.setdefault(sym, {"shares": 0.0, "cost": 0.0, "buy_date": ""})
+        b["shares"] += float(h.shares)
+        b["cost"] += float(h.shares) * float(h.cost_basis_per_share)
+        pdate = (h.purchase_date or "").strip()
+        if pdate and (not b["buy_date"] or pdate < b["buy_date"]):
+            b["buy_date"] = pdate
+    out: list[SimpleNamespace] = []
+    for sym, b in agg.items():
+        shares = b["shares"]
+        out.append(
+            SimpleNamespace(
+                ticker=sym,
+                quantity=shares,
+                avg_buy_price=(b["cost"] / shares if shares else 0.0),
+                buy_date=b["buy_date"],
+            )
+        )
+    return out
 
 
 async def _legacy_summary_for_holdings(holdings: list[PortfolioHoldingORM]) -> dict[str, Any]:
@@ -630,3 +665,77 @@ async def get_portfolio_analytics(
         "sharpe_ratio": sharpe_ratio,
         "max_drawdown": max_drawdown,
     }
+
+
+# --- Deep analytics ported from the retired global legacy portfolio -----------
+# These mirror the old `/api/portfolio/analytics/*` endpoints but are scoped to a
+# user's own Manager portfolio. Holdings are adapted + aggregated per symbol via
+# `_manager_holdings_as_legacy` before feeding the shared analytics service.
+
+
+def _analytics_holdings(db: Session, portfolio_id: str, user_id: str) -> list[SimpleNamespace]:
+    _portfolio_for_user(db, portfolio_id, user_id)  # 404 if not the caller's
+    holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == portfolio_id).all()
+    return _manager_holdings_as_legacy(holdings)
+
+
+def _default_benchmark(db: Session, portfolio_id: str, user_id: str) -> str:
+    row = _portfolio_for_user(db, portfolio_id, user_id)
+    return row.benchmark_symbol or "S&P500"
+
+
+@router.get("/portfolios/{portfolio_id}/analytics/sector-allocation")
+async def get_portfolio_sector_allocation(
+    portfolio_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    holdings = _analytics_holdings(db, portfolio_id, current_user.id)
+    return await portfolio_analytics_service.sector_allocation(holdings)
+
+
+@router.get("/portfolios/{portfolio_id}/analytics/risk-metrics")
+async def get_portfolio_risk_metrics(
+    portfolio_id: str,
+    risk_free_rate: float = Query(default=0.04, ge=0, le=0.25),
+    benchmark: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    holdings = _analytics_holdings(db, portfolio_id, current_user.id)
+    bench = benchmark or _default_benchmark(db, portfolio_id, current_user.id)
+    return await portfolio_analytics_service.risk_metrics(holdings, risk_free_rate=risk_free_rate, benchmark=bench)
+
+
+@router.get("/portfolios/{portfolio_id}/analytics/correlation")
+async def get_portfolio_correlation(
+    portfolio_id: str,
+    window: int = Query(default=60, ge=10, le=252),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    holdings = _analytics_holdings(db, portfolio_id, current_user.id)
+    return await portfolio_analytics_service.correlation_matrix(holdings, window=window)
+
+
+@router.get("/portfolios/{portfolio_id}/analytics/dividends")
+async def get_portfolio_dividends(
+    portfolio_id: str,
+    days: int = Query(default=180, ge=1, le=730),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    holdings = _analytics_holdings(db, portfolio_id, current_user.id)
+    return await portfolio_analytics_service.dividend_tracker(holdings, days=days)
+
+
+@router.get("/portfolios/{portfolio_id}/analytics/benchmark-overlay")
+async def get_portfolio_benchmark_overlay(
+    portfolio_id: str,
+    benchmark: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    holdings = _analytics_holdings(db, portfolio_id, current_user.id)
+    bench = benchmark or _default_benchmark(db, portfolio_id, current_user.id)
+    return await portfolio_analytics_service.benchmark_overlay(holdings, benchmark=bench)
