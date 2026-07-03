@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Any
 from types import SimpleNamespace
@@ -21,6 +22,7 @@ from backend.models import (
 from backend.services.portfolio_analytics import portfolio_analytics_service
 from backend.services.portfolio_cash import cash_balance
 from backend.services.portfolio_pnl import realized_pnl
+from backend.shared.market_classifier import is_crypto_symbol, market_classifier
 
 router = APIRouter()
 
@@ -74,6 +76,124 @@ async def _quote_map(symbols: list[str]) -> dict[str, dict[str, Any]]:
     for sym in symbols:
         out[sym] = await fetch_stock_snapshot_coalesced(sym)
     return out
+
+
+def _primary_portfolio(db: Session, user_id: str, *, create: bool = True) -> PortfolioORM | None:
+    """The user's primary portfolio: their earliest-created one.
+
+    A user always has exactly one primary; when they have none yet and
+    ``create`` is set we materialise a default so dashboards (home, cockpit,
+    HUD, ...) that formerly read the global legacy portfolio have a per-user
+    portfolio to read instead. This is the replacement for the shared,
+    user-less legacy ``Holding`` table.
+    """
+    row = (
+        db.query(PortfolioORM)
+        .filter(PortfolioORM.user_id == user_id)
+        # id is a stable tiebreaker so "primary" stays fixed even if two
+        # portfolios share a created_at timestamp.
+        .order_by(PortfolioORM.created_at.asc(), PortfolioORM.id.asc())
+        .first()
+    )
+    if row is not None or not create:
+        return row
+    row = PortfolioORM(
+        user_id=user_id,
+        name="My Portfolio",
+        description="",
+        benchmark_symbol=None,
+        currency="USD",
+        starting_cash=0.0,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+async def _legacy_summary_for_holdings(holdings: list[PortfolioHoldingORM]) -> dict[str, Any]:
+    """Render Manager holdings in the shape the legacy ``/portfolio`` returned.
+
+    Positions are aggregated per symbol (weighted-average cost across lots) and
+    enriched with a live quote + market classification, bounded so a single slow
+    upstream can't stall the whole endpoint. Keeping the response shape stable
+    lets the shared dashboards repoint to a per-user portfolio without a rewrite.
+    """
+    # Aggregate lots -> one position per symbol.
+    agg: dict[str, dict[str, float]] = {}
+    for h in holdings:
+        sym = (h.symbol or "").strip().upper()
+        if not sym:
+            continue
+        bucket = agg.setdefault(sym, {"shares": 0.0, "cost": 0.0})
+        bucket["shares"] += float(h.shares)
+        bucket["cost"] += float(h.shares) * float(h.cost_basis_per_share)
+
+    symbols = sorted(agg.keys())
+    sem = asyncio.Semaphore(32)
+    snapshot_timeout_s = 8.0
+
+    async def _snapshot_for(ticker: str) -> dict[str, Any]:
+        async with sem:
+            try:
+                snap_task = asyncio.create_task(fetch_stock_snapshot_coalesced(ticker))
+                class_task = asyncio.create_task(market_classifier.classify(ticker))
+                snap, classification = await asyncio.wait_for(
+                    asyncio.gather(snap_task, class_task, return_exceptions=True),
+                    timeout=snapshot_timeout_s,
+                )
+                payload = snap if isinstance(snap, dict) else {}
+                if not isinstance(classification, Exception):
+                    payload["_classification"] = classification.model_dump()
+                return payload
+            except Exception:
+                return {}
+
+    snapshot_tasks = {sym: asyncio.create_task(_snapshot_for(sym)) for sym in symbols}
+    rows: list[dict[str, Any]] = []
+    total_cost = 0.0
+    total_value = 0.0
+    for sym in symbols:
+        shares = agg[sym]["shares"]
+        cost = agg[sym]["cost"]
+        avg_buy_price = cost / shares if shares else 0.0
+        total_cost += cost
+        snapshot = await snapshot_tasks[sym]
+        classification = snapshot.get("_classification") if isinstance(snapshot.get("_classification"), dict) else {}
+        raw_price = snapshot.get("current_price")
+        price = float(raw_price) if isinstance(raw_price, (int, float)) else None
+        sector = str(snapshot.get("sector") or "").strip() or ("Crypto" if is_crypto_symbol(sym) else None)
+        current_value = float(shares) * float(price) if isinstance(price, (int, float)) else None
+        if current_value is not None:
+            total_value += current_value
+        rows.append(
+            {
+                "id": sym,
+                "ticker": sym,
+                "quantity": shares,
+                "avg_buy_price": avg_buy_price,
+                "buy_date": "",
+                "sector": sector,
+                "current_price": price,
+                "current_value": current_value,
+                "pnl": (current_value - cost) if current_value is not None else None,
+                "exchange": classification.get("exchange") or snapshot.get("exchange"),
+                "country_code": classification.get("country_code") or snapshot.get("country_code"),
+                "flag_emoji": classification.get("flag_emoji") or snapshot.get("flag_emoji"),
+                "has_futures": bool(classification.get("has_futures")),
+                "has_options": bool(classification.get("has_options")),
+            }
+        )
+
+    overall_pnl = total_value - total_cost if total_value > 0 else None
+    return {
+        "items": rows,
+        "summary": {
+            "total_cost": total_cost,
+            "total_value": total_value if total_value > 0 else None,
+            "overall_pnl": overall_pnl,
+        },
+    }
 
 
 @router.post("/portfolios")
@@ -132,6 +252,30 @@ async def list_portfolios(
             }
         )
     return {"items": out}
+
+
+@router.get("/portfolios/primary")
+async def get_primary_portfolio_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Legacy-compatible summary of the user's primary portfolio.
+
+    Drop-in replacement for the retired global ``GET /api/portfolio``: same
+    ``{items, summary}`` shape, but scoped to the authenticated user instead of
+    a single table shared across everyone. Registered before the
+    ``/portfolios/{portfolio_id}`` route so "primary" isn't captured as an id.
+    """
+    portfolio = _primary_portfolio(db, current_user.id)
+    holdings = (
+        db.query(PortfolioHoldingORM)
+        .filter(PortfolioHoldingORM.portfolio_id == portfolio.id)
+        .all()
+    )
+    summary = await _legacy_summary_for_holdings(holdings)
+    summary["portfolio_id"] = portfolio.id
+    summary["portfolio_name"] = portfolio.name
+    return summary
 
 
 @router.get("/portfolios/{portfolio_id}")
