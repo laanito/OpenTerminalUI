@@ -501,7 +501,7 @@ export function LaunchpadPortfolioSummaryPanel(_: PanelProps) {
 }
 
 export function LaunchpadHeatmapPanel(_: PanelProps) {
-  const sector = useQuery({ queryKey: ["launchpad", "sector-allocation"], queryFn: fetchSectorAllocation, staleTime: 60_000, refetchInterval: 120_000 });
+  const sector = useQuery({ queryKey: ["launchpad", "sector-allocation"], queryFn: () => fetchSectorAllocation(), staleTime: 60_000, refetchInterval: 120_000 });
   const rows = sector.data?.sectors ?? [];
   const max = Math.max(...rows.map((r) => r.weight_pct), 1);
   return (

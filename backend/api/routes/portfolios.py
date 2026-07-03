@@ -673,15 +673,26 @@ async def get_portfolio_analytics(
 # `_manager_holdings_as_legacy` before feeding the shared analytics service.
 
 
+def _resolve_portfolio(db: Session, portfolio_id: str, user_id: str) -> PortfolioORM:
+    """Resolve a portfolio for analytics, honouring the ``primary`` sentinel.
+
+    ``/portfolios/primary/analytics/*`` falls through to these routes with
+    ``portfolio_id == "primary"`` (no separate route needed), letting dashboards
+    read the user's primary portfolio's analytics without first resolving its id.
+    """
+    if portfolio_id == "primary":
+        return _primary_portfolio(db, user_id)
+    return _portfolio_for_user(db, portfolio_id, user_id)  # 404 if not the caller's
+
+
 def _analytics_holdings(db: Session, portfolio_id: str, user_id: str) -> list[SimpleNamespace]:
-    _portfolio_for_user(db, portfolio_id, user_id)  # 404 if not the caller's
-    holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == portfolio_id).all()
+    portfolio = _resolve_portfolio(db, portfolio_id, user_id)
+    holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == portfolio.id).all()
     return _manager_holdings_as_legacy(holdings)
 
 
 def _default_benchmark(db: Session, portfolio_id: str, user_id: str) -> str:
-    row = _portfolio_for_user(db, portfolio_id, user_id)
-    return row.benchmark_symbol or "S&P500"
+    return _resolve_portfolio(db, portfolio_id, user_id).benchmark_symbol or "S&P500"
 
 
 @router.get("/portfolios/{portfolio_id}/analytics/sector-allocation")

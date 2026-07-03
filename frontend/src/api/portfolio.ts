@@ -82,8 +82,7 @@ export async function deleteHolding(holdingId: string | number): Promise<void> {
   await api.delete(`/portfolio/holdings/${holdingId}`);
 }
 
-export async function fetchPortfolio(): Promise<PortfolioResponse> {
-  const { data } = await api.get<PortfolioResponse>("/portfolio");
+function _normalizePortfolioResponse(data: unknown): PortfolioResponse {
   const items = Array.isArray((data as any)?.items) ? (data as any).items : [];
   const summary = (data as any)?.summary && typeof (data as any).summary === "object" ? (data as any).summary : {};
   return {
@@ -96,28 +95,47 @@ export async function fetchPortfolio(): Promise<PortfolioResponse> {
   };
 }
 
-export async function fetchSectorAllocation(): Promise<SectorAllocationResponse> {
-  const { data } = await api.get<SectorAllocationResponse>("/portfolio/analytics/sector-allocation");
+// The holdings summary now comes from the caller's *own* primary portfolio, not
+// the retired global (shared-across-users) table. Same {items, summary} shape,
+// so every dashboard (home, cockpit, HUD, launchpad, correlation) is unchanged.
+export async function fetchPortfolio(): Promise<PortfolioResponse> {
+  const { data } = await api.get<PortfolioResponse>("/portfolios/primary");
+  return _normalizePortfolioResponse(data);
+}
+
+// Reads the OLD global portfolio table directly. Kept solely for the one-time
+// "Import from Legacy" migration so users can pull their pre-existing global
+// holdings into the per-user Manager before the legacy endpoint is removed.
+export async function fetchLegacyGlobalPortfolio(): Promise<PortfolioResponse> {
+  const { data } = await api.get<PortfolioResponse>("/portfolio");
+  return _normalizePortfolioResponse(data);
+}
+
+// Analytics default to the user's primary portfolio; pass an explicit
+// portfolioId (the Manager does, for its selected portfolio). Both resolve on
+// the backend via /portfolios/{id|primary}/analytics/*.
+export async function fetchSectorAllocation(portfolioId = "primary"): Promise<SectorAllocationResponse> {
+  const { data } = await api.get<SectorAllocationResponse>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/sector-allocation`);
   return data;
 }
 
-export async function fetchPortfolioRiskMetrics(params?: { risk_free_rate?: number; benchmark?: string }): Promise<PortfolioRiskMetrics> {
-  const { data } = await api.get<PortfolioRiskMetrics>("/portfolio/analytics/risk-metrics", { params });
+export async function fetchPortfolioRiskMetrics(params?: { risk_free_rate?: number; benchmark?: string }, portfolioId = "primary"): Promise<PortfolioRiskMetrics> {
+  const { data } = await api.get<PortfolioRiskMetrics>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/risk-metrics`, { params });
   return data;
 }
 
-export async function fetchPortfolioCorrelation(params?: { window?: number }): Promise<PortfolioCorrelationResponse> {
-  const { data } = await api.get<PortfolioCorrelationResponse>("/portfolio/analytics/correlation", { params });
+export async function fetchPortfolioCorrelation(params?: { window?: number }, portfolioId = "primary"): Promise<PortfolioCorrelationResponse> {
+  const { data } = await api.get<PortfolioCorrelationResponse>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/correlation`, { params });
   return data;
 }
 
-export async function fetchPortfolioDividends(params?: { days?: number }): Promise<PortfolioDividendTracker> {
-  const { data } = await api.get<PortfolioDividendTracker>("/portfolio/analytics/dividends", { params });
+export async function fetchPortfolioDividends(params?: { days?: number }, portfolioId = "primary"): Promise<PortfolioDividendTracker> {
+  const { data } = await api.get<PortfolioDividendTracker>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/dividends`, { params });
   return data;
 }
 
-export async function fetchPortfolioBenchmarkOverlay(params?: { benchmark?: string }): Promise<PortfolioBenchmarkOverlay> {
-  const { data } = await api.get<PortfolioBenchmarkOverlay>("/portfolio/analytics/benchmark-overlay", { params });
+export async function fetchPortfolioBenchmarkOverlay(params?: { benchmark?: string }, portfolioId = "primary"): Promise<PortfolioBenchmarkOverlay> {
+  const { data } = await api.get<PortfolioBenchmarkOverlay>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/benchmark-overlay`, { params });
   return data;
 }
 
