@@ -80,6 +80,22 @@ def test_analytics_endpoints_return_wellformed_shapes() -> None:
     assert set(overlay.json()) >= {"equity_curve", "alpha", "tracking_error", "benchmark"}
 
 
+def test_primary_alias_resolves_for_analytics() -> None:
+    # `/portfolios/primary/analytics/*` falls through to the {portfolio_id} routes
+    # with the sentinel and resolves the caller's primary -- the id-free path the
+    # dashboards use. Works even before the user has explicitly made a portfolio.
+    client = TestClient(app)
+    headers = _auth_headers(client, "analytics-primary@example.com")
+    for suffix, keys in (
+        ("risk-metrics", {"sharpe_ratio", "sortino_ratio"}),
+        ("sector-allocation", {"total_value", "sectors"}),
+        ("benchmark-overlay", {"equity_curve", "benchmark"}),
+    ):
+        resp = client.get(f"/api/portfolios/primary/analytics/{suffix}", headers=headers)
+        assert resp.status_code == 200, f"{suffix}: {resp.status_code} {resp.text}"
+        assert set(resp.json()) >= keys
+
+
 def test_analytics_are_owner_scoped() -> None:
     client = TestClient(app)
     a = _auth_headers(client, "analytics-owner-a@example.com")

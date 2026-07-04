@@ -10,7 +10,11 @@ import {
   fetchPortfolioHoldings,
   fetchPortfolioTransactions,
   fetchPortfolios,
-  fetchPortfolio,
+  fetchLegacyGlobalPortfolio,
+  fetchPortfolioRiskMetrics,
+  fetchPortfolioCorrelation,
+  fetchPortfolioDividends,
+  fetchPortfolioBenchmarkOverlay,
   updatePortfolioById,
   type MultiPortfolio,
   type MultiPortfolioAnalytics,
@@ -18,9 +22,19 @@ import {
   type MultiPortfolioTransaction,
   type PortfolioTransactionType,
 } from "../../api/client";
+import type {
+  PortfolioRiskMetrics,
+  PortfolioCorrelationResponse,
+  PortfolioDividendTracker,
+  PortfolioBenchmarkOverlay,
+} from "../../types";
 import { DenseTable } from "../terminal/DenseTable";
 import { NotesPanel } from "../notes/NotesPanel";
 import { PortfolioEventsCalendar } from "../PortfolioEventsCalendar";
+import { RiskMetricsPanel } from "./RiskMetricsPanel";
+import { CorrelationHeatmap } from "./CorrelationHeatmap";
+import { DividendTracker } from "./DividendTracker";
+import { BenchmarkOverlayChart } from "./BenchmarkOverlayChart";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
@@ -64,6 +78,10 @@ export function PortfolioManager() {
   const [holdings, setHoldings] = useState<MultiPortfolioHolding[]>([]);
   const [notesSymbol, setNotesSymbol] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<MultiPortfolioAnalytics | null>(null);
+  const [riskMetrics, setRiskMetrics] = useState<PortfolioRiskMetrics | null>(null);
+  const [correlation, setCorrelation] = useState<PortfolioCorrelationResponse | null>(null);
+  const [dividends, setDividends] = useState<PortfolioDividendTracker | null>(null);
+  const [benchmarkOverlay, setBenchmarkOverlay] = useState<PortfolioBenchmarkOverlay | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -110,10 +128,26 @@ export function PortfolioManager() {
           setEditName(selected.name || "");
           setEditBenchmark(selected.benchmark_symbol || BENCHMARKS[0]);
         }
+        // Deep analytics hit market data and are slower; load them in the
+        // background (scoped to the selected portfolio) so the core view renders
+        // immediately. Each panel handles its own null/empty state.
+        const bench = selected?.benchmark_symbol || "S&P500";
+        setRiskMetrics(null);
+        setCorrelation(null);
+        setDividends(null);
+        setBenchmarkOverlay(null);
+        void fetchPortfolioRiskMetrics({ benchmark: bench, risk_free_rate: 0.04 }, activeId).then(setRiskMetrics).catch(() => setRiskMetrics(null));
+        void fetchPortfolioCorrelation({ window: 60 }, activeId).then(setCorrelation).catch(() => setCorrelation(null));
+        void fetchPortfolioDividends({ days: 180 }, activeId).then(setDividends).catch(() => setDividends(null));
+        void fetchPortfolioBenchmarkOverlay({ benchmark: bench }, activeId).then(setBenchmarkOverlay).catch(() => setBenchmarkOverlay(null));
       } else {
         setHoldings([]);
         setAnalytics(null);
         setTransactions([]);
+        setRiskMetrics(null);
+        setCorrelation(null);
+        setDividends(null);
+        setBenchmarkOverlay(null);
         setEditName("");
         setEditBenchmark(BENCHMARKS[0]);
       }
@@ -239,7 +273,7 @@ export function PortfolioManager() {
     setStatus(null);
     setError(null);
     try {
-      const legacy = await fetchPortfolio();
+      const legacy = await fetchLegacyGlobalPortfolio();
       const payloads = (legacy.items || []).map(legacyHoldingToPayload).filter(Boolean) as ReturnType<typeof legacyHoldingToPayload>[];
       if (!payloads.length) {
         setStatus("No legacy holdings to import");
@@ -549,6 +583,19 @@ export function PortfolioManager() {
             <div className="mb-2 text-xs text-terminal-muted">Upcoming events — dividends, earnings & corporate actions for your holdings</div>
             <PortfolioEventsCalendar symbols={portfolioSymbols} days={30} />
           </div>
+        ) : null}
+
+        {/* Deep analytics ported from the retired global portfolio — now scoped
+            to the selected Manager portfolio. */}
+        {selectedId ? (
+          <>
+            <RiskMetricsPanel metrics={riskMetrics} />
+            <div className="grid gap-2 xl:grid-cols-2">
+              <BenchmarkOverlayChart data={benchmarkOverlay} />
+              <CorrelationHeatmap data={correlation} />
+            </div>
+            <DividendTracker data={dividends} />
+          </>
         ) : null}
       </section>
     </div>
