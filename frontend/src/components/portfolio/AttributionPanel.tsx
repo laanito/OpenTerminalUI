@@ -1,6 +1,8 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { api } from "../../api/base";
+
 const FactorAttributionChart = lazy(() => import("./FactorAttributionChart"));
 
 type AttributionSectorRow = {
@@ -75,20 +77,18 @@ export function AttributionPanel({ portfolioId }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `/api/portfolio/${encodeURIComponent(portfolioId)}/attribution?period=${encodeURIComponent(period)}&benchmark=${encodeURIComponent(benchmark)}`,
-          { signal: controller.signal },
+        // Per-user Manager endpoint (plural), via the authed api client.
+        const { data: payload } = await api.get<AttributionResponse>(
+          `/portfolios/${encodeURIComponent(portfolioId)}/attribution`,
+          { params: { period, benchmark }, signal: controller.signal },
         );
-        if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { detail?: string } | null;
-          throw new Error(body?.detail ?? `Failed to load attribution (${response.status})`);
-        }
-        const payload = (await response.json()) as AttributionResponse;
         setData(payload);
       } catch (err) {
+        if ((err as { code?: string })?.code === "ERR_CANCELED") return;
         if (err instanceof DOMException && err.name === "AbortError") return;
         setData(null);
-        setError(err instanceof Error ? err.message : "Failed to load attribution");
+        const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+        setError(detail ?? (err instanceof Error ? err.message : "Failed to load attribution"));
       } finally {
         setLoading(false);
       }

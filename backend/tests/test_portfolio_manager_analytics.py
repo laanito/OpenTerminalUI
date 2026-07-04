@@ -96,6 +96,21 @@ def test_primary_alias_resolves_for_analytics() -> None:
         assert set(resp.json()) >= keys
 
 
+def test_attribution_endpoint_owner_scoped() -> None:
+    client = TestClient(app)
+    a = _auth_headers(client, "attribution-a@example.com")
+    b = _auth_headers(client, "attribution-b@example.com")
+    pid = _make_portfolio_with_holding(client, a)
+
+    ok = client.get(f"/api/portfolios/{pid}/attribution", headers=a, params={"period": "1M"})
+    assert ok.status_code == 200, ok.text
+    assert set(ok.json()) >= {"portfolio_id", "brinson", "factors", "benchmark"}
+
+    # Another user cannot read it.
+    denied = client.get(f"/api/portfolios/{pid}/attribution", headers=b)
+    assert denied.status_code == 404, denied.text
+
+
 def test_analytics_are_owner_scoped() -> None:
     client = TestClient(app)
     a = _auth_headers(client, "analytics-owner-a@example.com")

@@ -37,7 +37,9 @@ import { CorrelationHeatmap } from "./CorrelationHeatmap";
 import { DividendTracker } from "./DividendTracker";
 import { BenchmarkOverlayChart } from "./BenchmarkOverlayChart";
 import { BacktestResults } from "./BacktestResults";
+import { AttributionPanel } from "./AttributionPanel";
 import { AiInsightCard } from "../terminal/AiInsightCard";
+import { ExportButton } from "../common/ExportButton";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
@@ -448,6 +450,7 @@ export function PortfolioManager() {
             >
               Import from Legacy
             </TerminalButton>
+            <ExportButton source="portfolio" data={holdings} disabled={!holdings.length} />
             {loading ? <span className="text-terminal-muted">Loading...</span> : null}
           </div>
           {error ? <div className="mb-2 rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{error}</div> : null}
@@ -605,6 +608,7 @@ export function PortfolioManager() {
               <CorrelationHeatmap data={correlation} />
             </div>
             <DividendTracker data={dividends} />
+            <AttributionPanel portfolioId={selectedId} />
             <BacktestResults initialTickers={portfolioSymbols} />
           </>
         ) : null}
