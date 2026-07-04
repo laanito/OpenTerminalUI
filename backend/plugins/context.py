@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_unified_fetcher
-from backend.db.models import Holding
 
 
 class PluginContextImpl:
@@ -30,23 +29,11 @@ class PluginContextImpl:
 
     async def read_portfolio(self) -> dict[str, Any]:
         self._check("read_portfolio")
-        db = self._db_factory()
-        try:
-            rows = db.query(Holding).all()
-            return {
-                "items": [
-                    {
-                        "id": x.id,
-                        "ticker": x.ticker,
-                        "quantity": x.quantity,
-                        "avg_buy_price": x.avg_buy_price,
-                        "buy_date": x.buy_date,
-                    }
-                    for x in rows
-                ]
-            }
-        finally:
-            db.close()
+        # The global, shared-across-users portfolio was retired in v1.1. Plugins
+        # are enabled process-wide with no per-user context, so there is no
+        # portfolio to scope to here — returning empty rather than leaking every
+        # user's holdings. (Re-wire once plugins carry a user identity.)
+        return {"items": []}
 
     def log(self, message: str) -> None:
         print(f"[plugin] {message}")

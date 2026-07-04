@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 from backend.api.deps import get_db, get_unified_fetcher
 from backend.api.routes.chart import _parse_yahoo_chart
 from backend.auth.deps import get_current_user
-from backend.models import BacktestRun, Holding, PortfolioDefinition, User
+from backend.models import BacktestRun, PortfolioDefinition, User
+from backend.services.legacy_holdings import resolve_user_holdings
 from backend.risk_engine.engine import DEFAULT_SCENARIOS, compute_portfolio_risk
 from backend.services.stress_test_service import stress_test_service
 
@@ -62,11 +63,11 @@ async def _load_returns_frame(symbols: list[str]) -> pd.DataFrame:
 async def risk_portfolio(
     payload: RiskPortfolioRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     symbols = [s.strip().upper() for s in payload.symbols if s.strip()]
     if not symbols:
-        rows = db.query(Holding).all()
+        rows = resolve_user_holdings(db, user.id)
         symbols = sorted({str(row.ticker).strip().upper() for row in rows if str(row.ticker).strip()})
     if not symbols:
         raise HTTPException(status_code=400, detail="No symbols provided for risk calculation")
@@ -136,11 +137,11 @@ def _validate_portfolio_id(db: Session, portfolio_id: str) -> None:
 def risk_stress_test(
     payload: StressTestRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     _validate_portfolio_id(db, payload.portfolio_id)
     try:
-        result = stress_test_service.run_stress_test(db, payload.portfolio_id, payload.scenario, payload.custom_params)
+        result = stress_test_service.run_stress_test(db, payload.portfolio_id, payload.scenario, payload.custom_params, user_id=user.id)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except KeyError:
@@ -152,11 +153,11 @@ def risk_stress_test(
 def risk_stress_test_replay(
     payload: StressReplayRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     _validate_portfolio_id(db, payload.portfolio_id)
     try:
-        result = stress_test_service.run_historical_replay(db, payload.portfolio_id, payload.scenario)
+        result = stress_test_service.run_historical_replay(db, payload.portfolio_id, payload.scenario, user_id=user.id)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except KeyError:

@@ -11,7 +11,7 @@ from sqlalchemy.pool import StaticPool
 from backend.api.deps import get_db
 from backend.api.routes.stress_test import _RUN_HISTORY, router as stress_test_router
 from backend.auth.deps import get_current_user
-from backend.models import Holding, PortfolioDefinition
+from backend.models import PortfolioDefinition, PortfolioHoldingORM, PortfolioORM
 from backend.shared.db import Base
 
 
@@ -54,12 +54,17 @@ def _build_app() -> TestClient:
                 constraints_json={},
             )
         )
+        # Holdings now live in the user's per-user Manager portfolio (was the
+        # global Holding table). The stress endpoints resolve them via the
+        # authenticated user (overridden to u_test above).
+        db.add(PortfolioORM(id="pf-u-test", user_id="u_test", name="Core", currency="USD", starting_cash=0.0))
+        db.flush()
         db.add_all(
             [
-                Holding(ticker="AAPL", quantity=100, avg_buy_price=180.0, buy_date="2025-01-15"),
-                Holding(ticker="JPM", quantity=80, avg_buy_price=160.0, buy_date="2025-02-10"),
-                Holding(ticker="RELIANCE.NS", quantity=120, avg_buy_price=2800.0, buy_date="2025-03-20"),
-                Holding(ticker="XOM", quantity=90, avg_buy_price=115.0, buy_date="2025-04-05"),
+                PortfolioHoldingORM(portfolio_id="pf-u-test", symbol="AAPL", shares=100, cost_basis_per_share=180.0, purchase_date="2025-01-15", lot_id="l1"),
+                PortfolioHoldingORM(portfolio_id="pf-u-test", symbol="JPM", shares=80, cost_basis_per_share=160.0, purchase_date="2025-02-10", lot_id="l2"),
+                PortfolioHoldingORM(portfolio_id="pf-u-test", symbol="RELIANCE.NS", shares=120, cost_basis_per_share=2800.0, purchase_date="2025-03-20", lot_id="l3"),
+                PortfolioHoldingORM(portfolio_id="pf-u-test", symbol="XOM", shares=90, cost_basis_per_share=115.0, purchase_date="2025-04-05", lot_id="l4"),
             ]
         )
         db.commit()

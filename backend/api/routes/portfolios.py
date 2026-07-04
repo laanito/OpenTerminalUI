@@ -19,6 +19,10 @@ from backend.models import (
     PortfolioTransactionORM,
     User,
 )
+from backend.services.legacy_holdings import (
+    manager_holdings_as_legacy,
+    primary_portfolio,
+)
 from backend.services.portfolio_analytics import portfolio_analytics_service
 from backend.services.portfolio_cash import cash_balance
 from backend.services.portfolio_pnl import realized_pnl
@@ -75,74 +79,6 @@ async def _quote_map(symbols: list[str]) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for sym in symbols:
         out[sym] = await fetch_stock_snapshot_coalesced(sym)
-    return out
-
-
-def _primary_portfolio(db: Session, user_id: str, *, create: bool = True) -> PortfolioORM | None:
-    """The user's primary portfolio: their earliest-created one.
-
-    A user always has exactly one primary; when they have none yet and
-    ``create`` is set we materialise a default so dashboards (home, cockpit,
-    HUD, ...) that formerly read the global legacy portfolio have a per-user
-    portfolio to read instead. This is the replacement for the shared,
-    user-less legacy ``Holding`` table.
-    """
-    row = (
-        db.query(PortfolioORM)
-        .filter(PortfolioORM.user_id == user_id)
-        # id is a stable tiebreaker so "primary" stays fixed even if two
-        # portfolios share a created_at timestamp.
-        .order_by(PortfolioORM.created_at.asc(), PortfolioORM.id.asc())
-        .first()
-    )
-    if row is not None or not create:
-        return row
-    row = PortfolioORM(
-        user_id=user_id,
-        name="My Portfolio",
-        description="",
-        benchmark_symbol=None,
-        currency="USD",
-        starting_cash=0.0,
-    )
-    db.add(row)
-    db.commit()
-    db.refresh(row)
-    return row
-
-
-def _manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[SimpleNamespace]:
-    """Adapt Manager holdings to the ``Holding``-shaped objects the analytics
-    service reads (``.ticker``/``.quantity``/``.avg_buy_price``/``.buy_date``).
-
-    Aggregated per symbol on purpose: ``_portfolio_returns`` and
-    ``benchmark_overlay`` key intermediate dicts by ticker, so passing raw
-    per-lot rows would let a later lot silently overwrite an earlier lot's
-    quantity. buy_date is the earliest lot's date (equity curve "since first
-    bought").
-    """
-    agg: dict[str, dict[str, Any]] = {}
-    for h in holdings:
-        sym = (h.symbol or "").strip().upper()
-        if not sym:
-            continue
-        b = agg.setdefault(sym, {"shares": 0.0, "cost": 0.0, "buy_date": ""})
-        b["shares"] += float(h.shares)
-        b["cost"] += float(h.shares) * float(h.cost_basis_per_share)
-        pdate = (h.purchase_date or "").strip()
-        if pdate and (not b["buy_date"] or pdate < b["buy_date"]):
-            b["buy_date"] = pdate
-    out: list[SimpleNamespace] = []
-    for sym, b in agg.items():
-        shares = b["shares"]
-        out.append(
-            SimpleNamespace(
-                ticker=sym,
-                quantity=shares,
-                avg_buy_price=(b["cost"] / shares if shares else 0.0),
-                buy_date=b["buy_date"],
-            )
-        )
     return out
 
 
@@ -301,7 +237,7 @@ async def get_primary_portfolio_summary(
     a single table shared across everyone. Registered before the
     ``/portfolios/{portfolio_id}`` route so "primary" isn't captured as an id.
     """
-    portfolio = _primary_portfolio(db, current_user.id)
+    portfolio = primary_portfolio(db, current_user.id)
     holdings = (
         db.query(PortfolioHoldingORM)
         .filter(PortfolioHoldingORM.portfolio_id == portfolio.id)
@@ -681,14 +617,14 @@ def _resolve_portfolio(db: Session, portfolio_id: str, user_id: str) -> Portfoli
     read the user's primary portfolio's analytics without first resolving its id.
     """
     if portfolio_id == "primary":
-        return _primary_portfolio(db, user_id)
+        return primary_portfolio(db, user_id)
     return _portfolio_for_user(db, portfolio_id, user_id)  # 404 if not the caller's
 
 
 def _analytics_holdings(db: Session, portfolio_id: str, user_id: str) -> list[SimpleNamespace]:
     portfolio = _resolve_portfolio(db, portfolio_id, user_id)
     holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == portfolio.id).all()
-    return _manager_holdings_as_legacy(holdings)
+    return manager_holdings_as_legacy(holdings)
 
 
 def _default_benchmark(db: Session, portfolio_id: str, user_id: str) -> str:

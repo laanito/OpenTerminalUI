@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from backend.models import Holding, PortfolioDefinition
+from backend.services.legacy_holdings import resolve_user_holdings
 
 
 @dataclass(frozen=True)
@@ -193,13 +194,13 @@ class StressTestService:
                 return scenario
         raise KeyError(normalized)
 
-    def resolve_portfolio_holdings(self, db: Session, portfolio_id: str) -> tuple[list[Holding], str]:
+    def resolve_portfolio_holdings(self, db: Session, portfolio_id: str, user_id: str) -> tuple[list[Holding], str]:
         normalized = self._normalize_portfolio_id(portfolio_id)
         if normalized not in {"current", "portfolio", "default", ""}:
             portfolio = db.query(PortfolioDefinition).filter(PortfolioDefinition.id == portfolio_id).first()
             if portfolio is None:
                 raise LookupError("Portfolio not found")
-        holdings = db.query(Holding).all()
+        holdings = resolve_user_holdings(db, user_id)
         if not holdings:
             raise LookupError("No holdings available")
         return holdings, normalized or "current"
@@ -210,8 +211,10 @@ class StressTestService:
         portfolio_id: str,
         scenario_key: str,
         custom_params: dict[str, float] | None = None,
+        *,
+        user_id: str,
     ) -> StressResult:
-        holdings, resolved_portfolio = self.resolve_portfolio_holdings(db, portfolio_id)
+        holdings, resolved_portfolio = self.resolve_portfolio_holdings(db, portfolio_id, user_id)
         if self._normalize_key(scenario_key) == "custom":
             scenario_name = "Custom Stress Scenario"
             shocks = self._normalize_custom_params(custom_params or {})
@@ -280,8 +283,10 @@ class StressTestService:
         db: Session,
         portfolio_id: str,
         scenario_key: str,
+        *,
+        user_id: str,
     ) -> ReplayResult:
-        holdings, resolved_portfolio = self.resolve_portfolio_holdings(db, portfolio_id)
+        holdings, resolved_portfolio = self.resolve_portfolio_holdings(db, portfolio_id, user_id)
         scenario = self.get_scenario(scenario_key)
         impacts = [self._impact_for_holding(h, scenario.shocks) for h in holdings]
         starting_value = sum(item.current_value for item in impacts)

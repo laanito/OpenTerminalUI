@@ -8,7 +8,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from backend.db.models import BacktestRun, Holding, TaxLot, VirtualTrade, WatchlistItem
+from backend.db.models import BacktestRun, TaxLot, VirtualTrade, WatchlistItem
+from backend.services.legacy_holdings import resolve_user_holdings
 
 
 def _json_flatten(row: dict[str, Any]) -> dict[str, Any]:
@@ -21,7 +22,7 @@ def _json_flatten(row: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def rows_for_data_type(db: Session, data_type: str) -> list[dict[str, Any]]:
+def rows_for_data_type(db: Session, data_type: str, user_id: str) -> list[dict[str, Any]]:
     key = data_type.strip().lower()
     if key == "watchlist":
         return [
@@ -29,15 +30,15 @@ def rows_for_data_type(db: Session, data_type: str) -> list[dict[str, Any]]:
             for x in db.query(WatchlistItem).all()
         ]
     if key == "positions":
+        # Scoped to the user's own primary portfolio (was a global query).
         return [
             {
-                "id": x.id,
                 "ticker": x.ticker,
                 "quantity": x.quantity,
                 "avg_buy_price": x.avg_buy_price,
                 "buy_date": x.buy_date,
             }
-            for x in db.query(Holding).all()
+            for x in resolve_user_holdings(db, user_id)
         ]
     if key in {"trades", "backtest_trades"}:
         return [

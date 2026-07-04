@@ -12,8 +12,8 @@ from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
-from backend.api.routes.portfolios import _manager_holdings_as_legacy
 from backend.main import app
+from backend.services.legacy_holdings import manager_holdings_as_legacy
 
 
 def _auth_headers(client: TestClient, email: str) -> dict[str, str]:
@@ -44,7 +44,7 @@ def test_adapter_aggregates_lots_per_symbol_without_overwrite() -> None:
         SimpleNamespace(symbol="AAPL", shares=30, cost_basis_per_share=200, purchase_date="2025-01-15"),
         SimpleNamespace(symbol="msft", shares=5, cost_basis_per_share=50, purchase_date=""),
     ]
-    adapted = {h.ticker: h for h in _manager_holdings_as_legacy(holdings)}
+    adapted = {h.ticker: h for h in manager_holdings_as_legacy(holdings)}
     assert set(adapted) == {"AAPL", "MSFT"}
     aapl = adapted["AAPL"]
     assert aapl.quantity == 40

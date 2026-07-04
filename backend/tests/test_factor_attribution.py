@@ -114,11 +114,11 @@ def test_rolling_exposures_returns_series_for_each_factor() -> None:
 def test_factor_analysis_api_routes(monkeypatch: pytest.MonkeyPatch) -> None:
     app = FastAPI()
     app.include_router(factor_analysis.router, prefix="/api")
-    app.dependency_overrides[get_current_user] = lambda: object()
+    app.dependency_overrides[get_current_user] = lambda: type("U", (), {"id": "u_test"})()
 
     universe, holdings, dates = _build_universe()
 
-    async def _fake_context(_db, _portfolio_id: str, _period: str):  # noqa: ANN001
+    async def _fake_context(_db, _portfolio_id: str, _period: str, _user_id: str):  # noqa: ANN001
         return {"holdings": holdings, "universe_data": universe, "dates": dates}
 
     monkeypatch.setattr(factor_analysis, "_load_factor_context", _fake_context)

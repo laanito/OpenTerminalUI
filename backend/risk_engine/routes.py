@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from backend.api.deps import get_db, get_unified_fetcher
 from backend.api.routes.chart import _parse_yahoo_chart
 from backend.auth.deps import get_current_user
-from backend.models import Holding, User
+from backend.models import User
+from backend.services.legacy_holdings import resolve_user_holdings
 from backend.shared.market_classifier import market_classifier
 from backend.risk_engine.schemas import RiskSummary, ExposureAnalytics, CorrelationMatrix
 from backend.risk_engine.compute import (
@@ -45,7 +46,7 @@ async def _load_symbols_returns(symbols: List[str]) -> pd.DataFrame:
     df = pd.DataFrame(series_map).dropna()
     return df
 
-async def _get_target_symbols(db: Session, ticker: Optional[str] = None) -> List[str]:
+async def _get_target_symbols(db: Session, ticker: Optional[str], user_id: str) -> List[str]:
     if ticker:
         ticker = ticker.strip().upper()
         try:
@@ -58,7 +59,7 @@ async def _get_target_symbols(db: Session, ticker: Optional[str] = None) -> List
         except Exception:
             return [ticker]
 
-    rows = db.query(Holding).all()
+    rows = resolve_user_holdings(db, user_id)
     return sorted({str(row.ticker).strip().upper() for row in rows if str(row.ticker).strip()})
 
 @router.get("/summary", response_model=RiskSummary)
@@ -67,7 +68,7 @@ async def get_risk_summary(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    symbols = await _get_target_symbols(db, ticker)
+    symbols = await _get_target_symbols(db, ticker, user.id)
     df = await _load_symbols_returns(symbols)
 
     if df.empty:
@@ -110,7 +111,7 @@ async def get_risk_exposures(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    symbols = await _get_target_symbols(db, ticker)
+    symbols = await _get_target_symbols(db, ticker, user.id)
     df = await _load_symbols_returns(symbols)
     if df.empty:
         return ExposureAnalytics(pca_factors=[], loadings={})
@@ -127,7 +128,7 @@ async def get_risk_correlation(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    symbols = await _get_target_symbols(db, ticker)
+    symbols = await _get_target_symbols(db, ticker, user.id)
     df = await _load_symbols_returns(symbols)
     if df.empty:
         return CorrelationMatrix(matrix=[], assets=[])
@@ -146,9 +147,9 @@ async def get_sector_concentration(
 ):
     if ticker:
         # For a single ticker, we show industry/sector context compared to its peers
-        symbols = await _get_target_symbols(db, ticker)
+        symbols = await _get_target_symbols(db, ticker, user.id)
     else:
-        rows = db.query(Holding).all()
+        rows = resolve_user_holdings(db, user.id)
         symbols = [row.ticker for row in rows]
 
     if not symbols:

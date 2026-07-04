@@ -9,7 +9,8 @@ from typing import List
 from backend.core.unified_fetcher import UnifiedFetcher
 from backend.shared.cache import cache
 from backend.shared.db import SessionLocal
-from backend.db.models import Holding, WatchlistItem
+from backend.db.models import WatchlistItem
+from backend.services.legacy_holdings import all_held_symbols
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ def is_market_hours() -> bool:
 def get_db_tickers() -> List[str]:
     db = SessionLocal()
     try:
-        holdings = [h.ticker for h in db.query(Holding.ticker).all()]
+        holdings = all_held_symbols(db)
         watchlist = [w.ticker for w in db.query(WatchlistItem.ticker).all()]
         return list(set(holdings + watchlist))
     except Exception as e:
