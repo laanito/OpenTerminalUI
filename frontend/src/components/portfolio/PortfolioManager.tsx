@@ -15,6 +15,7 @@ import {
   fetchPortfolioCorrelation,
   fetchPortfolioDividends,
   fetchPortfolioBenchmarkOverlay,
+  fetchAiRiskInsights,
   updatePortfolioById,
   type MultiPortfolio,
   type MultiPortfolioAnalytics,
@@ -35,6 +36,8 @@ import { RiskMetricsPanel } from "./RiskMetricsPanel";
 import { CorrelationHeatmap } from "./CorrelationHeatmap";
 import { DividendTracker } from "./DividendTracker";
 import { BenchmarkOverlayChart } from "./BenchmarkOverlayChart";
+import { BacktestResults } from "./BacktestResults";
+import { AiInsightCard } from "../terminal/AiInsightCard";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
@@ -589,12 +592,20 @@ export function PortfolioManager() {
             to the selected Manager portfolio. */}
         {selectedId ? (
           <>
-            <RiskMetricsPanel metrics={riskMetrics} />
+            <div className="grid gap-2 xl:grid-cols-2">
+              <RiskMetricsPanel metrics={riskMetrics} />
+              <AiInsightCard
+                title="AI Risk Assessment"
+                description="Narrative interpretation of portfolio risk, concentration, and tail-risk posture"
+                fetcher={() => fetchAiRiskInsights(riskMetrics || {}, "portfolio")}
+              />
+            </div>
             <div className="grid gap-2 xl:grid-cols-2">
               <BenchmarkOverlayChart data={benchmarkOverlay} />
               <CorrelationHeatmap data={correlation} />
             </div>
             <DividendTracker data={dividends} />
+            <BacktestResults initialTickers={portfolioSymbols} />
           </>
         ) : null}
       </section>
