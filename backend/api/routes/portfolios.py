@@ -686,3 +686,27 @@ async def get_portfolio_benchmark_overlay(
     holdings = _analytics_holdings(db, portfolio_id, current_user.id)
     bench = benchmark or _default_benchmark(db, portfolio_id, current_user.id)
     return await portfolio_analytics_service.benchmark_overlay(holdings, benchmark=bench)
+
+
+@router.get("/portfolios/{portfolio_id}/attribution")
+async def get_portfolio_attribution(
+    portfolio_id: str,
+    period: str = Query(default="1M"),
+    benchmark: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    # Brinson + factor attribution for the user's own portfolio. Resolves the
+    # portfolio (ownership-checked, honours "primary") then feeds its real id to
+    # the per-portfolio attribution path (no global-holdings involvement).
+    portfolio = _resolve_portfolio(db, portfolio_id, current_user.id)
+    bench = benchmark or portfolio.benchmark_symbol or "S&P500"
+    try:
+        return await portfolio_analytics_service.portfolio_attribution(
+            db=db, portfolio_id=portfolio.id, period=period, benchmark=bench
+        )
+    except ValueError as exc:
+        message = str(exc)
+        if "not found" in message.lower():
+            raise HTTPException(status_code=404, detail=message)
+        raise HTTPException(status_code=400, detail=message)
