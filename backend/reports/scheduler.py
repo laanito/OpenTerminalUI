@@ -136,7 +136,7 @@ class ScheduledReportsService:
             )
             if row is None:
                 return
-            rows = rows_for_data_type(db, row.data_type)
+            rows = rows_for_data_type(db, row.data_type, row.user_id)
             pdf = generate_pdf_report(rows, title=f"{row.report_type} report")
             self.send_email(
                 row.email,

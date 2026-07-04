@@ -8,12 +8,15 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_db
-from backend.db.models import Holding, WatchlistItem
+from backend.auth.deps import get_current_user
+from backend.db.models import WatchlistItem
 from backend.equity.services.corporate_actions import (
     EventType,
     corporate_actions_service,
     extract_amount,
 )
+from backend.models import User
+from backend.services.legacy_holdings import resolve_user_holdings
 
 router = APIRouter()
 
@@ -51,8 +54,8 @@ def _dividend_type(title: str) -> str:
     return "Dividend"
 
 
-def _portfolio_symbols(db: Session) -> list[str]:
-    holdings = {h.ticker.strip().upper() for h in db.query(Holding).all() if h.ticker}
+def _portfolio_symbols(db: Session, user_id: str) -> list[str]:
+    holdings = {h.ticker.strip().upper() for h in resolve_user_holdings(db, user_id) if h.ticker}
     watchlist = {w.ticker.strip().upper() for w in db.query(WatchlistItem).all() if w.ticker}
     return sorted(holdings | watchlist)
 
@@ -62,6 +65,7 @@ async def get_dividend_calendar(
     days: int = Query(default=30, ge=1, le=365),
     symbols: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Upcoming dividend ex-dates for the user's universe.
 
@@ -72,7 +76,7 @@ async def get_dividend_calendar(
     if symbols:
         universe = sorted({s.strip().upper() for s in symbols.split(",") if s.strip()})
     else:
-        universe = _portfolio_symbols(db) or _DEFAULT_UNIVERSE
+        universe = _portfolio_symbols(db, current_user.id) or _DEFAULT_UNIVERSE
 
     events = await corporate_actions_service.get_upcoming_dividends(universe, days_ahead=days)
     out: list[dict[str, Any]] = []
@@ -129,14 +133,17 @@ async def get_dividend_aristocrats():
 
 
 @router.get("/dividends/portfolio-income")
-async def get_portfolio_dividend_income(db: Session = Depends(get_db)):
+async def get_portfolio_dividend_income(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Projected dividend income for current holdings, bucketed by month.
 
     Combines concrete upcoming ex-date events (next 12 months) with a
     trailing-yield estimate so the annual figure is meaningful even when a name
     has no scheduled event in the window.
     """
-    holdings = db.query(Holding).all()
+    holdings = resolve_user_holdings(db, current_user.id)
     qty = {h.ticker.strip().upper(): float(h.quantity) for h in holdings if h.ticker}
     symbols = sorted(qty.keys())
 

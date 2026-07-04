@@ -4,7 +4,7 @@ import math
 import numpy as np
 import pandas as pd
 import pytest
-from backend.models import Holding
+from backend.models import Holding, PortfolioHoldingORM, PortfolioORM
 from backend.risk_engine.scenario_engine import scenario_engine, ScenarioImpact
 
 def test_parallel_shift_math():
@@ -138,9 +138,12 @@ def test_api_endpoint_integration():
     test_app.dependency_overrides[get_db] = override_get_db
     test_app.dependency_overrides[get_current_user] = override_get_current_user
 
-    # Seed data
+    # Seed data in the user's per-user Manager portfolio (was the global Holding
+    # table); the endpoint resolves holdings via the authenticated user.
     db = TestingSessionLocal()
-    db.add(Holding(ticker="AAPL", quantity=100, avg_buy_price=150.0, buy_date="2024-01-15"))
+    db.add(PortfolioORM(id="pf-test-user", user_id="test_user", name="Core", currency="USD", starting_cash=0.0))
+    db.flush()
+    db.add(PortfolioHoldingORM(portfolio_id="pf-test-user", symbol="AAPL", shares=100, cost_basis_per_share=150.0, purchase_date="2024-01-15", lot_id="l1"))
     db.commit()
     db.close()
 

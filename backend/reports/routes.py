@@ -397,19 +397,19 @@ def delete_scheduled_report(
 
 # Maps a requested report type to the underlying data rows. Reuses the generator's
 # data-type row builders; "stock" narrows the holdings/lots to a single ticker.
-def _rows_for_report(db: Session, report_type: str, params: Dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
+def _rows_for_report(db: Session, report_type: str, params: Dict[str, Any], user_id: str) -> tuple[str, list[dict[str, Any]]]:
     key = (report_type or "portfolio").strip().lower()
     if key == "portfolio":
-        return "Portfolio Report", rows_for_data_type(db, "positions")
+        return "Portfolio Report", rows_for_data_type(db, "positions", user_id)
     if key == "backtest":
-        return "Backtest Report", rows_for_data_type(db, "screening_results")
+        return "Backtest Report", rows_for_data_type(db, "screening_results", user_id)
     if key == "stock":
         ticker = str(params.get("ticker", "")).strip().upper()
-        positions = [r for r in rows_for_data_type(db, "positions") if str(r.get("ticker", "")).upper() == ticker]
-        lots = [r for r in rows_for_data_type(db, "tax_lots") if str(r.get("ticker", "")).upper() == ticker]
+        positions = [r for r in rows_for_data_type(db, "positions", user_id) if str(r.get("ticker", "")).upper() == ticker]
+        lots = [r for r in rows_for_data_type(db, "tax_lots", user_id) if str(r.get("ticker", "")).upper() == ticker]
         return f"Stock Report - {ticker or 'N/A'}", positions + lots
     # Unknown type: fall back to portfolio positions rather than erroring.
-    return f"{key.title()} Report", rows_for_data_type(db, "positions")
+    return f"{key.title()} Report", rows_for_data_type(db, "positions", user_id)
 
 
 @router.post("/reports/generate")
@@ -418,7 +418,7 @@ def generate_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Response:
-    title, rows = _rows_for_report(db, payload.type, payload.params)
+    title, rows = _rows_for_report(db, payload.type, payload.params, current_user.id)
     try:
         pdf = generate_pdf_report(rows, title=title)
     except RuntimeError as exc:  # reportlab missing
