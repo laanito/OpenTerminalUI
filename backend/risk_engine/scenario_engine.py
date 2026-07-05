@@ -7,7 +7,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from backend.models import Holding
 from backend.risk_engine.compute import calculate_beta
 from backend.risk_engine.engine import compute_parametric_var_es
 
@@ -439,7 +438,7 @@ class ScenarioEngine:
 
     def run_stress_test(
         self,
-        holdings: list[Holding],
+        holdings: list[Any],
         scenario_type: str,
         returns_df: pd.DataFrame,
         market_returns: pd.Series,
@@ -461,7 +460,7 @@ class ScenarioEngine:
             return self._handle_flash_crash(holdings, base_beta, base_var, portfolio_value, params)
         raise ValueError(f"Unknown scenario type: {scenario_type}")
 
-    def _get_weights(self, holdings: list[Holding]) -> pd.Series:
+    def _get_weights(self, holdings: list[Any]) -> pd.Series:
         total_value = sum(float(h.quantity) * float(h.avg_buy_price) for h in holdings)
         weights: dict[str, float] = {}
         for holding in holdings:
@@ -471,7 +470,7 @@ class ScenarioEngine:
 
     def _handle_parallel_shift(
         self,
-        holdings: list[Holding],
+        holdings: list[Any],
         base_beta: float,
         base_var: float,
         portfolio_value: float,
@@ -499,7 +498,7 @@ class ScenarioEngine:
 
     def _handle_volatility_spike(
         self,
-        holdings: list[Holding],
+        holdings: list[Any],
         base_beta: float,
         base_var: float,
         portfolio_value: float,
@@ -526,7 +525,7 @@ class ScenarioEngine:
 
     def _handle_flash_crash(
         self,
-        holdings: list[Holding],
+        holdings: list[Any],
         base_beta: float,
         base_var: float,
         portfolio_value: float,
@@ -550,8 +549,8 @@ class ScenarioEngine:
             base_var=base_var,
         )
 
-    def _normalize_holding(self, holding: dict[str, Any] | Holding) -> dict[str, Any]:
-        if isinstance(holding, Holding):
+    def _normalize_holding(self, holding: dict[str, Any] | Any) -> dict[str, Any]:
+        if not isinstance(holding, dict):
             symbol = str(holding.ticker).upper()
             quantity = float(holding.quantity)
             current_price = float(holding.avg_buy_price)

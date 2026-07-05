@@ -1,239 +1,29 @@
+"""Watchlist-items endpoints.
+
+The legacy global portfolio (a single, user-less `Holding` table) and its
+analytics / tax-lot / attribution endpoints were removed in v1.1 (part C) — the
+per-user Portfolio Manager (`/api/portfolios`) fully replaces them. This module
+now only serves the enriched watchlist-items feed, which was always global and
+is intentionally kept.
+"""
 from __future__ import annotations
 
 import asyncio
 
-from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from backend.api.deps import fetch_stock_snapshot_coalesced, get_db
-from backend.db.models import Holding, WatchlistItem
-from backend.services.portfolio_analytics import portfolio_analytics_service
-from backend.shared.market_classifier import is_crypto_symbol, market_classifier
+from backend.api.deps import get_db
+from backend.db.models import WatchlistItem
+from backend.shared.market_classifier import market_classifier
 
 router = APIRouter()
-
-
-class HoldingCreate(BaseModel):
-    ticker: str
-    quantity: float = Field(gt=0)
-    avg_buy_price: float = Field(gt=0)
-    buy_date: str
 
 
 class WatchlistCreate(BaseModel):
     watchlist_name: str
     ticker: str
-
-
-class TaxLotCreate(BaseModel):
-    ticker: str
-    quantity: float = Field(gt=0)
-    buy_price: float = Field(gt=0)
-    buy_date: str
-
-
-class TaxLotRealizeRequest(BaseModel):
-    ticker: str
-    quantity: float = Field(gt=0)
-    sell_price: float = Field(gt=0)
-    sell_date: str
-    method: str = Field(default="FIFO", pattern="^(FIFO|LIFO|SPECIFIC|fifo|lifo|specific)$")
-    specific_lot_ids: list[int] | None = None
-
-
-@router.get("/portfolio")
-async def get_portfolio(db: Session = Depends(get_db)) -> dict[str, object]:
-    holdings = db.query(Holding).all()
-    sem = asyncio.Semaphore(32)
-    # Bound per-holding live-quote enrichment so a single slow/blocked upstream
-    # (e.g. NSE returning 403 for cloud IPs) cannot stall the whole endpoint past
-    # the client's 30s timeout. On timeout the holding still renders with its cost
-    # basis; only the live price is omitted.
-    snapshot_timeout_s = 8.0
-
-    async def _snapshot_for(ticker: str) -> dict[str, object]:
-        async with sem:
-            try:
-                snap_task = asyncio.create_task(fetch_stock_snapshot_coalesced(ticker))
-                class_task = asyncio.create_task(market_classifier.classify(ticker))
-                snap, classification = await asyncio.wait_for(
-                    asyncio.gather(snap_task, class_task, return_exceptions=True),
-                    timeout=snapshot_timeout_s,
-                )
-                payload = snap if isinstance(snap, dict) else {}
-                if not isinstance(classification, Exception):
-                    payload["_classification"] = classification.model_dump()
-                return payload
-            except Exception:
-                return {}
-
-    snapshot_tasks = {h.id: asyncio.create_task(_snapshot_for(h.ticker)) for h in holdings}
-    rows: list[dict[str, object]] = []
-    total_cost = 0.0
-    total_value = 0.0
-    for h in holdings:
-        total_cost += float(h.quantity) * float(h.avg_buy_price)
-        snapshot = await snapshot_tasks[h.id]
-        classification = snapshot.get("_classification") if isinstance(snapshot.get("_classification"), dict) else {}
-        raw_price = snapshot.get("current_price")
-        price = float(raw_price) if isinstance(raw_price, (int, float)) else None
-        sector = str(snapshot.get("sector") or "").strip() or ("Crypto" if is_crypto_symbol(h.ticker) else None)
-        current_value = float(h.quantity) * float(price) if isinstance(price, (int, float)) else None
-        if current_value is not None:
-            total_value += current_value
-        rows.append(
-            {
-                "id": h.id,
-                "ticker": h.ticker,
-                "quantity": h.quantity,
-                "avg_buy_price": h.avg_buy_price,
-                "buy_date": h.buy_date,
-                "sector": sector,
-                "current_price": price,
-                "current_value": current_value,
-                "pnl": (current_value - (float(h.quantity) * float(h.avg_buy_price))) if current_value is not None else None,
-                "exchange": classification.get("exchange") or snapshot.get("exchange"),
-                "country_code": classification.get("country_code") or snapshot.get("country_code"),
-                "flag_emoji": classification.get("flag_emoji") or snapshot.get("flag_emoji"),
-                "has_futures": bool(classification.get("has_futures")),
-                "has_options": bool(classification.get("has_options")),
-            }
-        )
-
-    overall_pnl = total_value - total_cost if total_value > 0 else None
-    return {
-        "items": rows,
-        "summary": {
-            "total_cost": total_cost,
-            "total_value": total_value if total_value > 0 else None,
-            "overall_pnl": overall_pnl,
-        },
-    }
-
-
-@router.get("/portfolio/analytics/sector-allocation")
-async def get_sector_allocation(db: Session = Depends(get_db)) -> dict[str, object]:
-    holdings = db.query(Holding).all()
-    return await portfolio_analytics_service.sector_allocation(holdings)
-
-
-@router.get("/portfolio/analytics/risk-metrics")
-async def get_risk_metrics(
-    risk_free_rate: float = Query(default=0.04, ge=0, le=0.25),
-    benchmark: str = Query(default="S&P500"),
-    db: Session = Depends(get_db),
-) -> dict[str, object]:
-    holdings = db.query(Holding).all()
-    return await portfolio_analytics_service.risk_metrics(holdings, risk_free_rate=risk_free_rate, benchmark=benchmark)
-
-
-@router.get("/portfolio/analytics/correlation")
-async def get_correlation_matrix(
-    window: int = Query(default=60, ge=10, le=252),
-    db: Session = Depends(get_db),
-) -> dict[str, object]:
-    holdings = db.query(Holding).all()
-    return await portfolio_analytics_service.correlation_matrix(holdings, window=window)
-
-
-@router.get("/portfolio/analytics/dividends")
-async def get_dividend_tracker(
-    days: int = Query(default=180, ge=1, le=730),
-    db: Session = Depends(get_db),
-) -> dict[str, object]:
-    holdings = db.query(Holding).all()
-    return await portfolio_analytics_service.dividend_tracker(holdings, days=days)
-
-
-@router.get("/portfolio/analytics/benchmark-overlay")
-async def get_benchmark_overlay(
-    benchmark: str = Query(default="S&P500"),
-    db: Session = Depends(get_db),
-) -> dict[str, object]:
-    holdings = db.query(Holding).all()
-    return await portfolio_analytics_service.benchmark_overlay(holdings, benchmark=benchmark)
-
-
-@router.get("/portfolio/{portfolio_id}/attribution")
-async def get_portfolio_attribution(
-    portfolio_id: str,
-    period: str = Query(default="1M"),
-    benchmark: str = Query(default="S&P500"),
-    db: Session = Depends(get_db),
-) -> dict[str, object]:
-    try:
-        return await portfolio_analytics_service.portfolio_attribution(
-            db=db,
-            portfolio_id=portfolio_id,
-            period=period,
-            benchmark=benchmark,
-        )
-    except ValueError as exc:
-        message = str(exc)
-        if "not found" in message.lower():
-            raise HTTPException(status_code=404, detail=message)
-        raise HTTPException(status_code=400, detail=message)
-
-
-@router.post("/portfolio/holdings")
-def add_holding(payload: HoldingCreate, db: Session = Depends(get_db)) -> dict[str, object]:
-    row = Holding(
-        ticker=payload.ticker.strip().upper(),
-        quantity=float(payload.quantity),
-        avg_buy_price=float(payload.avg_buy_price),
-        buy_date=payload.buy_date,
-    )
-    db.add(row)
-    db.commit()
-    db.refresh(row)
-    return {"status": "created", "holding": {"id": row.id, "ticker": row.ticker}}
-
-
-@router.delete("/portfolio/holdings/{holding_id}")
-def delete_holding(holding_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
-    row = db.query(Holding).filter(Holding.id == holding_id).first()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Holding not found")
-    db.delete(row)
-    db.commit()
-    return {"status": "deleted", "id": holding_id}
-
-
-@router.get("/portfolio/tax-lots")
-async def get_tax_lots(
-    ticker: str | None = Query(default=None),
-    db: Session = Depends(get_db),
-) -> dict[str, object]:
-    return await portfolio_analytics_service.tax_lot_summary(db, ticker=ticker)
-
-
-@router.post("/portfolio/tax-lots")
-def create_tax_lot(payload: TaxLotCreate, db: Session = Depends(get_db)) -> dict[str, object]:
-    row = portfolio_analytics_service.add_tax_lot(
-        db=db,
-        ticker=payload.ticker,
-        quantity=payload.quantity,
-        buy_price=payload.buy_price,
-        buy_date=payload.buy_date,
-    )
-    return {"status": "created", "lot": {"id": row.id, "ticker": row.ticker}}
-
-
-@router.post("/portfolio/tax-lots/realize")
-def realize_tax_lot(payload: TaxLotRealizeRequest, db: Session = Depends(get_db)) -> dict[str, object]:
-    try:
-        return portfolio_analytics_service.realize_tax_lots(
-            db=db,
-            ticker=payload.ticker,
-            sell_quantity=payload.quantity,
-            sell_price=payload.sell_price,
-            sell_date=payload.sell_date,
-            method=payload.method,
-            specific_lot_ids=payload.specific_lot_ids,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
 
 
 # Enriched, flattened watchlist items (per-symbol classification: country, flags,

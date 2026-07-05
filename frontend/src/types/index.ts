@@ -351,45 +351,6 @@ export type PortfolioBenchmarkOverlay = {
   tracking_error: number;
 };
 
-export type TaxLotRow = {
-  id: number;
-  ticker: string;
-  quantity: number;
-  remaining_quantity: number;
-  buy_price: number;
-  buy_date: string;
-  current_price?: number | null;
-  unrealized_gain?: number | null;
-};
-
-export type TaxLotSummary = {
-  lots: TaxLotRow[];
-  unrealized_gain_total: number;
-};
-
-export type TaxLotRealizationResponse = {
-  symbol: string;
-  method: string;
-  sell_quantity: number;
-  sell_price: number;
-  sell_date: string;
-  realizations: Array<{
-    lot_id: number;
-    ticker: string;
-    quantity: number;
-    buy_price: number;
-    sell_price: number;
-    buy_date: string;
-    sell_date: string;
-    holding_days: number;
-    holding_period: "short_term" | "long_term";
-    realized_gain: number;
-  }>;
-  realized_gain_total: number;
-  short_term_gain: number;
-  long_term_gain: number;
-};
-
 export type PluginManifestItem = {
   id: string;
   name: string;

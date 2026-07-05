@@ -12,8 +12,26 @@ when the class is deleted these become plain value objects.
 """
 from __future__ import annotations
 
-from backend.models import Holding, PortfolioHoldingORM, PortfolioORM
+from dataclasses import dataclass
+
+from backend.models import PortfolioHoldingORM, PortfolioORM
 from sqlalchemy.orm import Session
+
+
+@dataclass
+class LegacyHolding:
+    """A position in the shape the old global ``Holding`` row exposed.
+
+    The global ``Holding`` ORM class was deleted; consumers that read
+    ``.ticker``/``.quantity``/``.avg_buy_price``/``.buy_date`` now get one of
+    these plain value objects (built per-user from the primary portfolio),
+    keeping their math unchanged.
+    """
+
+    ticker: str
+    quantity: float
+    avg_buy_price: float
+    buy_date: str = ""
 
 
 def primary_portfolio(db: Session, user_id: str, *, create: bool = True) -> PortfolioORM | None:
@@ -42,7 +60,7 @@ def primary_portfolio(db: Session, user_id: str, *, create: bool = True) -> Port
     return row
 
 
-def manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[Holding]:
+def manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[LegacyHolding]:
     """Adapt Manager holdings to legacy ``Holding`` shape, aggregated per symbol.
 
     Aggregation is deliberate: several downstream consumers key by ticker, so raw
@@ -59,11 +77,11 @@ def manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[Hold
         pdate = (h.purchase_date or "").strip()
         if pdate and (not b["buy_date"] or pdate < str(b["buy_date"])):
             b["buy_date"] = pdate
-    out: list[Holding] = []
+    out: list[LegacyHolding] = []
     for sym, b in agg.items():
         shares = float(b["shares"])
         out.append(
-            Holding(
+            LegacyHolding(
                 ticker=sym,
                 quantity=shares,
                 avg_buy_price=(float(b["cost"]) / shares if shares else 0.0),
@@ -73,7 +91,7 @@ def manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[Hold
     return out
 
 
-def resolve_user_holdings(db: Session, user_id: str) -> list[Holding]:
+def resolve_user_holdings(db: Session, user_id: str) -> list[LegacyHolding]:
     """The user's primary-portfolio holdings in legacy ``Holding`` shape.
 
     Drop-in for the old global ``db.query(Holding).all()``. Returns [] when the

@@ -21,7 +21,6 @@ from backend.models.core import (
     ChartTemplate,
     UserLayoutORM,
     FutureContract,
-    Holding,
     FundamentalsPitORM,
     ModelRegistryORM,
     ModelExperiment,
@@ -34,7 +33,6 @@ from backend.models.core import (
     OpsKillSwitchORM,
     PriceEodORM,
     ScheduledReportORM,
-    TaxLot,
     NewsArticle,
     PortfolioMutualFundHolding,
     PortfolioDefinition,
@@ -73,8 +71,6 @@ from backend.models.notes import NoteORM
 from backend.models.notification import Notification
 
 __all__ = [
-    "Holding",
-    "TaxLot",
     "ScheduledReportORM",
     "WatchlistItem",
     "AlertRuleORM",

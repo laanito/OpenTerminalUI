@@ -6,8 +6,6 @@ import type {
   PortfolioCorrelationResponse,
   PortfolioDividendTracker,
   PortfolioBenchmarkOverlay,
-  TaxLotSummary,
-  TaxLotRealizationResponse,
   PortfolioMutualFundsResponse,
   PaperPortfolio,
   PaperOrder,
@@ -103,14 +101,6 @@ export async function fetchPortfolio(): Promise<PortfolioResponse> {
   return _normalizePortfolioResponse(data);
 }
 
-// Reads the OLD global portfolio table directly. Kept solely for the one-time
-// "Import from Legacy" migration so users can pull their pre-existing global
-// holdings into the per-user Manager before the legacy endpoint is removed.
-export async function fetchLegacyGlobalPortfolio(): Promise<PortfolioResponse> {
-  const { data } = await api.get<PortfolioResponse>("/portfolio");
-  return _normalizePortfolioResponse(data);
-}
-
 // Analytics default to the user's primary portfolio; pass an explicit
 // portfolioId (the Manager does, for its selected portfolio). Both resolve on
 // the backend via /portfolios/{id|primary}/analytics/*.
@@ -139,26 +129,6 @@ export async function fetchPortfolioBenchmarkOverlay(params?: { benchmark?: stri
   return data;
 }
 
-export async function fetchTaxLots(params?: { ticker?: string }): Promise<TaxLotSummary> {
-  const { data } = await api.get<TaxLotSummary>("/portfolio/tax-lots", { params });
-  return data;
-}
-
-export async function addTaxLot(payload: { ticker: string; quantity: number; buy_price: number; buy_date: string }): Promise<void> {
-  await api.post("/portfolio/tax-lots", payload);
-}
-
-export async function realizeTaxLots(payload: {
-  ticker: string;
-  quantity: number;
-  sell_price: number;
-  sell_date: string;
-  method?: string;
-  specific_lot_ids?: number[];
-}): Promise<TaxLotRealizationResponse> {
-  const { data } = await api.post<TaxLotRealizationResponse>("/portfolio/tax-lots/realize", payload);
-  return data;
-}
 
 export async function fetchPortfolioMutualFunds(): Promise<PortfolioMutualFundsResponse> {
   const { data } = await api.get<PortfolioMutualFundsResponse>("/mutual-funds/portfolio");

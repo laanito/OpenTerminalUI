@@ -4,17 +4,8 @@ import asyncio
 from dataclasses import dataclass
 
 from backend.api.routes import portfolio, search, stocks
-from backend.db.models import Holding, WatchlistItem
+from backend.db.models import WatchlistItem
 from backend.shared.market_classifier import StockClassification, market_classifier
-
-
-@dataclass
-class _FakeHolding:
-    id: int
-    ticker: str
-    quantity: float
-    avg_buy_price: float
-    buy_date: str
 
 
 @dataclass
@@ -33,13 +24,10 @@ class _FakeQuery:
 
 
 class _FakeDB:
-    def __init__(self, holdings=None, watchlists=None):
-        self._holdings = holdings or []
+    def __init__(self, watchlists=None):
         self._watchlists = watchlists or []
 
     def query(self, model):
-        if model is Holding:
-            return _FakeQuery(self._holdings)
         if model is WatchlistItem:
             return _FakeQuery(self._watchlists)
         return _FakeQuery([])
@@ -100,29 +88,14 @@ def test_stocks_route_includes_classification_and_us_symbol(monkeypatch) -> None
     assert out.classification["has_options"] is True
 
 
-def test_portfolio_and_watchlist_are_enriched_with_market_fields(monkeypatch) -> None:
-    async def _fake_snapshot(_: str):
-        return {"current_price": 200.0, "sector": "Tech"}
-
+def test_watchlist_is_enriched_with_market_fields(monkeypatch) -> None:
     async def _fake_classify(symbol: str):
         return _us_classification(symbol)
 
-    monkeypatch.setattr(portfolio, "fetch_stock_snapshot_coalesced", _fake_snapshot)
     monkeypatch.setattr(portfolio.market_classifier, "classify", _fake_classify)
 
-    db = _FakeDB(
-        holdings=[_FakeHolding(id=1, ticker="AAPL", quantity=2, avg_buy_price=150, buy_date="2025-01-01")],
-        watchlists=[_FakeWatchlist(id=1, watchlist_name="Core", ticker="AAPL")],
-    )
-    port = asyncio.run(portfolio.get_portfolio(db=db))
+    db = _FakeDB(watchlists=[_FakeWatchlist(id=1, watchlist_name="Core", ticker="AAPL")])
     watch = asyncio.run(portfolio.get_watchlists(db=db))
-
-    assert len(port["items"]) == 1
-    row = port["items"][0]
-    assert row["exchange"] == "NASDAQ"
-    assert row["country_code"] == "US"
-    assert row["flag_emoji"] == "🇺🇸"
-    assert row["has_options"] is True
 
     assert len(watch["items"]) == 1
     wrow = watch["items"][0]
@@ -132,10 +105,7 @@ def test_portfolio_and_watchlist_are_enriched_with_market_fields(monkeypatch) ->
     assert wrow["has_options"] is True
 
 
-def test_portfolio_watchlist_mixed_india_us_enrichment(monkeypatch) -> None:
-    async def _fake_snapshot(_: str):
-        return {"current_price": 100.0, "sector": "Mixed"}
-
+def test_watchlist_mixed_india_us_enrichment(monkeypatch) -> None:
     async def _fake_classify(symbol: str):
         s = symbol.strip().upper()
         if s == "RELIANCE":
@@ -153,37 +123,25 @@ def test_portfolio_watchlist_mixed_india_us_enrichment(monkeypatch) -> None:
             )
         return _us_classification(s)
 
-    monkeypatch.setattr(portfolio, "fetch_stock_snapshot_coalesced", _fake_snapshot)
     monkeypatch.setattr(portfolio.market_classifier, "classify", _fake_classify)
 
     db = _FakeDB(
-        holdings=[
-            _FakeHolding(id=1, ticker="RELIANCE", quantity=1, avg_buy_price=90, buy_date="2025-01-01"),
-            _FakeHolding(id=2, ticker="AAPL", quantity=1, avg_buy_price=90, buy_date="2025-01-01"),
-        ],
         watchlists=[
             _FakeWatchlist(id=1, watchlist_name="Core", ticker="RELIANCE"),
             _FakeWatchlist(id=2, watchlist_name="Core", ticker="AAPL"),
         ],
     )
 
-    port = asyncio.run(portfolio.get_portfolio(db=db))
     watch = asyncio.run(portfolio.get_watchlists(db=db))
-
-    by_ticker_port = {row["ticker"]: row for row in port["items"]}
     by_ticker_watch = {row["ticker"]: row for row in watch["items"]}
 
-    assert by_ticker_port["RELIANCE"]["exchange"] == "NSE"
-    assert by_ticker_port["RELIANCE"]["country_code"] == "IN"
-    assert by_ticker_port["RELIANCE"]["has_futures"] is True
-    assert by_ticker_port["RELIANCE"]["has_options"] is True
-
-    assert by_ticker_port["AAPL"]["exchange"] == "NASDAQ"
-    assert by_ticker_port["AAPL"]["country_code"] == "US"
-    assert by_ticker_port["AAPL"]["has_futures"] is False
-    assert by_ticker_port["AAPL"]["has_options"] is True
-
+    assert by_ticker_watch["RELIANCE"]["exchange"] == "NSE"
+    assert by_ticker_watch["RELIANCE"]["country_code"] == "IN"
+    assert by_ticker_watch["RELIANCE"]["has_futures"] is True
     assert by_ticker_watch["RELIANCE"]["flag_emoji"] == "🇮🇳"
+
+    assert by_ticker_watch["AAPL"]["exchange"] == "NASDAQ"
+    assert by_ticker_watch["AAPL"]["country_code"] == "US"
     assert by_ticker_watch["AAPL"]["flag_emoji"] == "🇺🇸"
 
 

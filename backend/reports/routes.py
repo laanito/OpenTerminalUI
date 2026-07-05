@@ -406,8 +406,7 @@ def _rows_for_report(db: Session, report_type: str, params: Dict[str, Any], user
     if key == "stock":
         ticker = str(params.get("ticker", "")).strip().upper()
         positions = [r for r in rows_for_data_type(db, "positions", user_id) if str(r.get("ticker", "")).upper() == ticker]
-        lots = [r for r in rows_for_data_type(db, "tax_lots", user_id) if str(r.get("ticker", "")).upper() == ticker]
-        return f"Stock Report - {ticker or 'N/A'}", positions + lots
+        return f"Stock Report - {ticker or 'N/A'}", positions
     # Unknown type: fall back to portfolio positions rather than erroring.
     return f"{key.title()} Report", rows_for_data_type(db, "positions", user_id)
 

@@ -10,7 +10,6 @@ import {
   fetchPortfolioHoldings,
   fetchPortfolioTransactions,
   fetchPortfolios,
-  fetchLegacyGlobalPortfolio,
   fetchPortfolioRiskMetrics,
   fetchPortfolioCorrelation,
   fetchPortfolioDividends,
@@ -47,7 +46,6 @@ import { useSettingsStore } from "../../store/settingsStore";
 import type { CurrencyCode } from "../../lib/currency";
 import { TX_TYPES, TX_NEEDS_SYMBOL, TX_NEEDS_SHARES, cashDeltaPreview } from "../../utils/portfolioCash";
 import {
-  legacyHoldingToPayload,
   CSV_SYMBOL_COLUMNS,
   CSV_SHARES_COLUMNS,
   CSV_COST_COLUMNS,
@@ -283,38 +281,6 @@ export function PortfolioManager() {
     }
   };
 
-  // Migrate the (global, single) legacy portfolio into the selected Manager
-  // portfolio. Cost basis is preserved; each holding creates a buy transaction,
-  // which debits cash — migrated positions were bought historically, so we flag
-  // that rather than silently inventing cash to cover them.
-  const handleImportFromLegacy = async () => {
-    if (!selectedId) return;
-    setStatus(null);
-    setError(null);
-    try {
-      const legacy = await fetchLegacyGlobalPortfolio();
-      const payloads = (legacy.items || []).map(legacyHoldingToPayload).filter(Boolean) as ReturnType<typeof legacyHoldingToPayload>[];
-      if (!payloads.length) {
-        setStatus("No legacy holdings to import");
-        return;
-      }
-      let imported = 0;
-      for (const payload of payloads) {
-        if (!payload) continue;
-        await addPortfolioHolding(selectedId, payload);
-        imported += 1;
-      }
-      setStatus(
-        imported > 0
-          ? `Imported ${imported} holdings from legacy — cost basis preserved. Cash was debited for the purchases; record a deposit if you funded the account separately.`
-          : "No valid legacy holdings imported",
-      );
-      await loadAll(selectedId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to import from legacy portfolio");
-    }
-  };
-
   return (
     <div className="grid gap-3 xl:grid-cols-[240px_1fr]">
       <aside className="rounded border border-terminal-border bg-terminal-panel p-2">
@@ -455,15 +421,6 @@ export function PortfolioManager() {
                 }}
               />
             </label>
-            <TerminalButton
-              size="sm"
-              variant="default"
-              disabled={!selectedId}
-              title="Copy holdings from the legacy portfolio into this one"
-              onClick={() => void handleImportFromLegacy()}
-            >
-              Import from Legacy
-            </TerminalButton>
             <ExportButton source="portfolio" data={holdings} disabled={!holdings.length} />
             {loading ? <span className="text-terminal-muted">Loading...</span> : null}
           </div>

@@ -10,25 +10,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from backend.shared.db import Base
 
 
-class Holding(Base):
-    __tablename__ = "holdings"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    ticker: Mapped[str] = mapped_column(String(32), index=True)
-    quantity: Mapped[float] = mapped_column(Float)
-    avg_buy_price: Mapped[float] = mapped_column(Float)
-    buy_date: Mapped[str] = mapped_column(String(16))
-
-
-class TaxLot(Base):
-    __tablename__ = "tax_lots"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    ticker: Mapped[str] = mapped_column(String(32), index=True)
-    quantity: Mapped[float] = mapped_column(Float)
-    remaining_quantity: Mapped[float] = mapped_column(Float)
-    buy_price: Mapped[float] = mapped_column(Float)
-    buy_date: Mapped[str] = mapped_column(String(16), index=True)
+# The global, user-less `Holding` and `TaxLot` tables were removed in v1.1
+# (part C). Portfolios are per-user now (PortfolioORM/PortfolioHoldingORM);
+# consumers that need a legacy-shaped view use services.legacy_holdings.
 
 
 class ScheduledReportORM(Base):
