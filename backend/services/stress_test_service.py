@@ -8,8 +8,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from backend.models import Holding, PortfolioDefinition
-from backend.services.legacy_holdings import resolve_user_holdings
+from backend.models import PortfolioDefinition
+from backend.services.legacy_holdings import LegacyHolding, resolve_user_holdings
 
 
 @dataclass(frozen=True)
@@ -194,7 +194,7 @@ class StressTestService:
                 return scenario
         raise KeyError(normalized)
 
-    def resolve_portfolio_holdings(self, db: Session, portfolio_id: str, user_id: str) -> tuple[list[Holding], str]:
+    def resolve_portfolio_holdings(self, db: Session, portfolio_id: str, user_id: str) -> tuple[list[LegacyHolding], str]:
         normalized = self._normalize_portfolio_id(portfolio_id)
         if normalized not in {"current", "portfolio", "default", ""}:
             portfolio = db.query(PortfolioDefinition).filter(PortfolioDefinition.id == portfolio_id).first()
@@ -346,7 +346,7 @@ class StressTestService:
         fx_exposure: float
         credit_sensitivity: float
 
-    def _impact_for_holding(self, holding: Holding, shocks: dict[str, float]) -> "StressTestService._ImpactCore":
+    def _impact_for_holding(self, holding: LegacyHolding, shocks: dict[str, float]) -> "StressTestService._ImpactCore":
         symbol = self._normalize_symbol(str(holding.ticker))
         sector = self._resolve_sector(symbol)
         exposure = self._exposure_for_symbol(symbol, sector)

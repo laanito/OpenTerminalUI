@@ -4,15 +4,16 @@ import math
 import numpy as np
 import pandas as pd
 import pytest
-from backend.models import Holding, PortfolioHoldingORM, PortfolioORM
+from backend.models import PortfolioHoldingORM, PortfolioORM
+from backend.services.legacy_holdings import LegacyHolding
 from backend.risk_engine.scenario_engine import scenario_engine, ScenarioImpact
 
 def test_parallel_shift_math():
     rng = np.random.default_rng(42)
     # Setup mock holdings
     holdings = [
-        Holding(ticker="AAPL", quantity=100, avg_buy_price=150.0), # Value: 15,000
-        Holding(ticker="MSFT", quantity=50, avg_buy_price=300.0),  # Value: 15,000
+        LegacyHolding(ticker="AAPL", quantity=100, avg_buy_price=150.0), # Value: 15,000
+        LegacyHolding(ticker="MSFT", quantity=50, avg_buy_price=300.0),  # Value: 15,000
     ]
     portfolio_value = 30000.0
 
@@ -53,7 +54,7 @@ def test_parallel_shift_math():
 
 def test_volatility_spike_math():
     rng = np.random.default_rng(42)
-    holdings = [Holding(ticker="AAPL", quantity=100, avg_buy_price=100.0)]
+    holdings = [LegacyHolding(ticker="AAPL", quantity=100, avg_buy_price=100.0)]
     portfolio_value = 10000.0
 
     dates = pd.date_range(start="2023-01-01", periods=252)
@@ -80,7 +81,7 @@ def test_volatility_spike_math():
 
 def test_flash_crash_math():
     rng = np.random.default_rng(42)
-    holdings = [Holding(ticker="AAPL", quantity=100, avg_buy_price=100.0)]
+    holdings = [LegacyHolding(ticker="AAPL", quantity=100, avg_buy_price=100.0)]
     portfolio_value = 10000.0
 
     dates = pd.date_range(start="2023-01-01", periods=252)

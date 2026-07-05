@@ -4,11 +4,7 @@ import asyncio
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
-from backend.api.deps import get_db
-from backend.api.routes import portfolio as portfolio_routes
 from backend.services.portfolio_analytics import compute_brinson_attribution, compute_factor_attribution, portfolio_analytics_service
 
 
@@ -134,49 +130,7 @@ def test_portfolio_attribution_service_shapes(monkeypatch: pytest.MonkeyPatch) -
     assert result["brinson"]["check_sum"] == pytest.approx(result["active_return"], abs=1e-10)
     assert result["factors"]["check_sum"] == pytest.approx(result["total_return"], abs=1e-10)
 
-
-def test_attribution_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
-    app = FastAPI()
-    app.include_router(portfolio_routes.router, prefix="/api")
-
-    async def _fake_portfolio_attribution(*args, **kwargs):  # noqa: ANN002, ANN003
-        return {
-            "portfolio_id": "current",
-            "portfolio_name": "Current Portfolio",
-            "period": "1M",
-            "benchmark": "NIFTY50",
-            "total_return": 0.08,
-            "benchmark_return": 0.05,
-            "active_return": 0.03,
-            "brinson": {"sectors": [], "total_allocation": 0.01, "total_selection": 0.015, "total_interaction": 0.005, "check_sum": 0.03},
-            "factors": {"exposures": {}, "factor_returns": {}, "contributions": {}, "alpha": 0.08, "check_sum": 0.08},
-        }
-
-    monkeypatch.setattr(portfolio_routes.portfolio_analytics_service, "portfolio_attribution", _fake_portfolio_attribution)
-    app.dependency_overrides[get_db] = lambda: object()
-
-    client = TestClient(app)
-    response = client.get("/api/portfolio/current/attribution?period=1M&benchmark=NIFTY50")
-
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["portfolio_id"] == "current"
-    assert payload["brinson"]["check_sum"] == pytest.approx(0.03, abs=1e-10)
-    assert payload["factors"]["alpha"] == pytest.approx(0.08, abs=1e-10)
-
-
-def test_attribution_invalid_portfolio(monkeypatch: pytest.MonkeyPatch) -> None:
-    app = FastAPI()
-    app.include_router(portfolio_routes.router, prefix="/api")
-
-    async def _raise_value_error(*args, **kwargs):  # noqa: ANN002, ANN003
-        raise ValueError("Portfolio not found")
-
-    monkeypatch.setattr(portfolio_routes.portfolio_analytics_service, "portfolio_attribution", _raise_value_error)
-    app.dependency_overrides[get_db] = lambda: object()
-
-    client = TestClient(app)
-    response = client.get("/api/portfolio/missing/attribution?period=1M&benchmark=NIFTY50")
-
-    assert response.status_code == 404
-    assert "Portfolio not found" in response.json()["detail"]
+# The attribution HTTP endpoint moved from the retired legacy route
+# (/api/portfolio/{id}/attribution) to the per-user Manager route
+# (/api/portfolios/{id}/attribution) in v1.1 (part C); it's covered, ownership-
+# scoped, in test_portfolio_manager_analytics.py.

@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from backend.db.models import BacktestRun, TaxLot, VirtualTrade, WatchlistItem
+from backend.db.models import BacktestRun, VirtualTrade, WatchlistItem
 from backend.services.legacy_holdings import resolve_user_holdings
 
 
@@ -63,18 +63,6 @@ def rows_for_data_type(db: Session, data_type: str, user_id: str) -> list[dict[s
                 parsed = {}
             rows.append({"run_id": run.run_id, "status": run.status, "result": parsed})
         return rows
-    if key == "tax_lots":
-        return [
-            {
-                "id": x.id,
-                "ticker": x.ticker,
-                "quantity": x.quantity,
-                "remaining_quantity": x.remaining_quantity,
-                "buy_price": x.buy_price,
-                "buy_date": x.buy_date,
-            }
-            for x in db.query(TaxLot).all()
-        ]
     return []
 
 

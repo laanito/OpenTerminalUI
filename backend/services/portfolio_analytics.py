@@ -11,7 +11,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_unified_fetcher
-from backend.db.models import Holding, PortfolioHoldingORM, PortfolioORM, TaxLot
+from backend.db.models import PortfolioHoldingORM, PortfolioORM
 from backend.equity.services.corporate_actions import corporate_actions_service, extract_amount
 from backend.shared.db import init_db
 from backend.shared.market_classifier import is_crypto_symbol
@@ -46,20 +46,6 @@ PORTFOLIO_PERIOD_RANGE_MAP = {
     "YTD": "ytd",
 }
 FACTOR_NAMES = ("Market", "Size", "Value", "Momentum", "Quality", "Volatility")
-
-
-@dataclass
-class TaxRealizationLine:
-    lot_id: int
-    ticker: str
-    quantity: float
-    buy_price: float
-    sell_price: float
-    buy_date: str
-    sell_date: str
-    holding_days: int
-    holding_period: str
-    realized_gain: float
 
 
 def _normalize_period(period: str) -> str:
@@ -240,7 +226,7 @@ class PortfolioAnalyticsService:
             return df["close"]
         return pd.Series(dtype="float64")
 
-    async def sector_allocation(self, holdings: Iterable[Holding]) -> dict[str, Any]:
+    async def sector_allocation(self, holdings: Iterable[Any]) -> dict[str, Any]:
         rows: list[dict[str, Any]] = []
         total = 0.0
         for h in holdings:
@@ -276,7 +262,7 @@ class PortfolioAnalyticsService:
         ]
         return {"total_value": total, "sectors": sectors, "industries": industries}
 
-    async def _portfolio_returns(self, holdings: Iterable[Holding], range_str: str = "1y") -> pd.Series:
+    async def _portfolio_returns(self, holdings: Iterable[Any], range_str: str = "1y") -> pd.Series:
         series: dict[str, pd.Series] = {}
         qty_map: dict[str, float] = {}
         for h in holdings:
@@ -294,7 +280,7 @@ class PortfolioAnalyticsService:
         port = (returns * weights.reindex(returns.columns).fillna(0.0)).sum(axis=1)
         return port
 
-    async def risk_metrics(self, holdings: Iterable[Holding], risk_free_rate: float = 0.04, benchmark: str = "S&P500") -> dict[str, Any]:
+    async def risk_metrics(self, holdings: Iterable[Any], risk_free_rate: float = 0.04, benchmark: str = "S&P500") -> dict[str, Any]:
         port = await self._portfolio_returns(holdings, range_str="2y")
         if port.empty:
             return {
@@ -352,7 +338,7 @@ class PortfolioAnalyticsService:
             "information_ratio": info_ratio,
         }
 
-    async def correlation_matrix(self, holdings: Iterable[Holding], window: int = 60) -> dict[str, Any]:
+    async def correlation_matrix(self, holdings: Iterable[Any], window: int = 60) -> dict[str, Any]:
         symbols: list[str] = []
         returns: list[pd.Series] = []
         seen: set[str] = set()
@@ -398,7 +384,7 @@ class PortfolioAnalyticsService:
                     rolling_rows.append({"date": idx.date().isoformat(), "pair": f"{a}-{b}", "value": float(val)})
         return {"symbols": list(corr.columns), "matrix": matrix, "rolling": rolling_rows}
 
-    async def dividend_tracker(self, holdings: Iterable[Holding], days: int = 180) -> dict[str, Any]:
+    async def dividend_tracker(self, holdings: Iterable[Any], days: int = 180) -> dict[str, Any]:
         symbols = sorted({h.ticker.strip().upper() for h in holdings if h.ticker})
         qty = {h.ticker.strip().upper(): float(h.quantity) for h in holdings if h.ticker}
         events = await corporate_actions_service.get_portfolio_events(symbols, days_ahead=max(1, days))
@@ -435,7 +421,7 @@ class PortfolioAnalyticsService:
         rows.sort(key=lambda x: (x.get("ex_date") or x.get("event_date") or ""))
         return {"upcoming": rows, "annual_income_projection": annual_income}
 
-    async def benchmark_overlay(self, holdings: Iterable[Holding], benchmark: str = "S&P500") -> dict[str, Any]:
+    async def benchmark_overlay(self, holdings: Iterable[Any], benchmark: str = "S&P500") -> dict[str, Any]:
         symbols = [h.ticker for h in holdings]
         buy_dates = {h.ticker: h.buy_date for h in holdings}
         quantities = {h.ticker: float(h.quantity) for h in holdings}
@@ -500,74 +486,9 @@ class PortfolioAnalyticsService:
         range_str = PORTFOLIO_PERIOD_RANGE_MAP[period_label]
         requested_benchmark = str(benchmark or "").strip().upper() or "S&P500"
 
+        # Attribution is per-user Manager portfolios only; the global "current"
+        # portfolio was removed in v1.1. portfolio_id is a real PortfolioORM id.
         portfolio_key = str(portfolio_id or "").strip()
-        if portfolio_key.lower() in {"", "current", "legacy", "default"}:
-            holdings_rows = list(db.query(Holding).all())
-            if not holdings_rows:
-                return {
-                    "portfolio_id": "current",
-                    "portfolio_name": "Current Portfolio",
-                    "benchmark": requested_benchmark,
-                    "period": period_label,
-                    "holdings": [],
-                    "portfolio_return": 0.0,
-                    "benchmark_return": 0.0,
-                }
-            benchmark_symbol = BENCHMARK_MAP.get(requested_benchmark, requested_benchmark)
-            holdings: list[dict[str, Any]] = []
-            symbols = [str(row.ticker).strip().upper() for row in holdings_rows if str(row.ticker).strip()]
-            snapshot_tasks = {symbol: asyncio.create_task(fetch_stock_snapshot_coalesced(symbol)) for symbol in symbols}
-            series_tasks = {symbol: asyncio.create_task(self._close_series(symbol, range_str=range_str)) for symbol in symbols}
-            benchmark_task = asyncio.create_task(self._close_series(benchmark_symbol, range_str=range_str))
-            snapshots = {symbol: await task for symbol, task in snapshot_tasks.items()}
-            series_map = {symbol: await task for symbol, task in series_tasks.items()}
-            benchmark_close = await benchmark_task
-            benchmark_return = _series_return(benchmark_close)
-            total_value = 0.0
-            for row in holdings_rows:
-                symbol = str(row.ticker).strip().upper()
-                snap = snapshots.get(symbol, {})
-                close = series_map.get(symbol, pd.Series(dtype="float64"))
-                period_return = _series_return(close)
-                price = snap.get("current_price")
-                current_price = float(price) if isinstance(price, (int, float)) else float(row.avg_buy_price)
-                current_value = max(0.0, float(row.quantity)) * current_price
-                total_value += current_value
-                sector = _sector_for(snap, symbol)
-                holdings.append(
-                    {
-                        "symbol": symbol,
-                        "sector": sector,
-                        "weight": 0.0,
-                        "return": period_return,
-                        "current_value": current_value,
-                        "market_cap": float(snap.get("market_cap") or 0.0) if isinstance(snap.get("market_cap"), (int, float)) else 0.0,
-                        "pe_ratio": float(snap.get("pe_ratio") or 0.0) if isinstance(snap.get("pe_ratio"), (int, float)) else 0.0,
-                        "roe_pct": float(snap.get("roe_pct") or 0.0) if isinstance(snap.get("roe_pct"), (int, float)) else 0.0,
-                        "beta": float(snap.get("beta") or 0.0) if isinstance(snap.get("beta"), (int, float)) else 0.0,
-                        "quality": float(snap.get("roe_pct") or 0.0) / 100.0 if isinstance(snap.get("roe_pct"), (int, float)) else 0.0,
-                    }
-                )
-
-            if total_value > 0:
-                for row in holdings:
-                    row["weight"] = float(row["current_value"]) / total_value
-            else:
-                weight = 1.0 / len(holdings) if holdings else 0.0
-                for row in holdings:
-                    row["weight"] = weight
-
-            portfolio_return = sum(float(row["weight"]) * float(row["return"]) for row in holdings)
-            return {
-                "portfolio_id": "current",
-                "portfolio_name": "Current Portfolio",
-                "benchmark": requested_benchmark,
-                "period": period_label,
-                "holdings": holdings,
-                "portfolio_return": portfolio_return,
-                "benchmark_return": benchmark_return,
-            }
-
         try:
             portfolio = db.query(PortfolioORM).filter(PortfolioORM.id == portfolio_key).first()
         except OperationalError:
@@ -759,150 +680,5 @@ class PortfolioAnalyticsService:
             "brinson": brinson,
             "factors": factors,
         }
-
-    def list_tax_lots(self, db: Session, ticker: str | None = None) -> list[TaxLot]:
-        try:
-            q = db.query(TaxLot)
-            if ticker:
-                q = q.filter(TaxLot.ticker == ticker.strip().upper())
-            return q.order_by(TaxLot.buy_date.asc(), TaxLot.id.asc()).all()
-        except OperationalError:
-            init_db()
-            q = db.query(TaxLot)
-            if ticker:
-                q = q.filter(TaxLot.ticker == ticker.strip().upper())
-            return q.order_by(TaxLot.buy_date.asc(), TaxLot.id.asc()).all()
-
-    def add_tax_lot(self, db: Session, ticker: str, quantity: float, buy_price: float, buy_date: str) -> TaxLot:
-        row = TaxLot(
-            ticker=ticker.strip().upper(),
-            quantity=float(quantity),
-            remaining_quantity=float(quantity),
-            buy_price=float(buy_price),
-            buy_date=buy_date,
-        )
-        db.add(row)
-        try:
-            db.commit()
-        except OperationalError:
-            db.rollback()
-            init_db()
-            db.add(row)
-            db.commit()
-        db.refresh(row)
-        return row
-
-    def _ordered_lots(self, lots: list[TaxLot], method: str, specific_lot_ids: list[int] | None = None) -> list[TaxLot]:
-        active = [x for x in lots if float(x.remaining_quantity) > 0]
-        m = method.upper()
-        if m == "FIFO":
-            return sorted(active, key=lambda x: (x.buy_date, x.id))
-        if m == "LIFO":
-            return sorted(active, key=lambda x: (x.buy_date, x.id), reverse=True)
-        if m == "SPECIFIC":
-            order = specific_lot_ids or []
-            rank = {lot_id: idx for idx, lot_id in enumerate(order)}
-            tagged = [x for x in active if x.id in rank]
-            tagged.sort(key=lambda x: rank[x.id])
-            return tagged
-        return sorted(active, key=lambda x: (x.buy_date, x.id))
-
-    def realize_tax_lots(
-        self,
-        db: Session,
-        ticker: str,
-        sell_quantity: float,
-        sell_price: float,
-        sell_date: str,
-        method: str,
-        specific_lot_ids: list[int] | None = None,
-    ) -> dict[str, Any]:
-        symbol = ticker.strip().upper()
-        lots = self.list_tax_lots(db, symbol)
-        ordered = self._ordered_lots(lots, method, specific_lot_ids)
-        remaining = float(sell_quantity)
-        sell_dt = datetime.fromisoformat(sell_date).date() if "T" in sell_date else date.fromisoformat(sell_date)
-        lines: list[TaxRealizationLine] = []
-
-        for lot in ordered:
-            if remaining <= 0:
-                break
-            available = float(lot.remaining_quantity)
-            if available <= 0:
-                continue
-            take = min(remaining, available)
-            buy_dt = datetime.fromisoformat(lot.buy_date).date() if "T" in lot.buy_date else date.fromisoformat(lot.buy_date)
-            holding_days = max(0, (sell_dt - buy_dt).days)
-            period = "long_term" if holding_days > 365 else "short_term"
-            gain = (float(sell_price) - float(lot.buy_price)) * take
-            lines.append(
-                TaxRealizationLine(
-                    lot_id=int(lot.id),
-                    ticker=symbol,
-                    quantity=take,
-                    buy_price=float(lot.buy_price),
-                    sell_price=float(sell_price),
-                    buy_date=lot.buy_date,
-                    sell_date=sell_date,
-                    holding_days=holding_days,
-                    holding_period=period,
-                    realized_gain=gain,
-                )
-            )
-            lot.remaining_quantity = max(0.0, available - take)
-            remaining -= take
-
-        if remaining > 1e-9:
-            raise ValueError("Insufficient lot quantity for requested sale")
-
-        db.commit()
-
-        stcg = sum(x.realized_gain for x in lines if x.holding_period == "short_term")
-        ltcg = sum(x.realized_gain for x in lines if x.holding_period == "long_term")
-        return {
-            "symbol": symbol,
-            "method": method.upper(),
-            "sell_quantity": float(sell_quantity),
-            "sell_price": float(sell_price),
-            "sell_date": sell_date,
-            "realizations": [x.__dict__ for x in lines],
-            "realized_gain_total": stcg + ltcg,
-            "short_term_gain": stcg,
-            "long_term_gain": ltcg,
-        }
-
-    async def tax_lot_summary(self, db: Session, ticker: str | None = None) -> dict[str, Any]:
-        lots = self.list_tax_lots(db, ticker)
-        symbols = sorted({x.ticker for x in lots})
-        current_prices: dict[str, float] = {}
-        for s in symbols:
-            snap = await fetch_stock_snapshot_coalesced(s)
-            px = snap.get("current_price")
-            if isinstance(px, (int, float)):
-                current_prices[s] = float(px)
-
-        unrealized = 0.0
-        rows: list[dict[str, Any]] = []
-        for lot in lots:
-            remaining = float(lot.remaining_quantity)
-            current = current_prices.get(lot.ticker)
-            gain = ((current - float(lot.buy_price)) * remaining) if current is not None else None
-            if gain is not None:
-                unrealized += gain
-            rows.append(
-                {
-                    "id": lot.id,
-                    "ticker": lot.ticker,
-                    "quantity": float(lot.quantity),
-                    "remaining_quantity": remaining,
-                    "buy_price": float(lot.buy_price),
-                    "buy_date": lot.buy_date,
-                    "current_price": current,
-                    "unrealized_gain": gain,
-                }
-            )
-
-        return {"lots": rows, "unrealized_gain_total": unrealized}
-
 
 portfolio_analytics_service = PortfolioAnalyticsService()
