@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-05
+
+The **"portfolio becomes real"** release. v1.0 hardened the *research* half of the
+north star (never show fabricated market data as live); 1.1 turns that same
+integrity lens on the *portfolio* half — a real cash/transaction spine, honest
+realized-vs-unrealized P&L, and the retirement of the old global, shared-across-
+users portfolio (a privacy contradiction) in favour of a per-user one.
+
 ### Added
 - **Portfolio cash ledger** (v1.1 "portfolio becomes real", spine) — cash is now
   derived from the transaction ledger as the single source of truth: a buy debits
@@ -20,13 +28,39 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 - **Upcoming events in the Portfolio Manager** (v1.1) — dividends, earnings and
   corporate actions for your holdings now show in the Manager's events calendar,
   not only on the legacy view / dedicated Dividends page.
-- **Reach & migrate the Portfolio Manager** (v1.1) — the Manager was only
-  reachable via a `?view=manager` URL; the default legacy view now has a
-  "Portfolio Manager" button. New one-click **Import from Legacy** copies the
-  legacy portfolio's holdings into the selected Manager portfolio (cost basis
-  preserved), and the CSV importer now accepts the legacy export's `avg_buy_price`
-  column so an export→import round trip works. First step toward retiring the
-  global legacy portfolio (see `docs/wiki/Roadmap.md` → v1.1 *Portfolio consolidation*).
+- **Deep analytics on the per-user portfolio** (v1.1, consolidation) — the
+  Portfolio Manager now carries everything the old view had: correlation matrix,
+  benchmark-overlay equity curve, the full risk-metric set (Sharpe, Sortino, beta,
+  alpha, information ratio, max drawdown), an upcoming-dividend tracker, and
+  Brinson + factor **attribution** — all scoped to the selected portfolio via new
+  owner-checked `GET /api/portfolios/{id}/analytics/*` and `/attribution` routes
+  (with a `primary` alias for dashboards).
+- **AI Risk Assessment + backtesting in the Manager** (v1.1) — the local-LLM risk
+  narrative (on-demand) and the backtester (seeded from the portfolio's holdings)
+  now live in the Manager.
+- **Sell from a holding row** (v1.1) — each holding has a "Sell" button that
+  pre-fills the transaction form (sell / that symbol / full size / current price)
+  so a sale is attributed to the position instead of typed from scratch.
+- **Holdings CSV export** in the Manager (it already had CSV import).
+
+### Changed
+- **The equity portfolio is now per-user, full stop** (v1.1, consolidation) — the
+  Portfolio Manager (`/api/portfolios`) is the only portfolio; the legacy
+  manager|legacy view toggle is gone and every surface that read a portfolio
+  (home, cockpit, HUD, launchpad, correlation dashboard, risk / stress / factor /
+  dividends / reports) now reads the caller's own **primary** portfolio via
+  `GET /api/portfolios/primary`.
+
+### Removed
+- **The global, user-less legacy portfolio** (v1.1, consolidation) — the shared
+  `Holding` table and its `/api/portfolio`, `/api/portfolio/analytics/*`,
+  `/api/portfolio/holdings*` and `/api/portfolio/{id}/attribution` endpoints are
+  deleted. On a shared instance every user saw and edited the *same* holdings — a
+  contradiction of the "private terminal" thesis; portfolios are per-user now.
+  (The global `/watchlists/items` feed is unaffected.)
+- **Tax-lot accounting** (the `TaxLot` model, `/api/portfolio/tax-lots*` endpoints
+  and the Tax Lot Manager UI) — a jurisdiction-specific rabbit hole where a wrong
+  number is worse than none; deliberately shelved.
 
 ### Fixed
 - **Import from Legacy / bulk add crashed with a 500** (v1.1) — adding a holding
