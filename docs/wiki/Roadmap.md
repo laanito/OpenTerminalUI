@@ -241,7 +241,7 @@ condensed in the README.
 The first additive release after the 1.0 hardening pass, and the one that makes
 the **"grow privately"** half usable. Built on the **Portfolio Manager** (the
 per-user, multi-portfolio `/portfolios` system), which now has a real transaction
-ledger. Core scope **SHIPPED** (PRs #61/#63/#64):
+ledger. **RELEASED as v1.1.0 (2026-07-05)** — PRs #61–#74:
 
 - ✅ **Portfolio cash & transactions** — the spine. Cash is *derived from the
   transaction ledger* as the single source of truth (`backend/services/
@@ -262,15 +262,19 @@ instance — a privacy leak in any multi-user deploy and a feature split (rich
 analytics live on legacy; real accounting lives on the Manager). Plan:
   - ✅ **A. Reachability** — the Manager was only reachable via `?view=manager`;
     added a two-way toggle so the default legacy view links to it. *(shipped)*
-  - ✅ **B. Migration/import** — one-click "Import from Legacy" in the Manager
-    (copies legacy holdings into the selected portfolio, cost basis preserved) +
-    the CSV importer now accepts the legacy export's `avg_buy_price` column so the
-    export→import round trip works. *(shipped)*
-  - ⏳ **C. Retire the global model** — once users can migrate, port the rich
-    analytics (attribution/risk/correlation/dividends/tax-lots) onto the per-user
-    Manager, migrate any remaining legacy holdings into a default per-user
-    portfolio, then delete the global `Holding` table and the legacy view. Removes
-    the shared-portfolio privacy leak. (Larger effort; v1.2-scale.)
+  - ✅ **B. Migration/import** — a one-click "Import from Legacy" migration path
+    (cost basis preserved) plus a CSV importer that accepts the legacy
+    `avg_buy_price` column. *(shipped; the Import-from-Legacy button was a
+    transient migration aid, removed in C once the legacy table was deleted — the
+    CSV importer stays.)*
+  - ✅ **C. Retire the global model** — DONE in v1.1 (PRs #67–#74). Ported the rich
+    analytics (correlation/benchmark/risk/dividends + Brinson **attribution**, plus
+    the AI risk narrative and backtesting) onto the per-user Manager; introduced a
+    per-user **primary** portfolio and repointed every consumer (dashboards + risk/
+    stress/factor/dividends/reports/workers) to it; then **deleted** the global
+    `Holding`/`TaxLot` tables, the legacy `/api/portfolio*` routes, and the legacy
+    view. The shared-across-users portfolio (the privacy leak) is gone; watchlists
+    (`/watchlists/items`) are unaffected.
 
 > **Explicitly out of scope (removed from the timeline 2026-06-30):** tax lots /
 > cost-basis accounting. It's a rabbit hole where a *wrong* number is worse than
