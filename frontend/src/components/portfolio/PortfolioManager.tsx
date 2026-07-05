@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import {
@@ -110,6 +110,7 @@ export function PortfolioManager() {
   const [txFees, setTxFees] = useState(0);
   const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
   const [txNotes, setTxNotes] = useState("");
+  const txFormRef = useRef<HTMLDivElement>(null);
 
   const loadAll = async (nextId?: string) => {
     setLoading(true);
@@ -183,6 +184,19 @@ export function PortfolioManager() {
   const cashCurrency = toCurrencyCode(selectedPortfolio?.currency);
   const portfolioSymbols = useMemo(() => Array.from(new Set(holdings.map((h) => h.symbol).filter(Boolean))), [holdings]);
   const txPreview = cashDeltaPreview(txType, txShares, txPrice, txFees);
+
+  // Pre-fill the Record Transaction form to sell a specific position (full size
+  // at the current price by default; user can adjust before recording). Turns a
+  // generic "record a sale" into a sale attributed to the row you clicked.
+  const sellFromPosition = (row: MultiPortfolioHolding) => {
+    setTxType("sell");
+    setTxSymbol(row.symbol);
+    setTxShares(row.shares);
+    setTxPrice(Number(row.current_price || row.cost_basis_per_share || 0));
+    setError(null);
+    setStatus(`Selling ${row.symbol} — review shares/price, then Record`);
+    requestAnimationFrame(() => txFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  };
 
   const handleRecordTransaction = async () => {
     if (!selectedId) return;
@@ -468,11 +482,32 @@ export function PortfolioManager() {
               { key: "value", title: "Market Value", type: "large-number", align: "right", sortable: true, getValue: (r) => (r.current_price || 0) * r.shares, render: (r) => formatCompactMoney((r.current_price || 0) * r.shares, currencyFor(r.symbol)) },
               { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => ((r.current_price || 0) - r.cost_basis_per_share) * r.shares, render: (r) => formatCompactMoney(((r.current_price || 0) - r.cost_basis_per_share) * r.shares, currencyFor(r.symbol)) },
               { key: "pnlPct", title: "P&L%", type: "percent", align: "right", sortable: true, getValue: (r) => (r.cost_basis_per_share > 0 ? (((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100 : 0) },
+              {
+                key: "actions",
+                title: "",
+                type: "text",
+                align: "right",
+                width: 64,
+                getValue: () => "",
+                render: (r) => (
+                  <button
+                    type="button"
+                    className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                    title={`Sell ${r.symbol} from this position`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sellFromPosition(r);
+                    }}
+                  >
+                    Sell
+                  </button>
+                ),
+              },
             ]}
           />
         </div>
 
-        <div className="rounded border border-terminal-border bg-terminal-panel p-2">
+        <div ref={txFormRef} className="rounded border border-terminal-border bg-terminal-panel p-2">
           <div className="mb-2 flex flex-wrap items-end gap-2 text-xs">
             <span className="text-terminal-muted">Record Transaction</span>
             <label className="flex flex-col gap-0.5">
