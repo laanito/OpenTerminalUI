@@ -387,8 +387,15 @@ class PortfolioAnalyticsService:
     async def dividend_tracker(self, holdings: Iterable[Any], days: int = 180) -> dict[str, Any]:
         symbols = sorted({h.ticker.strip().upper() for h in holdings if h.ticker})
         qty = {h.ticker.strip().upper(): float(h.quantity) for h in holdings if h.ticker}
-        events = await corporate_actions_service.get_portfolio_events(symbols, days_ahead=max(1, days))
-        dividends = [e for e in events if str(e.event_type).lower() == "dividend"]
+        # Use the projecting entry point (not get_portfolio_events): many regular
+        # distributors — monthly/quarterly ETFs like JEIP.DE — never publish a
+        # forward ex-date on free sources, so their only real announced events are
+        # historical and get filtered out of the upcoming window. get_upcoming_dividends
+        # falls back to a clearly-labelled projection from the historical cadence,
+        # which is what makes those holdings appear in the portfolio at all.
+        dividends = await corporate_actions_service.get_upcoming_dividends(
+            symbols, days_ahead=max(1, days), project=True
+        )
         rows: list[dict[str, Any]] = []
         annual_income = 0.0
         for evt in dividends:
