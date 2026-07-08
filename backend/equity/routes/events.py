@@ -47,6 +47,13 @@ async def get_portfolio_events(symbols: str = Query(...), days: int = 30) -> dic
     if not parsed:
         raise HTTPException(status_code=400, detail="Provide symbols as comma-separated values")
     rows = await corporate_actions_service.get_portfolio_events(parsed, days_ahead=max(1, days))
+    # Merge in labelled dividend projections so regular distributors that publish
+    # no forward ex-date (monthly/quarterly ETFs like JEIP.DE) still appear. The
+    # real announced dividends are already in `rows`; only add projection-sourced
+    # ones to avoid duplicates.
+    divs = await corporate_actions_service.get_upcoming_dividends(parsed, days_ahead=max(1, days), project=True)
+    rows = rows + [d for d in divs if d.source == "projection"]
+    rows.sort(key=lambda x: x.event_date)
     return {"count": len(rows), "items": [x.model_dump() for x in rows]}
 
 
