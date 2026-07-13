@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 
 from backend.shared.db import engine
 
@@ -43,8 +43,12 @@ def ensure_screener_table() -> None:
     sql = f"CREATE TABLE IF NOT EXISTS {TABLE_NAME} ({columns_sql})"
     with engine.begin() as conn:
         conn.execute(text(sql))
-        existing = conn.execute(text(f"PRAGMA table_info({TABLE_NAME})")).fetchall()
-        existing_cols = {row[1] for row in existing}
+        # Introspect existing columns dialect-agnostically. This was a raw
+        # `PRAGMA table_info(...)`, which is SQLite-only — on PostgreSQL it's a
+        # syntax error, so the screener 500'd on any Postgres deploy. The
+        # SQLAlchemy inspector reads the right catalog for whichever dialect is
+        # in use and sees the just-created table within this transaction.
+        existing_cols = {col["name"] for col in inspect(conn).get_columns(TABLE_NAME)}
         for col, dtype in SCHEMA_COLUMNS.items():
             if col not in existing_cols:
                 conn.execute(text(f"ALTER TABLE {TABLE_NAME} ADD COLUMN {col} {dtype}"))
