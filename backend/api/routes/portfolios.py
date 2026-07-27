@@ -410,8 +410,9 @@ def add_portfolio_transaction(
     )
     db.add(tx)
 
-    if payload.type in {"buy", "sell"} and payload.shares > 0:
-        lot_id = payload.lot_id.strip() or ("manual" if payload.type == "sell" else datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S"))
+    if payload.type == "buy" and payload.shares > 0:
+        # A buy either opens a new lot or adds to an existing one (weighted-avg cost).
+        lot_id = payload.lot_id.strip() or datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         row = (
             db.query(PortfolioHoldingORM)
             .filter(
@@ -421,30 +422,56 @@ def add_portfolio_transaction(
             )
             .first()
         )
-        if row is None and payload.type == "buy":
-            row = PortfolioHoldingORM(
-                portfolio_id=portfolio_id,
-                symbol=symbol,
-                shares=float(payload.shares),
-                cost_basis_per_share=float(payload.price),
-                purchase_date=payload.date,
-                notes=payload.notes,
-                lot_id=lot_id,
-            )
-            db.add(row)
-        elif row is not None:
-            if payload.type == "buy":
-                old_shares = float(row.shares)
-                add_shares = float(payload.shares)
-                new_shares = old_shares + add_shares
-                row.cost_basis_per_share = (
-                    (old_shares * float(row.cost_basis_per_share) + add_shares * float(payload.price)) / max(new_shares, 1e-9)
+        if row is None:
+            db.add(
+                PortfolioHoldingORM(
+                    portfolio_id=portfolio_id,
+                    symbol=symbol,
+                    shares=float(payload.shares),
+                    cost_basis_per_share=float(payload.price),
+                    purchase_date=payload.date,
+                    notes=payload.notes,
+                    lot_id=lot_id,
                 )
-                row.shares = new_shares
-            else:
-                row.shares = max(0.0, float(row.shares) - float(payload.shares))
-        if row is not None and row.shares <= 0:
-            db.delete(row)
+            )
+        else:
+            old_shares = float(row.shares)
+            add_shares = float(payload.shares)
+            new_shares = old_shares + add_shares
+            row.cost_basis_per_share = (
+                (old_shares * float(row.cost_basis_per_share) + add_shares * float(payload.price)) / max(new_shares, 1e-9)
+            )
+            row.shares = new_shares
+
+    elif payload.type == "sell" and payload.shares > 0:
+        # A sell reduces the position for this symbol. If an explicit lot_id is
+        # given it targets that lot; otherwise it consumes the symbol's lots
+        # oldest-first (FIFO) — the common case, since the "Sell" button and the
+        # plain sell form don't carry a lot_id. Matching on a synthetic "manual"
+        # lot_id (the old behaviour) never matched a real holding, so the sale was
+        # recorded (cash moved via the ledger) but the shares were never removed.
+        lot_filter = [
+            PortfolioHoldingORM.portfolio_id == portfolio_id,
+            PortfolioHoldingORM.symbol == symbol,
+        ]
+        explicit_lot = payload.lot_id.strip()
+        if explicit_lot:
+            lot_filter.append(PortfolioHoldingORM.lot_id == explicit_lot)
+        lots = (
+            db.query(PortfolioHoldingORM)
+            .filter(*lot_filter)
+            .order_by(PortfolioHoldingORM.created_at.asc())
+            .all()
+        )
+        remaining = float(payload.shares)
+        for lot in lots:
+            if remaining <= 1e-9:
+                break
+            take = min(float(lot.shares), remaining)
+            lot.shares = float(lot.shares) - take
+            remaining -= take
+            if lot.shares <= 1e-9:
+                db.delete(lot)
 
     db.commit()
     db.refresh(tx)
