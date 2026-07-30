@@ -28,6 +28,18 @@ US_MARKETS = {"NYSE", "NASDAQ"}
 IN_MARKETS = {"NSE", "BSE"}
 SUPPORTED_MARKETS = US_MARKETS | IN_MARKETS
 
+# Coin symbol -> human name, for crypto news queries (BTC-USD -> "Bitcoin").
+# Sourced from the shared crypto universe so there's a single source of truth;
+# guarded so a heavy/unavailable import never breaks news for equities.
+try:
+    from backend.services.crypto_universe import FALLBACK_META as _CRYPTO_FALLBACK_META
+
+    _CRYPTO_NAME_BY_SYMBOL: dict[str, str] = {
+        sym: meta.get("name", "") for sym, meta in _CRYPTO_FALLBACK_META.items() if meta.get("name")
+    }
+except Exception:  # pragma: no cover - defensive: name-free crypto terms still work
+    _CRYPTO_NAME_BY_SYMBOL = {}
+
 _HTML_RE = re.compile(r"<[^>]+>")
 
 
@@ -143,8 +155,33 @@ def _ticker_aliases(symbol: str, market: str | None = None) -> list[str]:
     return sorted(aliases)
 
 
+def _is_crypto_symbol(symbol: str) -> bool:
+    # Crypto is quoted against USD (BTC-USD, ETH-USD, RENDER-USD, ...) — the same
+    # convention the frontend's isCryptoSymbol and the /v1/crypto routes use.
+    return symbol.strip().upper().endswith("-USD")
+
+
+def _crypto_news_terms(symbol: str) -> list[str]:
+    """News search terms for a crypto symbol.
+
+    "BTC-USD stock" returns nothing useful; crypto news lives under the coin's
+    name and the word crypto. Resolve the human name from the shared crypto
+    universe when known (BTC-USD -> Bitcoin), and always include name-free
+    fallbacks so coins outside the curated map still search sensibly."""
+    full = symbol.strip().upper()
+    base = full.split("-")[0]
+    name = _CRYPTO_NAME_BY_SYMBOL.get(full)
+    terms: list[str] = []
+    if name:
+        terms += [f"{name} crypto", f"{name} cryptocurrency", name]
+    terms += [f"{base} crypto", f"{base} cryptocurrency", f"{base} coin"]
+    return list(dict.fromkeys([t for t in terms if t.strip()]))
+
+
 def _ticker_fallback_terms(symbol: str, market: str | None = None) -> list[str]:
     base = symbol.strip().upper()
+    if _is_crypto_symbol(base):
+        return _crypto_news_terms(base)
     mkt = (market or "").strip().upper()
     terms = [f"{base} stock", base]
     if mkt in {"NSE", "IN"}:
