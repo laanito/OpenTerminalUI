@@ -1,14 +1,16 @@
 """LLM-powered AI insight endpoints.
 
-Three read-only analytical endpoints that turn structured terminal data into a
-concise, sectioned narrative via a local LLM:
+Read-only analytical endpoints that turn structured terminal data into a concise,
+sectioned narrative via a local LLM:
 
-* ``GET  /api/ai/briefing/{ticker}`` - investment briefing for a stock
-* ``POST /api/ai/backtest-explain``  - plain-English assessment of a backtest
-* ``POST /api/ai/risk-insights``     - narrative interpretation of portfolio risk
+* ``GET  /api/ai/briefing/{ticker}``     - investment briefing for a stock
+* ``GET  /api/ai/interrogate/{ticker}``  - adversarial interrogation of a stock,
+  grounded in the user's own notes (v1.2 "research interrogates")
+* ``POST /api/ai/backtest-explain``      - plain-English assessment of a backtest
+* ``POST /api/ai/risk-insights``         - narrative interpretation of portfolio risk
 
-All three share one structured-output schema (``llm_insights.INSIGHT_SCHEMA``)
-and degrade gracefully when LLM is unavailable.
+All share one structured-output schema (``llm_insights.INSIGHT_SCHEMA``) and
+degrade gracefully when LLM is unavailable.
 """
 
 from __future__ import annotations
@@ -16,11 +18,15 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
-from backend.api.deps import cache_instance, fetch_stock_snapshot_coalesced
+from backend.api.deps import cache_instance, fetch_stock_snapshot_coalesced, get_db
 from backend.api.routes.news import _fetch_news_fallback, _ticker_fallback_terms
+from backend.auth.deps import get_current_user
 from backend.core.ttl_policy import market_open_now, ttl_seconds
+from backend.models.notes import NoteORM
+from backend.models.user import User
 from backend.services.llm_insights import run_insight
 
 router = APIRouter()
@@ -33,6 +39,58 @@ def _fmt(value: Any, suffix: str = "") -> str:
         return f"{float(value):,.2f}{suffix}"
     except (TypeError, ValueError):
         return str(value)
+
+
+def _interrogation_prompts(
+    symbol: str,
+    snap: dict[str, Any],
+    headlines: list[str],
+    note_texts: list[str],
+) -> tuple[str, str]:
+    """Build the (system, user) prompt for an adversarial stock interrogation.
+
+    Pure and side-effect-free so it's unit-testable: the user's own notes are
+    folded in verbatim (capped upstream) as the thesis to pressure-test. The
+    output contract stays the shared INSIGHT_SCHEMA {summary, sections}."""
+    name = snap.get("company_name") or snap.get("name") or symbol
+    facts = "\n".join(
+        [
+            f"Sector: {snap.get('sector') or 'n/a'} | Industry: {snap.get('industry') or 'n/a'}",
+            f"Price: {_fmt(snap.get('current_price'))} | Day change: {_fmt(snap.get('change_pct'), '%')}",
+            f"Market cap: {_fmt(snap.get('market_cap'))}",
+            f"P/E: {_fmt(snap.get('pe_ratio') or snap.get('pe'))} | "
+            f"P/B: {_fmt(snap.get('pb_ratio') or snap.get('pb'))}",
+            f"ROE: {_fmt(snap.get('roe'))} | Debt/Equity: {_fmt(snap.get('debt_to_equity'))}",
+            f"52-week range: {_fmt(snap.get('week52_low'))} - {_fmt(snap.get('week52_high'))}",
+        ]
+    )
+    news_block = "\n".join(f"- {h}" for h in headlines) or "- (no recent headlines available)"
+    notes_block = "\n".join(f"- {t}" for t in note_texts) or "- (you have recorded no notes on this stock yet)"
+
+    system_prompt = (
+        "You are a sharp, skeptical devil's-advocate analyst for a professional "
+        "trader — the opposite of a cheerleader. Your job is to INTERROGATE the bull "
+        "case for a stock, not sell it. Using the fundamentals, recent headlines, and "
+        "especially the user's own notes, state the prevailing narrative plainly and "
+        "then pressure-test it: surface the assumptions it rests on, the ways it could "
+        "be wrong, relevant base rates, and whether the story is already reflected in "
+        "the price. Where the user's notes assert a thesis, challenge it directly and "
+        "on its own terms. Be specific and grounded in the data provided; do NOT give "
+        "direct buy or sell advice, and do not flatter. Provide exactly these "
+        "sections: 'The Bull Narrative' (tone neutral) - the story being told, "
+        "including the user's if present; 'What Would Have To Be True' (tone neutral) "
+        "- the load-bearing assumptions behind it; 'The Bear Case & Base Rates' (tone "
+        "negative) - what would break it and how often such stories disappoint; "
+        "'Already Priced In?' (tone neutral) - whether the valuation and price action "
+        "already reflect the narrative."
+    )
+    user_content = (
+        f"Company: {name} ({symbol})\n\n"
+        f"Fundamentals:\n{facts}\n\n"
+        f"Recent headlines:\n{news_block}\n\n"
+        f"The user's own notes on {symbol} (their recorded thesis - challenge it directly):\n{notes_block}"
+    )
+    return system_prompt, user_content
 
 
 @router.get("/ai/briefing/{ticker}")
@@ -90,6 +148,72 @@ async def stock_briefing(
         ),
     )
     payload = {"ticker": symbol, "company_name": name, **result}
+    await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
+    return payload
+
+
+@router.get("/ai/interrogate/{ticker}")
+async def interrogate_stock(
+    ticker: str,
+    market: str | None = Query(default=None, description="Optional market context"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Adversarially interrogate a stock, grounded in the user's own notes.
+
+    The differentiator of v1.2: instead of another bullish briefing, this turns
+    the local model on the *bull case* — and specifically on the user's recorded
+    thesis for the ticker — to pressure-test it rather than flatter it. Authed and
+    per-user: it reads this user's `security`/symbol notes.
+    """
+    symbol = ticker.strip().upper()
+    market_code = (market or "").strip().upper() or None
+
+    # Cache per user — the interrogation folds in THIS user's private notes, so
+    # two users must not share a cached result for the same symbol.
+    cache_key = cache_instance.build_key(
+        "ai_insight", f"interrogate:{symbol}:{current_user.id}", {"market": market_code or ""}
+    )
+    cached = await cache_instance.get(cache_key)
+    if cached:
+        return cached
+
+    # The user's own notes on this exact ticker — their recorded thesis. Direct,
+    # precise, symbol-scoped (no embedding round-trip needed for "my notes on X").
+    notes = (
+        db.query(NoteORM)
+        .filter(NoteORM.user_id == current_user.id, NoteORM.symbol == symbol)
+        .order_by(NoteORM.updated_at.desc())
+        .limit(12)
+        .all()
+    )
+    note_texts: list[str] = []
+    for note in notes:
+        title = (note.title or "").strip()
+        body = (note.body or "").strip()
+        text = f"{title}: {body}" if title and body else (title or body)
+        if text:
+            note_texts.append(text[:600])
+
+    snap = await fetch_stock_snapshot_coalesced(symbol) or {}
+    headlines: list[str] = []
+    for term in _ticker_fallback_terms(symbol, market_code):
+        items = await _fetch_news_fallback(term, limit=6)
+        if items:
+            headlines = [str(i.get("title") or "").strip() for i in items[:6] if i.get("title")]
+            break
+
+    system_prompt, user_content = _interrogation_prompts(symbol, snap, headlines, note_texts)
+    result = await run_insight(
+        system_prompt,
+        user_content,
+        max_tokens=1000,
+        unavailable_summary=(
+            f"AI interrogation for {symbol} is unavailable - start your local LLM (e.g. Ollama) "
+            "to pressure-test your thesis."
+        ),
+    )
+    payload = {"ticker": symbol, "note_count": len(note_texts), **result}
     await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
     return payload
 
