@@ -68,6 +68,67 @@ def _citations(matches: list[VectorMatch]) -> list[dict[str, Any]]:
     return out
 
 
+async def related_notes(
+    db: Session,
+    user_id: str,
+    query_text: str,
+    *,
+    exclude_symbol: str | None = None,
+    k: int = 4,
+    min_score: float = 0.2,
+) -> list[dict[str, Any]]:
+    """Semantically retrieve the user's OWN notes related to a query.
+
+    Used to ground an adversarial read (the "interrogate this stock" card) in the
+    user's *broader* thinking — notes on other tickers or themes that echo the
+    thesis under scrutiny, not just the same-ticker notes. Same-ticker notes are
+    folded in directly by the caller, so ``exclude_symbol`` drops them here to keep
+    "related" meaning "elsewhere in your writing".
+
+    Best-effort and never raises: an empty brain, a disabled/unreachable embedder,
+    or a pgvector hiccup all degrade to an empty list, so callers can treat related
+    notes as a bonus on top of the precise same-ticker match. ``min_score`` is a
+    gentle cosine floor that drops clearly-unrelated notes when the user has only a
+    handful indexed.
+    """
+    query_text = (query_text or "").strip()
+    if not query_text:
+        return []
+
+    embedder = get_embedding_service()
+    store = make_vector_store(engine, embedder.dim)
+    if store.count(db, user_id) == 0:
+        return []
+
+    try:
+        query_vector = await embedder.embed_query(query_text)
+    except EmbeddingError as exc:
+        logger.info("related_notes: embeddings unavailable (%s); skipping.", exc)
+        return []
+
+    exclude = (exclude_symbol or "").strip().upper() or None
+    # Over-fetch so the symbol/score filtering below still yields up to k.
+    matches = store.search(db, user_id, query_vector, k=k + 8, sources=["note"])
+    out: list[dict[str, Any]] = []
+    for m in matches:
+        if m.score < min_score:
+            continue
+        sym = (m.chunk.symbol or "").strip().upper() or None
+        if exclude and sym == exclude:
+            continue  # same-ticker notes are the caller's direct grounding, not "related"
+        out.append(
+            {
+                "symbol": sym,
+                "title": m.chunk.title,
+                "text": m.chunk.chunk_text,
+                "score": round(m.score, 4),
+            }
+        )
+        if len(out) >= k:
+            break
+    return out
+
+
 async def status(db: Session, user_id: str) -> dict[str, Any]:
     embedder = get_embedding_service()
     store = make_vector_store(engine, embedder.dim)

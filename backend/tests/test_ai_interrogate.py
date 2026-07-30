@@ -8,6 +8,7 @@ shape with engine "unavailable" — never a fabricated analysis.
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -55,6 +56,24 @@ def test_interrogation_prompt_handles_no_notes() -> None:
     assert "recorded no notes" in user  # honest placeholder, not silence
 
 
+def test_interrogation_prompt_folds_in_related_notes() -> None:
+    # Semantically-related notes on OTHER tickers are folded in as a distinct block
+    # so the model can cross-reference the thesis against the user's wider thinking.
+    system, user = _interrogation_prompts(
+        "AAPL",
+        {"company_name": "Apple Inc."},
+        [],
+        ["Thesis: services moat is durable"],
+        ["[on MSFT] I keep betting on 'durable software moats' — this one burned me"],
+    )
+    assert "related notes on OTHER tickers" in user
+    assert "durable software moats" in user
+    assert "recurring pattern" in system.lower()
+    # Backward-compatible: omitting related notes adds no related block.
+    _s2, user2 = _interrogation_prompts("AAPL", {"company_name": "Apple Inc."}, [], [])
+    assert "related notes on OTHER tickers" not in user2
+
+
 def _auth_headers(client: TestClient, email: str) -> dict[str, str]:
     password = "pw-interrogate-123"
     client.post("/api/auth/register", json={"email": email, "password": password, "role": "trader"})
@@ -93,4 +112,107 @@ def test_interrogate_returns_insight_shape_and_counts_notes() -> None:
 
     r1 = client.get(f"/api/ai/interrogate/{with_note}", headers=headers)
     assert r1.status_code == 200, r1.text
-    assert r1.json()["note_count"] == 1
+    body1 = r1.json()
+    assert body1["note_count"] == 1
+    # Semantic-related grounding is always reported, even when 0 (no brain / offline
+    # embedder degrades to no related notes — never a failure).
+    assert "related_count" in body0 and "related_count" in body1
+
+
+def _match(symbol, text, score):
+    from backend.services.brain.vector_store import VectorMatch
+
+    chunk = SimpleNamespace(
+        symbol=symbol,
+        title=f"Note · {symbol or 'general'}",
+        chunk_text=text,
+        source="note",
+        ref_id=text[:8],
+    )
+    return VectorMatch(chunk=chunk, score=score)
+
+
+@pytest.mark.asyncio
+async def test_related_notes_excludes_same_ticker_and_applies_floor(monkeypatch) -> None:
+    from backend.services.brain import brain_service
+
+    # A same-ticker note (must be EXCLUDED — the caller folds these in directly),
+    # an on-topic related note, and an off-topic one below the score floor.
+    results = [
+        _match("AAPL", "AAPL moat note", 0.95),
+        _match("MSFT", "MSFT moat thesis", 0.90),
+        _match("KO", "KO dividend note", 0.10),
+    ]
+
+    class FakeStore:
+        use_pgvector = False
+
+        def count(self, db, uid):
+            return len(results)
+
+        def search(self, db, uid, qv, *, k=6, sources=None):
+            assert sources == ["note"]  # only the user's own notes, per the chosen scope
+            return results
+
+    class FakeEmbedder:
+        dim = 3
+
+        async def embed_query(self, q):
+            return [1.0, 0.0, 0.0]
+
+    monkeypatch.setattr(brain_service, "make_vector_store", lambda engine, dim: FakeStore())
+    monkeypatch.setattr(brain_service, "get_embedding_service", lambda: FakeEmbedder())
+
+    related = await brain_service.related_notes(
+        None, "user1", "software moat", exclude_symbol="AAPL", k=4, min_score=0.5
+    )
+    symbols = {r["symbol"] for r in related}
+    assert "AAPL" not in symbols  # same-ticker excluded
+    assert "MSFT" in symbols  # on-topic related note retrieved
+    assert "KO" not in symbols  # off-topic dropped by the min_score floor
+
+
+@pytest.mark.asyncio
+async def test_related_notes_empty_brain_returns_nothing(monkeypatch) -> None:
+    from backend.services.brain import brain_service
+
+    class EmptyStore:
+        use_pgvector = False
+
+        def count(self, db, uid):
+            return 0
+
+    class FakeEmbedder:
+        dim = 3
+
+        async def embed_query(self, q):  # pragma: no cover - must not be reached
+            raise AssertionError("should not embed when the brain is empty")
+
+    monkeypatch.setattr(brain_service, "make_vector_store", lambda engine, dim: EmptyStore())
+    monkeypatch.setattr(brain_service, "get_embedding_service", lambda: FakeEmbedder())
+
+    assert await brain_service.related_notes(None, "nobody", "anything") == []
+
+
+@pytest.mark.asyncio
+async def test_related_notes_degrades_when_embedder_unavailable(monkeypatch) -> None:
+    from backend.services.brain import brain_service
+    from backend.services.embeddings import EmbeddingError
+
+    class FakeStore:
+        use_pgvector = False
+
+        def count(self, db, uid):
+            return 3
+
+    class BrokenEmbedder:
+        dim = 3
+
+        async def embed_query(self, q):
+            raise EmbeddingError("no embeddings backend")
+
+    monkeypatch.setattr(brain_service, "make_vector_store", lambda engine, dim: FakeStore())
+    monkeypatch.setattr(brain_service, "get_embedding_service", lambda: BrokenEmbedder())
+
+    # Never raises — an unreachable embedder just yields no related notes.
+    assert await brain_service.related_notes(None, "user1", "anything") == []

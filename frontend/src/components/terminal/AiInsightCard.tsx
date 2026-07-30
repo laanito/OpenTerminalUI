@@ -14,6 +14,10 @@ export type InsightData = {
   summary: string;
   sections: InsightSection[];
   generated_at?: string;
+  /** Interrogation grounding: how many of the user's own notes fed the analysis. */
+  note_count?: number;
+  /** Interrogation grounding: related notes on other tickers/themes folded in. */
+  related_count?: number;
 };
 
 type Props = {
@@ -130,6 +134,17 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
           {data.engine !== "llm" && !data.sections.length && (
             <div className="text-[11px] text-terminal-muted">
               Start your LLM endpoint (e.g. Ollama), then click Regenerate.
+            </div>
+          )}
+          {data.note_count !== undefined && (
+            <div className="text-[10px] text-terminal-muted">
+              {data.note_count > 0
+                ? `Grounded in ${data.note_count} of your note${data.note_count === 1 ? "" : "s"} on this ticker`
+                : "No notes recorded on this ticker yet — add your thesis to ground the interrogation"}
+              {data.related_count
+                ? ` + ${data.related_count} related from your other notes`
+                : ""}
+              .
             </div>
           )}
         </div>
