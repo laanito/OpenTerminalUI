@@ -21,6 +21,7 @@ import { CryptoFundamentalsPanel } from "../components/crypto/CryptoFundamentals
 import { CryptoOverviewPanel } from "../components/crypto/CryptoOverviewPanel";
 import { FuturesPanel } from "../components/market/FuturesPanel";
 import { OrderBookPanel } from "../components/market/OrderBookPanel";
+import { TickerNewsCard } from "../components/market/TickerNewsCard";
 import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { NotesPanel } from "../components/notes/NotesPanel";
@@ -609,6 +610,11 @@ export function StockDetailPage() {
               title="Interrogate this Coin"
               description={`${ticker} · Adversarial pressure-test of the bull case — and of your own notes`}
               fetcher={() => fetchStockInterrogation(ticker, selectedMarket)}
+            />
+            <TickerNewsCard
+              ticker={ticker}
+              title="Crypto News"
+              subtitle={`Latest ${ticker.replace(/-USD$/i, "")} headlines across crypto media`}
             />
           </div>
         )}
