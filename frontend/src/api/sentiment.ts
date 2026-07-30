@@ -47,6 +47,17 @@ export async function fetchStockBriefing(ticker: string, market?: string): Promi
   return data;
 }
 
+// v1.2 "research interrogates": an adversarial read that pressure-tests the bull
+// case (and your own recorded notes) rather than another bullish briefing. Authed
+// endpoint — folds in the user's notes on this ticker; goes through the same
+// authed `api` instance as the briefing.
+export async function fetchStockInterrogation(ticker: string, market?: string): Promise<InsightData> {
+  const { data } = await api.get<InsightData>(`/ai/interrogate/${encodeURIComponent(ticker)}`, {
+    params: { market },
+  });
+  return data;
+}
+
 export async function fetchAiRiskInsights(metrics: Record<string, any>, scope = "portfolio"): Promise<InsightData> {
   const { data } = await api.post<InsightData>("/ai/risk-insights", { metrics, scope });
   return data;

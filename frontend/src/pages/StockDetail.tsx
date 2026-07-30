@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { fetchQuotesBatch, fetchStockBriefing, getHistory } from "../api/client";
+import { fetchQuotesBatch, fetchStockBriefing, fetchStockInterrogation, getHistory } from "../api/client";
 import { AiInsightCard } from "../components/terminal/AiInsightCard";
 import { OverviewPanel } from "../components/analysis/OverviewPanel";
 import { PeersComparison } from "../components/analysis/PeersComparison";
@@ -636,6 +636,11 @@ export function StockDetailPage() {
               title="AI Investment Briefing"
               description={`${ticker} · AI-synthesized bull/bear thesis from fundamentals and news`}
               fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
+            />
+            <AiInsightCard
+              title="Interrogate this Stock"
+              description={`${ticker} · Adversarial pressure-test of the bull case — and of your own notes`}
+              fetcher={() => fetchStockInterrogation(ticker, selectedMarket)}
             />
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
               {isIndian && <PromoterHoldingsCard ticker={ticker} />}
