@@ -9,10 +9,22 @@ from __future__ import annotations
 
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.api.routes.ai_insights import _interrogation_prompts
 from backend.main import app
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _ensure_schema() -> None:
+    # This file sorts early, so in CI it can run before any test that boots the
+    # app lifespan (which calls init_db) and creates the shared test-DB schema —
+    # yielding "no such table: users". Create the tables here directly (idempotent
+    # create_all), avoiding lifespan start/stop churn between client blocks.
+    from backend.shared.db import init_db
+
+    init_db()
 
 
 def _unique_symbol() -> str:
