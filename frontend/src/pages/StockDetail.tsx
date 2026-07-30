@@ -605,6 +605,11 @@ export function StockDetailPage() {
               description={`${ticker} · AI-synthesized bull/bear thesis from market context and news`}
               fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
             />
+            <AiInsightCard
+              title="Interrogate this Coin"
+              description={`${ticker} · Adversarial pressure-test of the bull case — and of your own notes`}
+              fetcher={() => fetchStockInterrogation(ticker, selectedMarket)}
+            />
           </div>
         )}
 
@@ -620,6 +625,11 @@ export function StockDetailPage() {
               title="AI Investment Briefing"
               description={`${ticker} · AI-synthesized read on the index from market context and news`}
               fetcher={() => fetchStockBriefing(ticker, selectedMarket)}
+            />
+            <AiInsightCard
+              title="Interrogate this Index"
+              description={`${ticker} · Adversarial read of the prevailing index narrative — and of your own notes`}
+              fetcher={() => fetchStockInterrogation(ticker, selectedMarket)}
             />
           </div>
         )}
