@@ -27,6 +27,7 @@ from backend.auth.deps import get_current_user
 from backend.core.ttl_policy import market_open_now, ttl_seconds
 from backend.models.notes import NoteORM
 from backend.models.user import User
+from backend.services.brain import brain_service
 from backend.services.llm_insights import run_insight
 
 router = APIRouter()
@@ -46,12 +47,16 @@ def _interrogation_prompts(
     snap: dict[str, Any],
     headlines: list[str],
     note_texts: list[str],
+    related_texts: list[str] | None = None,
 ) -> tuple[str, str]:
     """Build the (system, user) prompt for an adversarial stock interrogation.
 
     Pure and side-effect-free so it's unit-testable: the user's own notes are
-    folded in verbatim (capped upstream) as the thesis to pressure-test. The
-    output contract stays the shared INSIGHT_SCHEMA {summary, sections}."""
+    folded in verbatim (capped upstream) as the thesis to pressure-test.
+    ``related_texts`` are the user's semantically-related notes on *other*
+    tickers/themes (via the second-brain index), so the model can cross-reference
+    the thesis against the user's wider recorded thinking. The output contract
+    stays the shared INSIGHT_SCHEMA {summary, sections}."""
     name = snap.get("company_name") or snap.get("name") or symbol
     facts = "\n".join(
         [
@@ -66,6 +71,8 @@ def _interrogation_prompts(
     )
     news_block = "\n".join(f"- {h}" for h in headlines) or "- (no recent headlines available)"
     notes_block = "\n".join(f"- {t}" for t in note_texts) or "- (you have recorded no notes on this stock yet)"
+    related = related_texts or []
+    related_block = "\n".join(f"- {t}" for t in related)
 
     system_prompt = (
         "You are a sharp, skeptical devil's-advocate analyst for a professional "
@@ -75,14 +82,17 @@ def _interrogation_prompts(
         "then pressure-test it: surface the assumptions it rests on, the ways it could "
         "be wrong, relevant base rates, and whether the story is already reflected in "
         "the price. Where the user's notes assert a thesis, challenge it directly and "
-        "on its own terms. Be specific and grounded in the data provided; do NOT give "
-        "direct buy or sell advice, and do not flatter. Provide exactly these "
-        "sections: 'The Bull Narrative' (tone neutral) - the story being told, "
-        "including the user's if present; 'What Would Have To Be True' (tone neutral) "
-        "- the load-bearing assumptions behind it; 'The Bear Case & Base Rates' (tone "
-        "negative) - what would break it and how often such stories disappoint; "
-        "'Already Priced In?' (tone neutral) - whether the valuation and price action "
-        "already reflect the narrative."
+        "on its own terms. When the user's related notes on OTHER tickers or themes "
+        "reveal a recurring pattern — the same bet, bias, or blind spot they keep "
+        "returning to — name it explicitly, because that is exactly what a person is "
+        "least able to see in themselves. Be specific and grounded in the data "
+        "provided; do NOT give direct buy or sell advice, and do not flatter. Provide "
+        "exactly these sections: 'The Bull Narrative' (tone neutral) - the story being "
+        "told, including the user's if present; 'What Would Have To Be True' (tone "
+        "neutral) - the load-bearing assumptions behind it; 'The Bear Case & Base "
+        "Rates' (tone negative) - what would break it and how often such stories "
+        "disappoint; 'Already Priced In?' (tone neutral) - whether the valuation and "
+        "price action already reflect the narrative."
     )
     user_content = (
         f"Company: {name} ({symbol})\n\n"
@@ -90,6 +100,12 @@ def _interrogation_prompts(
         f"Recent headlines:\n{news_block}\n\n"
         f"The user's own notes on {symbol} (their recorded thesis - challenge it directly):\n{notes_block}"
     )
+    if related:
+        user_content += (
+            f"\n\nThe user's related notes on OTHER tickers/themes (cross-reference the "
+            f"thesis against these — flag if it repeats a pattern the user expresses "
+            f"elsewhere):\n{related_block}"
+        )
     return system_prompt, user_content
 
 
@@ -196,6 +212,7 @@ async def interrogate_stock(
             note_texts.append(text[:600])
 
     snap = await fetch_stock_snapshot_coalesced(symbol) or {}
+    name = snap.get("company_name") or snap.get("name") or symbol
     headlines: list[str] = []
     for term in _ticker_fallback_terms(symbol, market_code):
         items = await _fetch_news_fallback(term, limit=6)
@@ -203,7 +220,25 @@ async def interrogate_stock(
             headlines = [str(i.get("title") or "").strip() for i in items[:6] if i.get("title")]
             break
 
-    system_prompt, user_content = _interrogation_prompts(symbol, snap, headlines, note_texts)
+    # Broaden the grounding beyond same-ticker notes: semantically retrieve the
+    # user's related notes on OTHER tickers/themes from their second brain, so the
+    # interrogation can cross-reference the thesis against their wider thinking
+    # (e.g. the same bet made elsewhere). Best-effort — degrades to nothing when the
+    # brain is empty or embeddings are unavailable, never failing the endpoint.
+    related_query = " ".join(
+        [name, symbol, str(snap.get("sector") or ""), *note_texts]
+    ).strip()
+    related = await brain_service.related_notes(
+        db, str(current_user.id), related_query, exclude_symbol=symbol, k=4
+    )
+    related_texts = [
+        f"[on {r['symbol']}] {r['text']}" if r.get("symbol") else r["text"]
+        for r in related
+    ]
+
+    system_prompt, user_content = _interrogation_prompts(
+        symbol, snap, headlines, note_texts, related_texts
+    )
     result = await run_insight(
         system_prompt,
         user_content,
@@ -213,7 +248,12 @@ async def interrogate_stock(
             "to pressure-test your thesis."
         ),
     )
-    payload = {"ticker": symbol, "note_count": len(note_texts), **result}
+    payload = {
+        "ticker": symbol,
+        "note_count": len(note_texts),
+        "related_count": len(related_texts),
+        **result,
+    }
     await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
     return payload
 

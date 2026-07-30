@@ -974,4 +974,8 @@ export type InsightData = {
   summary: string;
   sections: InsightSection[];
   generated_at?: string;
+  /** Interrogation only: how many of the user's own notes on the ticker fed the analysis. */
+  note_count?: number;
+  /** Interrogation only: related notes on other tickers/themes folded in semantically. */
+  related_count?: number;
 };
