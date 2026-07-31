@@ -5,10 +5,11 @@ Authed (per-user, never /api/v1). Mounted under "/api" → /api/notes.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -17,7 +18,29 @@ from backend.auth.deps import get_current_user
 from backend.models.notes import NOTE_CONTEXTS, NoteORM
 from backend.models.user import User
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/notes", tags=["notes"])
+
+
+async def _reindex_user_brain(user_id: str) -> None:
+    """Best-effort incremental reindex so a newly written note flows into the
+    second brain — and thus into the interrogation's *related-notes* grounding —
+    without waiting for a manual reindex or the first "ask".
+
+    Runs in the background AFTER the note write is committed, on its own session,
+    and swallows every error: an offline embedder (or any indexing hiccup) must
+    never fail a note save. Incremental — unchanged chunks are skipped."""
+    from backend.services.brain.indexer import reindex_user
+    from backend.shared.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        await reindex_user(db, user_id)
+    except Exception as exc:  # noqa: BLE001 - saving a note must not depend on the embedder
+        logger.info("Brain reindex after note write skipped: %s", exc)
+    finally:
+        db.close()
 
 
 class NoteCreate(BaseModel):
@@ -100,6 +123,7 @@ def list_notes(
 @router.post("", response_model=NoteOut, status_code=201)
 def create_note(
     payload: NoteCreate,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> NoteOut:
@@ -115,6 +139,7 @@ def create_note(
     db.add(row)
     db.commit()
     db.refresh(row)
+    background.add_task(_reindex_user_brain, current_user.id)
     return _serialize(row)
 
 
@@ -122,6 +147,7 @@ def create_note(
 def update_note(
     note_id: str,
     payload: NoteUpdate,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> NoteOut:
@@ -140,12 +166,14 @@ def update_note(
         row.tags = _normalize_tags(payload.tags)
     db.commit()
     db.refresh(row)
+    background.add_task(_reindex_user_brain, current_user.id)
     return _serialize(row)
 
 
 @router.delete("/{note_id}", status_code=204)
 def delete_note(
     note_id: str,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> None:
@@ -158,3 +186,4 @@ def delete_note(
         raise HTTPException(status_code=404, detail="Note not found")
     db.delete(row)
     db.commit()
+    background.add_task(_reindex_user_brain, current_user.id)
