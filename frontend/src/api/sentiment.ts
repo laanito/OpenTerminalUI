@@ -58,6 +58,31 @@ export async function fetchStockInterrogation(ticker: string, market?: string): 
   return data;
 }
 
+export type ArticleSentiment = {
+  id: string;
+  label: string;
+  score: number;
+  confidence: number;
+  rationale?: string;
+  engine: "llm" | "lexical";
+};
+
+export type NewsSentimentBatch = {
+  engine: "llm" | "lexical" | "mixed" | "unavailable";
+  model?: string;
+  items: ArticleSentiment[];
+};
+
+// v1.2: score a page of headlines with the local LLM (trader's-eye bull/bear read),
+// batched into one call and cached per headline server-side. Degrades per-item to
+// the lexical scorer when the model is off — each item is tagged with its engine.
+export async function scoreNewsArticles(
+  items: { id: string; title: string; summary?: string }[],
+): Promise<NewsSentimentBatch> {
+  const { data } = await api.post<NewsSentimentBatch>("/ai/news-sentiment", { items });
+  return data;
+}
+
 export async function fetchAiRiskInsights(metrics: Record<string, any>, scope = "portfolio"): Promise<InsightData> {
   const { data } = await api.post<InsightData>("/ai/risk-insights", { metrics, scope });
   return data;

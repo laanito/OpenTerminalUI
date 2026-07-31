@@ -29,6 +29,7 @@ from backend.models.notes import NoteORM
 from backend.models.user import User
 from backend.services.brain import brain_service
 from backend.services.llm_insights import run_insight
+from backend.services.llm_sentiment import score_articles
 
 router = APIRouter()
 
@@ -256,6 +257,20 @@ async def interrogate_stock(
     }
     await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
     return payload
+
+
+@router.post("/ai/news-sentiment")
+async def news_sentiment(payload: dict[str, Any]) -> dict[str, Any]:
+    """Score a batch of news articles' sentiment with the local LLM (v1.2).
+
+    On-demand upgrade over the always-on lexical scorer: pass a page of headlines
+    (`{items: [{id, title, summary}]}`) and get a trader's-eye Bullish/Bearish/
+    Neutral read per article, batched into one LLM call and cached per headline.
+    Degrades per-item to the lexical engine when the model is off/unreachable —
+    each item is tagged with the engine that produced it.
+    """
+    items = payload.get("items") if isinstance(payload, dict) else None
+    return await score_articles(items if isinstance(items, list) else [])
 
 
 @router.post("/ai/backtest-explain")
