@@ -637,6 +637,11 @@ export function StockDetailPage() {
               description={`${ticker} · Adversarial read of the prevailing index narrative — and of your own notes`}
               fetcher={() => fetchStockInterrogation(ticker, selectedMarket)}
             />
+            <TickerNewsCard
+              ticker={ticker}
+              title="Index News"
+              subtitle={`Latest headlines on ${ticker.toUpperCase()}`}
+            />
           </div>
         )}
 

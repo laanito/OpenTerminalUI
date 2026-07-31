@@ -40,6 +40,25 @@ try:
 except Exception:  # pragma: no cover - defensive: name-free crypto terms still work
     _CRYPTO_NAME_BY_SYMBOL = {}
 
+# Index symbol (Yahoo caret notation) -> human name, for index news queries.
+# "^GSPC stock" returns nothing; "S&P 500" does. Same bug class as crypto.
+_INDEX_NAME_BY_SYMBOL: dict[str, str] = {
+    "^GSPC": "S&P 500",
+    "^DJI": "Dow Jones Industrial Average",
+    "^IXIC": "Nasdaq Composite",
+    "^NDX": "Nasdaq 100",
+    "^RUT": "Russell 2000",
+    "^VIX": "VIX volatility index",
+    "^FTSE": "FTSE 100",
+    "^GDAXI": "DAX",
+    "^FCHI": "CAC 40",
+    "^STOXX50E": "Euro Stoxx 50",
+    "^N225": "Nikkei 225",
+    "^HSI": "Hang Seng Index",
+    "^NSEI": "Nifty 50",
+    "^BSESN": "BSE Sensex",
+}
+
 _HTML_RE = re.compile(r"<[^>]+>")
 
 
@@ -150,7 +169,11 @@ def _ticker_aliases(symbol: str, market: str | None = None) -> list[str]:
         aliases.add(f"{base}.NS")
     if mkt in {"BSE"}:
         aliases.add(f"{base}.BO")
-    if not mkt:
+    # With no market hint, we used to guess India (.NS/.BO) for EVERY symbol —
+    # which India-biases the DB lookup for EU-suffixed tickers (JEIP.DE), crypto
+    # (BTC-USD) and indices (^GSPC). Only guess India for a *bare* equity ticker
+    # that carries no exchange suffix of its own.
+    if not mkt and "." not in base and not _is_crypto_symbol(base) and not _is_index_symbol(base):
         aliases.update({f"{base}.NS", f"{base}.BO"})
     return sorted(aliases)
 
@@ -159,6 +182,29 @@ def _is_crypto_symbol(symbol: str) -> bool:
     # Crypto is quoted against USD (BTC-USD, ETH-USD, RENDER-USD, ...) — the same
     # convention the frontend's isCryptoSymbol and the /v1/crypto routes use.
     return symbol.strip().upper().endswith("-USD")
+
+
+def _is_index_symbol(symbol: str) -> bool:
+    # Indices use Yahoo caret notation (^GSPC, ^IXIC, ^NSEI, ...) — matches the
+    # frontend's isIndexSymbol.
+    return symbol.strip().startswith("^")
+
+
+def _index_news_terms(symbol: str) -> list[str]:
+    """News search terms for a market index.
+
+    "^GSPC stock" is useless; index news lives under the index's name. Resolve the
+    human name when known (^GSPC -> "S&P 500"), always including a caret-free
+    fallback so unmapped indices still search sensibly."""
+    full = symbol.strip().upper()
+    name = _INDEX_NAME_BY_SYMBOL.get(full)
+    bare = full.lstrip("^")
+    terms: list[str] = []
+    if name:
+        terms += [name, f"{name} index"]
+    if bare:
+        terms.append(f"{bare} index")
+    return list(dict.fromkeys([t for t in terms if t.strip()])) or ["stock market"]
 
 
 def _crypto_news_terms(symbol: str) -> list[str]:
@@ -182,6 +228,8 @@ def _ticker_fallback_terms(symbol: str, market: str | None = None) -> list[str]:
     base = symbol.strip().upper()
     if _is_crypto_symbol(base):
         return _crypto_news_terms(base)
+    if _is_index_symbol(base):
+        return _index_news_terms(base)
     mkt = (market or "").strip().upper()
     terms = [f"{base} stock", base]
     if mkt in {"NSE", "IN"}:
