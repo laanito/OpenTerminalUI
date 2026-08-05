@@ -2,17 +2,20 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchStockEmotion, searchLatestNews, type NewsLatestApiItem } from "../api/client";
+import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchStockEmotion, searchLatestNews, type NewsLatestApiItem } from "../api/client";
 import { EmotionIndicator } from "../components/terminal/EmotionIndicator";
+import { NewsArticleRow } from "../components/market/NewsArticleRow";
 import { NotesPanel } from "../components/notes/NotesPanel";
-import { SentimentBadge } from "../components/terminal/SentimentBadge";
 import { useStock } from "../hooks/useStocks";
 import { useStockStore } from "../store/stockStore";
 import { terminalColors } from "../theme/terminal";
 
 type SentimentLabel = "Bullish" | "Bearish" | "Neutral";
 type PeriodOption = 1 | 3 | 7 | 14 | 30;
-type SourceMode = "by_ticker" | "search" | "latest" | "failed";
+type SourceMode = "by_ticker" | "search" | "latest" | "crypto" | "failed";
+type NewsScope = "market" | "ticker" | "search";
+type MarketSlice = "all" | "us" | "europe" | "india" | "crypto" | "indices";
+type SentimentFilter = "all" | SentimentLabel;
 
 type UiNewsItem = {
   id: string;
@@ -37,6 +40,25 @@ type NewsQueryResult = {
 
 const PERIOD_OPTIONS: PeriodOption[] = [1, 3, 7, 14, 30];
 const PAGE_SIZE = 20;
+
+// Browse-by-market slices. Each drives the free sources with a market-flavored
+// query (or the keyless crypto firehose), so "give me a general idea of X" needs
+// no ticker. Labels are what the chips show; the query is what actually searches.
+const MARKET_SLICES: Array<{ key: MarketSlice; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "us", label: "US" },
+  { key: "europe", label: "Europe" },
+  { key: "india", label: "India" },
+  { key: "crypto", label: "Crypto" },
+  { key: "indices", label: "Indices" },
+];
+
+const MARKET_SLICE_QUERY: Record<Exclude<MarketSlice, "all" | "crypto">, string> = {
+  us: "US stock market earnings Wall Street",
+  europe: "European stocks Euronext DAX CAC 40 FTSE STOXX",
+  india: "India stock market Sensex Nifty NSE",
+  indices: "stock market index S&P 500 Nasdaq Dow Jones",
+};
 
 function clampScore(v: number): number {
   return Math.max(-1, Math.min(1, v));
@@ -72,32 +94,10 @@ function normalizeNewsItem(item: NewsLatestApiItem): UiNewsItem | null {
   };
 }
 
-function formatPublishedTime(iso: string): string {
-  const ts = Date.parse(iso);
-  if (!Number.isFinite(ts)) return "-";
-  return new Date(ts).toLocaleString();
-}
-
-function relativeTime(iso: string, nowMs: number): string {
-  const ts = Date.parse(iso);
-  if (!Number.isFinite(ts)) return "recently";
-  const diffSec = Math.max(0, Math.floor((nowMs - ts) / 1000));
-  if (diffSec < 60) return "just now";
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-  return `${Math.floor(diffSec / 86400)}d ago`;
-}
-
 function sentimentColor(label: SentimentLabel): string {
   if (label === "Bullish") return terminalColors.positive;
   if (label === "Bearish") return terminalColors.negative;
   return terminalColors.muted;
-}
-
-function sentimentDot(label: SentimentLabel): string {
-  if (label === "Bullish") return "GREEN";
-  if (label === "Bearish") return "RED";
-  return "NEUTRAL";
 }
 
 function toUpperWords(value: string): string[] {
@@ -183,25 +183,56 @@ async function loadTickerContextNews(ticker: string, companyName: string, market
   }
 }
 
+async function loadMarketNews(slice: MarketSlice, limit = 200): Promise<NewsQueryResult> {
+  const errors: string[] = [];
+  try {
+    if (slice === "crypto") {
+      const items = await fetchCryptoNews(Math.min(limit, 120));
+      return { items, sourceMode: "crypto", errors };
+    }
+    if (slice === "all") {
+      const items = await fetchLatestNews(limit);
+      return { items, sourceMode: "latest", errors };
+    }
+    const term = MARKET_SLICE_QUERY[slice];
+    const items = await searchLatestNews(term, limit);
+    return { items, sourceMode: "search", searchTerm: term, errors };
+  } catch (e) {
+    errors.push(e instanceof Error ? e.message : "market feed failed");
+    return { items: [], sourceMode: "failed", errors };
+  }
+}
+
 export function NewsPage() {
   const currentTicker = useStockStore((s) => s.ticker);
   const { data: selectedStock } = useStock(currentTicker);
+  // Land on the market overview — news without a ticker gives the general read;
+  // the Ticker tab (below) is one click away when you want a symbol's context.
+  const [scope, setScope] = useState<NewsScope>("market");
+  const [marketSlice, setMarketSlice] = useState<MarketSlice>("all");
+  const [sentimentFilter, setSentimentFilter] = useState<SentimentFilter>("all");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [periodDays, setPeriodDays] = useState<PeriodOption>(7);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [nowMs, setNowMs] = useState(Date.now());
-  const [isTickerMode, setIsTickerMode] = useState(true);
   const [sortMode, setSortMode] = useState<"time" | "sentiment">("time");
   const [keywordInput, setKeywordInput] = useState(localStorage.getItem("news:keyword-alerts") || "");
   const [keywordHits, setKeywordHits] = useState<Array<{ keyword: string; title: string; source: string; publishedAt: string }>>([]);
   const [lastRefreshMs, setLastRefreshMs] = useState<number>(Date.now());
+
+  const isTickerScope = scope === "ticker";
   const relevanceAliases = useMemo(
     () => Array.from(new Set(toUpperWords(String(selectedStock?.company_name || "")).slice(0, 6))),
     [selectedStock?.company_name],
   );
 
   const tickerDisplay = (selectedStock?.company_name || currentTicker || "").trim();
+  const scopeLabel = isTickerScope
+    ? `Ticker: ${tickerDisplay || currentTicker}`
+    : scope === "search"
+    ? `Search: ${debouncedSearch || "—"}`
+    : `Market: ${MARKET_SLICES.find((s) => s.key === marketSlice)?.label ?? "All"}`;
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 350);
@@ -213,16 +244,10 @@ export function NewsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (!isTickerMode) return;
-    setSearchInput("");
-    setDebouncedSearch("");
-  }, [currentTicker, isTickerMode]);
-
   const newsQuery = useQuery<NewsQueryResult>({
-    queryKey: ["news-page", currentTicker, selectedStock?.company_name || "", debouncedSearch, isTickerMode],
+    queryKey: ["news-page", scope, marketSlice, currentTicker, selectedStock?.company_name || "", debouncedSearch],
     queryFn: async () => {
-      if (isTickerMode) {
+      if (scope === "ticker") {
         return loadTickerContextNews(
           currentTicker,
           String(selectedStock?.company_name || ""),
@@ -230,8 +255,11 @@ export function NewsPage() {
           200,
         );
       }
-      const items = debouncedSearch ? await searchLatestNews(debouncedSearch, 200) : await fetchLatestNews(200);
-      return { items, sourceMode: debouncedSearch ? "search" : "latest", searchTerm: debouncedSearch || undefined, errors: [] };
+      if (scope === "search") {
+        const items = debouncedSearch ? await searchLatestNews(debouncedSearch, 200) : await fetchLatestNews(200);
+        return { items, sourceMode: debouncedSearch ? "search" : "latest", searchTerm: debouncedSearch || undefined, errors: [] };
+      }
+      return loadMarketNews(marketSlice, 200);
     },
     retry: 2,
     staleTime: 60_000,
@@ -252,7 +280,7 @@ export function NewsPage() {
   const sentimentQuery = useQuery({
     queryKey: ["news-sentiment", currentTicker, periodDays],
     queryFn: () => fetchNewsSentiment(currentTicker, periodDays, String(selectedStock?.exchange || "")),
-    enabled: isTickerMode && Boolean(currentTicker),
+    enabled: isTickerScope && Boolean(currentTicker),
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
@@ -274,7 +302,7 @@ export function NewsPage() {
   const emotionQuery = useQuery({
     queryKey: ["stock-emotion", currentTicker, periodDays, String(selectedStock?.exchange || "")],
     queryFn: () => fetchStockEmotion(currentTicker, periodDays, String(selectedStock?.exchange || "")),
-    enabled: isTickerMode && Boolean(currentTicker),
+    enabled: isTickerScope && Boolean(currentTicker),
     staleTime: 120_000,
     refetchInterval: 300_000,
   });
@@ -282,7 +310,7 @@ export function NewsPage() {
   const normalizedItems = useMemo(() => {
     const raw = newsQuery.data?.items ?? [];
     const mapped = raw.map(normalizeNewsItem).filter((v): v is UiNewsItem => Boolean(v));
-    if (!isTickerMode) return mapped;
+    if (!isTickerScope) return mapped;
 
     const ticker = currentTicker.trim().toUpperCase();
     const aliases = relevanceAliases;
@@ -295,7 +323,7 @@ export function NewsPage() {
     // Search/latest fallbacks are not ticker-specific — show nothing rather
     // than generic market news when a specific ticker is selected.
     return [];
-  }, [currentTicker, isTickerMode, newsQuery.data?.items, newsQuery.data?.sourceMode, relevanceAliases]);
+  }, [currentTicker, isTickerScope, newsQuery.data?.items, newsQuery.data?.sourceMode, relevanceAliases]);
 
   useEffect(() => {
     const keywords = keywordInput
@@ -332,7 +360,7 @@ export function NewsPage() {
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [debouncedSearch, periodDays, periodItems.length, currentTicker, isTickerMode]);
+  }, [debouncedSearch, periodDays, periodItems.length, currentTicker, scope, marketSlice, sentimentFilter]);
 
   const fallbackSummary = useMemo(() => {
     const total = periodItems.length;
@@ -378,13 +406,21 @@ export function NewsPage() {
     };
   }, [periodItems]);
 
-  const summary = isTickerMode && sentimentQuery.data
+  const summary = isTickerScope && sentimentQuery.data
     ? sentimentQuery.data
     : {
         ticker: currentTicker,
         period_days: periodDays,
         ...fallbackSummary,
       };
+
+  // In-feed sentiment counts drive the clickable filter — click a bucket to see
+  // only those headlines and validate (or break) a thesis against the evidence.
+  const sentimentCounts = useMemo(() => {
+    const counts = { Bullish: 0, Bearish: 0, Neutral: 0 } as Record<SentimentLabel, number>;
+    for (const item of periodItems) counts[item.sentiment.label] += 1;
+    return counts;
+  }, [periodItems]);
 
   const sortedItems = useMemo(() => {
     const next = [...periodItems];
@@ -395,7 +431,36 @@ export function NewsPage() {
     next.sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
     return next;
   }, [periodItems, sortMode]);
-  const visibleItems = sortedItems.slice(0, visibleCount);
+
+  const filteredItems = useMemo(
+    () => (sentimentFilter === "all" ? sortedItems : sortedItems.filter((i) => i.sentiment.label === sentimentFilter)),
+    [sortedItems, sentimentFilter],
+  );
+  const visibleItems = filteredItems.slice(0, visibleCount);
+
+  function goToSector(sector: string) {
+    const term = `${sector} sector stocks`;
+    setScope("search");
+    setSearchInput(term);
+    setDebouncedSearch(term);
+    setSentimentFilter("all");
+  }
+
+  function selectMarketSlice(slice: MarketSlice) {
+    setScope("market");
+    setMarketSlice(slice);
+    setSentimentFilter("all");
+  }
+
+  function toggleSentimentFilter(label: SentimentLabel) {
+    setSentimentFilter((prev) => (prev === label ? "all" : label));
+  }
+
+  const scopeTabs: Array<{ key: NewsScope; label: string; show: boolean }> = [
+    { key: "market", label: "Market", show: true },
+    { key: "ticker", label: currentTicker ? `Ticker · ${currentTicker}` : "Ticker", show: Boolean(currentTicker) },
+    { key: "search", label: "Search", show: true },
+  ];
 
   return (
     <div className="space-y-3 p-4">
@@ -403,9 +468,7 @@ export function NewsPage() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="text-sm font-semibold">News & Sentiment</div>
-            <div className="text-[11px] text-terminal-muted">
-              {isTickerMode ? `Ticker context: ${tickerDisplay || currentTicker}` : "Global/search context"}
-            </div>
+            <div className="text-[11px] text-terminal-muted">{scopeLabel}</div>
             <div className="text-[10px] text-terminal-muted">
               Source: {newsQuery.data?.sourceMode || "-"} {newsQuery.data?.searchTerm ? `(${newsQuery.data.searchTerm})` : ""} | Refreshed: {new Date(lastRefreshMs).toLocaleTimeString()}
             </div>
@@ -430,18 +493,59 @@ export function NewsPage() {
                 </option>
               ))}
             </select>
-            <button className="rounded border border-terminal-border px-2 py-1 text-xs" onClick={() => setIsTickerMode(true)}>
-              Use ticker
-            </button>
           </div>
         </div>
+
+        {/* Scope tabs: Market (tickerless overview) · Ticker · Search */}
+        <div className="mt-2 flex flex-wrap gap-1">
+          {scopeTabs.filter((t) => t.show).map((tab) => (
+            <button
+              key={tab.key}
+              className={`rounded border px-2 py-1 text-xs ${
+                scope === tab.key
+                  ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
+                  : "border-terminal-border text-terminal-muted hover:border-terminal-accent"
+              }`}
+              onClick={() => {
+                setScope(tab.key);
+                setSentimentFilter("all");
+                if (tab.key !== "search") {
+                  setSearchInput("");
+                  setDebouncedSearch("");
+                }
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Market-slice chips: browse by market without a ticker */}
+        {scope === "market" && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {MARKET_SLICES.map((slice) => (
+              <button
+                key={slice.key}
+                className={`rounded border px-2 py-0.5 text-[11px] ${
+                  marketSlice === slice.key
+                    ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
+                    : "border-terminal-border text-terminal-muted hover:border-terminal-accent"
+                }`}
+                onClick={() => selectMarketSlice(slice.key)}
+              >
+                {slice.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="mt-2">
           <input
             className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs outline-none focus:border-terminal-accent"
-            placeholder="Search news..."
+            placeholder="Search news across all markets..."
             value={searchInput}
             onChange={(e) => {
-              setIsTickerMode(false);
+              setScope("search");
               setSearchInput(e.target.value);
             }}
           />
@@ -471,11 +575,33 @@ export function NewsPage() {
             <div style={{ width: `${summary.bearish_pct}%`, background: terminalColors.negative }} />
           </div>
         </div>
-        <div className="mt-1 flex items-center justify-between text-[11px] text-terminal-muted">
-          <span>Bullish {summary.bullish_pct}%</span>
-          <span>Neutral {summary.neutral_pct}%</span>
-          <span>Bearish {summary.bearish_pct}%</span>
+        {/* Clickable legend: filter the feed down to one sentiment to test a thesis. */}
+        <div className="mt-1 flex items-center justify-between gap-1 text-[11px]">
+          {(["Bullish", "Neutral", "Bearish"] as SentimentLabel[]).map((label) => {
+            const pct = label === "Bullish" ? summary.bullish_pct : label === "Bearish" ? summary.bearish_pct : summary.neutral_pct;
+            const active = sentimentFilter === label;
+            return (
+              <button
+                key={label}
+                onClick={() => toggleSentimentFilter(label)}
+                className={`flex-1 rounded border px-1.5 py-0.5 ${
+                  active ? "border-terminal-accent text-terminal-accent" : "border-transparent text-terminal-muted hover:border-terminal-border"
+                }`}
+                title={`Show only ${label} headlines (${sentimentCounts[label]})`}
+              >
+                <span style={{ color: active ? undefined : sentimentColor(label) }}>{label}</span> {pct}%
+              </button>
+            );
+          })}
         </div>
+        {sentimentFilter !== "all" && (
+          <div className="mt-1 flex items-center justify-between rounded border border-terminal-accent/40 bg-terminal-accent/5 px-2 py-1 text-[11px] text-terminal-accent">
+            <span>Filtered to {sentimentFilter} headlines ({sentimentCounts[sentimentFilter as SentimentLabel]})</span>
+            <button className="underline" onClick={() => setSentimentFilter("all")}>
+              Clear
+            </button>
+          </div>
+        )}
 
         <div className="mt-3 h-28 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -488,24 +614,28 @@ export function NewsPage() {
           </ResponsiveContainer>
         </div>
         {marketSentimentQuery.data?.sectors?.length ? (
-          <div className="mt-3 grid grid-cols-2 gap-1 text-[11px] md:grid-cols-4">
-            {marketSentimentQuery.data.sectors.slice(0, 8).map((row) => (
-              <div
-                key={row.sector}
-                className="rounded border border-terminal-border px-1.5 py-1"
-                style={{
-                  background:
-                    row.avg_sentiment > 0
-                      ? `rgba(34,197,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
-                      : row.avg_sentiment < 0
-                      ? `rgba(244,63,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
-                      : "#0D1117",
-                }}
-              >
-                <div className="truncate text-terminal-muted">{row.sector}</div>
-                <div className="font-semibold">{row.avg_sentiment >= 0 ? "+" : ""}{row.avg_sentiment.toFixed(2)}</div>
-              </div>
-            ))}
+          <div className="mt-3">
+            <div className="mb-1 text-[11px] text-terminal-muted">Sectors — click to browse that segment</div>
+            <div className="grid grid-cols-2 gap-1 text-[11px] md:grid-cols-4">
+              {marketSentimentQuery.data.sectors.slice(0, 8).map((row) => (
+                <button
+                  key={row.sector}
+                  onClick={() => goToSector(row.sector)}
+                  className="rounded border border-terminal-border px-1.5 py-1 text-left hover:border-terminal-accent"
+                  style={{
+                    background:
+                      row.avg_sentiment > 0
+                        ? `rgba(34,197,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
+                        : row.avg_sentiment < 0
+                        ? `rgba(244,63,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
+                        : "#0D1117",
+                  }}
+                >
+                  <div className="truncate text-terminal-muted">{row.sector}</div>
+                  <div className="font-semibold">{row.avg_sentiment >= 0 ? "+" : ""}{row.avg_sentiment.toFixed(2)}</div>
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
         <div className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2">
@@ -541,7 +671,7 @@ export function NewsPage() {
         ) : null}
       </section>
 
-      {isTickerMode && currentTicker && (
+      {isTickerScope && currentTicker && (
         <EmotionIndicator
           ticker={currentTicker}
           data={emotionQuery.data}
@@ -550,7 +680,7 @@ export function NewsPage() {
         />
       )}
 
-      {isTickerMode && currentTicker && (
+      {isTickerScope && currentTicker && (
         <section className="rounded border border-terminal-border bg-terminal-panel p-3">
           <div className="mb-2 text-[10px] uppercase tracking-wide text-terminal-muted">
             Your notes on {currentTicker} — captured into the Second Brain
@@ -559,7 +689,7 @@ export function NewsPage() {
         </section>
       )}
 
-      {(newsQuery.isLoading || (isTickerMode && sentimentQuery.isLoading)) && (
+      {(newsQuery.isLoading || (isTickerScope && sentimentQuery.isLoading)) && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, idx) => (
             <div key={idx} className="h-20 animate-pulse rounded border border-terminal-border bg-terminal-panel" />
@@ -567,45 +697,42 @@ export function NewsPage() {
         </div>
       )}
       {newsQuery.isError && (
-        <div className="rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">Failed to load latest news feed</div>
+        <div className="rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">Failed to load news feed</div>
       )}
-      {isTickerMode && sentimentQuery.isError && (
+      {isTickerScope && sentimentQuery.isError && (
         <div className="rounded border border-terminal-warn bg-terminal-warn/10 p-2 text-xs text-terminal-warn">
           Sentiment service unavailable. Showing headline feed with fallback sentiment summary.
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="grid gap-1">
         {visibleItems.map((item) => (
-          <article key={item.id} className="rounded border border-terminal-border bg-terminal-panel p-3">
-            <div className="flex items-center justify-between gap-2">
-              <SentimentBadge label={item.sentiment.label} score={item.sentiment.score} confidence={item.sentiment.confidence} />
-              <div className="flex items-center gap-2">
-                {isTickerMode && (
-                  <span className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted">
-                    {relevanceReason(item, currentTicker, relevanceAliases)}
-                  </span>
-                )}
-                <div className="text-[11px] text-terminal-muted">{relativeTime(item.publishedAt, nowMs)}</div>
-              </div>
-            </div>
-            <a href={item.url} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm font-semibold text-terminal-accent hover:underline">
-              {item.title}
-            </a>
-            <div className="mt-1 text-[11px] text-terminal-muted">
-              {item.source} | {formatPublishedTime(item.publishedAt)}
-            </div>
-            <p className="mt-2 text-xs text-terminal-text">{item.summary || "-"}</p>
-          </article>
+          <NewsArticleRow
+            key={item.id}
+            item={item}
+            nowMs={nowMs}
+            sentiment={{ label: item.sentiment.label, score: item.sentiment.score, confidence: item.sentiment.confidence }}
+            meta={
+              isTickerScope ? (
+                <span className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted">
+                  {relevanceReason(item, currentTicker, relevanceAliases)}
+                </span>
+              ) : undefined
+            }
+          />
         ))}
         {!newsQuery.isLoading && visibleItems.length === 0 && (
           <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs text-terminal-muted">
-            {isTickerMode ? `No relevant latest news found for ${currentTicker}.` : "No news found for this search"}
+            {sentimentFilter !== "all"
+              ? `No ${sentimentFilter} headlines in this feed.`
+              : isTickerScope
+              ? `No relevant news found for ${currentTicker}.`
+              : "No news found for this view."}
           </div>
         )}
       </div>
 
-      {visibleCount < periodItems.length && (
+      {visibleCount < filteredItems.length && (
         <div className="pt-1">
           <button className="rounded border border-terminal-border px-3 py-1 text-xs" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
             Load more
