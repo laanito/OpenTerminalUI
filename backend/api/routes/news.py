@@ -59,6 +59,43 @@ _INDEX_NAME_BY_SYMBOL: dict[str, str] = {
     "^BSESN": "BSE Sensex",
 }
 
+# EU-listed equities carry an exchange suffix (SAP.DE, ASML.AS, MC.PA, SHELL.L).
+# "SAP.DE stock" returns almost nothing; the coverage lives under the root ticker
+# plus the exchange/city name people actually write. Same bug class as crypto and
+# indices — resolve the suffix to a search-friendly exchange phrase. Longest
+# suffixes are matched first so ".LS" (Lisbon) never collides with ".L" (London).
+_EU_EXCHANGE_BY_SUFFIX: dict[str, str] = {
+    ".DE": "Frankfurt Xetra",
+    ".F": "Frankfurt",
+    ".PA": "Euronext Paris",
+    ".AS": "Euronext Amsterdam",
+    ".BR": "Euronext Brussels",
+    ".LS": "Euronext Lisbon",
+    ".IR": "Euronext Dublin",
+    ".MI": "Borsa Italiana Milan",
+    ".MC": "Bolsa de Madrid",
+    ".L": "London Stock Exchange",
+    ".SW": "SIX Swiss Exchange",
+    ".VI": "Vienna Stock Exchange",
+    ".ST": "Nasdaq Stockholm",
+    ".HE": "Nasdaq Helsinki",
+    ".CO": "Nasdaq Copenhagen",
+    ".OL": "Oslo Bors",
+    ".AT": "Athens Stock Exchange",
+    ".LS": "Euronext Lisbon",
+    ".WA": "Warsaw Stock Exchange",
+}
+
+# Keyless crypto-native RSS feeds. The web-search fallbacks (Yahoo, Google News)
+# under-cover crypto beyond the largest coins, so for crypto symbols we also pull
+# these firehoses and filter them to the coin. No API keys, honoring the project's
+# privacy-first, no-paid-feeds default.
+_CRYPTO_RSS_FEEDS: list[tuple[str, str]] = [
+    ("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
+    ("Cointelegraph", "https://cointelegraph.com/rss"),
+    ("Decrypt", "https://decrypt.co/feed"),
+]
+
 _HTML_RE = re.compile(r"<[^>]+>")
 
 
@@ -224,12 +261,35 @@ def _crypto_news_terms(symbol: str) -> list[str]:
     return list(dict.fromkeys([t for t in terms if t.strip()]))
 
 
+def _eu_exchange_suffix(symbol: str) -> tuple[str, str] | None:
+    """(root, exchange_phrase) if the symbol carries a known EU exchange suffix.
+
+    Longest suffix wins so ".LS" (Lisbon) doesn't get shadowed by ".L" (London)."""
+    base = symbol.strip().upper()
+    for suffix in sorted(_EU_EXCHANGE_BY_SUFFIX, key=len, reverse=True):
+        if base.endswith(suffix) and len(base) > len(suffix):
+            return base[: -len(suffix)], _EU_EXCHANGE_BY_SUFFIX[suffix]
+    return None
+
+
+def _eu_news_terms(root: str, exchange: str) -> list[str]:
+    """News search terms for an EU-listed equity.
+
+    We don't resolve the company name (a keyless name lookup is future work), so
+    lead with the exchange phrase to disambiguate the root ticker, then broaden."""
+    terms = [f"{root} {exchange}", f"{root} shares", f"{root} stock", root]
+    return list(dict.fromkeys([t for t in terms if t.strip()]))
+
+
 def _ticker_fallback_terms(symbol: str, market: str | None = None) -> list[str]:
     base = symbol.strip().upper()
     if _is_crypto_symbol(base):
         return _crypto_news_terms(base)
     if _is_index_symbol(base):
         return _index_news_terms(base)
+    eu = _eu_exchange_suffix(base)
+    if eu is not None:
+        return _eu_news_terms(*eu)
     mkt = (market or "").strip().upper()
     terms = [f"{base} stock", base]
     if mkt in {"NSE", "IN"}:
@@ -268,11 +328,11 @@ def _sentiment_payload(title: str, summary: str) -> dict[str, Any]:
     return score_article_sentiment(_compose_news_text(title, summary))
 
 
-def _rss_item_to_payload(item: ET.Element) -> dict[str, Any] | None:
+def _rss_item_to_payload(item: ET.Element, default_source: str = "Google News") -> dict[str, Any] | None:
     title = (item.findtext("title") or "").strip()
     url = (item.findtext("link") or "").strip()
     summary = _strip_html((item.findtext("description") or "").strip())
-    source = (item.findtext("source") or "").strip() or "Google News"
+    source = (item.findtext("source") or "").strip() or default_source
     published_at = _to_iso_from_rss_date(item.findtext("pubDate"))
     if not title or not url:
         return None
@@ -319,6 +379,49 @@ async def _fetch_google_news_rss(query: str, limit: int = 50) -> list[dict[str, 
     return out
 
 
+async def _fetch_rss_feed(url: str, default_source: str, limit: int = 50) -> list[dict[str, Any]]:
+    """Fetch and parse a plain RSS 2.0 feed (no keys, no query params)."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0, trust_env=False, follow_redirects=True) as client:
+            resp = await client.get(url, headers={"User-Agent": "OpenTerminalUI/1.0 (+news)"})
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+    except Exception:
+        return []
+
+    out: list[dict[str, Any]] = []
+    for node in root.findall(".//item"):
+        parsed = _rss_item_to_payload(node, default_source=default_source)
+        if parsed:
+            out.append(parsed)
+        if len(out) >= limit:
+            break
+    return out
+
+
+async def _fetch_crypto_rss(limit: int = 80) -> list[dict[str, Any]]:
+    """Merged, deduped firehose from keyless crypto-native RSS feeds.
+
+    Symbol-independent, so it's cached once under a fixed key rather than fetched
+    per coin — filtering to a specific coin happens downstream in memory."""
+    cache_key = cache_instance.build_key("news_latest", "crypto_rss", {"limit": limit})
+    cached = await cache_instance.get(cache_key)
+    if cached is not None:
+        return cached
+
+    feeds = await asyncio.gather(
+        *(_fetch_rss_feed(url, source, limit=limit) for source, url in _CRYPTO_RSS_FEEDS),
+        return_exceptions=True,
+    )
+    rows: list[dict[str, Any]] = []
+    for result in feeds:
+        if isinstance(result, list):
+            rows.extend(result)
+    merged = _merge_news(rows, limit=limit)
+    await cache_instance.set(cache_key, merged, ttl=ttl_seconds("news_latest", market_open_now()))
+    return merged
+
+
 def _yahoo_news_row_to_payload(row: dict[str, Any]) -> dict[str, Any] | None:
     title = str(row.get("title") or "").strip()
     url = str(row.get("link") or row.get("url") or "").strip()
@@ -360,6 +463,68 @@ async def _fetch_news_fallback(query: str, limit: int = 50) -> list[dict[str, An
     if yahoo_rows:
         return yahoo_rows[:limit]
     return await _fetch_google_news_rss(query, limit=limit)
+
+
+def _merge_news(*groups: list[dict[str, Any]], limit: int = 50) -> list[dict[str, Any]]:
+    """Dedup by URL across groups and sort newest-first. Earlier groups win ties."""
+    dedup: dict[str, dict[str, Any]] = {}
+    for group in groups:
+        for row in group:
+            url = str(row.get("url") or "").strip()
+            if url and url not in dedup:
+                dedup[url] = row
+    items = list(dedup.values())
+    items.sort(key=lambda x: str(x.get("published_at") or ""), reverse=True)
+    return items[:limit]
+
+
+def _crypto_match_tokens(symbol: str) -> list[str]:
+    """Whole-word tokens that mean 'this coin' in a headline (name + ticker root).
+
+    Single-letter roots are dropped — too noisy to word-match reliably."""
+    full = symbol.strip().upper()
+    base = full.split("-")[0]
+    tokens = {base}
+    name = _CRYPTO_NAME_BY_SYMBOL.get(full)
+    if name:
+        tokens.add(name.upper())
+    return [t for t in tokens if len(t) >= 2]
+
+
+def _filter_crypto_rss(rows: list[dict[str, Any]], symbol: str) -> list[dict[str, Any]]:
+    """Keep firehose items whose title/summary mention the coin (whole-word)."""
+    tokens = _crypto_match_tokens(symbol)
+    if not tokens:
+        return []
+    pattern = re.compile(r"\b(?:" + "|".join(re.escape(t) for t in tokens) + r")\b", re.IGNORECASE)
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        haystack = f"{row.get('title') or ''} {row.get('summary') or ''}"
+        if pattern.search(haystack):
+            out.append(row)
+    return out
+
+
+async def _fetch_ticker_news(symbol: str, market: str | None, limit: int = 50) -> list[dict[str, Any]]:
+    """Live news for a symbol from keyless sources.
+
+    Crypto symbols blend web search with the crypto-native RSS firehose (filtered
+    to the coin); equities and indices take the first fallback term that yields."""
+    base = symbol.strip().upper()
+    terms = _ticker_fallback_terms(base, market)
+    if _is_crypto_symbol(base):
+        web: list[dict[str, Any]] = []
+        for term in terms:
+            web = await _fetch_news_fallback(term, limit=limit)
+            if web:
+                break
+        firehose = _filter_crypto_rss(await _fetch_crypto_rss(limit=80), base)
+        return _merge_news(web, firehose, limit=limit)
+    for term in terms:
+        items = await _fetch_news_fallback(term, limit=limit)
+        if items:
+            return items
+    return []
 
 
 async def _fallback_latest_news(limit: int = 50) -> list[dict[str, Any]]:
@@ -514,19 +679,10 @@ async def get_news_by_ticker(
         )
         items = [_row_to_item(row) for row in rows]
         if not items:
-            items = []
-            for term in _ticker_fallback_terms(symbol, market_code):
-                items = await _fetch_news_fallback(term, limit=limit)
-                if items:
-                    break
+            items = await _fetch_ticker_news(symbol, market_code, limit=limit)
         payload = {"items": items}
     except OperationalError:
-        fallback_items: list[dict[str, Any]] = []
-        for term in _ticker_fallback_terms(symbol, market_code):
-            fallback_items = await _fetch_news_fallback(term, limit=limit)
-            if fallback_items:
-                break
-        payload = {"items": fallback_items}
+        payload = {"items": await _fetch_ticker_news(symbol, market_code, limit=limit)}
     finally:
         db.close()
 
@@ -536,6 +692,22 @@ async def get_news_by_ticker(
         ttl=ttl_seconds("news_latest", market_open_now()),
     )
     return payload
+
+
+@router.get("/news/crypto")
+async def get_crypto_news(
+    limit: int = Query(default=50, ge=1, le=200),
+    symbol: str | None = Query(default=None, description="Optional coin to filter to, e.g. BTC-USD"),
+) -> dict[str, Any]:
+    """Keyless crypto-native news firehose (CoinDesk/Cointelegraph/Decrypt).
+
+    Unfiltered by default (browsable crypto news); pass a crypto symbol to narrow
+    the firehose to a single coin."""
+    firehose = await _fetch_crypto_rss(limit=max(limit, 80))
+    sym = (symbol or "").strip().upper() or None
+    if sym and _is_crypto_symbol(sym):
+        firehose = _filter_crypto_rss(firehose, sym)
+    return {"items": firehose[:limit]}
 
 
 @router.get("/news/sentiment/market")
