@@ -666,6 +666,18 @@ async def get_news_by_ticker(
     if cached:
         return cached
 
+    # Crypto is special-cased: the ingestor's ticker tagging is unreliable for
+    # coins (loose "-USD"/symbol matching mistags unrelated equities — a Ford
+    # story ends up tagged "XRP-USD"), and the DB-first path below would then
+    # return those junk rows and, because it found *something*, never fall
+    # through to the keyless crypto firehose. So for a coin we skip the DB and
+    # serve the live blended feed (web search + CoinDesk/Cointelegraph/Decrypt,
+    # filtered to the coin) directly.
+    if _is_crypto_symbol(symbol):
+        payload = {"items": await _fetch_ticker_news(symbol, market_code, limit=limit)}
+        await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
+        return payload
+
     db = SessionLocal()
     try:
         aliases = _ticker_aliases(symbol, market_code)
