@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { fetchNewsByTicker } from "../../api/news";
 import { scoreNewsArticles, type ArticleSentiment } from "../../api/sentiment";
-import { SentimentBadge } from "../terminal/SentimentBadge";
+import { NewsArticleRow } from "./NewsArticleRow";
 import { TerminalPanel } from "../terminal/TerminalPanel";
 
 type Props = {
@@ -13,17 +13,6 @@ type Props = {
   title?: string;
   subtitle?: string;
 };
-
-function formatWhen(value: string): string {
-  const ts = Date.parse(value);
-  if (!Number.isFinite(ts)) return "";
-  return new Date(ts).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 /**
  * Compact ticker-scoped news feed backed by `/news/by-ticker`. Works for any
@@ -96,35 +85,19 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
           {items.map((item) => {
             const sentiment = scores[item.id];
             return (
-              <a
+              <NewsArticleRow
                 key={`${item.id}-${item.published_at}`}
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="grid gap-0.5 rounded-sm border border-terminal-border bg-terminal-bg px-2 py-2 hover:border-terminal-accent"
-              >
-                <div className="flex items-center gap-2 text-[11px] text-terminal-muted">
-                  <span className="truncate font-semibold text-terminal-text/80">{item.source || "NEWS"}</span>
-                  {item.published_at && <span>· {formatWhen(item.published_at)}</span>}
-                  {sentiment && (
-                    <span className="ml-auto">
-                      <SentimentBadge
-                        label={sentiment.label}
-                        score={sentiment.score}
-                        confidence={sentiment.confidence}
-                      />
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-terminal-text">{item.title}</div>
-                {sentiment?.rationale ? (
-                  <div className="text-[11px] italic text-terminal-muted">{sentiment.rationale}</div>
-                ) : (
-                  item.summary && (
-                    <div className="line-clamp-2 text-[11px] text-terminal-muted">{item.summary}</div>
-                  )
-                )}
-              </a>
+                item={{
+                  id: item.id,
+                  title: item.title,
+                  source: item.source,
+                  url: item.url,
+                  summary: item.summary,
+                  publishedAt: item.published_at,
+                }}
+                sentiment={sentiment ? { label: sentiment.label, score: sentiment.score, confidence: sentiment.confidence } : undefined}
+                rationale={sentiment?.rationale}
+              />
             );
           })}
         </div>

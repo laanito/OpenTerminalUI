@@ -32,6 +32,16 @@ export async function fetchNewsByTicker(ticker: string, limit = 100, market?: st
   return Array.isArray(data?.items) ? data.items : [];
 }
 
+/**
+ * Keyless crypto-native news firehose (CoinDesk/Cointelegraph/Decrypt). Omit
+ * `symbol` for the browsable market-wide feed, or pass a coin (e.g. BTC-USD) to
+ * narrow the firehose to that coin.
+ */
+export async function fetchCryptoNews(limit = 60, symbol?: string): Promise<NewsLatestApiItem[]> {
+  const { data } = await api.get<{ items: NewsLatestApiItem[] }>("/news/crypto", { params: { limit, symbol } });
+  return Array.isArray(data?.items) ? data.items : [];
+}
+
 export async function fetchQuarterlyReports(market: string, symbol: string, limit = 8): Promise<QuarterlyReportApiItem[]> {
   const { data } = await api.get<{ items: QuarterlyReportApiItem[] }>("/reports/quarterly", { params: { market, symbol, limit } });
   return Array.isArray(data?.items) ? data.items : [];
