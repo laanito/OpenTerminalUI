@@ -86,3 +86,74 @@ def test_aliases_still_guess_india_for_bare_ticker() -> None:
     assert news._ticker_aliases("AAPL") == ["AAPL", "AAPL.BO", "AAPL.NS"]
     # An explicit market is honored regardless.
     assert news._ticker_aliases("RELIANCE", "NSE") == ["RELIANCE", "RELIANCE.NS"]
+
+
+# ---- EU-listed equities: exchange suffix -> search-friendly terms -------------
+
+def test_eu_suffix_resolves_to_root_and_exchange() -> None:
+    assert news._eu_exchange_suffix("SAP.DE") == ("SAP", "Frankfurt Xetra")
+    assert news._eu_exchange_suffix("ASML.AS") == ("ASML", "Euronext Amsterdam")
+    assert news._eu_exchange_suffix("SHELL.L") == ("SHELL", "London Stock Exchange")
+
+
+def test_eu_longest_suffix_wins() -> None:
+    # ".LS" (Lisbon) must beat ".L" (London) — longest match, not first.
+    assert news._eu_exchange_suffix("ABC.LS") == ("ABC", "Euronext Lisbon")
+
+
+def test_eu_suffix_ignores_non_eu_and_bare() -> None:
+    assert news._eu_exchange_suffix("AAPL") is None
+    assert news._eu_exchange_suffix("BTC-USD") is None
+    assert news._eu_exchange_suffix("^GSPC") is None
+    # A suffix with no root before it is not a real ticker.
+    assert news._eu_exchange_suffix(".DE") is None
+
+
+def test_eu_terms_lead_with_exchange_context() -> None:
+    terms = news._ticker_fallback_terms("SAP.DE")
+    # Exchange phrase leads so the ambiguous root ("SAP") is disambiguated.
+    assert terms[0] == "SAP Frankfurt Xetra"
+    assert "SAP" in terms
+    # No India bias for EU tickers.
+    assert all("NSE" not in t and "BSE" not in t for t in terms)
+
+
+def test_us_equity_terms_still_unchanged_by_eu_path() -> None:
+    # The EU path must not touch plain US tickers.
+    assert news._ticker_fallback_terms("MSFT") == ["MSFT stock", "MSFT"]
+
+
+# ---- crypto-native RSS firehose: matching / merge -----------------------------
+
+def test_crypto_match_tokens_include_name_and_root() -> None:
+    tokens = news._crypto_match_tokens("BTC-USD")
+    assert "BTC" in tokens
+    assert "BITCOIN" in tokens
+
+
+def test_crypto_match_tokens_drop_single_letter_roots() -> None:
+    # A 1-char root is too noisy to word-match; only keep >=2-char tokens.
+    assert all(len(t) >= 2 for t in news._crypto_match_tokens("X-USD"))
+
+
+def test_filter_crypto_rss_matches_whole_words_only() -> None:
+    rows = [
+        {"url": "u1", "title": "Bitcoin hits new high", "summary": ""},
+        {"url": "u2", "title": "Ethereum upgrade ships", "summary": "no coin here"},
+        {"url": "u3", "title": "arbitrary text", "summary": "mentions BTC futures"},
+        {"url": "u4", "title": "orbiting satellites", "summary": "nothing relevant"},
+    ]
+    matched = news._filter_crypto_rss(rows, "BTC-USD")
+    urls = {r["url"] for r in matched}
+    assert urls == {"u1", "u3"}  # Bitcoin (name) + BTC (root); no false positives
+
+
+def test_merge_news_dedupes_by_url_and_sorts_newest_first() -> None:
+    a = [{"url": "u1", "published_at": "2026-01-01T00:00:00+00:00"}]
+    b = [
+        {"url": "u1", "published_at": "2026-01-01T00:00:00+00:00"},  # dup, earlier group wins
+        {"url": "u2", "published_at": "2026-02-01T00:00:00+00:00"},
+    ]
+    merged = news._merge_news(a, b, limit=10)
+    assert [r["url"] for r in merged] == ["u2", "u1"]  # newest first
+    assert len(merged) == 2  # deduped
