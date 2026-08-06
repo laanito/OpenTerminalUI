@@ -11,7 +11,7 @@ from email.utils import parsedate_to_datetime
 from xml.etree import ElementTree as ET
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 from sqlalchemy import desc, or_
 from sqlalchemy.exc import OperationalError
 import httpx
@@ -97,6 +97,23 @@ _CRYPTO_RSS_FEEDS: list[tuple[str, str]] = [
 ]
 
 _HTML_RE = re.compile(r"<[^>]+>")
+
+# Publisher-authored summary extraction. The keyless Yahoo Finance search — our
+# primary source for market/search/ticker news — returns headline-only rows with
+# NO summary field, so those feeds render bare titles. Rather than have an LLM
+# invent a summary from a headline we haven't read (fabrication, exactly what this
+# terminal refuses to do), we lift the article's OWN one-to-two-line blurb from its
+# Open Graph / meta description. Real publisher text, no keys, no invention.
+_OG_DESC_RE = re.compile(
+    r"<meta[^>]+property=[\"']og:description[\"'][^>]+content=[\"']([^\"']+)[\"']",
+    re.IGNORECASE,
+)
+_META_DESC_RE = re.compile(
+    r"<meta[^>]+name=[\"']description[\"'][^>]+content=[\"']([^\"']+)[\"']",
+    re.IGNORECASE,
+)
+_SUMMARY_MAX_CHARS = 280
+_SUMMARY_MAX_URLS = 24
 
 
 def _to_iso_from_epoch(value: Any) -> str | None:
@@ -540,6 +557,80 @@ async def _fallback_latest_news(limit: int = 50) -> list[dict[str, Any]]:
     items = list(dedup.values())
     items.sort(key=lambda x: str(x.get("published_at") or ""), reverse=True)
     return items[:limit]
+
+
+async def _fetch_og_summary(url: str) -> str:
+    """The article's own summary (Open Graph / meta description), keyless.
+
+    Cached per-URL under a long TTL — a published article's blurb doesn't change,
+    so once fetched it's effectively free and shared across users. Any failure
+    (timeout, non-HTML, no tag) degrades to an empty string; the row then simply
+    shows no summary rather than a fabricated one."""
+    clean = (url or "").strip()
+    if not clean.startswith(("http://", "https://")):
+        return ""
+    cache_key = cache_instance.build_key("news_summary", clean, {})
+    cached = await cache_instance.get(cache_key)
+    if cached is not None:
+        return cached
+
+    summary = ""
+    try:
+        async with httpx.AsyncClient(timeout=6.0, trust_env=False, follow_redirects=True) as client:
+            resp = await client.get(
+                clean,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; OpenTerminalUI/1.0; +news)"},
+            )
+            resp.raise_for_status()
+            ctype = resp.headers.get("content-type", "")
+            if "html" in ctype.lower() or not ctype:
+                # Only the <head> carries the meta tags; cap the scanned text so a
+                # huge page doesn't blow up the regex.
+                head = resp.text[:120_000]
+                match = _OG_DESC_RE.search(head) or _META_DESC_RE.search(head)
+                if match:
+                    text = _strip_html(html.unescape(match.group(1)))
+                    if len(text) > _SUMMARY_MAX_CHARS:
+                        text = text[:_SUMMARY_MAX_CHARS].rsplit(" ", 1)[0].rstrip() + "…"
+                    summary = text
+    except Exception:
+        summary = ""
+
+    # Cache even the empty result so a dead/summary-less URL isn't refetched every
+    # render; TTL is a day (news_summary policy), well beyond a browsing session.
+    await cache_instance.set(cache_key, summary, ttl=ttl_seconds("news_summary", market_open_now()))
+    return summary
+
+
+@router.post("/news/summaries")
+async def get_news_summaries(
+    urls: list[str] = Body(..., embed=True, description="Article URLs to summarise (max 24)"),
+) -> dict[str, dict[str, str]]:
+    """Batch: article URL -> publisher summary, for rows a feed left summary-less.
+
+    The frontend calls this only for the handful of headlines currently on screen
+    that arrived without a summary (the Yahoo-search path), so cost tracks what the
+    user actually sees, and per-URL caching makes repeat views free."""
+    seen: list[str] = []
+    for raw in urls or []:
+        clean = str(raw or "").strip()
+        if clean and clean not in seen:
+            seen.append(clean)
+        if len(seen) >= _SUMMARY_MAX_URLS:
+            break
+
+    if not seen:
+        return {"summaries": {}}
+
+    sem = asyncio.Semaphore(6)
+
+    async def _one(u: str) -> tuple[str, str]:
+        async with sem:
+            return u, await _fetch_og_summary(u)
+
+    resolved = await asyncio.gather(*[_one(u) for u in seen])
+    summaries = {u: text for u, text in resolved if text}
+    return {"summaries": summaries}
 
 
 @router.get("/news/symbol")

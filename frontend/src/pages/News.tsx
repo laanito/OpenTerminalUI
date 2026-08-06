@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchStockEmotion, searchLatestNews, type NewsLatestApiItem } from "../api/client";
+import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchNewsSummaries, fetchStockEmotion, searchLatestNews, type NewsLatestApiItem } from "../api/client";
 import { EmotionIndicator } from "../components/terminal/EmotionIndicator";
 import { NewsArticleRow } from "../components/market/NewsArticleRow";
 import { NotesPanel } from "../components/notes/NotesPanel";
@@ -438,6 +438,24 @@ export function NewsPage() {
   );
   const visibleItems = filteredItems.slice(0, visibleCount);
 
+  // Lazy summary enrichment: the keyless Yahoo feed returns headline-only rows, so
+  // for the handful currently on screen that lack a summary we fetch the article's
+  // own publisher blurb (og/meta description). Scoped to visible rows so cost
+  // tracks what's actually read, and keyed on the URL set so it refetches only
+  // when new summary-less rows appear (scroll / filter / sort change).
+  const summarylessUrls = useMemo(
+    () => visibleItems.filter((i) => !i.summary.trim() && i.url).map((i) => i.url),
+    [visibleItems],
+  );
+  const summaryKey = useMemo(() => [...summarylessUrls].sort().join("|"), [summarylessUrls]);
+  const summariesQuery = useQuery<Record<string, string>>({
+    queryKey: ["news-summaries", summaryKey],
+    queryFn: () => fetchNewsSummaries(summarylessUrls),
+    enabled: summarylessUrls.length > 0,
+    staleTime: 60 * 60 * 1000,
+  });
+  const summaryByUrl = summariesQuery.data ?? {};
+
   function goToSector(sector: string) {
     const term = `${sector} sector stocks`;
     setScope("search");
@@ -709,7 +727,7 @@ export function NewsPage() {
         {visibleItems.map((item) => (
           <NewsArticleRow
             key={item.id}
-            item={item}
+            item={{ ...item, summary: item.summary || summaryByUrl[item.url] || "" }}
             nowMs={nowMs}
             sentiment={{ label: item.sentiment.label, score: item.sentiment.score, confidence: item.sentiment.confidence }}
             meta={

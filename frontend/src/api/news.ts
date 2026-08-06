@@ -42,6 +42,19 @@ export async function fetchCryptoNews(limit = 60, symbol?: string): Promise<News
   return Array.isArray(data?.items) ? data.items : [];
 }
 
+/**
+ * Batch-fetch publisher summaries (Open Graph / meta description) for article URLs
+ * that arrived without one — the keyless Yahoo search path returns headline-only
+ * rows. Real publisher text, not generated; returns a url -> summary map (only
+ * URLs that yielded a summary are present).
+ */
+export async function fetchNewsSummaries(urls: string[]): Promise<Record<string, string>> {
+  const list = Array.from(new Set(urls.filter((u) => typeof u === "string" && u.trim()))).slice(0, 24);
+  if (list.length === 0) return {};
+  const { data } = await api.post<{ summaries: Record<string, string> }>("/news/summaries", { urls: list });
+  return data && typeof data.summaries === "object" && data.summaries ? data.summaries : {};
+}
+
 export async function fetchQuarterlyReports(market: string, symbol: string, limit = 8): Promise<QuarterlyReportApiItem[]> {
   const { data } = await api.get<{ items: QuarterlyReportApiItem[] }>("/reports/quarterly", { params: { market, symbol, limit } });
   return Array.isArray(data?.items) ? data.items : [];

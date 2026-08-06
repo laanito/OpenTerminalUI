@@ -25,6 +25,10 @@ def ttl_seconds(data_type: str, market_open: bool) -> int:
         "chart": (60, 900),
         "futures_chain": (45, 300),
         "news_latest": (180, 600),
+        # A published article's own summary (og/meta description) doesn't change,
+        # so cache it for a day regardless of market state — refetching per render
+        # would be pure waste.
+        "news_summary": (86400, 86400),
     }
     open_ttl, closed_ttl = policy.get(dt, (300, 900))
     return open_ttl if market_open else closed_ttl
