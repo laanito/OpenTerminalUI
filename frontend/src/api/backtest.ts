@@ -8,11 +8,15 @@ import type {
   InsightData,
 } from "./types";
 
+// LLM-backed calls: generation routinely exceeds the api client's default 30s
+// timeout, so give them a roomier budget (mirrors sentiment.ts / brain.ts).
+const AI_TIMEOUT = { timeout: 180_000 } as const;
+
 export async function explainBacktest(
   strategy: string,
   metrics?: Record<string, any>,
 ): Promise<InsightData> {
-  const { data } = await api.post<InsightData>("/ai/backtest-explain", { strategy, metrics: metrics || {} });
+  const { data } = await api.post<InsightData>("/ai/backtest-explain", { strategy, metrics: metrics || {} }, AI_TIMEOUT);
   return data;
 }
 
@@ -20,7 +24,7 @@ export async function fetchRiskInsights(
   scope: string,
   metrics?: Record<string, any>,
 ): Promise<InsightData> {
-  const { data } = await api.post<InsightData>("/ai/risk-insights", { scope, metrics: metrics || {} });
+  const { data } = await api.post<InsightData>("/ai/risk-insights", { scope, metrics: metrics || {} }, AI_TIMEOUT);
   return data;
 }
 
