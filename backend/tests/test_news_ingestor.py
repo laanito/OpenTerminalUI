@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
 from pathlib import Path
@@ -110,6 +111,55 @@ def test_news_dedupe_by_url_keeps_latest_seen() -> None:
     assert len(out) == 1
     assert out[0].source == "SrcB"
     assert out[0].title == "T2"
+
+
+class _FakeYahoo:
+    def __init__(self, rows_by_query: dict[str, list[dict]]) -> None:
+        self.rows_by_query = rows_by_query
+        self.queries: list[str] = []
+
+    async def search_news(self, query: str, limit: int = 10):  # noqa: ARG002
+        self.queries.append(query)
+        return self.rows_by_query.get(query, [])
+
+
+class _FakeFetcher:
+    def __init__(self, yahoo: _FakeYahoo) -> None:
+        self.yahoo = yahoo
+
+
+def test_fetch_yahoo_gates_crypto_junk(monkeypatch) -> None:
+    """A coin's name-proxy search can surface off-topic stories — only the ones
+    that actually name the coin get tagged, so no more BTC-USD on a mining story."""
+    mod = _NEWS_INGESTOR_MODULE
+    monkeypatch.setattr(mod, "_db_tickers", lambda limit=40: ["BTC-USD"])
+    yahoo = _FakeYahoo(
+        {
+            "Bitcoin crypto": [
+                {"title": "Bitcoin surges past $70k", "link": "https://x/btc", "publisher": "CoinDesk"},
+                {"title": "Greenland Mines expands drilling", "link": "https://x/mine", "publisher": "Mining Weekly"},
+            ]
+        }
+    )
+    items = asyncio.run(mod.NewsIngestor()._fetch_yahoo(_FakeFetcher(yahoo)))  # noqa: SLF001
+    titles = [i.title for i in items]
+    assert "Bitcoin surges past $70k" in titles
+    assert "Greenland Mines expands drilling" not in titles  # gated out
+    assert all(i.tickers == ["BTC-USD"] for i in items)
+    assert yahoo.queries[0] == "Bitcoin crypto"  # searched by name, not "BTC-USD stock news"
+
+
+def test_fetch_yahoo_equity_trusts_query(monkeypatch) -> None:
+    """Bare equities keep the reliable "{ticker} stock news" query + attribution."""
+    mod = _NEWS_INGESTOR_MODULE
+    monkeypatch.setattr(mod, "_db_tickers", lambda limit=40: ["AAPL"])
+    yahoo = _FakeYahoo(
+        {"AAPL stock news": [{"title": "Apple supplier update", "link": "https://x/aapl", "publisher": "Reuters"}]}
+    )
+    items = asyncio.run(mod.NewsIngestor()._fetch_yahoo(_FakeFetcher(yahoo)))  # noqa: SLF001
+    assert [i.title for i in items] == ["Apple supplier update"]
+    assert items[0].tickers == ["AAPL"]
+    assert yahoo.queries == ["AAPL stock news"]
 
 
 def test_store_news_persists_sentiment_fields(monkeypatch) -> None:
