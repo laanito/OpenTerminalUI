@@ -55,6 +55,29 @@ class LLMClient:
         # Local servers (Ollama/LM Studio) ignore this; hosted providers need it.
         return {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
 
+    def _augment_messages(
+        self, messages: list[dict[str, str]], json_schema: dict[str, Any] | None
+    ) -> list[dict[str, str]]:
+        """Append a JSON directive to the prompt when structured output is wanted.
+
+        ``response_format`` is not honored uniformly — notably Ollama's reasoning
+        models (gpt-oss) return HTTP 200 with markdown prose regardless of it, which
+        then fails JSON parsing and makes a feature look "unavailable". Those models
+        DO follow an explicit in-prompt instruction, so we carry the required shape
+        in the messages themselves. Harmless for providers that already enforce the
+        schema. No-op when no schema is requested or structured output is off."""
+        if json_schema is None or self.structured_output == "none":
+            return messages
+        directive = {
+            "role": "system",
+            "content": (
+                "Respond with ONLY a single JSON object and nothing else — no prose, "
+                "no explanation, no markdown, no code fences. The object MUST conform "
+                "to this JSON Schema:\n" + json.dumps(json_schema, separators=(",", ":"))
+            ),
+        }
+        return [*messages, directive]
+
     def _response_format_ladder(self, json_schema: dict[str, Any] | None) -> list[dict[str, Any] | None]:
         """Ordered response_format variants to attempt, most→least structured."""
         if json_schema is None or self.structured_output == "none":
@@ -88,12 +111,13 @@ class LLMClient:
         """
         url = f"{self.base_url}/chat/completions"
         ladder = self._response_format_ladder(json_schema)
+        send_messages = self._augment_messages(messages, json_schema)
         last_exc: Exception | None = None
 
         for response_format in ladder:
             payload: dict[str, Any] = {
                 "model": self.model,
-                "messages": messages,
+                "messages": send_messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
                 "stream": False,
