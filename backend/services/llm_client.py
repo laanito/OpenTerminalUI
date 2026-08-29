@@ -26,6 +26,12 @@ _JSON_OBJ_RE = re.compile(r"\{.*\}", re.DOTALL)
 # HTTP statuses a server returns when it doesn't support a given response_format.
 _UNSUPPORTED_STATUSES = {400, 404, 422, 501}
 
+# Roomier token budget for the one retry we grant a structured call that came back
+# truncated (finish_reason == "length"). Reasoning models (qwen3, deepseek-r1, …)
+# can spend an entire small budget on hidden <think> tokens and return an empty or
+# half-written answer; one roomier attempt lets them finish the JSON.
+_TRUNCATION_RETRY_MAX_TOKENS = 6144
+
 
 class LLMError(RuntimeError):
     """Raised when the LLM endpoint is unreachable or returns bad data."""
@@ -54,6 +60,29 @@ class LLMClient:
     def _headers(self) -> dict[str, str]:
         # Local servers (Ollama/LM Studio) ignore this; hosted providers need it.
         return {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+
+    def _augment_messages(
+        self, messages: list[dict[str, str]], json_schema: dict[str, Any] | None
+    ) -> list[dict[str, str]]:
+        """Append a JSON directive to the prompt when structured output is wanted.
+
+        ``response_format`` is not honored uniformly — notably Ollama's reasoning
+        models (gpt-oss) return HTTP 200 with markdown prose regardless of it, which
+        then fails JSON parsing and makes a feature look "unavailable". Those models
+        DO follow an explicit in-prompt instruction, so we carry the required shape
+        in the messages themselves. Harmless for providers that already enforce the
+        schema. No-op when no schema is requested or structured output is off."""
+        if json_schema is None or self.structured_output == "none":
+            return messages
+        directive = {
+            "role": "system",
+            "content": (
+                "Respond with ONLY a single JSON object and nothing else — no prose, "
+                "no explanation, no markdown, no code fences. The object MUST conform "
+                "to this JSON Schema:\n" + json.dumps(json_schema, separators=(",", ":"))
+            ),
+        }
+        return [*messages, directive]
 
     def _response_format_ladder(self, json_schema: dict[str, Any] | None) -> list[dict[str, Any] | None]:
         """Ordered response_format variants to attempt, most→least structured."""
@@ -88,40 +117,66 @@ class LLMClient:
         """
         url = f"{self.base_url}/chat/completions"
         ladder = self._response_format_ladder(json_schema)
+        send_messages = self._augment_messages(messages, json_schema)
         last_exc: Exception | None = None
+        effective_max = max_tokens
+        bumped = False
 
         for response_format in ladder:
-            payload: dict[str, Any] = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "stream": False,
-            }
-            if frequency_penalty:
-                payload["frequency_penalty"] = frequency_penalty
-            if response_format is not None:
-                payload["response_format"] = response_format
+            advance_ladder = False
+            while True:
+                payload: dict[str, Any] = {
+                    "model": self.model,
+                    "messages": send_messages,
+                    "temperature": temperature,
+                    "max_tokens": effective_max,
+                    "stream": False,
+                }
+                if frequency_penalty:
+                    payload["frequency_penalty"] = frequency_penalty
+                if response_format is not None:
+                    payload["response_format"] = response_format
 
-            try:
-                async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
-                    resp = await client.post(url, json=payload, headers=self._headers())
-                    resp.raise_for_status()
-                    data = resp.json()
-            except httpx.HTTPStatusError as exc:
-                status = exc.response.status_code if exc.response is not None else None
-                # Endpoint rejected this response_format — try the next, simpler form.
-                if response_format is not None and status in _UNSUPPORTED_STATUSES:
-                    last_exc = exc
+                try:
+                    async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
+                        resp = await client.post(url, json=payload, headers=self._headers())
+                        resp.raise_for_status()
+                        data = resp.json()
+                except httpx.HTTPStatusError as exc:
+                    status = exc.response.status_code if exc.response is not None else None
+                    # Endpoint rejected this response_format — try the next, simpler form.
+                    if response_format is not None and status in _UNSUPPORTED_STATUSES:
+                        last_exc = exc
+                        advance_ladder = True
+                        break
+                    raise LLMError(f"LLM HTTP {status if status is not None else '?'}") from exc
+                except (httpx.HTTPError, ValueError) as exc:
+                    raise LLMError(f"LLM request failed: {exc}") from exc
+
+                try:
+                    choice = data["choices"][0]
+                    content = str((choice.get("message") or {}).get("content") or "")
+                except (KeyError, IndexError, TypeError) as exc:
+                    raise LLMError("LLM returned an unexpected payload") from exc
+
+                # A structured answer truncated by the token cap (finish_reason ==
+                # "length") — typically a reasoning model that spent the budget on
+                # hidden thinking — gets one roomier retry on the same rung before we
+                # accept a broken/empty result.
+                if (
+                    json_schema is not None
+                    and choice.get("finish_reason") == "length"
+                    and not bumped
+                    and effective_max < _TRUNCATION_RETRY_MAX_TOKENS
+                ):
+                    bumped = True
+                    effective_max = _TRUNCATION_RETRY_MAX_TOKENS
                     continue
-                raise LLMError(f"LLM HTTP {status if status is not None else '?'}") from exc
-            except (httpx.HTTPError, ValueError) as exc:
-                raise LLMError(f"LLM request failed: {exc}") from exc
 
-            try:
-                return str(data["choices"][0]["message"]["content"] or "")
-            except (KeyError, IndexError, TypeError) as exc:
-                raise LLMError("LLM returned an unexpected payload") from exc
+                return content
+
+            if advance_ladder:
+                continue
 
         # Exhausted the ladder (every structured form was rejected).
         raise LLMError("LLM rejected all response formats") from last_exc
