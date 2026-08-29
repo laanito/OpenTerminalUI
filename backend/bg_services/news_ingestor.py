@@ -12,6 +12,13 @@ from backend.shared.db import SessionLocal
 from backend.db.models import NewsArticle, WatchlistItem
 from backend.services.legacy_holdings import all_held_symbols
 from backend.services.sentiment_engine import score_article_sentiment
+from backend.services.news_terms import (
+    crypto_mentions,
+    index_mentions,
+    is_crypto_symbol,
+    is_index_symbol,
+    ticker_fallback_terms,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -199,29 +206,62 @@ class NewsIngestor:
         logger.info("event=news_ingest_store inserted=%s candidates=%s", inserted, len(items))
         return inserted
 
+    async def _search_ticker_rows(self, fetcher: Any, ticker: str) -> list[dict[str, Any]]:
+        """Yahoo news rows for a tracked ticker, using the SHARED search terms.
+
+        A crypto/index ticker searched as "{ticker} stock news" returns garbage
+        (Yahoo has no listing for "BTC-USD stock"), so we search the coin/index by
+        name ("Bitcoin crypto", "S&P 500") — trying terms until one yields. Bare
+        equities keep the reliable "{ticker} stock news" query."""
+        terms = ticker_fallback_terms(ticker)
+        if is_crypto_symbol(ticker) or is_index_symbol(ticker):
+            for term in terms:
+                rows = await fetcher.yahoo.search_news(term, limit=10)
+                if rows:
+                    return rows
+            return []
+        query = terms[0] if terms else f"{ticker} stock"
+        return await fetcher.yahoo.search_news(f"{query} news".strip(), limit=10)
+
+    @staticmethod
+    def _row_matches_ticker(ticker: str, title: str, summary: str) -> bool:
+        """Relevance gate before tagging an article with a ticker.
+
+        Crypto/index searches are name-proxies, so a broad query can still return an
+        off-topic story; require the article to actually name the coin/index (whole
+        word) before we tag it — otherwise a Ford story would end up tagged BTC-USD.
+        Equities/EU tickers trust the "{ticker} stock" query attribution as before."""
+        if is_crypto_symbol(ticker):
+            return crypto_mentions(f"{title} {summary}", ticker)
+        if is_index_symbol(ticker):
+            return index_mentions(f"{title} {summary}", ticker)
+        return True
+
     async def _fetch_yahoo(self, fetcher: Any) -> list[NormalizedNews]:
         tickers = _db_tickers()
         out: list[NormalizedNews] = []
         for ticker in tickers:
             try:
-                # Replicate Yahoo news search logic for background ingest
-                query = f"{ticker} stock news"
-                rows = await fetcher.yahoo.search_news(query, limit=10)
+                rows = await self._search_ticker_rows(fetcher, ticker)
                 for row in rows:
                     title = str(row.get("title") or "").strip()
                     url = str(row.get("link") or row.get("url") or "").strip()
                     if not title or not url:
                         continue
 
-                    # Sentiment and normalization
-                    text = f"{title}. {str(row.get('summary') or '').strip()}".strip()
+                    summary = str(row.get("summary") or "").strip()
+                    # Only tag the article with this ticker if it's actually about it.
+                    if not self._row_matches_ticker(ticker, title, summary):
+                        continue
+
+                    text = f"{title}. {summary}".strip()
                     sentiment = score_article_sentiment(text)
 
                     item = NormalizedNews(
                         source=str(row.get("publisher") or "Yahoo Finance").strip() or "Yahoo Finance",
                         title=title,
                         url=url,
-                        summary=str(row.get("summary") or "").strip(),
+                        summary=summary,
                         image_url="",
                         published_at=_to_iso(row.get("providerPublishTime") or row.get("pubDate")),
                         tickers=[ticker],

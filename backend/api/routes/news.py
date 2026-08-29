@@ -21,6 +21,16 @@ from backend.core.ttl_policy import market_open_now, ttl_seconds
 from backend.services.sentiment_engine import score_article_sentiment
 from backend.shared.db import SessionLocal
 from backend.db.models import NewsArticle
+from backend.services.news_terms import (
+    crypto_match_tokens as _crypto_match_tokens,
+    crypto_news_terms as _crypto_news_terms,
+    eu_exchange_suffix as _eu_exchange_suffix,
+    eu_news_terms as _eu_news_terms,
+    index_news_terms as _index_news_terms,
+    is_crypto_symbol as _is_crypto_symbol,
+    is_index_symbol as _is_index_symbol,
+    ticker_fallback_terms as _ticker_fallback_terms,
+)
 
 router = APIRouter()
 
@@ -28,63 +38,9 @@ US_MARKETS = {"NYSE", "NASDAQ"}
 IN_MARKETS = {"NSE", "BSE"}
 SUPPORTED_MARKETS = US_MARKETS | IN_MARKETS
 
-# Coin symbol -> human name, for crypto news queries (BTC-USD -> "Bitcoin").
-# Sourced from the shared crypto universe so there's a single source of truth;
-# guarded so a heavy/unavailable import never breaks news for equities.
-try:
-    from backend.services.crypto_universe import FALLBACK_META as _CRYPTO_FALLBACK_META
-
-    _CRYPTO_NAME_BY_SYMBOL: dict[str, str] = {
-        sym: meta.get("name", "") for sym, meta in _CRYPTO_FALLBACK_META.items() if meta.get("name")
-    }
-except Exception:  # pragma: no cover - defensive: name-free crypto terms still work
-    _CRYPTO_NAME_BY_SYMBOL = {}
-
-# Index symbol (Yahoo caret notation) -> human name, for index news queries.
-# "^GSPC stock" returns nothing; "S&P 500" does. Same bug class as crypto.
-_INDEX_NAME_BY_SYMBOL: dict[str, str] = {
-    "^GSPC": "S&P 500",
-    "^DJI": "Dow Jones Industrial Average",
-    "^IXIC": "Nasdaq Composite",
-    "^NDX": "Nasdaq 100",
-    "^RUT": "Russell 2000",
-    "^VIX": "VIX volatility index",
-    "^FTSE": "FTSE 100",
-    "^GDAXI": "DAX",
-    "^FCHI": "CAC 40",
-    "^STOXX50E": "Euro Stoxx 50",
-    "^N225": "Nikkei 225",
-    "^HSI": "Hang Seng Index",
-    "^NSEI": "Nifty 50",
-    "^BSESN": "BSE Sensex",
-}
-
-# EU-listed equities carry an exchange suffix (SAP.DE, ASML.AS, MC.PA, SHELL.L).
-# "SAP.DE stock" returns almost nothing; the coverage lives under the root ticker
-# plus the exchange/city name people actually write. Same bug class as crypto and
-# indices — resolve the suffix to a search-friendly exchange phrase. Longest
-# suffixes are matched first so ".LS" (Lisbon) never collides with ".L" (London).
-_EU_EXCHANGE_BY_SUFFIX: dict[str, str] = {
-    ".DE": "Frankfurt Xetra",
-    ".F": "Frankfurt",
-    ".PA": "Euronext Paris",
-    ".AS": "Euronext Amsterdam",
-    ".BR": "Euronext Brussels",
-    ".LS": "Euronext Lisbon",
-    ".IR": "Euronext Dublin",
-    ".MI": "Borsa Italiana Milan",
-    ".MC": "Bolsa de Madrid",
-    ".L": "London Stock Exchange",
-    ".SW": "SIX Swiss Exchange",
-    ".VI": "Vienna Stock Exchange",
-    ".ST": "Nasdaq Stockholm",
-    ".HE": "Nasdaq Helsinki",
-    ".CO": "Nasdaq Copenhagen",
-    ".OL": "Oslo Bors",
-    ".AT": "Athens Stock Exchange",
-    ".LS": "Euronext Lisbon",
-    ".WA": "Warsaw Stock Exchange",
-}
+# Symbol classification, news search terms, and coin/index relevance matching now
+# live in backend/services/news_terms.py so the background ingestor shares exactly
+# the same logic — see the aliased imports above.
 
 # Keyless crypto-native RSS feeds. The web-search fallbacks (Yahoo, Google News)
 # under-cover crypto beyond the largest coins, so for crypto symbols we also pull
@@ -230,90 +186,6 @@ def _ticker_aliases(symbol: str, market: str | None = None) -> list[str]:
     if not mkt and "." not in base and not _is_crypto_symbol(base) and not _is_index_symbol(base):
         aliases.update({f"{base}.NS", f"{base}.BO"})
     return sorted(aliases)
-
-
-def _is_crypto_symbol(symbol: str) -> bool:
-    # Crypto is quoted against USD (BTC-USD, ETH-USD, RENDER-USD, ...) — the same
-    # convention the frontend's isCryptoSymbol and the /v1/crypto routes use.
-    return symbol.strip().upper().endswith("-USD")
-
-
-def _is_index_symbol(symbol: str) -> bool:
-    # Indices use Yahoo caret notation (^GSPC, ^IXIC, ^NSEI, ...) — matches the
-    # frontend's isIndexSymbol.
-    return symbol.strip().startswith("^")
-
-
-def _index_news_terms(symbol: str) -> list[str]:
-    """News search terms for a market index.
-
-    "^GSPC stock" is useless; index news lives under the index's name. Resolve the
-    human name when known (^GSPC -> "S&P 500"), always including a caret-free
-    fallback so unmapped indices still search sensibly."""
-    full = symbol.strip().upper()
-    name = _INDEX_NAME_BY_SYMBOL.get(full)
-    bare = full.lstrip("^")
-    terms: list[str] = []
-    if name:
-        terms += [name, f"{name} index"]
-    if bare:
-        terms.append(f"{bare} index")
-    return list(dict.fromkeys([t for t in terms if t.strip()])) or ["stock market"]
-
-
-def _crypto_news_terms(symbol: str) -> list[str]:
-    """News search terms for a crypto symbol.
-
-    "BTC-USD stock" returns nothing useful; crypto news lives under the coin's
-    name and the word crypto. Resolve the human name from the shared crypto
-    universe when known (BTC-USD -> Bitcoin), and always include name-free
-    fallbacks so coins outside the curated map still search sensibly."""
-    full = symbol.strip().upper()
-    base = full.split("-")[0]
-    name = _CRYPTO_NAME_BY_SYMBOL.get(full)
-    terms: list[str] = []
-    if name:
-        terms += [f"{name} crypto", f"{name} cryptocurrency", name]
-    terms += [f"{base} crypto", f"{base} cryptocurrency", f"{base} coin"]
-    return list(dict.fromkeys([t for t in terms if t.strip()]))
-
-
-def _eu_exchange_suffix(symbol: str) -> tuple[str, str] | None:
-    """(root, exchange_phrase) if the symbol carries a known EU exchange suffix.
-
-    Longest suffix wins so ".LS" (Lisbon) doesn't get shadowed by ".L" (London)."""
-    base = symbol.strip().upper()
-    for suffix in sorted(_EU_EXCHANGE_BY_SUFFIX, key=len, reverse=True):
-        if base.endswith(suffix) and len(base) > len(suffix):
-            return base[: -len(suffix)], _EU_EXCHANGE_BY_SUFFIX[suffix]
-    return None
-
-
-def _eu_news_terms(root: str, exchange: str) -> list[str]:
-    """News search terms for an EU-listed equity.
-
-    We don't resolve the company name (a keyless name lookup is future work), so
-    lead with the exchange phrase to disambiguate the root ticker, then broaden."""
-    terms = [f"{root} {exchange}", f"{root} shares", f"{root} stock", root]
-    return list(dict.fromkeys([t for t in terms if t.strip()]))
-
-
-def _ticker_fallback_terms(symbol: str, market: str | None = None) -> list[str]:
-    base = symbol.strip().upper()
-    if _is_crypto_symbol(base):
-        return _crypto_news_terms(base)
-    if _is_index_symbol(base):
-        return _index_news_terms(base)
-    eu = _eu_exchange_suffix(base)
-    if eu is not None:
-        return _eu_news_terms(*eu)
-    mkt = (market or "").strip().upper()
-    terms = [f"{base} stock", base]
-    if mkt in {"NSE", "IN"}:
-        terms = [f"{base} NSE India stock", f"{base} NSE", *terms]
-    elif mkt == "BSE":
-        terms = [f"{base} BSE India stock", f"{base} BSE", *terms]
-    return list(dict.fromkeys([t for t in terms if t.strip()]))
 
 
 def _validate_market(market: str) -> str:
@@ -493,19 +365,6 @@ def _merge_news(*groups: list[dict[str, Any]], limit: int = 50) -> list[dict[str
     items = list(dedup.values())
     items.sort(key=lambda x: str(x.get("published_at") or ""), reverse=True)
     return items[:limit]
-
-
-def _crypto_match_tokens(symbol: str) -> list[str]:
-    """Whole-word tokens that mean 'this coin' in a headline (name + ticker root).
-
-    Single-letter roots are dropped — too noisy to word-match reliably."""
-    full = symbol.strip().upper()
-    base = full.split("-")[0]
-    tokens = {base}
-    name = _CRYPTO_NAME_BY_SYMBOL.get(full)
-    if name:
-        tokens.add(name.upper())
-    return [t for t in tokens if len(t) >= 2]
 
 
 def _filter_crypto_rss(rows: list[dict[str, Any]], symbol: str) -> list[dict[str, Any]]:
@@ -1035,20 +894,27 @@ async def get_news_sentiment(
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     cutoff_iso = cutoff.isoformat()
 
-    db = SessionLocal()
-    try:
-        aliases = _ticker_aliases(symbol, market_code)
-        ticker_filters = [NewsArticle.tickers.like(f'%"{alias}"%') for alias in aliases]
-        rows = (
-            db.query(NewsArticle)
-            .filter(or_(*ticker_filters), NewsArticle.published_at >= cutoff_iso)
-            .order_by(desc(NewsArticle.published_at))
-            .all()
-        )
-    except OperationalError:
-        rows = []
-    finally:
-        db.close()
+    # Crypto is special-cased: the ingestor's DB ticker tags for coins are
+    # unreliable (loose name-proxy searches historically mis-tagged unrelated
+    # equities as a coin — see /news/by-ticker), so a coin's sentiment must NOT be
+    # read from DB rows. Skip straight to the live blended crypto feed below.
+    # Equities/indices keep the DB-first path.
+    rows: list[NewsArticle] = []
+    if not _is_crypto_symbol(symbol):
+        db = SessionLocal()
+        try:
+            aliases = _ticker_aliases(symbol, market_code)
+            ticker_filters = [NewsArticle.tickers.like(f'%"{alias}"%') for alias in aliases]
+            rows = (
+                db.query(NewsArticle)
+                .filter(or_(*ticker_filters), NewsArticle.published_at >= cutoff_iso)
+                .order_by(desc(NewsArticle.published_at))
+                .all()
+            )
+        except OperationalError:
+            rows = []
+        finally:
+            db.close()
 
     bullish = 0
     bearish = 0
@@ -1074,12 +940,19 @@ async def get_news_sentiment(
             if day:
                 day_buckets[day].append(score)
     else:
-        # Fallback sentiment when DB has no ingested records.
+        # No usable DB rows → live feed. Crypto blends the keyless crypto-native
+        # firehose (CoinDesk/Cointelegraph/Decrypt, filtered to the coin) so its
+        # sentiment reflects real coin coverage rather than junk-tagged DB rows;
+        # everything else takes the first web-search term that yields.
+        news_limit = max(20, days * 8)
         fallback_items: list[dict[str, Any]] = []
-        for term in _ticker_fallback_terms(symbol, market_code):
-            fallback_items = await _fetch_news_fallback(term, limit=max(20, days * 8))
-            if fallback_items:
-                break
+        if _is_crypto_symbol(symbol):
+            fallback_items = await _fetch_ticker_news(symbol, market_code, limit=news_limit)
+        else:
+            for term in _ticker_fallback_terms(symbol, market_code):
+                fallback_items = await _fetch_news_fallback(term, limit=news_limit)
+                if fallback_items:
+                    break
         total = len(fallback_items)
         for item in fallback_items:
             sent = item.get("sentiment") if isinstance(item, dict) else {}
