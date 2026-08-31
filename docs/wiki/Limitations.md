@@ -22,7 +22,8 @@ the genuine gaps are.
 | **Commodities** | — | `FMP_API_KEY` | degraded banner |
 | **Dividends calendar / history** | ✅ Yahoo (`events=div`) + FMP when keyed | `FMP_API_KEY` enriches | works keyless via Yahoo |
 | **Crypto fundamentals** (tokenomics, TVL, fees) | ✅ CoinGecko + DefiLlama (both keyless) | — | n/a |
-| **AI insights / news emotion / briefings** | ✅ local **Ollama** (keyless, on-device) | `LLM_API_KEY` only for *hosted* providers (OpenAI/OpenRouter/…) | lexical/FinBERT fallback when LLM off/unreachable |
+| **AI briefings / Interrogate** | ✅ local **Ollama** (keyless, on-device) | `LLM_API_KEY` only for *hosted* providers (OpenAI/OpenRouter/…) | explicitly unavailable when no LLM can answer |
+| **News AI sentiment / emotion** | ✅ local **Ollama**, invoked on demand for News sentiment | `LLM_API_KEY` only for hosted providers | classical lexical/FinBERT fallback, clearly labelled |
 | **Second brain (RAG)** | ✅ local embeddings (Ollama `nomic-embed-text`, or `sentence-transformers` fallback) | hosted embedding model (optional) | n/a — runs fully local |
 | **India NSE/BSE F&O** (real-time + historical) | — | `KITE_API_KEY` / `KITE_API_SECRET` / `KITE_ACCESS_TOKEN` | degraded banner |
 | **Scheduled report email delivery** | reports still generate + download on demand | `SMTP_*` config | email delivery skipped (not an error) |
@@ -33,7 +34,7 @@ variable.
 
 ## Limitations & honest caveats
 
-These are deliberate, documented gaps as of **v1.0.0** — not bugs. Each is
+These are deliberate, documented gaps as of **v1.2.0** — not bugs. Each is
 surfaced in-UI (degraded banner or explicit label), never silently faked.
 
 - **No live economic-calendar source.** The calendar ships a labelled **sample**
@@ -54,7 +55,7 @@ surfaced in-UI (degraded banner or explicit label), never silently faked.
   fund flows** (ETF *holdings/overlap* do work via Yahoo), **Tape / Time & Sales**.
 - **US / EU equity Level-2 depth has no free source.** The order book shows empty
   + `degraded` for US/EU equities (India has real depth via Kite). A future
-  Interactive Brokers adapter is the planned L2 source (v1.1).
+  Interactive Brokers adapter is the planned L2 source after v1.2.
 - **Crypto 24h liquidations read 0** until the Binance `forceOrder` WebSocket
   runner is wired (there's no REST endpoint); the response is flagged
   `no_live_source`. Crypto order-book depth, funding, and open interest *are* real.

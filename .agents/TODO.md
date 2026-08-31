@@ -1,6 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-08-31**, against `main` at `acecb4e` (PR #91).
+Last audited: **2026-08-31**, against `main` at `bd44141` (PR #94), plus the
+v1.2.0 release-prep changes on this branch.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -31,39 +32,29 @@ section and update this file in the same PR when priorities materially change.
   reporting, AI risk narrative, and portfolio-seeded backtesting.
 - Tax-lot accounting was deliberately removed and remains out of scope.
 
-## Unreleased work already on `main`
+### v1.2.0 — research interrogates
 
-The version remains 1.1.0, but these v1.2 slices landed after the tag (PRs
-#76-#91):
-
-- Fixed projected portfolio dividends and sell transactions reducing/removing
-  the corresponding holding.
-- Made screener materialised-store introspection PostgreSQL-safe.
-- Added adversarial **Interrogate** experiences for stocks, crypto, and indices,
-  grounded with semantically related private notes.
-- Added note reindexing/test-readiness improvements and index-news support.
-- Added crypto-native RSS ingestion, crypto-aware ticker routing, and EU ticker
-  term resolution.
-- Added optional batched/cached LLM per-article sentiment with classical fallback.
-- Expanded the News hub with market overview, browse-by-market, sentiment
-  drill-in, and short publisher summaries.
-- Hardened LLM structured output for providers that ignore `response_format`,
-  added a larger-budget retry for truncation, and increased frontend timeouts for
-  long-running LLM-backed insight requests.
-
-These changes should be captured in `CHANGELOG.md` before the next release; its
-`[Unreleased]` section is currently empty.
+- Adversarial **Interrogate** experiences for equities, crypto, and indices,
+  grounded in semantically related private notes.
+- Asset-aware briefing/interrogation facts: equity fundamentals, crypto
+  tokenomics/on-chain evidence, and index regime/breadth context.
+- Crypto-native RSS, crypto/index ticker routing, EU-aware news resolution, and
+  a market/search/ticker News hub with publisher-summary enrichment.
+- Explicit, on-demand LLM sentiment for visible News batches, with per-article
+  caching and transparent classical fallback.
+- Structured-output portability, truncation retry, realistic request timeouts,
+  and explicit fresh regeneration of cached AI research.
+- Portfolio and PostgreSQL correctness fixes described in `CHANGELOG.md`.
 
 ## Active product work
 
 These are the clearest remaining items from the current roadmap and code state.
 They are not ordered unless a maintainer explicitly assigns priority.
 
-- [ ] **Finish the v1.2 research-interrogation arc.** Evaluate consistent
-      explain/interrogate affordances on remaining surfaces and complete the
-      planned second-brain improvements: long-note chunking, proactive journal
-      gaps, market-data/news corpus expansion, streaming answers, and source
-      filters. Confirm what is already present before implementing a slice.
+- [ ] **Second Brain depth after v1.2.** Evaluate long-note chunking, proactive
+      journal gaps, market-data/news corpus expansion, streaming answers, and
+      per-source filters as independently scoped work; none was a v1.2 release
+      requirement.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.
@@ -109,7 +100,7 @@ They are not ordered unless a maintainer explicitly assigns priority.
 
 ## Maintenance and documentation debt
 
-- [ ] Update `CHANGELOG.md` with the post-v1.1 PRs before cutting the next release.
+- [x] Curate the v1.2 changelog and align the backend/frontend version contract.
 - [ ] Refresh `docs/wiki/Architecture.md`: it still says SQLite is the default,
       PostgreSQL optional, and points at obsolete migration/service locations.
 - [ ] Reconcile test/setup commands across `README.md`, `CONTRIBUTING.md`, and
