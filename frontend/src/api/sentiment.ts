@@ -47,9 +47,9 @@ export async function fetchStockEmotion(
   return data;
 }
 
-export async function fetchStockBriefing(ticker: string, market?: string): Promise<InsightData> {
+export async function fetchStockBriefing(ticker: string, market?: string, refresh = false): Promise<InsightData> {
   const { data } = await api.get<InsightData>(`/ai/briefing/${encodeURIComponent(ticker)}`, {
-    params: { market },
+    params: { market, refresh },
     ...AI_TIMEOUT,
   });
   return data;
@@ -59,9 +59,9 @@ export async function fetchStockBriefing(ticker: string, market?: string): Promi
 // case (and your own recorded notes) rather than another bullish briefing. Authed
 // endpoint — folds in the user's notes on this ticker; goes through the same
 // authed `api` instance as the briefing.
-export async function fetchStockInterrogation(ticker: string, market?: string): Promise<InsightData> {
+export async function fetchStockInterrogation(ticker: string, market?: string, refresh = false): Promise<InsightData> {
   const { data } = await api.get<InsightData>(`/ai/interrogate/${encodeURIComponent(ticker)}`, {
-    params: { market },
+    params: { market, refresh },
     ...AI_TIMEOUT,
   });
   return data;

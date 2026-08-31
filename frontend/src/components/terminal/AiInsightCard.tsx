@@ -23,8 +23,8 @@ export type InsightData = {
 type Props = {
   title: string;
   description?: string;
-  /** Resolves the insight. Invoked only when the user clicks Generate. */
-  fetcher: () => Promise<InsightData>;
+  /** Resolves the insight. `refresh` is true after the first attempt. */
+  fetcher: (refresh?: boolean) => Promise<InsightData>;
 };
 
 function toneColor(tone: InsightSection["tone"]): string {
@@ -45,16 +45,22 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
     setStatus("loading");
     setData(null);
     try {
-      const result = await fetcher();
+      // A button labelled Regenerate must not simply return the same cached AI
+      // payload. Fetchers that do not cache may safely ignore this argument.
+      const result = await fetcher(status !== "idle");
       setData(result);
       setStatus("done");
     } catch {
       setStatus("error");
     }
-  }, [fetcher]);
+  }, [fetcher, status]);
 
   const engineLive = data?.engine === "llm";
-  const engineLabel = engineLive ? data?.model ?? "LLM" : "LLM offline — lexical fallback";
+  const engineLabel = engineLive
+    ? data?.model ?? "LLM"
+    : data?.engine === "lexical"
+      ? "Lexical fallback"
+      : "LLM unavailable";
 
   return (
     <section className="rounded border border-terminal-border bg-terminal-panel p-3">
