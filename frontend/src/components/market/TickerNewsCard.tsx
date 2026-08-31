@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { fetchNewsByTicker } from "../../api/news";
 import { scoreNewsArticles, type ArticleSentiment } from "../../api/sentiment";
 import { NewsArticleRow } from "./NewsArticleRow";
+import { newsSentimentEngineLabel, newsSentimentScoreKey } from "./newsAiSentiment";
 import { TerminalPanel } from "../terminal/TerminalPanel";
 
 type Props = {
@@ -39,16 +40,27 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
 
   const scoreMutation = useMutation({
     mutationFn: () =>
-      scoreNewsArticles(items.map((i) => ({ id: i.id, title: i.title, summary: i.summary }))),
+      scoreNewsArticles(items.slice(0, 20).map((i) => ({ id: i.id, title: i.title, summary: i.summary }))),
     onSuccess: (batch) => {
       const next: Record<string, ArticleSentiment> = {};
-      for (const it of batch.items) next[it.id] = it;
+      const byId = new Map(batch.items.map((item) => [item.id, item]));
+      for (const item of items.slice(0, 20)) {
+        const result = byId.get(item.id);
+        if (result) next[newsSentimentScoreKey(item)] = result;
+      }
       setScores(next);
     },
   });
 
+  useEffect(() => {
+    setScores({});
+    scoreMutation.reset();
+    // The mutation object itself is not a stable dependency; reset is only
+    // needed when this card is pointed at a different feed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker, market, limit]);
+
   const scored = scoreMutation.data;
-  const aiEngineLive = scored?.engine === "llm" || scored?.engine === "mixed";
 
   return (
     <TerminalPanel
@@ -59,7 +71,7 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
           <div className="flex items-center gap-2">
             {scored && (
               <span className="text-[10px] text-terminal-muted">
-                {aiEngineLive ? scored.model ?? "LLM" : "LLM offline — lexical"}
+                {newsSentimentEngineLabel(scored)} · {scored.items.length}/{Math.min(items.length, 20)}
               </span>
             )}
             <button
@@ -70,6 +82,9 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
             >
               {scoreMutation.isPending ? "Scoring…" : scored ? "Rescore" : "AI sentiment"}
             </button>
+            {scoreMutation.isError && (
+              <span className="text-[10px] text-terminal-neg">Scoring failed — retry</span>
+            )}
           </div>
         ) : undefined
       }
@@ -83,7 +98,7 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
       ) : (
         <div className="grid gap-1">
           {items.map((item) => {
-            const sentiment = scores[item.id];
+            const sentiment = scores[newsSentimentScoreKey(item)];
             return (
               <NewsArticleRow
                 key={`${item.id}-${item.published_at}`}

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchNewsSummaries, fetchStockEmotion, searchLatestNews, type NewsLatestApiItem } from "../api/client";
+import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchNewsSummaries, fetchStockEmotion, scoreNewsArticles, searchLatestNews, type ArticleSentiment, type NewsLatestApiItem } from "../api/client";
 import { EmotionIndicator } from "../components/terminal/EmotionIndicator";
 import { NewsArticleRow } from "../components/market/NewsArticleRow";
+import { newsSentimentEngineLabel, newsSentimentScoreKey } from "../components/market/newsAiSentiment";
 import { NotesPanel } from "../components/notes/NotesPanel";
 import { useStock } from "../hooks/useStocks";
 import { useStockStore } from "../store/stockStore";
@@ -220,6 +221,7 @@ export function NewsPage() {
   const [keywordInput, setKeywordInput] = useState(localStorage.getItem("news:keyword-alerts") || "");
   const [keywordHits, setKeywordHits] = useState<Array<{ keyword: string; title: string; source: string; publishedAt: string }>>([]);
   const [lastRefreshMs, setLastRefreshMs] = useState<number>(Date.now());
+  const [aiScores, setAiScores] = useState<Record<string, ArticleSentiment>>({});
 
   const isTickerScope = scope === "ticker";
   const relevanceAliases = useMemo(
@@ -455,6 +457,41 @@ export function NewsPage() {
     staleTime: 60 * 60 * 1000,
   });
   const summaryByUrl = summariesQuery.data ?? {};
+
+  const unscoredVisibleItems = visibleItems.filter((item) => !aiScores[newsSentimentScoreKey(item)]);
+  const aiBatchItems = (unscoredVisibleItems.length > 0 ? unscoredVisibleItems : visibleItems.slice(-PAGE_SIZE)).slice(0, PAGE_SIZE);
+  const aiContextKey = [scope, marketSlice, currentTicker, debouncedSearch, periodDays, sentimentFilter, sortMode, visibleCount].join("|");
+  const aiSentimentMutation = useMutation({
+    mutationFn: ({ items }: { items: UiNewsItem[]; contextKey: string }) =>
+      scoreNewsArticles(
+        items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          summary: item.summary || summaryByUrl[item.url] || undefined,
+        })),
+      ),
+    onSuccess: (batch, request) => {
+      if (request.contextKey !== aiContextKey) return;
+      const byId = new Map(batch.items.map((item) => [item.id, item]));
+      setAiScores((current) => {
+        const next = { ...current };
+        for (const item of request.items) {
+          const result = byId.get(item.id);
+          if (result) next[newsSentimentScoreKey(item)] = result;
+        }
+        return next;
+      });
+    },
+  });
+
+  useEffect(() => {
+    aiSentimentMutation.reset();
+    // Reset only the status for the old view. Content-keyed verdicts remain
+    // reusable if the same article is still present after filtering/sorting.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiContextKey]);
+
+  const aiResultIsCurrent = aiSentimentMutation.variables?.contextKey === aiContextKey;
 
   function goToSector(sector: string) {
     const term = `${sector} sector stocks`;
@@ -723,22 +760,65 @@ export function NewsPage() {
         </div>
       )}
 
-      <div className="grid gap-1">
-        {visibleItems.map((item) => (
-          <NewsArticleRow
-            key={item.id}
-            item={{ ...item, summary: item.summary || summaryByUrl[item.url] || "" }}
-            nowMs={nowMs}
-            sentiment={{ label: item.sentiment.label, score: item.sentiment.score, confidence: item.sentiment.confidence }}
-            meta={
-              isTickerScope ? (
-                <span className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted">
-                  {relevanceReason(item, currentTicker, relevanceAliases)}
+      {!newsQuery.isLoading && visibleItems.length > 0 && (
+        <section className="rounded border border-terminal-border bg-terminal-panel px-3 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="text-xs font-semibold">AI headline sentiment</div>
+              <div className="text-[10px] text-terminal-muted">
+                On demand · scores up to {PAGE_SIZE} visible headlines in one batch
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {aiSentimentMutation.data && aiResultIsCurrent && (
+                <span className="text-[10px] text-terminal-muted">
+                  {newsSentimentEngineLabel(aiSentimentMutation.data)} · {aiSentimentMutation.data.items.length}/{aiSentimentMutation.variables?.items.length ?? 0}
                 </span>
-              ) : undefined
-            }
-          />
-        ))}
+              )}
+              {aiSentimentMutation.isError && aiResultIsCurrent && (
+                <span className="text-[10px] text-terminal-neg">Scoring failed — retry</span>
+              )}
+              <button
+                type="button"
+                className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-text hover:border-terminal-accent disabled:opacity-50"
+                onClick={() => aiSentimentMutation.mutate({ items: aiBatchItems, contextKey: aiContextKey })}
+                disabled={aiSentimentMutation.isPending || aiBatchItems.length === 0}
+              >
+                {aiSentimentMutation.isPending
+                  ? "Scoring…"
+                  : unscoredVisibleItems.length > 0
+                  ? `AI sentiment · ${Math.min(unscoredVisibleItems.length, PAGE_SIZE)}`
+                  : `Rescore latest ${aiBatchItems.length}`}
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-1">
+        {visibleItems.map((item) => {
+          const aiSentiment = aiScores[newsSentimentScoreKey(item)];
+          return (
+            <NewsArticleRow
+              key={item.id}
+              item={{ ...item, summary: item.summary || summaryByUrl[item.url] || "" }}
+              nowMs={nowMs}
+              sentiment={
+                aiSentiment
+                  ? { label: aiSentiment.label, score: aiSentiment.score, confidence: aiSentiment.confidence }
+                  : { label: item.sentiment.label, score: item.sentiment.score, confidence: item.sentiment.confidence }
+              }
+              rationale={aiSentiment?.rationale}
+              meta={
+                isTickerScope ? (
+                  <span className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted">
+                    {relevanceReason(item, currentTicker, relevanceAliases)}
+                  </span>
+                ) : undefined
+              }
+            />
+          );
+        })}
         {!newsQuery.isLoading && visibleItems.length === 0 && (
           <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs text-terminal-muted">
             {sentimentFilter !== "all"
