@@ -284,27 +284,30 @@ analytics live on legacy; real accounting lives on the Manager). Plan:
 
 ### v1.2 — Research interrogates
 
-The active **"don't get fooled"** half: 1.0 made the data honest *passively* (no
+The **"don't get fooled"** half: 1.0 made the data honest *passively* (no
 fabrication); v1.2 makes the product *challenge you* rather than just store your
-notes.
+notes. **RELEASED as v1.2.0 (2026-08-31)** — PRs #76–#94.
 
-- **Consistent explain / interrogate affordance** — a uniform "explain this /
-  what am I missing / is this hype?" layer across surfaces. The actual
-  differentiator: it uses the LLM + your second brain + market data adversarially,
-  not as a cheerleader.
-- **Crypto news sources** — extend news ingestion with crypto-focused outlets so
-  crypto detail/news pages have real coverage. *(Moved here from the old v1.1.)*
-- **LLM-based per-article sentiment** — optionally route the News feed's
-  per-article classification through the local LLM (reuse the Emotion Indicator
-  pipeline; sentiment is persisted, so inference is paid once). Keep the classical
-  FinBERT → TextBlob → lexicon engine as the offline fallback.
-- **Second-brain enhancements** — chunk long notes, proactively surface "what to
-  journal" gaps, add market-data/news to the corpus, streaming answers, a
-  per-source filter in the UI.
-- **Relative Strength engine** — strong candidate to fold in here: replace the
-  degraded `/rs/*` stub with the real IBD-style computation (detailed under
-  *Degraded stubs → real data* below). RS is core "don't chase momentum blindly"
-  research, so it fits the interrogation theme.
+- ✅ **Adversarial Interrogate affordance** — shipped for equities, crypto, and
+  indices, grounded in semantically related private notes. Asset-aware prompts
+  and facts use company fundamentals for equities, tokenomics/on-chain evidence
+  for coins, and regime/breadth context for indices.
+- ✅ **Crypto and multi-asset news coverage** — crypto-native keyless RSS,
+  crypto-firehose ticker routing, index news, EU-aware search resolution, market
+  browse slices, and publisher-summary enrichment.
+- ✅ **LLM-based per-article sentiment** — one optional structured call scores a
+  visible batch of at most 20 headlines. Results are cached per article and each
+  result identifies LLM or lexical fallback; the main News hub never invokes the
+  LLM until the user asks.
+- ✅ **Provider robustness and freshness** — structured schemas are included in
+  prompts for providers that ignore `response_format`, truncated output gets one
+  larger-budget retry, long-running calls have realistic frontend timeouts, and
+  Regenerate explicitly bypasses cached briefing/interrogation results.
+
+The milestone deliberately stopped at the smallest coherent research arc.
+Long-note chunking, proactive journal gaps, market-data/news corpus expansion,
+streaming Second Brain answers, per-source filters, and the real Relative
+Strength engine remain post-v1.2 backlog rather than being implied release gates.
 
 ### Continuous — depth & coverage (demand-pulled, not a release theme)
 

@@ -6,6 +6,32 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-31
+
+The **"research interrogates"** release. v1.2 turns the private research layer
+from passive storage into an adversarial assistant: it challenges a thesis with
+asset-appropriate market evidence and the user's own notes, while the News hub
+adds optional, transparent LLM sentiment without making inference automatic.
+
+### Added
+- **Adversarial Interrogate research** for equities, crypto assets, and indices.
+  The structured analysis pressure-tests the bull case, identifies missing
+  evidence and disconfirming signals, and grounds its challenge in semantically
+  related private notes when available.
+- **Crypto- and index-aware research context.** Crypto interrogation uses
+  tokenomics, dilution, TVL, fees, and on-chain context; index interrogation uses
+  regime, breadth, constituents, and index-level market context instead of
+  pretending either asset is an operating company.
+- **Crypto-native and broader ticker news.** Keyless crypto RSS ingestion,
+  crypto firehose routing, index news, and EU-aware search terms improve coverage
+  outside US equities.
+- **Optional batched AI article sentiment.** The backend scores and caches up to
+  20 headlines in one structured LLM call and falls back per article to the
+  classical lexical engine when the model is disabled or unreachable.
+- **News hub research workflow.** Market-wide browsing, US/Europe/India/crypto/
+  index slices, search and ticker scopes, sentiment drill-in, publisher-summary
+  enrichment, and explicit on-demand AI scoring of visible headline batches.
+
 ### Changed
 - **Asset-aware AI research** — stock, crypto, and index briefings/interrogations
   now use domain-appropriate facts and prompts. Coins are evaluated through
@@ -14,12 +40,23 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 - **On-demand News hub AI sentiment** — the main market, ticker, and search news
   feeds can score visible headlines in batches of at most 20, overlay concise
   rationales, and clearly identify LLM, mixed, or lexical-fallback results.
+- **More portable structured LLM output** — the requested JSON schema is carried
+  in the prompt for providers that ignore `response_format`, and truncated
+  structured responses receive one larger-budget retry. Frontend AI requests now
+  allow enough time for local and reasoning models to complete.
 
 ### Fixed
 - **Fresh AI regeneration and note grounding** — Interrogate cache keys now
   follow each user's note state, and the UI's Regenerate action explicitly
   bypasses cached briefing/interrogation results. Unavailable insight generation
   is labelled honestly instead of being misreported as a lexical fallback.
+- **News routing and classification** — crypto articles are tagged at ingestion,
+  coin ticker requests use the crypto firehose, index headlines resolve, and EU
+  company aliases no longer bias results toward unrelated US tickers.
+- **Portfolio and PostgreSQL regressions** — projected dividends are included for
+  regular distributors, sells reduce or remove their holding as well as updating
+  cash, and screener materialised-store introspection works on PostgreSQL rather
+  than relying on SQLite-only PRAGMA calls.
 
 ## [1.1.0] - 2026-07-05
 

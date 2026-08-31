@@ -1,11 +1,11 @@
 # Releasing
 
-How this fork cuts a tagged release. The first is **v1.0.0** (see the *Release
-plan* in [Roadmap](Roadmap.md) for what gates it).
+How this fork prepares, validates, and cuts a tagged release. See the milestone
+sections in [Roadmap](Roadmap.md) for the intended scope of each minor release.
 
 ## Philosophy
 
-`1.0.0` is a **hardening** milestone, not a feature one: a coherent, honest,
+`1.0.0` was a **hardening** milestone, not a feature one: a coherent, honest,
 installable product where every advertised feature works or is explicitly
 labelled degraded. Integrity outranks feature count — no silent mock data, no
 broken links, no wrong-currency numbers. Feature growth resumes in `1.1+`.
@@ -25,7 +25,7 @@ broken links, no wrong-currency numbers. Feature growth resumes in `1.1+`.
 
 ## Pre-release checklist
 
-Work the **v1.0.0** checklist in [Roadmap](Roadmap.md) (buckets A–E) to done, then:
+Confirm the target milestone in [Roadmap](Roadmap.md) is complete, then:
 
 1. **Version bump** — set `frontend/package.json` and backend `app_version` to the
    release version; grep for stragglers.
@@ -34,8 +34,9 @@ Work the **v1.0.0** checklist in [Roadmap](Roadmap.md) (buckets A–E) to done, 
 3. **Docs** — README quickstart verified end-to-end; the out-of-the-box-vs-keys
    matrix, Limitations, and upgrade notes (e.g. the pgvector image swap) current
    in [Limitations](Limitations) (mirrored condensed in the README).
-4. **Green CI** — `ci.yml` must pass: backend `pytest` + coverage gate, frontend
-   build + Vitest, Playwright smoke.
+4. **Green CI** — `ci.yml` must pass: backend compile, mock-detection guard,
+   `pytest` + coverage gate, frontend build, and Vitest. Playwright is currently
+   manual-only while its pre-1.0 fixtures are rehabilitated.
 5. **Smoke matrix** — manually verify the core flows on each combination:
 
    | DB | Keys | Must work |
