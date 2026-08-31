@@ -46,17 +46,19 @@ degraded state is preferable to a convincing but invented number.
 
 ## Current release and development state
 
-- Current release/version contract: **1.2.0** (`v1.2.0` once the release commit
-  is tagged). Keep
+- Current release/version contract: **1.2.0** (tagged as `v1.2.0`). Keep
   `backend/config/settings.py` and `frontend/package.json` in lockstep when
   releasing.
 - v1.2's completed scope is the adversarial Interrogate flow for stocks, crypto,
   and indices; semantic private-note grounding; asset-aware briefing facts;
   crypto/index/EU-aware news; and optional batched AI sentiment in the main News
   hub with a classical fallback. See `CHANGELOG.md` for the release inventory.
-- The deeper Second Brain ideas (long-note chunking, proactive journal gaps,
-  market/news corpus, streaming, and source filters) and the real Relative
-  Strength engine were explicitly deferred beyond v1.2.
+- The next planned milestone is **v1.3 — The second brain gets depth**:
+  deterministic long-note chunking, source-aware retrieval, progressive answers,
+  and an explicit journal-gap review. External market/news indexing remains
+  deferred so the brain's grounding contract stays "only your own writing".
+- The real Relative Strength engine and broader depth/coverage work remain
+  separate backlog rather than v1.3 release gates.
 - The old `.agents/TODO.md` snapshot stopped around PR #17. Its Ollama, EUR,
   crypto tick, and early frontend-audit tasks have all shipped and must not be
   treated as current work.

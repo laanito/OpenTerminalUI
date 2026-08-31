@@ -309,6 +309,52 @@ Long-note chunking, proactive journal gaps, market-data/news corpus expansion,
 streaming Second Brain answers, per-source filters, and the real Relative
 Strength engine remain post-v1.2 backlog rather than being implied release gates.
 
+### v1.3 — The second brain gets depth
+
+The **"grow privately"** half returns to the foreground. The current Second Brain
+already answers from a user's journal, theses, and notes with citations, but each
+source record becomes a single embedding, all source types are searched together,
+and synthesis arrives only after the model has finished. v1.3 makes that memory
+useful as it grows without changing its trust boundary: **answers remain grounded
+only in the current user's own writing.**
+
+The release promise is: **the Second Brain can read long thinking in useful
+pieces, show which parts of the private record it searched, answer progressively,
+and point out what the user has not documented well enough to know.**
+
+1. **Chunk-aware private memory — the storage foundation.** Long notes and other
+   substantial sources are split deterministically into bounded, lightly
+   overlapping chunks with stable identities. Incremental reindexing updates only
+   changed chunks and prunes stale ones; citations still resolve to the original
+   source record. SQLite/numpy and PostgreSQL/pgvector must behave equivalently.
+2. **Source-aware, inspectable retrieval.** `POST /api/brain/ask` accepts an
+   optional validated source scope covering notes, journal entries, portfolio
+   theses, holding notes, and transaction notes. The UI exposes the same filters,
+   shows per-source index counts, and makes the active evidence scope visible.
+   Omitting the filter preserves the current all-private-sources behaviour.
+3. **Progressive answers with an honest fallback.** Add an incremental synthesis
+   route for OpenAI-compatible providers that support streaming, while keeping the
+   existing non-streaming endpoint backwards compatible. Citations and degraded
+   states remain complete even if streaming is unsupported, interrupted, or the
+   model is unavailable; retrieval-only output must still work.
+4. **On-demand journal-gap review.** A user-triggered review identifies missing
+   rationale, outcomes, emotions, setup labels, and stale theses in the private
+   record, then links back to entries worth completing. Deterministic completeness
+   checks should carry the basic signal; the LLM may explain patterns but may not
+   invent the absent facts or turn gaps into buy/sell advice.
+
+**Release gate:** ownership isolation, stable chunk/citation identity,
+incremental pruning, filter parity across both vector backends, stream
+interruption, provider fallback, and frontend behaviour are covered by tests. The
+no-model path remains useful and explicitly labelled, and the release smoke matrix
+covers SQLite plus PostgreSQL/pgvector.
+
+**Explicitly out of scope:** indexing market/news content, autonomous background
+notifications, cross-user memory, trading recommendations or execution, the real
+Relative Strength engine, and paid-feed coverage. External corpora need a separate
+provenance design before they can coexist with the current "your own writing"
+promise.
+
 ### Continuous — depth & coverage (demand-pulled, not a release theme)
 
 Real work, but "fill the map" rather than a north-star arc — thread it in by what
