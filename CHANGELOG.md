@@ -6,6 +6,18 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Changed
+- **Asset-aware AI research** — stock, crypto, and index briefings/interrogations
+  now use domain-appropriate facts and prompts. Coins are evaluated through
+  tokenomics/on-chain context and indices through regime/breadth context rather
+  than being treated as companies with issuer fundamentals.
+
+### Fixed
+- **Fresh AI regeneration and note grounding** — Interrogate cache keys now
+  follow each user's note state, and the UI's Regenerate action explicitly
+  bypasses cached briefing/interrogation results. Unavailable insight generation
+  is labelled honestly instead of being misreported as a lexical fallback.
+
 ## [1.1.0] - 2026-07-05
 
 The **"portfolio becomes real"** release. v1.0 hardened the *research* half of the
