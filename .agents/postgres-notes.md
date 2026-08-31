@@ -1,12 +1,14 @@
 # PostgreSQL support — what was broken and how it's fixed
 
-Branch: `feat/postgres-support`
+Originally implemented on `feat/postgres-support`; merged into `main` and shipped
+in v1.0.0. These are current portability invariants, not instructions to return
+to the historical branch.
 
 Upstream assumed SQLite. The original maintainer of this fork had a set of
 in-place "hacky" edits in a separate working copy (`../orig_OpenTerminal`) that
 made Postgres work but weren't dialect-safe (they hard-coded Postgres spellings,
-which then break SQLite). This branch reimplements those fixes so **the same
-code runs on both SQLite and PostgreSQL**, driven by `DATABASE_URL`.
+which then break SQLite). The fork reimplemented those fixes so **the same code
+runs on both SQLite and PostgreSQL**, driven by `DATABASE_URL`.
 
 ## Root causes & robust fixes
 
@@ -88,7 +90,25 @@ To run on SQLite instead, set in `.env`:
 `DATABASE_URL=sqlite+aiosqlite:////data/openterminal.db`
 
 The **code-level** default (no `DATABASE_URL` set, e.g. local pytest) is still
-SQLite via `settings.sqlite_url`, so the test suite is unaffected.
+SQLite via `settings.sqlite_url`, so the test suite is unaffected. Do not confuse
+this with the deployment default: Docker Compose is PostgreSQL-first.
+
+## Ongoing review checklist
+
+For schema or persistence changes:
+
+- Prefer SQLAlchemy models/Core and Alembic operations to handwritten DDL.
+- Keep every Alembic revision identifier at most 32 characters.
+- Review raw SQL for SQLite-only constructs (`AUTOINCREMENT`, `PRAGMA`, permissive
+  typing) and PostgreSQL-only constructs (`SERIAL`, boolean literal spellings).
+- Remember that some dedicated caches intentionally use `sqlite3` even when the
+  application database is PostgreSQL; identify which engine/connection a call
+  actually uses before changing it.
+- Add focused SQLite tests and, when the change is dialect-sensitive, verify the
+  PostgreSQL path or add a regression test that exercises dialect generation.
+- Do not use `PRAGMA table_info` against the shared application engine. Use
+  SQLAlchemy inspection; `backend/services/materialized_store.py` contains a
+  post-v1.1 regression fix for this exact mistake.
 
 ## Verifying
 
