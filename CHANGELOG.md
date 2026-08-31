@@ -11,6 +11,9 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   now use domain-appropriate facts and prompts. Coins are evaluated through
   tokenomics/on-chain context and indices through regime/breadth context rather
   than being treated as companies with issuer fundamentals.
+- **On-demand News hub AI sentiment** — the main market, ticker, and search news
+  feeds can score visible headlines in batches of at most 20, overlay concise
+  rationales, and clearly identify LLM, mixed, or lexical-fallback results.
 
 ### Fixed
 - **Fresh AI regeneration and note grounding** — Interrogate cache keys now
