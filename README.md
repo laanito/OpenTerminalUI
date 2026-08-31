@@ -47,6 +47,11 @@ This fork re-centres OpenTerminalUI toward **US / EU / crypto** markets on a **P
 - **Open & extensible** &mdash; self-hosted, MIT-licensed, bring-your-own provider keys, with a plugin/Python scripting layer.
 - **Multi-asset, unified** &mdash; equities, ETFs, FX, bonds, and **crypto as a first-class citizen**, with a display-currency selector (USD/EUR/INR).
 
+The next planned milestone is **v1.3 — The second brain gets depth**: chunk-aware
+private memory, visible source filters, progressive answers, and an explicit
+journal-gap review. It remains grounded only in the current user's own writing;
+external news and market corpora are not part of this release.
+
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 
 ## Screenshots

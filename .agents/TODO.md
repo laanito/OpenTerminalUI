@@ -1,7 +1,6 @@
 # Current project state and backlog
 
-Last audited: **2026-08-31**, against `main` at `bd44141` (PR #94), plus the
-v1.2.0 release-prep changes on this branch.
+Last audited: **2026-09-01**, against `main` at `d0c6d7b` (`v1.2.0`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -46,15 +45,43 @@ section and update this file in the same PR when priorities materially change.
   and explicit fresh regeneration of cached AI research.
 - Portfolio and PostgreSQL correctness fixes described in `CHANGELOG.md`.
 
-## Active product work
+## v1.3 — The second brain gets depth
+
+This is the next planned release and its implementation order. Each item should
+remain independently reviewable and preserve the existing private, per-user,
+SQLite/PostgreSQL-compatible retrieval contract.
+
+- [ ] **Chunk long sources deterministically.** Split long notes and journal text
+      into bounded, lightly overlapping chunks with stable identities. Reindexing
+      must update changed chunks, prune removed ones, and keep citations linked to
+      the original source record on both SQLite and PostgreSQL/pgvector.
+- [ ] **Make retrieval source-aware and inspectable.** Add validated filters for
+      notes, journal, portfolio theses, holding notes, and transaction notes;
+      expose per-source index counts; and let the user see which scope produced an
+      answer. The default remains all of the user's own writing.
+- [ ] **Stream synthesis without weakening fallbacks.** Add an incremental answer
+      path for compatible OpenAI-style providers while retaining the existing
+      non-streaming `/api/brain/ask` contract. Retrieval-only and model-unavailable
+      responses must remain complete and honestly labelled.
+- [ ] **Add an explicit journal-gap review.** Provide an on-demand review that
+      identifies missing rationale, outcomes, emotions, setup labels, or thesis
+      updates from the user's own records and links back to the entries to improve.
+      It must not run silently, invent missing facts, issue trade directives, or
+      become a background notification engine.
+- [ ] **Close the release contract.** Cover chunk boundaries, incremental pruning,
+      source filters, ownership, SQLite/pgvector parity, stream interruption, and
+      frontend fallback behaviour; then update user docs, changelog, versions, and
+      the smoke matrix for v1.3.0.
+
+Explicitly out of v1.3: external market/news corpus indexing, autonomous advice
+or trading, cross-user retrieval, the Relative Strength engine, paid market-data
+adapters, and general dashboard coverage work.
+
+## Other active product work
 
 These are the clearest remaining items from the current roadmap and code state.
 They are not ordered unless a maintainer explicitly assigns priority.
 
-- [ ] **Second Brain depth after v1.2.** Evaluate long-note chunking, proactive
-      journal gaps, market-data/news corpus expansion, streaming answers, and
-      per-source filters as independently scoped work; none was a v1.2 release
-      requirement.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.
