@@ -4,6 +4,7 @@ import type {
   JournalStats,
   JournalEquityPoint,
   JournalCalendarDay,
+  JournalGapReview,
 } from "../types";
 import type {
   JournalEntryPayload,
@@ -46,4 +47,11 @@ export async function fetchJournalEquityCurve(): Promise<JournalEquityPoint[]> {
 export async function fetchJournalCalendar(month?: number, year?: number): Promise<JournalCalendarDay[]> {
   const { data } = await api.get<{ days: JournalCalendarDay[] }>("/journal/calendar", { params: { month, year } });
   return Array.isArray(data?.days) ? data.days : [];
+}
+
+export async function fetchJournalGapReview(staleAfterDays = 30): Promise<JournalGapReview> {
+  const { data } = await api.get<JournalGapReview>("/journal/gaps", {
+    params: { stale_after_days: staleAfterDays },
+  });
+  return data;
 }

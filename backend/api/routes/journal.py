@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import io
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -103,6 +103,32 @@ def _compute_streaks(closed_rows: list[JournalEntry]) -> tuple[int, int, int]:
         best = max(best, current)
         worst = min(worst, current)
     return current, best, worst
+
+
+def _journal_gap_fields(
+    row: JournalEntry,
+    *,
+    now: datetime,
+    stale_after_days: int,
+) -> list[str]:
+    """Return only facts absent from the record; never fill or infer them."""
+    gaps: list[str] = []
+    if not (row.notes or "").strip():
+        gaps.append("rationale")
+    if row.exit_price is None or row.exit_date is None:
+        gaps.append("outcome")
+    if not (row.emotion or "").strip():
+        gaps.append("emotion")
+    if not (row.setup or "").strip():
+        gaps.append("setup")
+
+    if row.exit_price is None:
+        last_touched = row.updated_at or row.created_at or row.entry_date
+        if last_touched.tzinfo is None:
+            last_touched = last_touched.replace(tzinfo=timezone.utc)
+        if now - last_touched >= timedelta(days=stale_after_days):
+            gaps.append("thesis_update")
+    return gaps
 
 
 class JournalEntryBase(BaseModel):
@@ -259,6 +285,58 @@ def list_journal_entries(
     if tag_filters:
         rows = [row for row in rows if all(tag in (row.tags or []) for tag in tag_filters)]
     return {"entries": [_serialize_entry(row) for row in rows]}
+
+
+@router.get("/gaps")
+def review_journal_gaps(
+    stale_after_days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """On-demand, deterministic review of facts absent from journal records."""
+    now = datetime.now(timezone.utc)
+    rows = (
+        db.query(JournalEntry)
+        .filter(JournalEntry.user_id == str(current_user.id))
+        .order_by(JournalEntry.entry_date.desc(), JournalEntry.id.desc())
+        .all()
+    )
+    prompts = {
+        "rationale": "Add the reasoning you had when taking this trade.",
+        "outcome": "If this trade has ended, record its exit and outcome.",
+        "emotion": "Record the emotional state that influenced the decision.",
+        "setup": "Label the setup so comparable trades can be reviewed together.",
+        "thesis_update": "Revisit this open trade and record whether its thesis still holds.",
+    }
+    gap_counts = {key: 0 for key in prompts}
+    items: list[dict[str, Any]] = []
+    for row in rows:
+        gaps = _journal_gap_fields(row, now=now, stale_after_days=stale_after_days)
+        if not gaps:
+            continue
+        for gap in gaps:
+            gap_counts[gap] += 1
+        items.append(
+            {
+                "entry_id": row.id,
+                "symbol": row.symbol,
+                "entry_date": row.entry_date.isoformat(),
+                "status": "open" if row.exit_price is None else "closed",
+                "missing": gaps,
+                "prompts": [prompts[gap] for gap in gaps],
+                "entry": _serialize_entry(row),
+            }
+        )
+
+    return {
+        "reviewed_at": now.isoformat(),
+        "stale_after_days": stale_after_days,
+        "total_entries": len(rows),
+        "entries_needing_review": len(items),
+        "complete_entries": len(rows) - len(items),
+        "gap_counts": gap_counts,
+        "items": items,
+    }
 
 
 @router.get("/stats")

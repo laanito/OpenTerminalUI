@@ -55,7 +55,8 @@ degraded state is preferable to a convincing but invented number.
   hub with a classical fallback. See `CHANGELOG.md` for the release inventory.
 - The next planned milestone is **v1.3 — The second brain gets depth**:
   deterministic long-note chunking, source-aware retrieval, progressive answers,
-  deliberate API-key note ingestion, and an explicit journal-gap review. General
+  deliberate API-key note ingestion, and an explicit journal-gap review. Those
+  feature slices are implemented; release-contract verification remains. General
   MCP tooling and automatic external market/news indexing remain deferred.
 - The real Relative Strength engine and broader depth/coverage work remain
   separate backlog rather than v1.3 release gates.

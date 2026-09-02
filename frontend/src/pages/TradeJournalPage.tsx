@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDownRight, ArrowUpRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ClipboardCheck, Pencil, Plus, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import {
@@ -9,6 +9,7 @@ import {
   fetchJournalCalendar,
   fetchJournalEntries,
   fetchJournalEquityCurve,
+  fetchJournalGapReview,
   fetchJournalStats,
   updateJournalEntry,
   type JournalEntryPayload,
@@ -162,6 +163,9 @@ export function TradeJournalPage() {
     ]);
   }
 
+  const gapReviewMutation = useMutation({
+    mutationFn: () => fetchJournalGapReview(),
+  });
   const createMutation = useMutation({
     mutationFn: (payload: JournalEntryPayload) => createJournalEntry(payload),
     onSuccess: async () => {
@@ -174,6 +178,7 @@ export function TradeJournalPage() {
     onSuccess: async () => {
       setEditingEntry(null);
       await refreshJournal();
+      if (gapReviewMutation.data) gapReviewMutation.mutate();
     },
   });
   const deleteMutation = useMutation({
@@ -240,6 +245,65 @@ export function TradeJournalPage() {
       >
         {activeTab === "journal" ? (
           <div className="space-y-4">
+            <div className="rounded-sm border border-terminal-border bg-terminal-bg/50 p-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold text-terminal-text">Journal completeness review</div>
+                  <div className="mt-1 text-[11px] text-terminal-muted">
+                    On demand only · reports missing facts and stale open theses without inventing answers.
+                  </div>
+                </div>
+                <TerminalButton
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  leftIcon={<ClipboardCheck className="h-3.5 w-3.5" />}
+                  loading={gapReviewMutation.isPending}
+                  onClick={() => gapReviewMutation.mutate()}
+                >
+                  Review journal gaps
+                </TerminalButton>
+              </div>
+
+              {gapReviewMutation.isError ? (
+                <div className="mt-3 text-xs text-terminal-neg">Review unavailable — retry when ready.</div>
+              ) : null}
+
+              {gapReviewMutation.data ? (
+                <div className="mt-3 space-y-3" data-testid="journal-gap-review">
+                  <div className="text-xs text-terminal-muted">
+                    {gapReviewMutation.data.entries_needing_review} of {gapReviewMutation.data.total_entries} entries need attention
+                    {gapReviewMutation.data.complete_entries > 0 ? ` · ${gapReviewMutation.data.complete_entries} complete` : ""}.
+                  </div>
+                  {gapReviewMutation.data.items.map((item) => (
+                    <div key={item.entry_id} className="rounded-sm border border-terminal-border/70 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-xs font-semibold text-terminal-text">
+                          {item.symbol} · {item.status.toUpperCase()}
+                        </div>
+                        <TerminalButton type="button" size="sm" variant="ghost" onClick={() => setEditingEntry(item.entry)}>
+                          Complete entry
+                        </TerminalButton>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {item.missing.map((gap) => (
+                          <span key={gap} className="rounded-sm border border-terminal-warn/40 px-1.5 py-0.5 text-[10px] text-terminal-warn">
+                            {gap.replace("_", " ")}
+                          </span>
+                        ))}
+                      </div>
+                      <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] text-terminal-muted">
+                        {item.prompts.map((prompt) => <li key={prompt}>{prompt}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                  {!gapReviewMutation.data.items.length ? (
+                    <div className="text-xs text-terminal-pos">No documentation gaps found.</div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
             <div className="grid gap-3 md:grid-cols-4">
               <TerminalInput value={symbolFilter} onChange={(event) => setSymbolFilter(event.target.value)} placeholder="Filter symbol" />
               <TerminalInput as="select" value={strategyFilter} onChange={(event) => setStrategyFilter(event.target.value)}>
