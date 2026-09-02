@@ -59,7 +59,7 @@ describe("NewsPage AI sentiment", () => {
         source: "Wire",
         url: `https://example.com/${index}`,
         summary: `Publisher summary ${index}`,
-        published_at: new Date().toISOString(),
+        published_at: "2026-09-02T12:00:00.000Z",
         sentiment: { label: "Neutral", score: 0, confidence: 0.3 },
       })),
     );
