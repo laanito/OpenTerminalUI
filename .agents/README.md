@@ -55,8 +55,8 @@ degraded state is preferable to a convincing but invented number.
   hub with a classical fallback. See `CHANGELOG.md` for the release inventory.
 - The next planned milestone is **v1.3 — The second brain gets depth**:
   deterministic long-note chunking, source-aware retrieval, progressive answers,
-  and an explicit journal-gap review. External market/news indexing remains
-  deferred so the brain's grounding contract stays "only your own writing".
+  deliberate API-key note ingestion, and an explicit journal-gap review. General
+  MCP tooling and automatic external market/news indexing remain deferred.
 - The real Relative Strength engine and broader depth/coverage work remain
   separate backlog rather than v1.3 release gates.
 - The old `.agents/TODO.md` snapshot stopped around PR #17. Its Ollama, EUR,
@@ -190,6 +190,7 @@ links, paths, commands, spelling, and the rendered diff.
 | Market classification | `backend/shared/market_classifier.py` |
 | LLM client | `backend/services/llm_client.py` |
 | Second brain | `backend/services/brain/` |
+| External note ingestion | `backend/api/routes/external_notes.py` |
 | Portfolio routes/services | `backend/api/routes/portfolios.py`, `backend/services/portfolio_*` |
 | News ingestion/API | `backend/bg_services/news_ingestor.py`, `backend/api/routes/news.py` |
 | Frontend API clients | `frontend/src/api/` |

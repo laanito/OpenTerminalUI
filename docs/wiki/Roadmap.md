@@ -337,7 +337,12 @@ and point out what the user has not documented well enough to know.**
    existing non-streaming endpoint backwards compatible. Citations and degraded
    states remain complete even if streaming is unsupported, interrupted, or the
    model is unavailable; retrieval-only output must still work.
-4. **On-demand journal-gap review.** A user-triggered review identifies missing
+4. **Deliberate external note capture.** A write-scoped API key can idempotently
+   upsert a private note using a stable source/external ID pair, enabling selected
+   summaries from tools such as Hermes to enter the normal Second Brain index
+   without sharing a browser JWT. This is narrow note ingestion, not automatic
+   external-corpus indexing or a general MCP interface.
+5. **On-demand journal-gap review.** A user-triggered review identifies missing
    rationale, outcomes, emotions, setup labels, and stale theses in the private
    record, then links back to entries worth completing. Deterministic completeness
    checks should carry the basic signal; the LLM may explain patterns but may not
@@ -349,11 +354,10 @@ interruption, provider fallback, and frontend behaviour are covered by tests. Th
 no-model path remains useful and explicitly labelled, and the release smoke matrix
 covers SQLite plus PostgreSQL/pgvector.
 
-**Explicitly out of scope:** indexing market/news content, autonomous background
-notifications, cross-user memory, trading recommendations or execution, the real
-Relative Strength engine, and paid-feed coverage. External corpora need a separate
-provenance design before they can coexist with the current "your own writing"
-promise.
+**Explicitly out of scope:** a general MCP interface, automatic market/news corpus
+indexing, autonomous background notifications, cross-user memory, trading
+recommendations or execution, the real Relative Strength engine, and paid-feed
+coverage. Broader external corpora still need a separate provenance design.
 
 ### Continuous — depth & coverage (demand-pulled, not a release theme)
 

@@ -22,6 +22,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   The original non-streaming API remains available, retrieval/model fallbacks stay
   complete and cited, and interrupted browser streams retry through that stable
   path rather than leaving a partial answer presented as complete.
+- **API-key external note ingestion** — `read_write` keys can idempotently upsert
+  an owner-scoped private note at `PUT /api/v1/notes/external` using a stable
+  source/external ID pair. This supports deliberate inputs such as Hermes YouTube
+  summaries, adds provenance tags, and schedules normal Second Brain reindexing.
 
 ## [1.2.0] - 2026-08-31
 

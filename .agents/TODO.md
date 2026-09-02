@@ -67,6 +67,11 @@ SQLite/PostgreSQL-compatible retrieval contract.
       the existing non-streaming `/api/brain/ask` contract remains unchanged.
       Retrieval-only and model-unavailable paths emit complete, honestly labelled
       results, and interrupted browser streams retry through the stable endpoint.
+- [x] **Accept deliberate external note capture.** A `read_write` API key can
+      idempotently upsert an owner-scoped note through
+      `PUT /api/v1/notes/external`, keyed by a short source and external ID. This
+      supports pipelines such as Hermes summaries of selected YouTube videos and
+      schedules normal Second Brain reindexing without exposing browser JWTs.
 - [ ] **Add an explicit journal-gap review.** Provide an on-demand review that
       identifies missing rationale, outcomes, emotions, setup labels, or thesis
       updates from the user's own records and links back to the entries to improve.
@@ -77,9 +82,9 @@ SQLite/PostgreSQL-compatible retrieval contract.
       frontend fallback behaviour; then update user docs, changelog, versions, and
       the smoke matrix for v1.3.0.
 
-Explicitly out of v1.3: external market/news corpus indexing, autonomous advice
-or trading, cross-user retrieval, the Relative Strength engine, paid market-data
-adapters, and general dashboard coverage work.
+Explicitly out of v1.3: general MCP tooling, automatic external market/news corpus
+indexing, autonomous advice or trading, cross-user retrieval, the Relative
+Strength engine, paid market-data adapters, and general dashboard coverage work.
 
 ## Other active product work
 

@@ -18,6 +18,7 @@ interface APIKey {
 export function APIKeyManager() {
   const [keys, setKeys] = useState<APIKey[]>([]);
   const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyPermissions, setNewKeyPermissions] = useState<"read" | "read_write">("read");
   const [showModal, setShowModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,10 @@ export function APIKeyManager() {
     if (!newKeyName) return;
     setLoading(true);
     try {
-      const res = await api.post("/settings/api-keys", { name: newKeyName });
+      const res = await api.post("/settings/api-keys", {
+        name: newKeyName,
+        permissions: newKeyPermissions,
+      });
       setGeneratedKey(res.data.key);
       setShowModal(true);
       setNewKeyName("");
@@ -67,13 +71,25 @@ export function APIKeyManager() {
 
   return (
     <div className="space-y-3">
-      <TerminalPanel title="Public API Keys" subtitle="Manage access for external applications">
+      <TerminalPanel
+        title="Automation API Keys"
+        subtitle="Manage read-only market access and external-note ingestion"
+      >
         <div className="flex items-center gap-2 mb-4">
           <TerminalInput
             placeholder="Key Name (e.g. My Python Script)"
             value={newKeyName}
             onChange={(e) => setNewKeyName(e.target.value)}
           />
+          <TerminalInput
+            as="select"
+            aria-label="Key permissions"
+            value={newKeyPermissions}
+            onChange={(e) => setNewKeyPermissions(e.target.value as "read" | "read_write")}
+          >
+            <option value="read">Read only</option>
+            <option value="read_write">Read + external notes</option>
+          </TerminalInput>
           <TerminalButton variant="accent" onClick={createKey} disabled={loading || !newKeyName}>
             {loading ? "Generating..." : "Generate New Key"}
           </TerminalButton>

@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from backend.api.routes.ai import router as ai_router
 from backend.api.routes.analytics import router as analytics_router
 from backend.api.routes.brain import router as brain_router
+from backend.api.routes.external_notes import router as external_notes_router
 from backend.api.routes.notes import router as notes_router
 from backend.api.routes.bonds import router as bonds_router
 from backend.api.routes.commodities import router as commodities_router
@@ -57,6 +58,8 @@ api_router.include_router(ai_router, prefix="/api")
 # Private second-brain RAG (per-user, authed). Router carries "/brain"; the "/api"
 # prefix here resolves it to /api/brain/{ask,reindex,status}.
 api_router.include_router(brain_router, prefix="/api")
+# API-key-authenticated, idempotent ingestion for external private notes.
+api_router.include_router(external_notes_router, prefix="/api")
 # Generic per-user notes — the capture layer feeding the second brain.
 api_router.include_router(notes_router, prefix="/api")
 # These routers already carry their full "/api/..." prefix internally,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Literal, Optional
 from datetime import datetime
 
 from backend.shared.db import SessionLocal
@@ -23,7 +23,7 @@ def get_db():
 
 class APIKeyCreate(BaseModel):
     name: str
-    permissions: str = "read"
+    permissions: Literal["read", "read_write"] = "read"
 
 class APIKeyResponse(BaseModel):
     id: int
