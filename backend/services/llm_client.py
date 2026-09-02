@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import AsyncIterator
 from typing import Any
 
 import httpx
@@ -180,6 +181,69 @@ class LLMClient:
 
         # Exhausted the ladder (every structured form was rejected).
         raise LLMError("LLM rejected all response formats") from last_exc
+
+    async def chat_stream(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        temperature: float = 0.1,
+        max_tokens: int = 512,
+        frequency_penalty: float = 0.0,
+    ) -> AsyncIterator[str]:
+        """Yield text deltas from an OpenAI-compatible SSE chat completion.
+
+        Streaming is intentionally limited to plain-text completions. Structured
+        output keeps using :meth:`chat`, whose response-format fallback ladder and
+        truncation retry require seeing the complete response.
+        """
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": True,
+        }
+        if frequency_penalty:
+            payload["frequency_penalty"] = frequency_penalty
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
+                async with client.stream(
+                    "POST",
+                    f"{self.base_url}/chat/completions",
+                    json=payload,
+                    headers=self._headers(),
+                ) as resp:
+                    resp.raise_for_status()
+                    async for raw_line in resp.aiter_lines():
+                        line = raw_line.strip()
+                        if not line or line.startswith(":"):
+                            continue
+                        if line.startswith("data:"):
+                            line = line[5:].strip()
+                        if line == "[DONE]":
+                            return
+                        try:
+                            data = json.loads(line)
+                            choices = data.get("choices") or []
+                            if not choices:
+                                continue  # usage-only trailer
+                            choice = choices[0]
+                            delta = choice.get("delta") or choice.get("message") or {}
+                            content = delta.get("content")
+                        except (json.JSONDecodeError, AttributeError, IndexError, TypeError) as exc:
+                            raise LLMError("LLM stream returned an unexpected payload") from exc
+                        if isinstance(content, str) and content:
+                            yield content
+                        elif isinstance(content, list):
+                            for part in content:
+                                if isinstance(part, dict) and isinstance(part.get("text"), str):
+                                    yield part["text"]
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code if exc.response is not None else "?"
+            raise LLMError(f"LLM stream HTTP {status}") from exc
+        except httpx.HTTPError as exc:
+            raise LLMError(f"LLM stream failed: {exc}") from exc
 
     async def embed(self, texts: list[str], *, model: str | None = None) -> list[list[float]]:
         """Embed texts via the OpenAI-compatible ``POST {base_url}/embeddings`` spec.

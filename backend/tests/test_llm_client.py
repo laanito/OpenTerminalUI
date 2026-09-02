@@ -108,6 +108,45 @@ class _FakeAsyncClient:
         return _FakeAsyncClient.queue.pop(0)
 
 
+class _FakeStreamResponse:
+    def __init__(self, lines: list[str]) -> None:
+        self.lines = lines
+        self.status_code = 200
+        self.exited = False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        self.exited = True
+        return False
+
+    def raise_for_status(self) -> None:
+        return None
+
+    async def aiter_lines(self):
+        for line in self.lines:
+            yield line
+
+
+class _FakeStreamingClient:
+    response = _FakeStreamResponse([])
+    payload: dict = {}
+
+    def __init__(self, *args, **kwargs) -> None:
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return False
+
+    def stream(self, method, url, json=None, headers=None):  # noqa: A002
+        _FakeStreamingClient.payload = json
+        return _FakeStreamingClient.response
+
+
 def _choice(content: str, finish: str) -> dict:
     return {"choices": [{"message": {"content": content}, "finish_reason": finish}]}
 
@@ -142,3 +181,40 @@ async def test_no_retry_for_plain_text_call(monkeypatch) -> None:
     out = await _client().chat([{"role": "user", "content": "hi"}], max_tokens=900)
     assert out == "some long prose"
     assert len(_FakeAsyncClient.posts) == 1  # no retry
+
+
+@pytest.mark.asyncio
+async def test_chat_stream_parses_sse_deltas_and_usage_trailer(monkeypatch) -> None:
+    _FakeStreamingClient.response = _FakeStreamResponse(
+        [
+            ": keepalive",
+            'data: {"choices":[{"delta":{"content":"Hello "}}]}',
+            'data: {"choices":[{"delta":{"content":[{"type":"text","text":"world"}]}}]}',
+            'data: {"choices":[],"usage":{"completion_tokens":2}}',
+            "data: [DONE]",
+        ]
+    )
+    monkeypatch.setattr(llm_client_mod.httpx, "AsyncClient", _FakeStreamingClient)
+
+    chunks = [chunk async for chunk in _client().chat_stream(msgs_ref())]
+
+    assert chunks == ["Hello ", "world"]
+    assert _FakeStreamingClient.payload["stream"] is True
+    assert _FakeStreamingClient.response.exited is True
+
+
+@pytest.mark.asyncio
+async def test_chat_stream_closes_provider_response_when_consumer_stops(monkeypatch) -> None:
+    _FakeStreamingClient.response = _FakeStreamResponse(
+        [
+            'data: {"choices":[{"delta":{"content":"first"}}]}',
+            'data: {"choices":[{"delta":{"content":"second"}}]}',
+        ]
+    )
+    monkeypatch.setattr(llm_client_mod.httpx, "AsyncClient", _FakeStreamingClient)
+    stream = _client().chat_stream(msgs_ref())
+
+    assert await anext(stream) == "first"
+    await stream.aclose()
+
+    assert _FakeStreamingClient.response.exited is True

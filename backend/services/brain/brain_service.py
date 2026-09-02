@@ -10,6 +10,8 @@ when your notes don't cover the question.
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -66,6 +68,13 @@ def _normalize_sources(sources: list[str] | None) -> list[str]:
 
 def _with_scope(payload: dict[str, Any], sources: list[str]) -> dict[str, Any]:
     return {**payload, "sources": sources}
+
+
+@dataclass(frozen=True)
+class _SynthesisRequest:
+    sources: list[str]
+    citations: list[dict[str, Any]]
+    messages: list[dict[str, str]]
 
 
 def _citations(matches: list[VectorMatch]) -> list[dict[str, Any]]:
@@ -165,20 +174,23 @@ async def status(db: Session, user_id: str) -> dict[str, Any]:
     }
 
 
-async def ask(
+async def _prepare_ask(
     db: Session,
     user_id: str,
     question: str,
     *,
     k: int = 6,
     sources: list[str] | None = None,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any] | None, _SynthesisRequest | None]:
     active_sources = _normalize_sources(sources)
     question = (question or "").strip()
     if not question:
-        return _with_scope(
-            {"answer": "Ask me something about your trades, theses, or notes.", "citations": []},
-            active_sources,
+        return (
+            _with_scope(
+                {"answer": "Ask me something about your trades, theses, or notes.", "citations": []},
+                active_sources,
+            ),
+            None,
         )
 
     settings = get_settings()
@@ -193,83 +205,175 @@ async def ask(
             logger.warning("Auto-index failed: %s", exc)
 
     if store.count(db, user_id) == 0:
-        return _with_scope(
-            {
-                "answer": (
-                    "Your second brain is empty. Add some trade journal entries, a "
-                    "portfolio thesis, or position notes, then ask again — I only ever "
-                    "answer from your own writing."
-                ),
-                "citations": [],
-                "indexed_chunks": 0,
-            },
-            active_sources,
+        return (
+            _with_scope(
+                {
+                    "answer": (
+                        "Your second brain is empty. Add some trade journal entries, a "
+                        "portfolio thesis, or position notes, then ask again — I only ever "
+                        "answer from your own writing."
+                    ),
+                    "citations": [],
+                    "indexed_chunks": 0,
+                },
+                active_sources,
+            ),
+            None,
         )
 
     try:
         query_vector = await embedder.embed_query(question)
     except EmbeddingError as exc:
-        return _with_scope(
-            {
-                "answer": f"I couldn't generate an embedding to search your notes: {exc}",
-                "citations": [],
-                "error": "embeddings_unavailable",
-            },
-            active_sources,
+        return (
+            _with_scope(
+                {
+                    "answer": f"I couldn't generate an embedding to search your notes: {exc}",
+                    "citations": [],
+                    "error": "embeddings_unavailable",
+                },
+                active_sources,
+            ),
+            None,
         )
 
     search_sources = None if sources is None else active_sources
     matches = store.search(db, user_id, query_vector, k=k, sources=search_sources)
     if not matches:
-        return _with_scope(
-            {
-                "answer": "I don't have anything in the selected private sources about that yet.",
-                "citations": [],
-            },
-            active_sources,
+        return (
+            _with_scope(
+                {
+                    "answer": "I don't have anything in the selected private sources about that yet.",
+                    "citations": [],
+                },
+                active_sources,
+            ),
+            None,
         )
 
+    citations = _citations(matches)
     if not settings.llm_enabled:
         # Retrieval still works without a chat model — return the sources directly.
-        return _with_scope(
-            {
-                "answer": (
-                    "The language model is disabled, so here are the most relevant "
-                    "excerpts from the selected private sources."
-                ),
-                "citations": _citations(matches),
-                "llm": False,
-            },
-            active_sources,
+        return (
+            _with_scope(
+                {
+                    "answer": (
+                        "The language model is disabled, so here are the most relevant "
+                        "excerpts from the selected private sources."
+                    ),
+                    "citations": citations,
+                    "llm": False,
+                },
+                active_sources,
+            ),
+            None,
         )
 
     context = _format_context(matches)
     user_msg = f"CONTEXT:\n{context}\n\nQUESTION: {question}"
-    try:
-        client = get_llm_client()
-        answer = await client.chat(
-            [
+    return (
+        None,
+        _SynthesisRequest(
+            sources=active_sources,
+            citations=citations,
+            messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_msg},
             ],
+        ),
+    )
+
+
+def _llm_unavailable(request: _SynthesisRequest) -> dict[str, Any]:
+    return _with_scope(
+        {
+            "answer": (
+                "I found relevant private writing but couldn't reach the language model to "
+                "synthesize an answer. Here are the sources."
+            ),
+            "citations": request.citations,
+            "error": "llm_unavailable",
+        },
+        request.sources,
+    )
+
+
+async def ask(
+    db: Session,
+    user_id: str,
+    question: str,
+    *,
+    k: int = 6,
+    sources: list[str] | None = None,
+) -> dict[str, Any]:
+    immediate, request = await _prepare_ask(
+        db,
+        user_id,
+        question,
+        k=k,
+        sources=sources,
+    )
+    if immediate is not None:
+        return immediate
+    assert request is not None
+
+    try:
+        client = get_llm_client()
+        answer = await client.chat(
+            request.messages,
             temperature=0.2,
             max_tokens=600,
         )
     except LLMError as exc:
         logger.warning("Brain synthesis failed: %s", exc)
-        return _with_scope(
-            {
-                "answer": (
-                    "I found relevant private writing but couldn't reach the language model to "
-                    "synthesize an answer. Here are the sources."
-                ),
-                "citations": _citations(matches),
-                "error": "llm_unavailable",
-            },
-            active_sources,
-        )
+        return _llm_unavailable(request)
 
     return _with_scope(
-        {"answer": answer.strip(), "citations": _citations(matches), "llm": True},
-        active_sources,
+        {"answer": answer.strip(), "citations": request.citations, "llm": True},
+        request.sources,
     )
+
+
+async def ask_stream(
+    db: Session,
+    user_id: str,
+    question: str,
+    *,
+    k: int = 6,
+    sources: list[str] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    """Yield metadata and answer deltas, or one complete fallback result."""
+    immediate, request = await _prepare_ask(
+        db,
+        user_id,
+        question,
+        k=k,
+        sources=sources,
+    )
+    if immediate is not None:
+        yield {"type": "result", "result": immediate}
+        return
+    assert request is not None
+
+    yield {
+        "type": "start",
+        "sources": request.sources,
+        "citations": request.citations,
+        "llm": True,
+    }
+    emitted = False
+    try:
+        client = get_llm_client()
+        async for text in client.chat_stream(
+            request.messages,
+            temperature=0.2,
+            max_tokens=600,
+        ):
+            emitted = True
+            yield {"type": "delta", "text": text}
+        if not emitted:
+            raise LLMError("LLM stream returned no answer text")
+    except LLMError as exc:
+        logger.warning("Brain streaming synthesis failed: %s", exc)
+        yield {"type": "result", "result": _llm_unavailable(request)}
+        return
+    yield {"type": "done"}
