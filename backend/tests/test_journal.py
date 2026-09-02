@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -7,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from backend.api.deps import get_db
 from backend.main import app
+from backend.models.journal import JournalEntry
 from backend.shared.db import Base
 
 
@@ -120,6 +123,67 @@ def test_get_journal_stats_returns_valid_statistics() -> None:
     assert payload["total_pnl"] == 950.0
     assert any(item["strategy"] == "breakout" for item in payload["by_strategy"])
     assert any(item["emotion"] == "confident" for item in payload["by_emotion"])
+
+
+def test_journal_gap_review_is_on_demand_deterministic_and_owner_scoped() -> None:
+    client, session_factory = _build_client()
+    headers = _auth_headers(client, "journal-gaps@example.com")
+    other_headers = _auth_headers(client, "journal-gaps-other@example.com")
+
+    complete = _create_trade(client, headers, symbol="COMPLETE")
+    incomplete = _create_trade(
+        client,
+        headers,
+        symbol="REVIEW",
+        exit_date=None,
+        exit_price=None,
+        setup=None,
+        emotion=None,
+        notes=None,
+    )
+    _create_trade(client, other_headers, symbol="PRIVATE", setup=None, emotion=None, notes=None)
+
+    db = session_factory()
+    try:
+        row = db.query(JournalEntry).filter(JournalEntry.id == incomplete.json()["entry"]["id"]).one()
+        row.updated_at = datetime(2026, 1, 1)
+        row.created_at = datetime(2026, 1, 1)
+        db.commit()
+    finally:
+        db.close()
+
+    response = client.get("/api/journal/gaps", headers=headers, params={"stale_after_days": 1})
+
+    assert complete.status_code == 200
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_entries"] == 2
+    assert payload["entries_needing_review"] == 1
+    assert payload["complete_entries"] == 1
+    assert [item["symbol"] for item in payload["items"]] == ["REVIEW"]
+    assert payload["items"][0]["missing"] == [
+        "rationale",
+        "outcome",
+        "emotion",
+        "setup",
+        "thesis_update",
+    ]
+    assert payload["gap_counts"] == {
+        "rationale": 1,
+        "outcome": 1,
+        "emotion": 1,
+        "setup": 1,
+        "thesis_update": 1,
+    }
+
+
+def test_journal_gap_review_rejects_invalid_staleness_window() -> None:
+    client, _ = _build_client()
+    headers = _auth_headers(client, "journal-gap-window@example.com")
+
+    response = client.get("/api/journal/gaps", headers=headers, params={"stale_after_days": 0})
+
+    assert response.status_code == 422
 
 
 def test_get_journal_equity_curve_returns_time_series() -> None:

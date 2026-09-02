@@ -72,11 +72,12 @@ SQLite/PostgreSQL-compatible retrieval contract.
       `PUT /api/v1/notes/external`, keyed by a short source and external ID. This
       supports pipelines such as Hermes summaries of selected YouTube videos and
       schedules normal Second Brain reindexing without exposing browser JWTs.
-- [ ] **Add an explicit journal-gap review.** Provide an on-demand review that
-      identifies missing rationale, outcomes, emotions, setup labels, or thesis
-      updates from the user's own records and links back to the entries to improve.
-      It must not run silently, invent missing facts, issue trade directives, or
-      become a background notification engine.
+- [x] **Add an explicit journal-gap review.** The Journal page now runs an
+      explicitly requested, deterministic completeness review that identifies
+      missing rationale, outcomes, emotions, setup labels, or thesis
+      updates and opens the relevant owner-scoped entry for editing. It does not
+      run silently, invent missing facts, issue trade directives, or become a
+      background notification engine.
 - [ ] **Close the release contract.** Cover chunk boundaries, incremental pruning,
       source filters, ownership, SQLite/pgvector parity, stream interruption, and
       frontend fallback behaviour; then update user docs, changelog, versions, and

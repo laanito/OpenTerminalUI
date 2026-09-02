@@ -186,7 +186,10 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **Corporate Actions** &mdash; splits, dividends, rights, bonuses timeline
 - **Peer Comparison** &mdash; relative valuation matrices across comparable companies
 - **Insider Trading Monitor** &mdash; recent insider trades, per-stock insider activity, top buyers/sellers leaderboard, and cluster-buy detection with minimum insider thresholds
-- **Trade Journal** &mdash; trade logging with equity curve, calendar heatmap, and performance statistics
+- **Trade Journal** &mdash; trade logging with equity curve, calendar heatmap,
+  performance statistics, and an on-demand completeness review that links missing
+  rationale, outcomes, emotions, setup labels, or stale thesis updates back to the
+  entry editor without inventing the absent facts
 
 ### Advanced Screener
 

@@ -26,6 +26,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   an owner-scoped private note at `PUT /api/v1/notes/external` using a stable
   source/external ID pair. This supports deliberate inputs such as Hermes YouTube
   summaries, adds provenance tags, and schedules normal Second Brain reindexing.
+- **On-demand journal completeness review** — the Trade Journal can explicitly
+  scan the current user's entries for absent rationale, outcomes, emotions, setup
+  labels, and stale open-trade thesis updates, then open each result for editing.
+  Checks are deterministic and do not invent facts, advice, or notifications.
 
 ## [1.2.0] - 2026-08-31
 

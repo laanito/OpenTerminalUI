@@ -1246,6 +1246,26 @@ export type JournalEntry = {
   updated_at: string | null;
 };
 
+export type JournalGapField = "rationale" | "outcome" | "emotion" | "setup" | "thesis_update";
+
+export type JournalGapReview = {
+  reviewed_at: string;
+  stale_after_days: number;
+  total_entries: number;
+  entries_needing_review: number;
+  complete_entries: number;
+  gap_counts: Record<JournalGapField, number>;
+  items: Array<{
+    entry_id: number;
+    symbol: string;
+    entry_date: string;
+    status: "open" | "closed";
+    missing: JournalGapField[];
+    prompts: string[];
+    entry: JournalEntry;
+  }>;
+};
+
 export type JournalStatsGroup = {
   count: number;
   win_rate: number;
