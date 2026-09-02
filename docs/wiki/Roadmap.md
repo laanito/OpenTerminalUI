@@ -309,10 +309,10 @@ Long-note chunking, proactive journal gaps, market-data/news corpus expansion,
 streaming Second Brain answers, per-source filters, and the real Relative
 Strength engine remain post-v1.2 backlog rather than being implied release gates.
 
-### v1.3 — The second brain gets depth
+### v1.3.0 — The second brain gets depth ✅ released 2026-09-02
 
-Release-prepared as **v1.3.0 (2026-09-02)** — implementation PRs #96–#101;
-tagging follows the host smoke check described in [Releasing](Releasing).
+Released as **v1.3.0 (2026-09-02)** — implementation PRs #96–#101, release PR
+#102, and tag/release `v1.3.0` at `293f911`.
 
 The **"grow privately"** half returns to the foreground. Before v1.3, the Second
 Brain already answered from a user's journal, theses, and notes with citations,
@@ -361,6 +361,10 @@ covers SQLite plus PostgreSQL/pgvector.
 indexing, autonomous background notifications, cross-user memory, trading
 recommendations or execution, the real Relative Strength engine, and paid-feed
 coverage. Broader external corpora still need a separate provenance design.
+
+No v1.4 theme is committed at this handoff. The next release should be shaped
+with the maintainer from observed demand and the continuous backlog below rather
+than inferred automatically from list order.
 
 ### Continuous — depth & coverage (demand-pulled, not a release theme)
 

@@ -4,8 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-02**, against `main` at `cab34ad` (PR #101), plus the
-v1.3.0 release-prep changes on this branch.
+Last audited: **2026-09-02**, against `main` at `293f911` (PR #102 and tag
+`v1.3.0`).
 
 ## Read order and sources of truth
 
@@ -46,16 +46,22 @@ degraded state is preferable to a convincing but invented number.
 
 ## Current release and development state
 
-- Release-prep version contract: **1.3.0** (`v1.2.0` remains the latest tag until
-  the host smoke check and release tag). Keep
-  `backend/config/settings.py` and `frontend/package.json` in lockstep when
-  releasing.
-- **v1.3 — The second brain gets depth** includes
+- Latest release: **v1.3.0**, tagged at `293f911` and published on 2026-09-02.
+  Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
+  preparing the next release.
+- **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
   deliberate API-key note ingestion, and an explicit journal-gap review. Feature
-  work and automated release verification are complete; the host smoke check is
-  the remaining pre-tag step. General MCP tooling and automatic external
-  market/news indexing remain deferred.
+  work, release verification, tag, and GitHub release are complete. The release
+  gate recorded 817 backend tests and 296 frontend tests, plus compile, build,
+  production-mock, and Compose checks.
+- There is **no committed v1.4 theme or active implementation slice** at this
+  handoff. Select the next item with the maintainer from `TODO.md`; do not infer
+  that the first unordered backlog item is assigned.
+- General MCP tooling and automatic external market/news indexing remain
+  deferred. The supported automation boundary is the authenticated, idempotent
+  external-note endpoint intended for deliberate inputs such as Hermes YouTube
+  summaries.
 - The real Relative Strength engine and broader depth/coverage work remain
   separate backlog rather than v1.3 release gates.
 - The old `.agents/TODO.md` snapshot stopped around PR #17. Its Ollama, EUR,
@@ -63,6 +69,11 @@ degraded state is preferable to a convincing but invented number.
   treated as current work.
 - See `TODO.md` for the current backlog. Before starting any backlog item, check
   `git log`, the implementation, and tests in case it landed without a doc edit.
+
+The v1.3 collaboration retrospective was merged into `praderasblog` as PR #104,
+series order 10: **“When a Second Brain Learns to Grow.”** It is narrative
+context, not an engineering source of truth; deployment is handled separately on
+the blog host after merge.
 
 ## Architecture at a glance
 
