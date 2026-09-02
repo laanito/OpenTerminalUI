@@ -13,6 +13,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   record. Stable internal chunk keys preserve the original citation `ref_id` and
   expose a zero-based `chunk_index`; incremental reindexing embeds only new or
   changed chunks and prunes stale rows after replacements are safely persisted.
+- **Inspectable Second Brain evidence scopes** — ask requests can restrict
+  retrieval to validated private source types while omitted filters retain the
+  all-private-writing default. The index status reports per-source chunk counts,
+  and the UI shows filter chips and records the exact scope used for each answer.
 
 ## [1.2.0] - 2026-08-31
 

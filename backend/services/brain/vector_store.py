@@ -23,7 +23,7 @@ import logging
 import threading
 from dataclasses import dataclass
 
-from sqlalchemy import bindparam, text
+from sqlalchemy import bindparam, func, text
 from sqlalchemy.orm import Session
 
 from backend.models.brain import BrainChunkORM
@@ -159,6 +159,16 @@ class VectorStore:
 
     def count(self, db: Session, user_id: str) -> int:
         return db.query(BrainChunkORM).filter(BrainChunkORM.user_id == user_id).count()
+
+    def count_by_source(self, db: Session, user_id: str) -> dict[str, int]:
+        """Return indexed chunk counts by source for one user only."""
+        rows = (
+            db.query(BrainChunkORM.source, func.count(BrainChunkORM.id))
+            .filter(BrainChunkORM.user_id == user_id)
+            .group_by(BrainChunkORM.source)
+            .all()
+        )
+        return {str(source): int(count) for source, count in rows}
 
     # ---- retrieval -------------------------------------------------------
 

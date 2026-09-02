@@ -7,6 +7,8 @@ and notes and never leaves the machine.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -19,10 +21,13 @@ from backend.services.brain.indexer import reindex_user
 
 router = APIRouter(prefix="/brain", tags=["brain"])
 
+BrainSource = Literal["note", "journal", "portfolio", "holding", "transaction"]
+
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     k: int = Field(default=6, ge=1, le=20)
+    sources: list[BrainSource] | None = Field(default=None, min_length=1)
 
 
 class Citation(BaseModel):
@@ -40,6 +45,7 @@ class Citation(BaseModel):
 class AskResponse(BaseModel):
     answer: str
     citations: list[Citation] = []
+    sources: list[BrainSource]
     indexed_chunks: int | None = None
     llm: bool | None = None
     error: str | None = None
@@ -56,6 +62,7 @@ class ReindexResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     indexed_chunks: int
+    source_counts: dict[BrainSource, int]
     backend: str
     embed_model: str
 
@@ -66,7 +73,13 @@ async def brain_ask(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> AskResponse:
-    result = await brain_service.ask(db, current_user.id, payload.question, k=payload.k)
+    result = await brain_service.ask(
+        db,
+        current_user.id,
+        payload.question,
+        k=payload.k,
+        sources=payload.sources,
+    )
     return AskResponse(**result)
 
 

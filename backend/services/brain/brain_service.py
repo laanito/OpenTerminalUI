@@ -23,6 +23,9 @@ from backend.shared.db import engine
 
 logger = logging.getLogger(__name__)
 
+BRAIN_SOURCES = ("note", "journal", "portfolio", "holding", "transaction")
+_BRAIN_SOURCE_SET = frozenset(BRAIN_SOURCES)
+
 SYSTEM_PROMPT = """You are the user's private "second brain" — a research partner \
 that helps them invest without being fooled by markets, by hype, or by themselves.
 
@@ -46,6 +49,23 @@ def _format_context(matches: list[VectorMatch]) -> str:
     for i, m in enumerate(matches, start=1):
         blocks.append(f"[{i}] ({m.chunk.source}) {m.chunk.title}\n{m.chunk.chunk_text}")
     return "\n\n".join(blocks)
+
+
+def _normalize_sources(sources: list[str] | None) -> list[str]:
+    """Validate, deduplicate, and stabilize a requested private-source scope."""
+    if sources is None:
+        return list(BRAIN_SOURCES)
+    normalized = list(dict.fromkeys(str(source).strip().lower() for source in sources))
+    if not normalized:
+        raise ValueError("At least one brain source is required")
+    invalid = [source for source in normalized if source not in _BRAIN_SOURCE_SET]
+    if invalid:
+        raise ValueError(f"Unknown brain sources: {', '.join(invalid)}")
+    return normalized
+
+
+def _with_scope(payload: dict[str, Any], sources: list[str]) -> dict[str, Any]:
+    return {**payload, "sources": sources}
 
 
 def _citations(matches: list[VectorMatch]) -> list[dict[str, Any]]:
@@ -136,17 +156,30 @@ async def related_notes(
 async def status(db: Session, user_id: str) -> dict[str, Any]:
     embedder = get_embedding_service()
     store = make_vector_store(engine, embedder.dim)
+    counts = store.count_by_source(db, user_id)
     return {
         "indexed_chunks": store.count(db, user_id),
+        "source_counts": {source: counts.get(source, 0) for source in BRAIN_SOURCES},
         "backend": "pgvector" if store.use_pgvector else "numpy",
         "embed_model": get_settings().llm_embed_model,
     }
 
 
-async def ask(db: Session, user_id: str, question: str, *, k: int = 6) -> dict[str, Any]:
+async def ask(
+    db: Session,
+    user_id: str,
+    question: str,
+    *,
+    k: int = 6,
+    sources: list[str] | None = None,
+) -> dict[str, Any]:
+    active_sources = _normalize_sources(sources)
     question = (question or "").strip()
     if not question:
-        return {"answer": "Ask me something about your trades, theses, or notes.", "citations": []}
+        return _with_scope(
+            {"answer": "Ask me something about your trades, theses, or notes.", "citations": []},
+            active_sources,
+        )
 
     settings = get_settings()
     embedder = get_embedding_service()
@@ -160,42 +193,55 @@ async def ask(db: Session, user_id: str, question: str, *, k: int = 6) -> dict[s
             logger.warning("Auto-index failed: %s", exc)
 
     if store.count(db, user_id) == 0:
-        return {
-            "answer": (
-                "Your second brain is empty. Add some trade journal entries, a "
-                "portfolio thesis, or position notes, then ask again — I only ever "
-                "answer from your own writing."
-            ),
-            "citations": [],
-            "indexed_chunks": 0,
-        }
+        return _with_scope(
+            {
+                "answer": (
+                    "Your second brain is empty. Add some trade journal entries, a "
+                    "portfolio thesis, or position notes, then ask again — I only ever "
+                    "answer from your own writing."
+                ),
+                "citations": [],
+                "indexed_chunks": 0,
+            },
+            active_sources,
+        )
 
     try:
         query_vector = await embedder.embed_query(question)
     except EmbeddingError as exc:
-        return {
-            "answer": f"I couldn't generate an embedding to search your notes: {exc}",
-            "citations": [],
-            "error": "embeddings_unavailable",
-        }
+        return _with_scope(
+            {
+                "answer": f"I couldn't generate an embedding to search your notes: {exc}",
+                "citations": [],
+                "error": "embeddings_unavailable",
+            },
+            active_sources,
+        )
 
-    matches = store.search(db, user_id, query_vector, k=k)
+    search_sources = None if sources is None else active_sources
+    matches = store.search(db, user_id, query_vector, k=k, sources=search_sources)
     if not matches:
-        return {
-            "answer": "I don't have anything in your notes about that yet.",
-            "citations": [],
-        }
+        return _with_scope(
+            {
+                "answer": "I don't have anything in the selected private sources about that yet.",
+                "citations": [],
+            },
+            active_sources,
+        )
 
     if not settings.llm_enabled:
         # Retrieval still works without a chat model — return the sources directly.
-        return {
-            "answer": (
-                "The language model is disabled, so here are the most relevant "
-                "excerpts from your own notes."
-            ),
-            "citations": _citations(matches),
-            "llm": False,
-        }
+        return _with_scope(
+            {
+                "answer": (
+                    "The language model is disabled, so here are the most relevant "
+                    "excerpts from the selected private sources."
+                ),
+                "citations": _citations(matches),
+                "llm": False,
+            },
+            active_sources,
+        )
 
     context = _format_context(matches)
     user_msg = f"CONTEXT:\n{context}\n\nQUESTION: {question}"
@@ -211,13 +257,19 @@ async def ask(db: Session, user_id: str, question: str, *, k: int = 6) -> dict[s
         )
     except LLMError as exc:
         logger.warning("Brain synthesis failed: %s", exc)
-        return {
-            "answer": (
-                "I found relevant notes but couldn't reach the language model to "
-                "synthesize an answer. Here are the sources."
-            ),
-            "citations": _citations(matches),
-            "error": "llm_unavailable",
-        }
+        return _with_scope(
+            {
+                "answer": (
+                    "I found relevant private writing but couldn't reach the language model to "
+                    "synthesize an answer. Here are the sources."
+                ),
+                "citations": _citations(matches),
+                "error": "llm_unavailable",
+            },
+            active_sources,
+        )
 
-    return {"answer": answer.strip(), "citations": _citations(matches), "llm": True}
+    return _with_scope(
+        {"answer": answer.strip(), "citations": _citations(matches), "llm": True},
+        active_sources,
+    )
