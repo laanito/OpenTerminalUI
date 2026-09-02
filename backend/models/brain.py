@@ -1,11 +1,11 @@
 """Storage for the private "second brain" RAG index.
 
-Each row is one embedded chunk of the user's own writing — a journal entry, a
-portfolio thesis, a per-holding note, a transaction memo. The embedding is stored
-as portable JSON (``vector_json``) so the index works on SQLite as well as
-Postgres; on Postgres a real ``pgvector`` column + ANN index is layered on top by
-the vector store. Everything is scoped by ``user_id`` and never leaves the
-machine.
+Each row is one embedded chunk of the user's own writing. Short source records
+produce one row and long records produce several stable, overlapping rows. The
+embedding is stored as portable JSON (``vector_json``) so the index works on
+SQLite as well as Postgres; on Postgres a real ``pgvector`` column + ANN index is
+layered on top by the vector store. Everything is scoped by ``user_id`` and never
+leaves the machine.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from backend.shared.db import Base
 class BrainChunkORM(Base):
     __tablename__ = "brain_chunks"
     __table_args__ = (
-        # One row per source record; re-indexing upserts in place.
+        # One row per stable chunk key; the original source ID lives in meta_json.
         UniqueConstraint("user_id", "source", "ref_id", name="uq_brain_chunk_user_source_ref"),
     )
 
@@ -38,8 +38,9 @@ class BrainChunkORM(Base):
     user_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    # journal | portfolio | holding | transaction
+    # note | journal | portfolio | holding | transaction
     source: Mapped[str] = mapped_column(String(32), index=True)
+    # Deterministic hash of (source, original source ID, zero-based chunk index).
     ref_id: Mapped[str] = mapped_column(String(64), index=True)
     symbol: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(256), default="")

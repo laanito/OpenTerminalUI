@@ -73,8 +73,31 @@ class VectorStore:
 
     # ---- persistence -----------------------------------------------------
 
+    def pending_chunks(
+        self,
+        db: Session,
+        user_id: str,
+        chunks: list[dict],
+        *,
+        dim: int,
+    ) -> list[dict]:
+        """Return only chunks that need a new embedding or stored vector."""
+        rows = db.query(BrainChunkORM).filter(BrainChunkORM.user_id == user_id).all()
+        existing = {(row.source, row.ref_id): row for row in rows}
+        pending: list[dict] = []
+        for chunk in chunks:
+            row = existing.get((chunk["source"], str(chunk["ref_id"])))
+            if (
+                row is None
+                or row.content_hash != chunk.get("content_hash", "")
+                or row.dim != dim
+                or not row.vector_json
+            ):
+                pending.append(chunk)
+        return pending
+
     def upsert(self, db: Session, user_id: str, chunks: list[dict]) -> int:
-        """Insert or update one row per (source, ref_id). Returns rows written."""
+        """Insert or update one row per stable chunk identity. Returns rows written."""
         written = 0
         for chunk in chunks:
             row = (
@@ -104,7 +127,11 @@ class VectorStore:
                     **fields,
                 )
                 db.add(row)
-            elif row.content_hash == chunk.get("content_hash") and row.dim == len(vector):
+            elif (
+                row.content_hash == chunk.get("content_hash")
+                and row.dim == len(vector)
+                and row.vector_json
+            ):
                 continue  # unchanged — skip the write entirely
             else:
                 for key, value in fields.items():

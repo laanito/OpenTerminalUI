@@ -45,6 +45,154 @@ def test_cosine_topk_zero_query_returns_empty():
     assert _cosine_topk([0.0, 0.0], [_chunk([1.0, 0.0])], k=3) == []
 
 
+# ---- deterministic source chunking ---------------------------------------
+
+def test_split_text_is_bounded_overlapping_and_deterministic():
+    from backend.services.brain.indexer import _split_text
+
+    text = " ".join(f"word-{i}" for i in range(80))
+    first = _split_text(text, max_chars=120, overlap_chars=24)
+    second = _split_text(text, max_chars=120, overlap_chars=24)
+
+    assert first == second
+    assert len(first) > 1
+    assert all(0 < len(chunk) <= 120 for chunk in first)
+    for left, right in zip(first, first[1:]):
+        assert set(left.split()[-4:]) & set(right.split()[:4])
+
+
+def test_build_chunks_keeps_stable_internal_and_original_source_ids():
+    from backend.services.brain.indexer import _build_chunks
+
+    text = " ".join(f"evidence-{i}" for i in range(500))
+    kwargs = {
+        "source": "note",
+        "source_ref_id": "note-123",
+        "symbol": "AAPL",
+        "title": "Long thesis",
+        "text": text,
+        "meta_json": {"route": "/equity/security/AAPL"},
+    }
+
+    first = _build_chunks(**kwargs)
+    second = _build_chunks(**kwargs)
+
+    assert len(first) > 1
+    assert [chunk["ref_id"] for chunk in first] == [chunk["ref_id"] for chunk in second]
+    assert len({chunk["ref_id"] for chunk in first}) == len(first)
+    assert all(len(chunk["ref_id"]) == 64 for chunk in first)
+    assert [chunk["meta_json"]["chunk_index"] for chunk in first] == list(range(len(first)))
+    assert all(chunk["meta_json"]["source_ref_id"] == "note-123" for chunk in first)
+
+
+def test_vector_store_only_reembeds_changed_chunks_and_prunes_stale_ones():
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from backend.models.brain import BrainChunkORM
+    from backend.models.user import User
+    from backend.services.brain.indexer import _build_chunks
+    from backend.services.brain.vector_store import VectorStore
+
+    test_engine = create_engine("sqlite:///:memory:")
+    User.__table__.create(test_engine)
+    BrainChunkORM.__table__.create(test_engine)
+    db = sessionmaker(bind=test_engine)()
+    store = VectorStore(use_pgvector=False)
+
+    try:
+        long_text = " ".join(f"observation-{i}" for i in range(500))
+        chunks = _build_chunks(
+            source="note",
+            source_ref_id="note-1",
+            symbol=None,
+            title="Research log",
+            text=long_text,
+            meta_json={},
+        )
+        assert store.pending_chunks(db, "user-1", chunks, dim=2) == chunks
+
+        for chunk in chunks:
+            chunk["vector"] = [1.0, 0.0]
+        assert store.upsert(db, "user-1", chunks) == len(chunks)
+        assert store.pending_chunks(db, "user-1", chunks, dim=2) == []
+
+        missing_vector = db.query(BrainChunkORM).filter_by(user_id="user-1").first()
+        missing_vector.vector_json = []
+        db.commit()
+        pending_missing = store.pending_chunks(db, "user-1", chunks, dim=2)
+        assert len(pending_missing) == 1
+        assert store.upsert(db, "user-1", pending_missing) == 1
+
+        shortened = _build_chunks(
+            source="note",
+            source_ref_id="note-1",
+            symbol=None,
+            title="Research log",
+            text="A much shorter revised note.",
+            meta_json={},
+        )
+        pending = store.pending_chunks(db, "user-1", shortened, dim=2)
+        assert pending == shortened
+
+        keep = {(chunk["source"], chunk["ref_id"]) for chunk in shortened}
+        assert store.delete_missing(db, "user-1", keep) == len(chunks) - 1
+        assert store.count(db, "user-1") == 1
+    finally:
+        db.close()
+        test_engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_reindex_keeps_old_rows_when_replacement_embedding_fails(monkeypatch):
+    from backend.services.brain import indexer
+    from backend.services.brain.indexer import _build_chunks
+
+    chunks = _build_chunks(
+        source="note",
+        source_ref_id="note-1",
+        symbol=None,
+        title="Research log",
+        text="A replacement chunk.",
+        meta_json={},
+    )
+    events: list[str] = []
+
+    class Store:
+        use_pgvector = False
+
+        def pending_chunks(self, db, user_id, candidates, *, dim):
+            events.append("pending")
+            return candidates
+
+        def upsert(self, db, user_id, candidates):
+            events.append("upsert")
+            return len(candidates)
+
+        def delete_missing(self, db, user_id, keep):
+            events.append("prune")
+            return 1
+
+        def count(self, db, user_id):
+            return 1
+
+    class BrokenEmbedder:
+        dim = 2
+
+        async def embed_texts(self, texts):
+            events.append("embed")
+            raise RuntimeError("embedding provider offline")
+
+    monkeypatch.setattr(indexer, "_collect_chunks", lambda db, user_id: chunks)
+    monkeypatch.setattr(indexer, "get_embedding_service", lambda: BrokenEmbedder())
+    monkeypatch.setattr(indexer, "make_vector_store", lambda engine, dim: Store())
+
+    with pytest.raises(RuntimeError, match="provider offline"):
+        await indexer.reindex_user(None, "user-1")
+
+    assert events == ["pending", "embed"]
+
+
 # ---- ask flow (stubbed embedder / store / llm) ----------------------------
 
 @pytest.mark.asyncio
@@ -95,6 +243,22 @@ async def test_ask_grounds_answer_and_cites(monkeypatch):
     assert out["citations"][0]["source"] == "journal"
     assert out["citations"][0]["route"] == "/equity/journal"
     assert out["citations"][0]["n"] == 1
+
+
+def test_citation_exposes_original_source_id_and_chunk_index():
+    match = VectorMatch(
+        chunk=_chunk(
+            [1.0, 0.0],
+            ref_id="internal-chunk-hash",
+            meta_json={"source_ref_id": "note-123", "chunk_index": 2},
+        ),
+        score=0.8,
+    )
+
+    citation = brain_service._citations([match])[0]
+
+    assert citation["ref_id"] == "note-123"
+    assert citation["chunk_index"] == 2
 
 
 @pytest.mark.asyncio
@@ -161,7 +325,9 @@ def test_collect_chunks_indexes_notes():
     note_chunks = [c for c in chunks if c["source"] == "note"]
     assert len(note_chunks) == 1
     c = note_chunks[0]
-    assert c["ref_id"] == "n1"
+    assert c["ref_id"] != "n1"  # internal row key is chunk-specific
+    assert c["meta_json"]["source_ref_id"] == "n1"
+    assert c["meta_json"]["chunk_index"] == 0
     assert c["symbol"] == "AAPL"
     assert "Margins peaking" in c["chunk_text"]
     assert "Thesis check" in c["chunk_text"]

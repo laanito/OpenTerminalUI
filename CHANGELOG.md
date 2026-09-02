@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **v1.3 chunk-aware Second Brain memory** — long private notes, journal entries,
+  portfolio theses, holding notes, and transaction notes are split into
+  deterministic, lightly overlapping chunks instead of one embedding per source
+  record. Stable internal chunk keys preserve the original citation `ref_id` and
+  expose a zero-based `chunk_index`; incremental reindexing embeds only new or
+  changed chunks and prunes stale rows after replacements are safely persisted.
+
 ## [1.2.0] - 2026-08-31
 
 The **"research interrogates"** release. v1.2 turns the private research layer

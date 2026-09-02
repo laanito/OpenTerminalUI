@@ -6,8 +6,9 @@ Sources (all per-user, all authored by the user themselves):
   * per-holding notes — why this position is held
   * transaction notes — the rationale captured at decision time
 
-Each becomes one chunk. Re-indexing is incremental: unchanged rows (same content
-hash) are skipped, and rows whose source record disappeared are pruned.
+Short records become one chunk; long records are split deterministically into
+lightly overlapping chunks. Re-indexing is incremental: unchanged chunks (same
+stable identity and content hash) are skipped, and stale chunks are pruned.
 """
 
 from __future__ import annotations
@@ -32,9 +33,99 @@ from backend.shared.db import engine
 
 logger = logging.getLogger(__name__)
 
+CHUNK_MAX_CHARS = 1200
+CHUNK_OVERLAP_CHARS = 160
+_CHUNK_MIN_BREAK_FRACTION = 0.6
+
 
 def _hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _split_text(
+    text: str,
+    *,
+    max_chars: int = CHUNK_MAX_CHARS,
+    overlap_chars: int = CHUNK_OVERLAP_CHARS,
+) -> list[str]:
+    """Split text deterministically, preferring readable boundaries.
+
+    Chunks are character-bounded so the behaviour is independent of the active
+    embedding model/tokenizer. Paragraph and sentence endings are preferred;
+    long unbroken text falls back to a hard boundary. The next chunk starts near
+    ``overlap_chars`` before the previous end, aligned to whitespace when
+    possible.
+    """
+    text = (text or "").strip()
+    if not text:
+        return []
+    if max_chars <= 0:
+        raise ValueError("max_chars must be positive")
+    if overlap_chars < 0 or overlap_chars >= max_chars:
+        raise ValueError("overlap_chars must be between 0 and max_chars - 1")
+    if len(text) <= max_chars:
+        return [text]
+
+    chunks: list[str] = []
+    start = 0
+    while start < len(text):
+        hard_end = min(start + max_chars, len(text))
+        end = hard_end
+        if hard_end < len(text):
+            min_end = start + int(max_chars * _CHUNK_MIN_BREAK_FRACTION)
+            for separator in ("\n\n", "\n", ". ", "? ", "! ", "; ", ", ", " "):
+                boundary = text.rfind(separator, min_end, hard_end)
+                if boundary >= min_end:
+                    end = boundary + len(separator)
+                    break
+
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        if end >= len(text):
+            break
+
+        next_start = max(start + 1, end - overlap_chars)
+        while next_start < end and not text[next_start].isspace():
+            next_start += 1
+        while next_start < len(text) and text[next_start].isspace():
+            next_start += 1
+        start = next_start if next_start < end else end
+
+    return chunks
+
+
+def _chunk_ref_id(source: str, source_ref_id: Any, chunk_index: int) -> str:
+    """Return a stable internal row key without exposing it as the citation ID."""
+    return _hash(f"{source}\0{source_ref_id}\0{chunk_index}")
+
+
+def _build_chunks(
+    *,
+    source: str,
+    source_ref_id: Any,
+    symbol: str | None,
+    title: str,
+    text: str,
+    meta_json: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Build persistable chunks while retaining the original citation identity."""
+    out: list[dict[str, Any]] = []
+    for chunk_index, chunk_text in enumerate(_split_text(text)):
+        meta = dict(meta_json)
+        meta.update({"source_ref_id": str(source_ref_id), "chunk_index": chunk_index})
+        out.append(
+            {
+                "source": source,
+                "ref_id": _chunk_ref_id(source, source_ref_id, chunk_index),
+                "symbol": symbol,
+                "title": title,
+                "chunk_text": chunk_text,
+                "content_hash": _hash(chunk_text),
+                "meta_json": meta,
+            }
+        )
+    return out
 
 
 def _fmt_num(value: Any) -> str:
@@ -109,31 +200,29 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
         route = _NOTE_CONTEXT_ROUTES.get(row.context)
         if row.context in ("security", "general") and sym:
             route = f"/equity/security/{sym}"
-        chunks.append(
-            {
-                "source": "note",
-                "ref_id": row.id,
-                "symbol": sym or None,
-                "title": heading or "Note",
-                "chunk_text": text,
-                "content_hash": _hash(text),
-                "meta_json": {"context": row.context, "symbol": sym or None, "route": route},
-            }
+        chunks.extend(
+            _build_chunks(
+                source="note",
+                source_ref_id=row.id,
+                symbol=sym or None,
+                title=heading or "Note",
+                text=text,
+                meta_json={"context": row.context, "symbol": sym or None, "route": route},
+            )
         )
 
     # 1. Journal entries — always embed (structured context is meaningful even without notes).
     for row in db.query(JournalEntry).filter(JournalEntry.user_id == user_id).all():
         text = _journal_text(row)
         when = row.entry_date.date().isoformat() if row.entry_date else ""
-        chunks.append(
-            {
-                "source": "journal",
-                "ref_id": row.id,
-                "symbol": row.symbol,
-                "title": f"Journal · {row.direction} {row.symbol} {when}".strip(),
-                "chunk_text": text,
-                "content_hash": _hash(text),
-                "meta_json": {
+        chunks.extend(
+            _build_chunks(
+                source="journal",
+                source_ref_id=row.id,
+                symbol=row.symbol,
+                title=f"Journal · {row.direction} {row.symbol} {when}".strip(),
+                text=text,
+                meta_json={
                     "emotion": row.emotion,
                     "strategy": row.strategy,
                     "setup": row.setup,
@@ -141,7 +230,7 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
                     "date": when,
                     "route": "/equity/journal",
                 },
-            }
+            )
         )
 
     # User's portfolios (the join key for holding/transaction notes below).
@@ -154,16 +243,15 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
         if not desc:
             continue
         text = f"Portfolio thesis — {p.name}: {desc}"
-        chunks.append(
-            {
-                "source": "portfolio",
-                "ref_id": p.id,
-                "symbol": None,
-                "title": f"Portfolio · {p.name}",
-                "chunk_text": text,
-                "content_hash": _hash(text),
-                "meta_json": {"portfolio": p.name, "route": "/equity/portfolio/lab"},
-            }
+        chunks.extend(
+            _build_chunks(
+                source="portfolio",
+                source_ref_id=p.id,
+                symbol=None,
+                title=f"Portfolio · {p.name}",
+                text=text,
+                meta_json={"portfolio": p.name, "route": "/equity/portfolio/lab"},
+            )
         )
 
     if portfolio_ids:
@@ -178,16 +266,15 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
             if not note:
                 continue
             text = f"Position note — {h.symbol}: {note}"
-            chunks.append(
-                {
-                    "source": "holding",
-                    "ref_id": h.id,
-                    "symbol": h.symbol,
-                    "title": f"Position · {h.symbol}",
-                    "chunk_text": text,
-                    "content_hash": _hash(text),
-                    "meta_json": {"symbol": h.symbol, "route": "/equity/portfolio/lab"},
-                }
+            chunks.extend(
+                _build_chunks(
+                    source="holding",
+                    source_ref_id=h.id,
+                    symbol=h.symbol,
+                    title=f"Position · {h.symbol}",
+                    text=text,
+                    meta_json={"symbol": h.symbol, "route": "/equity/portfolio/lab"},
+                )
             )
 
         # 4. Transaction notes.
@@ -201,16 +288,15 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
             if not note:
                 continue
             text = f"Transaction note — {t.type} {t.symbol} on {t.date}: {note}"
-            chunks.append(
-                {
-                    "source": "transaction",
-                    "ref_id": t.id,
-                    "symbol": t.symbol,
-                    "title": f"Transaction · {t.type} {t.symbol}",
-                    "chunk_text": text,
-                    "content_hash": _hash(text),
-                    "meta_json": {"symbol": t.symbol, "type": t.type, "date": t.date},
-                }
+            chunks.extend(
+                _build_chunks(
+                    source="transaction",
+                    source_ref_id=t.id,
+                    symbol=t.symbol,
+                    title=f"Transaction · {t.type} {t.symbol}",
+                    text=text,
+                    meta_json={"symbol": t.symbol, "type": t.type, "date": t.date},
+                )
             )
 
     return chunks
@@ -222,22 +308,29 @@ async def reindex_user(db: Session, user_id: str) -> dict:
     embedder = get_embedding_service()
     store: VectorStore = make_vector_store(engine, embedder.dim)
 
+    written = 0
+    pending = store.pending_chunks(db, user_id, chunks, dim=embedder.dim)
+    if pending:
+        vectors = await embedder.embed_texts([c["chunk_text"] for c in pending])
+        for chunk, vector in zip(pending, vectors):
+            chunk["vector"] = vector
+        written = store.upsert(db, user_id, pending)
+
+    # Prune only after replacement chunks have been embedded and persisted. On
+    # the first v1.3 reindex this keeps the legacy one-row index usable if the
+    # embedding provider fails midway through migration.
     keep = {(c["source"], str(c["ref_id"])) for c in chunks}
     removed = store.delete_missing(db, user_id, keep)
 
-    written = 0
-    if chunks:
-        vectors = await embedder.embed_texts([c["chunk_text"] for c in chunks])
-        for chunk, vector in zip(chunks, vectors):
-            chunk["vector"] = vector
-        written = store.upsert(db, user_id, chunks)
-
     total = store.count(db, user_id)
+    source_count = len(
+        {(c["source"], str(c["meta_json"]["source_ref_id"])) for c in chunks}
+    )
     return {
         "indexed": written,
         "removed": removed,
         "total": total,
         "backend": "pgvector" if store.use_pgvector else "numpy",
         "dim": embedder.dim,
-        "sources": len(chunks),
+        "sources": source_count,
     }
