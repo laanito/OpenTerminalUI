@@ -34,6 +34,7 @@ class Citation(BaseModel):
     score: float
     route: str | None = None
     ref_id: str
+    chunk_index: int | None = None
 
 
 class AskResponse(BaseModel):

@@ -51,7 +51,7 @@ def _format_context(matches: list[VectorMatch]) -> str:
 def _citations(matches: list[VectorMatch]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for i, m in enumerate(matches, start=1):
-        meta = m.chunk.meta_json or {}
+        meta = getattr(m.chunk, "meta_json", None) or {}
         snippet = m.chunk.chunk_text
         out.append(
             {
@@ -62,7 +62,11 @@ def _citations(matches: list[VectorMatch]) -> list[dict[str, Any]]:
                 "snippet": snippet[:280] + ("…" if len(snippet) > 280 else ""),
                 "score": round(m.score, 4),
                 "route": meta.get("route"),
-                "ref_id": m.chunk.ref_id,
+                # Chunk rows use an internal deterministic key. Citations keep the
+                # original record ID so existing deep links/API consumers remain
+                # stable across the v1.3 reindex.
+                "ref_id": str(meta.get("source_ref_id", m.chunk.ref_id)),
+                "chunk_index": meta.get("chunk_index"),
             }
         )
     return out

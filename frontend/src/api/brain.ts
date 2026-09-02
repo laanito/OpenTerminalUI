@@ -9,6 +9,7 @@ export interface BrainCitation {
   score: number;
   route?: string | null;
   ref_id: string;
+  chunk_index?: number | null;
 }
 
 export interface BrainAskResponse {

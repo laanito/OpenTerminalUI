@@ -51,10 +51,12 @@ This is the next planned release and its implementation order. Each item should
 remain independently reviewable and preserve the existing private, per-user,
 SQLite/PostgreSQL-compatible retrieval contract.
 
-- [ ] **Chunk long sources deterministically.** Split long notes and journal text
-      into bounded, lightly overlapping chunks with stable identities. Reindexing
-      must update changed chunks, prune removed ones, and keep citations linked to
-      the original source record on both SQLite and PostgreSQL/pgvector.
+- [x] **Chunk long sources deterministically.** Long notes and journal text are
+      split into bounded, lightly overlapping chunks with stable internal keys;
+      citation metadata retains the original source record and chunk index.
+      Reindexing embeds only new/changed chunks, persists replacements before
+      pruning stale rows, and uses the same storage path for SQLite and
+      PostgreSQL/pgvector.
 - [ ] **Make retrieval source-aware and inspectable.** Add validated filters for
       notes, journal, portfolio theses, holding notes, and transaction notes;
       expose per-source index counts; and let the user see which scope produced an
