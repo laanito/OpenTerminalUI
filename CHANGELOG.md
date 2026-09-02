@@ -6,6 +6,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-02
+
+The **"second brain gets depth"** release. v1.3 keeps private memory grounded in
+the current user's own writing while making long sources, retrieval scope,
+progressive answers, deliberate automation inputs, and documentation gaps
+inspectable as that memory grows.
+
 ### Added
 - **v1.3 chunk-aware Second Brain memory** — long private notes, journal entries,
   portfolio theses, holding notes, and transaction notes are split into

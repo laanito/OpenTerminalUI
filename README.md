@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.2.0-0f172a" alt="Version 1.2.0" />
+  <img src="https://img.shields.io/badge/version-1.3.0-0f172a" alt="Version 1.3.0" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -47,10 +47,10 @@ This fork re-centres OpenTerminalUI toward **US / EU / crypto** markets on a **P
 - **Open & extensible** &mdash; self-hosted, MIT-licensed, bring-your-own provider keys, with a plugin/Python scripting layer.
 - **Multi-asset, unified** &mdash; equities, ETFs, FX, bonds, and **crypto as a first-class citizen**, with a display-currency selector (USD/EUR/INR).
 
-The next planned milestone is **v1.3 — The second brain gets depth**: chunk-aware
-private memory, visible source filters, progressive answers, deliberate external
-note capture, and an explicit journal-gap review. Automatic external news/market
-corpora and a general MCP interface are not part of this release.
+**v1.3 — The second brain gets depth** adds chunk-aware private memory, visible
+source filters, progressive answers, deliberate external-note capture, and an
+explicit journal-gap review. Automatic external news/market corpora and a general
+MCP interface remain deferred.
 
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 

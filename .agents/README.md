@@ -4,8 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-08-31**, against `main` at `bd44141` (PR #94), plus the
-v1.2.0 release-prep changes on this branch.
+Last audited: **2026-09-02**, against `main` at `cab34ad` (PR #101), plus the
+v1.3.0 release-prep changes on this branch.
 
 ## Read order and sources of truth
 
@@ -46,18 +46,16 @@ degraded state is preferable to a convincing but invented number.
 
 ## Current release and development state
 
-- Current release/version contract: **1.2.0** (tagged as `v1.2.0`). Keep
+- Release-prep version contract: **1.3.0** (`v1.2.0` remains the latest tag until
+  the host smoke check and release tag). Keep
   `backend/config/settings.py` and `frontend/package.json` in lockstep when
   releasing.
-- v1.2's completed scope is the adversarial Interrogate flow for stocks, crypto,
-  and indices; semantic private-note grounding; asset-aware briefing facts;
-  crypto/index/EU-aware news; and optional batched AI sentiment in the main News
-  hub with a classical fallback. See `CHANGELOG.md` for the release inventory.
-- The next planned milestone is **v1.3 — The second brain gets depth**:
+- **v1.3 — The second brain gets depth** includes
   deterministic long-note chunking, source-aware retrieval, progressive answers,
-  deliberate API-key note ingestion, and an explicit journal-gap review. Those
-  feature slices are implemented; release-contract verification remains. General
-  MCP tooling and automatic external market/news indexing remain deferred.
+  deliberate API-key note ingestion, and an explicit journal-gap review. Feature
+  work and automated release verification are complete; the host smoke check is
+  the remaining pre-tag step. General MCP tooling and automatic external
+  market/news indexing remain deferred.
 - The real Relative Strength engine and broader depth/coverage work remain
   separate backlog rather than v1.3 release gates.
 - The old `.agents/TODO.md` snapshot stopped around PR #17. Its Ollama, EUR,
