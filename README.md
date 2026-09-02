@@ -48,9 +48,9 @@ This fork re-centres OpenTerminalUI toward **US / EU / crypto** markets on a **P
 - **Multi-asset, unified** &mdash; equities, ETFs, FX, bonds, and **crypto as a first-class citizen**, with a display-currency selector (USD/EUR/INR).
 
 The next planned milestone is **v1.3 — The second brain gets depth**: chunk-aware
-private memory, visible source filters, progressive answers, and an explicit
-journal-gap review. It remains grounded only in the current user's own writing;
-external news and market corpora are not part of this release.
+private memory, visible source filters, progressive answers, deliberate external
+note capture, and an explicit journal-gap review. Automatic external news/market
+corpora and a general MCP interface are not part of this release.
 
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 
@@ -612,6 +612,30 @@ cosine if unavailable); on SQLite it uses an in-process numpy cosine search.
 
 These can also be set under `app:` in `config/settings.yaml`. The legacy
 `LM_STUDIO_*` / `OLLAMA_BASE_URL` / `OPENAI_API_KEY` variables are still honored.
+
+### External note ingestion
+
+Automations can feed selected summaries into the private Second Brain without a
+browser JWT. Create an API key in **Settings → API Keys** with **Read + external
+notes** permission, then idempotently upsert a note:
+
+```bash
+curl -X PUT http://localhost:8000/api/v1/notes/external \
+  -H "X-API-Key: otui_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "youtube",
+    "external_id": "dQw4w9WgXcQ",
+    "title": "Video title",
+    "body": "Hermes-generated summary with the source URL and key points.",
+    "tags": ["youtube", "hermes"]
+  }'
+```
+
+Retries with the same `source` and `external_id` update the same owner-scoped
+note. Successful writes schedule the normal incremental Second Brain reindex.
+`source` is limited to 16 URL-safe characters, `external_id` to 38 characters,
+and `body` to 10,000 characters. General MCP tooling remains deferred.
 
 > **Performance:** large models are slow on consumer hardware &mdash; the first
 > analysis for a ticker can take a minute or more (results are then cached). For a
