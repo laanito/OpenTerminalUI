@@ -17,6 +17,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   retrieval to validated private source types while omitted filters retain the
   all-private-writing default. The index status reports per-source chunk counts,
   and the UI shows filter chips and records the exact scope used for each answer.
+- **Incremental Second Brain synthesis** — compatible OpenAI-style providers can
+  stream grounded answer text to the UI over an authenticated NDJSON endpoint.
+  The original non-streaming API remains available, retrieval/model fallbacks stay
+  complete and cited, and interrupted browser streams retry through that stable
+  path rather than leaving a partial answer presented as complete.
 
 ## [1.2.0] - 2026-08-31
 

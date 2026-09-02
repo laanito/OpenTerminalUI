@@ -62,10 +62,11 @@ SQLite/PostgreSQL-compatible retrieval contract.
       notes; status exposes per-source indexed chunk counts; and the Second Brain
       shows selectable source chips plus the evidence scope attached to each
       answer. Omitted filters still search all of the user's own writing.
-- [ ] **Stream synthesis without weakening fallbacks.** Add an incremental answer
-      path for compatible OpenAI-style providers while retaining the existing
-      non-streaming `/api/brain/ask` contract. Retrieval-only and model-unavailable
-      responses must remain complete and honestly labelled.
+- [x] **Stream synthesis without weakening fallbacks.** Compatible OpenAI-style
+      providers stream incremental answers through `/api/brain/ask/stream`, while
+      the existing non-streaming `/api/brain/ask` contract remains unchanged.
+      Retrieval-only and model-unavailable paths emit complete, honestly labelled
+      results, and interrupted browser streams retry through the stable endpoint.
 - [ ] **Add an explicit journal-gap review.** Provide an on-demand review that
       identifies missing rationale, outcomes, emotions, setup labels, or thesis
       updates from the user's own records and links back to the entries to improve.

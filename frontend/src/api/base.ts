@@ -23,6 +23,16 @@ export function setRefreshHandler(handler: RefreshHandler | null): void {
 // Coalesce concurrent refreshes so a burst of 401s triggers only one refresh.
 let refreshInFlight: Promise<string | null> | null = null;
 
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshHandler) return null;
+  try {
+    refreshInFlight = refreshInFlight ?? refreshHandler();
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
+}
+
 api.interceptors.request.use((config) => {
   // A refresh-retry already carries a fresh Authorization header; don't clobber it.
   const headers = config.headers as Record<string, string> | undefined;
@@ -46,21 +56,38 @@ api.interceptors.response.use(
       | undefined;
     if (status === 401 && refreshHandler && config && !config.__isRetry) {
       try {
-        refreshInFlight = refreshInFlight ?? refreshHandler();
-        const newToken = await refreshInFlight;
-        refreshInFlight = null;
+        const newToken = await refreshAccessToken();
         if (newToken) {
           config.__isRetry = true;
           config.headers = { ...(config.headers || {}), Authorization: `Bearer ${newToken}` };
           return api.request(config);
         }
       } catch {
-        refreshInFlight = null;
+        // Fall through to the original 401.
       }
     }
     return Promise.reject(error);
   },
 );
+
+/** Fetch a progressive response with the same bearer/refresh behavior as axios. */
+export async function fetchApi(path: string, init: RequestInit = {}): Promise<Response> {
+  const baseUrl = String(api.defaults.baseURL || "").replace(/\/$/, "");
+  const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+
+  const send = (token: string | null) => {
+    const headers = new Headers(init.headers);
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    return fetch(url, { ...init, headers });
+  };
+
+  let response = await send(accessTokenGetter?.() ?? null);
+  if (response.status === 401 && refreshHandler) {
+    const newToken = await refreshAccessToken();
+    if (newToken) response = await send(newToken);
+  }
+  return response;
+}
 
 export function extractApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {

@@ -6,11 +6,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecondBrainPanel } from "../components/brain/SecondBrainPanel";
 
 const askBrainMock = vi.fn();
+const askBrainStreamMock = vi.fn();
 const fetchBrainStatusMock = vi.fn();
 const reindexBrainMock = vi.fn();
 
 vi.mock("../api/brain", () => ({
   askBrain: (...args: unknown[]) => askBrainMock(...args),
+  askBrainStream: (...args: unknown[]) => askBrainStreamMock(...args),
   fetchBrainStatus: (...args: unknown[]) => fetchBrainStatusMock(...args),
   reindexBrain: (...args: unknown[]) => reindexBrainMock(...args),
 }));
@@ -46,7 +48,7 @@ describe("SecondBrainPanel source filters", () => {
       backend: "numpy",
       embed_model: "nomic-embed-text",
     });
-    askBrainMock.mockImplementation(
+    askBrainStreamMock.mockImplementation(
       async (_question: string, _k: number, sources: string[]) => ({
         answer: "Scoped answer",
         citations: [],
@@ -74,10 +76,11 @@ describe("SecondBrainPanel source filters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ask" }));
 
     await waitFor(() =>
-      expect(askBrainMock).toHaveBeenCalledWith(
+      expect(askBrainStreamMock).toHaveBeenCalledWith(
         "Where does my thesis drift?",
         6,
         ["note", "portfolio", "holding", "transaction"],
+        expect.any(Function),
       ),
     );
     expect(await screen.findByText("Scoped answer")).toBeInTheDocument();
@@ -105,5 +108,38 @@ describe("SecondBrainPanel source filters", () => {
 
     expect(notes).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Evidence scope · Notes")).toBeInTheDocument();
+  });
+
+  it("renders answer text before the stream completes", async () => {
+    let finish: ((value: unknown) => void) | undefined;
+    askBrainStreamMock.mockImplementation(
+      async (_question: string, _k: number, sources: string[], onUpdate: (value: unknown) => void) => {
+        onUpdate({
+          answer: "A partial grounded thought…",
+          citations: [],
+          sources,
+          llm: true,
+        });
+        return await new Promise((resolve) => {
+          finish = resolve;
+        });
+      },
+    );
+    renderPanel();
+    await screen.findByText(/8 indexed/);
+
+    fireEvent.change(screen.getByPlaceholderText(/Ask your second brain/), {
+      target: { value: "What keeps repeating?" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ask" }));
+
+    expect(await screen.findByText("A partial grounded thought…")).toBeInTheDocument();
+    finish?.({
+      answer: "A complete grounded thought.",
+      citations: [],
+      sources: ["note", "journal", "portfolio", "holding", "transaction"],
+      llm: true,
+    });
+    expect(await screen.findByText("A complete grounded thought.")).toBeInTheDocument();
   });
 });

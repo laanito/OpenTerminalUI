@@ -329,6 +329,89 @@ async def test_ask_defaults_to_all_private_sources_without_filtering_store(monke
 
 
 @pytest.mark.asyncio
+async def test_ask_stream_yields_metadata_deltas_and_done(monkeypatch):
+    request = brain_service._SynthesisRequest(
+        sources=["journal"],
+        citations=[{"n": 1, "source": "journal"}],
+        messages=[{"role": "user", "content": "grounded context"}],
+    )
+
+    class StreamingClient:
+        async def chat_stream(self, messages, **kwargs):
+            yield "A grounded "
+            yield "answer [1]."
+
+    async def prepare(*args, **kwargs):
+        return None, request
+
+    monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda: StreamingClient())
+
+    events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
+
+    assert [event["type"] for event in events] == ["start", "delta", "delta", "done"]
+    assert events[0]["sources"] == ["journal"]
+    assert "".join(event.get("text", "") for event in events) == "A grounded answer [1]."
+
+
+@pytest.mark.asyncio
+async def test_ask_stream_replaces_interrupted_output_with_complete_fallback(monkeypatch):
+    from backend.services.llm_client import LLMError
+
+    request = brain_service._SynthesisRequest(
+        sources=["note"],
+        citations=[{"n": 1, "source": "note"}],
+        messages=[{"role": "user", "content": "grounded context"}],
+    )
+
+    class BrokenStreamingClient:
+        async def chat_stream(self, messages, **kwargs):
+            yield "unfinished"
+            raise LLMError("provider disconnected")
+
+    async def prepare(*args, **kwargs):
+        return None, request
+
+    monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda: BrokenStreamingClient())
+
+    events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
+
+    assert [event["type"] for event in events] == ["start", "delta", "result"]
+    fallback = events[-1]["result"]
+    assert fallback["answer"].startswith("I found relevant private writing")
+    assert fallback["citations"] == request.citations
+    assert fallback["sources"] == ["note"]
+    assert fallback["error"] == "llm_unavailable"
+
+
+@pytest.mark.asyncio
+async def test_stream_route_emits_ndjson_without_buffering_headers(monkeypatch):
+    from backend.api.routes.brain import AskRequest, brain_ask_stream
+
+    async def stream(*args, **kwargs):
+        yield {"type": "delta", "text": "hello"}
+        yield {"type": "done"}
+
+    monkeypatch.setattr(brain_service, "ask_stream", stream)
+
+    response = await brain_ask_stream(
+        AskRequest(question="why?", sources=["note"]),
+        db=None,
+        current_user=SimpleNamespace(id="user1"),
+    )
+    body = "".join([chunk async for chunk in response.body_iterator])
+
+    assert response.media_type == "application/x-ndjson"
+    assert response.headers["cache-control"] == "no-cache"
+    assert response.headers["x-accel-buffering"] == "no"
+    assert body.splitlines() == [
+        '{"type":"delta","text":"hello"}',
+        '{"type":"done"}',
+    ]
+
+
+@pytest.mark.asyncio
 async def test_ask_rejects_empty_or_unknown_source_scopes():
     with pytest.raises(ValueError, match="At least one"):
         await brain_service.ask(None, "user1", "anything?", sources=[])

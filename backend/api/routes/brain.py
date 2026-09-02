@@ -7,9 +7,11 @@ and notes and never leaves the machine.
 
 from __future__ import annotations
 
+import json
 from typing import Literal
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -81,6 +83,31 @@ async def brain_ask(
         sources=payload.sources,
     )
     return AskResponse(**result)
+
+
+@router.post("/ask/stream")
+async def brain_ask_stream(
+    payload: AskRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StreamingResponse:
+    """Stream newline-delimited JSON while preserving complete fallback events."""
+
+    async def events():
+        async for event in brain_service.ask_stream(
+            db,
+            current_user.id,
+            payload.question,
+            k=payload.k,
+            sources=payload.sources,
+        ):
+            yield json.dumps(event, separators=(",", ":")) + "\n"
+
+    return StreamingResponse(
+        events(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post("/reindex", response_model=ReindexResponse)

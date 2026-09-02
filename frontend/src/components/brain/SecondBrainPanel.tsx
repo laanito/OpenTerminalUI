@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Brain, RefreshCw, Send, Sparkles } from "lucide-react";
 
 import {
-  askBrain,
+  askBrainStream,
   fetchBrainStatus,
   reindexBrain,
   type BrainCitation,
@@ -82,10 +82,43 @@ function CitationCard({ citation }: { citation: BrainCitation }) {
   );
 }
 
+function ExchangeCard({ exchange }: { exchange: Exchange }) {
+  return (
+    <div className="space-y-2 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold text-terminal-text">
+        <Brain className="h-3.5 w-3.5 text-terminal-accent" />
+        {exchange.question}
+      </p>
+      <p className="whitespace-pre-wrap text-xs leading-relaxed text-terminal-text">
+        {exchange.answer}
+      </p>
+      <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+        Evidence scope · {scopeLabel(exchange.sources)}
+      </p>
+      {exchange.error ? (
+        <p className="text-[10px] uppercase tracking-wide text-terminal-neg">
+          degraded: {exchange.error}
+        </p>
+      ) : null}
+      {exchange.citations.length ? (
+        <div className="space-y-1.5 pt-1">
+          <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+            Sources from your private record
+          </p>
+          {exchange.citations.map((citation) => (
+            <CitationCard key={citation.n} citation={citation} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function SecondBrainPanel() {
   const queryClient = useQueryClient();
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<Exchange[]>([]);
+  const [streamingExchange, setStreamingExchange] = useState<Exchange | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedSources, setSelectedSources] = useState<BrainSource[]>(allSources);
 
@@ -93,7 +126,16 @@ export function SecondBrainPanel() {
 
   const askMutation = useMutation({
     mutationFn: ({ question: q, sources }: { question: string; sources: BrainSource[] }) =>
-      askBrain(q, 6, sources),
+      askBrainStream(q, 6, sources, (response) =>
+        setStreamingExchange({
+          question: q,
+          answer: response.answer,
+          citations: response.citations,
+          sources: response.sources.length ? response.sources : sources,
+          llm: response.llm,
+          error: response.error,
+        }),
+      ),
     onSuccess: (data, variables) => {
       setHistory((prev) => [
         {
@@ -106,10 +148,14 @@ export function SecondBrainPanel() {
         },
         ...prev,
       ]);
+      setStreamingExchange(null);
       setQuestion("");
       void queryClient.invalidateQueries({ queryKey: ["brain", "status"] });
     },
-    onError: (err) => setError(extractApiErrorMessage(err, "Failed to ask your second brain.")),
+    onError: (err) => {
+      setStreamingExchange(null);
+      setError(extractApiErrorMessage(err, "Failed to ask your second brain."));
+    },
   });
 
   const reindexMutation = useMutation({
@@ -122,7 +168,9 @@ export function SecondBrainPanel() {
     const trimmed = q.trim();
     if (!trimmed || askMutation.isPending) return;
     setError(null);
-    askMutation.mutate({ question: trimmed, sources: selectedSources });
+    const sources = [...selectedSources];
+    setStreamingExchange({ question: trimmed, answer: "", citations: [], sources });
+    askMutation.mutate({ question: trimmed, sources });
   };
 
   const status = statusQuery.data;
@@ -251,28 +299,9 @@ export function SecondBrainPanel() {
         ) : null}
 
         <div className="space-y-4">
-          {history.map((ex, idx) => (
-            <div key={idx} className="space-y-2 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-terminal-text">
-                <Brain className="h-3.5 w-3.5 text-terminal-accent" />
-                {ex.question}
-              </p>
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-terminal-text">{ex.answer}</p>
-              <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
-                Evidence scope · {scopeLabel(ex.sources)}
-              </p>
-              {ex.error ? (
-                <p className="text-[10px] uppercase tracking-wide text-terminal-neg">degraded: {ex.error}</p>
-              ) : null}
-              {ex.citations.length ? (
-                <div className="space-y-1.5 pt-1">
-                  <p className="text-[10px] uppercase tracking-wide text-terminal-muted">Sources from your private record</p>
-                  {ex.citations.map((c) => (
-                    <CitationCard key={c.n} citation={c} />
-                  ))}
-                </div>
-              ) : null}
-            </div>
+          {streamingExchange ? <ExchangeCard exchange={streamingExchange} /> : null}
+          {history.map((exchange, idx) => (
+            <ExchangeCard key={idx} exchange={exchange} />
           ))}
         </div>
       </div>
