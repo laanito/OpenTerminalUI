@@ -8,6 +8,7 @@ import {
   fetchBrainStatus,
   reindexBrain,
   type BrainCitation,
+  type BrainSource,
 } from "../../api/brain";
 import { extractApiErrorMessage } from "../../api/base";
 import { TerminalButton } from "../terminal/TerminalButton";
@@ -18,6 +19,7 @@ interface Exchange {
   question: string;
   answer: string;
   citations: BrainCitation[];
+  sources: BrainSource[];
   llm?: boolean | null;
   error?: string | null;
 }
@@ -36,6 +38,21 @@ const sourceLabels: Record<string, string> = {
   holding: "Position",
   transaction: "Transaction",
 };
+
+const sourceOptions: { value: BrainSource; label: string }[] = [
+  { value: "note", label: "Notes" },
+  { value: "journal", label: "Journal" },
+  { value: "portfolio", label: "Portfolio theses" },
+  { value: "holding", label: "Position notes" },
+  { value: "transaction", label: "Transaction notes" },
+];
+
+const allSources = sourceOptions.map((option) => option.value);
+
+function scopeLabel(sources: BrainSource[]) {
+  if (sources.length === sourceOptions.length) return "All private sources";
+  return sources.map((source) => sourceOptions.find((option) => option.value === source)?.label ?? source).join(", ");
+}
 
 function CitationCard({ citation }: { citation: BrainCitation }) {
   const label = sourceLabels[citation.source] ?? citation.source;
@@ -70,14 +87,23 @@ export function SecondBrainPanel() {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<Exchange[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSources, setSelectedSources] = useState<BrainSource[]>(allSources);
 
   const statusQuery = useQuery({ queryKey: ["brain", "status"], queryFn: fetchBrainStatus });
 
   const askMutation = useMutation({
-    mutationFn: (q: string) => askBrain(q),
-    onSuccess: (data, q) => {
+    mutationFn: ({ question: q, sources }: { question: string; sources: BrainSource[] }) =>
+      askBrain(q, 6, sources),
+    onSuccess: (data, variables) => {
       setHistory((prev) => [
-        { question: q, answer: data.answer, citations: data.citations, llm: data.llm, error: data.error },
+        {
+          question: variables.question,
+          answer: data.answer,
+          citations: data.citations,
+          sources: data.sources ?? variables.sources,
+          llm: data.llm,
+          error: data.error,
+        },
         ...prev,
       ]);
       setQuestion("");
@@ -96,7 +122,7 @@ export function SecondBrainPanel() {
     const trimmed = q.trim();
     if (!trimmed || askMutation.isPending) return;
     setError(null);
-    askMutation.mutate(trimmed);
+    askMutation.mutate({ question: trimmed, sources: selectedSources });
   };
 
   const status = statusQuery.data;
@@ -155,6 +181,51 @@ export function SecondBrainPanel() {
           </TerminalButton>
         </form>
 
+        <div className="space-y-1.5 rounded-sm border border-terminal-border/70 bg-terminal-bg/30 p-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+              Evidence scope · {scopeLabel(selectedSources)}
+            </p>
+            <button
+              type="button"
+              aria-pressed={selectedSources.length === sourceOptions.length}
+              onClick={() => setSelectedSources(allSources)}
+              className="text-[10px] text-terminal-accent hover:underline"
+            >
+              Select all
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Private evidence sources">
+            {sourceOptions.map((option) => {
+              const selected = selectedSources.includes(option.value);
+              const count = status?.source_counts[option.value] ?? 0;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setSelectedSources((current) => {
+                      const isSelected = current.includes(option.value);
+                      if (isSelected && current.length === 1) return current;
+                      return isSelected
+                        ? current.filter((source) => source !== option.value)
+                        : [...current, option.value];
+                    })
+                  }
+                  className={`rounded-sm border px-2 py-1 text-[10px] transition-colors ${
+                    selected
+                      ? "border-terminal-accent/60 bg-terminal-accent/10 text-terminal-accent"
+                      : "border-terminal-border text-terminal-muted hover:border-terminal-accent/30"
+                  }`}
+                >
+                  {option.label} · {count}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {history.length === 0 && !askMutation.isPending ? (
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (
@@ -175,7 +246,7 @@ export function SecondBrainPanel() {
         {askMutation.isPending ? (
           <p className="flex items-center gap-2 text-[11px] text-terminal-muted">
             <Sparkles className="h-3.5 w-3.5 animate-pulse text-terminal-accent" />
-            Searching your notes and synthesizing…
+            Searching selected private sources and synthesizing…
           </p>
         ) : null}
 
@@ -187,12 +258,15 @@ export function SecondBrainPanel() {
                 {ex.question}
               </p>
               <p className="whitespace-pre-wrap text-xs leading-relaxed text-terminal-text">{ex.answer}</p>
+              <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+                Evidence scope · {scopeLabel(ex.sources)}
+              </p>
               {ex.error ? (
                 <p className="text-[10px] uppercase tracking-wide text-terminal-neg">degraded: {ex.error}</p>
               ) : null}
               {ex.citations.length ? (
                 <div className="space-y-1.5 pt-1">
-                  <p className="text-[10px] uppercase tracking-wide text-terminal-muted">Sources from your notes</p>
+                  <p className="text-[10px] uppercase tracking-wide text-terminal-muted">Sources from your private record</p>
                   {ex.citations.map((c) => (
                     <CitationCard key={c.n} citation={c} />
                   ))}

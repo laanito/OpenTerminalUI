@@ -1,5 +1,7 @@
 import { api } from "./base";
 
+export type BrainSource = "note" | "journal" | "portfolio" | "holding" | "transaction";
+
 export interface BrainCitation {
   n: number;
   source: string;
@@ -15,6 +17,7 @@ export interface BrainCitation {
 export interface BrainAskResponse {
   answer: string;
   citations: BrainCitation[];
+  sources: BrainSource[];
   indexed_chunks?: number | null;
   llm?: boolean | null;
   error?: string | null;
@@ -22,6 +25,7 @@ export interface BrainAskResponse {
 
 export interface BrainStatus {
   indexed_chunks: number;
+  source_counts: Record<BrainSource, number>;
   backend: string;
   embed_model: string;
 }
@@ -39,8 +43,13 @@ export interface BrainReindexResult {
 // a generous timeout rather than the default 30s.
 const SLOW = { timeout: 180000 } as const;
 
-export async function askBrain(question: string, k = 6): Promise<BrainAskResponse> {
-  const { data } = await api.post<BrainAskResponse>("/brain/ask", { question, k }, SLOW);
+export async function askBrain(
+  question: string,
+  k = 6,
+  sources?: BrainSource[],
+): Promise<BrainAskResponse> {
+  const payload = sources ? { question, k, sources } : { question, k };
+  const { data } = await api.post<BrainAskResponse>("/brain/ask", payload, SLOW);
   return data;
 }
 

@@ -116,6 +116,8 @@ def test_vector_store_only_reembeds_changed_chunks_and_prunes_stale_ones():
             chunk["vector"] = [1.0, 0.0]
         assert store.upsert(db, "user-1", chunks) == len(chunks)
         assert store.pending_chunks(db, "user-1", chunks, dim=2) == []
+        assert store.count_by_source(db, "user-1") == {"note": len(chunks)}
+        assert store.count_by_source(db, "other-user") == {}
 
         missing_vector = db.query(BrainChunkORM).filter_by(user_id="user-1").first()
         missing_vector.vector_json = []
@@ -138,6 +140,50 @@ def test_vector_store_only_reembeds_changed_chunks_and_prunes_stale_ones():
         keep = {(chunk["source"], chunk["ref_id"]) for chunk in shortened}
         assert store.delete_missing(db, "user-1", keep) == len(chunks) - 1
         assert store.count(db, "user-1") == 1
+    finally:
+        db.close()
+        test_engine.dispose()
+
+
+def test_vector_store_filters_numpy_search_by_user_and_source():
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from backend.models.brain import BrainChunkORM
+    from backend.models.user import User
+    from backend.services.brain.vector_store import VectorStore
+
+    test_engine = create_engine("sqlite:///:memory:")
+    User.__table__.create(test_engine)
+    BrainChunkORM.__table__.create(test_engine)
+    db = sessionmaker(bind=test_engine)()
+    store = VectorStore(use_pgvector=False)
+
+    try:
+        for user_id, source, ref_id, vector in (
+            ("user-1", "note", "note-1", [1.0, 0.0]),
+            ("user-1", "journal", "journal-1", [0.9, 0.1]),
+            ("user-2", "note", "private-note", [1.0, 0.0]),
+        ):
+            store.upsert(
+                db,
+                user_id,
+                [
+                    {
+                        "source": source,
+                        "ref_id": ref_id,
+                        "title": ref_id,
+                        "chunk_text": ref_id,
+                        "content_hash": ref_id,
+                        "vector": vector,
+                    }
+                ],
+            )
+
+        matches = store.search(db, "user-1", [1.0, 0.0], sources=["journal"])
+
+        assert [match.chunk.ref_id for match in matches] == ["journal-1"]
+        assert store.count_by_source(db, "user-1") == {"journal": 1, "note": 1}
     finally:
         db.close()
         test_engine.dispose()
@@ -215,6 +261,7 @@ async def test_ask_grounds_answer_and_cites(monkeypatch):
             return 5
 
         def search(self, db, uid, qv, *, k=6, sources=None):
+            captured["sources"] = sources
             return [match]
 
     class FakeEmbedder:
@@ -234,7 +281,12 @@ async def test_ask_grounds_answer_and_cites(monkeypatch):
     monkeypatch.setattr(brain_service, "get_embedding_service", lambda: FakeEmbedder())
     monkeypatch.setattr(brain_service, "get_llm_client", lambda: FakeClient())
 
-    out = await brain_service.ask(None, "user1", "when do I lose money?")
+    out = await brain_service.ask(
+        None,
+        "user1",
+        "when do I lose money?",
+        sources=["journal", "journal"],
+    )
 
     assert out["llm"] is True
     assert "[1]" in out["answer"]
@@ -243,6 +295,90 @@ async def test_ask_grounds_answer_and_cites(monkeypatch):
     assert out["citations"][0]["source"] == "journal"
     assert out["citations"][0]["route"] == "/equity/journal"
     assert out["citations"][0]["n"] == 1
+    assert out["sources"] == ["journal"]
+    assert captured["sources"] == ["journal"]
+
+
+@pytest.mark.asyncio
+async def test_ask_defaults_to_all_private_sources_without_filtering_store(monkeypatch):
+    captured = {}
+
+    class EmptyStore:
+        use_pgvector = False
+
+        def count(self, db, uid):
+            return 1
+
+        def search(self, db, uid, qv, *, k=6, sources=None):
+            captured["sources"] = sources
+            return []
+
+    class FakeEmbedder:
+        dim = 2
+
+        async def embed_query(self, q):
+            return [1.0, 0.0]
+
+    monkeypatch.setattr(brain_service, "make_vector_store", lambda engine, dim: EmptyStore())
+    monkeypatch.setattr(brain_service, "get_embedding_service", lambda: FakeEmbedder())
+
+    out = await brain_service.ask(None, "user1", "anything?")
+
+    assert out["sources"] == list(brain_service.BRAIN_SOURCES)
+    assert captured["sources"] is None
+
+
+@pytest.mark.asyncio
+async def test_ask_rejects_empty_or_unknown_source_scopes():
+    with pytest.raises(ValueError, match="At least one"):
+        await brain_service.ask(None, "user1", "anything?", sources=[])
+    with pytest.raises(ValueError, match="Unknown brain sources: market"):
+        await brain_service.ask(None, "user1", "anything?", sources=["market"])
+
+
+def test_ask_request_validates_source_vocabulary():
+    from pydantic import ValidationError
+
+    from backend.api.routes.brain import AskRequest
+
+    assert AskRequest(question="why?", sources=["note", "journal"]).sources == [
+        "note",
+        "journal",
+    ]
+    with pytest.raises(ValidationError):
+        AskRequest(question="why?", sources=[])
+    with pytest.raises(ValidationError):
+        AskRequest(question="why?", sources=["market"])
+
+
+@pytest.mark.asyncio
+async def test_status_exposes_zero_filled_per_source_counts(monkeypatch):
+    class Store:
+        use_pgvector = False
+
+        def count(self, db, uid):
+            return 4
+
+        def count_by_source(self, db, uid):
+            return {"note": 3, "journal": 1}
+
+    monkeypatch.setattr(brain_service, "make_vector_store", lambda engine, dim: Store())
+    monkeypatch.setattr(
+        brain_service,
+        "get_embedding_service",
+        lambda: SimpleNamespace(dim=2),
+    )
+
+    out = await brain_service.status(None, "user1")
+
+    assert out["indexed_chunks"] == 4
+    assert out["source_counts"] == {
+        "note": 3,
+        "journal": 1,
+        "portfolio": 0,
+        "holding": 0,
+        "transaction": 0,
+    }
 
 
 def test_citation_exposes_original_source_id_and_chunk_index():

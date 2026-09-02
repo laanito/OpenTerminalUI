@@ -57,10 +57,11 @@ SQLite/PostgreSQL-compatible retrieval contract.
       Reindexing embeds only new/changed chunks, persists replacements before
       pruning stale rows, and uses the same storage path for SQLite and
       PostgreSQL/pgvector.
-- [ ] **Make retrieval source-aware and inspectable.** Add validated filters for
-      notes, journal, portfolio theses, holding notes, and transaction notes;
-      expose per-source index counts; and let the user see which scope produced an
-      answer. The default remains all of the user's own writing.
+- [x] **Make retrieval source-aware and inspectable.** The ask API validates
+      filters for notes, journal, portfolio theses, holding notes, and transaction
+      notes; status exposes per-source indexed chunk counts; and the Second Brain
+      shows selectable source chips plus the evidence scope attached to each
+      answer. Omitted filters still search all of the user's own writing.
 - [ ] **Stream synthesis without weakening fallbacks.** Add an incremental answer
       path for compatible OpenAI-style providers while retaining the existing
       non-streaming `/api/brain/ask` contract. Retrieval-only and model-unavailable
