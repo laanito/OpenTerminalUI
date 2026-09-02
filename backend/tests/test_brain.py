@@ -189,6 +189,58 @@ def test_vector_store_filters_numpy_search_by_user_and_source():
         test_engine.dispose()
 
 
+def test_pgvector_search_contract_preserves_owner_source_filter_and_ranking():
+    """Exercise the pgvector branch without requiring a Postgres service in CI."""
+    from backend.services.brain.vector_store import VectorStore
+
+    rows = [SimpleNamespace(id="journal-1"), SimpleNamespace(id="note-1")]
+
+    class Result:
+        def fetchall(self):
+            return [("journal-1", 0.91), ("note-1", 0.72)]
+
+    class Query:
+        def filter(self, *args):
+            return self
+
+        def all(self):
+            return rows
+
+    class DB:
+        executed_sql = ""
+        executed_params = {}
+
+        def execute(self, statement, params):
+            self.executed_sql = str(statement)
+            self.executed_params = params
+            return Result()
+
+        def query(self, model):
+            return Query()
+
+    db = DB()
+    matches = VectorStore(use_pgvector=True)._search_pgvector(
+        db,
+        "owner-1",
+        [1.0, 0.0],
+        2,
+        ["journal", "note"],
+    )
+
+    assert "user_id = :uid" in db.executed_sql
+    assert "source IN" in db.executed_sql
+    assert db.executed_params == {
+        "q": "[1.0,0.0]",
+        "uid": "owner-1",
+        "k": 2,
+        "sources": ("journal", "note"),
+    }
+    assert [(match.chunk.id, match.score) for match in matches] == [
+        ("journal-1", 0.91),
+        ("note-1", 0.72),
+    ]
+
+
 @pytest.mark.asyncio
 async def test_reindex_keeps_old_rows_when_replacement_embedding_fails(monkeypatch):
     from backend.services.brain import indexer

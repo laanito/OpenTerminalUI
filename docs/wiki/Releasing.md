@@ -48,6 +48,25 @@ Confirm the target milestone in [Roadmap](Roadmap.md) is complete, then:
    Confirm **no fabricated data looks live** in the no-keys runs (banners/labels
    present).
 
+### v1.3.0 verification ledger
+
+Release-prep automation covers the v1.3-specific contract independently of the
+runtime matrix above:
+
+| Contract | Evidence |
+|---|---|
+| Stable long-source chunks and incremental pruning | `backend/tests/test_brain.py` |
+| Owner- and source-filtered SQLite/pgvector retrieval | `backend/tests/test_brain.py` |
+| Complete fallback after provider/browser stream interruption | `backend/tests/test_brain.py`, `frontend/src/__tests__/brainStreaming.test.ts` |
+| Visible source counts, filters, and progressive rendering | `frontend/src/__tests__/SecondBrainPanel.sourceFilters.test.tsx` |
+| Write-scoped, owner-scoped external-note upserts | `backend/tests/test_external_note_ingest.py` |
+| On-demand, owner-scoped journal gap review | `backend/tests/test_journal.py`, `frontend/src/__tests__/TradeJournalPage.gaps.test.tsx` |
+
+The Docker Compose file resolves successfully during release prep. The three
+runtime smoke rows still require confirmation on the deployment host after merge
+and before tagging; a sandboxed coding agent without Docker-daemon access must
+leave that step to the host operator rather than marking it passed.
+
 ## Cutting the release
 
 ```bash

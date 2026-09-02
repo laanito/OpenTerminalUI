@@ -311,12 +311,15 @@ Strength engine remain post-v1.2 backlog rather than being implied release gates
 
 ### v1.3 — The second brain gets depth
 
-The **"grow privately"** half returns to the foreground. The current Second Brain
-already answers from a user's journal, theses, and notes with citations, but each
-source record becomes a single embedding, all source types are searched together,
-and synthesis arrives only after the model has finished. v1.3 makes that memory
-useful as it grows without changing its trust boundary: **answers remain grounded
-only in the current user's own writing.**
+Release-prepared as **v1.3.0 (2026-09-02)** — implementation PRs #96–#101;
+tagging follows the host smoke check described in [Releasing](Releasing).
+
+The **"grow privately"** half returns to the foreground. Before v1.3, the Second
+Brain already answered from a user's journal, theses, and notes with citations,
+but each source record became a single embedding, all source types were searched
+together, and synthesis arrived only after the model had finished. v1.3 makes
+that memory useful as it grows without changing its trust boundary: **answers
+remain grounded only in the current user's own writing.**
 
 The release promise is: **the Second Brain can read long thinking in useful
 pieces, show which parts of the private record it searched, answer progressively,

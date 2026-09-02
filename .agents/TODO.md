@@ -1,6 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-09-01**, against `main` at `d0c6d7b` (`v1.2.0`).
+Last audited: **2026-09-02**, against `main` at `cab34ad` (PR #101), plus the
+v1.3.0 release-prep branch.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -78,10 +79,14 @@ SQLite/PostgreSQL-compatible retrieval contract.
       updates and opens the relevant owner-scoped entry for editing. It does not
       run silently, invent missing facts, issue trade directives, or become a
       background notification engine.
-- [ ] **Close the release contract.** Cover chunk boundaries, incremental pruning,
-      source filters, ownership, SQLite/pgvector parity, stream interruption, and
-      frontend fallback behaviour; then update user docs, changelog, versions, and
-      the smoke matrix for v1.3.0.
+- [x] **Close the automated release contract.** Tests cover chunk boundaries,
+      incremental pruning, source filters, ownership, SQLite/pgvector query
+      parity, stream interruption, provider degradation, and frontend fallback
+      behaviour. User docs, changelog, and backend/frontend versions are aligned
+      for v1.3.0.
+- [ ] **Confirm the host smoke matrix and tag v1.3.0.** After this release-prep
+      branch merges, verify the SQLite/keyless and Postgres/pgvector keyless/keyed
+      rows in `docs/wiki/Releasing.md`; then create the tag and GitHub release.
 
 Explicitly out of v1.3: general MCP tooling, automatic external market/news corpus
 indexing, autonomous advice or trading, cross-user retrieval, the Relative

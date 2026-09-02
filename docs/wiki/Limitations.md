@@ -34,7 +34,7 @@ variable.
 
 ## Limitations & honest caveats
 
-These are deliberate, documented gaps as of **v1.2.0** — not bugs. Each is
+These are deliberate, documented gaps as of **v1.3.0** — not bugs. Each is
 surfaced in-UI (degraded banner or explicit label), never silently faked.
 
 - **No live economic-calendar source.** The calendar ships a labelled **sample**
@@ -55,7 +55,7 @@ surfaced in-UI (degraded banner or explicit label), never silently faked.
   fund flows** (ETF *holdings/overlap* do work via Yahoo), **Tape / Time & Sales**.
 - **US / EU equity Level-2 depth has no free source.** The order book shows empty
   + `degraded` for US/EU equities (India has real depth via Kite). A future
-  Interactive Brokers adapter is the planned L2 source after v1.2.
+  Interactive Brokers adapter is the planned L2 source after v1.3.
 - **Crypto 24h liquidations read 0** until the Binance `forceOrder` WebSocket
   runner is wired (there's no REST endpoint); the response is flagged
   `no_live_source`. Crypto order-book depth, funding, and open interest *are* real.
