@@ -1,7 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-09-02**, against `main` at `cab34ad` (PR #101), plus the
-v1.3.0 release-prep branch.
+Last audited: **2026-09-02**, against `main` at `293f911` (PR #102 and tag
+`v1.3.0`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -46,11 +46,11 @@ section and update this file in the same PR when priorities materially change.
   and explicit fresh regeneration of cached AI research.
 - Portfolio and PostgreSQL correctness fixes described in `CHANGELOG.md`.
 
-## v1.3 — The second brain gets depth
+### v1.3.0 — the second brain gets depth
 
-This is the next planned release and its implementation order. Each item should
-remain independently reviewable and preserve the existing private, per-user,
-SQLite/PostgreSQL-compatible retrieval contract.
+Released 2026-09-02. The implementation landed through PRs #96–#101 and release
+preparation through PR #102. The release is tagged and published; there is no
+remaining v1.3 release task.
 
 - [x] **Chunk long sources deterministically.** Long notes and journal text are
       split into bounded, lightly overlapping chunks with stable internal keys;
@@ -84,13 +84,25 @@ SQLite/PostgreSQL-compatible retrieval contract.
       parity, stream interruption, provider degradation, and frontend fallback
       behaviour. User docs, changelog, and backend/frontend versions are aligned
       for v1.3.0.
-- [ ] **Confirm the host smoke matrix and tag v1.3.0.** After this release-prep
-      branch merges, verify the SQLite/keyless and Postgres/pgvector keyless/keyed
-      rows in `docs/wiki/Releasing.md`; then create the tag and GitHub release.
+- [x] **Publish v1.3.0.** The release-prep branch merged, the maintainer
+      authorised the release after the verification sequence, and tag/release
+      `v1.3.0` points to `293f911`.
 
 Explicitly out of v1.3: general MCP tooling, automatic external market/news corpus
 indexing, autonomous advice or trading, cross-user retrieval, the Relative
 Strength engine, paid market-data adapters, and general dashboard coverage work.
+
+## Current handoff boundary
+
+- v1.3.0 is complete; no v1.4 theme or PR sequence has been selected.
+- The next agent should ask the maintainer to choose a product direction before
+  converting the unordered backlog below into a release plan.
+- Hermes-style pipelines can already send selected summaries through
+  `PUT /api/v1/notes/external` with a `read_write` API key and stable
+  source/external ID. Do not design a broad MCP surface unless it is explicitly
+  prioritised; provenance and permission semantics remain the prerequisite.
+- A bilingual v1.3 retrospective was merged in `praderasblog` PR #104. Blog
+  deployment belongs to the host agent and is outside this repository's scope.
 
 ## Other active product work
 
