@@ -26,6 +26,14 @@ def test_cockpit_summary_schema_and_cache():
         assert "risk_summary" in data1
         assert "events" in data1
         assert "news" in data1
+        assert data1["portfolio_snapshot"]["positions"] == []
+        assert data1["portfolio_snapshot"]["pnl"] is None
+        assert data1["risk_summary"]["summary"] == {}
+        assert data1["events"]["events"] == []
+        assert data1["news"]["news"] == []
+        assert data1["degraded"]["reason"] == "no_live_source"
+        assert "AAPL" not in resp1.text
+        assert "FOMC" not in resp1.text
 
         # Check logs for cache miss
         mock_logger.info.assert_called()

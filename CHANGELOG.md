@@ -22,6 +22,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   implementations plus the unreachable Breakout Scanner page and its page-only
   presentation/test files. Active Home, Crypto Workspace, authentication,
   Screener, scanner APIs, and alert infrastructure are unchanged.
+- **Cockpit is an honest compatibility surface** — removed fabricated AAPL,
+  P&L, risk, and FOMC values from its legacy summary API. The endpoint now emits
+  empty/null sections with explicit unavailable reasons, and Cockpit is hidden
+  from navigation, home/about launchers, and command discovery until it becomes
+  an authenticated, owner-scoped aggregation of real services.
 
 ## [1.3.0] - 2026-09-02
 

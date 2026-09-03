@@ -30,6 +30,8 @@ import {
   TerminalPanel,
 } from "../../components/terminal";
 import { AiInsightCard } from "../../components/terminal/AiInsightCard";
+import { DegradedBanner } from "../../components/common/DegradedBanner";
+import type { DegradedInfo } from "../../api/types";
 import { fetchCollectionBriefing } from "../../api/client";
 import {
   useAnalystConsensus,
@@ -46,6 +48,7 @@ import { normalizeTicker } from "../../utils/ticker";
 import { getWorkspacePresetConfig } from "../../workspace/presets";
 
 type CockpitSummary = {
+  degraded?: DegradedInfo;
   portfolio_snapshot?: {
     total_value?: unknown;
     daily_pnl?: unknown;
@@ -674,6 +677,7 @@ export function CockpitDashboard() {
   return (
     <div className="h-full min-h-0 overflow-auto p-2">
       <div className="grid gap-2">
+        <DegradedBanner info={cockpit?.degraded} />
         <section className="rounded-sm border border-terminal-border bg-[radial-gradient(circle_at_top_left,rgba(255,107,0,0.18),transparent_38%),linear-gradient(135deg,rgba(16,22,32,0.98),rgba(10,14,20,0.96))] px-3 py-3">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 space-y-2">

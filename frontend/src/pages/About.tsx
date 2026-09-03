@@ -116,7 +116,6 @@ const MODULE_GROUPS = [
 const QUICK_LINKS = [
   { label: "Market Home", to: "/equity/stocks", badge: "F1" },
   { label: "Security Hub", to: "/equity/security", badge: "SH" },
-  { label: "Cockpit", to: "/equity/cockpit", badge: "CP" },
   { label: "Launchpad", to: "/equity/launchpad", badge: "LP" },
   { label: "Workstation", to: "/equity/chart-workstation", badge: "6" },
   { label: "Crypto", to: "/equity/crypto", badge: "CR" },
