@@ -117,7 +117,10 @@ boundaries should follow the audit rather than being guessed in advance.
       with their narrower limitation.
 - [ ] Remove verified dead/duplicate UI and obsolete backend paths, preserving
       compatibility aliases only when they serve a documented consumer. Add
-      regression coverage for changed navigation and contracts.
+      regression coverage for changed navigation and contracts. The first four
+      orphan pages and the page-only Breakout Scanner component/test island have
+      been removed; experimental destinations and backend duplicates remain to
+      be adjudicated.
 - [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;

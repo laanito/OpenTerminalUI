@@ -22,7 +22,7 @@ does not by itself make a feature useful enough for primary navigation.
 - FastAPI publishes **396 paths / 442 operations / 86 tag families**.
 - The equity sidebar previously advertised 43 destinations. The v1.4 baseline
   retains 38 and hides five standalone empty-data products.
-- The repository contains 73 backend route modules, 112 frontend page
+- The repository contained 73 backend route modules, 112 frontend page
   files, and 31 parked Playwright specs. These counts describe audit scale, not
   release gates.
 
@@ -107,7 +107,7 @@ Routes not shown in the sidebar are classified by family:
 | Model/portfolio labs and algorithm framework | **experimental** | Advanced research surfaces, not stable v1 core contracts |
 | Legacy top-level redirects | **hidden** | Compatibility aliases into `/equity`, `/backtesting`, and portfolio-lab routes |
 
-## Verified removal candidates
+## Removed orphan surfaces
 
 Static import/reachability inspection found four page implementations absent from
 `App.tsx` and production imports:
@@ -117,8 +117,10 @@ Static import/reachability inspection found four page implementations absent fro
 - `frontend/src/pages/Auth/LoginPage.tsx` (the app uses `pages/LoginPage.tsx`)
 - `frontend/src/pages/BreakoutScanner.tsx` (test-only, with no registered route)
 
-They are classified **remove candidates**, not deleted in this inventory change.
-The removal PR must verify assets, exports, tests, and lazy imports independently.
+They were removed in the follow-up v1.4 cleanup. The breakout page's dedicated
+test and four page-only presentation components were removed with it; scanner
+APIs, shared types, alert infrastructure, and the registered Screener workflows
+remain. The active frontend page count is now 108.
 
 ## API-family decisions
 
@@ -137,13 +139,11 @@ does not erase a narrower limitation.
 
 ## Remaining v1.4 sequence
 
-1. Remove the four verified orphan candidates and identify assets/tests that
-   became unreachable with them.
-2. Review each experimental primary destination and either promote it with a
+1. Review each experimental primary destination and either promote it with a
    stated contract, gate it, hide it, or remove it.
-3. Rationalize duplicate API generations and compatibility redirects without
+2. Rationalize duplicate API generations and compatibility redirects without
    breaking documented consumers.
-4. Align `Limitations.md` and user-facing navigation/configuration copy with the
+3. Align `Limitations.md` and user-facing navigation/configuration copy with the
    final retained surface.
 
 Do not turn provider acquisition, broad MCP, or cross-market feature development
