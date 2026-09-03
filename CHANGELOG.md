@@ -18,6 +18,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   until real production data paths exist. Their direct routes and APIs remain
   compatible and honestly degraded; configured Yield Curve and DOM workflows
   remain visible.
+- **Orphan frontend cleanup** — removed superseded Home, Crypto, and Login page
+  implementations plus the unreachable Breakout Scanner page and its page-only
+  presentation/test files. Active Home, Crypto Workspace, authentication,
+  Screener, scanner APIs, and alert infrastructure are unchanged.
 
 ## [1.3.0] - 2026-09-02
 
