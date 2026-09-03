@@ -4,8 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-02**, against `main` at `293f911` (PR #102 and tag
-`v1.3.0`).
+Last audited: **2026-09-03**, against `main` at `c12ddc6` (PR #103; latest
+release remains `v1.3.0` at `293f911`).
 
 ## Read order and sources of truth
 
@@ -44,6 +44,33 @@ investing terminal with these priorities:
 The product principle is **integrity over feature count**. A visible empty or
 degraded state is preferable to a convincing but invented number.
 
+The long-term product is a private, AI-friendly, multi-asset decision terminal:
+it should connect worldwide market context, fundamentals, technicals, sentiment,
+portfolio exposure, and the user's own research; support decisions across
+investing, trading, and scalping; and eventually interact with brokers through
+strictly controlled execution. The major-generation targets are:
+
+1. **v1 — coherent, honest fork:** one product identity, intentional surface
+   area, accurate contracts and docs, and no accidental inherited defaults.
+2. **v2 — cross-market intelligence:** markets and asset classes explain one
+   another rather than existing as isolated screens.
+3. **v3 — multi-dimensional validation:** fundamentals, technicals, sentiment,
+   regime, portfolio context, and private evidence converge on an opportunity.
+4. **v4 — decision lifecycle:** evidence, thesis, decision, position, outcome,
+   and review form one traceable loop.
+5. **v5 — multiple horizons and instruments:** investing, swing trading,
+   intraday/scalping, spot, and leveraged products have coherent workflows and
+   risk semantics.
+6. **v6 — agent-native terminal:** external models receive stable, scoped APIs
+   for reading, investigating, ingesting, and proposing.
+7. **v7 — controlled execution:** broker sync progresses from read-only and
+   paper workflows to approval-gated, auditable, bounded automation.
+
+These are dominant product promises, not silos. Existing journal, derivatives,
+and Hermes ingestion work are foundations for later generations, not evidence
+that those generations are complete. `docs/wiki/Roadmap.md` is canonical for the
+release-level interpretation and safety boundaries.
+
 ## Current release and development state
 
 - Latest release: **v1.3.0**, tagged at `293f911` and published on 2026-09-02.
@@ -55,9 +82,11 @@ degraded state is preferable to a convincing but invented number.
   work, release verification, tag, and GitHub release are complete. The release
   gate recorded 817 backend tests and 296 frontend tests, plus compile, build,
   production-mock, and Compose checks.
-- There is **no committed v1.4 theme or active implementation slice** at this
-  handoff. Select the next item with the maintainer from `TODO.md`; do not infer
-  that the first unordered backlog item is assigned.
+- The remaining v1 arc is now **fork consolidation**: v1.4 audits and prunes the
+  exposed surface, v1.5 makes fork identity/defaults/contracts consistent, and
+  v1.6 establishes the stable baseline before v2 cross-market intelligence.
+  `TODO.md` records the release gates; individual implementation PRs still need
+  to be selected and scoped from that sequence.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

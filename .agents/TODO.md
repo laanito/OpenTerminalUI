@@ -1,7 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-09-02**, against `main` at `293f911` (PR #102 and tag
-`v1.3.0`).
+Last audited: **2026-09-03**, against `main` at `c12ddc6` (PR #103; latest
+release remains `v1.3.0` at `293f911`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -92,11 +92,74 @@ Explicitly out of v1.3: general MCP tooling, automatic external market/news corp
 indexing, autonomous advice or trading, cross-user retrieval, the Relative
 Strength engine, paid market-data adapters, and general dashboard coverage work.
 
+## Remaining v1 plan — consolidate the fork
+
+The maintainer selected **a coherent, honest fork** as the v1 completion promise.
+Do not pull unrelated feature ideas into v1 merely because they are listed in the
+continuous backlog. The work proceeds in three minor-release arcs; exact PR
+boundaries should follow the audit rather than being guessed in advance.
+
+### v1.4 — surface truth
+
+- [ ] Inventory every navigable frontend destination and public backend API
+      family, including duplicated, orphaned, compatibility, and experimental
+      paths.
+- [ ] Classify each exposed feature as **supported**, **configuration-gated**,
+      **experimental**, **hidden**, or **remove**. Record the user-visible contract
+      and owner for every retained degraded surface.
+- [ ] Decide each current stub explicitly: Relative Strength, bonds/fixed-income
+      screening, hotlists, insider ingestion, ETF flows, tape/time-and-sales,
+      US/EU Level-2, crypto liquidations, and the sample economic calendar. A
+      decision may be to implement, gate, hide, or remove; v1 does not require
+      buying or inventing a feed.
+- [ ] Remove verified dead/duplicate UI and obsolete backend paths, preserving
+      compatibility aliases only when they serve a documented consumer. Add
+      regression coverage for changed navigation and contracts.
+- [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
+
+**Exit:** every reachable page and API is intentional and truthfully classified;
+the primary navigation does not advertise an unexplained empty product.
+
+### v1.5 — fork consistency
+
+- [ ] Replace accidental upstream repository identity, stale hard-coded versions,
+      clone links, and obsolete screenshots/copy across the app and documentation.
+- [ ] Audit inherited India-first defaults in screener, backtesting, charts,
+      reports, and model tooling. Keep intentional NSE/BSE/F&O support, but make
+      the configured market or the global fork default drive generic workflows.
+- [ ] Finish instrument-aware currency and locale cleanup. Never relabel an
+      unconverted value or apply an India-specific grouping format globally.
+- [ ] Reconcile architecture, installation, contribution, API, configuration,
+      and release documentation with the actual PostgreSQL-first application and
+      current commands.
+- [ ] Remove or clearly document stale compatibility code and historical design
+      documents that otherwise look authoritative.
+
+**Exit:** a new human or agent encounters one fork identity and one accurate set
+of defaults, commands, contracts, and sources of truth.
+
+### v1.6 — stable baseline
+
+- [ ] Rehabilitate the valuable Playwright journeys using deterministic fixtures
+      and seeded authentication, then restore an appropriate browser smoke set to
+      the regular gate.
+- [ ] Profile and reduce initial frontend load/chunk cost and the most expensive
+      news, AI, and market-data paths without weakening correctness or fallbacks.
+- [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
+      scanner, and chart regression coverage identified by the v1.4 audit.
+- [ ] Complete the public API reference, supported/configured/degraded feature
+      matrix, clean-install verification, and final v1 release checklist.
+- [ ] Convert the accepted v2 cross-market-intelligence promise into concrete
+      user journeys and contracts only after the consolidated v1 surface is known.
+
+**Exit:** the retained fork installs, documents, navigates, degrades, and tests as
+one dependable product; v2 can build across intentional interfaces rather than
+inherited ambiguity.
+
 ## Current handoff boundary
 
-- v1.3.0 is complete; no v1.4 theme or PR sequence has been selected.
-- The next agent should ask the maintainer to choose a product direction before
-  converting the unordered backlog below into a release plan.
+- v1.3.0 is complete. The next product work starts with the v1.4 inventory and
+  classification; do not begin by arbitrarily implementing the first data stub.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly
@@ -104,10 +167,11 @@ Strength engine, paid market-data adapters, and general dashboard coverage work.
 - A bilingual v1.3 retrospective was merged in `praderasblog` PR #104. Blog
   deployment belongs to the host agent and is outside this repository's scope.
 
-## Other active product work
+## Other product work
 
 These are the clearest remaining items from the current roadmap and code state.
-They are not ordered unless a maintainer explicitly assigns priority.
+They are inputs to the v1.4 classification or later product generations, not an
+ordered implementation queue.
 
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
