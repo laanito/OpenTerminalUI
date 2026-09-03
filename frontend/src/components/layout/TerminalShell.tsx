@@ -46,7 +46,7 @@ const PRESET_OPTIONS: Array<{ id: WorkspacePreset; label: string }> = [
   { id: "quant", label: "Quant" },
   { id: "pm", label: "PM" },
   { id: "risk", label: "Risk" },
-  { id: "ops", label: "Ops" },
+  { id: "ops", label: "System" },
 ];
 
 type RightRailSection = {

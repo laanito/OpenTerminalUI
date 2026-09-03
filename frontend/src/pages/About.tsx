@@ -104,8 +104,6 @@ const MODULE_GROUPS = [
     items: [
       "Local administrator plugin loader",
       "Alert engine",
-      "OMS / compliance",
-      "Ops dashboard",
       "Provider registry",
       "Auth + account flows",
       "Export pathways",
@@ -127,7 +125,6 @@ const QUICK_LINKS = [
   { label: "Risk Dashboard", to: "/equity/risk", badge: "RSK" },
   { label: "Paper Trading", to: "/equity/paper", badge: "P" },
   { label: "Breakout Scanner", to: "/equity/screener", badge: "SCAN" },
-  { label: "Ops", to: "/equity/ops", badge: "OPS" },
 ] as const;
 
 const COMMAND_SURFACES = [

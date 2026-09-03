@@ -366,12 +366,12 @@ function EquityRightRail() {
 
         {isOpsRoute ? (
           <>
-            <TerminalPanel title="Feed Health" subtitle="Ops snapshot" bodyClassName="space-y-1 text-[11px]">
+            <TerminalPanel title="Feed Health" subtitle="Measured snapshot" bodyClassName="space-y-1 text-[11px]">
               {opsFeedQuery.isLoading ? (
                 <div className="text-terminal-muted">Loading feed health...</div>
               ) : (
                 <>
-                  <div className="flex justify-between"><span className="text-terminal-muted">State</span><span>{String(opsFeed.feed_state || "-")}</span></div>
+                  <div className="flex justify-between"><span className="text-terminal-muted">US Provider</span><span>{String(opsFeed.us_primary_provider || "none")}</span></div>
                   <div className="flex justify-between"><span className="text-terminal-muted">Kite Stream</span><span>{String(opsFeed.kite_stream_status || "-")}</span></div>
                   <div className="flex justify-between"><span className="text-terminal-muted">WS Clients</span><span>{String(opsFeed.ws_connected_clients || 0)}</span></div>
                 </>
@@ -399,7 +399,7 @@ function EquityRightRail() {
 
         {isOmsRoute ? (
           <>
-            <TerminalPanel title="OMS Orders" subtitle="Execution summary" bodyClassName="space-y-1 text-[11px]">
+            <TerminalPanel title="OMS Orders" subtitle="Internal simulations" bodyClassName="space-y-1 text-[11px]">
               {omsOrdersQuery.isLoading ? (
                 <div className="text-terminal-muted">Loading OMS orders...</div>
               ) : !omsOrders.length ? (

@@ -125,7 +125,7 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 <p align="center">
   <img src="assets/screenshots/cockpit.png" alt="Cockpit" width="900" />
 </p>
-<p align="center"><em>Cockpit Priority Stack — a ranked daily brief across portfolio risk, alerts, catalysts, movers, and model signals.</em></p>
+<p align="center"><em>Legacy Cockpit compatibility view — retained by direct URL while its aggregator is rebuilt around authenticated, real services.</em></p>
 
 <p align="center">
   <img src="assets/screenshots/risk-dashboard.png" alt="Risk Dashboard" width="900" />
@@ -260,9 +260,9 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **Attribution Analysis** &mdash; top contributors/detractors, worst drawdowns, rebalance log
 - **Correlation Matrices** &mdash; cross-asset cluster analysis
 
-### Cockpit, Workspaces & Intelligence
+### Workspaces & Intelligence
 
-- **Cockpit Priority Stack** &mdash; a ranked daily brief across portfolio risk, alerts, catalysts, news shocks, top movers, and model signals
+- **Cockpit Compatibility View** &mdash; retained by direct URL while its legacy aggregator remains empty and explicitly degraded; it is not part of primary navigation
 - **Unified Intelligence Timeline** &mdash; news, alerts, events, insider activity, earnings, corporate actions, model signals, and backtest runs in one chronological feed
 - **Exposure Heatmaps** &mdash; sector, factor, currency, and correlation exposure maps across Home, Cockpit, and Risk
 - **Workspace Presets** &mdash; Trader / Quant / PM / Risk / Ops presets that reconfigure dashboards, panels, and quick links
@@ -292,10 +292,9 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 
 ### Operations & Compliance
 
-- **OMS** &mdash; order management with restricted list enforcement and audit trail
-- **Ops Dashboard** &mdash; feed health monitoring, kill switches, data quality panels
+- **Internal OMS Simulator** &mdash; user-scoped quote-backed simulated fills; it does not route broker orders or update Paper portfolios
+- **System Monitor** &mdash; a hidden compatibility view of measured feed health, kill-switch state, and data quality; global controls are administrator-only
 - **Model Governance** &mdash; model registry, approval workflows, risk limit monitoring
-- **Cockpit** &mdash; executive dashboard aggregating portfolio, signals, risk, and events
 
 ### News & Sentiment
 

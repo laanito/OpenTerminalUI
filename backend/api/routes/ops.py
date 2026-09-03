@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db
-from backend.auth.deps import get_current_user
+from backend.auth.deps import get_current_user, require_role
 from backend.models import OpsKillSwitchORM, User
 from backend.oms.service import log_audit
 from backend.services.marketdata_hub import get_marketdata_hub
@@ -30,9 +30,7 @@ async def feed_health(_: User = Depends(get_current_user)) -> dict[str, Any]:
     snap = await hub.metrics_snapshot()
     ws_clients = int(snap.get("ws_connected_clients", 0))
     ws_subs = int(snap.get("ws_subscriptions", 0))
-    freshness_state = "ok" if ws_clients >= 0 else "unknown"
     return {
-        "feed_state": freshness_state,
         "ws_connected_clients": ws_clients,
         "ws_subscriptions": ws_subs,
         "kite_stream_status": hub.kite_stream_status(),
@@ -72,7 +70,7 @@ def get_kill_switches(
 def set_kill_switch(
     payload: KillSwitchRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role("admin")),
 ) -> dict[str, Any]:
     row = db.query(OpsKillSwitchORM).filter(OpsKillSwitchORM.scope == payload.scope).first()
     if row is None:

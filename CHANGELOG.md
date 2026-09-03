@@ -32,6 +32,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   lifecycle endpoints to administrators, and fixed rediscovery so it no longer
   silently forgets enabled runtime state. The compatibility page now states that
   host-installed plugins are trusted code and that no marketplace exists.
+- **OMS and Ops are honest compatibility tools** — removed them from general
+  navigation and replaced the fabricated operational console with measured,
+  read-only feed, data-quality, and kill-switch state. OMS now identifies itself
+  as an internal simulator, returns only the caller's orders and audit events,
+  attributes fill audits to that user, and reserves global restrictions and kill
+  switches for administrators.
 
 ## [1.3.0] - 2026-09-02
 

@@ -21,7 +21,6 @@ export type CommandFunctionCode =
   | "TOP"
   | "BT"
   | "SET"
-  | "OPS"
   | "LAUNCH"
   | "COMP"
   | "YCURVE"
@@ -118,7 +117,6 @@ export const COMMAND_FUNCTIONS: CommandFunctionSpec[] = [
   { code: "TOP", label: "Top Stories", description: "Open top market stories", aliases: ["HEADLINES"] },
   { code: "BT", label: "Backtesting", description: "Open backtesting workspace", aliases: ["BACKTEST"] },
   { code: "SET", label: "Settings", description: "Open settings", aliases: ["SETTINGS"] },
-  { code: "OPS", label: "Ops Dashboard", description: "Open operations dashboard", aliases: ["OPERATIONS"] },
   { code: "LAUNCH", label: "Launchpad", description: "Open multi-panel launchpad", aliases: ["LP", "LAUNCHPAD"] },
   { code: "COMP", label: "Split Compare", description: "Open split-screen comparison", aliases: ["COMPARE"] },
   { code: "YCURVE", label: "Yield Curve", description: "Open US Treasury yield curve dashboard", aliases: ["GC", "YIELD", "CURVE"] },
@@ -451,9 +449,6 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
       case "SET":
         navigate("/equity/settings");
         return { ok: true, target: "/equity/settings" };
-      case "OPS":
-        navigate("/equity/ops");
-        return { ok: true, target: "/equity/ops" };
       case "LAUNCH":
         navigate("/equity/launchpad");
         return { ok: true, target: "/equity/launchpad" };

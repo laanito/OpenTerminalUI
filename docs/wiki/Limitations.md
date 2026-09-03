@@ -63,6 +63,11 @@ surfaced in-UI (degraded banner or explicit label), never silently faked.
   `^NSEI`, …) shows price / chart / performance + notes; issuer fundamentals
   (P/E, financials, peers, shareholding) are intentionally hidden because they
   don't apply to an index.
+- **OMS is an internal simulator, not broker execution.** Its quote-backed fills
+  are user-scoped records and do not update Paper portfolios or reach a broker.
+  The OMS and Ops pages are hidden compatibility routes; the Ops route shows
+  measured system state only. Global restricted-list and kill-switch mutations
+  require an administrator.
 
 ## Upgrade notes
 

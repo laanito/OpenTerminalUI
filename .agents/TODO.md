@@ -123,8 +123,10 @@ boundaries should follow the audit rather than being guessed in advance.
       returns explicit empty/degraded sections instead of fabricated portfolio,
       risk, and event values. Plugins are also hidden from general discovery and
       their process-wide lifecycle is admin-only; repeated discovery now preserves
-      enabled runtime state. The remaining experimental destinations and backend
-      duplicates remain to be adjudicated.
+      enabled runtime state. OMS and Ops are hidden compatibility tools: invented
+      operational panels were removed, OMS data/audit are user-scoped, and global
+      compliance controls are admin-only. The remaining experimental destinations
+      and backend duplicates remain to be adjudicated.
 - [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
