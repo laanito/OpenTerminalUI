@@ -13,6 +13,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **GitHub Pages deployment maintenance** — upgraded the Pages workflow to
+  Node.js 24-compatible action majors, removed an unauthorized attempt to enable
+  Pages with the default workflow token, and made workflow changes trigger a
+  deployment so they are exercised after merge.
 - **Primary navigation reflects usable products** — Bonds screening, Hotlists,
   standalone Insider Activity, Relative Strength, and standalone Tape are hidden
   until real production data paths exist. Their direct routes and APIs remain
