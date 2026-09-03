@@ -35,8 +35,6 @@ export type CommandFunctionCode =
   | "CMDTY"
   | "FX"
   | "ETFA"
-  | "BOND"
-  | "HOT"
   | "TCA"
   | "COMM"
   | "DEPTH"
@@ -135,8 +133,6 @@ export const COMMAND_FUNCTIONS: CommandFunctionSpec[] = [
   { code: "CMDTY", label: "Commodities", description: "Open commodity market view", aliases: ["COMMODITY", "GOLD", "OIL"] },
   { code: "FX", label: "Forex", description: "Open FX market view", aliases: ["FOREX", "CURRENCY"] },
   { code: "ETFA", label: "ETF Analytics", description: "Open ETF market view", aliases: ["ETF"] },
-  { code: "BOND", label: "Bonds", description: "Open bond and yield views", aliases: ["CREDIT", "FIXED"] },
-  { code: "HOT", label: "Hotlists", description: "Open movers and hotlists", aliases: ["MOVERS", "GAINERS", "LOSERS", "HOTLISTS"] },
   { code: "TCA", label: "Transaction Costs", description: "Open TCA workflow", aliases: ["COST", "SLIPPAGE"] },
   { code: "COMM", label: "Community", description: "Open community and idea flow", aliases: ["IDEAS", "SOCIAL"] },
   { code: "DEPTH", label: "Market Depth", description: "Open market depth workflow", aliases: ["DOM", "L2", "BOOK"] },
@@ -422,12 +418,6 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
         }
         navigate("/equity/etf-analytics");
         return { ok: true, target: "/equity/etf-analytics" };
-      case "BOND":
-        navigate("/equity/bonds");
-        return { ok: true, target: "/equity/bonds" };
-      case "HOT":
-        navigate("/equity/hotlists");
-        return { ok: true, target: "/equity/hotlists" };
       case "TCA":
         navigate(mod0 && looksLikeTicker(mod0) ? `/equity/portfolio?ticker=${encodeURIComponent(mod0)}&view=tca` : "/equity/portfolio?view=tca");
         return { ok: true, target: "/equity/portfolio" };

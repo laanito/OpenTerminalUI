@@ -412,6 +412,10 @@ verified dead or duplicate paths are removed, compatibility paths are retained
 only for documented consumers, navigation/contracts receive regression coverage,
 and Limitations matches what remains reachable.
 
+The audited classification and live follow-up sequence are maintained in
+[Product surface inventory](Surface-Inventory.md). Its checked-in API registry
+must remain aligned with the generated OpenAPI tags.
+
 **Exit condition:** every reachable page and API is intentional and truthfully
 classified, and primary navigation does not advertise an unexplained empty
 product.

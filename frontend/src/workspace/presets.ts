@@ -24,7 +24,7 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
     label: "Trader",
     landing: {
       headline: "Trading Desk",
-      description: "Fast chart, tape, watchlist, alerts, and execution paths for intraday decisions.",
+      description: "Fast charts, watchlists, alerts, and execution paths for intraday decisions.",
       primaryRoute: "/equity/chart-workstation",
       primaryLabel: "Open Workstation",
     },
@@ -36,7 +36,6 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
       { to: "/equity/watchlist", label: "Watchlist" },
       { to: "/equity/alerts", label: "Alerts" },
       { to: "/equity/paper", label: "Paper" },
-      { to: "/equity/tape", label: "Tape" },
     ],
     launchpadLayoutId: "preset-trader",
     launchpadPanels: [
@@ -64,7 +63,6 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
       { to: "/backtesting/model-lab", label: "Model Lab" },
       { to: "/equity/factors", label: "Factors" },
       { to: "/equity/chart-workstation", label: "Charts" },
-      { to: "/equity/rs", label: "RS" },
     ],
     launchpadLayoutId: "preset-quant",
     launchpadPanels: [

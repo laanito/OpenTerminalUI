@@ -34,9 +34,10 @@ Confirm the target milestone in [Roadmap](Roadmap.md) is complete, then:
 3. **Docs** — README quickstart verified end-to-end; the out-of-the-box-vs-keys
    matrix, Limitations, and upgrade notes (e.g. the pgvector image swap) current
    in [Limitations](Limitations) (mirrored condensed in the README).
-4. **Green CI** — `ci.yml` must pass: backend compile, mock-detection guard,
-   `pytest` + coverage gate, frontend build, and Vitest. Playwright is currently
-   manual-only while its pre-1.0 fixtures are rehabilitated.
+4. **Green CI** — `ci.yml` must pass: backend compile, mock-detection and
+   surface-inventory guards, `pytest` + coverage gate, frontend build, and
+   Vitest. Playwright is currently manual-only while its pre-1.0 fixtures are
+   rehabilitated.
 5. **Smoke matrix** — manually verify the core flows on each combination:
 
    | DB | Keys | Must work |

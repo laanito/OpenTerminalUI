@@ -16,6 +16,9 @@ release remains `v1.3.0` at `293f911`).
 5. `README.md`, `CHANGELOG.md`, and `docs/wiki/Roadmap.md` for product-level
    detail and release history.
 
+During v1.4, also read `docs/wiki/Surface-Inventory.md` and its machine-readable
+`docs/surface-inventory.json` before adding, removing, or advertising a route.
+
 The code and recent Git history win when prose disagrees. Some older wiki pages
 and plans describe historical architecture. In particular,
 `docs/wiki/Architecture.md` still contains pre-1.0 statements such as SQLite
@@ -183,13 +186,15 @@ The PR CI gate uses Python 3.11 and Node 22. It runs:
 ```bash
 python -m compileall backend
 python scripts/check_no_production_mocks.py
+PYTHONPATH=. python scripts/check_surface_inventory.py
 PYTHONPATH=. pytest backend/tests -q --cov=backend --cov-fail-under=45
 cd frontend && npm ci && npm run build && npx vitest run
 ```
 
-For an existing checkout with dependencies installed, `make gate` runs backend
-compile/tests and the frontend build. Run focused tests during development, then
-the broadest relevant checks before handing off.
+For an existing checkout with dependencies installed, `make gate` runs the
+surface-inventory guard, backend compile/tests, and the frontend build. Run
+focused tests during development, then the broadest relevant checks before
+handing off.
 
 Playwright is currently **manual-only**, not part of every PR gate. Several E2E
 specs predate the 1.0 integrity/de-India changes and need rewriting; do not assume

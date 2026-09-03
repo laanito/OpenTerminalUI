@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: setup setup-backend setup-frontend test test-backend build build-frontend gate
+.PHONY: setup setup-backend setup-frontend test test-backend build build-frontend check-surface gate
 
 setup: setup-backend setup-frontend
 
@@ -20,4 +20,7 @@ build: build-frontend
 build-frontend:
 	cd frontend && npm run build
 
-gate: test-backend build-frontend
+check-surface:
+	PYTHONPATH=. backend/.venv/bin/python scripts/check_surface_inventory.py
+
+gate: check-surface test-backend build-frontend

@@ -42,8 +42,14 @@ const HUB_TABS: TerminalTabItem[] = [
   { id: "estimates", label: "Estimates" },
   { id: "peers", label: "Peers" },
   { id: "esg", label: "ESG" },
-  { id: "tape", label: "Tape" },
-  { id: "insider", label: "Insider" },
+];
+
+const HUB_TAB_IDS: readonly HubTab[] = [
+  ...HUB_TABS.map((item) => item.id as HubTab),
+  // Compatibility-only tabs: accepted in old links, but not advertised while
+  // their production data families are classified hidden by the v1.4 audit.
+  "tape",
+  "insider",
 ];
 
 function MiniRangeBar({ low, high, current }: { low: number | null; high: number | null; current: number | null }) {
@@ -111,7 +117,7 @@ export function SecurityHubPage() {
   const loadTicker = useStockStore((s) => s.load);
   const activeTicker = (tickerParam || searchParams.get("ticker") || storeTicker || "AAPL").toUpperCase();
   const tabFromUrl = (searchParams.get("tab") || "overview").toLowerCase() as HubTab;
-  const tab = HUB_TABS.some((t) => t.id === tabFromUrl) ? tabFromUrl : "overview";
+  const tab = HUB_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : "overview";
   const [newsSelectedIndex, setNewsSelectedIndex] = useState(0);
   const [compareSymbols, setCompareSymbols] = useState<string[]>(() => {
     const comp = searchParams.get("compare");
