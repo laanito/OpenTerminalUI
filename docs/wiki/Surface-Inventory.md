@@ -21,7 +21,7 @@ does not by itself make a feature useful enough for primary navigation.
 
 - FastAPI publishes **396 paths / 442 operations / 86 tag families**.
 - The equity sidebar previously advertised 43 destinations. The current v1.4
-  state retains 34 and hides nine incomplete, unsafe-as-general-UI, or
+  state retains 32 and hides 11 incomplete, unsafe-as-general-UI, or
   empty-data products.
 - The repository contained 73 backend route modules, 112 frontend page
   files, and 31 parked Playwright specs. These counts describe audit scale, not
@@ -44,10 +44,10 @@ The following retained destinations are **supported**:
 
 | Area | Destinations |
 |---|---|
-| Market and research | Market, Security Hub, Forex, Rotation, Crypto, Compare, Screener, Heatmap, Dividends, News |
+| Market and research | Market, Security Hub, Forex, Rotation, Crypto, Compare, Screener, Heatmap, Dividends, News, ETF Analytics |
 | Workspaces | Launchpad, Workstation, Multi-Timeframe Analysis |
 | Private record | Portfolio, Paper, Position Sizer, Journal, Second Brain, Watchlist, Alerts |
-| Risk and administration | Risk, Correlation, Settings, About, Backtesting |
+| Risk, quant, and administration | Risk, Correlation, Statistical Lab, Pair Trading, Settings, About, Backtesting |
 
 Configuration-gated destinations remain visible because they provide a useful
 contract in a documented environment:
@@ -57,11 +57,14 @@ contract in a documented environment:
 | Commodities | Live quotes require FMP; failures return explicit degraded data |
 | Yield Curve | Live macro series require FRED; no fabricated curve is returned |
 | DOM | Real depth exists for Binance crypto and configured India/Kite paths; unsupported US/EU equity depth remains empty and degraded |
+| Economics | Live macro indicators require FRED; the calendar remains explicitly labelled sample data until a live forward-calendar source is selected |
 
-Experimental destinations remain visible for v1.4 evaluation: Economics, ETF
-Analytics, Portfolio Lab, Statistical Lab, Pair Trading, and Model Lab. Their
-final keep/gate/hide decision must be made before the v1.4 exit gate;
-`experimental` is not a permanent substitute for a contract.
+No unresolved experimental destination remains in primary navigation. ETF
+Analytics retains its keyless Yahoo holdings and overlap contract while marking
+the unavailable flows panel degraded. Statistical Lab and Pair Trading are
+stateless, keyless research computations over real historical prices. Model Lab
+and Portfolio Lab remain available only as compatibility routes because their
+saved definitions and runs are installation-wide rather than owner-scoped.
 
 ## Hidden compatibility surfaces
 
@@ -79,6 +82,8 @@ the audit, but they are removed from primary navigation now:
 | Plugins | **hidden** | A deliberate operator workflow and trust model exist for installing and running host Python extensions; lifecycle APIs remain admin-only |
 | OMS | **hidden** | The internal simulator is either consolidated into Paper trading or gains an explicit broker/execution contract; its global restricted list remains admin-only |
 | Ops | **hidden** | A deliberate administrator UI replaces the former fabricated operational console; the compatibility route now displays measured, read-only health only |
+| Model Lab | **hidden** | Experiment definitions and runs become owner-scoped, with an explicit stable research contract |
+| Portfolio Lab | **hidden** | Portfolio definitions, blends, and runs become owner-scoped instead of installation-wide |
 
 The corresponding API families are classified `hidden`, not removed. Direct
 route access continues to show an honest compatibility state. Cockpit's compatibility
@@ -87,7 +92,10 @@ former sample AAPL position, P&L, risk metrics, and FOMC event were removed.
 The Plugins URL is retained for local administrators, but it is not a marketplace:
 the host operator installs trusted code and enable/disable/reload acts process-wide.
 OMS records and audit results are now user-scoped, simulated fills are labelled,
-and global restrictions and kill switches require an administrator.
+and global restrictions and kill switches require an administrator. Direct Model
+Lab and Portfolio Lab pages display an installation-wide data warning and are no
+longer linked from Home, About, Portfolio, Backtesting, workspace presets, or
+primary navigation.
 
 ## Retained partial surfaces
 
@@ -97,8 +105,8 @@ boundary:
 
 | Surface | Classification | Boundary |
 |---|---|---|
-| Economics | **experimental** | Macro data can use FRED; the forward calendar is a labelled sample until a source is selected |
-| ETF Analytics | **experimental** | Holdings and overlap use real Yahoo data; fund flows still have no provider |
+| Economics | **configuration-gated** | Macro data can use FRED; the forward calendar is a labelled sample until a source is selected |
+| ETF Analytics | **supported** | Holdings and overlap use real Yahoo data; fund flows still have no provider |
 | Crypto derivatives | **supported** | Funding and open interest are real; liquidation totals stay degraded until the Binance force-order stream is wired |
 | DOM | **configuration-gated** | Crypto and India have real paths; US/EU equity Level-2 requires a subscribed provider such as IBKR |
 | Second Brain | **supported** | Retrieval works without synthesis; LLM output and embeddings depend on configured model capabilities |
@@ -115,7 +123,8 @@ Routes not shown in the sidebar are classified by family:
 | Notes Hub | **supported** | Contextual capture UI; Second Brain remains the primary navigation entry |
 | Bond Analytics and Option Greeks calculators | **experimental** | Calculators do not imply that the hidden live Bonds feed exists |
 | F&O child routes | **configuration-gated** | India support is intentional; US option paths depend on available providers |
-| Model/portfolio labs and algorithm framework | **experimental** | Advanced research surfaces, not stable v1 core contracts |
+| Model/portfolio labs | **hidden** | Direct compatibility routes carry an installation-wide data warning; they are not stable or owner-scoped v1 products |
+| Algorithm framework | **experimental** | Advanced research surface, not a stable v1 core contract |
 | Legacy top-level redirects | **hidden** | Compatibility aliases into `/equity`, `/backtesting`, and portfolio-lab routes |
 
 ## Removed orphan surfaces
@@ -138,12 +147,13 @@ remain. The active frontend page count is now 108.
 The checked-in registry classifies all 86 generated OpenAPI tags. The important
 non-supported groups are:
 
-- **Hidden:** `bonds`, `cockpit`, `hotlists`, `insider`, `oms`, `ops`, `plugins`,
-  `rs`, `tape`.
+- **Hidden:** `bonds`, `cockpit`, `hotlists`, `insider`, `model-lab`, `oms`,
+  `ops`, `plugins`, `portfolio-lab`, `rs`, `tape`.
 - **Configuration-gated:** `ai`, `ai-insights`, `depth`, `fixed-income`, `fno`,
   `fno-flow`, `fno-signals`, `kite`, `options`.
-- **Experimental:** advanced labs/governance, ops/data-quality, economics,
-  ETF, scripting, stock-picking/conviction, and currently untagged routes.
+- **Experimental:** advanced governance/framework and portfolio-backtest APIs,
+  data-quality, scripting, stock-picking/conviction, and currently untagged
+  routes.
 
 Everything else is classified supported at the family level. Mixed families
 must still preserve endpoint-specific degraded markers; family classification
@@ -151,11 +161,9 @@ does not erase a narrower limitation.
 
 ## Remaining v1.4 sequence
 
-1. Review each experimental primary destination and either promote it with a
-   stated contract, gate it, hide it, or remove it.
-2. Rationalize duplicate API generations and compatibility redirects without
+1. Rationalize duplicate API generations and compatibility redirects without
    breaking documented consumers.
-3. Align `Limitations.md` and user-facing navigation/configuration copy with the
+2. Align `Limitations.md` and user-facing navigation/configuration copy with the
    final retained surface.
 
 Do not turn provider acquisition, broad MCP, or cross-market feature development

@@ -37,9 +37,7 @@ export type IntelligenceTimelineItem = {
     | "event"
     | "insider"
     | "earnings"
-    | "corporate_action"
-    | "model_signal"
-    | "backtest_run";
+    | "corporate_action";
   title: string;
   symbol?: string;
   source?: string;
@@ -171,14 +169,6 @@ export async function fetchIntelligenceTimeline(params: {
           rows: asArray(res.data, ["items", "actions", "corporate_actions", "results"]),
         }))
       : Promise.resolve({ bucket: "corporate_action", rows: [] }),
-    api.get("/model-lab/leaderboard", { params: { limit: 10 } }).then((res) => ({
-      bucket: "model_signal",
-      rows: asArray(res.data, ["items", "results", "leaderboard", "runs"]),
-    })),
-    api.get("/portfolio-lab/leaderboard", { params: { limit: 10 } }).then((res) => ({
-      bucket: "backtest_run",
-      rows: asArray(res.data, ["items", "results", "leaderboard", "runs"]),
-    })),
   ];
 
   const settled = await Promise.allSettled(calls);

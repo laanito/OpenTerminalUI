@@ -18,6 +18,18 @@ describe("primary navigation surface", () => {
     expect(byPath.get("/equity/yield-curve")?.state).toBe("configuration-gated");
     expect(byPath.get("/equity/dom")?.state).toBe("configuration-gated");
     expect(byPath.get("/equity/commodities")?.state).toBe("configuration-gated");
+    expect(byPath.get("/equity/economics")?.state).toBe("configuration-gated");
+  });
+
+  it("publishes no unresolved experimental destinations", () => {
+    const byPath = new Map(PRIMARY_NAV_ITEMS.map((item) => [item.path, item]));
+
+    expect(PRIMARY_NAV_ITEMS.every((item) => item.state === "supported" || item.state === "configuration-gated")).toBe(true);
+    expect(byPath.get("/equity/etf-analytics")?.state).toBe("supported");
+    expect(byPath.get("/equity/stat-lab")?.state).toBe("supported");
+    expect(byPath.get("/equity/pair-trading")?.state).toBe("supported");
+    expect(PRIMARY_NAV_ITEMS.some((item) => item.path.includes("model-lab"))).toBe(false);
+    expect(PRIMARY_NAV_ITEMS.some((item) => item.path.includes("portfolio/lab"))).toBe(false);
   });
 
   it("uses unique paths", () => {

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createModelExperiment, listModelExperiments } from "../api/client";
 import { api } from "../api/base";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 const DEFAULT_JSON = '{"tickers":["AAPL"]}';
 const DEFAULT_PARAMS = '{"short_window":20,"long_window":50}';
@@ -133,6 +134,7 @@ export function ModelLabPage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Model Lab" />
       <TerminalPanel title="Research Suites" subtitle="Backtesting + Model Lab">
         <div className="flex flex-wrap gap-2 text-xs">
           <Link className={`rounded border px-2 py-1 ${location.pathname.startsWith("/backtesting/model-lab") ? "border-terminal-border text-terminal-muted hover:text-terminal-text" : "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"}`} to="/backtesting">

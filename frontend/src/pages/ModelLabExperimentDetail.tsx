@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getModelExperiment, runModelExperiment, runModelParamSweep, runModelWalkForward } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 function isCompletedStatus(status: string): boolean {
   return status === "succeeded" || status === "completed" || status === "done";
@@ -57,6 +58,7 @@ export function ModelLabExperimentDetailPage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Model Lab" />
       <TerminalPanel title="Model Lab / Experiment" subtitle={id}>
         {detailQuery.isLoading && <div className="text-xs text-terminal-muted">Loading experiment...</div>}
         {detailQuery.isError && <div className="text-xs text-terminal-neg">Failed to load experiment.</div>}

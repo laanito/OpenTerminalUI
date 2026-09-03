@@ -106,6 +106,7 @@ function renderWithProviders(ui: React.ReactElement, route = "/") {
 describe("Model Lab pages", () => {
   it("renders list page", async () => {
     renderWithProviders(<ModelLabPage />);
+    expect(screen.getByText(/Model Lab compatibility surface/)).toBeTruthy();
     expect(await screen.findByText("Model Lab")).toBeTruthy();
     expect(await screen.findByText("Alpha")).toBeTruthy();
   });

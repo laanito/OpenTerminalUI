@@ -10,11 +10,9 @@ import {
   fetchWatchlist,
   type NewsLatestApiItem,
 } from "../api/client";
-import { fetchDashboardResults, type DashboardResults } from "../api/intelligence";
 import { ExposureHeatmap } from "../components/dashboard/ExposureHeatmap";
 import { GuidedEmptyState } from "../components/dashboard/GuidedEmptyState";
 import { IntelligenceTimeline } from "../components/dashboard/IntelligenceTimeline";
-import { ResultsSummaryCards } from "../components/dashboard/ResultsSummaryCards";
 import { LiveClockStrip } from "../components/home/LiveClockStrip";
 import { MarketHeatStrip, type MarketHeatStripItem } from "../components/home/MarketHeatStrip";
 import { MetricCard } from "../components/home/MetricCard";
@@ -106,11 +104,8 @@ const NAV_CARD_SECTIONS: Array<{ title: string; cards: NavCard[] }> = [
     title: "LABS",
     cards: [
       { label: "Backtesting", to: "/backtesting", badge: "F9" },
-      { label: "Model Lab", to: "/backtesting/model-lab", badge: "ML" },
-      { label: "Portfolio Lab", to: "/equity/portfolio/lab", badge: "PL" },
-      { label: "Model Compare", to: "/backtesting/model-lab/compare", badge: "MC" },
-      { label: "Blends", to: "/equity/portfolio/lab/blends", badge: "BL" },
       { label: "Stat Lab", to: "/equity/stat-lab", badge: "SL" },
+      { label: "Pair Trading", to: "/equity/pair-trading", badge: "PT" },
     ],
   },
   {
@@ -236,9 +231,7 @@ export function HomePage() {
   const [newsLog, setNewsLog] = useState<NewsLatestApiItem[]>([]);
   const [snapshot, setSnapshot] = useState<DashboardSnapshot>(EMPTY_SNAPSHOT);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
-  const [dashboardResults, setDashboardResults] = useState<DashboardResults | null>(null);
   const [activePreset, setActivePreset] = useState(readWorkspacePreset);
-  const [resultsLoading, setResultsLoading] = useState(false);
   const [performancePoints, setPerformancePoints] = useState<number[]>(FALLBACK_PERFORMANCE_POINTS);
   const [performanceBenchmarkPoints, setPerformanceBenchmarkPoints] = useState<number[]>([]);
   const [performanceLabels, setPerformanceLabels] = useState<string[]>([]);
@@ -339,24 +332,6 @@ export function HomePage() {
     setPerformanceLabels(nextPerformanceLabels);
     next.updatedAt = Date.now();
     setSnapshot(next);
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    setResultsLoading(true);
-    fetchDashboardResults(4)
-      .then((data) => {
-        if (active) setDashboardResults(data);
-      })
-      .catch(() => {
-        if (active) setDashboardResults({ modelLab: [], portfolioLab: [] });
-      })
-      .finally(() => {
-        if (active) setResultsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -936,14 +911,9 @@ export function HomePage() {
             </section>
             ) : null}
 
-            {showHomeSection("results") || showHomeSection("heatmap") || showHomeSection("timeline") ? (
+            {showHomeSection("heatmap") || showHomeSection("timeline") ? (
             <section className="grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]" aria-label="Dashboard Intelligence">
               <div className="space-y-3">
-                {showHomeSection("results") ? <ResultsSummaryCards
-                  results={dashboardResults}
-                  loading={resultsLoading}
-                  onRunBacktest={() => navigate("/backtesting")}
-                /> : null}
                 {showHomeSection("heatmap") ? <ExposureHeatmap
                   title="Portfolio Exposure Heatmap"
                   market={selectedMarket}

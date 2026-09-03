@@ -1502,7 +1502,7 @@ export function BacktestingPage() {
     <div className="h-full space-y-3 overflow-y-auto px-3 py-2 pb-4">
       <TerminalPanel
         title="Research Suites"
-        subtitle="Backtesting + Model Lab"
+        subtitle="Backtesting control deck"
         actions={
           <SavedViewsControl
             pageLabel="Backtesting"
@@ -1518,9 +1518,6 @@ export function BacktestingPage() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link className={`rounded border px-2 py-1 ${location.pathname.startsWith("/backtesting/model-lab") ? "border-terminal-border text-terminal-muted hover:text-terminal-text" : "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"}`} to="/backtesting">
             Backtesting Console
-          </Link>
-          <Link className={`rounded border px-2 py-1 ${location.pathname.startsWith("/backtesting/model-lab") ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:text-terminal-text"}`} to="/backtesting/model-lab">
-            Open Model Lab
           </Link>
         </div>
       </TerminalPanel>

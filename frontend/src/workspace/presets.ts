@@ -28,7 +28,7 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
       primaryRoute: "/equity/chart-workstation",
       primaryLabel: "Open Workstation",
     },
-    homeSections: ["portfolio", "health", "news", "results", "heatmap", "timeline", "launch"],
+    homeSections: ["portfolio", "health", "news", "heatmap", "timeline", "launch"],
     cockpitPanels: ["priority", "results", "focus", "news", "sentiment", "portfolio", "risk", "events", "heatmap", "timeline"],
     quickLinks: [
       { to: "/equity/chart-workstation", label: "Charts" },
@@ -51,16 +51,16 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
     label: "Quant",
     landing: {
       headline: "Quant Research",
-      description: "Screener, backtesting, model lab, factor, and workstation surfaces for research loops.",
+      description: "Screener, backtesting, statistics, factors, and workstation surfaces for research loops.",
       primaryRoute: "/backtesting",
       primaryLabel: "Run Backtest",
     },
-    homeSections: ["results", "timeline", "launch", "portfolio", "news"],
+    homeSections: ["timeline", "launch", "portfolio", "news"],
     cockpitPanels: ["priority", "results", "focus", "sentiment", "events", "timeline"],
     quickLinks: [
       { to: "/equity/screener", label: "Screener" },
       { to: "/backtesting", label: "Backtest" },
-      { to: "/backtesting/model-lab", label: "Model Lab" },
+      { to: "/equity/stat-lab", label: "Stat Lab" },
       { to: "/equity/factors", label: "Factors" },
       { to: "/equity/chart-workstation", label: "Charts" },
     ],
@@ -86,7 +86,6 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
     cockpitPanels: ["priority", "portfolio", "risk", "events", "heatmap", "timeline", "news"],
     quickLinks: [
       { to: "/equity/portfolio", label: "Portfolio" },
-      { to: "/equity/portfolio/lab", label: "Lab" },
       { to: "/equity/risk", label: "Risk" },
       { to: "/equity/correlation", label: "Corr" },
       { to: "/equity/news", label: "News" },
