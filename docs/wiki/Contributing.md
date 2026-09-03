@@ -9,7 +9,7 @@ Thank you for your interest in contributing to OpenTerminalUI. This page covers 
 ### 1. Fork and clone
 
 ```bash
-git clone https://github.com/YOUR_ORG/OpenTerminalUI.git
+git clone https://github.com/laanito/OpenTerminalUI.git
 cd OpenTerminalUI
 ```
 
@@ -149,7 +149,7 @@ Before requesting review, confirm:
 
 ## Reporting Bugs
 
-Open a [GitHub Issue](https://github.com/YOUR_ORG/OpenTerminalUI/issues) with:
+Open a [GitHub Issue](https://github.com/laanito/OpenTerminalUI/issues) with:
 
 1. **What you expected** — describe the expected behaviour
 2. **What happened** — paste the exact error message or describe the wrong behaviour
