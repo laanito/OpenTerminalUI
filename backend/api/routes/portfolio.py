@@ -1,10 +1,12 @@
-"""Watchlist-items endpoints.
+"""Deprecated installation-wide watchlist-items compatibility endpoints.
 
 The legacy global portfolio (a single, user-less `Holding` table) and its
 analytics / tax-lot / attribution endpoints were removed in v1.1 (part C) — the
 per-user Portfolio Manager (`/api/portfolios`) fully replaces them. This module
-now only serves the enriched watchlist-items feed, which was always global and
-is intentionally kept.
+now serves only the old global feed used by background reports, prefetch,
+dividends, and news ingestion. Supported frontend consumers use the owner-scoped
+`/api/watchlists` contract. These routes remain temporarily for administrators
+while the remaining background consumers are migrated.
 """
 from __future__ import annotations
 
@@ -15,10 +17,12 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db
+from backend.auth.deps import require_role
 from backend.db.models import WatchlistItem
+from backend.models import UserRole
 from backend.shared.market_classifier import market_classifier
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_role(UserRole.ADMIN.value))])
 
 
 class WatchlistCreate(BaseModel):
@@ -26,11 +30,10 @@ class WatchlistCreate(BaseModel):
     ticker: str
 
 
-# Enriched, flattened watchlist items (per-symbol classification: country, flags,
-# F&O availability). Served at /watchlists/items so it does NOT collide with the
-# multi-watchlist router's GET /watchlists (which returns the lists themselves and
-# was shadowing this handler, leaving the items feed unreachable).
-@router.get("/watchlists/items")
+# Enriched, flattened installation-wide items (per-symbol classification:
+# country, flags, F&O availability). This legacy shape is distinct from the
+# canonical multi-watchlist response and must not regain frontend consumers.
+@router.get("/watchlists/items", deprecated=True)
 async def get_watchlists(db: Session = Depends(get_db)) -> dict[str, list[dict[str, object]]]:
     items = db.query(WatchlistItem).all()
     sem = asyncio.Semaphore(16)
@@ -61,7 +64,7 @@ async def get_watchlists(db: Session = Depends(get_db)) -> dict[str, list[dict[s
     }
 
 
-@router.post("/watchlists/items")
+@router.post("/watchlists/items", deprecated=True)
 def add_watchlist_item(payload: WatchlistCreate, db: Session = Depends(get_db)) -> dict[str, object]:
     row = WatchlistItem(watchlist_name=payload.watchlist_name.strip(), ticker=payload.ticker.strip().upper())
     db.add(row)
@@ -70,7 +73,7 @@ def add_watchlist_item(payload: WatchlistCreate, db: Session = Depends(get_db)) 
     return {"status": "created", "item": {"id": row.id, "watchlist_name": row.watchlist_name, "ticker": row.ticker}}
 
 
-@router.delete("/watchlists/items/{item_id}")
+@router.delete("/watchlists/items/{item_id}", deprecated=True)
 def delete_watchlist_item(item_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
     row = db.query(WatchlistItem).filter(WatchlistItem.id == item_id).first()
     if row is None:

@@ -176,9 +176,12 @@ inherited ambiguity.
 
 - v1.3.0 is complete. The v1.4 inventory, stub decisions, first orphan cleanup,
   hidden compatibility hardening, and primary experimental-route adjudication
-  are complete. Next rationalize duplicate API generations and compatibility
-  aliases, then align Limitations with the final surface; do not implement data
-  stubs merely to make the inventory look fuller.
+  are complete. Supported frontend watchlist reads and writes now use the
+  owner-scoped contract; the legacy installation-global flat feed is deprecated
+  and admin-only until its report/prefetch/dividend/news consumers are migrated.
+  Next finish the remaining API-generation and compatibility-alias decisions,
+  then align Limitations with the final surface; do not implement data stubs
+  merely to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

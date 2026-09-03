@@ -13,6 +13,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Watchlists consolidated on the owner-scoped contract** — all supported UI
+  reads and add actions now use `/api/watchlists`, and update, delete, and symbol
+  mutations verify ownership. The old installation-global
+  `/api/watchlists/items` feed is deprecated, hidden, and administrator-only
+  while its remaining background-service consumers are migrated.
 - **Experimental primary surfaces adjudicated** — Economics is now explicitly
   FRED/provider-gated, while ETF holdings/overlap, Statistical Lab, and Pair
   Trading retain supported real-data contracts. Installation-global Model Lab

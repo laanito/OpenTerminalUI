@@ -90,7 +90,9 @@ release-level interpretation and safety boundaries.
   v1.6 establishes the stable baseline before v2 cross-market intelligence.
   The v1.4 inventory, stub decisions, initial orphan removal, and hidden
   compatibility hardening have landed; primary experimental destinations are
-  now adjudicated. API-generation/alias rationalization and final Limitations
+  now adjudicated. Frontend watchlist traffic is owner-scoped and the old flat
+  global feed is deprecated/admin-only pending migration of its background
+  consumers. Further API-generation/alias decisions and final Limitations
   alignment remain. `TODO.md` records the release gates.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
@@ -168,6 +170,9 @@ the blog host after merge.
 4. **Portfolios are per-user.** The legacy global `Holding`/`TaxLot` system was
    removed in v1.1. Use the owner-checked `/api/portfolios` system and the
    per-user primary portfolio.
+   Watchlists follow the same rule: supported clients use `/api/watchlists`;
+   `/api/watchlists/items` is temporary administrator-only compatibility for
+   installation-wide background services.
 5. **Cash derives from the transaction ledger.** Do not introduce a competing
    mutable cash balance. Sells must update both the ledger and holdings.
 6. **Currency must be instrument-aware.** A display-currency selection is not

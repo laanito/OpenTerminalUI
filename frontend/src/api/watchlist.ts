@@ -36,14 +36,25 @@ export async function removeWatchlistSymbol(id: string, symbol: string): Promise
 }
 
 export async function fetchWatchlist(): Promise<WatchlistItem[]> {
-  const { data } = await api.get<{ items: WatchlistItem[] }>("/watchlists/items");
-  return Array.isArray(data?.items) ? data.items : [];
+  const watchlists = await fetchWatchlists();
+  return watchlists.flatMap((watchlist) =>
+    watchlist.symbols.map((ticker) => ({
+      id: `${watchlist.id}:${ticker}`,
+      watchlist_name: watchlist.name,
+      ticker,
+    })),
+  );
 }
 
 export async function addWatchlistItem(payload: { watchlist_name: string; ticker: string }): Promise<void> {
-  await api.post("/watchlists/items", payload);
-}
+  const watchlists = await fetchWatchlists();
+  const requestedName = payload.watchlist_name.trim().toLowerCase();
+  const target = watchlists.find((watchlist) => {
+    const actualName = watchlist.name.trim().toLowerCase();
+    return actualName === requestedName
+      || (requestedName === "default" && actualName === "default watchlist");
+  }) ?? watchlists[0];
 
-export async function deleteWatchlistItem(itemId: number): Promise<void> {
-  await api.delete(`/watchlists/items/${itemId}`);
+  if (!target) throw new Error("No watchlist is available");
+  await addWatchlistSymbols(target.id, [payload.ticker]);
 }
