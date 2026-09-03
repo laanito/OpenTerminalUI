@@ -120,14 +120,48 @@
   Scheduled delivery emails the report via SMTP, degrading gracefully when SMTP
   env isn't configured. Unblocks the Settings scheduler + SecurityHub export.
 
+## Product generations
+
+OpenTerminalUI's long-term north star is a **private, AI-friendly, multi-asset
+decision terminal**. It should help a user cross-check opportunities using
+worldwide market context, fundamentals, technicals, sentiment, portfolio
+exposure, and private research; support investing, trading, and scalping across
+spot and leveraged instruments; and eventually interact with brokers through
+strictly controlled execution.
+
+The roadmap uses seven major product generations:
+
+| Generation | Primary promise |
+|---|---|
+| **v1 — Coherent, honest fork** | One product identity, intentional surface area, accurate docs/contracts, and no accidental inherited defaults |
+| **v2 — Cross-market intelligence** | Markets and asset classes explain one another instead of remaining isolated screens |
+| **v3 — Multi-dimensional validation** | Fundamentals, technicals, sentiment, regime, portfolio context, and private evidence converge |
+| **v4 — Decision lifecycle** | Evidence → thesis → decision → position → outcome → review becomes one traceable loop |
+| **v5 — Multiple horizons and instruments** | Investing, swing, intraday/scalping, spot, and leveraged workflows have explicit risk semantics |
+| **v6 — Agent-native terminal** | External models can safely read, investigate, ingest, and propose through stable scoped interfaces |
+| **v7 — Controlled execution** | Broker sync matures through paper and approval-gated orders into auditable, bounded automation |
+
+These are dominant promises, not isolated feature buckets. The journal is an
+early v4 foundation, derivatives contribute to v5, and the Hermes-compatible
+notes endpoint begins v6, but none makes its generation complete. The existing
+principles *don't get fooled* and *grow privately* remain trust invariants across
+every generation rather than competing release themes.
+
+The execution progression is deliberately conservative: **read-only broker sync
+→ paper orders → proposed orders → human-approved execution → narrowly bounded
+automation**. Permissions, idempotency, risk limits, audit trails,
+reconciliation, and emergency stops are prerequisites; analysis never implies
+authority to trade.
+
+The version numbers continue to follow Semantic Versioning. A generation becomes
+a major release only when its product promise and stable contracts are ready; the
+table is direction, not permission to bump a major version for marketing alone.
+
 ## Release plan
 
-The fork has shipped a large feature set but never cut a tagged release. The plan
-below draws the line: **v1.0.0 is a *hardening* milestone, not a feature one** —
-its job is a coherent, honest, installable product where every advertised feature
-works or is explicitly labelled degraded, with a real version contract and docs.
-New surfaces are deferred to v1.1+. See [Releasing](Releasing.md) for the
-mechanics and the `CHANGELOG.md` for curated history.
+The fork has shipped v1.0 through v1.3. The remaining v1 releases finish the fork
+as one coherent product before v2 adds a cross-market intelligence layer. See
+[Releasing](Releasing.md) for mechanics and `CHANGELOG.md` for curated history.
 
 > **What "stable" means here.** For a private-investing terminal whose north star
 > is *don't get fooled*, integrity outranks feature count: no silent mock data
@@ -229,12 +263,12 @@ condensed in the README.
 - [x] **`Releasing.md`** (checklist + version-bump steps) and **upgrade notes**
   (the `pgvector/pgvector:0.8.3-pg16-trixie` image swap).
 
-> **Sequencing principle (decided 2026-06-30).** Post-1.0 releases are cut by
-> **north-star half**, not by engineering theme. The north star has two halves —
-> *don't get fooled* (research/integrity) and *grow privately* (portfolio/second
-> brain) — and 1.0 only finished the *passive* integrity side. So v1.1 makes the
-> portfolio real and v1.2 makes the research interrogate, while depth/coverage
-> work flows continuously underneath (it's "fill the map," not a release theme).
+> **Historical sequencing principle (decided 2026-06-30, completed through
+> v1.3).** Releases alternated between the two trust halves: *don't get fooled*
+> (research/integrity) and *grow privately* (portfolio/second brain). This shaped
+> v1.1–v1.3 while depth/coverage flowed underneath. On 2026-09-03 the broader
+> product-generation roadmap above superseded it for future release selection;
+> both halves remain invariants.
 
 ### v1.1 — Portfolio becomes real
 
@@ -362,9 +396,52 @@ indexing, autonomous background notifications, cross-user memory, trading
 recommendations or execution, the real Relative Strength engine, and paid-feed
 coverage. Broader external corpora still need a separate provenance design.
 
-No v1.4 theme is committed at this handoff. The next release should be shaped
-with the maintainer from observed demand and the continuous backlog below rather
-than inferred automatically from list order.
+### v1.4 — Surface truth
+
+The first consolidation release audits what the product exposes before adding
+more of it. Inventory every navigable frontend destination and public API family,
+then classify it as **supported**, **configuration-gated**, **experimental**,
+**hidden**, or **remove**. This includes duplicate/orphaned paths and the current
+degraded surfaces: Relative Strength, bonds/fixed-income screening, hotlists,
+insider ingestion, ETF flows, tape/time-and-sales, US/EU Level-2, crypto
+liquidations, and the sample economic calendar.
+
+The outcome is not automatically to implement every feed. Paid or unresolved data
+must not hold v1 hostage. Each surface receives an explicit product decision;
+verified dead or duplicate paths are removed, compatibility paths are retained
+only for documented consumers, navigation/contracts receive regression coverage,
+and Limitations matches what remains reachable.
+
+**Exit condition:** every reachable page and API is intentional and truthfully
+classified, and primary navigation does not advertise an unexplained empty
+product.
+
+### v1.5 — Fork consistency
+
+Make the retained surface belong unambiguously to this fork: replace accidental
+upstream identity and stale versions/links; distinguish intentional India support
+from inherited India-first defaults; finish instrument-aware currency/locale
+cleanup; and reconcile architecture, installation, contribution, configuration,
+API, and release documentation with the PostgreSQL-first application. Remove or
+label obsolete compatibility and historical documents that appear authoritative.
+
+**Exit condition:** a new human or external agent encounters one product identity
+and one accurate set of defaults, commands, contracts, and sources of truth.
+
+### v1.6 — Stable baseline
+
+Rehabilitate valuable Playwright journeys with deterministic fixtures and seeded
+authentication; restore an appropriate browser smoke set to the regular gate;
+reduce initial bundle/load and expensive news/AI/market-data costs; close the
+high-risk test gaps found by the surface audit; complete public API and feature-
+state documentation; and verify clean installation and release paths.
+
+Define concrete v2 journeys only after the consolidated v1 surface is known.
+Cross-market intelligence should then connect intentional interfaces instead of
+building across inherited ambiguity.
+
+**Exit condition:** the retained fork installs, documents, navigates, degrades,
+and tests as one dependable product, ready for the v2 cross-market promise.
 
 ### Continuous — depth & coverage (demand-pulled, not a release theme)
 
