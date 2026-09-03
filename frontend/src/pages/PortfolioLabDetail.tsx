@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getPortfolioDefinition, listStrategyBlends, runPortfolioDefinition } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 function isCompletedStatus(status: string): boolean {
   return status === "succeeded" || status === "completed" || status === "done";
@@ -40,6 +41,7 @@ export function PortfolioLabDetailPage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Portfolio Lab" />
       <TerminalPanel title="Portfolio Lab / Portfolio" subtitle={id}>
         {portfolioQuery.isLoading && <div className="text-xs text-terminal-muted">Loading portfolio...</div>}
         {portfolioQuery.data && (

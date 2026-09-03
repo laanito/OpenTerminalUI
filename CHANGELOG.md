@@ -13,6 +13,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Experimental primary surfaces adjudicated** — Economics is now explicitly
+  FRED/provider-gated, while ETF holdings/overlap, Statistical Lab, and Pair
+  Trading retain supported real-data contracts. Installation-global Model Lab
+  and Portfolio Lab workflows are hidden from general discovery and show a
+  direct-route warning until their persisted definitions and runs are
+  owner-scoped.
 - **Canonical project links** — the public documentation site, README,
   contributor guide, and in-app repository links now point to
   `laanito/OpenTerminalUI`. Removed the duplicate repository-wide Pages workflow

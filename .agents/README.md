@@ -4,7 +4,7 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-03**, against `main` at `c12ddc6` (PR #103; latest
+Last audited: **2026-09-03**, from `main` at `05b004e` (PR #111; latest
 release remains `v1.3.0` at `293f911`).
 
 ## Read order and sources of truth
@@ -88,8 +88,10 @@ release-level interpretation and safety boundaries.
 - The remaining v1 arc is now **fork consolidation**: v1.4 audits and prunes the
   exposed surface, v1.5 makes fork identity/defaults/contracts consistent, and
   v1.6 establishes the stable baseline before v2 cross-market intelligence.
-  `TODO.md` records the release gates; individual implementation PRs still need
-  to be selected and scoped from that sequence.
+  The v1.4 inventory, stub decisions, initial orphan removal, and hidden
+  compatibility hardening have landed; primary experimental destinations are
+  now adjudicated. API-generation/alias rationalization and final Limitations
+  alignment remain. `TODO.md` records the release gates.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

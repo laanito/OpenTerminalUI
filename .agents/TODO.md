@@ -1,6 +1,6 @@
 # Current project state and backlog
 
-Last audited: **2026-09-03**, against `main` at `c12ddc6` (PR #103; latest
+Last audited: **2026-09-03**, from `main` at `05b004e` (PR #111; latest
 release remains `v1.3.0` at `293f911`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
@@ -126,7 +126,11 @@ boundaries should follow the audit rather than being guessed in advance.
       enabled runtime state. OMS and Ops are hidden compatibility tools: invented
       operational panels were removed, OMS data/audit are user-scoped, and global
       compliance controls are admin-only. The remaining experimental destinations
-      and backend duplicates remain to be adjudicated.
+      have now been adjudicated: Economics is configuration-gated; ETF Analytics,
+      Statistical Lab, and Pair Trading have supported real-data computation
+      contracts; installation-global Model Lab and Portfolio Lab workflows are
+      hidden from discovery with explicit direct-route warnings. Backend API
+      duplicates and compatibility aliases remain to be adjudicated.
 - [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
@@ -170,8 +174,11 @@ inherited ambiguity.
 
 ## Current handoff boundary
 
-- v1.3.0 is complete. The next product work starts with the v1.4 inventory and
-  classification; do not begin by arbitrarily implementing the first data stub.
+- v1.3.0 is complete. The v1.4 inventory, stub decisions, first orphan cleanup,
+  hidden compatibility hardening, and primary experimental-route adjudication
+  are complete. Next rationalize duplicate API generations and compatibility
+  aliases, then align Limitations with the final surface; do not implement data
+  stubs merely to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

@@ -103,9 +103,6 @@ export function PortfolioPage() {
             <button className="rounded border border-terminal-accent px-2 py-1 text-xs text-terminal-accent">
               Mutual Funds
             </button>
-            <Link className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent" to="/equity/portfolio/lab">
-              Open Portfolio Lab
-            </Link>
           </div>
         </div>
         <div className="rounded border border-terminal-border bg-terminal-panel p-4">
@@ -271,9 +268,6 @@ export function PortfolioPage() {
           <button className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted" onClick={() => switchPortfolioMode("mutual_funds")}>
             Mutual Funds
           </button>
-          <Link className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent" to="/equity/portfolio/lab">
-            Open Portfolio Lab
-          </Link>
         </div>
       </div>
       <PortfolioManager />

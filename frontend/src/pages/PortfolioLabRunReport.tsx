@@ -5,6 +5,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, Line
 
 import { getPortfolioRunReport } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 function pct(value: number | undefined): string {
   if (!Number.isFinite(Number(value))) return "-";
@@ -76,6 +77,7 @@ export function PortfolioLabRunReportPage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Portfolio Lab" />
       <TerminalPanel title="Portfolio Lab / Report" subtitle={runId}>
         <div className="flex items-center justify-between text-xs">
           <div>Status: <span className="text-terminal-accent">{reportQuery.data?.status || "loading"}</span></div>

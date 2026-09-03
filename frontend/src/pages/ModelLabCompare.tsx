@@ -16,6 +16,7 @@ import {
 
 import { compareModelRuns } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 export function ModelLabComparePage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -75,6 +76,7 @@ export function ModelLabComparePage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Model Lab" />
       <TerminalPanel title="Model Lab / Compare" subtitle="Multi-run comparison (up to 6)">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <input

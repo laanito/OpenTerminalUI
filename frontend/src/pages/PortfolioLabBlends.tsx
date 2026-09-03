@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createStrategyBlend, listStrategyBlends } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 const STRATEGY_OPTIONS = [
   "sma_crossover",
@@ -64,6 +65,7 @@ export function PortfolioLabBlendsPage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Portfolio Lab" />
       <TerminalPanel title="Portfolio Lab / Blends" subtitle="Strategy blending registry">
         <div className="text-xs text-terminal-muted">Returns blending is MVP and default mode.</div>
       </TerminalPanel>

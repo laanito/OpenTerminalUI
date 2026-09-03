@@ -9,6 +9,7 @@ function BacktestingRightRail() {
   const location = useLocation();
   const { preset } = useTerminalShellWorkspace();
   const ticker = useStockStore((s) => s.ticker);
+  const isModelLab = location.pathname.includes("/model-lab");
 
   const routeLabel = (() => {
     if (location.pathname.includes("/backtesting/model-lab/compare")) return "Model Lab Compare";
@@ -51,9 +52,11 @@ function BacktestingRightRail() {
             <Link to="/backtesting" className="rounded-sm border border-terminal-border px-2 py-1 ot-type-label text-terminal-muted hover:text-terminal-text">
               Backtesting Console
             </Link>
-            <Link to="/backtesting/model-lab" className="rounded-sm border border-terminal-border px-2 py-1 ot-type-label text-terminal-muted hover:text-terminal-text">
-              Model Lab
-            </Link>
+            {isModelLab ? (
+              <Link to="/backtesting/model-lab" className="rounded-sm border border-terminal-border px-2 py-1 ot-type-label text-terminal-muted hover:text-terminal-text">
+                Model Lab
+              </Link>
+            ) : null}
             <Link to="/backtesting/model-governance" className="rounded-sm border border-terminal-border px-2 py-1 ot-type-label text-terminal-muted hover:text-terminal-text">
               Model Governance
             </Link>

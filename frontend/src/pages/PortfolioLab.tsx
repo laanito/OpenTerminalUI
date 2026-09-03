@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPortfolioDefinition, listPortfolioDefinitions, type RebalanceFrequency, type WeightingMethod } from "../api/client";
 import { api } from "../api/base";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
 
 type LeaderboardSortKey = "sharpe" | "cagr" | "max_drawdown" | "turnover" | "stability" | "recency" | "governance";
 type PortfolioLeaderboardRow = {
@@ -116,6 +117,7 @@ export function PortfolioLabPage() {
 
   return (
     <div className="space-y-3 p-3">
+      <InstallationWideLabNotice name="Portfolio Lab" />
       <div className="rounded border border-terminal-border bg-terminal-panel p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div className="text-sm font-semibold uppercase tracking-wide text-terminal-accent">Portfolio</div>
