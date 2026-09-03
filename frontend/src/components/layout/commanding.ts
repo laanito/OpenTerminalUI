@@ -5,7 +5,6 @@ import { inferRecentSecurityAssetClass } from "../../hooks/useRecentSecurities";
 import { useStockStore } from "../../store/stockStore";
 
 export type CommandFunctionCode =
-  | "DESK"
   | "DES"
   | "GP"
   | "CH"
@@ -101,7 +100,6 @@ export type CommandFunctionSpec = {
 };
 
 export const COMMAND_FUNCTIONS: CommandFunctionSpec[] = [
-  { code: "DESK", label: "Analyst Desk", description: "Open the cockpit analyst workspace", aliases: ["COCKPIT", "MONITOR"] },
   { code: "DES", label: "Description / Security Hub", description: "Open security hub overview", securityScoped: true, aliases: ["SECURITY", "HUB"] },
   { code: "GP", label: "Graph Price", description: "Open chart tab", securityScoped: true, aliases: ["CHART"] },
   { code: "CH", label: "Chart Workstation", description: "Open chart workstation with active symbol", securityScoped: true, aliases: ["WORKSTATION"] },
@@ -359,10 +357,6 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
 
   if (parsed.kind === "ticker-function") {
     applyTicker(parsed.ticker);
-    if (parsed.func === "DESK") {
-      navigate(`/equity/cockpit?ticker=${encodeURIComponent(parsed.ticker)}`);
-      return { ok: true, target: "/equity/cockpit" };
-    }
     if (parsed.func === "CH") {
       navigateToChartWorkstation(navigate, parsed.ticker);
       return { ok: true, target: "/equity/chart-workstation" };
@@ -387,14 +381,6 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
   if (parsed.kind === "function") {
     const mod0 = parsed.modifiers[0];
     switch (parsed.func) {
-      case "DESK":
-        if (mod0 && looksLikeTicker(mod0)) {
-          applyTicker(mod0);
-          navigate(`/equity/cockpit?ticker=${encodeURIComponent(mod0)}`);
-          return { ok: true, target: "/equity/cockpit" };
-        }
-        navigate("/equity/cockpit");
-        return { ok: true, target: "/equity/cockpit" };
       case "EQS":
         navigate("/equity/screener");
         return { ok: true, target: "/equity/screener" };

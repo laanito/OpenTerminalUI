@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel
 
 
 class PortfolioSnapshot(BaseModel):
     positions: List[dict]
-    pnl: float
+    pnl: Optional[float] = None
+    unavailable_reason: Optional[str] = None
 
 
 class SignalSummary(BaseModel):
@@ -14,14 +15,17 @@ class SignalSummary(BaseModel):
 
 class RiskSummary(BaseModel):
     summary: dict
+    unavailable_reason: Optional[str] = None
 
 
 class EventsSummary(BaseModel):
     events: List[dict]
+    unavailable_reason: Optional[str] = None
 
 
 class NewsSummary(BaseModel):
     news: List[dict]
+    unavailable_reason: Optional[str] = None
 
 
 class CockpitSummary(BaseModel):
@@ -30,3 +34,4 @@ class CockpitSummary(BaseModel):
     risk_summary: RiskSummary
     events: EventsSummary
     news: NewsSummary
+    degraded: Optional[dict[str, Any]] = None

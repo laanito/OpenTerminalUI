@@ -119,8 +119,10 @@ boundaries should follow the audit rather than being guessed in advance.
       compatibility aliases only when they serve a documented consumer. Add
       regression coverage for changed navigation and contracts. The first four
       orphan pages and the page-only Breakout Scanner component/test island have
-      been removed; experimental destinations and backend duplicates remain to
-      be adjudicated.
+      been removed. Cockpit is now hidden from discovery: its compatibility API
+      returns explicit empty/degraded sections instead of fabricated portfolio,
+      risk, and event values. The remaining experimental destinations and backend
+      duplicates remain to be adjudicated.
 - [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;

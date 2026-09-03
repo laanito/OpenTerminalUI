@@ -50,7 +50,6 @@ export const PRIMARY_NAV_ITEMS: readonly TerminalNavItem[] = [
   { label: "Settings", path: "/equity/settings", key: "F6", state: "supported" },
   { label: "About", path: "/equity/stocks/about", key: "F7", state: "supported" },
   { label: "Model Lab", path: "/backtesting/model-lab", key: "ML", hint: "Backtest", state: "experimental" },
-  { label: "Cockpit", path: "/equity/cockpit", key: "CP", hint: "Overview", state: "experimental" },
   { label: "Backtesting", path: "/backtesting", key: "F9", state: "supported" },
 ];
 
@@ -64,4 +63,5 @@ export const HIDDEN_COMPATIBILITY_ROUTES = [
   { path: "/equity/insider", reason: "The query layer exists, but no production insider filing ingestion is wired." },
   { path: "/equity/rs", reason: "All four Relative Strength endpoints intentionally return empty and degraded." },
   { path: "/equity/tape", reason: "No production recent-trades adapter is wired for the standalone tape." },
+  { path: "/equity/cockpit", reason: "The legacy aggregator is not owner-scoped or connected to the real dashboard services." },
 ] as const;

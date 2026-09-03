@@ -24,7 +24,7 @@
     "chart": "supported",
     "chart-workstation": "supported",
     "charts": "supported",
-    "cockpit": "experimental",
+    "cockpit": "hidden",
     "correlation": "supported",
     "crypto": "supported",
     "data": "supported",

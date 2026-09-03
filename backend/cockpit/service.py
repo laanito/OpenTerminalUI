@@ -11,6 +11,7 @@ from backend.cockpit.schemas import (
     SignalSummary,
 )
 from backend.shared.cache import cache
+from backend.shared.degraded import REASON_NO_LIVE_SOURCE, degraded_marker
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,14 @@ async def get_cockpit_summary() -> CockpitSummary:
         logger.info("cockpit_summary_request", extra={"cache_hit": True, "latency_ms": duration_ms})
         return CockpitSummary.model_validate_json(cached_data)
 
-    # 1. Pull from existing portfolio (placeholder simulation if empty)
+    # The aggregator contract predates the owner-scoped portfolio and the real
+    # dashboard queries. Keep it honest and empty until it can compose those
+    # services with the authenticated user's id; never cache a sample portfolio
+    # or plausible market values as if they belonged to the caller.
     portfolio_snapshot = PortfolioSnapshot(
-        positions=[{"symbol": "AAPL", "qty": 10, "current_price": 150.0}],
-        pnl=500.0,
+        positions=[],
+        pnl=None,
+        unavailable_reason="Owner-scoped portfolio aggregation is not wired.",
     )
 
     # 2. Pull from signal/scanner
@@ -39,17 +44,20 @@ async def get_cockpit_summary() -> CockpitSummary:
 
     # 3. Pull from risk
     risk_summary = RiskSummary(
-        summary={"ewma_vol": 0.15, "beta": 1.05},
+        summary={},
+        unavailable_reason="Cockpit risk aggregation is not wired.",
     )
 
     # 4. Pull events
     events_summary = EventsSummary(
-        events=[{"name": "FOMC Meeting", "date": "2026-03-18"}],
+        events=[],
+        unavailable_reason="Cockpit event aggregation is not wired.",
     )
 
     # 5. Pull news
     news_summary = NewsSummary(
         news=[],
+        unavailable_reason="Cockpit news aggregation is not wired.",
     )
 
     summary = CockpitSummary(
@@ -58,6 +66,10 @@ async def get_cockpit_summary() -> CockpitSummary:
         risk_summary=risk_summary,
         events=events_summary,
         news=news_summary,
+        degraded=degraded_marker(
+            REASON_NO_LIVE_SOURCE,
+            detail="The Cockpit aggregator is retained for compatibility but is not a supported product surface.",
+        ),
     )
 
     ttl = int(os.getenv("COCKPIT_CACHE_TTL", "60"))
