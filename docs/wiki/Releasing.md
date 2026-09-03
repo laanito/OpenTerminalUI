@@ -84,3 +84,17 @@ Then open the next milestone's tracking and start the `[Unreleased]` section.
 
 - Patch releases (`X.Y.1`) for fixes; cut from `main`, same checklist (lighter).
 - Keep `CHANGELOG.md` updated per PR so the next cut is cheap.
+
+## Documentation site
+
+The `Deploy GitHub Pages` workflow publishes `docs/site` after relevant changes
+land on `main`, and it can also be run manually. Before its first successful run,
+an administrator must select **GitHub Actions** as the Pages source in
+**Settings → Pages → Build and deployment**.
+
+That one-time repository setting is deliberately not automated by the workflow.
+The normal `GITHUB_TOKEN` has permission to deploy to an existing Pages site but
+does not have the repository-administration permission required to create or
+enable one. Do not add `enablement: true` to `actions/configure-pages` unless the
+workflow is also supplied a separate token with the documented administration
+scope.
