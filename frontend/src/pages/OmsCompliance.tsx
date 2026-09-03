@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { createOmsOrder, fetchAuditEvents, fetchOmsOrders, setRestrictedSymbol } from "../api/client";
+import { createOmsOrder, fetchAuditEvents, fetchOmsOrders } from "../api/client";
 import type { AuditEvent, OmsOrder } from "../types";
 
 export function OmsCompliancePage() {
@@ -24,8 +24,12 @@ export function OmsCompliancePage() {
   return (
     <div className="space-y-3 p-4">
       <div className="rounded border border-terminal-border bg-terminal-panel p-3">
-        <div className="mb-2 text-sm font-semibold text-terminal-accent">Order Ticket + Compliance</div>
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
+        <div className="mb-1 text-sm font-semibold text-terminal-accent">Simulated OMS Compatibility Tool</div>
+        <div className="mb-2 text-xs text-terminal-muted">
+          Records an internal simulated fill using a resolved quote. It never sends an order to a broker or updates the Paper portfolio.
+          Global restrictions are managed separately by administrators.
+        </div>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
           <input className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} />
           <select className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={side} onChange={(e) => setSide(e.target.value as any)}>
             <option value="buy">BUY</option>
@@ -42,17 +46,7 @@ export function OmsCompliancePage() {
               await load();
             }}
           >
-            Submit Order
-          </button>
-          <button
-            className="rounded border border-terminal-neg px-2 py-1 text-xs text-terminal-neg"
-            onClick={async () => {
-              await setRestrictedSymbol({ symbol, active: true, reason: "Manual compliance restriction" });
-              setMessage(`Restricted ${symbol}`);
-              await load();
-            }}
-          >
-            Restrict Symbol
+            Simulate Order
           </button>
         </div>
         {message && <div className="mt-2 text-xs text-terminal-muted">{message}</div>}

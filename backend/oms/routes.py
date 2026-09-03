@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_db
-from backend.auth.deps import get_current_user
+from backend.auth.deps import get_current_user, require_role
 from backend.models import OmsOrderORM, RestrictedListORM, User
 from backend.oms.service import create_fill, create_order, log_audit, pre_trade_checks
 
@@ -70,6 +70,7 @@ async def oms_order(
         fill = create_fill(
             db=db,
             order_id=order.id,
+            user_id=current_user.id,
             symbol=symbol,
             quantity=payload.quantity,
             fill_price=price,
@@ -114,7 +115,7 @@ def oms_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    query = db.query(OmsOrderORM).filter((OmsOrderORM.user_id == current_user.id) | (OmsOrderORM.user_id.is_(None)))
+    query = db.query(OmsOrderORM).filter(OmsOrderORM.user_id == current_user.id)
     if status:
         query = query.filter(OmsOrderORM.status == status)
     rows = query.order_by(OmsOrderORM.created_at.desc()).offset(offset).limit(limit).all()
@@ -140,7 +141,7 @@ def oms_orders(
 def oms_restricted(
     payload: RestrictedRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role("admin")),
 ) -> dict[str, Any]:
     symbol = payload.symbol.strip().upper()
     row = db.query(RestrictedListORM).filter(RestrictedListORM.symbol == symbol).first()

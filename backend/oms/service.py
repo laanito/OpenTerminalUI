@@ -80,7 +80,15 @@ def create_order(
     return row
 
 
-def create_fill(db: Session, order_id: str, symbol: str, quantity: float, fill_price: float, cost: float) -> OmsFillORM:
+def create_fill(
+    db: Session,
+    order_id: str,
+    user_id: str,
+    symbol: str,
+    quantity: float,
+    fill_price: float,
+    cost: float,
+) -> OmsFillORM:
     row = OmsFillORM(
         order_id=order_id,
         symbol=symbol.upper(),
@@ -98,5 +106,6 @@ def create_fill(db: Session, order_id: str, symbol: str, quantity: float, fill_p
         entity_type="fill",
         entity_id=row.id,
         payload={"order_id": order_id, "symbol": symbol, "quantity": quantity, "fill_price": fill_price, "cost": cost},
+        user_id=user_id,
     )
     return row

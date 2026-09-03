@@ -114,7 +114,6 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
     quickLinks: [
       { to: "/equity/risk", label: "Risk" },
       { to: "/equity/correlation", label: "Corr" },
-      { to: "/equity/ops", label: "Ops" },
       { to: "/equity/alerts", label: "Alerts" },
       { to: "/equity/portfolio", label: "Portfolio" },
       { to: "/equity/heatmap", label: "Heatmap" },
@@ -130,21 +129,20 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
   },
   ops: {
     id: "ops",
-    label: "Ops",
+    label: "System",
     landing: {
-      headline: "Operations Desk",
-      description: "Data quality, feed health, OMS, and operational controls first.",
-      primaryRoute: "/equity/ops",
-      primaryLabel: "Open Ops",
+      headline: "System Workspace",
+      description: "Configuration, data quality, alerts, and risk context without simulated operational controls.",
+      primaryRoute: "/equity/settings",
+      primaryLabel: "Open Settings",
     },
     homeSections: ["health", "launch", "news", "portfolio"],
     cockpitPanels: ["priority", "news", "events", "portfolio", "risk"],
     quickLinks: [
-      { to: "/equity/ops", label: "Ops" },
       { to: "/equity/data-quality", label: "Data" },
-      { to: "/equity/oms", label: "OMS" },
       { to: "/equity/settings", label: "Settings" },
       { to: "/equity/alerts", label: "Alerts" },
+      { to: "/equity/risk", label: "Risk" },
     ],
     launchpadLayoutId: "preset-ops",
     launchpadPanels: [
