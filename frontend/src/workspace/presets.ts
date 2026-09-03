@@ -133,7 +133,7 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
     label: "Ops",
     landing: {
       headline: "Operations Desk",
-      description: "Data quality, feed health, OMS, plugins, and operational controls first.",
+      description: "Data quality, feed health, OMS, and operational controls first.",
       primaryRoute: "/equity/ops",
       primaryLabel: "Open Ops",
     },
@@ -143,7 +143,6 @@ export const WORKSPACE_PRESET_CONFIGS: Record<WorkspacePreset, WorkspacePresetCo
       { to: "/equity/ops", label: "Ops" },
       { to: "/equity/data-quality", label: "Data" },
       { to: "/equity/oms", label: "OMS" },
-      { to: "/equity/plugins", label: "Plugins" },
       { to: "/equity/settings", label: "Settings" },
       { to: "/equity/alerts", label: "Alerts" },
     ],

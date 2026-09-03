@@ -24,6 +24,9 @@ export function PluginsPage() {
     <div className="space-y-3 p-3">
       <div className="rounded border border-terminal-border bg-terminal-panel p-3">
         <div className="mb-2 text-sm font-semibold text-terminal-accent">Installed Plugins</div>
+        <div className="mb-2 text-xs text-terminal-muted">
+          Local administrator surface. Enabling a plugin loads trusted Python code process-wide.
+        </div>
         {error ? <div className="text-xs text-terminal-neg">{error}</div> : null}
         {!items.length ? <div className="text-xs text-terminal-muted">No plugins discovered.</div> : null}
         <div className="space-y-2">
@@ -62,7 +65,7 @@ export function PluginsPage() {
       </div>
 
       <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs text-terminal-muted">
-        Plugin marketplace placeholder: registry integration will be added in a future release.
+        No marketplace or remote installation is provided. Plugins must be installed on the host by its operator.
       </div>
     </div>
   );

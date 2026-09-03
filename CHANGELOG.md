@@ -27,6 +27,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   empty/null sections with explicit unavailable reasons, and Cockpit is hidden
   from navigation, home/about launchers, and command discovery until it becomes
   an authenticated, owner-scoped aggregation of real services.
+- **Plugins are operator-only** — removed the local Python plugin loader from
+  general navigation and Ops launch links, restricted discovery and process-wide
+  lifecycle endpoints to administrators, and fixed rediscovery so it no longer
+  silently forgets enabled runtime state. The compatibility page now states that
+  host-installed plugins are trusted code and that no marketplace exists.
 
 ## [1.3.0] - 2026-09-02
 

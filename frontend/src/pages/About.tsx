@@ -102,7 +102,7 @@ const MODULE_GROUPS = [
   {
     title: "Platform & Ops",
     items: [
-      "Plugin system",
+      "Local administrator plugin loader",
       "Alert engine",
       "OMS / compliance",
       "Ops dashboard",
