@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="https://hitheshkaranth.github.io/OpenTerminalUI/">Website</a> |
+  <a href="https://laanito.github.io/OpenTerminalUI/">Website</a> |
   <a href="#features">Features</a> |
   <a href="#screenshots">Screenshots</a> |
   <a href="#architecture">Architecture</a> |
@@ -400,7 +400,7 @@ Request → L1 Cache (SQLite) → L2 Cache (Redis) → Primary Provider → Fall
 ### Option 1: Docker (Recommended)
 
 ```bash
-git clone https://github.com/Hitheshkaranth/OpenTerminalUI.git
+git clone https://github.com/laanito/OpenTerminalUI.git
 cd OpenTerminalUI
 cp .env.example .env      # add API keys if you have them
 docker compose up --build

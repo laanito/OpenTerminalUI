@@ -13,6 +13,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Canonical project links** — the public documentation site, README,
+  contributor guide, and in-app repository links now point to
+  `laanito/OpenTerminalUI`. Removed the duplicate repository-wide Pages workflow
+  created during initial setup so only the maintained `docs/site` deployment can
+  publish the site.
 - **GitHub Pages deployment maintenance** — upgraded the Pages workflow to
   Node.js 24-compatible action majors, removed an unauthorized attempt to enable
   Pages with the default workflow token, and made workflow changes trigger a

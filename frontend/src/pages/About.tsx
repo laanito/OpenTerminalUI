@@ -7,7 +7,7 @@ import { TerminalButton } from "../components/terminal/TerminalButton";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { AsciiHero } from "../home/AsciiHero";
 
-const REPO_URL = "https://github.com/Hitheshkaranth/OpenTerminalUI";
+const REPO_URL = "https://github.com/laanito/OpenTerminalUI";
 const STAR_URL = `${REPO_URL}/stargazers`;
 
 const PLATFORM_STATS = [

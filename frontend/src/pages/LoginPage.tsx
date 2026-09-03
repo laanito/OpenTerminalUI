@@ -218,7 +218,7 @@ export function LoginPage() {
             <p>
               New to OpenTerminal? <Link to="/register">Request access</Link>
             </p>
-            <p className="ot-login-meta">v1.0.0 | MIT LICENSE | github.com/Hitheshkaranth/OpenTerminalUI</p>
+            <p className="ot-login-meta">v1.0.0 | MIT LICENSE | github.com/laanito/OpenTerminalUI</p>
           </footer>
         </div>
       </section>

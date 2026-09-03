@@ -64,11 +64,11 @@ describe("AboutPage dossier revamp", () => {
     expect(screen.getByRole("link", { name: /Breakout Scanner/i })).toHaveAttribute("href", "/equity/screener");
     expect(screen.getByRole("link", { name: "Open GitHub" })).toHaveAttribute(
       "href",
-      "https://github.com/Hitheshkaranth/OpenTerminalUI",
+      "https://github.com/laanito/OpenTerminalUI",
     );
     expect(screen.getByRole("link", { name: "Star on GitHub" })).toHaveAttribute(
       "href",
-      "https://github.com/Hitheshkaranth/OpenTerminalUI/stargazers",
+      "https://github.com/laanito/OpenTerminalUI/stargazers",
     );
   });
 
@@ -78,7 +78,7 @@ describe("AboutPage dossier revamp", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy repository URL" }));
 
     await waitFor(() =>
-      expect(writeTextMock).toHaveBeenCalledWith("https://github.com/Hitheshkaranth/OpenTerminalUI"),
+      expect(writeTextMock).toHaveBeenCalledWith("https://github.com/laanito/OpenTerminalUI"),
     );
     expect(screen.getByText("Copied")).toBeInTheDocument();
 
