@@ -6,6 +6,19 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **v1.4 product-surface inventory** — checked-in classifications cover every
+  generated OpenAPI family and every primary navigation destination. A CI guard
+  fails when API-family tags drift without an explicit supported, gated,
+  experimental, hidden, or removal decision.
+
+### Changed
+- **Primary navigation reflects usable products** — Bonds screening, Hotlists,
+  standalone Insider Activity, Relative Strength, and standalone Tape are hidden
+  until real production data paths exist. Their direct routes and APIs remain
+  compatible and honestly degraded; configured Yield Curve and DOM workflows
+  remain visible.
+
 ## [1.3.0] - 2026-09-02
 
 The **"second brain gets depth"** release. v1.3 keeps private memory grounded in

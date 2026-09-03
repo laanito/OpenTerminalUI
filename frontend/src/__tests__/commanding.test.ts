@@ -71,8 +71,6 @@ describe("GO commanding", () => {
       ["CMDTY GC1", "/equity/commodities?symbol=GC1"],
       ["FX EURUSD", "/equity/forex?pair=EURUSD"],
       ["ETFA SPY", "/equity/etf-analytics?ticker=SPY"],
-      ["BOND", "/equity/bonds"],
-      ["HOT", "/equity/hotlists"],
       ["TCA AAPL", "/equity/portfolio?ticker=AAPL&view=tca"],
       ["COMM AAPL", "/equity/news?ticker=AAPL&view=community"],
       ["DEPTH AAPL", "/equity/chart-workstation?panel=depth&ticker=AAPL&symbol=AAPL"],
@@ -84,6 +82,13 @@ describe("GO commanding", () => {
       expect(result.ok).toBe(true);
       expect(navigate).toHaveBeenCalledWith(target);
     }
+  });
+
+  it("does not reserve hidden product commands", () => {
+    const navigate = vi.fn();
+    const result = executeParsedCommand(parseCommand("BOND"), navigate as any);
+    expect(result.ok).toBe(true);
+    expect(navigate).toHaveBeenCalledWith("/equity/stocks?ticker=BOND");
   });
 
   it("builds asset disambiguation commands when multiple asset classes share a symbol", () => {

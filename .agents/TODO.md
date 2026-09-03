@@ -101,17 +101,20 @@ boundaries should follow the audit rather than being guessed in advance.
 
 ### v1.4 — surface truth
 
-- [ ] Inventory every navigable frontend destination and public backend API
+- [x] Inventory every navigable frontend destination and public backend API
       family, including duplicated, orphaned, compatibility, and experimental
-      paths.
-- [ ] Classify each exposed feature as **supported**, **configuration-gated**,
+      paths. The baseline is recorded in `docs/wiki/Surface-Inventory.md` and
+      `docs/surface-inventory.json`; keep the OpenAPI-tag check passing.
+- [x] Classify each exposed feature as **supported**, **configuration-gated**,
       **experimental**, **hidden**, or **remove**. Record the user-visible contract
       and owner for every retained degraded surface.
-- [ ] Decide each current stub explicitly: Relative Strength, bonds/fixed-income
+- [x] Decide each current stub explicitly: Relative Strength, bonds/fixed-income
       screening, hotlists, insider ingestion, ETF flows, tape/time-and-sales,
       US/EU Level-2, crypto liquidations, and the sample economic calendar. A
       decision may be to implement, gate, hide, or remove; v1 does not require
-      buying or inventing a feed.
+      buying or inventing a feed. Five wholly empty standalone products are now
+      hidden from primary navigation; useful mixed surfaces remain classified
+      with their narrower limitation.
 - [ ] Remove verified dead/duplicate UI and obsolete backend paths, preserving
       compatibility aliases only when they serve a documented consumer. Add
       regression coverage for changed navigation and contracts.
