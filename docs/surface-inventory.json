@@ -69,7 +69,7 @@
     "paper_tca": "experimental",
     "patterns": "supported",
     "peers": "supported",
-    "plugins": "experimental",
+    "plugins": "hidden",
     "portfolio": "supported",
     "portfolio-lab": "experimental",
     "portfolio-optimizer": "experimental",

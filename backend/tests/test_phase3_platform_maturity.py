@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from backend.auth.jwt import create_access_token
 from backend.main import app
+from backend.models.user import User, UserRole
+from backend.shared.db import SessionLocal
 
 
 def _auth_headers(client: TestClient, email: str) -> dict[str, str]:
@@ -27,11 +30,33 @@ def test_export_csv_endpoint_smoke() -> None:
     assert "text/csv" in str(res.headers.get("content-type", ""))
 
 
-def test_plugins_routes_discover_examples() -> None:
+def test_plugins_routes_are_admin_only_and_discover_examples() -> None:
     client = TestClient(app)
-    headers = _auth_headers(client, "phase3-plugins@example.com")
-    res = client.get("/api/plugins", headers=headers)
+    email = "phase3-plugins@example.com"
+    viewer_headers = _auth_headers(client, email)
+    denied = client.get("/api/plugins", headers=viewer_headers)
+    assert denied.status_code == 403
+    denied_mutation = client.post("/api/plugins/missing@0/enable", headers=viewer_headers)
+    assert denied_mutation.status_code == 403
+
+    session_factory = getattr(app.state, "db_session_factory", SessionLocal)
+    db = session_factory()
+    try:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        user.role = UserRole.ADMIN
+        db.commit()
+        db.refresh(user)
+        admin_token = create_access_token(user.id, user.email, user.role.value)
+    finally:
+        db.close()
+
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    res = client.get("/api/plugins", headers=admin_headers)
     assert res.status_code == 200
     body = res.json()
     assert "items" in body
     assert any("rsi_divergence_scanner" in str(x.get("name")) for x in body["items"])
+
+    missing = client.post("/api/plugins/missing@0/enable", headers=admin_headers)
+    assert missing.status_code == 404

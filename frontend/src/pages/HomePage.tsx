@@ -139,7 +139,6 @@ const NAV_CARD_SECTIONS: Array<{ title: string; cards: NavCard[] }> = [
     cards: [
       { label: "Launchpad", to: "/equity/launchpad", badge: "LP" },
       { label: "Workstation", to: "/equity/chart-workstation", badge: "WS" },
-      { label: "Plugins", to: "/equity/plugins", badge: "PLG" },
       { label: "Settings", to: "/equity/settings", badge: "F6" },
       { label: "Account", to: "/account", badge: "ACC" },
     ],

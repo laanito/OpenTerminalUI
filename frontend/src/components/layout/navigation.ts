@@ -46,7 +46,6 @@ export const PRIMARY_NAV_ITEMS: readonly TerminalNavItem[] = [
   { label: "Pair Trading", path: "/equity/pair-trading", key: "PT", hint: "Quant", state: "experimental" },
   { label: "OMS", path: "/equity/oms", key: "O", state: "experimental" },
   { label: "Ops", path: "/equity/ops", key: "K", state: "experimental" },
-  { label: "Plugins", path: "/equity/plugins", key: "PL", state: "experimental" },
   { label: "Settings", path: "/equity/settings", key: "F6", state: "supported" },
   { label: "About", path: "/equity/stocks/about", key: "F7", state: "supported" },
   { label: "Model Lab", path: "/backtesting/model-lab", key: "ML", hint: "Backtest", state: "experimental" },
@@ -64,4 +63,5 @@ export const HIDDEN_COMPATIBILITY_ROUTES = [
   { path: "/equity/rs", reason: "All four Relative Strength endpoints intentionally return empty and degraded." },
   { path: "/equity/tape", reason: "No production recent-trades adapter is wired for the standalone tape." },
   { path: "/equity/cockpit", reason: "The legacy aggregator is not owner-scoped or connected to the real dashboard services." },
+  { path: "/equity/plugins", reason: "Process-wide Python plugin lifecycle controls are restricted to local administrators." },
 ] as const;

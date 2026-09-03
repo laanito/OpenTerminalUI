@@ -45,8 +45,9 @@ class PluginLoader:
         self.records: dict[str, PluginRecord] = {}
 
     def discover(self) -> list[PluginRecord]:
-        self.records = {}
+        discovered: dict[str, PluginRecord] = {}
         if not self.plugins_root.exists():
+            self.records = discovered
             return []
         for manifest in self.plugins_root.rglob("plugin.yaml"):
             try:
@@ -56,12 +57,19 @@ class PluginLoader:
             if not self._validate_manifest(payload):
                 continue
             plugin_id = f"{payload['name']}@{payload['version']}"
-            self.records[plugin_id] = PluginRecord(
-                id=plugin_id,
-                manifest_path=str(manifest),
-                manifest=payload,
-                enabled=False,
-            )
+            current = self.records.get(plugin_id)
+            if current is not None:
+                current.manifest_path = str(manifest)
+                current.manifest = payload
+                discovered[plugin_id] = current
+            else:
+                discovered[plugin_id] = PluginRecord(
+                    id=plugin_id,
+                    manifest_path=str(manifest),
+                    manifest=payload,
+                    enabled=False,
+                )
+        self.records = discovered
         return list(self.records.values())
 
     def _validate_manifest(self, m: dict[str, Any]) -> bool:

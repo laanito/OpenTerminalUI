@@ -21,7 +21,8 @@ does not by itself make a feature useful enough for primary navigation.
 
 - FastAPI publishes **396 paths / 442 operations / 86 tag families**.
 - The equity sidebar previously advertised 43 destinations. The current v1.4
-  state retains 37 and hides six incomplete or empty-data products.
+  state retains 36 and hides seven incomplete, unsafe-as-general-UI, or
+  empty-data products.
 - The repository contained 73 backend route modules, 112 frontend page
   files, and 31 parked Playwright specs. These counts describe audit scale, not
   release gates.
@@ -58,8 +59,8 @@ contract in a documented environment:
 | DOM | Real depth exists for Binance crypto and configured India/Kite paths; unsupported US/EU equity depth remains empty and degraded |
 
 Experimental destinations remain visible for v1.4 evaluation: Economics, ETF
-Analytics, Portfolio Lab, Statistical Lab, Pair Trading, OMS, Ops, Plugins, Model
-Lab. Their final keep/gate/hide decision must be made before the v1.4 exit gate;
+Analytics, Portfolio Lab, Statistical Lab, Pair Trading, OMS, Ops, and Model Lab.
+Their final keep/gate/hide decision must be made before the v1.4 exit gate;
 `experimental` is not a permanent substitute for a contract.
 
 ## Hidden compatibility surfaces
@@ -75,11 +76,14 @@ the audit, but they are removed from primary navigation now:
 | Relative Strength | **hidden** | A real benchmark-relative computation and cached universe ranking replace all four empty endpoints; likely v2 work |
 | Tape / Time & Sales | **hidden** | A production recent-trades adapter supplies actual prints; live tape embedded in supported depth flows is unaffected |
 | Cockpit | **hidden** | The legacy summary becomes an authenticated, owner-scoped composition of the real portfolio, risk, event, news, and signal services |
+| Plugins | **hidden** | A deliberate operator workflow and trust model exist for installing and running host Python extensions; lifecycle APIs remain admin-only |
 
 The corresponding API families are classified `hidden`, not removed. Direct
 route access continues to show honest degraded states. Cockpit's compatibility
 endpoint now returns empty/null sections with explicit unavailable reasons; its
 former sample AAPL position, P&L, risk metrics, and FOMC event were removed.
+The Plugins URL is retained for local administrators, but it is not a marketplace:
+the host operator installs trusted code and enable/disable/reload acts process-wide.
 
 ## Retained partial surfaces
 
@@ -130,11 +134,11 @@ remain. The active frontend page count is now 108.
 The checked-in registry classifies all 86 generated OpenAPI tags. The important
 non-supported groups are:
 
-- **Hidden:** `bonds`, `cockpit`, `hotlists`, `insider`, `rs`, `tape`.
+- **Hidden:** `bonds`, `cockpit`, `hotlists`, `insider`, `plugins`, `rs`, `tape`.
 - **Configuration-gated:** `ai`, `ai-insights`, `depth`, `fixed-income`, `fno`,
   `fno-flow`, `fno-signals`, `kite`, `options`.
 - **Experimental:** advanced labs/governance, ops/data-quality, economics,
-  ETF, plugins/scripting, stock-picking/conviction, and currently untagged routes.
+  ETF, scripting, stock-picking/conviction, and currently untagged routes.
 
 Everything else is classified supported at the family level. Mixed families
 must still preserve endpoint-specific degraded markers; family classification

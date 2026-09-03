@@ -307,8 +307,8 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 
 ### Plugin System & Scripting
 
-- **Plugin API** &mdash; extensible architecture for custom analysis modules
-- **Included Plugins** &mdash; RSI Divergence Scanner, Sector Rotation Monitor, Unusual Volume Detector
+- **Local Plugin API** &mdash; administrator-only lifecycle controls for trusted Python modules installed by the host operator
+- **Included Examples** &mdash; RSI Divergence Scanner, Sector Rotation Monitor, Unusual Volume Detector manifests for local evaluation; no marketplace or remote installation
 - **Python Scripting** &mdash; sandboxed execution with security-hardened imports
 - **OpenScript** &mdash; chart-based indicator scripting with library and sharing
 
@@ -724,7 +724,7 @@ frontend/                React + Vite + TypeScript SPA
   src/store/             Zustand state management
   src/__tests__/         234+ unit tests
   tests/e2e/             Playwright E2E specs
-plugins/                 Extensible plugin system with examples
+plugins/                 Trusted local plugin loader and example manifests
 docs/                    Wiki, architecture specs, and contributor docs
   site/                  GitHub Pages website
   wiki/                  Getting started, contributing guides

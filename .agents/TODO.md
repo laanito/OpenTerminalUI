@@ -121,7 +121,9 @@ boundaries should follow the audit rather than being guessed in advance.
       orphan pages and the page-only Breakout Scanner component/test island have
       been removed. Cockpit is now hidden from discovery: its compatibility API
       returns explicit empty/degraded sections instead of fabricated portfolio,
-      risk, and event values. The remaining experimental destinations and backend
+      risk, and event values. Plugins are also hidden from general discovery and
+      their process-wide lifecycle is admin-only; repeated discovery now preserves
+      enabled runtime state. The remaining experimental destinations and backend
       duplicates remain to be adjudicated.
 - [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
 
