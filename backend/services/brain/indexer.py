@@ -14,6 +14,7 @@ stable identity and content hash) are skipped, and stale chunks are pruned.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 from typing import Any
 
@@ -114,6 +115,15 @@ def _build_chunks(
     for chunk_index, chunk_text in enumerate(_split_text(text)):
         meta = dict(meta_json)
         meta.update({"source_ref_id": str(source_ref_id), "chunk_index": chunk_index})
+        # Citation metadata is part of the persisted record. Including it in the
+        # hash makes route/title corrections propagate on the next reindex even
+        # when the text (and therefore its semantic embedding) is unchanged.
+        content_identity = json.dumps(
+            {"text": chunk_text, "title": title, "symbol": symbol, "meta": meta},
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
         out.append(
             {
                 "source": source,
@@ -121,7 +131,7 @@ def _build_chunks(
                 "symbol": symbol,
                 "title": title,
                 "chunk_text": chunk_text,
-                "content_hash": _hash(chunk_text),
+                "content_hash": _hash(content_identity),
                 "meta_json": meta,
             }
         )
@@ -174,8 +184,8 @@ _NOTE_CONTEXT_LABELS = {
 _NOTE_CONTEXT_ROUTES = {
     "watchlist": "/equity/watchlist",
     "news": "/equity/news",
-    "holding": "/equity/portfolio/lab",
-    "transaction": "/equity/portfolio/lab",
+    "holding": "/equity/portfolio",
+    "transaction": "/equity/portfolio",
 }
 
 
@@ -250,7 +260,7 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
                 symbol=None,
                 title=f"Portfolio · {p.name}",
                 text=text,
-                meta_json={"portfolio": p.name, "route": "/equity/portfolio/lab"},
+                meta_json={"portfolio": p.name, "route": "/equity/portfolio"},
             )
         )
 
@@ -273,7 +283,7 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
                     symbol=h.symbol,
                     title=f"Position · {h.symbol}",
                     text=text,
-                    meta_json={"symbol": h.symbol, "route": "/equity/portfolio/lab"},
+                    meta_json={"symbol": h.symbol, "route": "/equity/portfolio"},
                 )
             )
 
@@ -295,7 +305,12 @@ def _collect_chunks(db: Session, user_id: str) -> list[dict]:
                     symbol=t.symbol,
                     title=f"Transaction · {t.type} {t.symbol}",
                     text=text,
-                    meta_json={"symbol": t.symbol, "type": t.type, "date": t.date},
+                    meta_json={
+                        "symbol": t.symbol,
+                        "type": t.type,
+                        "date": t.date,
+                        "route": "/equity/portfolio",
+                    },
                 )
             )
 

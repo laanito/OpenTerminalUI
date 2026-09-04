@@ -36,6 +36,7 @@ export type CommandFunctionCode =
   | "TCA"
   | "COMM"
   | "DEPTH"
+  | "JOURNAL"
   | "BRAIN"
   | "NOTES";
 
@@ -111,6 +112,7 @@ export const COMMAND_FUNCTIONS: CommandFunctionSpec[] = [
   { code: "OWN", label: "Ownership", description: "Open ownership tab", securityScoped: true, aliases: ["OWNERSHIP"] },
   { code: "EQS", label: "Equity Screener", description: "Open equity screener", aliases: ["SCREENER"] },
   { code: "PORT", label: "Portfolio", description: "Open portfolio", aliases: ["PF", "PORTFOLIO"] },
+  { code: "JOURNAL", label: "Trade Journal", description: "Open the trading journal", aliases: ["JNL"] },
   { code: "BRAIN", label: "Second Brain", description: "Open the private RAG over your journal, theses & notes", aliases: ["BR", "RAG", "MEMORY"] },
   { code: "NOTES", label: "Notes", description: "Open the notes hub (capture thoughts that feed the Second Brain)", aliases: ["NOTE", "NT"] },
   { code: "WL", label: "Watchlist", description: "Open watchlist", aliases: ["WATCHLIST"] },
@@ -420,6 +422,9 @@ export function executeParsedCommand(parsed: ParsedCommand, navigate: NavigateFu
       case "PORT":
         navigate("/equity/portfolio");
         return { ok: true, target: "/equity/portfolio" };
+      case "JOURNAL":
+        navigate("/equity/journal");
+        return { ok: true, target: "/equity/journal" };
       case "BRAIN":
         navigate("/equity/brain");
         return { ok: true, target: "/equity/brain" };

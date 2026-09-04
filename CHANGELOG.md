@@ -13,6 +13,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Second Brain capture paths are discoverable** — the active application rail
+  and GO bar now expose the Trade Journal, the Brain links directly to journal
+  and portfolio-thesis capture, and Portfolio Manager can create and edit the
+  portfolio description used as its indexed thesis. Portfolio, holding, and
+  transaction citations now return to Portfolio Manager, including after a
+  metadata-only reindex correction.
 - **Slow AI and NSE fallback reliability** — AI insight requests now allow five
   minutes in the browser, exceeding the backend's default four-minute model
   deadline so slow local inference can finish or degrade server-side. Direct

@@ -15,6 +15,16 @@ vi.mock("react-router-dom", async () => {
 });
 
 describe("IconRail keyboard behavior", () => {
+  it("exposes the trade journal from the active application rail", () => {
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <IconRail />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("link", { name: "Journal" })).toHaveAttribute("href", "/equity/journal");
+  });
+
   it("moves focus with arrows and navigates with Enter", () => {
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/home"]}>

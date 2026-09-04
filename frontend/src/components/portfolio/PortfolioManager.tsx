@@ -90,9 +90,11 @@ export function PortfolioManager() {
   const [status, setStatus] = useState<string | null>(null);
 
   const [newName, setNewName] = useState("Core Portfolio");
+  const [newDescription, setNewDescription] = useState("");
   const [newBenchmark, setNewBenchmark] = useState(BENCHMARKS[0]);
   const [newCash, setNewCash] = useState(100000);
   const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
   const [editBenchmark, setEditBenchmark] = useState(BENCHMARKS[0]);
 
   const [addSymbol, setAddSymbol] = useState("AAPL");
@@ -130,6 +132,7 @@ export function PortfolioManager() {
         const selected = pfs.find((p) => p.id === activeId);
         if (selected) {
           setEditName(selected.name || "");
+          setEditDescription(selected.description || "");
           setEditBenchmark(selected.benchmark_symbol || BENCHMARKS[0]);
         }
         // Deep analytics hit market data and are slower; load them in the
@@ -153,6 +156,7 @@ export function PortfolioManager() {
         setDividends(null);
         setBenchmarkOverlay(null);
         setEditName("");
+        setEditDescription("");
         setEditBenchmark(BENCHMARKS[0]);
       }
     } catch (err) {
@@ -300,6 +304,14 @@ export function PortfolioManager() {
         </div>
         <div className="mt-3 space-y-1 border-t border-terminal-border pt-2">
           <TerminalInput value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Portfolio name" />
+          <TerminalInput
+            as="textarea"
+            rows={3}
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+            placeholder="Portfolio thesis"
+            aria-label="New portfolio thesis"
+          />
           <select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={newBenchmark} onChange={(e) => setNewBenchmark(e.target.value)}>
             {BENCHMARKS.map((x) => <option key={x} value={x}>{x}</option>)}
           </select>
@@ -309,8 +321,14 @@ export function PortfolioManager() {
             onClick={async () => {
               try {
                 setError(null);
-                const created = await createPortfolio({ name: newName, benchmark_symbol: newBenchmark, starting_cash: newCash });
+                const created = await createPortfolio({
+                  name: newName,
+                  description: newDescription.trim(),
+                  benchmark_symbol: newBenchmark,
+                  starting_cash: newCash,
+                });
                 setStatus(`Created ${created.name}`);
+                setNewDescription("");
                 await loadAll(created.id);
               } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to create portfolio");
@@ -353,6 +371,7 @@ export function PortfolioManager() {
                   setError(null);
                   await updatePortfolioById(selectedPortfolio.id, {
                     name: editName.trim() || selectedPortfolio.name,
+                    description: editDescription.trim(),
                     benchmark_symbol: editBenchmark,
                   });
                   setStatus("Portfolio updated");
@@ -386,6 +405,18 @@ export function PortfolioManager() {
               Sync
             </TerminalButton>
           </div>
+          <label className="mb-2 block text-xs text-terminal-muted">
+            <span className="mb-1 block">Portfolio thesis — indexed by the Second Brain</span>
+            <TerminalInput
+              as="textarea"
+              rows={3}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Record the mandate, assumptions, time horizon, and conditions that would invalidate it."
+              disabled={!selectedPortfolio}
+              aria-label="Portfolio thesis"
+            />
+          </label>
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
             <span className="text-terminal-muted">Add Holding</span>
             <TerminalInput className="w-24" value={addSymbol} onChange={(e) => setAddSymbol(e.target.value.toUpperCase())} />

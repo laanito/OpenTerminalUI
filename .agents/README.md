@@ -4,7 +4,7 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-04**, from `main` at `43cacf8` (PR #116; latest
+Last audited: **2026-09-04**, from `main` at `b5b4326` (PR #117; latest
 release remains `v1.3.0` at `293f911`).
 
 ## Read order and sources of truth
@@ -98,8 +98,11 @@ release-level interpretation and safety boundaries.
   match the retained surface, completing the v1.4 implementation sequence.
   Final user-test blockers extend the browser deadline beyond the backend LLM
   timeout and make direct public NSE scraping opt-in with a first-403 process
-  circuit. Release preparation and verification follow after that fix merges;
-  `TODO.md` records the gates.
+  circuit. PR #117 merged those reliability fixes. The remaining user-found
+  surface gap is making Journal and portfolio-thesis capture discoverable from
+  the active shell and correcting their Brain citation destinations; after that
+  fix merges, release preparation and verification follow. `TODO.md` records
+  the gates.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

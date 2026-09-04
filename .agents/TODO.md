@@ -1,6 +1,6 @@
 # Current project state and backlog
 
-Last audited: **2026-09-04**, from `main` at `43cacf8` (PR #116; latest
+Last audited: **2026-09-04**, from `main` at `b5b4326` (PR #117; latest
 release remains `v1.3.0` at `293f911`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
@@ -140,6 +140,10 @@ boundaries should follow the audit rather than being guessed in advance.
 - [x] Close user-test release blockers: keep browser AI deadlines beyond the
       backend model timeout, disable direct public NSE scraping by default, and
       open a process-level circuit on the first opted-in NSE 403.
+- [x] Close private-record capture gaps: expose Journal in the active icon rail
+      and GO bar, make portfolio descriptions visibly editable as Second Brain
+      theses, and return portfolio/position/transaction citations to Portfolio
+      Manager rather than the unrelated installation-global Portfolio Lab.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
 the primary navigation does not advertise an unexplained empty product.
@@ -186,12 +190,12 @@ inherited ambiguity.
   complete: surfaces are classified, empty products are hidden, compatibility
   boundaries are explicit, ownerless watchlists and verified duplicates/orphans
   are removed, and configuration-gated navigation explains its deployment
-  requirements. User testing then identified two release blockers: the browser
-  aborted slow AI insights before the backend timeout, and the unconfigured Kite
-  fallback repeatedly scraped a 403-blocked NSE endpoint. Both now have explicit
-  timeout and opt-in/circuit-breaker contracts. After that fix merges, prepare
-  and verify the v1.4.0 release; do not implement data stubs merely to make the
-  inventory look fuller.
+  requirements. User testing identified and closed slow-AI and repeated-NSE-403
+  release blockers in PR #117. A final discovery pass found that the active icon
+  rail omitted Journal and Portfolio Manager did not expose the description that
+  the Brain calls a portfolio thesis; the current follow-up closes those capture
+  and citation gaps. After it merges, prepare and verify the v1.4.0 release; do
+  not implement data stubs merely to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

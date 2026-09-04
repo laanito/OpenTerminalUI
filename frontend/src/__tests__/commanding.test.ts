@@ -51,6 +51,13 @@ describe("GO commanding", () => {
     expect(navigate).toHaveBeenCalledWith("/equity/watchlist");
   });
 
+  it("opens the journal from the GO command", () => {
+    const navigate = vi.fn();
+    const result = executeParsedCommand(parseCommand("JOURNAL"), navigate as any);
+    expect(result.ok).toBe(true);
+    expect(navigate).toHaveBeenCalledWith("/equity/journal");
+  });
+
   it("routes ticker-only commands to the market stock page", () => {
     const navigate = vi.fn();
     const result = executeParsedCommand(parseCommand("AAPL"), navigate as any);
