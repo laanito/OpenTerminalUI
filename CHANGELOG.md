@@ -13,6 +13,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Configuration gates are visible and documented** — the sidebar and Home
+  launcher now identify provider/market-gated destinations, Settings explains
+  that market-data secrets belong in the host environment rather than browser
+  storage, and Automation API Keys are distinguished from provider credentials.
+  The Limitations matrix now matches the retained supported, partial, and hidden
+  compatibility surfaces.
 - **Duplicate APIs and route aliases consolidated** — Commodities and Forex now
   mount once, the provider-backed cached Volume Profile is the sole handler for
   its URL, and the surface guard rejects duplicate OpenAPI operation IDs and

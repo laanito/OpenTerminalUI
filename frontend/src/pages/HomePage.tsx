@@ -22,6 +22,7 @@ import { QuickNavGrid, type QuickNavSection } from "../components/home/QuickNavG
 import { SystemHealthBar, type SystemHealthItem } from "../components/home/SystemHealthBar";
 import { AiInsightCard } from "../components/terminal/AiInsightCard";
 import { TerminalShell } from "../components/layout/TerminalShell";
+import { PRIMARY_NAV_ITEMS } from "../components/layout/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { useDisplayCurrency } from "../hooks/useDisplayCurrency";
 import { fetchChainSummary } from "../fno/api/fnoApi";
@@ -57,7 +58,12 @@ type NavCard = {
   label: string;
   to: string;
   badge: string;
+  configuration?: string;
 };
+
+const CONFIGURATION_BY_PATH = new Map(
+  PRIMARY_NAV_ITEMS.flatMap((item) => (item.configuration ? [[item.path, item.configuration.detail] as const] : [])),
+);
 
 const TRANSITION_FLAG_KEY = "ot-terminal-transition";
 const NEWS_LIMIT = 15;
@@ -67,10 +73,15 @@ const NAV_CARD_SECTIONS: Array<{ title: string; cards: NavCard[] }> = [
     title: "MARKETS",
     cards: [
       { label: "Equity", to: "/equity/stocks", badge: "M1" },
-      { label: "F&O", to: "/fno", badge: "FO" },
+      {
+        label: "F&O",
+        to: "/fno",
+        badge: "FO",
+        configuration: "India live and historical derivatives data require server-side Kite credentials.",
+      },
       { label: "Crypto", to: "/equity/crypto", badge: "CR" },
-      { label: "Economics", to: "/equity/economics", badge: "EC" },
-      { label: "Yield Curve", to: "/equity/yield-curve", badge: "YC" },
+      { label: "Economics", to: "/equity/economics", badge: "EC", configuration: CONFIGURATION_BY_PATH.get("/equity/economics") },
+      { label: "Yield Curve", to: "/equity/yield-curve", badge: "YC", configuration: CONFIGURATION_BY_PATH.get("/equity/yield-curve") },
       { label: "Rotation", to: "/equity/sector-rotation", badge: "ROT" },
       { label: "Heatmap", to: "/equity/heatmap", badge: "HM" },
     ],
@@ -503,7 +514,9 @@ export function HomePage() {
           id: `${slugify(section.title)}-${slugify(card.label)}`,
           label: card.label,
           shortcut: card.badge,
-          description: `${section.title} desk access`,
+          description: card.configuration
+            ? `${section.title} desk access. Configuration: ${card.configuration}`
+            : `${section.title} desk access`,
           onSelect: () => navigate(card.to),
         })),
       })).filter((section) => section.items.length > 0);

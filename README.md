@@ -475,8 +475,8 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | Variable | Purpose |
 |----------|---------|
 | `FMP_API_KEY` | Financial Modeling Prep &mdash; US equities, fundamentals, earnings |
-| `FINNHUB_API_KEY` | Finnhub &mdash; US real-time WebSocket ticks + economic calendar events |
-| `FRED_API_KEY` | FRED (St. Louis Fed) &mdash; macro indicators dashboard (US/EU/China); falls back to mock values if unset |
+| `FINNHUB_API_KEY` | Finnhub &mdash; US real-time WebSocket ticks |
+| `FRED_API_KEY` | FRED (St. Louis Fed) &mdash; macro indicators and yield-curve series (US/EU/China); returns degraded data if unset |
 | `COINGECKO_API_KEY` | CoinGecko demo key &mdash; raises the keyless crypto rate limit (optional) |
 | `OPENTERMINALUI_BINANCE_WS_ENABLED` | Toggle live crypto spot ticks via Binance WebSocket (default `true`) |
 | `KITE_API_KEY` | Zerodha Kite &mdash; India NSE/BSE F&O real-time + historical |
@@ -513,8 +513,9 @@ shows a banner. Highlights:
 
 The full feature matrix, honest **Limitations** (no live econ-calendar source;
 dividend forward dates are estimates; RS / bonds / hotlists / insider / tape are
-degraded stubs; US/EU L2 depth has no free source; crypto liquidations until the
-WS runner is wired), and **upgrade notes** (the pgvector image swap) live in the
+hidden compatibility surfaces; US/EU L2 depth has no free source; crypto
+liquidations remain degraded until the WS runner is wired), and **upgrade notes**
+(the pgvector image swap) live in the
 [Limitations](docs/wiki/Limitations.md) wiki page.
 
 ## AI News Sentiment & Insights (local LLM)

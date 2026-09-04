@@ -1,6 +1,6 @@
 # Current project state and backlog
 
-Last audited: **2026-09-03**, from `main` at `05b004e` (PR #111; latest
+Last audited: **2026-09-04**, from `main` at `61e7645` (PR #115; latest
 release remains `v1.3.0` at `293f911`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
@@ -115,7 +115,7 @@ boundaries should follow the audit rather than being guessed in advance.
       buying or inventing a feed. Five wholly empty standalone products are now
       hidden from primary navigation; useful mixed surfaces remain classified
       with their narrower limitation.
-- [ ] Remove verified dead/duplicate UI and obsolete backend paths, preserving
+- [x] Remove verified dead/duplicate UI and obsolete backend paths, preserving
       compatibility aliases only when they serve a documented consumer. Add
       regression coverage for changed navigation and contracts. The first four
       orphan pages and the page-only Breakout Scanner component/test island have
@@ -129,9 +129,14 @@ boundaries should follow the audit rather than being guessed in advance.
       have now been adjudicated: Economics is configuration-gated; ETF Analytics,
       Statistical Lab, and Pair Trading have supported real-data computation
       contracts; installation-global Model Lab and Portfolio Lab workflows are
-      hidden from discovery with explicit direct-route warnings. Backend API
-      duplicates and compatibility aliases remain to be adjudicated.
-- [ ] Align `docs/wiki/Limitations.md` with the resulting product surface.
+      hidden from discovery with explicit direct-route warnings. Duplicate
+      backend mounts, the shadowed Volume Profile implementation, redundant
+      frontend wrappers, and duplicate lab route trees are now consolidated;
+      intentional Backtest and Screener generations are recorded.
+- [x] Align `docs/wiki/Limitations.md` with the resulting product surface. The
+      sidebar and Home launcher now identify configuration-gated destinations,
+      and Settings distinguishes host-managed provider secrets from automation
+      API keys.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
 the primary navigation does not advertise an unexplained empty product.
@@ -174,15 +179,12 @@ inherited ambiguity.
 
 ## Current handoff boundary
 
-- v1.3.0 is complete. The v1.4 inventory, stub decisions, first orphan cleanup,
-  hidden compatibility hardening, and primary experimental-route adjudication
-  are complete. Watchlists are owner-scoped end-to-end for interactive/reporting
-  consumers, background workers receive only a symbol union, and the old global
-  model/API/table are removed. Duplicate API mounts, shadowed Volume Profile,
-  redundant v1 job wrappers, and duplicated lab route trees are consolidated;
-  intentional Backtest/Screener generations are documented. Next align
-  Limitations and user-facing configuration copy with the final surface; do not
-  implement data stubs merely to make the inventory look fuller.
+- v1.3.0 is complete. The v1.4 implementation and documentation sequence is
+  complete: surfaces are classified, empty products are hidden, compatibility
+  boundaries are explicit, ownerless watchlists and verified duplicates/orphans
+  are removed, and configuration-gated navigation explains its deployment
+  requirements. After this final slice merges, prepare and verify the v1.4.0
+  release; do not implement data stubs merely to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly
@@ -247,7 +249,7 @@ ordered implementation queue.
 - [ ] Reconcile test/setup commands across `README.md`, `CONTRIBUTING.md`, and
       `Makefile` (for example, `CONTRIBUTING.md` references a missing
       `backend/requirements-dev.txt`).
-- [ ] Refresh `docs/wiki/Limitations.md` for post-v1.0/v1.1 behaviour and verify
+- [x] Refresh `docs/wiki/Limitations.md` for post-v1.0/v1.1 behaviour and verify
       every listed degraded surface against current routes.
 - [ ] Improve provider credential/config management before relying on paid APIs.
 - [ ] Consider the deferred Docker Python 3.11 → 3.12 upgrade only with dependency

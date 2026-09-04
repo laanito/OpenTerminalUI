@@ -32,6 +32,8 @@ export function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            title={item.configuration?.detail}
+            aria-label={item.configuration ? `${item.label}. Configuration: ${item.configuration.detail}` : item.label}
             className={({ isActive }) =>
               `flex cursor-pointer items-center justify-between rounded px-2 py-2 ${
                 isActive
@@ -44,9 +46,12 @@ export function Sidebar() {
               <span>{item.label}</span>
               {item.hint && <span className="text-[8px] text-terminal-accent/70 -mt-0.5 uppercase">{item.hint}</span>}
             </div>
-            <span className="text-[10px]">
-              {item.path === "/equity/alerts" && unreadCount > 0 ? `${unreadCount}` : item.key}
-            </span>
+            <div className="flex flex-col items-end gap-0.5 text-[10px]">
+              <span>{item.path === "/equity/alerts" && unreadCount > 0 ? `${unreadCount}` : item.key}</span>
+              {item.configuration ? (
+                <span className="text-[8px] uppercase text-terminal-warn">{item.configuration.label}</span>
+              ) : null}
+            </div>
           </NavLink>
         ))}
       </nav>
