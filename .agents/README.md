@@ -4,8 +4,9 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-04**, from `main` at `ee5a31e` (PR #118; latest
-release remains `v1.3.0` at `293f911`).
+Last audited: **2026-09-04**, from `main` at `1191811` (PR #119), plus the
+v1.4.0 release-preparation changes on this branch. The latest tag remains
+`v1.3.0` at `293f911` until host verification.
 
 ## Read order and sources of truth
 
@@ -76,9 +77,9 @@ release-level interpretation and safety boundaries.
 
 ## Current release and development state
 
-- Latest release: **v1.3.0**, tagged at `293f911` and published on 2026-09-02.
-  Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
-  preparing the next release.
+- Release-prep version contract: **1.4.0** (`v1.3.0` remains the latest tag until
+  the host smoke check and release tag). Keep `backend/config/settings.py` and
+  `frontend/package.json` in lockstep when releasing.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
   deliberate API-key note ingestion, and an explicit journal-gap review. Feature
@@ -102,9 +103,10 @@ release-level interpretation and safety boundaries.
   portfolio-thesis capture discoverable and corrected Brain citation routes.
   Live testing then exposed intermittent malformed JSON from a healthy local
   Gemma provider and ungrounded Home/Risk generation when their facts were
-  absent. The current follow-up adds one bounded structured-output retry and
-  requires terminal observations before those cards run. Release preparation
-  and verification follow after it merges; `TODO.md` records the gates.
+  absent; PR #119 added one bounded structured-output retry and factual input
+  gates. Feature work and automated release preparation are complete. Host smoke
+  verification, merge, tag, and GitHub release remain; `TODO.md` records the
+  gates.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

@@ -1,7 +1,8 @@
 # Current project state and backlog
 
-Last audited: **2026-09-04**, from `main` at `ee5a31e` (PR #118; latest
-release remains `v1.3.0` at `293f911`).
+Last audited: **2026-09-04**, from `main` at `1191811` (PR #119), plus the
+v1.4.0 release-preparation changes on this branch. The latest tag remains
+`v1.3.0` at `293f911` until host verification.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -148,6 +149,12 @@ boundaries should follow the audit rather than being guessed in advance.
       within the existing deadline, log the real degradation cause, ground the
       Home Market Outlook in its displayed live observations, and prevent Market
       Outlook/Risk Assessment generation when their required facts are absent.
+- [x] Close the automated v1.4 release contract: align backend/frontend versions,
+      changelog, roadmap, public site, release ledger, and agent handoff for
+      v1.4.0.
+- [ ] Confirm the host smoke matrix and tag v1.4.0. After the release-prep branch
+      merges, verify the SQLite/keyless and Postgres/pgvector keyless/keyed rows
+      in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
 the primary navigation does not advertise an unexplained empty product.
@@ -175,6 +182,12 @@ of defaults, commands, contracts, and sources of truth.
 - [ ] Rehabilitate the valuable Playwright journeys using deterministic fixtures
       and seeded authentication, then restore an appropriate browser smoke set to
       the regular gate.
+- [ ] Replace per-card LLM request handling with a shared, cancellable job
+      lifecycle: server-owned deadlines, provider capability detection, bounded
+      retry/repair, typed failure states, and SSE or NDJSON progress/streaming
+      with a stable non-streaming fallback. Publish structured insight sections
+      only after schema validation, and cover interruption, malformed streams,
+      slow providers, cancellation, and fallback behavior.
 - [ ] Profile and reduce initial frontend load/chunk cost and the most expensive
       news, AI, and market-data paths without weakening correctness or fallbacks.
 - [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
@@ -199,9 +212,11 @@ inherited ambiguity.
   capture and repaired Brain citation destinations. Continued live testing found
   that a healthy Gemma provider intermittently returned malformed structured
   output and that Home/Risk cards could ask for analysis without factual inputs;
-  the current follow-up adds a bounded retry and factual generation gates. After
-  it merges, prepare and verify the v1.4.0 release; do not implement data stubs
-  merely to make the inventory look fuller.
+  PR #119 added a bounded retry and factual generation gates. Automated v1.4.0
+  release preparation is now complete. The remaining steps are host smoke
+  verification, merge, tag, and GitHub release; do not expand v1.4 with the
+  deferred LLM streaming/job redesign or implement data stubs merely to make the
+  inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

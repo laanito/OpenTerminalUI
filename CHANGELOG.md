@@ -6,6 +6,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-04
+
+The **"surface truth"** release turns the inherited application map into an
+intentional product contract. Reachable pages and APIs are classified, empty or
+unsafe compatibility products leave primary discovery, duplicate implementations
+are consolidated, and configured or degraded behavior is made explicit.
+
 ### Added
 - **v1.4 product-surface inventory** — checked-in classifications cover every
   generated OpenAPI family and every primary navigation destination. A CI guard

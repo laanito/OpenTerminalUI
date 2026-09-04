@@ -398,7 +398,10 @@ indexing, autonomous background notifications, cross-user memory, trading
 recommendations or execution, the real Relative Strength engine, and paid-feed
 coverage. Broader external corpora still need a separate provenance design.
 
-### v1.4 — Surface truth
+### v1.4 — Surface truth ✅ release-prepared 2026-09-04
+
+Prepared as **v1.4.0 (2026-09-04)** — implementation PRs #103–#119; tagging
+follows the host smoke check described in [Releasing](Releasing).
 
 The first consolidation release audits what the product exposes before adding
 more of it. Inventory every navigable frontend destination and public API family,
@@ -438,9 +441,12 @@ and one accurate set of defaults, commands, contracts, and sources of truth.
 
 Rehabilitate valuable Playwright journeys with deterministic fixtures and seeded
 authentication; restore an appropriate browser smoke set to the regular gate;
-reduce initial bundle/load and expensive news/AI/market-data costs; close the
-high-risk test gaps found by the surface audit; complete public API and feature-
-state documentation; and verify clean installation and release paths.
+replace per-card LLM calls with a shared cancellable lifecycle that supports
+server-owned deadlines, typed failures, validated response repair, and optional
+SSE/NDJSON progress or streaming with a stable fallback; reduce initial
+bundle/load and expensive news/AI/market-data costs; close the high-risk test
+gaps found by the surface audit; complete public API and feature-state
+documentation; and verify clean installation and release paths.
 
 Define concrete v2 journeys only after the consolidated v1 surface is known.
 Cross-market intelligence should then connect intentional interfaces instead of
