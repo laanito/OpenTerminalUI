@@ -199,6 +199,20 @@ export function SecondBrainPanel() {
       }
     >
       <div className="space-y-3">
+        <div className="flex flex-wrap gap-2 text-[11px]">
+          <Link
+            to="/equity/journal"
+            className="rounded-sm border border-terminal-border px-2 py-1 text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+          >
+            Add journal entry
+          </Link>
+          <Link
+            to="/equity/portfolio"
+            className="rounded-sm border border-terminal-border px-2 py-1 text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+          >
+            Edit portfolio theses
+          </Link>
+        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {

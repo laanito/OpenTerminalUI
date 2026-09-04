@@ -607,6 +607,33 @@ def test_collect_chunks_indexes_notes():
     assert c["content_hash"]  # hashed for incremental skip
 
 
+def test_collect_chunks_links_portfolio_evidence_to_portfolio_manager():
+    from backend.models.core import PortfolioHoldingORM, PortfolioORM, PortfolioTransactionORM
+    from backend.models.journal import JournalEntry
+    from backend.models.notes import NoteORM
+    from backend.services.brain.indexer import _collect_chunks
+
+    portfolio = SimpleNamespace(id="p1", name="Core", description="Durable compounders.")
+    holding = SimpleNamespace(id="h1", portfolio_id="p1", symbol="AAPL", notes="Hold while margins expand.")
+    transaction = SimpleNamespace(
+        id="t1", portfolio_id="p1", symbol="AAPL", type="buy", date="2026-09-04", notes="Added after guidance."
+    )
+    db = _FakeDB(
+        {
+            NoteORM: [],
+            JournalEntry: [],
+            PortfolioORM: [portfolio],
+            PortfolioHoldingORM: [holding],
+            PortfolioTransactionORM: [transaction],
+        }
+    )
+
+    chunks = _collect_chunks(db, "user1")
+
+    assert {chunk["source"] for chunk in chunks} == {"portfolio", "holding", "transaction"}
+    assert all(chunk["meta_json"]["route"] == "/equity/portfolio" for chunk in chunks)
+
+
 @pytest.mark.asyncio
 async def test_ask_no_matches(monkeypatch):
     class Store:

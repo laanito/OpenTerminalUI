@@ -58,6 +58,14 @@ describe("SecondBrainPanel source filters", () => {
     );
   });
 
+  it("links to the journal and portfolio thesis capture surfaces", async () => {
+    renderPanel();
+    await screen.findByText(/8 indexed/);
+
+    expect(screen.getByRole("link", { name: "Add journal entry" })).toHaveAttribute("href", "/equity/journal");
+    expect(screen.getByRole("link", { name: "Edit portfolio theses" })).toHaveAttribute("href", "/equity/portfolio");
+  });
+
   it("shows source counts and sends the visible evidence scope", async () => {
     renderPanel();
 
