@@ -7,7 +7,16 @@ import pytest
 from fastapi import HTTPException
 
 from backend.api.routes import chart
+from backend.main import app
 from backend.providers.chart_data import OHLCVBar
+
+
+def test_volume_profile_openapi_uses_the_canonical_rich_contract() -> None:
+    operation = app.openapi()["paths"]["/api/charts/volume-profile/{symbol}"]["get"]
+    parameter_names = {parameter["name"] for parameter in operation["parameters"]}
+
+    assert {"period", "bins", "market", "mode", "lookback_bars"} <= parameter_names
+    assert operation["tags"] == ["chart"]
 
 
 def test_volume_profile_route_returns_expected_shape_and_metrics(monkeypatch) -> None:

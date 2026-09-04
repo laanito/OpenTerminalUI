@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import { CompatibilityRedirect } from "./components/CompatibilityRedirect";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { TerminalBackground } from "./components/TerminalBackground";
 import { ThemeRuntime } from "./components/layout/ThemeRuntime";
@@ -208,14 +209,8 @@ function App() {
           </Route>
 
           <Route path="/cockpit" element={<Navigate to="/equity/cockpit" replace />} />
-          <Route path="/model-lab" element={<ProtectedRoute><ModelLabPage /></ProtectedRoute>} />
-          <Route path="/model-lab/experiments/:id" element={<ProtectedRoute><ModelLabExperimentDetailPage /></ProtectedRoute>} />
-          <Route path="/model-lab/runs/:runId" element={<ProtectedRoute><ModelLabRunReportPage /></ProtectedRoute>} />
-          <Route path="/model-lab/compare" element={<ProtectedRoute><ModelLabComparePage /></ProtectedRoute>} />
-          <Route path="/portfolio-lab" element={<ProtectedRoute><PortfolioLabPage /></ProtectedRoute>} />
-          <Route path="/portfolio-lab/portfolios/:id" element={<ProtectedRoute><PortfolioLabDetailPage /></ProtectedRoute>} />
-          <Route path="/portfolio-lab/runs/:runId" element={<ProtectedRoute><PortfolioLabRunReportPage /></ProtectedRoute>} />
-          <Route path="/portfolio-lab/blends" element={<ProtectedRoute><PortfolioLabBlendsPage /></ProtectedRoute>} />
+          <Route path="/model-lab/*" element={<CompatibilityRedirect from="/model-lab" to="/backtesting/model-lab" />} />
+          <Route path="/portfolio-lab/*" element={<CompatibilityRedirect from="/portfolio-lab" to="/equity/portfolio/lab" />} />
 
           <Route path="/stocks" element={<Navigate to="/equity/stocks" replace />} />
           <Route path="/security" element={<Navigate to="/equity/security" replace />} />
