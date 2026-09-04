@@ -19,7 +19,7 @@ does not by itself make a feature useful enough for primary navigation.
 
 ## Snapshot
 
-- FastAPI publishes **396 paths / 442 operations / 86 tag families**.
+- FastAPI publishes **394 paths / 439 operations / 85 tag families**.
 - The equity sidebar previously advertised 43 destinations. The current v1.4
   state retains 32 and hides 11 incomplete, unsafe-as-general-UI, or
   empty-data products.
@@ -126,7 +126,6 @@ Routes not shown in the sidebar are classified by family:
 | Model/portfolio labs | **hidden** | Direct compatibility routes carry an installation-wide data warning; they are not stable or owner-scoped v1 products |
 | Algorithm framework | **experimental** | Advanced research surface, not a stable v1 core contract |
 | Legacy top-level redirects | **hidden** | Compatibility aliases into `/equity`, `/backtesting`, and portfolio-lab routes |
-| Legacy flat watchlist feed | **hidden** | Deprecated, administrator-only `/api/watchlists/items`; retained temporarily for installation-wide background consumers, not frontend use |
 
 ## Removed orphan surfaces
 
@@ -145,13 +144,11 @@ remain. The active frontend page count is now 108.
 
 ## API-family decisions
 
-The checked-in registry classifies all 86 generated OpenAPI tags. The important
+The checked-in registry classifies all 85 generated OpenAPI tags. The important
 non-supported groups are:
 
 - **Hidden:** `bonds`, `cockpit`, `hotlists`, `insider`, `model-lab`, `oms`,
-  `ops`, `plugins`, `portfolio`, `portfolio-lab`, `rs`, `tape`. Here `portfolio`
-  is the legacy flat watchlist-items tag; the canonical owner-scoped
-  `portfolios` and `watchlists` families remain supported.
+  `ops`, `plugins`, `portfolio-lab`, `rs`, `tape`.
 - **Configuration-gated:** `ai`, `ai-insights`, `depth`, `fixed-income`, `fno`,
   `fno-flow`, `fno-signals`, `kite`, `options`.
 - **Experimental:** advanced governance/framework and portfolio-backtest APIs,
@@ -164,11 +161,9 @@ does not erase a narrower limitation.
 
 ## Remaining v1.4 sequence
 
-1. Migrate the remaining report, prefetch, dividend, and news-ingestion users
-   of the legacy flat watchlist table, then remove its admin-only API.
-2. Record decisions for the other duplicate API generations and compatibility
+1. Record decisions for the remaining duplicate API generations and compatibility
    redirects without breaking documented consumers.
-3. Align `Limitations.md` and user-facing navigation/configuration copy with the
+2. Align `Limitations.md` and user-facing navigation/configuration copy with the
    final retained surface.
 
 Do not turn provider acquisition, broad MCP, or cross-market feature development

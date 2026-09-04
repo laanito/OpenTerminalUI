@@ -39,13 +39,6 @@ class WatchlistORM(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
-class WatchlistItem(Base):
-    __tablename__ = "watchlist_items"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    watchlist_name: Mapped[str] = mapped_column(String(64), index=True)
-    ticker: Mapped[str] = mapped_column(String(32), index=True)
-
 class InsiderTrade(Base):
     __tablename__ = "insider_trades"
 

@@ -57,7 +57,6 @@ from backend.models.core import (
     WeightingMethod,
     BlendMethod,
     WatchlistORM,
-    WatchlistItem,
     InsiderTrade,
 )
 from backend.portfolio_backtests.models import PortfolioBacktestJob
@@ -72,7 +71,6 @@ from backend.models.notification import Notification
 
 __all__ = [
     "ScheduledReportORM",
-    "WatchlistItem",
     "AlertRuleORM",
     "AlertHistoryORM",
     "AlertConditionType",

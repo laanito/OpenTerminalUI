@@ -9,10 +9,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from backend.api.deps import get_db
-from backend.api.routes import portfolio, watchlists
+from backend.api.routes import watchlists
 from backend.auth.deps import get_current_user
 from backend.db.models import WatchlistORM
-from backend.models import UserRole
 from backend.shared.db import Base
 
 
@@ -23,8 +22,7 @@ def _build_app():
 
     app = FastAPI()
     app.include_router(watchlists.router)
-    app.include_router(portfolio.router, prefix="/api", tags=["portfolio"])
-    identity = {"id": "user-one", "role": UserRole.VIEWER}
+    identity = {"id": "user-one"}
 
     def _db_override():
         db = session_factory()
@@ -38,7 +36,7 @@ def _build_app():
 
     app.dependency_overrides[get_db] = _db_override
     app.dependency_overrides[get_current_user] = _user_override
-    return TestClient(app), session_factory, identity
+    return TestClient(app), session_factory
 
 
 def _watchlist(*, watchlist_id: str, user_id: str, symbol: str) -> WatchlistORM:
@@ -53,7 +51,7 @@ def _watchlist(*, watchlist_id: str, user_id: str, symbol: str) -> WatchlistORM:
 
 
 def test_watchlists_are_read_and_mutated_only_by_their_owner() -> None:
-    client, session_factory, _ = _build_app()
+    client, session_factory = _build_app()
     with session_factory() as db:
         db.add_all([
             _watchlist(watchlist_id="wl-one", user_id="user-one", symbol="AAPL"),
@@ -78,16 +76,3 @@ def test_watchlists_are_read_and_mutated_only_by_their_owner() -> None:
         other = db.query(WatchlistORM).filter(WatchlistORM.id == "wl-two").one()
         assert other.name == "user-two watchlist"
         assert other.symbols_json == ["MSFT"]
-
-
-def test_legacy_flat_watchlist_feed_is_admin_only_and_deprecated() -> None:
-    client, _, identity = _build_app()
-
-    assert client.get("/api/watchlists/items").status_code == 403
-    identity["role"] = UserRole.ADMIN
-    response = client.get("/api/watchlists/items")
-    assert response.status_code == 200
-    assert response.json() == {"items": []}
-
-    assert portfolio.router.routes
-    assert all(route.deprecated for route in portfolio.router.routes)

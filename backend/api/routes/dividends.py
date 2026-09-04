@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_db
 from backend.auth.deps import get_current_user
-from backend.db.models import WatchlistItem
 from backend.equity.services.corporate_actions import (
     EventType,
     corporate_actions_service,
@@ -17,6 +16,7 @@ from backend.equity.services.corporate_actions import (
 )
 from backend.models import User
 from backend.services.legacy_holdings import resolve_user_holdings
+from backend.services.watchlists import watchlist_symbols_for_user
 
 router = APIRouter()
 
@@ -56,7 +56,7 @@ def _dividend_type(title: str) -> str:
 
 def _portfolio_symbols(db: Session, user_id: str) -> list[str]:
     holdings = {h.ticker.strip().upper() for h in resolve_user_holdings(db, user_id) if h.ticker}
-    watchlist = {w.ticker.strip().upper() for w in db.query(WatchlistItem).all() if w.ticker}
+    watchlist = set(watchlist_symbols_for_user(db, user_id))
     return sorted(holdings | watchlist)
 
 
