@@ -68,6 +68,26 @@ runtime smoke rows still require confirmation on the deployment host after merge
 and before tagging; a sandboxed coding agent without Docker-daemon access must
 leave that step to the host operator rather than marking it passed.
 
+### v1.4.0 verification ledger
+
+Release-prep automation covers the v1.4 surface-truth contract independently of
+the runtime matrix above:
+
+| Contract | Evidence |
+|---|---|
+| Every public API family has an explicit product classification | `docs/surface-inventory.json`, `scripts/check_surface_inventory.py` |
+| Duplicate mounts and operation IDs remain rejected | `backend/tests/test_api/test_router_smoke.py`, `scripts/check_surface_inventory.py` |
+| Owner-scoped watchlist and compatibility-tool boundaries | `backend/tests/test_watchlist_routes.py`, `backend/tests/test_watchlist_service.py`, `backend/tests/test_oms_and_ops_routes.py`, `backend/tests/test_plugin_loader.py` |
+| Primary navigation and configuration gates match the inventory | `frontend/src/__tests__/navigationSurface.test.ts` |
+| Missing provider data remains explicit rather than fabricated | backend provider/degradation tests and `scripts/check_no_production_mocks.py` |
+| Slow or malformed AI responses degrade within bounded deadlines | `backend/tests/test_llm_insights.py`, frontend AI timeout/card tests |
+
+The host operator must still confirm the three runtime smoke rows after the
+release-prep PR merges and before tagging. The broader LLM job, streaming,
+cancellation, and response-repair architecture is intentionally deferred to the
+v1.6 stable-baseline work; the bounded v1.4 reliability fixes do not expand that
+release's scope.
+
 ## Cutting the release
 
 ```bash
