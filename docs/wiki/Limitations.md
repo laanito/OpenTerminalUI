@@ -97,6 +97,13 @@ provider secrets in the browser. In particular:
 - `KITE_API_KEY`, `KITE_API_SECRET`, and `KITE_ACCESS_TOKEN` unlock supported
   India NSE/BSE F&O and depth workflows.
 
+Direct unauthenticated access to `nseindia.com` is a brittle compatibility path,
+not the default India provider. It is disabled unless the host explicitly sets
+`OPENTERMINALUI_NSE_PUBLIC_ENABLED=1`; when enabled, the first HTTP 403 opens a
+process-wide circuit so background or batch work cannot hammer a blocked source.
+Restarting the backend resets the circuit. Yahoo `.NS` market data and configured
+Kite access remain independent alternatives.
+
 The **Automation API Keys** section creates application credentials for scoped
 external clients, including deliberate note ingestion. Those keys do not
 configure or proxy market-data providers.

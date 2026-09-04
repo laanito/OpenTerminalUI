@@ -7,6 +7,8 @@ from datetime import date, datetime, timezone
 from typing import Any
 
 import httpx
+
+from backend.shared.nse_access import disable_nse_public, nse_public_enabled
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -226,11 +228,20 @@ async def _llm_extract(symbol: str, documents: list[dict[str, Any]]) -> dict[str
 async def fetch_public_filings(symbol: str, market: str, limit: int = 5) -> list[dict[str, Any]]:
     symbol_u = symbol.strip().upper()
     if market == "IN":
+        if not nse_public_enabled():
+            return []
         url = "https://www.nseindia.com/api/corporate-announcements"
         try:
             async with httpx.AsyncClient(timeout=8.0, headers={"User-Agent": "Mozilla/5.0"}, trust_env=False) as client:
-                await client.get("https://www.nseindia.com", timeout=8.0)
+                home = await client.get("https://www.nseindia.com", timeout=8.0)
+                if home.status_code == 403:
+                    disable_nse_public("HTTP 403 for NSE homepage")
+                    return []
+                home.raise_for_status()
                 resp = await client.get(url, params={"index": "equities", "symbol": symbol_u})
+                if resp.status_code == 403:
+                    disable_nse_public(f"HTTP 403 for corporate announcements ({symbol_u})")
+                    return []
                 resp.raise_for_status()
                 payload = resp.json()
         except Exception:
@@ -417,4 +428,3 @@ def get_conviction_record(db: Session, symbol: str, market: str | None = None, r
         "summary": row["raw_summary"],
         "updated_at": row["updated_at"],
     }
-

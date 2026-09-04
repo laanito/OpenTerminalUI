@@ -8,6 +8,8 @@ from typing import Any
 
 import requests
 
+from backend.shared.nse_access import disable_nse_public, nse_public_enabled
+
 logger = logging.getLogger(__name__)
 
 
@@ -123,7 +125,10 @@ class NSEResultsCalendar:
 
     def _init_nse_session(self) -> None:
         self._session = self._new_session()
-        self._session.get(_HOME_URL, timeout=15)
+        response = self._session.get(_HOME_URL, timeout=15)
+        if response.status_code == 403:
+            disable_nse_public("HTTP 403 for NSE homepage")
+        response.raise_for_status()
 
     def _rate_limit_nse(self) -> None:
         elapsed = time.time() - self._last_nse_call_at
@@ -132,12 +137,17 @@ class NSEResultsCalendar:
         self._last_nse_call_at = time.time()
 
     def _nse_get_json(self, url: str, params: dict[str, Any] | None = None) -> Any:
+        if not nse_public_enabled():
+            return None
         backoff = 1.0
         for attempt in range(1, 4):
             try:
                 self._rate_limit_nse()
                 resp = self._session.get(url, params=params, timeout=20)
-                if resp.status_code in (401, 403):
+                if resp.status_code == 403:
+                    disable_nse_public(f"HTTP 403 for {url}")
+                    return None
+                if resp.status_code == 401:
                     logger.warning("NSE auth/cookie failure status=%s url=%s attempt=%s", resp.status_code, url, attempt)
                     self._init_nse_session()
                     time.sleep(backoff)

@@ -482,6 +482,7 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | `KITE_API_KEY` | Zerodha Kite &mdash; India NSE/BSE F&O real-time + historical |
 | `KITE_API_SECRET` | Zerodha Kite secret |
 | `KITE_ACCESS_TOKEN` | Zerodha Kite session token |
+| `OPENTERMINALUI_NSE_PUBLIC_ENABLED` | Optional direct `nseindia.com` compatibility access (default `false`; disables itself for the process after a 403) |
 | `JWT_SECRET_KEY` | JWT signing key for authentication |
 | `CACHE_SIGNING_KEY` | Cache integrity signing key |
 | `DATABASE_URL` | Database connection (Docker default: PostgreSQL; set a `sqlite+aiosqlite://` URL to use SQLite) |

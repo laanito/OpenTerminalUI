@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from backend.shared.cache import cache
 from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
+from backend.shared.nse_access import disable_nse_public, nse_public_enabled, require_nse_public
 
 
 class ShareholdingCategory(BaseModel):
@@ -138,13 +139,19 @@ class ShareholdingService:
     SHAREHOLDING_TTL = 86400
 
     async def get_nse_session(self) -> httpx.AsyncClient:
+        require_nse_public()
         client = httpx.AsyncClient(
             headers=self.NSE_HEADERS,
             follow_redirects=True,
             timeout=15.0,
             trust_env=False,
         )
-        await client.get(self.NSE_BASE)
+        response = await client.get(self.NSE_BASE)
+        if response.status_code == 403:
+            disable_nse_public("HTTP 403 for NSE homepage")
+            await client.aclose()
+            require_nse_public()
+        response.raise_for_status()
         return client
 
     def _extract_rows(self, payload: Any) -> list[dict[str, Any]]:
@@ -336,10 +343,15 @@ class ShareholdingService:
         return out
 
     async def _fetch_nse_shareholding_payload(self, symbol: str) -> dict[str, Any]:
+        if not nse_public_enabled():
+            return {}
         endpoint = f"{self.NSE_BASE}/api/corporate-share-holding"
         client = await self.get_nse_session()
         try:
             resp = await client.get(endpoint, params={"symbol": symbol, "issuer": "company"})
+            if resp.status_code == 403:
+                disable_nse_public(f"HTTP 403 for corporate shareholding ({symbol})")
+                return {}
             if resp.status_code != 200:
                 logger.warning(f"NSE shareholding pattern for {symbol} returned status {resp.status_code}")
                 return {}

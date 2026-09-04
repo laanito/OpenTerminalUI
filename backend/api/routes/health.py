@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from backend.api.deps import get_unified_fetcher
+from backend.shared.nse_access import nse_public_enabled
 
 router = APIRouter()
 
@@ -35,8 +36,11 @@ async def datasource_health() -> dict[str, Any]:
     # Define checks using actual async methods from new clients
     checks_map = []
 
-    # NSE: get_market_status (lightweight)
-    checks_map.append(_probe("nse", fetcher.nse.get_market_status()))
+    # Direct NSE website access is an opt-in compatibility provider. Do not
+    # probe (or degrade overall health) when the host intentionally disabled it.
+    nse_disabled = not nse_public_enabled()
+    if not nse_disabled:
+        checks_map.append(_probe("nse-public", fetcher.nse.get_market_status()))
 
     # Yahoo: get_quotes (lightweight)
     checks_map.append(_probe("yahoo", fetcher.yahoo.get_quotes(["RELIANCE.NS"])))
@@ -59,6 +63,8 @@ async def datasource_health() -> dict[str, Any]:
         )
 
     results = await asyncio.gather(*checks_map)
+    if nse_disabled:
+        results.append({"name": "nse-public", "status": "disabled", "latency_ms": 0.0})
 
-    overall = "ok" if all(r["status"] == "ok" for r in results) else "degraded"
+    overall = "ok" if all(r["status"] in {"ok", "disabled"} for r in results) else "degraded"
     return {"status": overall, "sources": list(results)}

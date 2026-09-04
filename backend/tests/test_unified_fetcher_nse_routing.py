@@ -64,6 +64,7 @@ def test_corporate_actions_uses_nse_for_indian_symbol(monkeypatch, fetcher_with_
         return _classification("IN", "NSE")
 
     monkeypatch.setattr(uf.market_classifier, "classify", fake_classify)
+    monkeypatch.setattr(uf, "nse_public_enabled", lambda: True)
 
     result = asyncio.run(fetcher.fetch_corporate_actions("RELIANCE"))
 

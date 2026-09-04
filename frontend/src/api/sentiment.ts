@@ -13,7 +13,10 @@ import type {
 // and reasoning models longer still. Without a roomier per-call timeout the
 // browser aborts mid-generation and the card shows "unavailable" for anything but
 // the fastest model. Same treatment brain.ts already gives its LLM calls.
-const AI_TIMEOUT = { timeout: 180_000 } as const;
+// Keep the browser deadline beyond the backend's default 240-second model
+// timeout so a slow local inference can degrade cleanly server-side instead of
+// being aborted by Axios first.
+const AI_TIMEOUT = { timeout: 300_000 } as const;
 
 export async function fetchNewsSentiment(ticker: string, days = 7, market?: string): Promise<NewsSentimentSummary> {
   const { data } = await api.get<NewsSentimentSummary>(`/news/sentiment/${encodeURIComponent(ticker)}`, {

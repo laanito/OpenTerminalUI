@@ -11,6 +11,8 @@ import pandas as pd
 import requests
 import yfinance as yf
 
+from backend.shared.nse_access import disable_nse_public, nse_public_enabled, require_nse_public
+
 _YF_CACHE_DIR = Path(__file__).resolve().parents[2] / ".yf_cache"
 _NSE_SYMBOLS_PATH = Path(__file__).resolve().parents[2] / "data" / "nse_equity_symbols_eq.csv"
 _YF_CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -188,6 +190,7 @@ class MarketDataFetcher:
         }
 
     def _fetch_nse_quote_api(self, ticker: str) -> dict[str, Any]:
+        require_nse_public()
         base_symbol = ticker.strip().upper().split(".")[0]
         headers = {
             "User-Agent": "Mozilla/5.0",
@@ -200,6 +203,8 @@ class MarketDataFetcher:
             headers=headers,
             timeout=self.request_timeout_seconds,
         )
+        if basic.status_code == 403:
+            disable_nse_public(f"HTTP 403 for quote-equity ({base_symbol})")
         basic.raise_for_status()
         basic_obj = basic.json()
 
@@ -209,6 +214,8 @@ class MarketDataFetcher:
             headers=headers,
             timeout=self.request_timeout_seconds,
         )
+        if trade.status_code == 403:
+            disable_nse_public(f"HTTP 403 for quote-equity trade info ({base_symbol})")
         trade.raise_for_status()
         trade_obj = trade.json()
 
@@ -292,7 +299,7 @@ class MarketDataFetcher:
                 except Exception:
                     self._mark_network_failure()
         # NSE quote fallback: keep this outside cooldown gate so we still recover market metrics.
-        if not info or info.get("marketCap") is None or info.get("trailingPE") is None:
+        if nse_public_enabled() and (not info or info.get("marketCap") is None or info.get("trailingPE") is None):
             try:
                 nse_info = self._fetch_nse_quote_api(ticker)
                 for key, val in nse_info.items():

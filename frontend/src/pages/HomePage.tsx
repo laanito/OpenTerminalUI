@@ -673,7 +673,7 @@ export function HomePage() {
             <div className="grid grid-cols-1">
               <AiInsightCard
                 title="AI Market Outlook"
-                description="Gemma-synthesized assessment of global market themes and regime"
+                description="Provider-agnostic assessment of global market themes and regime"
                 fetcher={() => fetchCollectionBriefing(MARKET_PULSE_SYMBOLS, "global markets")}
               />
             </div>

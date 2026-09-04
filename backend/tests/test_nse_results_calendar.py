@@ -10,6 +10,13 @@ import requests
 from backend.core.nse_results_calendar import NSEResultsCalendar, infer_quarter
 
 
+@pytest.fixture(autouse=True)
+def _enable_public_nse_for_provider_tests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests exercise the explicitly enabled provider implementation."""
+    monkeypatch.setattr("backend.core.nse_results_calendar.nse_public_enabled", lambda: True)
+    monkeypatch.setattr("backend.core.nse_results_calendar.disable_nse_public", lambda _reason: None)
+
+
 @dataclass
 class _FakeResponse:
     status_code: int = 200
@@ -199,7 +206,7 @@ def test_error_scenarios(monkeypatch: pytest.MonkeyPatch) -> None:
     assert payload == {"ok": True}
     assert init_calls["n"] >= 1
 
-    # 403 followed by success should re-init and retry.
+    # A 403 opens the circuit immediately; retrying amplifies NSE bot blocking.
     cal2 = NSEResultsCalendar()
     monkeypatch.setattr(cal2, "_rate_limit_nse", lambda: None)
     reinit_calls = {"n": 0}
@@ -208,8 +215,9 @@ def test_error_scenarios(monkeypatch: pytest.MonkeyPatch) -> None:
     seq = [_FakeResponse(status_code=403, payload={}), _FakeResponse(status_code=200, payload={"x": 1})]
     cal2._session.get = lambda *_a, **_k: seq.pop(0)  # type: ignore[assignment]
     payload2 = cal2._nse_get_json("https://www.nseindia.com/api/corporate-announcements")
-    assert payload2 == {"x": 1}
-    assert reinit_calls["n"] >= 1
+    assert payload2 is None
+    assert reinit_calls["n"] == 0
+    assert len(seq) == 1
 
     # Malformed JSON should return None gracefully.
     cal3 = NSEResultsCalendar()

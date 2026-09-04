@@ -8,6 +8,8 @@ from typing import Any, Optional
 
 import httpx
 
+from backend.shared.nse_access import NSEPublicAccessDisabled, disable_nse_public, require_nse_public
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_USER_AGENTS = [
@@ -57,8 +59,14 @@ class NSESession:
 
         try:
             # Hit homepage to get cookies
-            await self.client.get("https://www.nseindia.com", timeout=self.timeout)
+            response = await self.client.get("https://www.nseindia.com", timeout=self.timeout)
+            if response.status_code == 403:
+                disable_nse_public("HTTP 403 for NSE homepage")
+                raise NSEPublicAccessDisabled("Direct NSE public access blocked: HTTP 403 for NSE homepage")
+            response.raise_for_status()
             self.cookies_loaded = True
+        except NSEPublicAccessDisabled:
+            raise
         except Exception as e:
             logger.error(f"Failed to refresh NSE cookies: {e}")
             raise
@@ -104,6 +112,7 @@ class NSEClient:
             return session
 
     async def _request(self, endpoint: str, params: dict = None, attempt: int = 1) -> Any:
+        require_nse_public()
         session = await self._get_session()
 
         try:
@@ -114,16 +123,19 @@ class NSEClient:
             url = f"{self.API_BASE_URL}{endpoint}"
             response = await session.client.get(url, params=params)
 
-            if response.status_code == 401 or response.status_code == 403:
-                # Cookie expiry or blocking
-                logger.warning(f"NSE {response.status_code} for {endpoint}. Refreshing session.")
+            if response.status_code == 403:
+                # NSE commonly geo/bot-blocks server deployments. Retrying every
+                # symbol amplifies the block, so one 403 opens a process circuit.
+                disable_nse_public(f"HTTP 403 for {endpoint}")
+                raise NSEPublicAccessDisabled(f"Direct NSE public access blocked: HTTP 403 for {endpoint}")
+
+            if response.status_code == 401:
+                logger.warning(f"NSE 401 for {endpoint}. Refreshing session once.")
                 await session.initialize() # Re-init clears cookies
-                if attempt < 3:
-                     # Exponential backoff
+                if attempt < 2:
                     await asyncio.sleep(2 ** attempt + random.random())
                     return await self._request(endpoint, params, attempt + 1)
-                else:
-                    response.raise_for_status()
+                response.raise_for_status()
 
             if response.status_code == 429:
                 # Rate limit

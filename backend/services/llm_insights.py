@@ -109,13 +109,17 @@ async def run_insight(
         {"role": "user", "content": user_content},
     ]
     try:
-        content = await client.chat(
-            messages,
-            temperature=0.3,
-            max_tokens=max_tokens,
-            json_schema=INSIGHT_SCHEMA,
-            frequency_penalty=0.3,
-        )
+        # The client may make more than one provider request while stepping down
+        # its structured-output ladder. Bound the whole operation, not each rung,
+        # so the server always resolves before the browser's five-minute deadline.
+        async with asyncio.timeout(settings.llm_timeout_seconds):
+            content = await client.chat(
+                messages,
+                temperature=0.3,
+                max_tokens=max_tokens,
+                json_schema=INSIGHT_SCHEMA,
+                frequency_penalty=0.3,
+            )
         parsed = parse_json_response(content)
     except (LLMError, asyncio.TimeoutError):
         return base
