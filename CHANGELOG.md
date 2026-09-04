@@ -15,9 +15,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ### Changed
 - **Watchlists consolidated on the owner-scoped contract** — all supported UI
   reads and add actions now use `/api/watchlists`, and update, delete, and symbol
-  mutations verify ownership. The old installation-global
-  `/api/watchlists/items` feed is deprecated, hidden, and administrator-only
-  while its remaining background-service consumers are migrated.
+  mutations verify ownership. Reports and dividend views read only the caller's
+  lists; cache and news workers receive a symbol-only union across users.
 - **Experimental primary surfaces adjudicated** — Economics is now explicitly
   FRED/provider-gated, while ETF holdings/overlap, Statistical Lab, and Pair
   Trading retain supported real-data contracts. Installation-global Model Lab
@@ -58,6 +57,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   as an internal simulator, returns only the caller's orders and audit events,
   attributes fill audits to that user, and reserves global restrictions and kill
   switches for administrators.
+
+### Removed
+- **Ownerless watchlist storage and API** — removed the legacy
+  `/api/watchlists/items` endpoints, `WatchlistItem` model, and `watchlist_items`
+  table after migrating every runtime consumer. Existing rows cannot be assigned
+  safely because they contain no owner identity, so the migration deliberately
+  does not copy them into private user watchlists.
 
 ## [1.3.0] - 2026-09-02
 

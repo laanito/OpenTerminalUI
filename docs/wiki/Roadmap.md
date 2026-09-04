@@ -39,8 +39,9 @@
   watchlist items (singular→plural), plugin enable/disable, fixed-income→bonds.
   Also fixed two backend wiring bugs the audit surfaced: the `economics` router
   was imported but never mounted (every `/api/economics/*` was a 404, plus a
-  dead `settings.fmp_key` attribute), and the enriched watchlist-items GET was
-  shadowed by the multi-watchlist router (moved to `/watchlists/items`)
+  dead `settings.fmp_key` attribute), and the then-current enriched
+  watchlist-items GET was shadowed by the multi-watchlist router. That ownerless
+  compatibility feed was subsequently retired during v1.4 consolidation.
 - **Provider-agnostic LLM layer**: replaced the LM Studio-specific client with a
   generic OpenAI-compatible `LLMClient` (default **Ollama** at
   `localhost:11434/v1`, also works with LM Studio, OpenAI, OpenRouter, Groq,
@@ -307,8 +308,9 @@ analytics live on legacy; real accounting lives on the Manager). Plan:
     per-user **primary** portfolio and repointed every consumer (dashboards + risk/
     stress/factor/dividends/reports/workers) to it; then **deleted** the global
     `Holding`/`TaxLot` tables, the legacy `/api/portfolio*` routes, and the legacy
-    view. The shared-across-users portfolio (the privacy leak) is gone; watchlists
-    (`/watchlists/items`) are unaffected.
+    view. The shared-across-users portfolio (the privacy leak) is gone. The
+    analogous ownerless watchlist-items system was retired during v1.4; canonical
+    watchlists now use the per-user `/api/watchlists` contract.
 
 > **Explicitly out of scope (removed from the timeline 2026-06-30):** tax lots /
 > cost-basis accounting. It's a rabbit hole where a *wrong* number is worse than

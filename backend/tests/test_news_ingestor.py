@@ -20,6 +20,23 @@ NormalizedNews = _NEWS_INGESTOR_MODULE.NormalizedNews
 normalize_news_record = _NEWS_INGESTOR_MODULE.normalize_news_record
 
 
+def test_db_tickers_combines_held_and_watchlist_symbol_unions(monkeypatch) -> None:
+    class _TickerSession:
+        def close(self) -> None:
+            return None
+
+    session = _TickerSession()
+    monkeypatch.setattr(_NEWS_INGESTOR_MODULE, "SessionLocal", lambda: session)
+    monkeypatch.setattr(_NEWS_INGESTOR_MODULE, "all_held_symbols", lambda db, limit: ["MSFT", "AAPL"])
+    monkeypatch.setattr(
+        _NEWS_INGESTOR_MODULE,
+        "all_watchlist_symbols",
+        lambda db, limit: ["AAPL", "TSLA"],
+    )
+
+    assert _NEWS_INGESTOR_MODULE._db_tickers(limit=3) == ["MSFT", "AAPL", "TSLA"]
+
+
 class _FakeExistingQuery:
     def filter(self, *args, **kwargs):  # noqa: ANN002, ANN003
         return self

@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-from backend.api.routes import portfolio
+import warnings
+
+from backend.main import app
 
 
-def test_portfolio_module_serves_watchlist_items_only() -> None:
-    # The legacy global portfolio endpoints were removed in v1.1 (part C); this
-    # module now only serves the deprecated admin compatibility feed. Per-user
-    # portfolios live under /api/portfolios and watchlists under /api/watchlists.
-    paths = {route.path for route in portfolio.router.routes}
-    assert "/watchlists/items" in paths
-    assert all(route.deprecated for route in portfolio.router.routes)
+def _openapi_paths() -> set[str]:
+    # Other retained duplicate-router decisions are handled separately in v1.4;
+    # they should not add unrelated warning noise to this removal guard.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Duplicate Operation ID.*")
+        return set(app.openapi()["paths"])
+
+
+def test_legacy_global_portfolio_and_watchlist_routes_are_removed() -> None:
+    paths = _openapi_paths()
+    assert "/api/watchlists/items" not in paths
     assert all("/portfolio/holdings" not in p for p in paths)
     assert all("/portfolio/tax-lots" not in p for p in paths)
-    assert all("/backtests" not in p for p in paths)
 
 
-def test_portfolio_module_not_coupled_to_backtest_jobs() -> None:
-    names = set(dir(portfolio))
-    assert "get_backtest_job_service" not in names
+def test_canonical_portfolio_and_watchlist_routes_remain() -> None:
+    paths = _openapi_paths()
+    assert "/api/portfolios" in paths
+    assert "/api/watchlists" in paths

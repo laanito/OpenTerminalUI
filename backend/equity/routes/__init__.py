@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from backend.api.routes import (
     admin, backtest, backtests, chart, crypto, data,
     commodities, depth, export, forex, fundamentals, health, hotlists, indicators,
-    kite, news, emotion, ai_insights, paper, peers, plugins, portfolio, quotes,
+    kite, news, emotion, ai_insights, paper, peers, plugins, quotes,
     screener, scripting, shareholding, stocks,
     stream, valuation, options, audit, data_layer, governance, patterns,
     user_layouts, portfolios,
@@ -32,7 +32,6 @@ equity_router.include_router(fundamentals.router, prefix="/api", tags=["fundamen
 equity_router.include_router(peers.router, prefix="/api", tags=["peers"])
 # Legacy NSE-CSV /api/search retired in favor of /api/instruments/search.
 equity_router.include_router(quotes.router, prefix="/api", tags=["quotes"])
-equity_router.include_router(portfolio.router, prefix="/api", tags=["portfolio"])
 equity_router.include_router(backtest.router, prefix="/api", tags=["backtest"])
 equity_router.include_router(backtests.router, prefix="/api", tags=["backtests"])
 equity_router.include_router(alerts.router, prefix="/api", tags=["alerts"])

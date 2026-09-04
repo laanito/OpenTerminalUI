@@ -1,36 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 
-from backend.api.routes import portfolio, search, stocks
-from backend.db.models import WatchlistItem
+from backend.api.routes import search, stocks
 from backend.shared.market_classifier import StockClassification, market_classifier
-
-
-@dataclass
-class _FakeWatchlist:
-    id: int
-    watchlist_name: str
-    ticker: str
-
-
-class _FakeQuery:
-    def __init__(self, rows):
-        self._rows = rows
-
-    def all(self):
-        return list(self._rows)
-
-
-class _FakeDB:
-    def __init__(self, watchlists=None):
-        self._watchlists = watchlists or []
-
-    def query(self, model):
-        if model is WatchlistItem:
-            return _FakeQuery(self._watchlists)
-        return _FakeQuery([])
 
 
 def _us_classification(symbol: str) -> StockClassification:
@@ -86,63 +59,6 @@ def test_stocks_route_includes_classification_and_us_symbol(monkeypatch) -> None
     assert out.classification is not None
     assert out.classification["country_code"] == "US"
     assert out.classification["has_options"] is True
-
-
-def test_watchlist_is_enriched_with_market_fields(monkeypatch) -> None:
-    async def _fake_classify(symbol: str):
-        return _us_classification(symbol)
-
-    monkeypatch.setattr(portfolio.market_classifier, "classify", _fake_classify)
-
-    db = _FakeDB(watchlists=[_FakeWatchlist(id=1, watchlist_name="Core", ticker="AAPL")])
-    watch = asyncio.run(portfolio.get_watchlists(db=db))
-
-    assert len(watch["items"]) == 1
-    wrow = watch["items"][0]
-    assert wrow["exchange"] == "NASDAQ"
-    assert wrow["country_code"] == "US"
-    assert wrow["flag_emoji"] == "🇺🇸"
-    assert wrow["has_options"] is True
-
-
-def test_watchlist_mixed_india_us_enrichment(monkeypatch) -> None:
-    async def _fake_classify(symbol: str):
-        s = symbol.strip().upper()
-        if s == "RELIANCE":
-            return StockClassification(
-                symbol=s,
-                display_name=s,
-                exchange="NSE",
-                country_code="IN",
-                country_name="India",
-                flag_emoji="🇮🇳",
-                currency="INR",
-                has_futures=True,
-                has_options=True,
-                market_status="open",
-            )
-        return _us_classification(s)
-
-    monkeypatch.setattr(portfolio.market_classifier, "classify", _fake_classify)
-
-    db = _FakeDB(
-        watchlists=[
-            _FakeWatchlist(id=1, watchlist_name="Core", ticker="RELIANCE"),
-            _FakeWatchlist(id=2, watchlist_name="Core", ticker="AAPL"),
-        ],
-    )
-
-    watch = asyncio.run(portfolio.get_watchlists(db=db))
-    by_ticker_watch = {row["ticker"]: row for row in watch["items"]}
-
-    assert by_ticker_watch["RELIANCE"]["exchange"] == "NSE"
-    assert by_ticker_watch["RELIANCE"]["country_code"] == "IN"
-    assert by_ticker_watch["RELIANCE"]["has_futures"] is True
-    assert by_ticker_watch["RELIANCE"]["flag_emoji"] == "🇮🇳"
-
-    assert by_ticker_watch["AAPL"]["exchange"] == "NASDAQ"
-    assert by_ticker_watch["AAPL"]["country_code"] == "US"
-    assert by_ticker_watch["AAPL"]["flag_emoji"] == "🇺🇸"
 
 
 def test_search_results_include_flag_and_exchange(monkeypatch) -> None:

@@ -9,7 +9,7 @@ from typing import Any
 
 from backend.api.deps import get_unified_fetcher
 from backend.shared.db import SessionLocal
-from backend.db.models import NewsArticle, WatchlistItem
+from backend.db.models import NewsArticle
 from backend.services.legacy_holdings import all_held_symbols
 from backend.services.sentiment_engine import score_article_sentiment
 from backend.services.news_terms import (
@@ -19,6 +19,7 @@ from backend.services.news_terms import (
     is_index_symbol,
     ticker_fallback_terms,
 )
+from backend.services.watchlists import all_watchlist_symbols
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def _db_tickers(limit: int = 40) -> list[str]:
     db = SessionLocal()
     try:
         holdings = all_held_symbols(db, limit=limit)
-        watchlist = [str(r[0]).strip().upper() for r in db.query(WatchlistItem.ticker).limit(limit).all() if r and r[0]]
+        watchlist = all_watchlist_symbols(db, limit=limit)
         merged = list(dict.fromkeys([*holdings, *watchlist]))
         return merged[:limit]
     except Exception:

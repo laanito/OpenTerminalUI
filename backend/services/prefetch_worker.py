@@ -9,8 +9,8 @@ from typing import List
 from backend.core.unified_fetcher import UnifiedFetcher
 from backend.shared.cache import cache
 from backend.shared.db import SessionLocal
-from backend.db.models import WatchlistItem
 from backend.services.legacy_holdings import all_held_symbols
+from backend.services.watchlists import all_watchlist_symbols
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def get_db_tickers() -> List[str]:
     db = SessionLocal()
     try:
         holdings = all_held_symbols(db)
-        watchlist = [w.ticker for w in db.query(WatchlistItem.ticker).all()]
+        watchlist = all_watchlist_symbols(db)
         return list(set(holdings + watchlist))
     except Exception as e:
         logger.error(f"Error fetching DB tickers: {e}")
