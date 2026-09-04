@@ -622,8 +622,19 @@ export function PortfolioManager() {
               <RiskMetricsPanel metrics={riskMetrics} />
               <AiInsightCard
                 title="AI Risk Assessment"
-                description="Narrative interpretation of portfolio risk, concentration, and tail-risk posture"
-                fetcher={() => fetchAiRiskInsights(riskMetrics || {}, "portfolio")}
+                description="Narrative interpretation of the available portfolio risk and exposure evidence"
+                disabled={!riskMetrics}
+                disabledMessage="Portfolio risk metrics are unavailable; there is nothing factual to assess yet."
+                fetcher={() =>
+                  fetchAiRiskInsights(
+                    {
+                      risk_metrics: riskMetrics || {},
+                      allocation_by_sector: analytics?.allocation_by_sector || [],
+                      correlation: correlation?.matrix || [],
+                    },
+                    "portfolio",
+                  )
+                }
               />
             </div>
             <div className="grid gap-2 xl:grid-cols-2">

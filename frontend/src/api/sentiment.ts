@@ -100,7 +100,20 @@ export async function fetchAiRiskInsights(metrics: Record<string, any>, scope = 
   return data;
 }
 
-export async function fetchCollectionBriefing(symbols: string[], scope = "collection"): Promise<InsightData> {
-  const { data } = await api.post<InsightData>("/ai/collection-briefing", { symbols, scope }, AI_TIMEOUT);
+export type CollectionBriefingFact = {
+  symbol: string;
+  label?: string;
+  price?: number | null;
+  change?: number | null;
+  change_pct?: number | null;
+};
+
+export async function fetchCollectionBriefing(
+  symbols: string[],
+  scope = "collection",
+  facts?: CollectionBriefingFact[],
+): Promise<InsightData> {
+  const payload = facts ? { symbols, scope, facts } : { symbols, scope };
+  const { data } = await api.post<InsightData>("/ai/collection-briefing", payload, AI_TIMEOUT);
   return data;
 }

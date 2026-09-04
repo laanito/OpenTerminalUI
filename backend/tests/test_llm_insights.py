@@ -58,6 +58,37 @@ def test_run_insight_falls_back_on_unparseable_output(monkeypatch) -> None:
     assert result["engine"] == "unavailable"
 
 
+def test_run_insight_retries_malformed_structured_output_once(monkeypatch) -> None:
+    valid = (
+        '{"summary":"Grounded retry.","sections":['
+        '{"title":"Posture","tone":"neutral","points":["Mixed evidence"]},'
+        '{"title":"Risks","tone":"negative","points":["Data is limited"]}]}'
+    )
+
+    class _FlakyStructuredClient:
+        def __init__(self) -> None:
+            self.responses = ['{"summary":"truncated"', valid]
+            self.calls = 0
+
+        async def health(self) -> bool:
+            return True
+
+        async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001
+            response = self.responses[self.calls]
+            self.calls += 1
+            return response
+
+    client = _FlakyStructuredClient()
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: client)
+
+    result = asyncio.run(llm_insights.run_insight("system", "user"))
+
+    assert client.calls == 2
+    assert result["engine"] == "llm"
+    assert result["summary"] == "Grounded retry."
+
+
 def test_run_insight_bounds_the_whole_provider_operation(monkeypatch) -> None:
     class _SlowClient(_FakeClient):
         async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001

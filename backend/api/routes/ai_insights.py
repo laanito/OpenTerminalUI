@@ -16,6 +16,7 @@ degrade gracefully when LLM is unavailable.
 from __future__ import annotations
 
 import json
+import math
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query
@@ -48,6 +49,14 @@ def _fmt(value: Any, suffix: str = "") -> str:
         return f"{float(value):,.2f}{suffix}"
     except (TypeError, ValueError):
         return str(value)
+
+
+def _finite_observation(value: Any) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
 
 
 def _asset_type(symbol: str, market: str | None = None) -> AssetType:
@@ -473,6 +482,25 @@ async def collection_briefing(payload: dict[str, Any]) -> dict[str, Any]:
         symbols = []
     symbols = [str(s).strip().upper() for s in symbols[:10] if s]
     scope = str(payload.get("scope") or "collection").strip()
+    raw_facts = payload.get("facts") or []
+    facts: list[dict[str, Any]] = []
+    if isinstance(raw_facts, list):
+        allowed_symbols = set(symbols)
+        for raw in raw_facts[:10]:
+            if not isinstance(raw, dict):
+                continue
+            symbol = str(raw.get("symbol") or "").strip().upper()
+            if symbol not in allowed_symbols:
+                continue
+            facts.append(
+                {
+                    "symbol": symbol,
+                    "label": str(raw.get("label") or symbol).strip()[:80],
+                    "price": _finite_observation(raw.get("price")),
+                    "change": _finite_observation(raw.get("change")),
+                    "change_pct": _finite_observation(raw.get("change_pct")),
+                }
+            )
 
     if not symbols:
         return {
@@ -482,12 +510,19 @@ async def collection_briefing(payload: dict[str, Any]) -> dict[str, Any]:
         }
 
     system_prompt = (
-        f"You are a market analyst. Assess this {scope} of {len(symbols)} stocks. "
-        "Summarize the collective themes, sector distribution, and technical/fundamental "
-        "posture. Provide exactly these sections: 'Themes & Posture' (tone neutral), "
-        "'Top Picks' (tone positive), and 'Risks' (tone negative)."
+        f"You are a skeptical market analyst. Assess this {scope} of {len(symbols)} instruments "
+        "using only the observations supplied by the terminal. Do not infer current prices, "
+        "performance, fundamentals, technical signals, sectors, or a market regime when those "
+        "facts are absent. Explicitly identify evidence limits. Provide exactly these sections: "
+        "'Observed Posture' (tone neutral), 'Relative Strength' (tone positive or neutral), and "
+        "'Risks & Unknowns' (tone negative or neutral)."
     )
-    user_content = f"Symbols: {', '.join(symbols)}\nContext: Analysis of a filtered {scope}."
+    facts_block = json.dumps(facts, default=str) if facts else "No current observations were supplied."
+    user_content = (
+        f"Symbols: {', '.join(symbols)}\n"
+        f"Scope: {scope}\n"
+        f"Current terminal observations (JSON):\n{facts_block}"
+    )
 
     return await run_insight(
         system_prompt,
@@ -505,11 +540,13 @@ async def risk_insights(payload: dict[str, Any]) -> dict[str, Any]:
     scope = str((payload or {}).get("scope") or "the portfolio").strip() or "the portfolio"
 
     system_prompt = (
-        "You are a portfolio risk analyst. Interpret the risk metrics for a "
-        "professional trader in plain English. Highlight tail risk, volatility, "
-        "concentration, correlation clustering, and factor exposure. Provide exactly "
-        "these sections: 'Risk Posture' (tone neutral), 'Concentration & "
-        "Correlation' (tone negative or neutral), and 'Recommendations' (tone neutral)."
+        "You are a skeptical portfolio risk analyst. Interpret only the metrics and "
+        "portfolio observations supplied by the terminal. Do not infer volatility, "
+        "concentration, correlation clustering, factor exposure, or tail risk when the "
+        "corresponding evidence is absent; name those limits explicitly. Do not give "
+        "direct buy or sell advice. Provide exactly these sections: 'Risk Posture' "
+        "(tone neutral), 'Observed Exposures' (tone negative or neutral), and "
+        "'Risks & Unknowns' (tone neutral or negative)."
     )
     user_content = (
         f"Scope: {scope}\n"

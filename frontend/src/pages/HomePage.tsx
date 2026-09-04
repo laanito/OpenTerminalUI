@@ -673,8 +673,24 @@ export function HomePage() {
             <div className="grid grid-cols-1">
               <AiInsightCard
                 title="AI Market Outlook"
-                description="Provider-agnostic assessment of global market themes and regime"
-                fetcher={() => fetchCollectionBriefing(MARKET_PULSE_SYMBOLS, "global markets")}
+                description="Provider-agnostic interpretation of the displayed cross-asset snapshot"
+                disabled={!marketRows.some((row) => row.ltp > 0)}
+                disabledMessage="Live market observations are unavailable; an outlook cannot be grounded yet."
+                fetcher={() =>
+                  fetchCollectionBriefing(
+                    MARKET_PULSE_SYMBOLS,
+                    "global markets",
+                    marketRows
+                      .filter((row) => row.ltp > 0)
+                      .map((row) => ({
+                        symbol: row.symbol,
+                        label: row.label,
+                        price: row.ltp,
+                        change: row.chg,
+                        change_pct: row.chgPct,
+                      })),
+                  )
+                }
               />
             </div>
 

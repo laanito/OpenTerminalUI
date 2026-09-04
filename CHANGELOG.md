@@ -13,6 +13,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **AI insight generation is grounded and provider-tolerant** — malformed JSON
+  from otherwise healthy OpenAI-compatible models receives one bounded retry
+  before degrading, with diagnostic server logs instead of a silent false
+  "LLM unavailable" result. Home's Market Outlook now supplies the live prices
+  and daily changes it is interpreting, while Market Outlook and Portfolio Risk
+  Assessment stay disabled when their required observations are unavailable.
 - **Second Brain capture paths are discoverable** — the active application rail
   and GO bar now expose the Trade Journal, the Brain links directly to journal
   and portfolio-thesis capture, and Portfolio Manager can create and edit the
