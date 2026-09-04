@@ -6,19 +6,23 @@ import { PortfolioManager } from "../components/portfolio/PortfolioManager";
 const fetchPortfoliosMock = vi.fn();
 const createPortfolioMock = vi.fn();
 const updatePortfolioMock = vi.fn();
+const fetchAiRiskInsightsMock = vi.fn();
+const fetchPortfolioAnalyticsMock = vi.fn();
+const fetchPortfolioCorrelationMock = vi.fn();
+const fetchPortfolioRiskMetricsMock = vi.fn();
 
 vi.mock("../api/client", () => ({
   addPortfolioHolding: vi.fn(),
   addPortfolioTransaction: vi.fn(),
   createPortfolio: (...args: unknown[]) => createPortfolioMock(...args),
   deletePortfolioById: vi.fn(),
-  fetchAiRiskInsights: vi.fn(),
-  fetchPortfolioAnalyticsV2: vi.fn(async () => ({})),
+  fetchAiRiskInsights: (...args: unknown[]) => fetchAiRiskInsightsMock(...args),
+  fetchPortfolioAnalyticsV2: (...args: unknown[]) => fetchPortfolioAnalyticsMock(...args),
   fetchPortfolioBenchmarkOverlay: vi.fn(async () => null),
-  fetchPortfolioCorrelation: vi.fn(async () => null),
+  fetchPortfolioCorrelation: (...args: unknown[]) => fetchPortfolioCorrelationMock(...args),
   fetchPortfolioDividends: vi.fn(async () => null),
   fetchPortfolioHoldings: vi.fn(async () => []),
-  fetchPortfolioRiskMetrics: vi.fn(async () => null),
+  fetchPortfolioRiskMetrics: (...args: unknown[]) => fetchPortfolioRiskMetricsMock(...args),
   fetchPortfolioTransactions: vi.fn(async () => []),
   fetchPortfolios: (...args: unknown[]) => fetchPortfoliosMock(...args),
   updatePortfolioById: (...args: unknown[]) => updatePortfolioMock(...args),
@@ -50,7 +54,17 @@ vi.mock("recharts", () => ({
 
 describe("PortfolioManager thesis capture", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    for (const mock of [
+      fetchPortfoliosMock,
+      createPortfolioMock,
+      updatePortfolioMock,
+      fetchAiRiskInsightsMock,
+      fetchPortfolioAnalyticsMock,
+      fetchPortfolioCorrelationMock,
+      fetchPortfolioRiskMetricsMock,
+    ]) {
+      mock.mockReset();
+    }
     fetchPortfoliosMock.mockResolvedValue([
       {
         id: "p1",
@@ -61,6 +75,28 @@ describe("PortfolioManager thesis capture", () => {
       },
     ]);
     updatePortfolioMock.mockResolvedValue(undefined);
+    fetchPortfolioAnalyticsMock.mockResolvedValue({
+      allocation_by_sector: [{ name: "Technology", value: 75 }],
+    });
+    fetchPortfolioCorrelationMock.mockResolvedValue({
+      symbols: ["AAPL", "MSFT"],
+      matrix: [[{ x: "AAPL", y: "MSFT", value: 0.8 }]],
+      rolling: [],
+    });
+    fetchPortfolioRiskMetricsMock.mockResolvedValue({
+      sharpe_ratio: 1.1,
+      sortino_ratio: 1.4,
+      max_drawdown: -0.12,
+      beta: 0.9,
+      alpha: 0.03,
+      information_ratio: 0.4,
+    });
+    fetchAiRiskInsightsMock.mockResolvedValue({
+      engine: "llm",
+      model: "test",
+      summary: "Grounded risk assessment.",
+      sections: [],
+    });
   });
 
   it("loads and saves the selected portfolio thesis", async () => {
@@ -82,6 +118,7 @@ describe("PortfolioManager thesis capture", () => {
   });
 
   it("captures a thesis when creating a portfolio", async () => {
+    fetchPortfoliosMock.mockReset();
     fetchPortfoliosMock.mockResolvedValue([]);
     createPortfolioMock.mockResolvedValue({ id: "p2", name: "Macro" });
     render(<PortfolioManager />);
@@ -94,6 +131,25 @@ describe("PortfolioManager thesis capture", () => {
     await waitFor(() =>
       expect(createPortfolioMock).toHaveBeenCalledWith(
         expect.objectContaining({ description: "Diversify across inflation regimes." }),
+      ),
+    );
+  });
+
+  it("sends available risk and exposure evidence to the assessment", async () => {
+    render(<PortfolioManager />);
+
+    const generate = await screen.findByRole("button", { name: "Generate" });
+    await waitFor(() => expect(generate).toBeEnabled());
+    fireEvent.click(generate);
+
+    await waitFor(() =>
+      expect(fetchAiRiskInsightsMock).toHaveBeenCalledWith(
+        {
+          risk_metrics: expect.objectContaining({ sharpe_ratio: 1.1, max_drawdown: -0.12 }),
+          allocation_by_sector: [{ name: "Technology", value: 75 }],
+          correlation: [[{ x: "AAPL", y: "MSFT", value: 0.8 }]],
+        },
+        "portfolio",
       ),
     );
   });

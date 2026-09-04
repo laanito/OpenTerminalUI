@@ -9,6 +9,7 @@ LLM client, one schema, and one graceful-fallback path.
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -20,6 +21,7 @@ from backend.services.llm_client import (
 )
 
 _VALID_TONES = {"positive", "negative", "neutral"}
+logger = logging.getLogger(__name__)
 
 # Unified structured-output schema shared by every insight endpoint so a single
 # frontend card can render all of them.
@@ -110,8 +112,10 @@ async def run_insight(
     ]
     try:
         # The client may make more than one provider request while stepping down
-        # its structured-output ladder. Bound the whole operation, not each rung,
-        # so the server always resolves before the browser's five-minute deadline.
+        # its structured-output ladder. Bound the whole operation, including one
+        # retry for providers that intermittently return malformed JSON despite
+        # accepting response_format, so the server always resolves before the
+        # browser's five-minute deadline.
         async with asyncio.timeout(settings.llm_timeout_seconds):
             content = await client.chat(
                 messages,
@@ -120,8 +124,20 @@ async def run_insight(
                 json_schema=INSIGHT_SCHEMA,
                 frequency_penalty=0.3,
             )
-        parsed = parse_json_response(content)
-    except (LLMError, asyncio.TimeoutError):
+            try:
+                parsed = parse_json_response(content)
+            except LLMError as exc:
+                logger.warning("LLM insight returned malformed structured output; retrying once: %s", exc)
+                content = await client.chat(
+                    messages,
+                    temperature=0.0,
+                    max_tokens=max_tokens,
+                    json_schema=INSIGHT_SCHEMA,
+                    frequency_penalty=0.0,
+                )
+                parsed = parse_json_response(content)
+    except (LLMError, asyncio.TimeoutError) as exc:
+        logger.warning("LLM insight unavailable after bounded generation: %s", exc)
         return base
 
     summary = str(parsed.get("summary") or "").strip()

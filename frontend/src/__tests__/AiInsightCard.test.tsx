@@ -17,6 +17,22 @@ const firstResult: InsightData = {
 };
 
 describe("AiInsightCard", () => {
+  it("does not generate an assessment without its required facts", () => {
+    const fetcher = vi.fn();
+    render(
+      <AiInsightCard
+        title="AI Risk Assessment"
+        disabled
+        disabledMessage="Portfolio risk metrics are unavailable."
+        fetcher={fetcher}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
+    expect(screen.getByText("Portfolio risk metrics are unavailable.")).toBeInTheDocument();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("uses cache on Generate and requests a fresh result on Regenerate", async () => {
     const fetcher = vi
       .fn<(refresh?: boolean) => Promise<InsightData>>()

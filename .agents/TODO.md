@@ -1,6 +1,6 @@
 # Current project state and backlog
 
-Last audited: **2026-09-04**, from `main` at `b5b4326` (PR #117; latest
+Last audited: **2026-09-04**, from `main` at `ee5a31e` (PR #118; latest
 release remains `v1.3.0` at `293f911`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
@@ -144,6 +144,10 @@ boundaries should follow the audit rather than being guessed in advance.
       and GO bar, make portfolio descriptions visibly editable as Second Brain
       theses, and return portfolio/position/transaction citations to Portfolio
       Manager rather than the unrelated installation-global Portfolio Lab.
+- [x] Make shared AI insight cards tolerate one malformed structured response
+      within the existing deadline, log the real degradation cause, ground the
+      Home Market Outlook in its displayed live observations, and prevent Market
+      Outlook/Risk Assessment generation when their required facts are absent.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
 the primary navigation does not advertise an unexplained empty product.
@@ -191,11 +195,13 @@ inherited ambiguity.
   boundaries are explicit, ownerless watchlists and verified duplicates/orphans
   are removed, and configuration-gated navigation explains its deployment
   requirements. User testing identified and closed slow-AI and repeated-NSE-403
-  release blockers in PR #117. A final discovery pass found that the active icon
-  rail omitted Journal and Portfolio Manager did not expose the description that
-  the Brain calls a portfolio thesis; the current follow-up closes those capture
-  and citation gaps. After it merges, prepare and verify the v1.4.0 release; do
-  not implement data stubs merely to make the inventory look fuller.
+  release blockers in PR #117. PR #118 then exposed Journal and portfolio-thesis
+  capture and repaired Brain citation destinations. Continued live testing found
+  that a healthy Gemma provider intermittently returned malformed structured
+  output and that Home/Risk cards could ask for analysis without factual inputs;
+  the current follow-up adds a bounded retry and factual generation gates. After
+  it merges, prepare and verify the v1.4.0 release; do not implement data stubs
+  merely to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

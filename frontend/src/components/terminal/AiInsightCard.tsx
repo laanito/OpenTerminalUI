@@ -23,6 +23,8 @@ export type InsightData = {
 type Props = {
   title: string;
   description?: string;
+  disabled?: boolean;
+  disabledMessage?: string;
   /** Resolves the insight. `refresh` is true after the first attempt. */
   fetcher: (refresh?: boolean) => Promise<InsightData>;
 };
@@ -37,11 +39,12 @@ function toneColor(tone: InsightSection["tone"]): string {
  * On-demand AI analysis card backed by the local LLM. Kept lazy because
  * local LLM inference is slow — nothing runs until the user asks for it.
  */
-export function AiInsightCard({ title, description, fetcher }: Props) {
+export function AiInsightCard({ title, description, disabled = false, disabledMessage, fetcher }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [data, setData] = useState<InsightData | null>(null);
 
   const run = useCallback(async () => {
+    if (disabled) return;
     setStatus("loading");
     setData(null);
     try {
@@ -53,7 +56,7 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
     } catch {
       setStatus("error");
     }
-  }, [fetcher, status]);
+  }, [disabled, fetcher, status]);
 
   const engineLive = data?.engine === "llm";
   const engineLabel = engineLive
@@ -84,7 +87,7 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
           <button
             className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-text hover:border-terminal-accent disabled:opacity-50"
             onClick={run}
-            disabled={status === "loading"}
+            disabled={status === "loading" || disabled}
           >
             {status === "loading" ? "Analyzing…" : status === "idle" ? "Generate" : "Regenerate"}
           </button>
@@ -93,7 +96,9 @@ export function AiInsightCard({ title, description, fetcher }: Props) {
 
       {status === "idle" && (
         <div className="mt-2 text-[11px] text-terminal-muted">
-          Runs locally via your LLM endpoint (Ollama by default) — analysis can take a minute.
+          {disabled
+            ? disabledMessage ?? "Required terminal data is not available yet."
+            : "Runs locally via your LLM endpoint (Ollama by default) — analysis can take a minute."}
         </div>
       )}
 

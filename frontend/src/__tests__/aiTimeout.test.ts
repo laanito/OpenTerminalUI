@@ -13,11 +13,12 @@ describe("AI request deadlines", () => {
   });
 
   it("keeps collection briefings alive beyond the backend model timeout", async () => {
-    await fetchCollectionBriefing(["SPY", "QQQ"], "global markets");
+    const facts = [{ symbol: "SPY", price: 6500, change_pct: 0.2 }];
+    await fetchCollectionBriefing(["SPY", "QQQ"], "global markets", facts);
 
     expect(api.post).toHaveBeenCalledWith(
       "/ai/collection-briefing",
-      { symbols: ["SPY", "QQQ"], scope: "global markets" },
+      { symbols: ["SPY", "QQQ"], scope: "global markets", facts },
       { timeout: 300_000 },
     );
   });
