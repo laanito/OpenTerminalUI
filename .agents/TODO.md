@@ -178,9 +178,11 @@ inherited ambiguity.
   hidden compatibility hardening, and primary experimental-route adjudication
   are complete. Watchlists are owner-scoped end-to-end for interactive/reporting
   consumers, background workers receive only a symbol union, and the old global
-  model/API/table are removed. Next finish the remaining API-generation and
-  compatibility-alias decisions, then align Limitations with the final surface;
-  do not implement data stubs merely to make the inventory look fuller.
+  model/API/table are removed. Duplicate API mounts, shadowed Volume Profile,
+  redundant v1 job wrappers, and duplicated lab route trees are consolidated;
+  intentional Backtest/Screener generations are documented. Next align
+  Limitations and user-facing configuration copy with the final surface; do not
+  implement data stubs merely to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

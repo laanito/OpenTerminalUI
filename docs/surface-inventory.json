@@ -25,6 +25,7 @@
     "chart-workstation": "supported",
     "charts": "supported",
     "cockpit": "hidden",
+    "commodities": "configuration-gated",
     "correlation": "supported",
     "crypto": "supported",
     "data": "supported",

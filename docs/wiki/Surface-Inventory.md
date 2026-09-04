@@ -19,7 +19,7 @@ does not by itself make a feature useful enough for primary navigation.
 
 ## Snapshot
 
-- FastAPI publishes **394 paths / 439 operations / 85 tag families**.
+- FastAPI publishes **394 paths / 439 operations / 86 tag families**.
 - The equity sidebar previously advertised 43 destinations. The current v1.4
   state retains 32 and hides 11 incomplete, unsafe-as-general-UI, or
   empty-data products.
@@ -144,13 +144,13 @@ remain. The active frontend page count is now 108.
 
 ## API-family decisions
 
-The checked-in registry classifies all 85 generated OpenAPI tags. The important
+The checked-in registry classifies all 86 generated OpenAPI tags. The important
 non-supported groups are:
 
 - **Hidden:** `bonds`, `cockpit`, `hotlists`, `insider`, `model-lab`, `oms`,
   `ops`, `plugins`, `portfolio-lab`, `rs`, `tape`.
-- **Configuration-gated:** `ai`, `ai-insights`, `depth`, `fixed-income`, `fno`,
-  `fno-flow`, `fno-signals`, `kite`, `options`.
+- **Configuration-gated:** `ai`, `ai-insights`, `commodities`, `depth`,
+  `fixed-income`, `fno`, `fno-flow`, `fno-signals`, `kite`, `options`.
 - **Experimental:** advanced governance/framework and portfolio-backtest APIs,
   data-quality, scripting, stock-picking/conviction, and currently untagged
   routes.
@@ -159,11 +159,34 @@ Everything else is classified supported at the family level. Mixed families
 must still preserve endpoint-specific degraded markers; family classification
 does not erase a narrower limitation.
 
+### Duplicate-generation decisions
+
+- Commodities and Forex keep their existing `/api/commodities/*` and
+  `/api/forex/*` contracts through the equity router; identical second mounts
+  were removed. The inventory guard now rejects duplicate OpenAPI operation IDs
+  and redundant per-operation tags; Commodities now exposes its previously
+  masked configuration-gated family explicitly.
+- `/api/charts/volume-profile/{symbol}` is owned by the richer `chart` family
+  implementation with provider routing, modes, caching, validation, and compute
+  metadata. The shadowed implementation in the `charts` router was removed;
+  other `chart`, `charts`, and `chart-workstation` endpoints remain distinct.
+- Backtest generations remain intentionally supported: `/api/backtest/run` is
+  the synchronous momentum-rotation contract, `/api/v1/backtest/*` is the active
+  job/preset workflow, and `/api/backtests/*` supplies strategy comparison and
+  advanced analytics. Duplicate frontend wrappers for the same v1 job calls
+  were removed.
+- Screener families remain intentional while all three are active consumers:
+  the classic run/v2 scan, persisted `/api/v1/screener/*` runs and presets, and
+  the revamped saved-screen/formula/export workflow. Consolidating their data
+  models is later product work, not a safe v1 compatibility deletion.
+- Top-level `/model-lab/*` and `/portfolio-lab/*` URLs are compatibility-only
+  redirects. They preserve child paths, query strings, and hashes while routing
+  into `/backtesting/model-lab/*` and `/equity/portfolio/lab/*`, respectively,
+  so each hidden lab has one layout and route implementation.
+
 ## Remaining v1.4 sequence
 
-1. Record decisions for the remaining duplicate API generations and compatibility
-   redirects without breaking documented consumers.
-2. Align `Limitations.md` and user-facing navigation/configuration copy with the
+1. Align `Limitations.md` and user-facing navigation/configuration copy with the
    final retained surface.
 
 Do not turn provider acquisition, broad MCP, or cross-market feature development

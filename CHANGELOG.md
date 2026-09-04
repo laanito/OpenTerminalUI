@@ -13,6 +13,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Duplicate APIs and route aliases consolidated** — Commodities and Forex now
+  mount once, the provider-backed cached Volume Profile is the sole handler for
+  its URL, and the surface guard rejects duplicate OpenAPI operation IDs and
+  tags. Commodities now has an explicit configuration-gated API family.
+  Intentional Backtest/Screener generations are documented; redundant v1 job
+  wrappers were removed. Top-level Model/Portfolio Lab aliases now preserve child
+  paths and query state while redirecting into their canonical layouts.
 - **Watchlists consolidated on the owner-scoped contract** — all supported UI
   reads and add actions now use `/api/watchlists`, and update, delete, and symbol
   mutations verify ownership. Reports and dividend views read only the caller's

@@ -10,7 +10,7 @@ from backend.services.commodity_service import (
     get_commodities_service,
 )
 
-router = APIRouter()
+router = APIRouter(tags=["commodities"])
 
 
 @router.get("/commodities/quotes", response_model=CommodityQuotesResponse)

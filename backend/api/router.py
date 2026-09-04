@@ -8,14 +8,12 @@ from backend.api.routes.brain import router as brain_router
 from backend.api.routes.external_notes import router as external_notes_router
 from backend.api.routes.notes import router as notes_router
 from backend.api.routes.bonds import router as bonds_router
-from backend.api.routes.commodities import router as commodities_router
 from backend.api.routes.correlation import router as correlation_router
 from backend.api.routes.pair_trading import router as pair_trading_router
 from backend.api.routes.economics import router as economics_router
 from backend.api.routes.etf import router as etf_router
 from backend.api.routes.factor_analysis import router as factor_analysis_router
 from backend.api.routes.fixed_income import router as fixed_income_router
-from backend.api.routes.forex import router as forex_router
 from backend.api.routes.framework import router as framework_router
 from backend.api.routes.heatmap import router as heatmap_router
 from backend.api.routes.insider import router as insider_router
@@ -50,8 +48,6 @@ api_router = APIRouter()
 api_router.include_router(watchlists_router)
 api_router.include_router(equity_router)
 api_router.include_router(fno_router)
-api_router.include_router(commodities_router, prefix="/api")
-api_router.include_router(forex_router, prefix="/api")
 api_router.include_router(factor_analysis_router, prefix="/api")
 api_router.include_router(ai_router, prefix="/api")
 # Private second-brain RAG (per-user, authed). Router carries "/brain"; the "/api"

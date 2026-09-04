@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from collections import Counter
 from pathlib import Path
 
@@ -21,8 +22,17 @@ def main() -> int:
     classified: dict[str, str] = inventory["api_families"]
     invalid = {tag: state for tag, state in classified.items() if state not in allowed}
 
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        schema = app.openapi()
+    duplicate_operations = sorted(
+        str(warning.message)
+        for warning in caught
+        if "Duplicate Operation ID" in str(warning.message)
+    )
+
     operations = []
-    for path_item in app.openapi()["paths"].values():
+    for path_item in schema["paths"].values():
         operations.extend(
             operation
             for method, operation in path_item.items()
@@ -35,14 +45,25 @@ def main() -> int:
     }
     missing = actual - set(classified)
     stale = set(classified) - actual
+    duplicate_tags = sorted(
+        str(operation.get("operationId") or "unknown")
+        for operation in operations
+        if len(operation.get("tags") or []) != len(set(operation.get("tags") or []))
+    )
 
-    if invalid or missing or stale:
+    if invalid or missing or stale or duplicate_operations or duplicate_tags:
         if invalid:
             print(f"invalid states: {invalid}")
         if missing:
             print(f"unclassified OpenAPI tags: {sorted(missing)}")
         if stale:
             print(f"inventory tags absent from OpenAPI: {sorted(stale)}")
+        if duplicate_operations:
+            print("duplicate OpenAPI operation IDs:")
+            for warning in duplicate_operations:
+                print(f"- {warning}")
+        if duplicate_tags:
+            print(f"operations with duplicate tags: {duplicate_tags}")
         return 1
 
     counts = Counter(classified.values())

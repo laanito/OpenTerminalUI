@@ -3,35 +3,6 @@ import asyncio
 import pandas as pd
 
 from backend.api.routes import screener
-from backend.routers import charts
-
-
-class _DummyChartService:
-    async def get_chart_data(self, symbol: str, timeframe: str, market: str, extended: bool = False, date_from=None, date_to=None):
-        return [
-            {"open": 100, "close": 101, "volume": 10},
-            {"open": 101, "close": 102, "volume": 15},
-            {"open": 102, "close": 100, "volume": 20},
-            {"open": 100, "close": 99, "volume": 5},
-        ]
-
-
-def test_volume_profile_endpoint_payload_shape() -> None:
-    payload = asyncio.run(
-        charts.get_volume_profile(
-            "AAPL",
-            period="5d",
-            bins=10,
-            market="NASDAQ",
-            service=_DummyChartService(),
-        )
-    )
-    assert payload["symbol"] == "AAPL"
-    assert isinstance(payload["bins"], list)
-    assert len(payload["bins"]) == 10
-    assert "poc_price" in payload
-    assert "value_area_high" in payload
-    assert "value_area_low" in payload
 
 
 def test_multimarket_scan_filters_and_sorts(monkeypatch) -> None:

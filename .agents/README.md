@@ -92,8 +92,10 @@ release-level interpretation and safety boundaries.
   compatibility hardening have landed; primary experimental destinations are
   now adjudicated. Watchlists and their reports/dividend views are owner-scoped;
   background workers receive only a symbol union, and the old flat global model,
-  API, and table are gone. Further API-generation/alias decisions and final
-  Limitations alignment remain. `TODO.md` records the release gates.
+  API, and table are gone. Duplicate backend mounts and frontend lab route trees
+  are consolidated; intentional Backtest/Screener generations are recorded in
+  the surface inventory. Final Limitations alignment remains. `TODO.md` records
+  the release gates.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube
