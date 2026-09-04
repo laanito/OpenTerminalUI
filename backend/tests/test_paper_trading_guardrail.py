@@ -5,10 +5,11 @@ from backend.api.routes import portfolio
 
 def test_portfolio_module_serves_watchlist_items_only() -> None:
     # The legacy global portfolio endpoints were removed in v1.1 (part C); this
-    # module now only serves the watchlist-items feed. Per-user portfolios live
-    # under /api/portfolios.
+    # module now only serves the deprecated admin compatibility feed. Per-user
+    # portfolios live under /api/portfolios and watchlists under /api/watchlists.
     paths = {route.path for route in portfolio.router.routes}
     assert "/watchlists/items" in paths
+    assert all(route.deprecated for route in portfolio.router.routes)
     assert all("/portfolio/holdings" not in p for p in paths)
     assert all("/portfolio/tax-lots" not in p for p in paths)
     assert all("/backtests" not in p for p in paths)

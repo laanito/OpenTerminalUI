@@ -46,8 +46,8 @@ from backend.tca.routes import router as tca_router
 
 api_router = APIRouter()
 
-# Multi-watchlist routes must register BEFORE equity_router — its legacy portfolio
-# router also defines GET /api/watchlists and would otherwise shadow the real handler.
+# Register the canonical owner-scoped watchlist contract explicitly. The equity
+# router still carries the deprecated admin-only /api/watchlists/items feed.
 api_router.include_router(watchlists_router)
 api_router.include_router(equity_router)
 api_router.include_router(fno_router)

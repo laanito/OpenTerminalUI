@@ -70,7 +70,7 @@
     "patterns": "supported",
     "peers": "supported",
     "plugins": "hidden",
-    "portfolio": "supported",
+    "portfolio": "hidden",
     "portfolio-lab": "hidden",
     "portfolio-optimizer": "experimental",
     "portfolio_backtests": "experimental",
