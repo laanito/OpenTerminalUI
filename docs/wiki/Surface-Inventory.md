@@ -1,8 +1,9 @@
 # Product surface inventory
 
-Audited **2026-09-03** against `main` at `444f3d3`, immediately after the v1
-consolidation roadmap merged. This is the v1.4 decision record for what the fork
-exposes. It is not a claim that every retained feature is equally mature.
+Final audit **2026-09-04** against `main` at `61e7645` (through PR #115), before
+the documentation/configuration alignment that closes the sequence. This is the
+v1.4 decision record for what the fork exposes. It is not a claim that every
+retained feature is equally mature.
 
 ## Classification contract
 
@@ -184,10 +185,18 @@ does not erase a narrower limitation.
   into `/backtesting/model-lab/*` and `/equity/portfolio/lab/*`, respectively,
   so each hidden lab has one layout and route implementation.
 
-## Remaining v1.4 sequence
+## v1.4 exit evidence
 
-1. Align `Limitations.md` and user-facing navigation/configuration copy with the
-   final retained surface.
+The Limitations matrix now distinguishes visible partial products from hidden
+compatibility surfaces, and explains which credentials are deployment-level
+configuration rather than browser settings. Every configuration-gated primary
+navigation item carries shared gate metadata; the sidebar exposes that gate and
+the Home launcher describes it. Settings documents the host-managed boundary and
+keeps automation API keys clearly separate from provider credentials.
+
+The v1.4 implementation sequence is complete: every reachable surface has an
+intentional classification, primary navigation advertises no unexplained empty
+product, and duplicate/removal decisions have regression coverage.
 
 Do not turn provider acquisition, broad MCP, or cross-market feature development
 into implicit v1.4 gates. Those belong to later generations unless required to

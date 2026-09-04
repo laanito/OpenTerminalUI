@@ -19,6 +19,11 @@ describe("primary navigation surface", () => {
     expect(byPath.get("/equity/dom")?.state).toBe("configuration-gated");
     expect(byPath.get("/equity/commodities")?.state).toBe("configuration-gated");
     expect(byPath.get("/equity/economics")?.state).toBe("configuration-gated");
+    expect(
+      PRIMARY_NAV_ITEMS.filter((item) => item.state === "configuration-gated").every(
+        (item) => item.configuration?.label && item.configuration.detail.length > 30,
+      ),
+    ).toBe(true);
   });
 
   it("publishes no unresolved experimental destinations", () => {

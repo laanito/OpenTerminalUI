@@ -6,6 +6,10 @@ export type TerminalNavItem = {
   key: string;
   hint?: string;
   state: SurfaceState;
+  configuration?: {
+    label: string;
+    detail: string;
+  };
 };
 
 /**
@@ -17,11 +21,41 @@ export type TerminalNavItem = {
 export const PRIMARY_NAV_ITEMS: readonly TerminalNavItem[] = [
   { label: "Market", path: "/equity/stocks", key: "F1", state: "supported" },
   { label: "Security Hub", path: "/equity/security", key: "SH", hint: "Research", state: "supported" },
-  { label: "Economics", path: "/equity/economics", key: "E", hint: "Macro", state: "configuration-gated" },
-  { label: "Commodities", path: "/equity/commodities", key: "CMDTY", hint: "Macro", state: "configuration-gated" },
+  {
+    label: "Economics",
+    path: "/equity/economics",
+    key: "E",
+    hint: "Macro",
+    state: "configuration-gated",
+    configuration: {
+      label: "FRED",
+      detail: "Live macro indicators require a server-side FRED_API_KEY; the forward calendar remains labelled sample data.",
+    },
+  },
+  {
+    label: "Commodities",
+    path: "/equity/commodities",
+    key: "CMDTY",
+    hint: "Macro",
+    state: "configuration-gated",
+    configuration: {
+      label: "FMP",
+      detail: "Live commodity data requires a server-side FMP_API_KEY.",
+    },
+  },
   { label: "Forex", path: "/equity/forex", key: "FX", hint: "Macro", state: "supported" },
   { label: "ETF Analytics", path: "/equity/etf-analytics", key: "ETFA", hint: "Funds", state: "supported" },
-  { label: "Yield Curve", path: "/equity/yield-curve", key: "YC", hint: "Fixed Income", state: "configuration-gated" },
+  {
+    label: "Yield Curve",
+    path: "/equity/yield-curve",
+    key: "YC",
+    hint: "Fixed Income",
+    state: "configuration-gated",
+    configuration: {
+      label: "FRED",
+      detail: "Live curve and spread series require a server-side FRED_API_KEY.",
+    },
+  },
   { label: "Rotation", path: "/equity/sector-rotation", key: "ROT", hint: "Relative", state: "supported" },
   { label: "Crypto", path: "/equity/crypto", key: "CR", hint: "Digital", state: "supported" },
   { label: "Compare", path: "/equity/compare", key: "CMP", hint: "Split View", state: "supported" },
@@ -31,7 +65,17 @@ export const PRIMARY_NAV_ITEMS: readonly TerminalNavItem[] = [
   { label: "Launchpad", path: "/equity/launchpad", key: "LP", hint: "Workspace", state: "supported" },
   { label: "Workstation", path: "/equity/chart-workstation", key: "6", hint: "6 Charts", state: "supported" },
   { label: "MTA", path: "/equity/mta", key: "MT", hint: "Multi-TF", state: "supported" },
-  { label: "DOM", path: "/equity/dom", key: "D", hint: "Depth", state: "configuration-gated" },
+  {
+    label: "DOM",
+    path: "/equity/dom",
+    key: "D",
+    hint: "Depth",
+    state: "configuration-gated",
+    configuration: {
+      label: "MARKET",
+      detail: "Depth is live for Binance crypto and configured Kite markets; US/EU equity Level-2 is unavailable.",
+    },
+  },
   { label: "Portfolio", path: "/equity/portfolio", key: "F3", state: "supported" },
   { label: "Paper", path: "/equity/paper", key: "P", state: "supported" },
   { label: "Position Sizer", path: "/equity/position-sizer", key: "PS", hint: "Trading", state: "supported" },

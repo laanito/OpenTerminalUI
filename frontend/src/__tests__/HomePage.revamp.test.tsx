@@ -212,6 +212,8 @@ describe("HomePage mission-control revamp", () => {
     expect(screen.getByRole("region", { name: "Portfolio HQ" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "System Health" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Launch Matrix" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Economics.*Configuration:.*FRED_API_KEY/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /F&O.*Configuration:.*Kite credentials/i })).toBeInTheDocument();
 
     expect(screen.getAllByText("$2480000").length).toBeGreaterThan(0);
     expect(screen.getByText("$170000 (+7.36%)")).toBeInTheDocument();

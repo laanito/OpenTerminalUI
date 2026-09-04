@@ -5,6 +5,7 @@ import { TerminalButton } from "../components/terminal/TerminalButton";
 import { TerminalInput } from "../components/terminal/TerminalInput";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { TerminalTable } from "../components/terminal/TerminalTable";
+import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { DataManager } from "../components/settings/DataManager";
 import { APIKeyManager } from "../components/settings/APIKeyManager";
 import { ErrorBoundary } from "../components/common/ErrorBoundary";
@@ -91,6 +92,31 @@ export function SettingsPage() {
             onChange={(e) => setNewsRefreshSec(Math.max(5, Number(e.target.value) || 60))}
             placeholder="news refresh sec"
           />
+        </div>
+      </TerminalPanel>
+
+      <TerminalPanel title="Market Data Configuration" subtitle="Managed by the host operator">
+        <div className="space-y-2 text-xs text-terminal-muted">
+          <p>
+            Provider credentials are server-side environment settings, not account preferences. Ask the host operator to update the deployment and restart it; never paste provider secrets into browser storage.
+          </p>
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+            {[
+              ["FRED_API_KEY", "Live macro indicators and yield-curve series"],
+              ["FMP_API_KEY", "Commodity data and broader US fundamentals"],
+              ["FINNHUB_API_KEY", "Live US WebSocket ticks"],
+              ["KITE_*", "India NSE/BSE F&O and market depth"],
+            ].map(([key, purpose]) => (
+              <div key={key} className="flex items-center gap-2 rounded border border-terminal-border bg-terminal-bg px-2 py-1.5">
+                <TerminalBadge variant="warn">CONFIG</TerminalBadge>
+                <code className="text-terminal-text">{key}</code>
+                <span>{purpose}</span>
+              </div>
+            ))}
+          </div>
+          <p>
+            Automation API keys below authenticate external clients such as note-ingestion tools. They do not unlock market-data providers.
+          </p>
         </div>
       </TerminalPanel>
 
