@@ -8,8 +8,12 @@ from types import SimpleNamespace
 from backend.services import llm_insights
 
 
-def _settings(enabled: bool = True) -> SimpleNamespace:
-    return SimpleNamespace(llm_enabled=enabled, llm_model="google/gemma-4-26b-a4b")
+def _settings(enabled: bool = True, timeout: float = 240.0) -> SimpleNamespace:
+    return SimpleNamespace(
+        llm_enabled=enabled,
+        llm_model="google/gemma-4-26b-a4b",
+        llm_timeout_seconds=timeout,
+    )
 
 
 class _FakeClient:
@@ -51,6 +55,20 @@ def test_run_insight_falls_back_on_unparseable_output(monkeypatch) -> None:
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
     monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient("not json at all"))
     result = asyncio.run(llm_insights.run_insight("system", "user"))
+    assert result["engine"] == "unavailable"
+
+
+def test_run_insight_bounds_the_whole_provider_operation(monkeypatch) -> None:
+    class _SlowClient(_FakeClient):
+        async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001
+            await asyncio.sleep(0.05)
+            return self._content
+
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True, timeout=0.001))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _SlowClient("{}"))
+
+    result = asyncio.run(llm_insights.run_insight("system", "user"))
+
     assert result["engine"] == "unavailable"
 
 

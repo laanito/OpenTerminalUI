@@ -200,9 +200,15 @@ class PCRTracker:
 
     async def seed_history_from_bhavcopy(self, symbol: str, days: int = 30) -> None:
         """Best-effort history seeding from nsepython bhavcopy helper."""
+        from backend.shared.nse_access import disable_nse_public, nse_public_enabled
+
+        if not nse_public_enabled():
+            return
         try:
             import nsepython  # type: ignore
-        except Exception:
+        except Exception as exc:
+            if "403" in str(exc):
+                disable_nse_public("HTTP 403 from nsepython bhavcopy")
             return
 
         nsefin = getattr(nsepython, "nsefin", None)
@@ -214,7 +220,9 @@ class PCRTracker:
         start = end - timedelta(days=max(days, 1))
         try:
             rows = get_fn(start.strftime("%d-%m-%Y"), end.strftime("%d-%m-%Y"))
-        except Exception:
+        except Exception as exc:
+            if "403" in str(exc):
+                disable_nse_public("HTTP 403 from nsepython bhavcopy")
             return
         if not isinstance(rows, list):
             return

@@ -7,6 +7,7 @@ from backend.adapters.base import DataAdapter, FuturesContract, Instrument, OHLC
 from backend.core.kite_client import KiteClient
 from backend.core.nse_client import NSEClient
 from backend.core.yahoo_client import YahooClient
+from backend.shared.nse_access import nse_public_enabled
 
 
 def _f(value: Any) -> float | None:
@@ -38,11 +39,12 @@ class KiteAdapter(DataAdapter):
                     change = ltp - prev if prev else 0.0
                     cp = (change / prev * 100.0) if prev else 0.0
                     return QuoteResponse(symbol=sym, price=ltp, change=change, change_pct=cp, currency="INR", ts=datetime.now(timezone.utc).isoformat())
-        row = await self.nse.get_quote_equity(sym)
-        ltp = _f(((row or {}).get("priceInfo") or {}).get("lastPrice"))
-        if ltp is not None:
-            cp = _f(((row or {}).get("priceInfo") or {}).get("pChange")) or 0.0
-            return QuoteResponse(symbol=sym, price=ltp, change=0.0, change_pct=cp, currency="INR", ts=datetime.now(timezone.utc).isoformat())
+        if nse_public_enabled():
+            row = await self.nse.get_quote_equity(sym)
+            ltp = _f(((row or {}).get("priceInfo") or {}).get("lastPrice"))
+            if ltp is not None:
+                cp = _f(((row or {}).get("priceInfo") or {}).get("pChange")) or 0.0
+                return QuoteResponse(symbol=sym, price=ltp, change=0.0, change_pct=cp, currency="INR", ts=datetime.now(timezone.utc).isoformat())
         return None
 
     async def get_history(self, symbol: str, timeframe: str, start: date, end: date) -> list[OHLCV]:
@@ -78,6 +80,8 @@ class KiteAdapter(DataAdapter):
         return [Instrument(symbol=q, name=q, exchange="NSE", currency="INR")]
 
     async def get_fundamentals(self, symbol: str) -> dict[str, Any]:
+        if not nse_public_enabled():
+            return {}
         row = await self.nse.get_quote_equity(symbol.strip().upper())
         return row if isinstance(row, dict) else {}
 

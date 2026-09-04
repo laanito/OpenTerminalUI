@@ -32,6 +32,9 @@ class AppSettings(BaseModel):
     fmp_api_key: str | None = None
     finnhub_api_key: str | None = None
     coingecko_api_key: str | None = None
+    # Direct scraping of nseindia.com is opt-in. India workflows should prefer
+    # configured Kite or provider suffixes (for example Yahoo's `.NS`).
+    nse_public_enabled: bool = False
     ai_provider: str = "openai"  # legacy hint; the LLM client is provider-agnostic
     openai_api_key: str | None = None
     ollama_base_url: str = "http://localhost:11434"
@@ -220,6 +223,11 @@ def get_settings() -> AppSettings:
             or _env("COINGECKO_API_KEY")
             or app_cfg.get("coingecko_api_key")
         ),
+        nse_public_enabled=_as_bool(
+            _env("OPENTERMINALUI_NSE_PUBLIC_ENABLED")
+            or app_cfg.get("nse_public_enabled", False),
+            default=False,
+        ),
         ai_provider=(
             _env("OPENTERMINALUI_AI_PROVIDER")
             or _env("AI_PROVIDER")
@@ -280,6 +288,7 @@ def get_settings() -> AppSettings:
         ),
         llm_timeout_seconds=float(
             _env("OPENTERMINALUI_LLM_TIMEOUT_SECONDS")
+            or _env("LLM_TIMEOUT_SECONDS")
             or _env("OPENTERMINALUI_LM_STUDIO_TIMEOUT_SECONDS")
             or app_cfg.get("llm_timeout_seconds", app_cfg.get("lm_studio_timeout_seconds", 240.0))
         ),

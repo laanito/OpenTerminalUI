@@ -1,6 +1,6 @@
 # Current project state and backlog
 
-Last audited: **2026-09-04**, from `main` at `61e7645` (PR #115; latest
+Last audited: **2026-09-04**, from `main` at `43cacf8` (PR #116; latest
 release remains `v1.3.0` at `293f911`).
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
@@ -137,6 +137,9 @@ boundaries should follow the audit rather than being guessed in advance.
       sidebar and Home launcher now identify configuration-gated destinations,
       and Settings distinguishes host-managed provider secrets from automation
       API keys.
+- [x] Close user-test release blockers: keep browser AI deadlines beyond the
+      backend model timeout, disable direct public NSE scraping by default, and
+      open a process-level circuit on the first opted-in NSE 403.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
 the primary navigation does not advertise an unexplained empty product.
@@ -183,8 +186,12 @@ inherited ambiguity.
   complete: surfaces are classified, empty products are hidden, compatibility
   boundaries are explicit, ownerless watchlists and verified duplicates/orphans
   are removed, and configuration-gated navigation explains its deployment
-  requirements. After this final slice merges, prepare and verify the v1.4.0
-  release; do not implement data stubs merely to make the inventory look fuller.
+  requirements. User testing then identified two release blockers: the browser
+  aborted slow AI insights before the backend timeout, and the unconfigured Kite
+  fallback repeatedly scraped a 403-blocked NSE endpoint. Both now have explicit
+  timeout and opt-in/circuit-breaker contracts. After that fix merges, prepare
+  and verify the v1.4.0 release; do not implement data stubs merely to make the
+  inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

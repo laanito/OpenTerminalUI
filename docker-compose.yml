@@ -17,6 +17,9 @@ services:
       KITE_API_KEY: "${KITE_API_KEY:-}"
       KITE_API_SECRET: "${KITE_API_SECRET:-}"
       KITE_ACCESS_TOKEN: "${KITE_ACCESS_TOKEN:-}"
+      # Direct scraping of nseindia.com is intentionally opt-in. Prefer Kite or
+      # Yahoo's `.NS` symbols; the runtime circuit opens after the first 403.
+      OPENTERMINALUI_NSE_PUBLIC_ENABLED: "${OPENTERMINALUI_NSE_PUBLIC_ENABLED:-0}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
       OPENTERMINALUI_PREFETCH_ENABLED: "${OPENTERMINALUI_PREFETCH_ENABLED:-${OPENSCREENS_PREFETCH_ENABLED:-0}}"
       # Auto-populate the instrument search universe on first boot (set 0 to disable).
@@ -36,6 +39,7 @@ services:
       LLM_MODEL: "${LLM_MODEL:-llama3.1}"
       LLM_API_KEY: "${LLM_API_KEY:-}"
       LLM_ENABLED: "${LLM_ENABLED:-true}"
+      LLM_TIMEOUT_SECONDS: "${LLM_TIMEOUT_SECONDS:-240}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

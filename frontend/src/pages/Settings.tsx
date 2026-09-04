@@ -106,6 +106,7 @@ export function SettingsPage() {
               ["FMP_API_KEY", "Commodity data and broader US fundamentals"],
               ["FINNHUB_API_KEY", "Live US WebSocket ticks"],
               ["KITE_*", "India NSE/BSE F&O and market depth"],
+              ["OPENTERMINALUI_NSE_PUBLIC_ENABLED", "Optional direct nseindia.com compatibility access (off by default)"],
             ].map(([key, purpose]) => (
               <div key={key} className="flex items-center gap-2 rounded border border-terminal-border bg-terminal-bg px-2 py-1.5">
                 <TerminalBadge variant="warn">CONFIG</TerminalBadge>

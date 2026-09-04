@@ -13,6 +13,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   experimental, hidden, or removal decision.
 
 ### Changed
+- **Slow AI and NSE fallback reliability** — AI insight requests now allow five
+  minutes in the browser, exceeding the backend's default four-minute model
+  deadline so slow local inference can finish or degrade server-side. Direct
+  unauthenticated `nseindia.com` access is now opt-in; when enabled, its first 403
+  opens a process-wide circuit instead of refreshing sessions and retrying every
+  symbol. Kite and Yahoo `.NS` paths remain available for India market data.
 - **Configuration gates are visible and documented** — the sidebar and Home
   launcher now identify provider/market-gated destinations, Settings explains
   that market-data secrets belong in the host environment rather than browser

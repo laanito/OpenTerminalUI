@@ -12,6 +12,7 @@ from backend.core.finnhub_client import FinnhubClient
 from backend.core.fmp_client import FMPClient
 from backend.core.kite_client import KiteClient
 from backend.core.nse_client import NSEClient
+from backend.shared.nse_access import nse_public_enabled
 from backend.core.yahoo_client import YahooClient
 from backend.shared.market_classifier import FOREIGN_SUFFIXES, market_classifier
 from backend.api.schemas.market_data import MarketDepth, DepthLevel
@@ -239,7 +240,7 @@ class UnifiedFetcher:
                 logger.debug(f"Kite quote failed for {symbol}: {e}")
 
         # 2. NSE
-        if cls.country_code == "IN":
+        if cls.country_code == "IN" and nse_public_enabled():
             try:
                 data = await self.nse.get_quote_equity(symbol)
                 if data and "priceInfo" in data:
@@ -273,8 +274,9 @@ class UnifiedFetcher:
         price, change_pct, price_source = _extract_quote_price(quote_payload)
 
         # Launch parallel requests
-        nse_task = self.nse.get_quote_equity(symbol) if cls.country_code == "IN" else asyncio.sleep(0, result={})
-        nse_trade_task = self.nse.get_trade_info(symbol) if cls.country_code == "IN" else asyncio.sleep(0, result={})
+        use_public_nse = cls.country_code == "IN" and nse_public_enabled()
+        nse_task = self.nse.get_quote_equity(symbol) if use_public_nse else asyncio.sleep(0, result={})
+        nse_trade_task = self.nse.get_trade_info(symbol) if use_public_nse else asyncio.sleep(0, result={})
         yahoo_summary_task = self.yahoo.get_quote_summary(
             ysym, ["financialData", "summaryDetail", "defaultKeyStatistics", "assetProfile"]
         )
@@ -482,7 +484,7 @@ class UnifiedFetcher:
         # else, skip the NSE call (it would 403/404 from outside India anyway)
         # and fall through to the Yahoo holders fallback below.
         cls = await market_classifier.classify(symbol)
-        if cls.country_code == "IN":
+        if cls.country_code == "IN" and nse_public_enabled():
             try:
                 raw = await self.nse.get_corp_info(symbol)
             except Exception as exc:
@@ -579,6 +581,12 @@ class UnifiedFetcher:
                 "corporateActions": [],
                 "warning": "Corporate actions are sourced from NSE and only available for Indian equities.",
             }
+        if not nse_public_enabled():
+            return {
+                "ticker": symbol,
+                "corporateActions": [],
+                "warning": "Direct NSE public access is disabled; configure a supported provider.",
+            }
         return await self.nse.get_corp_info(symbol)
 
     async def fetch_analyst_consensus(self, ticker: str) -> Dict[str, Any]:
@@ -669,7 +677,7 @@ class UnifiedFetcher:
                 logger.debug(f"Kite depth failed for {symbol}: {e}")
 
         # 2. NSE (Snapshot depth)
-        if cls.country_code == "IN":
+        if cls.country_code == "IN" and nse_public_enabled():
             try:
                 data = await self.nse.get_quote_equity(symbol)
                 # NSE depth is often in 'marketDeptOrderBook' -> 'bid' / 'ask'

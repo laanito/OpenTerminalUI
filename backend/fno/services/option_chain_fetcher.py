@@ -9,6 +9,8 @@ from backend.api.deps import get_unified_fetcher
 from backend.fno.services.greeks_engine import get_greeks_engine
 from backend.shared.cache import cache as default_cache
 from backend.shared.nse_session import NSESession
+from backend.shared.nse_access import disable_nse_public, nse_public_enabled
+from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
 from backend.shared.symbol_resolver import SymbolResolver
 
 INDEX_SYMBOLS = {"NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "NIFTYNXT50"}
@@ -204,17 +206,25 @@ class OptionChainFetcher:
         }
 
     def _fetch_with_nsepython(self, symbol: str) -> dict[str, Any] | None:
+        if not nse_public_enabled():
+            return None
         try:
             from nsepython import option_chain  # type: ignore
-        except Exception:
+        except Exception as exc:
+            if "403" in str(exc):
+                disable_nse_public(f"HTTP 403 from nsepython option chain ({symbol})")
             return None
         try:
             out = option_chain(symbol)
             return out if isinstance(out, dict) else None
-        except Exception:
+        except Exception as exc:
+            if "403" in str(exc):
+                disable_nse_public(f"HTTP 403 from nsepython option chain ({symbol})")
             return None
 
     def _fetch_with_nse_api(self, symbol: str) -> dict[str, Any] | None:
+        if not nse_public_enabled():
+            return None
         path = self._option_path(symbol)
         try:
             out = self._nse.get(path, {"symbol": symbol})
@@ -223,6 +233,8 @@ class OptionChainFetcher:
             return None
 
     def _fallback_spot_from_nsetools(self, symbol: str) -> float:
+        if not nse_public_enabled():
+            return 0.0
         try:
             from nsetools import Nse  # type: ignore
 
@@ -233,7 +245,9 @@ class OptionChainFetcher:
                     val = self._to_float(row.get(key), 0.0)
                     if val > 0:
                         return val
-        except Exception:
+        except Exception as exc:
+            if "403" in str(exc):
+                disable_nse_public(f"HTTP 403 from nsetools quote ({symbol})")
             return 0.0
         return 0.0
 
@@ -311,6 +325,14 @@ class OptionChainFetcher:
                     "atm_strike": 0.0,
                     "strikes": [],
                     "totals": {"ce_oi_total": 0, "pe_oi_total": 0, "ce_volume_total": 0, "pe_volume_total": 0, "pcr_oi": 0.0, "pcr_volume": 0.0},
+                    "degraded": degraded_marker(
+                        REASON_NO_PROVIDER_DATA,
+                        detail=(
+                            "Kite did not provide an option chain and direct NSE public access is disabled"
+                            if not nse_public_enabled()
+                            else "Kite and direct NSE option-chain sources were unavailable"
+                        ),
+                    ),
                 }
             chain["market"] = "NSE"
 

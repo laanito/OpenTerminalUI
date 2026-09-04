@@ -6,6 +6,8 @@ from typing import Any
 
 import requests
 
+from backend.shared.nse_access import disable_nse_public, require_nse_public
+
 
 class NSESession:
     """Manages HTTP session with NSE India website, handling cookies and rate limits."""
@@ -28,10 +30,14 @@ class NSESession:
     def _ensure_cookies(self) -> None:
         if time.time() <= self._cookie_expiry:
             return
-        self._session.get(self.BASE_URL, timeout=10)
+        response = self._session.get(self.BASE_URL, timeout=10)
+        if response.status_code == 403:
+            disable_nse_public("HTTP 403 for NSE homepage")
+        response.raise_for_status()
         self._cookie_expiry = time.time() + 300
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        require_nse_public()
         with self._lock:
             self._ensure_cookies()
             elapsed = time.time() - self._last_request
@@ -40,6 +46,8 @@ class NSESession:
             resp = self._session.get(f"{self.BASE_URL}{path}", params=params, timeout=15)
             self._last_request = time.time()
 
+        if resp.status_code == 403:
+            disable_nse_public(f"HTTP 403 for {path}")
         resp.raise_for_status()
         payload = resp.json()
         return payload if isinstance(payload, dict) else {"data": payload}
