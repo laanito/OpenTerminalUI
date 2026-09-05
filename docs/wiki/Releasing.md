@@ -82,11 +82,11 @@ the runtime matrix above:
 | Missing provider data remains explicit rather than fabricated | backend provider/degradation tests and `scripts/check_no_production_mocks.py` |
 | Slow or malformed AI responses degrade within bounded deadlines | `backend/tests/test_llm_insights.py`, frontend AI timeout/card tests |
 
-The host operator must still confirm the three runtime smoke rows after the
-release-prep PR merges and before tagging. The broader LLM job, streaming,
-cancellation, and response-repair architecture is intentionally deferred to the
-v1.6 stable-baseline work; the bounded v1.4 reliability fixes do not expand that
-release's scope.
+The maintainer completed the host/user verification, release PR #120 merged,
+and tag/GitHub release `v1.4.0` were published from `2999a42` on 2026-09-04.
+The broader LLM job, streaming, cancellation, and response-repair architecture
+is intentionally deferred to the v1.6 stable-baseline work; the bounded v1.4
+reliability fixes do not expand that release's scope.
 
 ## Cutting the release
 
