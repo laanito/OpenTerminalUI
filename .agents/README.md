@@ -4,9 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-04**, from `main` at `1191811` (PR #119), plus the
-v1.4.0 release-preparation changes on this branch. The latest tag remains
-`v1.3.0` at `293f911` until host verification.
+Last audited: **2026-09-05**, from `main` at `2999a42` (release PR #120).
+The latest tag and published GitHub release are **v1.4.0** at that commit.
 
 ## Read order and sources of truth
 
@@ -17,8 +16,9 @@ v1.4.0 release-preparation changes on this branch. The latest tag remains
 5. `README.md`, `CHANGELOG.md`, and `docs/wiki/Roadmap.md` for product-level
    detail and release history.
 
-During v1.4, also read `docs/wiki/Surface-Inventory.md` and its machine-readable
-`docs/surface-inventory.json` before adding, removing, or advertising a route.
+When changing the product surface, also read `docs/wiki/Surface-Inventory.md`
+and its machine-readable `docs/surface-inventory.json` before adding, removing,
+or advertising a route.
 
 The code and recent Git history win when prose disagrees. Some older wiki pages
 and plans describe historical architecture. In particular,
@@ -77,8 +77,8 @@ release-level interpretation and safety boundaries.
 
 ## Current release and development state
 
-- Release-prep version contract: **1.4.0** (`v1.3.0` remains the latest tag until
-  the host smoke check and release tag). Keep `backend/config/settings.py` and
+- Current release: **v1.4.0**, tagged and published from `2999a42` after the
+  maintainer's host/user verification. Keep `backend/config/settings.py` and
   `frontend/package.json` in lockstep when releasing.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
@@ -86,9 +86,9 @@ release-level interpretation and safety boundaries.
   work, release verification, tag, and GitHub release are complete. The release
   gate recorded 817 backend tests and 296 frontend tests, plus compile, build,
   production-mock, and Compose checks.
-- The remaining v1 arc is now **fork consolidation**: v1.4 audits and prunes the
-  exposed surface, v1.5 makes fork identity/defaults/contracts consistent, and
-  v1.6 establishes the stable baseline before v2 cross-market intelligence.
+- The remaining v1 arc is now **fork consolidation**: v1.4 audited and pruned
+  the exposed surface, v1.5 makes fork identity/defaults/contracts consistent,
+  and v1.6 establishes the stable baseline before v2 cross-market intelligence.
   The v1.4 inventory, stub decisions, initial orphan removal, and hidden
   compatibility hardening have landed; primary experimental destinations are
   now adjudicated. Watchlists and their reports/dividend views are owner-scoped;
@@ -104,9 +104,9 @@ release-level interpretation and safety boundaries.
   Live testing then exposed intermittent malformed JSON from a healthy local
   Gemma provider and ungrounded Home/Risk generation when their facts were
   absent; PR #119 added one bounded structured-output retry and factual input
-  gates. Feature work and automated release preparation are complete. Host smoke
-  verification, merge, tag, and GitHub release remain; `TODO.md` records the
-  gates.
+  gates. The maintainer completed live verification, release PR #120 merged,
+  and `v1.4.0` was tagged and published at `2999a42`. **v1.5 — Fork
+  consistency** is the active milestone; `TODO.md` records its kickoff order.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube
@@ -120,9 +120,10 @@ release-level interpretation and safety boundaries.
   `git log`, the implementation, and tests in case it landed without a doc edit.
 
 The v1.3 collaboration retrospective was merged into `praderasblog` as PR #104,
-series order 10: **“When a Second Brain Learns to Grow.”** It is narrative
-context, not an engineering source of truth; deployment is handled separately on
-the blog host after merge.
+series order 10: **“When a Second Brain Learns to Grow.”** The v1.4 retrospective
+followed in PR #108, series order 11: **“The Release That Learned to Say No.”**
+These are narrative context, not engineering sources of truth; deployment is
+handled separately on the blog host after merge.
 
 ## Architecture at a glance
 

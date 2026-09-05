@@ -1,8 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-09-04**, from `main` at `1191811` (PR #119), plus the
-v1.4.0 release-preparation changes on this branch. The latest tag remains
-`v1.3.0` at `293f911` until host verification.
+Last audited: **2026-09-05**, from `main` at `2999a42` (release PR #120).
+The latest tag and published GitHub release are **v1.4.0** at that commit.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -152,9 +151,8 @@ boundaries should follow the audit rather than being guessed in advance.
 - [x] Close the automated v1.4 release contract: align backend/frontend versions,
       changelog, roadmap, public site, release ledger, and agent handoff for
       v1.4.0.
-- [ ] Confirm the host smoke matrix and tag v1.4.0. After the release-prep branch
-      merges, verify the SQLite/keyless and Postgres/pgvector keyless/keyed rows
-      in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
+- [x] Publish v1.4.0. The maintainer completed host/user verification, release PR
+      #120 merged, and tag/GitHub release `v1.4.0` point to `2999a42`.
 
 **Exit:** every reachable page and API is intentional and truthfully classified;
 the primary navigation does not advertise an unexplained empty product.
@@ -173,6 +171,14 @@ the primary navigation does not advertise an unexplained empty product.
       current commands.
 - [ ] Remove or clearly document stale compatibility code and historical design
       documents that otherwise look authoritative.
+
+Start with a repository-identity and documentation audit because it establishes
+the names, links, commands, and sources of truth used by every later cleanup.
+Then take inherited market defaults and currency/locale semantics as separate
+behavioural passes with focused regression coverage. Finish by adjudicating
+compatibility code and historical documents against the now-consistent product.
+PR boundaries may combine adjacent findings when they share one contract; do
+not turn a mechanical grep result into an unrelated omnibus rewrite.
 
 **Exit:** a new human or agent encounters one fork identity and one accurate set
 of defaults, commands, contracts, and sources of truth.
@@ -203,8 +209,8 @@ inherited ambiguity.
 
 ## Current handoff boundary
 
-- v1.3.0 is complete. The v1.4 implementation and documentation sequence is
-  complete: surfaces are classified, empty products are hidden, compatibility
+- v1.4.0 is released at `2999a42`. Its implementation and documentation sequence
+  is complete: surfaces are classified, empty products are hidden, compatibility
   boundaries are explicit, ownerless watchlists and verified duplicates/orphans
   are removed, and configuration-gated navigation explains its deployment
   requirements. User testing identified and closed slow-AI and repeated-NSE-403
@@ -212,23 +218,24 @@ inherited ambiguity.
   capture and repaired Brain citation destinations. Continued live testing found
   that a healthy Gemma provider intermittently returned malformed structured
   output and that Home/Risk cards could ask for analysis without factual inputs;
-  PR #119 added a bounded retry and factual generation gates. Automated v1.4.0
-  release preparation is now complete. The remaining steps are host smoke
-  verification, merge, tag, and GitHub release; do not expand v1.4 with the
-  deferred LLM streaming/job redesign or implement data stubs merely to make the
-  inventory look fuller.
+  PR #119 added a bounded retry and factual generation gates. Release PR #120,
+  maintainer verification, tag, and GitHub release completed the milestone.
+  Begin v1.5 with the repository-identity/documentation audit above; do not pull
+  in the deferred v1.6 LLM streaming/job redesign or implement data stubs merely
+  to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly
   prioritised; provenance and permission semantics remain the prerequisite.
 - A bilingual v1.3 retrospective was merged in `praderasblog` PR #104. Blog
   deployment belongs to the host agent and is outside this repository's scope.
+  The bilingual v1.4 retrospective was merged as PR #108, series order 11.
 
 ## Other product work
 
 These are the clearest remaining items from the current roadmap and code state.
-They are inputs to the v1.4 classification or later product generations, not an
-ordered implementation queue.
+They are later product-generation inputs, not an ordered v1.5 implementation
+queue.
 
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old

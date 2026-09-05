@@ -398,10 +398,10 @@ indexing, autonomous background notifications, cross-user memory, trading
 recommendations or execution, the real Relative Strength engine, and paid-feed
 coverage. Broader external corpora still need a separate provenance design.
 
-### v1.4 — Surface truth ✅ release-prepared 2026-09-04
+### v1.4.0 — Surface truth ✅ released 2026-09-04
 
-Prepared as **v1.4.0 (2026-09-04)** — implementation PRs #103–#119; tagging
-follows the host smoke check described in [Releasing](Releasing).
+Released as **v1.4.0 (2026-09-04)** — implementation PRs #103–#119, release PR
+#120, and tag/GitHub release `v1.4.0` at `2999a42`.
 
 The first consolidation release audits what the product exposes before adding
 more of it. Inventory every navigable frontend destination and public API family,
