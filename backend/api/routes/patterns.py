@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from backend.api.deps import get_chart_provider
 from backend.providers.chart_data import ChartDataProvider
 from backend.services.pattern_recognition_service import service as pattern_service
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 router = APIRouter(prefix="/api/charts", tags=["patterns"])
 
@@ -35,7 +36,7 @@ async def get_patterns(
     timeframe: str = Query(default="1D"),
     min_confidence: float = Query(default=0.6, ge=0.0, le=1.0),
     lookback: int = Query(default=200, ge=30, le=2000),
-    market: str = Query(default="NSE"),
+    market: str = Query(default=DEFAULT_EQUITY_MARKET),
     chart_provider: ChartDataProvider = Depends(get_chart_provider),
 ) -> dict[str, Any]:
     interval = _normalize_timeframe(timeframe)

@@ -17,6 +17,7 @@ from backend.models import (
     VirtualTrade,
 )
 from backend.paper_trading import get_paper_engine
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 router = APIRouter()
 
@@ -42,7 +43,7 @@ class DeployStrategyRequest(BaseModel):
     name: str = "Strategy Paper Portfolio"
     initial_capital: float = Field(default=100000.0, gt=0)
     symbol: str
-    market: str = "NSE"
+    market: str = DEFAULT_EQUITY_MARKET
     strategy: str
     context: dict[str, Any] = Field(default_factory=dict)
 

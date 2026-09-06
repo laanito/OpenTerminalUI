@@ -1084,6 +1084,7 @@ export type ScreenerRunRequestV3 = {
   query?: string;
   preset_id?: string;
   universe: string;
+  market?: "IN" | "US";
   sort_by?: string;
   sort_order?: "asc" | "desc";
   limit: number;

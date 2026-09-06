@@ -23,6 +23,7 @@ from backend.portfolio_lab.engine import run_portfolio_engine
 from backend.portfolio_lab.schemas import PortfolioDefinitionCreate, StrategyBlendCreate
 from backend.services.backtest_jobs import BacktestJobRequest, get_backtest_job_service
 from backend.shared.cache import cache
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET, region_for_market
 
 
 class PortfolioLabService:
@@ -194,6 +195,7 @@ class PortfolioLabService:
         *,
         start: str,
         end: str,
+        market: str,
     ) -> pd.Series:
         weighted_frames: list[pd.DataFrame] = []
         weights = np.array([float(item.get("weight", 1.0) or 1.0) for item in strategies], dtype=float)
@@ -213,7 +215,7 @@ class PortfolioLabService:
                 BacktestJobRequest(
                     symbol=asset,
                     asset=asset,
-                    market="NSE",
+                    market=market,
                     start=start,
                     end=end,
                     strategy=strat,
@@ -281,13 +283,13 @@ class PortfolioLabService:
         roll_sharpe = (roll_mean / roll_vol.replace(0.0, np.nan)).fillna(0.0)
         return [{"date": idx.date().isoformat(), "value": float(val)} for idx, val in roll_sharpe.dropna().items()]
 
-    async def _benchmark_series(self, benchmark_symbol: str | None, start: str, end: str) -> pd.Series:
+    async def _benchmark_series(self, benchmark_symbol: str | None, start: str, end: str, market: str) -> pd.Series:
         if not benchmark_symbol:
             return pd.Series(dtype=float)
         try:
             symbol, bars = get_historical_data_service().fetch_daily_ohlcv(
                 raw_symbol=benchmark_symbol,
-                market="NSE",
+                market=market,
                 start=start,
                 end=end,
                 limit=4000,
@@ -306,6 +308,7 @@ class PortfolioLabService:
 
     async def _compute_report(self, portfolio: PortfolioDefinition, blend: StrategyBlend | None) -> tuple[dict, dict, dict, dict]:
         universe = portfolio.universe_json or {}
+        market = str(universe.get("market") or DEFAULT_EQUITY_MARKET).strip().upper()
         tickers = [str(item).strip().upper() for item in (universe.get("tickers") or []) if str(item).strip()]
         tickers = list(dict.fromkeys(tickers))
         if not tickers:
@@ -331,7 +334,7 @@ class PortfolioLabService:
 
         returns_frames: list[pd.Series] = []
         for asset in tickers:
-            series = await self._asset_strategy_returns(asset, strategies, start=start, end=end)
+            series = await self._asset_strategy_returns(asset, strategies, start=start, end=end, market=market)
             if series.empty:
                 continue
             series.name = asset
@@ -364,7 +367,7 @@ class PortfolioLabService:
         pr = pd.Series([float(item["return"]) for item in engine_out.returns_series], index=pd.to_datetime([item["date"] for item in engine_out.returns_series]))
         equity = (1.0 + pr).cumprod() * 100000.0
 
-        benchmark_returns = await self._benchmark_series(portfolio.benchmark_symbol, start, end)
+        benchmark_returns = await self._benchmark_series(portfolio.benchmark_symbol, start, end, market)
         benchmark_equity = pd.Series(dtype=float)
         if not benchmark_returns.empty:
             benchmark_returns = benchmark_returns.reindex(pr.index).fillna(0.0)
@@ -543,7 +546,13 @@ class PortfolioLabService:
         finally:
             db.close()
 
-    async def leaderboard(self, sort_by: str = "sharpe", descending: bool = True, limit: int = 50) -> dict:
+    async def leaderboard(
+        self,
+        sort_by: str = "sharpe",
+        descending: bool = True,
+        limit: int = 50,
+        market: str | None = None,
+    ) -> dict:
         allowed = {"sharpe", "cagr", "max_drawdown", "turnover", "stability", "recency", "governance_state"}
         sort_key = sort_by if sort_by in allowed else "sharpe"
         db = next(get_db())
@@ -560,11 +569,16 @@ class PortfolioLabService:
             for run, portfolio, metrics_row in rows:
                 metrics = metrics_row.metrics_json if metrics_row else {}
                 governance_state = "approved" if run.status == "succeeded" and not run.error else ("blocked" if run.status == "failed" else "pending")
+                universe = portfolio.universe_json or {}
+                item_market = str(universe.get("market") or DEFAULT_EQUITY_MARKET) if isinstance(universe, dict) else DEFAULT_EQUITY_MARKET
+                if market and region_for_market(item_market) != region_for_market(market):
+                    continue
                 items.append(
                     {
                         "run_id": run.id,
                         "portfolio_id": portfolio.id,
                         "name": portfolio.name,
+                        "market": item_market,
                         "status": run.status,
                         "sharpe": float(metrics.get("sharpe", 0.0) or 0.0),
                         "cagr": float(metrics.get("cagr", 0.0) or 0.0),

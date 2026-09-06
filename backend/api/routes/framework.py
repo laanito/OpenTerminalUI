@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from backend.core import backtester
 from backend.core.framework.registry import list_models
 from backend.core.framework.engine import FrameworkConfig, run_framework_backtest
+from backend.shared.market_defaults import DEFAULT_BENCHMARK_SYMBOL
 
 router = APIRouter(prefix="/api/framework", tags=["framework"])
 
@@ -20,7 +21,7 @@ class FrameworkBacktestRequest(BaseModel):
     tickers: list[str] = Field(min_length=1)
     start: str | None = None
     end: str | None = None
-    benchmark: str | None = "^NSEI"
+    benchmark: str | None = DEFAULT_BENCHMARK_SYMBOL
     rebalance_freq: str = "ME"
     initial_cash: float = Field(100000.0, gt=0)
     transaction_cost_bps: float = Field(10.0, ge=0)

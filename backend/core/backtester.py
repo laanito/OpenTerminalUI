@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import pandas as pd
 import yfinance as yf
 
+from backend.shared.market_defaults import DEFAULT_BENCHMARK_SYMBOL, DEFAULT_EQUITY_MARKET
+
 
 @dataclass
 class BacktestConfig:
@@ -12,7 +14,8 @@ class BacktestConfig:
     rebalance_freq: str = "ME"
     top_n: int = 10
     transaction_cost_bps: float = 10.0
-    benchmark: str = "^NSEI"
+    benchmark: str = DEFAULT_BENCHMARK_SYMBOL
+    market: str = DEFAULT_EQUITY_MARKET
 
 
 def _normalize_rebalance_freq(freq: str) -> str:
@@ -50,16 +53,21 @@ def _perf_metrics(returns: pd.Series, equity_curve: pd.Series) -> dict[str, floa
     }
 
 
-def _download_close(tickers: list[str], start: str, end: str) -> pd.DataFrame:
+def _download_close(tickers: list[str], start: str, end: str, market: str = DEFAULT_EQUITY_MARKET) -> pd.DataFrame:
+    normalized_market = str(market or DEFAULT_EQUITY_MARKET).strip().upper()
     norm: list[str] = []
     for t in tickers:
         token = t.strip().upper()
         if not token:
             continue
-        if "." in token or token.startswith("^"):
+        if "." in token or token.startswith("^") or "=" in token:
             norm.append(token)
-        else:
+        elif normalized_market in {"NSE", "IN"}:
             norm.append(f"{token}.NS")
+        elif normalized_market == "BSE":
+            norm.append(f"{token}.BO")
+        else:
+            norm.append(token)
     norm = list(dict.fromkeys(norm))
     if not norm:
         return pd.DataFrame()
@@ -95,7 +103,7 @@ def _download_close(tickers: list[str], start: str, end: str) -> pd.DataFrame:
     rename_map = {}
     for t in close.columns:
         t_str = str(t).upper()
-        rename_map[t] = t_str.replace(".NS", "")
+        rename_map[t] = t_str.removesuffix(".NS").removesuffix(".BO")
     close = close.rename(columns=rename_map).sort_index()
     return close
 
@@ -106,12 +114,12 @@ def backtest_momentum_rotation(
     end: str,
     config: BacktestConfig,
 ) -> dict:
-    prices = _download_close(tickers, start, end)
+    prices = _download_close(tickers, start, end, config.market)
     if prices.empty or len(prices.columns) == 0:
         raise ValueError("No price data available for the selected universe/date range.")
     prices = prices.dropna(axis=1, how="all").ffill().dropna(how="all")
     if prices.empty or len(prices.columns) == 0:
-        raise ValueError("No usable ticker data after filtering. Verify NSE symbols and date range.")
+        raise ValueError("No usable ticker data after filtering. Verify symbols, market, and date range.")
     daily_ret = prices.pct_change().fillna(0.0)
     momentum = prices.pct_change(config.lookback_days)
 
@@ -158,7 +166,7 @@ def backtest_momentum_rotation(
     strategy_equity = (1.0 + port_returns).cumprod()
     strategy_metrics = _perf_metrics(port_returns, strategy_equity)
 
-    bench_prices = _download_close([config.benchmark], start, end)
+    bench_prices = _download_close([config.benchmark], start, end, config.market)
     if bench_prices.empty:
         benchmark_equity = pd.Series(index=strategy_equity.index, data=1.0)
         benchmark_metrics = {"total_return": 0.0, "cagr": 0.0, "volatility": 0.0, "sharpe": 0.0, "max_drawdown": 0.0}

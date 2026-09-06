@@ -13,6 +13,7 @@ from backend.shared.degraded import (
     REASON_NO_PROVIDER_DATA,
     degraded_marker,
 )
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 router = APIRouter(tags=["tape"])
 
@@ -44,7 +45,7 @@ def _guess_exchange(symbol: str) -> str:
         return "NSE"
     if normalized.endswith(".BO"):
         return "BSE"
-    return "NSE"
+    return DEFAULT_EQUITY_MARKET
 
 
 def _normalized_symbol(symbol: str) -> str:

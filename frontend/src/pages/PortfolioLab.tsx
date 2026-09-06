@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -6,6 +6,8 @@ import { createPortfolioDefinition, listPortfolioDefinitions, type RebalanceFreq
 import { api } from "../api/base";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
+import { useSettingsStore } from "../store/settingsStore";
+import { benchmarkForMarket, DEFAULT_EQUITY_MARKET, equityRegionForMarket } from "../types/markets";
 
 type LeaderboardSortKey = "sharpe" | "cagr" | "max_drawdown" | "turnover" | "stability" | "recency" | "governance";
 type PortfolioLeaderboardRow = {
@@ -36,7 +38,10 @@ function normalizeIsoDate(input: string): string {
 
 export function PortfolioLabPage() {
   const queryClient = useQueryClient();
-  const [leaderboardMarket, setLeaderboardMarket] = useState<"US" | "India">("India");
+  const selectedMarket = useSettingsStore((state) => state.selectedMarket);
+  const [leaderboardMarket, setLeaderboardMarket] = useState<"US" | "India">(
+    equityRegionForMarket(selectedMarket) === "IN" ? "India" : "US",
+  );
   const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSortKey>("sharpe");
   const [name, setName] = useState("Core Multi-Asset");
   const [description, setDescription] = useState("Portfolio lab baseline");
@@ -44,12 +49,17 @@ export function PortfolioLabPage() {
   const [tickers, setTickers] = useState("AAPL,MSFT,GOOGL,AMZN");
   const [startDate, setStartDate] = useState("2025-01-01");
   const [endDate, setEndDate] = useState("2025-12-31");
-  const [benchmark, setBenchmark] = useState("S&P500");
+  const [benchmark, setBenchmark] = useState<string>(() => benchmarkForMarket(selectedMarket));
   const [rebalanceFrequency, setRebalanceFrequency] = useState<RebalanceFrequency>("WEEKLY");
   const [weightingMethod, setWeightingMethod] = useState<WeightingMethod>("RISK_PARITY");
   const [maxWeight, setMaxWeight] = useState(0.25);
   const [cashBuffer, setCashBuffer] = useState(0);
   const [createMessage, setCreateMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLeaderboardMarket(equityRegionForMarket(selectedMarket) === "IN" ? "India" : "US");
+    setBenchmark((current) => current === "SPY" || current === "^NSEI" ? benchmarkForMarket(selectedMarket) : current);
+  }, [selectedMarket]);
 
   const portfolios = useQuery({
     queryKey: ["portfolio-lab", "portfolios"],
@@ -102,7 +112,12 @@ export function PortfolioLabPage() {
       name: name.trim(),
       description,
       tags: tags.split(",").map((row) => row.trim()).filter(Boolean),
-      universe_json: { tickers: tickerList },
+      universe_json: {
+        tickers: tickerList,
+        market: selectedMarket === "NSE" || selectedMarket === "BSE" || selectedMarket === "NYSE" || selectedMarket === "NASDAQ"
+          ? selectedMarket
+          : DEFAULT_EQUITY_MARKET,
+      },
       benchmark_symbol: benchmark.trim().toUpperCase() || undefined,
       start_date: normalizedStart,
       end_date: normalizedEnd,

@@ -40,6 +40,9 @@ class _FakeService:
     async def compare(self, run_ids: list[str]) -> dict:
         return {"runs": [{"run_id": run_id} for run_id in run_ids], "summary": []}
 
+    async def leaderboard(self, sort_by: str, descending: bool, limit: int, market: str | None = None) -> dict:
+        return {"items": [], "sort_by": sort_by, "descending": descending, "limit": limit, "market": market}
+
     async def walk_forward(self, experiment_id: str, train_window_days: int, test_window_days: int) -> dict:
         return {
             "experiment_id": experiment_id,
@@ -89,6 +92,9 @@ def test_create_list_run_report_compare(monkeypatch) -> None:
 
     compare = asyncio.run(routes.compare_runs(CompareRequest(run_ids=["r1", "r2"])))
     assert len(compare["runs"]) == 2
+
+    leaderboard = asyncio.run(routes.model_lab_leaderboard(market="US"))
+    assert leaderboard["market"] == "US"
 
 
 def test_walk_forward_and_param_sweep(monkeypatch) -> None:

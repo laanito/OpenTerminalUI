@@ -8,12 +8,13 @@ from backend.core.backtesting_models import BacktestConfig
 from backend.core.historical_data_service import get_historical_data_service
 from backend.core.single_asset_backtest import BacktestEngine
 from backend.core.strategy_runner import StrategyRunner
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 
 def run_portfolio_backtest(
     *,
     assets: list[str],
-    market: str = "NSE",
+    market: str = DEFAULT_EQUITY_MARKET,
     start: str | None = None,
     end: str | None = None,
     limit: int = 500,

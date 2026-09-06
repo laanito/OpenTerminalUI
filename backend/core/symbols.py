@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
+
 
 @dataclass(frozen=True)
 class Symbol:
@@ -11,9 +13,9 @@ class Symbol:
     provider_symbol: str
 
 
-def normalize_symbol(raw_symbol: str, market: str = "NSE") -> Symbol:
+def normalize_symbol(raw_symbol: str, market: str = DEFAULT_EQUITY_MARKET) -> Symbol:
     raw = raw_symbol.strip().upper()
-    market_norm = market.strip().upper() or "NSE"
+    market_norm = market.strip().upper() or DEFAULT_EQUITY_MARKET
     base = raw
     if base.endswith(".NS"):
         base = base[:-3]

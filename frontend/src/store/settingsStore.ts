@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { CountryCode, MarketCode } from "../types/markets";
+import { COUNTRY_DEFAULT_MARKET, DEFAULT_COUNTRY, type CountryCode, type MarketCode } from "../types/markets";
 
 export type DisplayCurrency = "INR" | "USD" | "EUR";
 export type RealtimeMode = "polling" | "ws";
@@ -99,7 +99,7 @@ const countryDefaults: Record<CountryCode, { market: MarketCode; currency: Displ
   CRYPTO: { market: "CRYPTO", currency: "USD" },
 };
 
-const defaultCountry: CountryCode = "US";
+const defaultCountry: CountryCode = DEFAULT_COUNTRY;
 const defaultValues = countryDefaults[defaultCountry];
 
 function normalizePersistedMarket(value: unknown, country: CountryCode): MarketCode {
@@ -107,7 +107,7 @@ function normalizePersistedMarket(value: unknown, country: CountryCode): MarketC
   if (raw === "IN") return "NSE";
   if (raw === "US") return "NASDAQ";
   if (["NSE", "BSE", "NYSE", "NASDAQ", "EU", "CRYPTO"].includes(raw)) return raw as MarketCode;
-  return countryDefaults[country].market;
+  return COUNTRY_DEFAULT_MARKET[country];
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -163,7 +163,10 @@ export const useSettingsStore = create<SettingsState>()(
         const persisted = (persistedState as Partial<SettingsState>) ?? {};
         const current = currentState as SettingsState;
         const selectedCountry: CountryCode =
-          persisted.selectedCountry === "IN" || persisted.selectedCountry === "US"
+          persisted.selectedCountry === "IN" ||
+          persisted.selectedCountry === "US" ||
+          persisted.selectedCountry === "EU" ||
+          persisted.selectedCountry === "CRYPTO"
             ? persisted.selectedCountry
             : current.selectedCountry;
         return {

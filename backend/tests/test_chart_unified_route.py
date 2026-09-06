@@ -57,7 +57,7 @@ def test_chart_route_normalized_returns_unified_payload(monkeypatch) -> None:
     assert calls["kwargs"]["market_hint"] == "NASDAQ"
 
 
-def test_chart_route_normalized_omitted_market_uses_autodetect(monkeypatch) -> None:
+def test_chart_route_normalized_omitted_market_uses_global_default(monkeypatch) -> None:
     calls: dict[str, object] = {}
 
     class _FakeProvider:
@@ -86,8 +86,8 @@ def test_chart_route_normalized_omitted_market_uses_autodetect(monkeypatch) -> N
     )
     assert result["symbol"] == "AAPL"
     assert result["count"] == 0
-    assert result["market_hint"] == ""
-    assert calls["kwargs"]["market_hint"] is None
+    assert result["market_hint"] == "NASDAQ"
+    assert calls["kwargs"]["market_hint"] == "NASDAQ"
 
 
 def test_chart_route_rejects_invalid_interval() -> None:

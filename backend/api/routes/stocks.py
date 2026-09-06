@@ -11,6 +11,7 @@ from backend.adapters.registry import get_adapter_registry
 from backend.api.deps import fetch_stock_snapshot_coalesced, get_unified_fetcher
 from backend.core.models import CapexPoint, CapexTrackerResponse, DeliveryPoint, DeliverySeriesResponse, EquityPerformanceSnapshot, PriceRange, PromoterHoldingPoint, PromoterHoldingsResponse, StockSnapshot, TopBarTicker, TopBarTickersResponse
 from backend.shared.market_classifier import market_classifier
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 router = APIRouter()
 
@@ -135,7 +136,7 @@ async def get_stock(ticker: str) -> StockSnapshot:
         snap = await fetch_stock_snapshot_coalesced(ticker)
         try:
             q = await get_adapter_registry().invoke(
-                classification.exchange or "NSE",
+                classification.exchange or DEFAULT_EQUITY_MARKET,
                 "get_quote",
                 yf_symbol if classification.country_code == "US" else ticker.upper(),
             )

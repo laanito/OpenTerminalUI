@@ -16,6 +16,7 @@ from backend.auth.deps import get_current_user
 from backend.core.models import ChartResponse, IndicatorPoint, IndicatorResponse, OhlcvPoint
 from backend.core.technicals import compute_indicator
 from backend.shared.degraded import REASON_NO_PROVIDER_DATA, degraded_marker
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET, currency_for_market
 from backend.models import ChartDrawing, ChartTemplate, User
 from backend.services.footprint_aggregator import FootprintAggregator, serialize_footprint_candle
 from backend.services.volume_profile_service import compute_volume_profile, parse_period_to_days
@@ -74,12 +75,12 @@ async def get_volume_profile(
     symbol: str,
     period: str = Query(default="20d"),
     bins: int = Query(default=50, ge=10, le=200),
-    market: str = Query(default="NSE"),
+    market: str = Query(default=DEFAULT_EQUITY_MARKET),
     mode: str = Query(default="fixed"),
     lookback_bars: int = Query(default=300, ge=50, le=5000),
 ) -> Dict[str, Any]:
     period = _coerce_query_str(period, "20d")
-    market = _coerce_query_str(market, "NSE").upper()
+    market = _coerce_query_str(market, DEFAULT_EQUITY_MARKET).upper()
     mode = _coerce_query_str(mode, "fixed").lower()
     bins = _coerce_query_int(bins, 50)
     lookback_bars = _coerce_query_int(lookback_bars, 300)
@@ -203,11 +204,11 @@ async def get_footprint(
     symbol: str,
     timeframe: str = Query(default="5m"),
     bars: int = Query(default=50, ge=1, le=500),
-    market: str = Query(default="NSE"),
+    market: str = Query(default=DEFAULT_EQUITY_MARKET),
     price_granularity: float = Query(default=0.5, gt=0.0),
 ) -> Dict[str, Any]:
     timeframe = _coerce_query_str(timeframe, "5m").lower()
-    market = _coerce_query_str(market, "NSE").upper()
+    market = _coerce_query_str(market, DEFAULT_EQUITY_MARKET).upper()
     bars = _coerce_query_int(bars, 50)
     if not math.isfinite(price_granularity) or price_granularity <= 0:
         raise HTTPException(status_code=400, detail="price_granularity must be greater than 0")
@@ -430,7 +431,8 @@ async def get_chart(
     # Direct function calls in unit tests bypass FastAPI dependency parsing and can leave
     # `Query(...)` sentinel objects in parameters.
     if not isinstance(market, str):
-        market = None
+        market = DEFAULT_EQUITY_MARKET
+    market = market.strip().upper() or DEFAULT_EQUITY_MARKET
     if not isinstance(interval, str):
         interval = "1d"
     interval = interval.strip().lower() or "1d"
@@ -447,6 +449,10 @@ async def get_chart(
         end = None
     if not isinstance(normalized, bool):
         normalized = False
+    if isinstance(limit, bool) or not isinstance(limit, int):
+        limit = None
+    if isinstance(cursor, bool) or not isinstance(cursor, int):
+        cursor = None
 
     # Unified OHLCV branch for the new chart workstation endpoint contract.
     # Keep the legacy ChartResponse branch below intact for pagination/backfill consumers.
@@ -483,9 +489,7 @@ async def get_chart(
             ],
         }
 
-    if not market:
-        market = "NSE"
-    key = cache_instance.build_key("chart", ticker.upper(), {"i": interval, "r": range})
+    key = cache_instance.build_key("chart", ticker.upper(), {"i": interval, "r": range, "market": market})
     cached = await cache_instance.get(key)
     if cached:
         payload = cached
@@ -545,7 +549,7 @@ async def get_chart(
         payload = {
             "ticker": ticker.upper(),
             "interval": interval,
-            "currency": "INR",
+            "currency": currency_for_market(market),
             "data": [d.model_dump() for d in data],
             "meta": {"warnings": warnings, "degraded": degraded},
         }
@@ -569,7 +573,7 @@ async def get_chart(
     return ChartResponse(
         ticker=str(payload.get("ticker") or ticker.upper()),
         interval=str(payload.get("interval") or interval),
-        currency=str(payload.get("currency") or "INR"),
+        currency=str(payload.get("currency") or currency_for_market(market)),
         data=filtered_points,
         meta={
             "warnings": (payload.get("meta") or {}).get("warnings", []),

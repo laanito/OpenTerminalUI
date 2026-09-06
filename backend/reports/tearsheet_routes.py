@@ -8,6 +8,7 @@ from backend.model_lab.service import get_model_lab_service
 from backend.models import ModelExperiment, ModelRun, PortfolioDefinition, PortfolioRun
 from backend.portfolio_lab.service import get_portfolio_lab_service
 from backend.reports.tearsheet import generate_strategy_tearsheet_html, infer_benchmark
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 tearsheet_router = APIRouter()
 
@@ -27,7 +28,9 @@ def _run_context(lab_key: str, run_id: str) -> dict:
             _run, experiment = row
             universe = experiment.universe_json or {}
             return {
-                "market": universe.get("market", "NSE") if isinstance(universe, dict) else "NSE",
+                "market": universe.get("market", DEFAULT_EQUITY_MARKET)
+                if isinstance(universe, dict)
+                else DEFAULT_EQUITY_MARKET,
                 "start": experiment.start_date,
                 "end": experiment.end_date,
             }
@@ -42,7 +45,9 @@ def _run_context(lab_key: str, run_id: str) -> dict:
         _run, portfolio = row
         universe = portfolio.universe_json or {}
         return {
-            "market": universe.get("market", "NSE") if isinstance(universe, dict) else "NSE",
+            "market": universe.get("market", DEFAULT_EQUITY_MARKET)
+            if isinstance(universe, dict)
+            else DEFAULT_EQUITY_MARKET,
             "start": portfolio.start_date,
             "end": portfolio.end_date,
         }
@@ -86,7 +91,11 @@ async def get_tearsheet(lab: str, run_id: str, download: bool = Query(default=Fa
     report["market"] = context.get("market")
     series = report.setdefault("series", {})
     if not series.get("benchmark_curve") and not series.get("benchmark_equity"):
-        series["benchmark_curve"] = _benchmark_curve(str(context.get("market") or "NSE"), context.get("start"), context.get("end"))
+        series["benchmark_curve"] = _benchmark_curve(
+            str(context.get("market") or DEFAULT_EQUITY_MARKET),
+            context.get("start"),
+            context.get("end"),
+        )
     html = generate_strategy_tearsheet_html(run_id=run_id, lab=lab_key, report=report, market=context.get("market"))
     headers = {}
     if download:

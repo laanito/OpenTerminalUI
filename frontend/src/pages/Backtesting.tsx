@@ -41,6 +41,7 @@ import { SavedViewsControl } from "../components/savedViews/SavedViewsControl";
 import { cloneIndicatorConfig, makeIndicatorInstanceId } from "../shared/chart/indicatorCatalog";
 import type { ChartKind, IndicatorConfig } from "../shared/chart/types";
 import { useSettingsStore } from "../store/settingsStore";
+import { DEFAULT_EQUITY_MARKET } from "../types/markets";
 import { useStockStore } from "../store/stockStore";
 import { terminalColors } from "../theme/terminal";
 import { consumePendingSavedView } from "../workspace/savedViewRestore";
@@ -153,6 +154,13 @@ const VIZ_TABS: { key: VizTab; label: string; icon: string }[] = [
 
 const CUSTOM_STRATEGY_VALUE = "custom";
 const KNOWN_MARKETS: BacktestMarket[] = ["NSE", "BSE", "NYSE", "NASDAQ", "AMEX"];
+
+export function backtestMarketForSelection(market: string | null | undefined): BacktestMarket {
+  const normalized = String(market || "").trim().toUpperCase();
+  return KNOWN_MARKETS.includes(normalized as BacktestMarket)
+    ? normalized as BacktestMarket
+    : DEFAULT_EQUITY_MARKET as BacktestMarket;
+}
 
 function strategyIndicator(
   id: string,
@@ -380,7 +388,7 @@ export function BacktestingPage() {
   const [asset, setAsset] = useState((storeTicker || "AAPL").toUpperCase());
   const [assetSuggestions, setAssetSuggestions] = useState<SearchSymbolItem[]>([]);
   const [showAssetSuggestions, setShowAssetSuggestions] = useState(false);
-  const [market, setMarket] = useState<BacktestMarket>((selectedMarket as BacktestMarket) || "NSE");
+  const [market, setMarket] = useState<BacktestMarket>(() => backtestMarketForSelection(selectedMarket));
   const [tradeCapital, setTradeCapital] = useState(100000);
   const [start, setStart] = useState("2024-01-01");
   const [end, setEnd] = useState("2026-01-01");

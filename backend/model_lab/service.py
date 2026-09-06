@@ -13,6 +13,7 @@ from backend.model_lab.metrics import compute_run_metrics, compute_run_timeserie
 from backend.model_lab.schemas import ExperimentCreate
 from backend.models import ModelExperiment, ModelRun, ModelRunMetrics, ModelRunTimeseries
 from backend.services.backtest_jobs import BacktestJobRequest, get_backtest_job_service
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET, region_for_market
 from backend.shared.cache import cache
 
 
@@ -148,7 +149,7 @@ class ModelLabService:
                 symbol = "AAPL"
             market = str(universe.get("market") or universe.get("exchange") or "NASDAQ").strip().upper() if isinstance(universe, dict) else "NASDAQ"
             if market not in {"NSE", "BSE", "NASDAQ", "NYSE", "AMEX"}:
-                market = "NSE"
+                market = DEFAULT_EQUITY_MARKET
 
             model_key = str(experiment.model_key).strip()
             strategy = model_key if ":" in model_key else f"example:{model_key}"
@@ -421,7 +422,7 @@ class ModelLabService:
             symbol = str(tickers[0]).strip().upper() if isinstance(tickers, list) and tickers else "AAPL"
             market = str(universe.get("market") or universe.get("exchange") or "NASDAQ").strip().upper() if isinstance(universe, dict) else "NASDAQ"
             if market not in {"NSE", "BSE", "NASDAQ", "NYSE", "AMEX"}:
-                market = "NSE"
+                market = DEFAULT_EQUITY_MARKET
             strategy = experiment.model_key if ":" in experiment.model_key else f"example:{experiment.model_key}"
 
             rows = []
@@ -481,7 +482,13 @@ class ModelLabService:
         finally:
             db.close()
 
-    async def leaderboard(self, sort_by: str = "sharpe", descending: bool = True, limit: int = 50) -> dict:
+    async def leaderboard(
+        self,
+        sort_by: str = "sharpe",
+        descending: bool = True,
+        limit: int = 50,
+        market: str | None = None,
+    ) -> dict:
         allowed = {"sharpe", "cagr", "max_drawdown", "turnover", "stability", "recency", "governance_state"}
         sort_key = sort_by if sort_by in allowed else "sharpe"
         db = next(get_db())
@@ -499,13 +506,16 @@ class ModelLabService:
                 metrics = metrics_row.metrics_json if metrics_row else {}
                 governance_state = "approved" if run.status == "succeeded" and not run.error else ("blocked" if run.status == "failed" else "pending")
                 universe = experiment.universe_json or {}
+                item_market = str(universe.get("market") or DEFAULT_EQUITY_MARKET) if isinstance(universe, dict) else DEFAULT_EQUITY_MARKET
+                if market and region_for_market(item_market) != region_for_market(market):
+                    continue
                 items.append(
                     {
                         "run_id": run.id,
                         "experiment_id": experiment.id,
                         "name": experiment.name,
                         "model_key": experiment.model_key,
-                        "market": universe.get("market", "NSE") if isinstance(universe, dict) else "NSE",
+                        "market": item_market,
                         "status": run.status,
                         "sharpe": float(metrics.get("sharpe", 0.0) or 0.0),
                         "cagr": float(metrics.get("cagr", 0.0) or 0.0),

@@ -331,7 +331,7 @@ describe("ChartWorkstationPage shell workflow", () => {
     });
   });
 
-  it("defaults imported shared workspaces without market metadata to IN", async () => {
+  it("defaults imported shared workspaces without market metadata to US", async () => {
     const shared = encodeWorkstationSharePayload(
       buildWorkstationSnapshotPayload("Shared Desk", {
         slots: [{ id: "share-1", ticker: "INFY", timeframe: "1D", chartType: "candle", indicators: [] }],
@@ -345,7 +345,7 @@ describe("ChartWorkstationPage shell workflow", () => {
     await waitFor(() => {
       const slot = useChartWorkstationStore.getState().slots[0];
       expect(slot?.ticker).toBe("INFY");
-      expect(slot?.market).toBe("IN");
+      expect(slot?.market).toBe("US");
     });
   });
 });

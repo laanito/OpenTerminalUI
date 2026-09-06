@@ -146,7 +146,7 @@ type WorkspaceTemplate = {
 };
 
 type ParsedWorkspaceTemplate = WorkspaceState;
-const DEFAULT_WORKSTATION_IMPORT_MARKET: SlotMarket = "IN";
+const DEFAULT_WORKSTATION_IMPORT_MARKET: SlotMarket = "US";
 
 const DEFAULT_EXTENDED_HOURS = {
   enabled: false,
@@ -287,7 +287,7 @@ function inferGridTemplate(slotCount: number): WorkspaceSnapshot["gridTemplate"]
 }
 
 function buildTemplateSlot(slot: Partial<ChartSlot> | null | undefined): ChartSlot {
-  const market = slot?.market === "US" ? "US" : "IN";
+  const market = slot?.market === "IN" ? "IN" : "US";
   return {
     id: typeof slot?.id === "string" && slot.id ? slot.id : createSlotId(),
     ticker: typeof slot?.ticker === "string" && slot.ticker.trim() ? slot.ticker.trim().toUpperCase() : null,

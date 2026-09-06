@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.core import backtester
+from backend.shared.market_defaults import DEFAULT_BENCHMARK_SYMBOL
 from backend.core.statlab import (
     forecast_series,
     cointegration_analysis,
@@ -50,7 +51,7 @@ class DecompositionRequest(BaseModel):
 
 class RegressionRequest(BaseModel):
     ticker: str
-    benchmark: str = "^NSEI"
+    benchmark: str = DEFAULT_BENCHMARK_SYMBOL
     lookback_days: int = 730
     rolling_window: int = Field(63, ge=20, le=252)
 

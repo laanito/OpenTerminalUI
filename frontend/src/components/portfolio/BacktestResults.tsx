@@ -14,6 +14,8 @@ import {
 import { deployBacktestToPaper, runBacktest, type BacktestPayload, type BacktestResponse } from "../../api/client";
 import { MOMENTUM_ROTATION_BASKET_CSV } from "../../utils/constants";
 import { formatPct } from "../../utils/formatters";
+import { useSettingsStore } from "../../store/settingsStore";
+import { DEFAULT_EQUITY_MARKET } from "../../types/markets";
 
 const DEFAULT_TICKERS = MOMENTUM_ROTATION_BASKET_CSV;
 
@@ -22,6 +24,10 @@ type Props = {
 };
 
 export function BacktestResults({ initialTickers }: Props) {
+  const selectedMarket = useSettingsStore((state) => state.selectedMarket);
+  const backtestMarket = selectedMarket === "NSE" || selectedMarket === "BSE" || selectedMarket === "NYSE" || selectedMarket === "NASDAQ"
+    ? selectedMarket
+    : DEFAULT_EQUITY_MARKET;
   const [tickers, setTickers] = useState(DEFAULT_TICKERS);
   const [lookback, setLookback] = useState(63);
   const [topN, setTopN] = useState(5);
@@ -48,6 +54,8 @@ export function BacktestResults({ initialTickers }: Props) {
     try {
       const payload: BacktestPayload = {
         tickers: tickers.split(",").map((t) => t.trim()).filter(Boolean),
+        market: backtestMarket,
+        benchmark: backtestMarket === "NSE" || backtestMarket === "BSE" ? "^NSEI" : "SPY",
         lookback_days: lookback,
         top_n: topN,
       };
@@ -118,7 +126,7 @@ export function BacktestResults({ initialTickers }: Props) {
                     name: `Backtest ${new Date().toLocaleDateString()}`,
                     initial_capital: 100000,
                     symbol: first,
-                    market: "NSE",
+                    market: backtestMarket,
                     strategy: "momentum_rotation",
                     context: { lookback_days: lookback, top_n: topN, tickers: tickersList },
                   });

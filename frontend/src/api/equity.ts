@@ -1,4 +1,5 @@
 import { api } from "./base";
+import { DEFAULT_EQUITY_MARKET } from "../types/markets";
 import type {
   FinancialsResponse,
   PeerResponse,
@@ -82,7 +83,11 @@ export async function fetchUniverseMembers(
   return data;
 }
 
-export async function fetchFinancials(ticker: string, period: "annual" | "quarterly", market = "NSE"): Promise<FinancialsResponse> {
+export async function fetchFinancials(
+  ticker: string,
+  period: "annual" | "quarterly",
+  market: string = DEFAULT_EQUITY_MARKET,
+): Promise<FinancialsResponse> {
   return getFinancials(ticker, market, period);
 }
 

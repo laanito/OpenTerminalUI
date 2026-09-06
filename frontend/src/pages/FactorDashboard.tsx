@@ -4,6 +4,8 @@ import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, Responsi
 
 import { fetchStockIdeas, fetchSymbolFactors, type FactorMarket, type FactorScores, type StockIdea } from "../api/client";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { useSettingsStore } from "../store/settingsStore";
+import { equityRegionForMarket } from "../types/markets";
 
 const SECTORS = ["All", "Technology", "Financials", "Consumer", "Industrials", "Healthcare", "Energy", "Materials"];
 
@@ -26,7 +28,10 @@ function factorChips(row?: StockIdea | null, factors?: FactorScores): string[] {
 }
 
 export function FactorDashboardPage() {
-  const [market, setMarket] = useState<FactorMarket>("India");
+  const selectedMarket = useSettingsStore((state) => state.selectedMarket);
+  const [market, setMarket] = useState<FactorMarket>(
+    equityRegionForMarket(selectedMarket) === "IN" ? "India" : "US",
+  );
   const [sector, setSector] = useState("All");
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 

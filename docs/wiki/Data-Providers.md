@@ -2,6 +2,12 @@
 
 OpenTerminalUI uses a **multi-provider waterfall architecture** — each data request tries the highest-quality provider first, and falls back automatically on failure. This ensures resilience against rate limits, scraping breakage, and API outages.
 
+Generic equity requests follow the user's selected market. When no usable
+market is supplied, the fork-wide fallback is **US/NASDAQ** with USD and SPY
+benchmark semantics. India remains an explicit **NSE/BSE** context with INR and
+NIFTY semantics; India-specific F&O routes are unaffected by the global
+fallback.
+
 ---
 
 ## India Providers

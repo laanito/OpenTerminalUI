@@ -7,6 +7,8 @@ import { TerminalBadge } from "../../../components/terminal/TerminalBadge";
 import { TerminalButton } from "../../../components/terminal/TerminalButton";
 import { TerminalInput } from "../../../components/terminal/TerminalInput";
 import { TerminalPanel } from "../../../components/terminal/TerminalPanel";
+import { useSettingsStore } from "../../../store/settingsStore";
+import { DEFAULT_SCAN_MARKETS } from "../../../types/markets";
 import { useStockStore } from "../../../store/stockStore";
 
 type Preset = {
@@ -110,9 +112,13 @@ function getRowPrice(row: Record<string, unknown>): number {
 }
 
 export function MultiMarketScanPanel() {
+  const selectedMarket = useSettingsStore((state) => state.selectedMarket);
+  const defaultMarkets = selectedMarket === "NSE" || selectedMarket === "BSE"
+    ? ["NSE"]
+    : [...DEFAULT_SCAN_MARKETS];
   const navigate = useNavigate();
   const setTicker = useStockStore((state) => state.setTicker);
-  const [markets, setMarkets] = useState<string[]>(["NSE", "NYSE", "NASDAQ"]);
+  const [markets, setMarkets] = useState<string[]>(defaultMarkets);
   const [limit, setLimit] = useState(100);
   const [marketCapMin, setMarketCapMin] = useState("1000000000");
   const [peMax, setPeMax] = useState("25");
@@ -237,7 +243,7 @@ export function MultiMarketScanPanel() {
     }
     try {
       const parsed = JSON.parse(raw) as SavedScanTemplate;
-      setMarkets(Array.isArray(parsed.markets) && parsed.markets.length ? parsed.markets : ["NSE", "NYSE", "NASDAQ"]);
+      setMarkets(Array.isArray(parsed.markets) && parsed.markets.length ? parsed.markets : defaultMarkets);
       setLimit(typeof parsed.limit === "number" ? parsed.limit : 100);
       setMarketCapMin(parsed.marketCapMin || "1000000000");
       setPeMax(parsed.peMax || "25");
@@ -265,7 +271,7 @@ export function MultiMarketScanPanel() {
   };
 
   return (
-    <TerminalPanel title="Multi-Market EQS Scan" subtitle="NSE + NYSE + NASDAQ / custom formula mode">
+    <TerminalPanel title="Multi-Market EQS Scan" subtitle="NSE, NYSE and NASDAQ / custom formula mode">
       <div className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
           {["NSE", "NYSE", "NASDAQ"].map((m) => (

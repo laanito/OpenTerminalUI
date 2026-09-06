@@ -81,6 +81,9 @@ class _FakePortfolioLabService:
             "matrices": {"correlation": {"labels": [], "values": []}},
         }
 
+    async def leaderboard(self, sort_by: str, descending: bool, limit: int, market: str | None = None) -> dict:
+        return {"items": [], "sort_by": sort_by, "descending": descending, "limit": limit, "market": market}
+
 
 def test_create_list_run_report(monkeypatch) -> None:
     monkeypatch.setattr(routes, "get_portfolio_lab_service", lambda: _FakePortfolioLabService())
@@ -102,3 +105,6 @@ def test_create_list_run_report(monkeypatch) -> None:
 
     report = asyncio.run(routes.run_report("pr_1"))
     assert report.metrics["cagr"] == 0.1
+
+    leaderboard = asyncio.run(routes.portfolio_lab_leaderboard(market="India"))
+    assert leaderboard["market"] == "India"
