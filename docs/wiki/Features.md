@@ -79,5 +79,6 @@
 
 - FastAPI backend + React/Vite frontend
 - Docker compose deployment
-- CI with backend + frontend + E2E checks
+- CI with backend compile/pytest, integrity guards, frontend build, and Vitest;
+  Playwright is currently manual-only
 - **Redis Integration**: Required for quote distribution and bar aggregation.

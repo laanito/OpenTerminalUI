@@ -1,4 +1,7 @@
 # Public Commit Preparation Design
+
+> **Historical design record.** Verify all counts, commands, and paths against
+> current source-of-truth documentation before reuse.
 **Date:** 2026-02-21
 **Scope:** Test gate, README + About screen updates, clean public commit
 

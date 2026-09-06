@@ -1,5 +1,8 @@
 # QC Checklist: Portfolio Lab
 
+> **Historical subsystem checklist.** Portfolio Lab is hidden from normal
+> discovery; these checks are not the current repository gate.
+
 ## Functional
 - [ ] Create/list/detail portfolio definitions
 - [ ] Create/list strategy blends

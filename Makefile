@@ -1,19 +1,23 @@
 SHELL := /bin/bash
 
-.PHONY: setup setup-backend setup-frontend test test-backend build build-frontend check-surface gate
+.PHONY: setup setup-backend setup-frontend test test-backend test-frontend build build-frontend check-mocks check-surface gate
 
 setup: setup-backend setup-frontend
 
 setup-backend:
-	cd backend && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && pip install pytest
+	cd backend && python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
 
 setup-frontend:
-	cd frontend && npm install
+	cd frontend && npm ci
 
-test: test-backend
+test: test-backend test-frontend
 
 test-backend:
-	cd backend && source .venv/bin/activate && python -m compileall . && pytest -q
+	PYTHONPATH=. backend/.venv/bin/python -m compileall -x 'backend/\.venv' backend
+	PYTHONPATH=. backend/.venv/bin/python -m pytest backend/tests -q --cov=backend --cov-fail-under=45
+
+test-frontend:
+	cd frontend && npm test
 
 build: build-frontend
 
@@ -23,4 +27,7 @@ build-frontend:
 check-surface:
 	PYTHONPATH=. backend/.venv/bin/python scripts/check_surface_inventory.py
 
-gate: check-surface test-backend build-frontend
+check-mocks:
+	backend/.venv/bin/python scripts/check_no_production_mocks.py
+
+gate: check-mocks check-surface test-backend build-frontend test-frontend

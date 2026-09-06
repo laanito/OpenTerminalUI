@@ -1,5 +1,9 @@
 # Model Lab Architecture Spec
 
+> **Historical subsystem specification.** Model Lab is a hidden,
+> installation-wide compatibility surface after the v1.4 audit. Verify all
+> paths and behavior against the code and [`wiki/Limitations.md`](wiki/Limitations.md).
+
 ## Scope
 Model Lab adds research-grade experiment management on top of existing backtest execution. It does not alter live trading execution and does not make market-beating claims.
 

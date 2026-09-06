@@ -1,5 +1,11 @@
 # API V1
 
+> **Historical partial snapshot.** This file documents a small set of endpoints
+> from an earlier implementation pass; it is not the complete or canonical API
+> reference. Use the running backend's `/docs` or `/openapi.json` and consult
+> [`surface-inventory.json`](surface-inventory.json) for family-level support
+> status.
+
 ## Equity
 
 ### GET `/api/v1/equity/company/{symbol}/performance`

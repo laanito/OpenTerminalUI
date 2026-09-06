@@ -33,7 +33,12 @@
 
 OpenTerminalUI is a self-hosted, full-stack financial terminal that combines real-time market data, institutional-grade charting, derivatives analytics, portfolio management, and quant research into a single platform. Built with a terminal-style shell interface inspired by Bloomberg and Refinitiv, it delivers professional-grade workflows to anyone with a browser.
 
-**Multi-market coverage** across NYSE, NASDAQ, major EU exchanges (LSE, XETRA, Euronext, SIX, Borsa Italiana), NSE/BSE, crypto, commodities, forex, bonds, ETFs, and mutual funds. **70+ technical indicators**, **multi-panel chart workstations**, **F&O option chains with live Greeks**, **backtesting with Model Lab**, **statistical arbitrage with Pair Trading Lab**, **portfolio analytics with risk engine**, and an **extensible plugin system** &mdash; all running on your own hardware.
+Its supported core spans US/EU equities, crypto, portfolio and private-research
+workflows, charting, screening, alerts, news, and backtesting. India NSE/BSE F&O
+remains an intentional provider-gated market. Other data-heavy or inherited
+surfaces are explicitly classified as supported, configuration-gated,
+experimental, or hidden in the [product surface inventory](docs/wiki/Surface-Inventory.md)
+and [limitations](docs/wiki/Limitations.md).
 
 ## Project direction
 
@@ -44,17 +49,28 @@ This fork re-centres OpenTerminalUI toward **US / EU / crypto** markets on a **P
 - **AI-native & private** &mdash; research, news sentiment, and an emotion gauge that run on *your* machine via a local LLM; nothing about what you search or hold leaves your hardware.
 - **A private "second brain" that grows** &mdash; an ask-anything research partner grounded *only* in your own trade journal, portfolio theses, and notes. It retrieves the relevant entries, synthesizes an answer with citations back to your own writing, and acts as a check against your biases ("what setups lose me money when I'm anxious?"). Local embeddings (Ollama `nomic-embed-text` by default, `sentence-transformers` fallback) and a dialect-aware vector store (pgvector on Postgres, numpy cosine on SQLite) keep it fully on-machine. Feed it from the Journal, the Portfolio Manager's portfolio-thesis and position-note fields, reusable note composers on research surfaces, or the standalone Notes hub &mdash; every entry is indexed into the brain.
 - **Don't-get-fooled by design** &mdash; features that separate real signal from hype (e.g. crypto fundamentals: supply dilution, on-chain TVL & fee revenue, plain-language "what to watch" cues) and that help you check your own behaviour.
-- **Open & extensible** &mdash; self-hosted, MIT-licensed, bring-your-own provider keys, with a plugin/Python scripting layer.
-- **Multi-asset, unified** &mdash; equities, ETFs, FX, bonds, and **crypto as a first-class citizen**, with a display-currency selector (USD/EUR/INR).
+- **Open & configurable** &mdash; self-hosted, MIT-licensed, with bring-your-own
+  market-data and OpenAI-compatible model providers.
+- **Multi-asset, unified** &mdash; equities, ETFs, FX, and **crypto as a
+  first-class citizen**, with intentional provider-gated India derivatives and
+  a display-currency selector (USD/EUR/INR).
 
-**v1.4 — Surface truth** makes the retained product intentional and honest:
+**v1.4 — Surface truth** made the retained product intentional and honest:
 every primary destination and public API family is classified, dead and duplicate
 surfaces are removed, configuration gates are visible, and compatibility tools
 no longer present fabricated or cross-user state as production data.
 
+**v1.5 — Fork consistency** is now aligning identity, defaults, currency/locale
+semantics, commands, and documentation across that retained surface.
+
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 
 ## Screenshots
+
+These are interface snapshots, not the product-support contract. Navigation and
+availability follow the current application plus the
+[surface inventory](docs/wiki/Surface-Inventory.md); hidden compatibility pages
+are intentionally omitted here.
 
 ### Workspace & Markets
 
@@ -123,11 +139,6 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 <p align="center"><em>Portfolio monitoring — holdings, movement &amp; historical return, risk metrics, and AI Risk Assessment.</em></p>
 
 <p align="center">
-  <img src="assets/screenshots/cockpit.png" alt="Cockpit" width="900" />
-</p>
-<p align="center"><em>Legacy Cockpit compatibility view — retained by direct URL while its aggregator is rebuilt around authenticated, real services.</em></p>
-
-<p align="center">
   <img src="assets/screenshots/risk-dashboard.png" alt="Risk Dashboard" width="900" />
 </p>
 <p align="center"><em>Risk dashboard with statistical risk metrics, factor/exposure heatmaps, and AI Risk Insights powered by a local LLM.</em></p>
@@ -136,16 +147,6 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
   <img src="assets/screenshots/backtesting.png" alt="Backtesting Lab" width="900" />
 </p>
 <p align="center"><em>Backtesting workspace with strategy presets, execution-profile modeling, performance summary, and AI analysis.</em></p>
-
-<p align="center">
-  <img src="assets/screenshots/model-lab.png" alt="Model Lab" width="900" />
-</p>
-<p align="center"><em>Model Lab — parameter sweeps, walk-forward validation, Monte Carlo robustness, and run leaderboards.</em></p>
-
-<p align="center">
-  <img src="assets/screenshots/portfolio-lab.png" alt="Portfolio Lab" width="900" />
-</p>
-<p align="center"><em>Portfolio Lab — multi-asset portfolio backtests, strategy blends, and correlation analysis.</em></p>
 
 <p align="center">
   <img src="assets/screenshots/watchlist.png" alt="Watchlist" width="900" />
@@ -230,11 +231,10 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **Factor Analytics** &mdash; multi-factor exposure radar, attribution waterfall, rolling factor history, and factor return comparison across market, size, value, momentum, quality, and low-volatility factors
 - **Stress Testing** &mdash; 6 predefined macro scenarios (GFC 2008, COVID 2020, rate shock, INR depreciation, tech rotation, commodity spike), custom shock builder, Monte Carlo simulation, and historical event replay
 - **Correlation Deep Dive** &mdash; correlation matrix, rolling correlation with regime detection, hierarchical clustering with dendrogram, and cross-asset dependency visualization
-- **Tax Lot Manager** &mdash; cost basis tracking across tax lots
 - **Dividend Tracker** &mdash; income tracking with ex-date calendar
 - **Paper Trading** &mdash; virtual trading engine with realistic order fills, slippage modeling, and TCA analytics
 
-### Backtesting & Model Lab
+### Backtesting & Quant Research
 
 - **16+ Strategy Templates** &mdash; SMA/EMA crossover, mean reversion, breakout, RSI, MACD, Bollinger Bands, dual momentum, VWAP reversion, Awesome Oscillator, Heikin-Ashi, Parabolic SAR, Dual Thrust, shooting star reversal, and Bollinger W/M patterns
 - **Pair Trading Lab** &mdash; cointegration screening, hedge-ratio estimation, spread z-score diagnostics, half-life analysis, and mean-reversion trade simulations for statistical arbitrage workflows
@@ -244,30 +244,17 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **Result Visualization** &mdash; equity curves, drawdown charts, monthly return heatmaps, rolling Sharpe, 3D parameter surfaces, Monte Carlo paths, trade analysis
 - **Walk-Forward Analysis** &mdash; out-of-sample validation with sliding windows
 - **Parameter Sweep** &mdash; sensitivity analysis across hyperparameter ranges
-- **Experiment Tracking** &mdash; create, run, compare, and promote models through the Model Lab
-- **Model Governance** &mdash; version tracking with code/data hashing, promotion to paper trading
 - **Monte Carlo Robustness** &mdash; trade/return resampling with confidence cones, terminal-wealth distribution, and probability-of-profit
 - **Liquidity-Aware Execution** &mdash; fixed-bps, volume-weighted, and square-root market-impact slippage models with percent-of-volume caps
 - **Strategy Tear-Sheets** &mdash; standardized HTML reports with equity, drawdown, rolling Sharpe, monthly returns, and benchmark overlay
-- **Run Leaderboards** &mdash; sortable Model Lab / Portfolio Lab run comparison by Sharpe, CAGR, max drawdown, turnover, and stability
-
-### Portfolio Lab
-
-- **Multi-Asset Backtesting** &mdash; portfolio-level backtests with up to 200 assets
-- **Weighting Modes** &mdash; equal weight, volatility target, risk parity, momentum, market cap
-- **Strategy Blends** &mdash; combine up to 10 strategies with weighted sum returns
-- **Rebalance Scheduling** &mdash; weekly, monthly, quarterly, or custom frequency
-- **Attribution Analysis** &mdash; top contributors/detractors, worst drawdowns, rebalance log
-- **Correlation Matrices** &mdash; cross-asset cluster analysis
 
 ### Workspaces & Intelligence
 
-- **Cockpit Compatibility View** &mdash; retained by direct URL while its legacy aggregator remains empty and explicitly degraded; it is not part of primary navigation
 - **Unified Intelligence Timeline** &mdash; news, alerts, events, insider activity, earnings, corporate actions, model signals, and backtest runs in one chronological feed
-- **Exposure Heatmaps** &mdash; sector, factor, currency, and correlation exposure maps across Home, Cockpit, and Risk
+- **Exposure Heatmaps** &mdash; sector, factor, currency, and correlation exposure maps across supported portfolio and risk workflows
 - **Workspace Presets** &mdash; Trader / Quant / PM / Risk / Ops presets that reconfigure dashboards, panels, and quick links
 - **Saved Views** &mdash; capture and restore page, filters, ticker, tabs, columns, and chart layout across major workflows
-- **AI Insight Cards** &mdash; LLM-powered insights embedded consistently across Home, Cockpit, Screener, Portfolio, and Security Hub, with graceful offline fallback
+- **AI Insight Cards** &mdash; grounded LLM-powered insights across Home, Screener, Portfolio, and Security Hub, with explicit offline fallback
 
 ### Cross-Asset & Macro
 
@@ -276,7 +263,6 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **Cryptocurrency** &mdash; full workspace with markets, movers, sectors, DeFi, derivatives, heatmaps, correlation, and **per-coin fundamentals** (tokenomics & supply dilution, on-chain TVL & fee revenue, valuation ratios, with plain-language "what to watch" cues), powered by CoinGecko + DefiLlama with live spot ticks via Binance
 - **ETF Analytics** &mdash; holdings viewer, flow tracker, multi-ETF overlap analysis
 - **Mutual Funds** &mdash; search, comparison, rolling returns, SIP calculator, category rankings, fund overlap
-- **Bonds** &mdash; fixed income yields, spreads, and duration analytics
 - **Yield Curve** &mdash; interactive US Treasury curve with historical comparison and 2s10s inversion detection
 - **Economics** &mdash; global event calendar with impact coding, macro indicators dashboard
 - **Sector Rotation** &mdash; Relative Rotation Graph (RRG) with 12-week trailing momentum paths
@@ -290,12 +276,6 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **Breakout Scanner** &mdash; automated pattern detection with confidence scoring
 - **Alert History** &mdash; full timeline with delivery status and re-trigger tracking
 
-### Operations & Compliance
-
-- **Internal OMS Simulator** &mdash; user-scoped quote-backed simulated fills; it does not route broker orders or update Paper portfolios
-- **System Monitor** &mdash; a hidden compatibility view of measured feed health, kill-switch state, and data quality; global controls are administrator-only
-- **Model Governance** &mdash; model registry, approval workflows, risk limit monitoring
-
 ### News & Sentiment
 
 - **Ticker-Specific News** &mdash; per-symbol news feed with multi-period filtering, scoped strictly to the selected ticker
@@ -304,11 +284,10 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 - **AI Emotion Indicator** &mdash; per-stock fear/greed gauge powered by a local **LLM** (Ollama by default), surfacing a 0&ndash;100 emotion index, dominant emotion (panic &rarr; euphoria), emotion mix, and per-article bullish/bearish breakdown
 - **Local & Private** &mdash; LLM sentiment runs entirely on your own machine; gracefully falls back to the lexical/FinBERT engine when the LLM is offline
 
-### Plugin System & Scripting
+### Experimental Scripting and Compatibility Plugins
 
-- **Local Plugin API** &mdash; administrator-only lifecycle controls for trusted Python modules installed by the host operator
-- **Included Examples** &mdash; RSI Divergence Scanner, Sector Rotation Monitor, Unusual Volume Detector manifests for local evaluation; no marketplace or remote installation
-- **Python Scripting** &mdash; sandboxed execution with security-hardened imports
+- **Local Plugin API** &mdash; hidden, administrator-only lifecycle controls for trusted Python modules installed by the host operator; there is no marketplace or remote installation
+- **Python Scripting** &mdash; experimental sandboxed execution with restricted imports
 - **OpenScript** &mdash; chart-based indicator scripting with library and sharing
 
 ### Real-Time Data
@@ -326,18 +305,18 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 |                   CLIENT TIER                     |
 |   React 18 + TypeScript + Vite + Tailwind CSS    |
 |   TanStack Query + Zustand + Lightweight Charts   |
-|   Recharts + Three.js + Playwright + Vitest       |
+|   Recharts + Three.js                             |
 +--------------------------+------------------------+
                            | REST API + WebSocket
 +--------------------------+------------------------+
 |                   API GATEWAY                     |
 |   FastAPI + Uvicorn + JWT Auth + CORS Middleware  |
-|   53 Route Modules (Equity, F&O, Backtest, Risk) |
+|   Composed API Routers (Equity, F&O, Risk, RAG)  |
 +--------------------------+------------------------+
                            |
 +--------------------------+------------------------+
 |                  SERVICE LAYER                    |
-|   Unified Fetcher + Screener Engine + Model Lab  |
+|   Unified Fetcher + Screener + Portfolio + Brain |
 |   Risk Engine + Alert Scheduler + Quote Hub      |
 |   Provider Registry + Failover Chain             |
 +--------------------------+------------------------+
@@ -352,7 +331,7 @@ NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for wha
 +--------------------------+------------------------+
 |                  PERSISTENCE                      |
 |   PostgreSQL 16 (default) | SQLite (opt-in)      |
-|   Redis (cache + pub/sub + sessions)             |
+|   Redis (cache + pub/sub + quote distribution)   |
 +---------------------------------------------------+
 ```
 
@@ -370,7 +349,7 @@ Market data flows through a unified pipeline:
 ### Provider Waterfall
 
 ```
-Request → L1 Cache (SQLite) → L2 Cache (Redis) → Primary Provider → Fallback Provider → 503
+Request → L1 Cache (SQLite) → L2 Cache (Redis) → Primary Provider → Fallback Provider → degraded
              HIT → return         HIT → return       OK → cache+return    OK → cache+return
 ```
 
@@ -711,19 +690,19 @@ make gate
 ```
 backend/                 FastAPI app, adapters, services, routes, tests
   adapters/              Market data provider adapters
-  api/routes/            53 route modules (equity, fno, backtest, risk, oms, ...)
+  api/routes/            Route modules composed by backend/api/router.py
   core/                  Unified fetcher, failover, service status
-  services/              48 business logic modules
+  services/              Business logic and provider orchestration
   db/                    SQLAlchemy ORM, migrations, caching
   auth/                  JWT authentication and middleware
   config/                Settings, environment, security
-  tests/                 409+ backend tests
+  tests/                 Backend unit and integration tests
 frontend/                React + Vite + TypeScript SPA
-  src/pages/             51 page components
+  src/pages/             Route-level page components
   src/components/        UI components, terminal design system
   src/fno/               F&O workspace modules
   src/store/             Zustand state management
-  src/__tests__/         234+ unit tests
+  src/__tests__/         Vitest component and unit tests
   tests/e2e/             Playwright E2E specs
 plugins/                 Trusted local plugin loader and example manifests
 docs/                    Wiki, architecture specs, and contributor docs

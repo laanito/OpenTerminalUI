@@ -1,5 +1,8 @@
 # QC Checklist: Model Lab
 
+> **Historical subsystem checklist.** Model Lab is hidden from normal discovery;
+> these checks are not the current repository gate.
+
 ## Functional
 - [ ] `/model-lab` route loads experiment list and create form.
 - [ ] Experiment can be created with model, universe, params, cost, benchmark.

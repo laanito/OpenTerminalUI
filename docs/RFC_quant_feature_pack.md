@@ -1,5 +1,9 @@
 # RFC: OpenTerminalUI Quant Feature Pack
 
+> **Historical proposal and implementation context.** It is not the current
+> product-surface contract. Use [`wiki/Surface-Inventory.md`](wiki/Surface-Inventory.md)
+> and [`wiki/Limitations.md`](wiki/Limitations.md) for current support status.
+
 ## 1. Overview and Objectives
 The Quant Feature Pack introduces robust algorithmic trading and portfolio management capabilities to OpenTerminalUI. This encompasses a comprehensive suite spanning a unified cockpit, portfolio-level backtesting, institutional-grade risk analytics, reproducible experiment tracking, centralized instrument mastering, paper trading with trade cost analysis (TCA), and automated data quality checks.
 

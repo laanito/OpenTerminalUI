@@ -1,5 +1,9 @@
 # Swarm Features Upgrade (Institutional Data, Risk, Execution, OMS, Governance, Ops)
 
+> **Historical implementation record.** Presence here does not mean every
+> listed surface is supported or publicly discoverable. Consult
+> [`wiki/Surface-Inventory.md`](wiki/Surface-Inventory.md) for current status.
+
 ## Added backend schema
 - Institutional data:
   - `data_versions`

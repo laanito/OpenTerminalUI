@@ -1,5 +1,8 @@
 # Multi-Chart Workstation Implementation Plan
 
+> **Historical implementation plan.** Embedded agent directives and commands
+> below are preserved as session history, not as current instructions.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Build a dynamic 1–6 simultaneous chart workstation at `/equity/chart-workstation` with ticker assignment, layout presets, crosshair sync, and real-time WebSocket quote streaming.

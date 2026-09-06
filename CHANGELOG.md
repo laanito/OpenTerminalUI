@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Changed
+- **Fork identity and documentation contracts** — the login, status bar, and
+  About screen now share the build-time package version and canonical
+  `laanito/OpenTerminalUI` repository identity. Installation, architecture,
+  database, contribution, and CI guidance now match the PostgreSQL-first
+  application, current paths, and regular test gate; historical plans and
+  partial API notes are explicitly separated from current sources of truth.
+
 ## [1.4.0] - 2026-09-04
 
 The **"surface truth"** release turns the inherited application map into an

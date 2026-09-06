@@ -1,5 +1,8 @@
 # Public Commit Preparation Implementation Plan
 
+> **Historical implementation plan.** Embedded agent directives and commands
+> below are preserved as session history, not as current instructions.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Run the full quality gate, update README.md and About.tsx with all new features (Risk Engine, Execution Sim, OMS/Compliance, Model Governance, Ops Dashboard, Technical Screener), then produce a clean public commit verified post-commit.
