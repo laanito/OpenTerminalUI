@@ -11,6 +11,7 @@ from backend.adapters.registry import get_adapter_registry
 from backend.api.deps import fetch_stock_snapshot_coalesced
 from backend.core.models import SearchResponse, SearchResult
 from backend.shared.market_classifier import market_classifier
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 router = APIRouter()
 DATA_PATH = Path(__file__).resolve().parents[3] / "data" / "nse_equity_symbols_eq.csv"
@@ -56,13 +57,13 @@ async def _get_rows() -> List[Dict[str, str]]:
         return _SEARCH_CACHE
 
 @router.get("/search", response_model=SearchResponse)
-async def search(q: str = Query(default=""), market: str = Query(default="NSE")) -> SearchResponse:
+async def search(q: str = Query(default=""), market: str = Query(default=DEFAULT_EQUITY_MARKET)) -> SearchResponse:
     query = q.strip().lower()
     if not query:
         return SearchResponse(query=q, results=[])
 
-    _market = market if isinstance(market, str) else "NSE"
-    selected_market = _market.strip().upper() or "NSE"
+    _market = market if isinstance(market, str) else DEFAULT_EQUITY_MARKET
+    selected_market = _market.strip().upper() or DEFAULT_EQUITY_MARKET
     rows = await _get_rows()
     matches: List[SearchResult] = []
     seen: set[str] = set()

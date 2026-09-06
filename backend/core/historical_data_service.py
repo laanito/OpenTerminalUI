@@ -13,6 +13,7 @@ import requests
 import yfinance as yf
 
 from backend.core.symbols import Symbol, normalize_symbol
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 _YF_CACHE_DIR = Path(__file__).resolve().parents[2] / ".yf_cache"
 _YF_CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -163,7 +164,7 @@ class HistoricalDataService:
     def fetch_daily_ohlcv(
         self,
         raw_symbol: str,
-        market: str = "NSE",
+        market: str = DEFAULT_EQUITY_MARKET,
         start: str | None = None,
         end: str | None = None,
         limit: int = 500,
@@ -183,7 +184,7 @@ class HistoricalDataService:
         self,
         raw_symbol: str,
         timeframe: str,
-        market: str = "NSE",
+        market: str = DEFAULT_EQUITY_MARKET,
         start: str | None = None,
         end: str | None = None,
         limit: int = 0,

@@ -5,12 +5,16 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+from backend.shared.market_defaults import DEFAULT_BENCHMARK_SYMBOL, DEFAULT_EQUITY_MARKET
+
 
 def infer_benchmark(market: str | None) -> str:
     normalized = str(market or "").strip().upper()
     if normalized in {"NASDAQ", "NYSE", "AMEX", "US"}:
         return "SPY"
-    return "NIFTY"
+    if normalized in {"NSE", "BSE", "IN", "INDIA"}:
+        return "NIFTY"
+    return DEFAULT_BENCHMARK_SYMBOL
 
 
 def infer_market_from_report(report: dict[str, Any]) -> str:
@@ -20,7 +24,9 @@ def infer_market_from_report(report: dict[str, Any]) -> str:
     symbols = json.dumps(report.get("series", {}))[:1000].upper()
     if "SPY" in symbols or "NASDAQ" in symbols or "NYSE" in symbols:
         return "US"
-    return "NSE"
+    if "NIFTY" in symbols or "NSE" in symbols or "BSE" in symbols:
+        return "NSE"
+    return DEFAULT_EQUITY_MARKET
 
 
 def _json_script(data: Any) -> str:

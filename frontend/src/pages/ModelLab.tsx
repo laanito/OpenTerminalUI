@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -7,6 +7,8 @@ import { createModelExperiment, listModelExperiments } from "../api/client";
 import { api } from "../api/base";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { InstallationWideLabNotice } from "../components/labs/InstallationWideLabNotice";
+import { useSettingsStore } from "../store/settingsStore";
+import { benchmarkForMarket, DEFAULT_EQUITY_MARKET, equityRegionForMarket } from "../types/markets";
 
 const DEFAULT_JSON = '{"tickers":["AAPL"]}';
 const DEFAULT_PARAMS = '{"short_window":20,"long_window":50}';
@@ -38,22 +40,30 @@ function pct(value: unknown): string {
 export function ModelLabPage() {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const selectedMarket = useSettingsStore((state) => state.selectedMarket);
   const [tag, setTag] = useState("");
   const [model, setModel] = useState("");
-  const [leaderboardMarket, setLeaderboardMarket] = useState<"US" | "India">("India");
+  const [leaderboardMarket, setLeaderboardMarket] = useState<"US" | "India">(
+    equityRegionForMarket(selectedMarket) === "IN" ? "India" : "US",
+  );
   const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSortKey>("sharpe");
 
   const [name, setName] = useState("SMA Baseline");
   const [description, setDescription] = useState("Baseline trend model");
   const [tags, setTags] = useState("baseline,trend");
   const [modelKey, setModelKey] = useState("sma_crossover");
-  const [benchmark, setBenchmark] = useState("S&P500");
+  const [benchmark, setBenchmark] = useState<string>(() => benchmarkForMarket(selectedMarket));
   const [startDate, setStartDate] = useState("2025-01-01");
   const [endDate, setEndDate] = useState("2025-12-31");
   const [universeJson, setUniverseJson] = useState(DEFAULT_JSON);
   const [paramsJson, setParamsJson] = useState(DEFAULT_PARAMS);
   const [costJson, setCostJson] = useState('{"commission_bps":1,"slippage_bps":2,"initial_cash":100000}');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLeaderboardMarket(equityRegionForMarket(selectedMarket) === "IN" ? "India" : "US");
+    setBenchmark((current) => current === "SPY" || current === "^NSEI" ? benchmarkForMarket(selectedMarket) : current);
+  }, [selectedMarket]);
 
   const experimentsQuery = useQuery({
     queryKey: ["model-lab", "experiments", tag, model],
@@ -123,7 +133,12 @@ export function ModelLabPage() {
         benchmark_symbol: benchmark || undefined,
         start_date: startDate,
         end_date: endDate,
-        universe_json: parsedUniverse,
+        universe_json: {
+          market: selectedMarket === "NSE" || selectedMarket === "BSE" || selectedMarket === "NYSE" || selectedMarket === "NASDAQ"
+            ? selectedMarket
+            : DEFAULT_EQUITY_MARKET,
+          ...parsedUniverse,
+        },
         params_json: parsedParams,
         cost_model_json: parsedCost,
       });

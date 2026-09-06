@@ -618,6 +618,7 @@ export type FuturesChainContract = {
 
 export type BacktestPayload = {
   tickers: string[];
+  market?: string;
   start?: string;
   end?: string;
   lookback_days?: number;

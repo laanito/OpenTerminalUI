@@ -70,5 +70,11 @@ async def portfolio_lab_leaderboard(
     sort_by: str = Query(default="sharpe"),
     descending: bool = Query(default=True),
     limit: int = Query(default=50, ge=1, le=250),
+    market: str | None = Query(default=None),
 ) -> dict:
-    return await get_portfolio_lab_service().leaderboard(sort_by=sort_by, descending=descending, limit=limit)
+    return await get_portfolio_lab_service().leaderboard(
+        sort_by=sort_by,
+        descending=descending,
+        limit=limit,
+        market=market,
+    )

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db
 from backend.core.factor_analysis import factor_breakdown, top_factor_ideas
+from backend.shared.market_defaults import DEFAULT_EQUITY_REGION
 
 router = APIRouter(prefix="/stock-picking", tags=["stock-picking"])
 
@@ -28,7 +29,7 @@ class FactorWeights(BaseModel):
 
 
 class IdeaListRequest(BaseModel):
-    market: str = "IN"
+    market: str = DEFAULT_EQUITY_REGION
     universe: str | None = None
     sector: str | None = None
     as_of: str | None = None
@@ -54,7 +55,7 @@ def post_factor_ideas(payload: IdeaListRequest, db: Session = Depends(get_db)) -
 
 @router.get("/ideas")
 def get_factor_ideas(
-    market: str = Query(default="IN"),
+    market: str = Query(default=DEFAULT_EQUITY_REGION),
     universe: str | None = Query(default=None),
     sector: str | None = Query(default=None),
     as_of: str | None = Query(default=None),
@@ -75,7 +76,7 @@ def get_factor_ideas(
 @router.get("/factors/{symbol}")
 def get_factor_breakdown(
     symbol: str,
-    market: str = Query(default="IN"),
+    market: str = Query(default=DEFAULT_EQUITY_REGION),
     universe: str | None = Query(default=None),
     as_of: str | None = Query(default=None),
     db: Session = Depends(get_db),
@@ -84,4 +85,3 @@ def get_factor_breakdown(
     if row is None:
         raise HTTPException(status_code=404, detail="No factor data available for symbol")
     return row
-

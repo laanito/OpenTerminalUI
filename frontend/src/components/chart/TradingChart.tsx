@@ -470,7 +470,7 @@ export function TradingChart({
   drawingWorkspaceId = "default-workspace",
   extendedHours,
   preMarketLevels,
-  market = "IN",
+  market = "US",
   panelId,
   compact = false,
   crosshairSyncGroupId = "chart-workstation",

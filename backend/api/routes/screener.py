@@ -19,6 +19,7 @@ from backend.core.screener import ScreenerEngine, Rule
 from backend.equity.screener_v2 import FactorEngine, FactorSpec
 from backend.models import SavedFormulaORM
 from backend.services.screener_scan_service import FMPScreenerAdapter, NSEScreenerAdapter, merge_scan_rows
+from backend.shared.market_defaults import DEFAULT_SCAN_MARKETS
 from backend.services.materialized_store import load_screener_df, upsert_screener_rows
 
 router = APIRouter()
@@ -84,7 +85,7 @@ class ScreenerScanSort(BaseModel):
 
 
 class ScreenerScanRequest(BaseModel):
-    markets: list[str] = Field(default_factory=lambda: ["NSE", "NYSE", "NASDAQ"])
+    markets: list[str] = Field(default_factory=lambda: list(DEFAULT_SCAN_MARKETS))
     filters: list[ScreenerScanFilter] = Field(default_factory=list)
     sort: ScreenerScanSort = Field(default_factory=lambda: ScreenerScanSort(field="market_cap", order="desc"))
     limit: int = Field(default=100, ge=1, le=500)
@@ -101,7 +102,7 @@ class ScreenerScanRequest(BaseModel):
             if market_upper not in SCAN_ALLOWED_MARKETS:
                 raise ValueError(f"Unsupported market '{market}'.")
             normalized.append(market_upper)
-        return normalized or ["NSE", "NYSE", "NASDAQ"]
+        return normalized or list(DEFAULT_SCAN_MARKETS)
 
 
 class CustomFormulaRunRequest(BaseModel):
@@ -507,7 +508,7 @@ async def run_screener(request: ScreenerRunRequest) -> ScreenerRunResponse:
 
 @router.post("/screener/scan")
 async def run_multimarket_scan(request: ScreenerScanRequest) -> dict[str, Any]:
-    markets = request.markets or ["NSE", "NYSE", "NASDAQ"]
+    markets = request.markets or list(DEFAULT_SCAN_MARKETS)
 
     warnings: list[dict[str, str]] = []
 

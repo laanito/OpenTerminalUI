@@ -14,6 +14,7 @@ from backend.core.portfolio_backtest import run_portfolio_backtest
 from backend.core.strategy_runner import get_strategy_catalog
 from backend.core.walk_forward import run_walk_forward_validation
 from backend.services.backtest_jobs import BacktestJobRequest, get_backtest_job_service
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ router = APIRouter()
 class BacktestSubmitPayload(BaseModel):
     symbol: str = Field(min_length=1)
     asset: str | None = None
-    market: str = "NSE"
+    market: str = DEFAULT_EQUITY_MARKET
     start: str | None = None
     end: str | None = None
     limit: int = Field(500, ge=1, le=5000)
@@ -32,7 +33,7 @@ class BacktestSubmitPayload(BaseModel):
 
 class ComparePayload(BaseModel):
     symbol: str = Field(min_length=1)
-    market: str = "NSE"
+    market: str = DEFAULT_EQUITY_MARKET
     start: str | None = None
     end: str | None = None
     limit: int = Field(500, ge=1, le=5000)
@@ -68,7 +69,7 @@ class MonteCarloPayload(BaseModel):
 
 class OptimizePayload(BaseModel):
     symbol: str = Field(min_length=1)
-    market: str = "NSE"
+    market: str = DEFAULT_EQUITY_MARKET
     strategy: str = "example:sma_crossover"
     start: str | None = None
     end: str | None = None
@@ -80,7 +81,7 @@ class OptimizePayload(BaseModel):
 
 class PortfolioSubmitPayload(BaseModel):
     assets: list[str] = Field(min_length=2, max_length=30)
-    market: str = "NSE"
+    market: str = DEFAULT_EQUITY_MARKET
     start: str | None = None
     end: str | None = None
     limit: int = Field(500, ge=30, le=5000)

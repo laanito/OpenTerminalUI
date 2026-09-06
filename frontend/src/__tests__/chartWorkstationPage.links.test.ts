@@ -142,6 +142,6 @@ describe("chart workstation linking helpers", () => {
       slots: [{ ticker: "INFY", timeframe: "1D", chartType: "candle" }],
     });
 
-    expect(parsed?.snapshot.slots[0]?.market).toBe("IN");
+    expect(parsed?.snapshot.slots[0]?.market).toBe("US");
   });
 });

@@ -15,6 +15,7 @@ from backend.core.nse_client import NSEClient
 from backend.shared.nse_access import nse_public_enabled
 from backend.core.yahoo_client import YahooClient
 from backend.shared.market_classifier import FOREIGN_SUFFIXES, market_classifier
+from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
 from backend.api.schemas.market_data import MarketDepth, DepthLevel
 from backend.shared.degraded import (
     REASON_NO_LIVE_SOURCE,
@@ -142,7 +143,7 @@ async def _adapter_exchange_and_symbol(symbol: str) -> tuple[str, str]:
     if _is_yahoo_native_symbol(normalized):
         return "", normalized
     classification = await market_classifier.classify(normalized)
-    return classification.exchange or "NSE", normalized
+    return classification.exchange or DEFAULT_EQUITY_MARKET, normalized
 
 @dataclass
 class UnifiedFetcher:
@@ -340,7 +341,12 @@ class UnifiedFetcher:
                        yq.get("longName") or \
                        fq.get("name") or \
                        fp.get("name")
-        exchange = _get_val(nq, "info", "exchange") or _get_val(nq, "metadata", "exchange") or cls.exchange or "NSE"
+        exchange = (
+            _get_val(nq, "info", "exchange")
+            or _get_val(nq, "metadata", "exchange")
+            or cls.exchange
+            or DEFAULT_EQUITY_MARKET
+        )
         country_code = cls.country_code
         indices: list[str] = []
         idx_meta = _get_val(nq, "metadata", "index")

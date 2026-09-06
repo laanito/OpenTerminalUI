@@ -159,21 +159,23 @@ the primary navigation does not advertise an unexplained empty product.
 
 ### v1.5 — fork consistency
 
-- [ ] Replace accidental upstream repository identity, stale hard-coded versions,
+- [x] Replace accidental upstream repository identity, stale hard-coded versions,
       clone links, and obsolete screenshots/copy across the app and documentation.
 - [x] Establish the canonical fork identity and documentation hierarchy. Shared
       frontend constants now own the build-time version and
       `laanito/OpenTerminalUI` URL; the login no longer carries a v1.0.0 label;
       current docs are distinguished from historical plans and partial API notes.
-- [ ] Audit inherited India-first defaults in screener, backtesting, charts,
+- [x] Audit inherited India-first defaults in screener, backtesting, charts,
       reports, and model tooling. Keep intentional NSE/BSE/F&O support, but make
       the configured market or the global fork default drive generic workflows.
+      Shared frontend/backend contracts now fall back to US/NASDAQ, while
+      explicit India selections still route to NSE/BSE, INR, and NIFTY.
 - [ ] Finish instrument-aware currency and locale cleanup. Never relabel an
       unconverted value or apply an India-specific grouping format globally.
-- [ ] Reconcile architecture, installation, contribution, API, configuration,
+- [x] Reconcile architecture, installation, contribution, API, configuration,
       and release documentation with the actual PostgreSQL-first application and
       current commands.
-- [ ] Remove or clearly document stale compatibility code and historical design
+- [x] Remove or clearly document stale compatibility code and historical design
       documents that otherwise look authoritative.
 
 Start with a repository-identity and documentation audit because it establishes

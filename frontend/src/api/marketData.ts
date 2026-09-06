@@ -11,6 +11,7 @@ import type {
   DepthSnapshotResponse,
   ChartBatchSource,
 } from "./types";
+import { DEFAULT_EQUITY_MARKET } from "../types/markets";
 
 export async function getHistory(
   symbol: string,
@@ -108,7 +109,7 @@ export async function searchSymbols(q: string, market?: string): Promise<SearchS
   }));
 }
 
-export async function fetchChart(ticker: string, interval = "1d", range = "1y", market = "NSE"): Promise<ChartResponse> {
+export async function fetchChart(ticker: string, interval = "1d", range = "1y", market: string = DEFAULT_EQUITY_MARKET): Promise<ChartResponse> {
   return getHistory(ticker, market, interval, range);
 }
 
@@ -120,7 +121,7 @@ export async function fetchChartsBatchWithMeta(
       symbol: item.symbol.trim().toUpperCase(),
       interval: item.interval ?? "1d",
       range: item.range ?? "1y",
-      market: (item.market ?? "NSE").trim().toUpperCase(),
+      market: (item.market ?? DEFAULT_EQUITY_MARKET).trim().toUpperCase(),
       extended: !!item.extended,
     }))
     .filter((item) => Boolean(item.symbol));
@@ -160,15 +161,15 @@ export async function fetchChartsBatch(
   return result.data;
 }
 
-export async function fetchStock(ticker: string, market = "NSE"): Promise<StockSnapshot> {
+export async function fetchStock(ticker: string, market: string = DEFAULT_EQUITY_MARKET): Promise<StockSnapshot> {
   return getQuote(ticker, market);
 }
 
-export async function searchStocks(q: string, market = "NSE"): Promise<SearchSymbolItem[]> {
+export async function searchStocks(q: string, market: string = DEFAULT_EQUITY_MARKET): Promise<SearchSymbolItem[]> {
   return searchSymbols(q, market);
 }
 
-export async function fetchDepth(symbol: string, market = "NSE", levels = 20): Promise<DepthSnapshotResponse> {
+export async function fetchDepth(symbol: string, market: string = DEFAULT_EQUITY_MARKET, levels = 20): Promise<DepthSnapshotResponse> {
   const { data } = await api.get<DepthSnapshotResponse>(`/depth/${encodeURIComponent(symbol)}`, {
     params: { market, levels },
   });

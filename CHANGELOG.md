@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Changed
+- **Market-context defaults** — generic screener, backtesting, chart, factor,
+  risk, report, Model Lab, Portfolio Lab, symbol-search, and paper-trading paths
+  now inherit the selected market or fall back to the fork-wide US/NASDAQ
+  context. New and imported chart panes use US context; legacy momentum runs no
+  longer suffix US tickers with `.NS`; generated tear sheets fall back to SPY;
+  and chart caches include market identity. Explicit NSE/BSE choices and the
+  India/F&O surfaces remain supported.
 - **Fork identity and documentation contracts** — the login, status bar, and
   About screen now share the build-time package version and canonical
   `laanito/OpenTerminalUI` repository identity. Installation, architecture,

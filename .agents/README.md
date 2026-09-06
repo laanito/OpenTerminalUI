@@ -4,8 +4,9 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-05**, from `main` at `2999a42` (release PR #120).
-The latest tag and published GitHub release are **v1.4.0** at that commit.
+Last audited: **2026-09-06**, from `main` at `ec8635b` (PR #122), plus the v1.5
+market-default changes on this branch. The latest tag and published GitHub
+release are **v1.4.0** at `2999a42`.
 
 ## Read order and sources of truth
 
@@ -20,11 +21,10 @@ When changing the product surface, also read `docs/wiki/Surface-Inventory.md`
 and its machine-readable `docs/surface-inventory.json` before adding, removing,
 or advertising a route.
 
-The code and recent Git history win when prose disagrees. Some older wiki pages
-and plans describe historical architecture. In particular,
-`docs/wiki/Architecture.md` still contains pre-1.0 statements such as SQLite
-being the default and PostgreSQL being optional. Do not copy those assumptions
-without checking the current code, Docker Compose, and README.
+The code and recent Git history win when prose disagrees. Older plans, RFCs,
+architecture proposals, and QC records are historical unless `docs/README.md`
+marks them current; do not copy their assumptions without checking the current
+code, Docker Compose, README, and maintained wiki pages.
 
 There is no repository-level `AGENTS.md` or `CLAUDE.md` at this snapshot. Local
 tool settings under `.claude/` are not a substitute for project documentation.
@@ -106,7 +106,12 @@ release-level interpretation and safety boundaries.
   absent; PR #119 added one bounded structured-output retry and factual input
   gates. The maintainer completed live verification, release PR #120 merged,
   and `v1.4.0` was tagged and published at `2999a42`. **v1.5 — Fork
-  consistency** is the active milestone; `TODO.md` records its kickoff order.
+  consistency** is the active milestone. PR #122 established canonical fork
+  identity, package-derived frontend versioning, the documentation hierarchy,
+  and current PostgreSQL-first setup/contribution contracts. The next pass
+  centralizes US/NASDAQ as the fallback for generic screens, backtests, charts,
+  reports, labs, and model tools while preserving selected NSE/BSE behavior.
+  Instrument-aware currency and locale semantics are the next open boundary.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

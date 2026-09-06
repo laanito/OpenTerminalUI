@@ -13,6 +13,7 @@ from backend.auth.deps import get_current_user
 from backend.models import User
 from backend.services.materialized_store import TABLE_NAME, load_screener_df, upsert_screener_rows
 from backend.shared.db import engine
+from backend.shared.market_defaults import DEFAULT_EQUITY_REGION, DEFAULT_EQUITY_UNIVERSE
 from sqlalchemy import text
 
 from .engine import RunConfig, ScreenerEngine, _load_universe_symbols
@@ -37,8 +38,8 @@ _engine = ScreenerEngine()
 class ScreenerRunRequest(BaseModel):
     query: str | None = None
     preset_id: str | None = None
-    universe: str = "nse_500"
-    market: str = "IN"
+    universe: str = DEFAULT_EQUITY_UNIVERSE
+    market: str = DEFAULT_EQUITY_REGION
     sort_by: str | None = None
     sort_order: str = "desc"
     limit: int = Field(default=100, ge=1, le=1000)
@@ -130,7 +131,11 @@ def _run_screen_impl(payload: ScreenerRunRequest) -> dict[str, Any]:
     return result
 
 
-async def _hydrate_missing_universe_rows(universe: str, market: str = "IN", refresh_cap: int = 60) -> int:
+async def _hydrate_missing_universe_rows(
+    universe: str,
+    market: str = DEFAULT_EQUITY_REGION,
+    refresh_cap: int = 60,
+) -> int:
     market = market.upper()
     symbols = _load_universe_symbols(universe, market=market)
     if not symbols:
@@ -195,8 +200,8 @@ async def run_screen(payload: ScreenerRunRequest) -> dict[str, Any]:
 async def run_screen_get(
     query: str | None = Query(default=None),
     preset_id: str | None = Query(default=None),
-    universe: str = Query(default="nse_500"),
-    market: str = Query(default="IN"),
+    universe: str = Query(default=DEFAULT_EQUITY_UNIVERSE),
+    market: str = Query(default=DEFAULT_EQUITY_REGION),
     sort_by: str | None = Query(default=None),
     sort_order: str = Query(default="desc"),
     limit: int = Query(default=100, ge=1, le=1000),
@@ -229,8 +234,8 @@ async def run_screen_revamped(payload: ScreenerRunRequest) -> dict[str, Any]:
 async def run_screen_revamped_get(
     query: str | None = Query(default=None),
     preset_id: str | None = Query(default=None),
-    universe: str = Query(default="nse_500"),
-    market: str = Query(default="IN"),
+    universe: str = Query(default=DEFAULT_EQUITY_UNIVERSE),
+    market: str = Query(default=DEFAULT_EQUITY_REGION),
     sort_by: str | None = Query(default=None),
     sort_order: str = Query(default="desc"),
     limit: int = Query(default=100, ge=1, le=1000),
@@ -355,7 +360,14 @@ def get_viz(screen_id: str) -> dict[str, Any]:
     preset = get_preset(screen_id)
     if preset is None:
         raise HTTPException(status_code=404, detail="Preset not found")
-    result = _engine.run(RunConfig(query=str(preset["query"]), universe="nse_500", market="IN", limit=200))
+    result = _engine.run(
+        RunConfig(
+            query=str(preset["query"]),
+            universe=DEFAULT_EQUITY_UNIVERSE,
+            market=DEFAULT_EQUITY_REGION,
+            limit=200,
+        )
+    )
     return {"screen_id": screen_id, "viz_config": preset.get("viz_config", {}), "viz_data": result.get("viz_data", {})}
 
 @router.post("/viz/{screen_id}")

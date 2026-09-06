@@ -15,19 +15,21 @@ from backend.core.backtester import BacktestConfig, backtest_momentum_rotation
 from backend.execution_sim.simulator import apply_execution_costs, parse_execution_profile
 from backend.models import BacktestRun
 from backend.services.data_version_service import get_active_data_version
+from backend.shared.market_defaults import DEFAULT_BENCHMARK_SYMBOL, DEFAULT_EQUITY_MARKET
 
 router = APIRouter()
 
 
 class BacktestRequest(BaseModel):
     tickers: list[str] = Field(min_length=1)
+    market: str = DEFAULT_EQUITY_MARKET
     start: str | None = None
     end: str | None = None
     lookback_days: int = 63
     rebalance_freq: str = "ME"
     top_n: int = 10
     transaction_cost_bps: float = 10.0
-    benchmark: str = "^NSEI"
+    benchmark: str = DEFAULT_BENCHMARK_SYMBOL
     data_version_id: str | None = None
     adjusted: bool = True
     execution_profile: dict[str, Any] = Field(default_factory=dict)
@@ -47,6 +49,7 @@ async def run_backtest(payload: BacktestRequest, db: Session = Depends(get_db)) 
         top_n=payload.top_n,
         transaction_cost_bps=payload.transaction_cost_bps,
         benchmark=payload.benchmark,
+        market=payload.market,
     )
 
     try:

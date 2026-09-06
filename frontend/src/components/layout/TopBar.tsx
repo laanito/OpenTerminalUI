@@ -10,7 +10,7 @@ import { useMarketStatus, useTopBarTickers } from "../../hooks/useStocks";
 import { useQuotesStore } from "../../realtime/useQuotesStream";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useStockStore } from "../../store/stockStore";
-import { COUNTRY_MARKETS } from "../../types";
+import { COUNTRY_DEFAULT_MARKET, COUNTRY_MARKETS } from "../../types";
 import type { CountryCode, MarketCode } from "../../types";
 import type { DisplayCurrency } from "../../store/settingsStore";
 
@@ -19,13 +19,6 @@ const COUNTRY_FLAGS: Record<CountryCode, string> = {
   US: "🇺🇸",
   EU: "🇪🇺",
   CRYPTO: "🪙",
-};
-
-const COUNTRY_DEFAULT_MARKET: Record<CountryCode, MarketCode> = {
-  IN: "NSE",
-  US: "NASDAQ",
-  EU: "EU",
-  CRYPTO: "CRYPTO",
 };
 
 type TopBarProps = {

@@ -8,6 +8,7 @@ from backend.auth.deps import get_current_user
 from backend.models import User
 from backend.services.legacy_holdings import resolve_user_holdings
 from backend.shared.market_classifier import market_classifier
+from backend.shared.market_defaults import DEFAULT_BENCHMARK_SYMBOL
 from backend.risk_engine.schemas import RiskSummary, ExposureAnalytics, CorrelationMatrix
 from backend.risk_engine.compute import (
     ewma_volatility,
@@ -79,7 +80,7 @@ async def get_risk_summary(
     port_returns = df.mean(axis=1).values
 
     # Use first symbol or benchmark for beta (simplification)
-    bm_symbol = "^NSEI" if not ticker else ticker
+    bm_symbol = DEFAULT_BENCHMARK_SYMBOL if not ticker else ticker
     bm_df = await _load_symbols_returns([bm_symbol])
     bm_returns = bm_df.iloc[:, 0].values if not bm_df.empty else port_returns
 

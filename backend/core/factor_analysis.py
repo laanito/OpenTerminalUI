@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from backend.services.pit_fundamentals_service import get_fundamentals_asof
+from backend.shared.market_defaults import DEFAULT_EQUITY_REGION
 
 DEFAULT_FACTOR_WEIGHTS: dict[str, float] = {
     "value": 0.30,
@@ -69,12 +70,12 @@ def run_factor_decomposition(
 
 
 def _clean_market(value: str | None) -> str:
-    text = (value or "IN").strip().upper()
+    text = (value or DEFAULT_EQUITY_REGION).strip().upper()
     if text in {"NSE", "BSE", "INDIA"}:
         return "IN"
     if text in {"NYSE", "NASDAQ", "USA"}:
         return "US"
-    return text or "IN"
+    return text or DEFAULT_EQUITY_REGION
 
 
 def _as_of(value: date | str | None) -> date:
@@ -254,7 +255,7 @@ def _load_symbols_from_universe(db: Session, universe: str, market: str, as_of_d
 def compute_factor_scores(
     db: Session,
     *,
-    market: str = "IN",
+    market: str = DEFAULT_EQUITY_REGION,
     universe: str | None = None,
     symbols: list[str] | None = None,
     as_of: date | str | None = None,
@@ -409,7 +410,7 @@ def compute_factor_scores(
 def top_factor_ideas(
     db: Session,
     *,
-    market: str = "IN",
+    market: str = DEFAULT_EQUITY_REGION,
     universe: str | None = None,
     sector: str | None = None,
     as_of: date | str | None = None,
@@ -437,7 +438,7 @@ def factor_breakdown(
     db: Session,
     *,
     symbol: str,
-    market: str = "IN",
+    market: str = DEFAULT_EQUITY_REGION,
     universe: str | None = None,
     as_of: date | str | None = None,
     weights: dict[str, float] | None = None,

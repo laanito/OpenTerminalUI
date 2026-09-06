@@ -12,6 +12,8 @@ import type {
   UserScreenV3,
 } from "../../../types";
 import { consumePendingSavedView } from "../../../workspace/savedViewRestore";
+import { useSettingsStore } from "../../../store/settingsStore";
+import { equityRegionForMarket, equityUniverseForMarket } from "../../../types/markets";
 
 export type ScreenerView = "table" | "charts" | "treemap" | "scatter" | "scorecard" | "split";
 export type ScreenerTab = "library" | "custom" | "formula" | "saved" | "public";
@@ -45,6 +47,8 @@ type ScreenerContextValue = {
 const ScreenerContext = createContext<ScreenerContextValue | null>(null);
 
 export function ScreenerProvider({ children }: { children: React.ReactNode }) {
+  const selectedMarket = useSettingsStore((state) => state.selectedMarket);
+  const selectedRegion = equityRegionForMarket(selectedMarket);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [presets, setPresets] = useState<ScreenerPresetV3[]>([]);
@@ -54,10 +58,17 @@ export function ScreenerProvider({ children }: { children: React.ReactNode }) {
   const [tab, setTab] = useState<ScreenerTab>("library");
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [query, setQuery] = useState("Market Capitalization > 500 AND ROE > 15 AND Debt to equity < 0.5");
-  const [universe, setUniverse] = useState("nse_500");
+  const [universe, setUniverse] = useState(() => equityUniverseForMarket(selectedMarket));
   const [view, setView] = useState<ScreenerView>("table");
   const [result, setResult] = useState<ScreenerRunResponseV3 | null>(null);
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
+
+  useEffect(() => {
+    setUniverse((current) => {
+      const knownMarketUniverse = ["nse_500", "nifty_500", "all_nse", "nifty_50", "sp_500", "nasdaq_100", "us_all"].includes(current);
+      return knownMarketUniverse ? equityUniverseForMarket(selectedMarket) : current;
+    });
+  }, [selectedMarket]);
 
   useEffect(() => {
     const payload = consumePendingSavedView(window.location.pathname);
@@ -121,6 +132,7 @@ export function ScreenerProvider({ children }: { children: React.ReactNode }) {
           query: override?.query ?? query,
           preset_id: payloadPresetId ?? undefined,
           universe,
+          market: selectedRegion,
           limit: 250,
           offset: 0,
           sort_by: "composite_score",
@@ -149,7 +161,7 @@ export function ScreenerProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [query, selectedPresetId, universe],
+    [query, selectedPresetId, selectedRegion, universe],
   );
 
   const value = useMemo<ScreenerContextValue>(

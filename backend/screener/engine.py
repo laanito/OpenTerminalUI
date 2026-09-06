@@ -8,6 +8,7 @@ from typing import Any
 import pandas as pd
 
 from backend.services.materialized_store import load_screener_df
+from backend.shared.market_defaults import DEFAULT_EQUITY_REGION, DEFAULT_EQUITY_UNIVERSE
 from .fields import has_field
 from .models import compute_many
 from .parser import ParsedQuery, parse_query
@@ -16,8 +17,8 @@ from .parser import ParsedQuery, parse_query
 @dataclass
 class RunConfig:
     query: str
-    universe: str = "nse_500"
-    market: str = "IN"
+    universe: str = DEFAULT_EQUITY_UNIVERSE
+    market: str = DEFAULT_EQUITY_REGION
     sort_by: str | None = None
     sort_order: str = "desc"
     limit: int = 100
@@ -184,7 +185,7 @@ class ScreenerEngine:
     def __init__(self) -> None:
         self._cache: dict[str, dict[str, Any]] = {}
 
-    def _load_data(self, universe: str, market: str = "IN") -> pd.DataFrame:
+    def _load_data(self, universe: str, market: str = DEFAULT_EQUITY_REGION) -> pd.DataFrame:
         symbols = _load_universe_symbols(universe, market=market)
         raw = load_screener_df(symbols)
         return _enrich_columns(raw)
@@ -243,7 +244,7 @@ class ScreenerEngine:
         parsed_order = config.sort_order or parsed.sort_order
         parsed_limit = config.limit or parsed.limit or 100
 
-        market = (config.market or "IN").upper()
+        market = (config.market or DEFAULT_EQUITY_REGION).upper()
         cache_key = f"{market}|{config.universe}|{parsed.normalized}|{parsed_sort}|{parsed_order}|{parsed_limit}|{config.offset}|{','.join(config.include_scores or [])}"
         if cache_key in self._cache:
             return self._cache[cache_key]
