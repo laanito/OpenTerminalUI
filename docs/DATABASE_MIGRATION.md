@@ -1,46 +1,52 @@
 # Database Migration
 
-## Overview
+This is the current database setup and schema-migration contract. Historical
+architecture documents under `docs/` are not migration instructions.
 
-The backend now supports async SQLAlchemy engine creation and Alembic migrations.
+## Runtime selection
 
-## Environment
+- Docker Compose defaults to PostgreSQL 16 with pgvector:
+  `postgresql://openterminalui:openterminalui@postgres:5432/openterminalui`.
+- A local backend without `DATABASE_URL` falls back to the configured SQLite
+  URL under `data/`.
+- To run the container with SQLite, set an explicit container-visible URL such
+  as `DATABASE_URL=sqlite+aiosqlite:////data/openterminal.db`.
 
-- `DATABASE_URL`
-  - SQLite default: `sqlite+aiosqlite:///./data/openterminal.db`
-  - PostgreSQL: `postgresql://user:pass@host:5432/dbname` (auto-converted to `postgresql+asyncpg://`)
+The primary database URL is normalized by `backend/db/base.py`. Dedicated
+SQLite provider caches may still exist alongside a PostgreSQL application
+database and do not change the primary-store selection.
 
-## Files
+## Schema files
 
-- `backend/db/base.py`: async engine factory
-- `backend/db/session.py`: async session factory + dependency
-- `backend/alembic.ini`: Alembic config
-- `backend/alembic/env.py`: async migration environment
-- `backend/alembic/versions/0001_initial.py`: initial schema migration
+- Alembic configuration: `backend/alembic.ini`
+- Migration environment: `backend/alembic/env.py`
+- Versioned migrations: `backend/alembic/versions/`
+- ORM models: `backend/models/` and `backend/db/models.py`
+- Portability notes: [`.agents/postgres-notes.md`](../.agents/postgres-notes.md)
 
-## Run Migrations
+Alembic revision identifiers must remain at most 32 characters because the
+PostgreSQL `alembic_version.version_num` column enforces that width.
 
-```bash
-alembic -c backend/alembic.ini upgrade head
-```
+## Apply migrations
 
-## Docker
-
-Container startup runs migrations automatically via `backend/entrypoint.sh` before launching API.
-
-To use PostgreSQL profile:
-
-```bash
-docker compose --profile postgres up -d --build
-```
-
-Then set:
+From the repository root with backend dependencies installed:
 
 ```bash
-DATABASE_URL=postgresql://<user>:<password>@postgres:5432/openterminalui
+PYTHONPATH=. backend/.venv/bin/python -m alembic -c backend/alembic.ini upgrade head
 ```
 
-## Notes
+Container startup runs that command automatically through
+`backend/entrypoint.sh` before Uvicorn starts. To inspect pending state:
 
-- BRIN indexes are created on PostgreSQL for selected timestamp-like columns in initial migration.
-- Existing legacy sync ORM continues to function; async DB session infrastructure is available for phased adoption.
+```bash
+PYTHONPATH=. backend/.venv/bin/python -m alembic -c backend/alembic.ini current
+PYTHONPATH=. backend/.venv/bin/python -m alembic -c backend/alembic.ini heads
+```
+
+## Switching database engines
+
+Changing `DATABASE_URL` selects a different database; it does **not** copy data
+between SQLite and PostgreSQL. Back up the source, provision the target, apply
+Alembic migrations, and use an explicit reviewed data-migration process when
+existing records must move. Do not copy SQLite files into PostgreSQL volumes or
+assume application startup transfers rows.

@@ -1,5 +1,8 @@
 # Group C QC Guideline (Events & Earnings)
 
+> **Historical phase checklist.** It is retained as implementation evidence,
+> not as the current repository test gate. Use [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+
 ## Quality Gates (Strict)
 
 1. API Contract Gate

@@ -6,8 +6,9 @@ import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { TerminalButton } from "../components/terminal/TerminalButton";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { AsciiHero } from "../home/AsciiHero";
+import { REPOSITORY_URL } from "../utils/constants";
 
-const REPO_URL = "https://github.com/laanito/OpenTerminalUI";
+const REPO_URL = REPOSITORY_URL;
 const STAR_URL = `${REPO_URL}/stargazers`;
 
 const PLATFORM_STATS = [

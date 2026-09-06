@@ -5,6 +5,7 @@ import { MarketTicker } from "../components/MarketTicker";
 import { StatusBar } from "../components/StatusBar";
 import { useAuth } from "../contexts/AuthContext";
 import logo from "../assets/logo.png";
+import { getAppVersion, REPOSITORY_LABEL, REPOSITORY_URL } from "../utils/constants";
 
 const TRANSITION_FLAG_KEY = "ot-terminal-transition";
 
@@ -218,7 +219,12 @@ export function LoginPage() {
             <p>
               New to OpenTerminal? <Link to="/register">Request access</Link>
             </p>
-            <p className="ot-login-meta">v1.0.0 | MIT LICENSE | github.com/laanito/OpenTerminalUI</p>
+            <p className="ot-login-meta">
+              v{getAppVersion()} | MIT LICENSE |{" "}
+              <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">
+                {REPOSITORY_LABEL}
+              </a>
+            </p>
           </footer>
         </div>
       </section>

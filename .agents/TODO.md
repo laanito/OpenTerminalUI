@@ -161,6 +161,10 @@ the primary navigation does not advertise an unexplained empty product.
 
 - [ ] Replace accidental upstream repository identity, stale hard-coded versions,
       clone links, and obsolete screenshots/copy across the app and documentation.
+- [x] Establish the canonical fork identity and documentation hierarchy. Shared
+      frontend constants now own the build-time version and
+      `laanito/OpenTerminalUI` URL; the login no longer carries a v1.0.0 label;
+      current docs are distinguished from historical plans and partial API notes.
 - [ ] Audit inherited India-first defaults in screener, backtesting, charts,
       reports, and model tooling. Keep intentional NSE/BSE/F&O support, but make
       the configured market or the global fork default drive generic workflows.
@@ -283,11 +287,12 @@ queue.
 ## Maintenance and documentation debt
 
 - [x] Curate the v1.2 changelog and align the backend/frontend version contract.
-- [ ] Refresh `docs/wiki/Architecture.md`: it still says SQLite is the default,
-      PostgreSQL optional, and points at obsolete migration/service locations.
-- [ ] Reconcile test/setup commands across `README.md`, `CONTRIBUTING.md`, and
-      `Makefile` (for example, `CONTRIBUTING.md` references a missing
-      `backend/requirements-dev.txt`).
+- [x] Refresh `docs/wiki/Architecture.md` for the PostgreSQL-first deployment,
+      SQLite sidecar/fallback roles, current migration paths, auth boundary, and
+      owner-scoped research architecture.
+- [x] Reconcile contributor setup, CI, and `make gate`; remove the missing
+      `backend/requirements-dev.txt` command and keep Playwright explicitly
+      manual-only.
 - [x] Refresh `docs/wiki/Limitations.md` for post-v1.0/v1.1 behaviour and verify
       every listed degraded surface against current routes.
 - [ ] Improve provider credential/config management before relying on paid APIs.

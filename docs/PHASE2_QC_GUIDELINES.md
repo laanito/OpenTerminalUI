@@ -1,5 +1,8 @@
 # Phase 2 Strict QC Guideline
 
+> **Historical phase checklist.** It is retained as implementation evidence,
+> not as the current repository test gate. Use [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+
 ## Scope Gate
 - Changes must include:
   - Backend route coverage for `alerts`, `paper`, `chart-drawings`.

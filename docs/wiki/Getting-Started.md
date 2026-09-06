@@ -9,6 +9,8 @@
 ## Run with Docker
 
 ```bash
+git clone https://github.com/laanito/OpenTerminalUI.git
+cd OpenTerminalUI
 cp .env.example .env
 docker compose up --build
 ```
@@ -23,13 +25,15 @@ App/API are served from backend container:
 
 ### Backend
 
+On macOS/Linux, run `make setup`, then:
+
 ```bash
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r backend/requirements.txt
-$env:PYTHONPATH='.'
-uvicorn backend.main:app --reload --port 8000
+PYTHONPATH=. backend/.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
 ```
+
+On Windows, create and activate a Python 3.11 virtual environment, install
+`backend/requirements.txt`, and run `python -m uvicorn backend.main:app --reload
+--port 8000` from the repository root.
 
 ### Frontend
 
@@ -46,10 +50,13 @@ Frontend dev server:
 
 ```bash
 python -m compileall backend
-$env:PYTHONPATH='.'; pytest backend/tests -q --cov=backend --cov-fail-under=45 --cov-report=xml --junitxml=pytest-report.xml
+PYTHONPATH=. python scripts/check_no_production_mocks.py
+PYTHONPATH=. python scripts/check_surface_inventory.py
+PYTHONPATH=. pytest backend/tests -q --cov=backend --cov-fail-under=45
 npm ci --prefix frontend
 npm run build --prefix frontend
 npm run test --prefix frontend
-npx playwright install --with-deps chromium --prefix frontend
-npm run test:e2e --prefix frontend
 ```
+
+Playwright is currently a manual workflow, not part of each PR gate. See
+[Contributing](Contributing) for the optional command and current rationale.

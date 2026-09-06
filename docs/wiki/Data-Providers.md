@@ -10,7 +10,11 @@ OpenTerminalUI uses a **multi-provider waterfall architecture** — each data re
 |---|---|---|---|---|---|
 | **Zerodha Kite** | Primary | Real-time ticks, OHLCV historical (all intervals) | ~3 req/s REST; ~60,000 ticks/day WS | Yes — Zerodha brokerage account | `KITE_API_KEY`, `KITE_API_SECRET`, `KITE_ACCESS_TOKEN` |
 | **yfinance** | Fallback | OHLCV historical (`RELIANCE.NS`, `TCS.NS` format) | ~2,000 calls/day per IP (unofficial) | None — scraping-based | None |
-| **NSEPython** | Tertiary | NSE website data (F&O, OI, PCR, corporate actions) | None documented | None — scraping-based | None (pin version ≥ 2.97) |
+| **Direct NSE website** | Opt-in compatibility | F&O, OI, PCR, selected corporate actions through NSEPython/direct clients | Undocumented and frequently blocked | None — scraping-based | `OPENTERMINALUI_NSE_PUBLIC_ENABLED=1` |
+
+Direct unauthenticated NSE access is disabled by default and opens a
+process-level circuit after the first HTTP 403. India workflows should prefer
+configured Kite or Yahoo `.NS` data where applicable.
 
 ---
 
@@ -57,8 +61,7 @@ Condensed from `QC_MASTER_PLAN.md`:
 | FMP | 15-minute delayed data | Medium | Document delay; use Kite/Finnhub for real-time use cases |
 | yfinance | No SLA, scraping-based | High | Only used as last resort; log when activated; do not depend on for production |
 | yfinance | ~2K calls/day per IP | Medium | Only triggered on fallback; add IP rotation if needed for batch jobs |
-| NSEPython | Scraping-based, no SLA | High | Pin version ≥ 2.97; test NSE scraping in CI with mocks |
-| NSEPython | NSE website structure changes | High | Monitor NSEPython GitHub; version-lock in requirements.txt |
+| Direct NSE website | Scraping-based, geoblocked, or schema-changing | High | Disabled by default; first 403 opens a process circuit; keep CI network-free with mocks |
 | CoinGecko | Keyless free-tier rate limit (~30/min) | Medium | Cache universe + candles; add `COINGECKO_API_KEY` demo key to raise limit |
 | Binance WS | Public-endpoint schema/geo changes | Low | Polling fallback when WS down; disable via `OPENTERMINALUI_BINANCE_WS_ENABLED=false` |
 
@@ -110,4 +113,6 @@ Zerodha Kite access tokens expire daily at midnight IST. To refresh:
 
 The backend will log a clear `KiteException: TokenExpired` error if the token has expired, so monitoring is straightforward.
 
-**Automating the refresh:** Zerodha provides a TOTP-based automation option. You can implement a morning cron job using `kiteconnect` to call `generate_session()` and write the new token to `.env` automatically. See the Kite developer docs for details.
+Automated credential refresh is deployment-specific and is not supplied by this
+repository. Keep any host automation outside source control and never commit the
+resulting token or `.env` file.

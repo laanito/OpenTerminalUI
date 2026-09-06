@@ -1,7 +1,14 @@
 export const APP_NAME = "OpenTerminalUI";
-// Version is sourced from package.json at build time via Vite's `__APP_VERSION__`
-// global (see vite.config.ts) — the single frontend source of truth. Don't add a
-// hardcoded version constant here; it drifts out of lockstep with package.json.
+export const REPOSITORY_URL = "https://github.com/laanito/OpenTerminalUI";
+export const REPOSITORY_LABEL = "github.com/laanito/OpenTerminalUI";
+
+// Version is sourced from package.json at build time via Vite's
+// `__APP_VERSION__` global (see vite.config.ts). Resolve it when rendering so
+// tests and non-Vite consumers can provide the value without a second version
+// constant that drifts from package.json.
+export function getAppVersion(): string {
+  return (typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0").trim();
+}
 
 export const MOMENTUM_ROTATION_BASKET = [
   "AAPL",

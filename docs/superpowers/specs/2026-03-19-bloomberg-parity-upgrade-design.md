@@ -1,5 +1,8 @@
 # Bloomberg Parity Upgrade — Design Specification
 
+> **Historical design record.** This specification predates the v1 product
+> consolidation and is not the current roadmap or feature-support contract.
+
 **Date:** 2026-03-19
 **Author:** Claude (Lead Architect / PM)
 **Approach:** B — Bloomberg Core + TradingView UX

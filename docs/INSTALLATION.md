@@ -6,11 +6,22 @@ Only Docker Desktop/Engine + Docker Compose are required; local Python/Node are 
 ## 1) Clone
 
 ```bash
-git clone <PUBLIC_REPO_URL>
+git clone https://github.com/laanito/OpenTerminalUI.git
 cd OpenTerminalUI
 ```
 
-## 2) Start in one command
+## 2) Configure and start
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+The default stack starts the application, Redis, and PostgreSQL 16 with
+pgvector. Provider keys are optional; unavailable integrations degrade
+explicitly.
+
+The platform-specific helper scripts provide the same local bootstrap:
 
 Windows PowerShell:
 
@@ -30,23 +41,17 @@ sh ./scripts/docker-up.sh
 - API docs: `http://127.0.0.1:8000/docs`
 - Health: `http://127.0.0.1:8000/health`
 
-## Optional profiles
+## SQLite opt-in
 
-Windows PowerShell:
+Set this in the root `.env` before starting Compose:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\docker-up.ps1 -Redis
-powershell -ExecutionPolicy Bypass -File .\scripts\docker-up.ps1 -Redis -Postgres
-powershell -ExecutionPolicy Bypass -File .\scripts\docker-up.ps1 -Port 8010
+```dotenv
+DATABASE_URL=sqlite+aiosqlite:////data/openterminal.db
 ```
 
-macOS/Linux:
-
-```bash
-sh ./scripts/docker-up.sh --redis
-sh ./scripts/docker-up.sh --redis --postgres
-sh ./scripts/docker-up.sh --port 8010
-```
+PostgreSQL remains part of the default Compose stack; the setting changes the
+application's primary database. For a custom host port, set `APP_PORT=8010` in
+`.env` or use the helper script's `--port 8010` / `-Port 8010` option.
 
 ## Common issues
 

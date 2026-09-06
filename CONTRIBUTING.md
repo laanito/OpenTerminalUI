@@ -4,24 +4,28 @@ Thank you for contributing.
 
 ## Development Setup
 
-### Backend
+On macOS/Linux, the repository setup target creates `backend/.venv` and installs
+the locked frontend dependencies:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\\Scripts\\activate
-pip install -r backend/requirements.txt
-pip install -r backend/requirements-dev.txt
-cp .env.example .env
-PYTHONPATH=. uvicorn backend.main:app --reload --port 8000
+make setup
 ```
 
-### Frontend
+Then copy the environment template and run the two development servers:
+
+```bash
+cp .env.example .env
+PYTHONPATH=. backend/.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
+```
 
 ```bash
 cd frontend
-npm ci
 npm run dev
 ```
+
+Windows contributors can create any Python 3.11 virtual environment, install
+`backend/requirements.txt`, and run the equivalent commands. Node.js 22 is the
+CI baseline.
 
 ## Branching and PRs
 
@@ -44,17 +48,18 @@ Run before opening a PR:
 make gate
 ```
 
+This runs the production-mock and surface-inventory guards, backend compile and
+pytest coverage gate, frontend build, and Vitest.
+
 If you run individual checks:
 
 ```bash
-PYTHONPATH=. pytest backend/tests -x -q --cov=backend --cov-fail-under=45
+PYTHONPATH=. backend/.venv/bin/python -m pytest backend/tests -x -q --cov=backend --cov-fail-under=45
 cd frontend && npm test
-cd frontend && npm run test:e2e
 ```
 
-## Forge Execution Rules
+Playwright remains manual-only while its inherited fixtures are rehabilitated:
 
-- Respect `.forge/tasks/*.json` file locks.
-- Execute one Forge task at a time.
-- Keep `auto_commit` disabled unless explicitly approved.
-- Capture verification artifacts under `.forge/results/<TASK-ID>/`.
+```bash
+cd frontend && npm run test:e2e
+```
