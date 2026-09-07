@@ -1,8 +1,8 @@
 # Current project state and backlog
 
-Last audited: **2026-09-07**, from `main` at `d66f96f` (PR #124), plus the v1.5.0
-release-preparation changes on this branch. The latest tag and published GitHub
-release remain **v1.4.0** at `2999a42` until host verification.
+Last audited: **2026-09-07**, from `main` at `1d2f3ca` (PR #126), plus the
+post-release handoff changes on this branch. The latest tag and published GitHub
+release are **v1.5.0** at `1d2f3ca`.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -186,9 +186,10 @@ the primary navigation does not advertise an unexplained empty product.
 - [x] Close the automated v1.5 release contract: align backend/frontend versions,
       changelog, roadmap, public site, release ledger, and agent handoff for
       v1.5.0.
-- [ ] Confirm the host smoke matrix and tag v1.5.0. After the release-prep branch
-      merges, verify the SQLite/keyless and PostgreSQL/pgvector keyless/keyed rows
-      in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
+- [x] Publish v1.5.0. Release PR #125 merged, final user testing identified and
+      closed the ambiguous Portfolio holding-entry layout in PR #126, and the
+      maintainer verified the result. Tag/GitHub release `v1.5.0` point to
+      `1d2f3ca`.
 
 Start with a repository-identity and documentation audit because it establishes
 the names, links, commands, and sources of truth used by every later cleanup.
@@ -241,10 +242,12 @@ inherited ambiguity.
   v1.5 PR #122 completed repository identity and documentation reconciliation;
   PR #123 moved generic workflows to shared US/NASDAQ defaults while preserving
   explicit India behavior; PR #124 completed instrument-aware currency and locale
-  semantics. Automated v1.5.0 release preparation is now complete. The remaining
-  steps are host smoke verification, merge, tag, and GitHub release; do not pull
-  in the deferred v1.6 LLM streaming/job redesign or implement data stubs merely
-  to make the inventory look fuller.
+  semantics. Release PR #125 completed automated preparation. Final user testing
+  then found that the newly adjacent portfolio thesis left holding-entry fields
+  ambiguous; PR #126 added visible labels, semantic grouping, and a responsive
+  layout. The maintainer verified the fix, and tag/GitHub release `v1.5.0` were
+  published from `1d2f3ca`. v1.6 is now active; start from its explicit baseline
+  items rather than implementing data stubs merely to make the inventory fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly
@@ -252,12 +255,13 @@ inherited ambiguity.
 - A bilingual v1.3 retrospective was merged in `praderasblog` PR #104. Blog
   deployment belongs to the host agent and is outside this repository's scope.
   The bilingual v1.4 retrospective was merged as PR #108, series order 11.
+  The bilingual v1.5 retrospective is open as PR #109, series order 12.
 
 ## Other product work
 
 These are the clearest remaining items from the current roadmap and code state.
-They are later product-generation inputs, not an ordered v1.5 implementation
-queue.
+They are demand-pulled or later-generation inputs, not a substitute for the
+ordered v1.6 milestone above.
 
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old

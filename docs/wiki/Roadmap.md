@@ -425,10 +425,10 @@ must remain aligned with the generated OpenAPI tags.
 classified, and primary navigation does not advertise an unexplained empty
 product.
 
-### v1.5.0 — Fork consistency ✅ release-prepared 2026-09-07
+### v1.5.0 — Fork consistency ✅ released 2026-09-07
 
-Prepared as **v1.5.0 (2026-09-07)** — implementation PRs #122–#124; tagging
-follows the host smoke check described in [Releasing](Releasing).
+Released as **v1.5.0 (2026-09-07)** — implementation PRs #122–#124, release PR
+#125, final user-test UX fix #126, and tag/GitHub release `v1.5.0` at `1d2f3ca`.
 
 Make the retained surface belong unambiguously to this fork: replace accidental
 upstream identity and stale versions/links; distinguish intentional India support
@@ -441,8 +441,8 @@ Implementation is complete through the identity/documentation pass, shared
 US/NASDAQ generic defaults, and the instrument-aware currency/locale pass.
 Provider currency metadata now wins over inference; unavailable FX keeps native
 labels and units; mixed-currency aggregates are not presented as one currency.
-Automated release preparation is complete. Host verification, merge, tag, and
-GitHub release remain.
+Release preparation, host/user verification, final holding-entry clarity fix,
+tag, and GitHub release are complete.
 
 **Exit condition:** a new human or external agent encounters one product identity
 and one accurate set of defaults, commands, contracts, and sources of truth.
