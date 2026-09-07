@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ChartKind, ChartTimeframe } from "./types";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../../lib/currency";
 import { TerminalBadge } from "../../components/terminal/TerminalBadge";
 import { TerminalButton } from "../../components/terminal/TerminalButton";
 import { TerminalInput } from "../../components/terminal/TerminalInput";
@@ -40,6 +41,7 @@ type Props = {
   extended?: boolean;
   onExtendedChange?: (v: boolean) => void;
   liveStatus?: "live" | "delayed" | "disconnected";
+  currency?: CurrencyCode;
 };
 
 export function SharedChartToolbar({
@@ -57,6 +59,7 @@ export function SharedChartToolbar({
   extended = false,
   onExtendedChange,
   liveStatus,
+  currency,
 }: Props) {
   const { formatDisplayMoney } = useDisplayCurrency();
   const [altParams, setAltParams] = useState<AlternativeChartParams>(DEFAULT_ALT_CHART_PARAMS);
@@ -111,7 +114,7 @@ export function SharedChartToolbar({
           </TerminalBadge>
 
           <div className="tabular-nums font-bold text-terminal-text">
-            {ltp === null ? "-" : formatDisplayMoney(ltp)}
+            {ltp === null ? "-" : formatDisplayMoney(ltp, currency)}
           </div>
 
           <TerminalBadge variant={pctBadgeVariant} size="sm" className="tabular-nums font-bold">

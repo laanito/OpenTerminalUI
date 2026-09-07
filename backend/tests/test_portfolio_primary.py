@@ -70,6 +70,7 @@ def test_primary_stays_fixed_and_aggregates_lots() -> None:
     after = client.get("/api/portfolios/primary", headers=headers).json()
     rows = [r for r in after["items"] if r["ticker"] == "AAPL"]
     assert len(rows) == 1  # two lots collapsed into one position
+    assert rows[0]["currency"] == "USD"
     assert _qty_for(after, "AAPL") - base_qty == 40
     # total_cost delta = 10*100 + 30*200 = 7000, independent of live quotes.
     assert float(after["summary"]["total_cost"]) - base_cost == 7000.0

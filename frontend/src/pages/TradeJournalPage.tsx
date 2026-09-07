@@ -20,6 +20,7 @@ import { TerminalInput } from "../components/terminal/TerminalInput";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { TerminalTabs } from "../components/terminal/TerminalTabs";
 import type { JournalEntry } from "../types";
+import { formatMoneyIn, nativeCurrencyForSymbol, type CurrencyCode } from "../lib/currency";
 
 const tabs = [
   { id: "journal", label: "Journal" },
@@ -34,9 +35,9 @@ const emotionMeta: Record<string, string> = {
   neutral: "😐",
 };
 
-function formatMoney(value: number | null | undefined): string {
+function formatMoney(value: number | null | undefined, currency: CurrencyCode): string {
   if (value == null) return "OPEN";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+  return formatMoneyIn(value, currency);
 }
 
 function formatPct(value: number | null | undefined): string {
@@ -121,6 +122,12 @@ export function TradeJournalPage() {
 
   const entries = entriesQuery.data ?? [];
   const stats = statsQuery.data;
+  const journalCurrency = useMemo<CurrencyCode | null>(() => {
+    const currencies = new Set(entries.map((entry) => nativeCurrencyForSymbol(entry.symbol)));
+    return currencies.size <= 1 ? (currencies.values().next().value ?? "USD") : null;
+  }, [entries]);
+  const formatAggregateMoney = (value: number | null | undefined): string =>
+    journalCurrency ? formatMoney(value, journalCurrency) : "Mixed currencies";
   const strategies = useMemo(
     () => Array.from(new Set(entries.map((entry) => entry.strategy).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b)),
     [entries],
@@ -372,7 +379,7 @@ export function TradeJournalPage() {
 
                       <div className="space-y-2 text-sm text-terminal-muted">
                         <div>
-                          {formatMoney(entry.entry_price)} <span className="text-terminal-text">→</span> {entry.exit_price != null ? formatMoney(entry.exit_price) : "Open"}
+                          {formatMoney(entry.entry_price, nativeCurrencyForSymbol(entry.symbol))} <span className="text-terminal-text">→</span> {entry.exit_price != null ? formatMoney(entry.exit_price, nativeCurrencyForSymbol(entry.symbol)) : "Open"}
                         </div>
                         <div>Qty {entry.quantity}</div>
                         <div>
@@ -383,7 +390,7 @@ export function TradeJournalPage() {
 
                       <div className="space-y-1 text-right">
                         <div className={`text-2xl font-semibold ${positive ? "text-terminal-pos" : "text-terminal-neg"}`} data-testid="journal-pnl">
-                          {entry.pnl != null ? `${entry.pnl >= 0 ? "+" : ""}${formatMoney(entry.pnl)}` : "OPEN"}
+                          {entry.pnl != null ? `${entry.pnl >= 0 ? "+" : ""}${formatMoney(entry.pnl, nativeCurrencyForSymbol(entry.symbol))}` : "OPEN"}
                         </div>
                         <div className={positive ? "text-terminal-pos" : "text-terminal-neg"}>{formatPct(entry.pnl_pct)}</div>
                         <div className="text-xs text-terminal-muted">{truncate(entry.notes, 68) || "No notes"}</div>
@@ -394,7 +401,7 @@ export function TradeJournalPage() {
                       <div className="mt-4 grid gap-3 border-t border-terminal-border pt-4 text-sm text-terminal-muted md:grid-cols-2">
                         <div className="space-y-2">
                           <div>Setup: <span className="text-terminal-text">{entry.setup || "--"}</span></div>
-                          <div>Fees: <span className="text-terminal-text">{formatMoney(entry.fees)}</span></div>
+                          <div>Fees: <span className="text-terminal-text">{formatMoney(entry.fees, nativeCurrencyForSymbol(entry.symbol))}</span></div>
                           <div>Exit: <span className="text-terminal-text">{formatDate(entry.exit_date)}</span></div>
                           <div className="leading-relaxed text-terminal-text">{entry.notes || "No journal notes recorded."}</div>
                         </div>
@@ -436,16 +443,21 @@ export function TradeJournalPage() {
 
         {activeTab === "analytics" ? (
           <div className="space-y-4">
+            {!journalCurrency ? (
+              <div className="rounded-sm border border-terminal-warn/50 bg-terminal-warn/10 px-3 py-2 text-xs text-terminal-warn">
+                Monetary totals combine trades in different native currencies. They remain unlabelled until journal analytics can normalize them through FX rates.
+              </div>
+            ) : null}
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 { label: "Total Trades", value: stats?.total_trades ?? 0, tone: "text-terminal-text" },
                 { label: "Win Rate", value: `${(stats?.win_rate ?? 0).toFixed(1)}%`, tone: (stats?.win_rate ?? 0) >= 50 ? "text-terminal-pos" : "text-terminal-neg" },
                 { label: "Profit Factor", value: stats?.profit_factor != null ? stats.profit_factor.toFixed(2) : "--", tone: (stats?.profit_factor ?? 0) >= 1 ? "text-terminal-pos" : "text-terminal-neg" },
                 { label: "Avg Win/Loss", value: `${(stats?.avg_win_pct ?? 0).toFixed(1)}% / ${(stats?.avg_loss_pct ?? 0).toFixed(1)}%`, tone: "text-terminal-text" },
-                { label: "Expectancy", value: formatMoney(stats?.expectancy ?? 0), tone: (stats?.expectancy ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
+                { label: "Expectancy", value: formatAggregateMoney(stats?.expectancy ?? 0), tone: (stats?.expectancy ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
                 { label: "Current Streak", value: stats?.current_streak ?? 0, tone: (stats?.current_streak ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
-                { label: "Total PnL", value: formatMoney(stats?.total_pnl ?? 0), tone: (stats?.total_pnl ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
-                { label: "Avg PnL", value: formatMoney(stats?.avg_pnl ?? 0), tone: (stats?.avg_pnl ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
+                { label: "Total PnL", value: formatAggregateMoney(stats?.total_pnl ?? 0), tone: (stats?.total_pnl ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
+                { label: "Avg PnL", value: formatAggregateMoney(stats?.avg_pnl ?? 0), tone: (stats?.avg_pnl ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
               ].map((card) => (
                 <div key={card.label} className="rounded-sm border border-terminal-border bg-terminal-bg/60 p-3">
                   <div className="text-[10px] uppercase tracking-[0.24em] text-terminal-muted">{card.label}</div>
@@ -464,7 +476,7 @@ export function TradeJournalPage() {
                       <YAxis stroke="#7f8ea3" tick={{ fontSize: 11 }} />
                       <Tooltip
                         contentStyle={{ background: "#0b1220", border: "1px solid rgba(148,163,184,0.2)" }}
-                        formatter={(value: number | string | undefined) => [formatMoney(value == null ? null : Number(value)), "Cumulative PnL"]}
+                        formatter={(value: number | string | undefined) => [formatAggregateMoney(value == null ? null : Number(value)), "Cumulative PnL"]}
                       />
                       <Line type="monotone" dataKey="cumulative_pnl" stroke={(stats?.total_pnl ?? 0) >= 0 ? "#22c55e" : "#ef4444"} strokeWidth={2.5} dot={false} />
                     </LineChart>

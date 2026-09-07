@@ -24,7 +24,7 @@ export function StrikeSummaryBar({ symbol, expiry, spotPrice, summary }: Props) 
       </div>
       <div>
         <div className="text-[10px] uppercase text-terminal-muted">Spot</div>
-        <div className="text-sm font-semibold">{formatDisplayMoney(spotPrice)}</div>
+        <div className="text-sm font-semibold">{formatDisplayMoney(spotPrice, "INR")}</div>
       </div>
       <div>
         <div className="text-[10px] uppercase text-terminal-muted">ATM IV</div>
@@ -44,7 +44,7 @@ export function StrikeSummaryBar({ symbol, expiry, spotPrice, summary }: Props) 
       </div>
       <div>
         <div className="text-[10px] uppercase text-terminal-muted">Max Pain</div>
-        <div className="text-sm font-semibold">{typeof summary?.max_pain === "number" ? formatDisplayMoney(summary.max_pain) : "-"}</div>
+        <div className="text-sm font-semibold">{typeof summary?.max_pain === "number" ? formatDisplayMoney(summary.max_pain, "INR") : "-"}</div>
       </div>
     </div>
   );

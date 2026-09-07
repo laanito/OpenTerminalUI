@@ -14,6 +14,7 @@ export type CurrencyCode =
   | "AUD"
   | "CAD"
   | "INR"
+  | "HKD"
   | "SEK"
   | "DKK"
   | "NOK";
@@ -47,6 +48,7 @@ const CURRENCY_META: Record<CurrencyCode, CurrencyMeta> = {
   AUD: { symbol: "A$", locale: "en-AU", compact: WESTERN_COMPACT },
   CAD: { symbol: "C$", locale: "en-CA", compact: WESTERN_COMPACT },
   INR: { symbol: "₹", locale: "en-IN", compact: INDIAN_COMPACT },
+  HKD: { symbol: "HK$", locale: "en-HK", compact: WESTERN_COMPACT },
   SEK: { symbol: "kr", locale: "sv-SE", compact: WESTERN_COMPACT },
   DKK: { symbol: "kr", locale: "da-DK", compact: WESTERN_COMPACT },
   NOK: { symbol: "kr", locale: "nb-NO", compact: WESTERN_COMPACT },
@@ -82,9 +84,26 @@ const SUFFIX_CURRENCY: Record<string, CurrencyCode> = {
   OL: "NOK",
 };
 
-function marketNativeCurrency(market?: string | null): CurrencyCode {
-  if (market === "NSE" || market === "BSE") return "INR";
-  if (market === "EU") return "EUR";
+export function asCurrencyCode(value?: string | null): CurrencyCode | null {
+  const normalized = String(value || "").trim().toUpperCase();
+  return Object.prototype.hasOwnProperty.call(CURRENCY_META, normalized)
+    ? normalized as CurrencyCode
+    : null;
+}
+
+export function marketNativeCurrency(market?: string | null): CurrencyCode {
+  const normalized = String(market || "").trim().toUpperCase();
+  if (["NSE", "BSE", "IN", "INDIA"].includes(normalized)) return "INR";
+  if (["LSE", "GB", "UK"].includes(normalized)) return "GBP";
+  if (["SIX", "SWX", "CH"].includes(normalized)) return "CHF";
+  if (["TSE", "JP"].includes(normalized)) return "JPY";
+  if (["HKSE", "HKEX", "HK"].includes(normalized)) return "HKD";
+  if (["ASX", "AU"].includes(normalized)) return "AUD";
+  if (["TSX", "CA"].includes(normalized)) return "CAD";
+  if (["OMX", "ST", "SE"].includes(normalized)) return "SEK";
+  if (["CO", "DK"].includes(normalized)) return "DKK";
+  if (["OSE", "OL", "NO"].includes(normalized)) return "NOK";
+  if (["EU", "EURONEXT", "XETRA", "DE", "FR", "NL", "BE", "PT", "IE", "IT", "ES", "AT", "FI"].includes(normalized)) return "EUR";
   return "USD";
 }
 
@@ -114,6 +133,16 @@ export function nativeCurrencyForSymbol(symbol?: string | null, market?: string 
     if (mapped) return mapped;
   }
   return marketNativeCurrency(market);
+}
+
+// Prefer provider/instrument metadata whenever it is available. Symbol and
+// market inference is only a fallback for older responses that lack currency.
+export function nativeCurrencyForInstrument(
+  currency?: string | null,
+  symbol?: string | null,
+  market?: string | null,
+): CurrencyCode {
+  return asCurrencyCode(currency) ?? nativeCurrencyForSymbol(symbol, market);
 }
 
 // "USDEUR" -> rate (1 USD = rate EUR). Built from the cross-rates pair_quotes.
@@ -155,6 +184,34 @@ export function resolveDisplayAmount(
   const converted = convertCurrency(value, from, display, pairs);
   if (Number.isFinite(converted)) return { value: converted, currency: display };
   return { value, currency: from };
+}
+
+export type FinancialDisplayAmount = {
+  value: number;
+  currency: CurrencyCode;
+  unit: "Cr" | "M";
+};
+
+export function financialUnitForCurrency(currency: CurrencyCode): "Cr" | "M" {
+  return currency === "INR" ? "Cr" : "M";
+}
+
+// Financial statement charts use a fixed unit. Select that unit from the
+// currency the value actually resolves to, so a missing FX rate cannot turn a
+// native amount into a display-currency label without converting it.
+export function resolveFinancialDisplayAmount(
+  value: number,
+  from: CurrencyCode,
+  display: CurrencyCode,
+  pairs: PairQuotes,
+): FinancialDisplayAmount {
+  const resolved = resolveDisplayAmount(value, from, display, pairs);
+  const unit = financialUnitForCurrency(resolved.currency);
+  return {
+    value: resolved.value / (unit === "Cr" ? 1e7 : 1e6),
+    currency: resolved.currency,
+    unit,
+  };
 }
 
 export type MoneyFormatOptions = {

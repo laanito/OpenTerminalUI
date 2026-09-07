@@ -61,7 +61,7 @@ export function ExpiryPage() {
                     <div className="space-y-1">
                       <div className="text-[10px] text-terminal-muted uppercase">Max Pain</div>
                       <div className="text-lg font-bold text-terminal-pos">
-                        {formatDisplayMoney(selectedSymbolData.max_pain)}
+                        {formatDisplayMoney(selectedSymbolData.max_pain, "INR")}
                       </div>
                     </div>
                   </div>
@@ -90,7 +90,7 @@ export function ExpiryPage() {
                         <div className="flex flex-wrap gap-2">
                           {(selectedSymbolData.support_resistance?.support ?? []).map(val => (
                             <span key={val} className="rounded bg-terminal-pos/10 border border-terminal-pos/20 px-2 py-0.5 text-xs text-terminal-pos font-bold tabular-nums">
-                              {formatDisplayMoney(val)}
+                              {formatDisplayMoney(val, "INR")}
                             </span>
                           ))}
                         </div>
@@ -100,7 +100,7 @@ export function ExpiryPage() {
                         <div className="flex flex-wrap gap-2">
                           {(selectedSymbolData.support_resistance?.resistance ?? []).map(val => (
                             <span key={val} className="rounded bg-terminal-neg/10 border border-terminal-neg/20 px-2 py-0.5 text-xs text-terminal-neg font-bold tabular-nums">
-                              {formatDisplayMoney(val)}
+                              {formatDisplayMoney(val, "INR")}
                             </span>
                           ))}
                         </div>
@@ -160,7 +160,7 @@ export function ExpiryPage() {
                   <td className="px-3 py-2 text-right tabular-nums">{row.days_to_expiry}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-terminal-info">{Number(row.atm_iv || 0).toFixed(2)}%</td>
                   <td className="px-3 py-2 text-right tabular-nums">{Number(row.pcr?.pcr_oi || 0).toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right tabular-nums font-bold">{formatDisplayMoney(row.max_pain)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums font-bold">{formatDisplayMoney(row.max_pain, "INR")}</td>
                   <td className="px-3 py-2 text-center">
                     <TerminalBadge variant={row.pcr?.signal === "Bullish" ? "success" : row.pcr?.signal === "Bearish" ? "danger" : "neutral"} size="sm">
                       {row.pcr?.signal.toUpperCase()}

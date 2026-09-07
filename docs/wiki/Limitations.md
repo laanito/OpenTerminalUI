@@ -72,6 +72,12 @@ never silently faked.
   `^NSEI`, …) shows price / chart / performance + notes; issuer fundamentals
   (P/E, financials, peers, shareholding) are intentionally hidden because they
   don't apply to an index.
+- **Cross-currency portfolio and journal totals are not FX-normalized on the
+  backend yet.** Individual instruments use provider-native currency and the UI
+  converts them when a supported cross-rate is available. When a collection
+  spans native currencies, aggregate monetary labels are withheld and the UI
+  says `Mixed currencies` rather than assigning an incorrect symbol. Full
+  base-currency accounting remains a post-v1 portfolio contract.
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,
   quote-backed simulator, not broker execution, and it does not update Paper
   portfolios. Ops shows measured system state only; global restricted-list and

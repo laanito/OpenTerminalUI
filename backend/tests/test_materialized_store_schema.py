@@ -41,10 +41,11 @@ def test_ensure_adds_missing_columns_to_an_old_table() -> None:
 
 def test_upsert_and_load_roundtrip() -> None:
     _drop()
-    ms.upsert_screener_rows([{"ticker": "AAPL", "sector": "Tech", "current_price": 200.0}])
+    ms.upsert_screener_rows([{"ticker": "AAPL", "sector": "Tech", "current_price": 200.0, "currency": "USD"}])
     df = ms.load_screener_df(["AAPL", "MSFT"])
     assert list(df["ticker"]) == ["AAPL"]
     assert df.iloc[0]["sector"] == "Tech"
+    assert df.iloc[0]["currency"] == "USD"
     # Upsert again updates in place (ON CONFLICT), no duplicate row.
     ms.upsert_screener_rows([{"ticker": "AAPL", "sector": "Technology", "current_price": 210.0}])
     df2 = ms.load_screener_df(["AAPL"])

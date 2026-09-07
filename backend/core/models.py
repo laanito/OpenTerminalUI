@@ -29,7 +29,7 @@ class OhlcvPoint(BaseModel):
 class ChartResponse(BaseModel):
     ticker: str
     interval: str
-    currency: str = "INR"
+    currency: str = "USD"
     data: list[OhlcvPoint]
     meta: APIResponseMeta = Field(default_factory=APIResponseMeta)
 

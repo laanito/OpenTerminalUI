@@ -4,8 +4,10 @@ import {
   type PairQuotes,
   convertCurrency,
   formatMoneyIn,
+  nativeCurrencyForInstrument,
   nativeCurrencyForSymbol,
   resolveDisplayAmount,
+  resolveFinancialDisplayAmount,
 } from "../lib/currency";
 
 // 1 USD = 0.9 EUR, 1 USD = 80 INR, 1 USD = 0.8 GBP
@@ -45,6 +47,17 @@ describe("nativeCurrencyForSymbol", () => {
     expect(nativeCurrencyForSymbol("AAPL", "NASDAQ")).toBe("USD");
     expect(nativeCurrencyForSymbol("FOO", "EU")).toBe("EUR");
   });
+
+  it("understands exchange/country hints beyond the original IN/US pair", () => {
+    expect(nativeCurrencyForSymbol("VOD", "LSE")).toBe("GBP");
+    expect(nativeCurrencyForSymbol("0700", "HKSE")).toBe("HKD");
+    expect(nativeCurrencyForSymbol("SHOP", "TSX")).toBe("CAD");
+  });
+
+  it("prefers explicit instrument currency over symbol inference", () => {
+    expect(nativeCurrencyForInstrument("EUR", "ACME", "NASDAQ")).toBe("EUR");
+    expect(nativeCurrencyForInstrument("unknown", "RELIANCE.NS", "NASDAQ")).toBe("INR");
+  });
 });
 
 describe("convertCurrency", () => {
@@ -74,6 +87,24 @@ describe("resolveDisplayAmount", () => {
     const out = resolveDisplayAmount(100, "SEK", "EUR", PAIRS);
     expect(out.currency).toBe("SEK");
     expect(out.value).toBe(100);
+  });
+});
+
+describe("resolveFinancialDisplayAmount", () => {
+  it("uses the converted currency's financial unit", () => {
+    expect(resolveFinancialDisplayAmount(20_000_000, "INR", "USD", PAIRS)).toEqual({
+      value: 0.25,
+      currency: "USD",
+      unit: "M",
+    });
+  });
+
+  it("keeps the native currency and unit when conversion is unavailable", () => {
+    expect(resolveFinancialDisplayAmount(20_000_000, "INR", "EUR", {})).toEqual({
+      value: 2,
+      currency: "INR",
+      unit: "Cr",
+    });
   });
 });
 

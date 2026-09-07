@@ -1,6 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-09-05**, from `main` at `2999a42` (release PR #120).
+Last audited: **2026-09-07**, from `main` at `d211e72` (PR #123), plus the v1.5
+currency/locale changes on this branch.
 The latest tag and published GitHub release are **v1.4.0** at that commit.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
@@ -170,8 +171,13 @@ the primary navigation does not advertise an unexplained empty product.
       the configured market or the global fork default drive generic workflows.
       Shared frontend/backend contracts now fall back to US/NASDAQ, while
       explicit India selections still route to NSE/BSE, INR, and NIFTY.
-- [ ] Finish instrument-aware currency and locale cleanup. Never relabel an
-      unconverted value or apply an India-specific grouping format globally.
+- [x] Finish instrument-aware currency and locale cleanup. Provider currency
+      metadata now wins over symbol/exchange inference; charts, backtests,
+      security financials, screeners, portfolio exposures, Journal entries, and
+      India derivatives pass an explicit native currency. Failed FX conversion
+      keeps both the native value and its native unit, generic surfaces no longer
+      inherit `en-IN`, and mixed-currency aggregates are identified rather than
+      relabelled as one currency.
 - [x] Reconcile architecture, installation, contribution, API, configuration,
       and release documentation with the actual PostgreSQL-first application and
       current commands.
@@ -226,9 +232,13 @@ inherited ambiguity.
   output and that Home/Risk cards could ask for analysis without factual inputs;
   PR #119 added a bounded retry and factual generation gates. Release PR #120,
   maintainer verification, tag, and GitHub release completed the milestone.
-  Begin v1.5 with the repository-identity/documentation audit above; do not pull
-  in the deferred v1.6 LLM streaming/job redesign or implement data stubs merely
-  to make the inventory look fuller.
+  v1.5 PR #122 completed repository identity and documentation reconciliation;
+  PR #123 moved generic workflows to shared US/NASDAQ defaults while preserving
+  explicit India behavior. The current branch closes the remaining
+  instrument-currency and locale boundary. After it merges and passes host/user
+  verification, prepare the v1.5 release rather than pulling in the deferred
+  v1.6 LLM streaming/job redesign or implementing data stubs merely to make the
+  inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

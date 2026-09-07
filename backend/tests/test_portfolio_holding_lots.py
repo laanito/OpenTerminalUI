@@ -37,6 +37,7 @@ def test_bulk_add_same_symbol_gets_distinct_lots() -> None:
     holdings = client.get(f"/api/portfolios/{pid}/holdings", headers=headers).json()["items"]
     btc = [h for h in holdings if h["symbol"] == "BTC-USD"]
     assert len(btc) == 5
+    assert {h["currency"] for h in btc} == {"USD"}
     # Every auto-generated lot_id is unique.
     assert len({h["lot_id"] for h in btc}) == 5
 

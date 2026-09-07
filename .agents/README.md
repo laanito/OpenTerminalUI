@@ -4,8 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-06**, from `main` at `ec8635b` (PR #122), plus the v1.5
-market-default changes on this branch. The latest tag and published GitHub
+Last audited: **2026-09-07**, from `main` at `d211e72` (PR #123), plus the v1.5
+currency/locale changes on this branch. The latest tag and published GitHub
 release are **v1.4.0** at `2999a42`.
 
 ## Read order and sources of truth
@@ -108,10 +108,13 @@ release-level interpretation and safety boundaries.
   and `v1.4.0` was tagged and published at `2999a42`. **v1.5 — Fork
   consistency** is the active milestone. PR #122 established canonical fork
   identity, package-derived frontend versioning, the documentation hierarchy,
-  and current PostgreSQL-first setup/contribution contracts. The next pass
-  centralizes US/NASDAQ as the fallback for generic screens, backtests, charts,
-  reports, labs, and model tools while preserving selected NSE/BSE behavior.
-  Instrument-aware currency and locale semantics are the next open boundary.
+  and current PostgreSQL-first setup/contribution contracts. PR #123 centralized
+  US/NASDAQ as the fallback for generic screens, backtests, charts, reports,
+  labs, and model tools while preserving selected NSE/BSE behavior. The current
+  currency/locale pass makes provider instrument metadata authoritative, keeps
+  native labels when FX is unavailable, confines Indian grouping to intentional
+  India contexts, and identifies mixed-currency aggregates. After merge and
+  host/user verification, the remaining v1.5 work is release preparation.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

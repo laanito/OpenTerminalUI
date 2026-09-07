@@ -1,7 +1,9 @@
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../../lib/currency";
 import { formatPct } from "../../utils/formatters";
 
 type Props = {
+  currency?: CurrencyCode;
   stock: {
     ticker: string;
     company_name?: string;
@@ -69,7 +71,7 @@ function moveClass(value: number | null | undefined): string {
   return value >= 0 ? "text-terminal-pos" : "text-terminal-neg";
 }
 
-export function OverviewPanel({ stock, momPct, qoqPct, yoyPct }: Props) {
+export function OverviewPanel({ stock, currency, momPct, qoqPct, yoyPct }: Props) {
   const { formatDisplayMoney, formatFinancialCompact } = useDisplayCurrency();
   const changePct = toNum(stock.change_pct);
   const priceMoveClass =
@@ -112,7 +114,7 @@ export function OverviewPanel({ stock, momPct, qoqPct, yoyPct }: Props) {
         </div>
         <div className="mt-3 flex items-end gap-3">
           <div className="text-2xl font-bold tabular-nums">
-            {currentPrice !== undefined ? formatDisplayMoney(currentPrice) : "-"}
+            {currentPrice !== undefined ? formatDisplayMoney(currentPrice, currency) : "-"}
           </div>
           <div className={`text-sm font-semibold ${priceMoveClass}`}>{moveText}</div>
         </div>
@@ -137,11 +139,11 @@ export function OverviewPanel({ stock, momPct, qoqPct, yoyPct }: Props) {
           const rendered =
             mode === "compact"
               ? val !== undefined
-                ? formatFinancialCompact(val)
+                ? formatFinancialCompact(val, currency)
                 : "-"
               : mode === "money"
               ? val !== undefined
-                ? formatDisplayMoney(val)
+                ? formatDisplayMoney(val, currency)
                 : "-"
               : mode === "pct"
               ? formatPct(val)

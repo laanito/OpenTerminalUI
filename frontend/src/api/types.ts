@@ -225,6 +225,7 @@ export type MultiPortfolioHolding = {
   notes?: string;
   lot_id?: string;
   current_price?: number;
+  currency?: string | null;
 };
 
 export type PortfolioTransactionType = "buy" | "sell" | "dividend" | "deposit" | "withdrawal";

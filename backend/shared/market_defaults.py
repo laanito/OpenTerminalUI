@@ -18,7 +18,25 @@ def currency_for_market(market: str | None) -> str:
     normalized = str(market or "").strip().upper()
     if normalized in {"NSE", "BSE", "IN"}:
         return "INR"
-    if normalized in {"EU", "EURONEXT", "XETRA", "LSE"}:
+    if normalized in {"LSE", "GB", "UK"}:
+        return "GBP"
+    if normalized in {"SIX", "SWX", "CH"}:
+        return "CHF"
+    if normalized in {"TSE", "JP"}:
+        return "JPY"
+    if normalized in {"HKSE", "HKEX", "HK"}:
+        return "HKD"
+    if normalized in {"ASX", "AU"}:
+        return "AUD"
+    if normalized in {"TSX", "CA"}:
+        return "CAD"
+    if normalized in {"OMX", "ST", "SE"}:
+        return "SEK"
+    if normalized in {"CO", "DK"}:
+        return "DKK"
+    if normalized in {"OSE", "OL", "NO"}:
+        return "NOK"
+    if normalized in {"EU", "EURONEXT", "XETRA", "DE", "FR", "NL", "BE", "PT", "IE", "IT", "ES", "AT", "FI"}:
         return "EUR"
     return "USD"
 

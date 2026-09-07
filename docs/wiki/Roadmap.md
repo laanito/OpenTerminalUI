@@ -434,6 +434,12 @@ cleanup; and reconcile architecture, installation, contribution, configuration,
 API, and release documentation with the PostgreSQL-first application. Remove or
 label obsolete compatibility and historical documents that appear authoritative.
 
+Implementation is complete through the identity/documentation pass, shared
+US/NASDAQ generic defaults, and the instrument-aware currency/locale pass.
+Provider currency metadata now wins over inference; unavailable FX keeps native
+labels and units; mixed-currency aggregates are not presented as one currency.
+The milestone proceeds to host verification and release preparation.
+
 **Exit condition:** a new human or external agent encounters one product identity
 and one accurate set of defaults, commands, contracts, and sources of truth.
 
@@ -577,10 +583,6 @@ sector-rotation** return live data from Yahoo/adapters — they only show
 
 Real but unscheduled; pull into a milestone when it fits.
 
-- **EUR display-currency leftovers** — thread the viewed symbol's currency into
-  StockDetail's financial/analysis panels (market-native default today); clear the
-  `en-IN` digit grouping in NSE-by-design F&O panels and a few screener/chart
-  formatters.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode

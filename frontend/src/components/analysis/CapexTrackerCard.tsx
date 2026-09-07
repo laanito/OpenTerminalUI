@@ -2,12 +2,14 @@ import { useMemo } from "react";
 
 import { useCapexTracker } from "../../hooks/useStocks";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../../lib/currency";
 
 type Props = {
   ticker: string;
+  currency?: CurrencyCode;
 };
 
-export function CapexTrackerCard({ ticker }: Props) {
+export function CapexTrackerCard({ ticker, currency }: Props) {
   const { data, isLoading } = useCapexTracker(ticker);
   const { formatFinancialCompact } = useDisplayCurrency();
 
@@ -37,7 +39,7 @@ export function CapexTrackerCard({ ticker }: Props) {
       <div className="text-xs uppercase tracking-wide text-terminal-accent">Capex Tracker</div>
       <div className="mt-1 text-[11px] text-terminal-muted">{latest?.date ?? "No period available"}</div>
       <div className="mt-3 text-lg font-semibold tabular-nums">
-        {latest ? formatFinancialCompact(latest.capex) : "-"}
+        {latest ? formatFinancialCompact(latest.capex, currency) : "-"}
       </div>
       <div className="mt-1 flex items-center gap-2">
         <span className={`text-xs font-semibold ${deltaClass}`}>

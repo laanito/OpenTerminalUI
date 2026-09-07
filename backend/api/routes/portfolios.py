@@ -150,6 +150,7 @@ async def _legacy_summary_for_holdings(holdings: list[PortfolioHoldingORM]) -> d
                 "pnl": (current_value - cost) if current_value is not None else None,
                 "exchange": classification.get("exchange") or snapshot.get("exchange"),
                 "country_code": classification.get("country_code") or snapshot.get("country_code"),
+                "currency": classification.get("currency") or snapshot.get("currency"),
                 "flag_emoji": classification.get("flag_emoji") or snapshot.get("flag_emoji"),
                 "has_futures": bool(classification.get("has_futures")),
                 "has_options": bool(classification.get("has_options")),
@@ -375,6 +376,7 @@ async def list_portfolio_holdings(
                 "notes": r.notes,
                 "lot_id": r.lot_id,
                 "current_price": float((quotes.get(r.symbol, {}) or {}).get("current_price") or 0.0),
+                "currency": (quotes.get(r.symbol, {}) or {}).get("currency"),
             }
             for r in rows
         ]

@@ -6,13 +6,14 @@ import { TerminalBadge } from "../../../components/terminal/TerminalBadge";
 import { TerminalButton } from "../../../components/terminal/TerminalButton";
 import { TerminalPanel } from "../../../components/terminal/TerminalPanel";
 import { useStockStore } from "../../../store/stockStore";
+import { formatMoneyIn, nativeCurrencyForInstrument } from "../../../lib/currency";
 import { SparklineCell } from "./SparklineCell";
 import { useScreenerContext } from "./ScreenerContext";
 
 function formatNum(value: unknown) {
   const n = Number(value || 0);
   if (!Number.isFinite(n)) return "--";
-  return n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
 function getTicker(row: Record<string, unknown> | null): string {
@@ -131,7 +132,15 @@ export function CompanyDetailDrawer() {
         </div>
         <div>
           <div className="text-terminal-muted">Market Cap</div>
-          <div>{formatNum(selectedRow.market_cap)}</div>
+          <div>{formatMoneyIn(
+            Number(selectedRow.market_cap || 0),
+            nativeCurrencyForInstrument(
+              typeof selectedRow.currency === "string" ? selectedRow.currency : null,
+              ticker,
+              String(selectedRow.market || selectedRow.exchange || selectedRow.country_code || ""),
+            ),
+            { compact: true },
+          )}</div>
         </div>
         <div>
           <div className="text-terminal-muted">PE</div>

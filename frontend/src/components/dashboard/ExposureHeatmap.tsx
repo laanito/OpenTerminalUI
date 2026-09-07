@@ -1,4 +1,5 @@
 import type { PortfolioItem } from "../../types";
+import { nativeCurrencyForInstrument } from "../../lib/currency";
 import { GuidedEmptyState } from "./GuidedEmptyState";
 
 type HeatmapMode = "sector" | "factor" | "currency" | "correlation";
@@ -20,10 +21,11 @@ function pct(value: number): string {
 }
 
 function classifyCurrency(item: PortfolioItem, market: string): string {
-  const exchange = (item.exchange || "").toUpperCase();
-  const country = (item.country_code || "").toUpperCase();
-  if (exchange.includes("NSE") || exchange.includes("BSE") || country === "IN" || market === "NSE" || market === "BSE") return "INR";
-  return "USD";
+  return nativeCurrencyForInstrument(
+    item.currency,
+    item.ticker,
+    item.exchange || item.country_code || market,
+  );
 }
 
 function sectorCells(items: PortfolioItem[]): ExposureCell[] {
@@ -47,7 +49,7 @@ function currencyCells(items: PortfolioItem[], market: string): ExposureCell[] {
   return [...byCurrency.entries()].map(([label, value]) => ({
     label,
     value: total > 0 ? (value / total) * 100 : 0,
-    context: label === "INR" ? "India" : "US",
+    context: "native exposure",
     tone: "neutral" as const,
   }));
 }
@@ -130,7 +132,7 @@ export function ExposureHeatmap({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">{title}</h3>
-          <p className="mt-1 text-xs text-terminal-muted">Sector, factor, currency, and correlation concentration for {market} and US desks.</p>
+          <p className="mt-1 text-xs text-terminal-muted">Sector, factor, currency, and correlation concentration for the {market} context.</p>
         </div>
         <div className="flex flex-wrap gap-1">
           {modes.map((mode) => (

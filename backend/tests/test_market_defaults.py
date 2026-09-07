@@ -8,6 +8,7 @@ import pandas as pd
 from backend.api.routes import backtest, backtests, chart, framework, paper, statlab, tape
 from backend.api.routes.screener import ScreenerScanRequest
 from backend.core import backtester
+from backend.core.models import ChartResponse
 from backend.core.symbols import normalize_symbol
 from backend.reports.tearsheet import infer_benchmark, infer_market_from_report
 from backend.screener.factor_routes import IdeaListRequest
@@ -37,6 +38,10 @@ def test_reports_and_currency_default_to_us_without_erasing_india() -> None:
     assert infer_benchmark("NSE") == "NIFTY"
     assert currency_for_market("NASDAQ") == "USD"
     assert currency_for_market("NSE") == "INR"
+    assert currency_for_market("LSE") == "GBP"
+    assert currency_for_market("XETRA") == "EUR"
+    assert currency_for_market("TSX") == "CAD"
+    assert ChartResponse(ticker="AAPL", interval="1d", data=[]).currency == "USD"
 
 
 def test_momentum_download_only_adds_india_suffix_for_india(monkeypatch) -> None:

@@ -179,6 +179,7 @@ async def _hydrate_missing_universe_rows(
                 "market": market,
                 "exchange": snap.get("exchange"),
                 "country_code": snap.get("country_code"),
+                "currency": snap.get("currency"),
                 "piotroski_f_score": None,
                 "altman_z_score": None,
             }
