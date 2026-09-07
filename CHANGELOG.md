@@ -15,6 +15,10 @@ now describe OpenTerminalUI rather than leaking accidental upstream or
 India-first assumptions.
 
 ### Changed
+- **Portfolio holding-entry clarity** — the portfolio thesis and add-holding
+  controls now share a responsive wide-screen row, while symbol, quantity, unit
+  price, and purchase date have persistent visible labels and an accessible form
+  grouping at every viewport size.
 - **Instrument-aware currency and locale semantics** — provider currency metadata
   now takes precedence over symbol/market inference in security, portfolio, and
   screener views; chart and backtest fallbacks share the same exchange-aware

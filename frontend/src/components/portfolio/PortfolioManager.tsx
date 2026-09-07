@@ -419,55 +419,73 @@ export function PortfolioManager() {
               Sync
             </TerminalButton>
           </div>
-          <label className="mb-2 block text-xs text-terminal-muted">
-            <span className="mb-1 block">Portfolio thesis — indexed by the Second Brain</span>
-            <TerminalInput
-              as="textarea"
-              rows={3}
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Record the mandate, assumptions, time horizon, and conditions that would invalidate it."
-              disabled={!selectedPortfolio}
-              aria-label="Portfolio thesis"
-            />
-          </label>
-          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-terminal-muted">Add Holding</span>
-            <TerminalInput className="w-24" value={addSymbol} onChange={(e) => setAddSymbol(e.target.value.toUpperCase())} />
-            <TerminalInput className="w-20" type="number" value={addShares} onChange={(e) => setAddShares(Number(e.target.value) || 0)} />
-            <TerminalInput className="w-24" type="number" value={addCost} onChange={(e) => setAddCost(Number(e.target.value) || 0)} />
-            <TerminalInput className="w-32" type="date" value={addDate} onChange={(e) => setAddDate(e.target.value)} />
-            <TerminalButton
-              variant="default"
-              onClick={async () => {
-                if (!selectedId) return;
-                try {
-                  setError(null);
-                  await addPortfolioHolding(selectedId, { symbol: addSymbol, shares: addShares, cost_basis_per_share: addCost, purchase_date: addDate });
-                  setStatus(`Added ${addSymbol}`);
-                  await loadAll(selectedId);
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "Failed to add holding");
-                }
-              }}
-            >
-              Add
-            </TerminalButton>
-            <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent">
-              Import CSV
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  void handleImportCsv(file);
-                  event.currentTarget.value = "";
-                }}
+          <div className="mb-2 grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(34rem,1.2fr)] xl:items-start">
+            <label className="block text-xs text-terminal-muted">
+              <span className="mb-1 block">Portfolio thesis — indexed by the Second Brain</span>
+              <TerminalInput
+                as="textarea"
+                rows={3}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Record the mandate, assumptions, time horizon, and conditions that would invalidate it."
+                disabled={!selectedPortfolio}
+                aria-label="Portfolio thesis"
               />
             </label>
-            <ExportButton source="portfolio" data={holdings} disabled={!holdings.length} />
-            {loading ? <span className="text-terminal-muted">Loading...</span> : null}
+            <fieldset className="rounded border border-terminal-border/70 bg-terminal-bg/30 p-2">
+              <legend className="px-1 text-xs font-semibold text-terminal-muted">Add holding</legend>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <label className="block text-[11px] text-terminal-muted">
+                  <span className="mb-1 block">Symbol</span>
+                  <TerminalInput className="w-full" value={addSymbol} onChange={(e) => setAddSymbol(e.target.value.toUpperCase())} placeholder="AAPL" />
+                </label>
+                <label className="block text-[11px] text-terminal-muted">
+                  <span className="mb-1 block">Quantity</span>
+                  <TerminalInput className="w-full" type="number" min="0" step="any" value={addShares} onChange={(e) => setAddShares(Number(e.target.value) || 0)} />
+                </label>
+                <label className="block text-[11px] text-terminal-muted">
+                  <span className="mb-1 block">Unit price</span>
+                  <TerminalInput className="w-full" type="number" min="0" step="any" value={addCost} onChange={(e) => setAddCost(Number(e.target.value) || 0)} />
+                </label>
+                <label className="block text-[11px] text-terminal-muted">
+                  <span className="mb-1 block">Purchase date</span>
+                  <TerminalInput className="w-full" type="date" value={addDate} onChange={(e) => setAddDate(e.target.value)} />
+                </label>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <TerminalButton
+                  variant="default"
+                  onClick={async () => {
+                    if (!selectedId) return;
+                    try {
+                      setError(null);
+                      await addPortfolioHolding(selectedId, { symbol: addSymbol, shares: addShares, cost_basis_per_share: addCost, purchase_date: addDate });
+                      setStatus(`Added ${addSymbol}`);
+                      await loadAll(selectedId);
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Failed to add holding");
+                    }
+                  }}
+                >
+                  Add
+                </TerminalButton>
+                <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent">
+                  Import CSV
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      void handleImportCsv(file);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+                <ExportButton source="portfolio" data={holdings} disabled={!holdings.length} />
+                {loading ? <span className="text-terminal-muted">Loading...</span> : null}
+              </div>
+            </fieldset>
           </div>
           {error ? <div className="mb-2 rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{error}</div> : null}
           {status ? <div className="mb-2 rounded-sm border border-terminal-pos/40 bg-terminal-pos/10 px-2 py-1 text-xs text-terminal-pos">{status}</div> : null}
