@@ -88,6 +88,24 @@ The broader LLM job, streaming, cancellation, and response-repair architecture
 is intentionally deferred to the v1.6 stable-baseline work; the bounded v1.4
 reliability fixes do not expand that release's scope.
 
+### v1.5.0 verification ledger
+
+Release-prep automation covers the v1.5 fork-consistency contract independently
+of the runtime matrix above:
+
+| Contract | Evidence |
+|---|---|
+| Canonical fork identity and package-derived frontend version | `frontend/src/__tests__/LoginPage.identity.test.tsx`, `frontend/src/__tests__/About.revamp.test.tsx` |
+| Shared US/NASDAQ defaults with explicit India routing preserved | `backend/tests/test_market_defaults.py`, `backend/tests/test_chart_unified_route.py`, `backend/tests/test_model_lab_routes.py`, `backend/tests/test_portfolio_lab_routes.py`, `frontend/src/__tests__/marketDefaults.test.ts` |
+| Instrument-aware native currency and honest FX fallback | `backend/tests/test_market_defaults.py`, `backend/tests/test_materialized_store_schema.py`, `backend/tests/test_portfolio_primary.py`, `frontend/src/__tests__/currency.test.ts` |
+| Market context survives chart and screener navigation | `frontend/src/__tests__/ChartWorkstationPage.toolbar.test.tsx`, `frontend/src/__tests__/chartWorkstationPage.links.test.ts`, `frontend/src/__tests__/ScreenerResultsTable.routes.test.tsx` |
+| Current documentation is separated from historical and partial references | `docs/README.md`, maintained wiki pages, and the release grep/checklist above |
+
+The host operator must still confirm the three runtime smoke rows after the
+release-prep PR merges and before tagging. The v1.6 browser-smoke, shared LLM-job,
+performance, and expanded high-risk coverage work remains deliberately outside
+this release.
+
 ## Cutting the release
 
 ```bash

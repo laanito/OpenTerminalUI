@@ -1,8 +1,8 @@
 # Current project state and backlog
 
-Last audited: **2026-09-07**, from `main` at `d211e72` (PR #123), plus the v1.5
-currency/locale changes on this branch.
-The latest tag and published GitHub release are **v1.4.0** at that commit.
+Last audited: **2026-09-07**, from `main` at `d66f96f` (PR #124), plus the v1.5.0
+release-preparation changes on this branch. The latest tag and published GitHub
+release remain **v1.4.0** at `2999a42` until host verification.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -183,6 +183,12 @@ the primary navigation does not advertise an unexplained empty product.
       current commands.
 - [x] Remove or clearly document stale compatibility code and historical design
       documents that otherwise look authoritative.
+- [x] Close the automated v1.5 release contract: align backend/frontend versions,
+      changelog, roadmap, public site, release ledger, and agent handoff for
+      v1.5.0.
+- [ ] Confirm the host smoke matrix and tag v1.5.0. After the release-prep branch
+      merges, verify the SQLite/keyless and PostgreSQL/pgvector keyless/keyed rows
+      in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
 
 Start with a repository-identity and documentation audit because it establishes
 the names, links, commands, and sources of truth used by every later cleanup.
@@ -234,11 +240,11 @@ inherited ambiguity.
   maintainer verification, tag, and GitHub release completed the milestone.
   v1.5 PR #122 completed repository identity and documentation reconciliation;
   PR #123 moved generic workflows to shared US/NASDAQ defaults while preserving
-  explicit India behavior. The current branch closes the remaining
-  instrument-currency and locale boundary. After it merges and passes host/user
-  verification, prepare the v1.5 release rather than pulling in the deferred
-  v1.6 LLM streaming/job redesign or implementing data stubs merely to make the
-  inventory look fuller.
+  explicit India behavior; PR #124 completed instrument-aware currency and locale
+  semantics. Automated v1.5.0 release preparation is now complete. The remaining
+  steps are host smoke verification, merge, tag, and GitHub release; do not pull
+  in the deferred v1.6 LLM streaming/job redesign or implement data stubs merely
+  to make the inventory look fuller.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

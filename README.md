@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.4.0-0f172a" alt="Version 1.4.0" />
+  <img src="https://img.shields.io/badge/version-1.5.0-0f172a" alt="Version 1.5.0" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -62,7 +62,9 @@ no longer present fabricated or cross-user state as production data.
 
 **v1.5 — Fork consistency** has aligned identity, generic market defaults,
 instrument-aware currency/locale semantics, commands, and documentation across
-that retained surface. Host verification and release preparation are next.
+that retained surface. **v1.6 — Stable baseline** is next: browser journeys,
+shared resilient LLM jobs, performance, high-risk coverage, and the final public
+contracts needed before v2 cross-market intelligence.
 
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 

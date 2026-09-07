@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-07
+
+The **"fork consistency"** release gives the retained product one identity and
+one set of defaults and contracts. Repository links, versions, current
+documentation, generic market context, and instrument currency/locale semantics
+now describe OpenTerminalUI rather than leaking accidental upstream or
+India-first assumptions.
+
 ### Changed
 - **Instrument-aware currency and locale semantics** — provider currency metadata
   now takes precedence over symbol/market inference in security, portfolio, and
