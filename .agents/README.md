@@ -4,9 +4,9 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-07**, from `main` at `d211e72` (PR #123), plus the v1.5
-currency/locale changes on this branch. The latest tag and published GitHub
-release are **v1.4.0** at `2999a42`.
+Last audited: **2026-09-07**, from `main` at `d66f96f` (PR #124), plus the v1.5.0
+release-preparation changes on this branch. The latest tag and published GitHub
+release remain **v1.4.0** at `2999a42` until host verification.
 
 ## Read order and sources of truth
 
@@ -77,8 +77,8 @@ release-level interpretation and safety boundaries.
 
 ## Current release and development state
 
-- Current release: **v1.4.0**, tagged and published from `2999a42` after the
-  maintainer's host/user verification. Keep `backend/config/settings.py` and
+- Release-prep version contract: **1.5.0** (`v1.4.0` remains the latest tag until
+  the host smoke check and release tag). Keep `backend/config/settings.py` and
   `frontend/package.json` in lockstep when releasing.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
@@ -113,8 +113,9 @@ release-level interpretation and safety boundaries.
   labs, and model tools while preserving selected NSE/BSE behavior. The current
   currency/locale pass makes provider instrument metadata authoritative, keeps
   native labels when FX is unavailable, confines Indian grouping to intentional
-  India contexts, and identifies mixed-currency aggregates. After merge and
-  host/user verification, the remaining v1.5 work is release preparation.
+  India contexts, and identifies mixed-currency aggregates. The implementation
+  and automated v1.5.0 release preparation are complete. Host smoke verification,
+  merge, tag, and GitHub release remain; v1.6 is the next implementation arc.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube
