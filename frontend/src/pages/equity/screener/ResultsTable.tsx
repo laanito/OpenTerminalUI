@@ -6,6 +6,7 @@ import { ExportButton } from "../../../components/common/ExportButton";
 import { DataGrid } from "../../../components/common/DataGrid";
 import { TerminalPanel } from "../../../components/terminal/TerminalPanel";
 import { useStockStore } from "../../../store/stockStore";
+import { formatMoneyIn, nativeCurrencyForInstrument } from "../../../lib/currency";
 import { InlineBar } from "./InlineBar";
 import { ScoreBadge } from "./ScoreBadge";
 import { SparklineCell } from "./SparklineCell";
@@ -227,7 +228,15 @@ export function ResultsTable() {
             align: "right",
             sortable: true,
             sortValue: (row) => toNum(row.market_cap),
-            renderCell: (row) => toNum(row.market_cap).toLocaleString("en-IN", { maximumFractionDigits: 0 }),
+            renderCell: (row) => formatMoneyIn(
+              toNum(row.market_cap),
+              nativeCurrencyForInstrument(
+                typeof row.currency === "string" ? row.currency : null,
+                getTicker(row),
+                String(row.market || row.exchange || row.country_code || ""),
+              ),
+              { compact: true, maximumFractionDigits: 0 },
+            ),
           },
           {
             key: "pe",

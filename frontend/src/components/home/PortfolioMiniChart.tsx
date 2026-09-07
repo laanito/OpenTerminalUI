@@ -36,7 +36,7 @@ function normalizePoints(points: readonly PortfolioMiniChartPoint[]): Normalized
 }
 
 function formatDefaultValue(value: number): string {
-  return value.toLocaleString("en-IN", {
+  return value.toLocaleString(undefined, {
     maximumFractionDigits: 0,
   });
 }

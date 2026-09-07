@@ -135,7 +135,7 @@ export function OptionChainTable({ rows, atmStrike }: Props) {
                       className="text-terminal-accent hover:underline"
                       onClick={() => setSelectedLeg({ side: "CE", strike: Number(row.strike_price), ltp: Number(row.ce?.ltp || 0) })}
                     >
-                      {formatDisplayMoney(Number(row.ce?.ltp || 0))}
+                      {formatDisplayMoney(Number(row.ce?.ltp || 0), "INR")}
                     </button>
                   </td>
                   <td className="px-2 py-1 text-center font-semibold tabular-nums">{Number(row.strike_price).toFixed(0)}{isAtm ? " ?" : ""}</td>
@@ -144,7 +144,7 @@ export function OptionChainTable({ rows, atmStrike }: Props) {
                       className="text-terminal-accent hover:underline"
                       onClick={() => setSelectedLeg({ side: "PE", strike: Number(row.strike_price), ltp: Number(row.pe?.ltp || 0) })}
                     >
-                      {formatDisplayMoney(Number(row.pe?.ltp || 0))}
+                      {formatDisplayMoney(Number(row.pe?.ltp || 0), "INR")}
                     </button>
                   </td>
                   <td className="px-2 py-1 text-left tabular-nums">{Number(row.pe?.iv || 0).toFixed(2)}</td>
@@ -175,7 +175,7 @@ export function OptionChainTable({ rows, atmStrike }: Props) {
 
       {selectedLeg && (
         <div className="border-t border-terminal-border bg-terminal-bg px-3 py-2 text-xs">
-          Add to Strategy: <span className="text-terminal-accent">{selectedLeg.side} {selectedLeg.strike}</span> @ {formatDisplayMoney(selectedLeg.ltp)}
+          Add to Strategy: <span className="text-terminal-accent">{selectedLeg.side} {selectedLeg.strike}</span> @ {formatDisplayMoney(selectedLeg.ltp, "INR")}
           <button
             className="ml-3 rounded border border-terminal-accent px-2 py-0.5 text-[11px] text-terminal-accent"
             onClick={() => persistLeg(selectedLeg)}

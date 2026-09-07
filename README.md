@@ -60,8 +60,9 @@ every primary destination and public API family is classified, dead and duplicat
 surfaces are removed, configuration gates are visible, and compatibility tools
 no longer present fabricated or cross-user state as production data.
 
-**v1.5 — Fork consistency** is now aligning identity, defaults, currency/locale
-semantics, commands, and documentation across that retained surface.
+**v1.5 — Fork consistency** has aligned identity, generic market defaults,
+instrument-aware currency/locale semantics, commands, and documentation across
+that retained surface. Host verification and release preparation are next.
 
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 

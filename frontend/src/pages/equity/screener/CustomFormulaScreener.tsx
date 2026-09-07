@@ -55,7 +55,7 @@ const EXAMPLE_FORMULAS = [
 function formatNumber(value: unknown, maximumFractionDigits = 2): string {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return "-";
-  return n.toLocaleString("en-IN", { maximumFractionDigits, minimumFractionDigits: maximumFractionDigits === 0 ? 0 : 2 });
+  return n.toLocaleString(undefined, { maximumFractionDigits, minimumFractionDigits: maximumFractionDigits === 0 ? 0 : 2 });
 }
 
 function validateFormulaInput(formula: string): string {

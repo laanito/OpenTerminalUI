@@ -166,9 +166,9 @@ export function StrategyPage() {
 
           <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs">
             <div>Name: <span className="text-terminal-accent">{payoffQuery.data?.strategy_name || "Custom"}</span></div>
-            <div>Net Premium: {formatDisplayMoney(Number(payoffQuery.data?.net_premium || 0))}</div>
-            <div>Max Profit: {typeof payoffQuery.data?.max_profit === "number" ? formatDisplayMoney(payoffQuery.data.max_profit) : String(payoffQuery.data?.max_profit ?? "-")}</div>
-            <div>Max Loss: {typeof payoffQuery.data?.max_loss === "number" ? formatDisplayMoney(payoffQuery.data.max_loss) : String(payoffQuery.data?.max_loss ?? "-")}</div>
+            <div>Net Premium: {formatDisplayMoney(Number(payoffQuery.data?.net_premium || 0), "INR")}</div>
+            <div>Max Profit: {typeof payoffQuery.data?.max_profit === "number" ? formatDisplayMoney(payoffQuery.data.max_profit, "INR") : String(payoffQuery.data?.max_profit ?? "-")}</div>
+            <div>Max Loss: {typeof payoffQuery.data?.max_loss === "number" ? formatDisplayMoney(payoffQuery.data.max_loss, "INR") : String(payoffQuery.data?.max_loss ?? "-")}</div>
             <div>Risk/Reward: {Number(payoffQuery.data?.risk_reward_ratio || 0).toFixed(2)}</div>
             <div>Breakeven: {(payoffQuery.data?.breakeven_points || []).join(", ") || "-"}</div>
           </div>

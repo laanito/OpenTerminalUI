@@ -200,7 +200,7 @@ export function FuturesPanel() {
                   return (
                     <tr key={`${row.instrument_token}`} className="border-b border-terminal-border/40">
                       <td className="px-2 py-1">{row.expiry_date || "-"}</td>
-                      <td className="px-2 py-1 text-right tabular-nums">{row.ltp !== null ? formatDisplayMoney(row.ltp) : "-"}</td>
+                      <td className="px-2 py-1 text-right tabular-nums">{row.ltp !== null ? formatDisplayMoney(row.ltp, "INR") : "-"}</td>
                       <td className={`px-2 py-1 text-right tabular-nums ${moveClass}`}>
                         {row.changePct !== null ? `${row.changePct >= 0 ? "+" : ""}${row.changePct.toFixed(2)}%` : "-"}
                       </td>

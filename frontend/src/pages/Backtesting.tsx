@@ -44,6 +44,7 @@ import { useSettingsStore } from "../store/settingsStore";
 import { DEFAULT_EQUITY_MARKET } from "../types/markets";
 import { useStockStore } from "../store/stockStore";
 import { terminalColors } from "../theme/terminal";
+import { formatMoneyIn, nativeCurrencyForSymbol } from "../lib/currency";
 import { consumePendingSavedView } from "../workspace/savedViewRestore";
 
 type JobState = "idle" | "queued" | "running" | "done" | "failed";
@@ -504,16 +505,10 @@ export function BacktestingPage() {
   }, [strategyMode]);
 
   const symbol = useMemo(() => asset.trim().toUpperCase(), [asset]);
-  const currencyCode = useMemo(() => (["NYSE", "NASDAQ", "AMEX"].includes(market) ? "USD" : "INR"), [market]);
-  const moneyLocale = useMemo(() => (currencyCode === "USD" ? "en-US" : "en-IN"), [currencyCode]);
+  const currencyCode = useMemo(() => nativeCurrencyForSymbol(symbol, market), [market, symbol]);
   const fmtMoney = useCallback(
-    (value: number): string =>
-      new Intl.NumberFormat(moneyLocale, {
-        style: "currency",
-        currency: currencyCode,
-        maximumFractionDigits: 2,
-      }).format(value),
-    [currencyCode, moneyLocale],
+    (value: number): string => formatMoneyIn(value, currencyCode),
+    [currencyCode],
   );
   const activePreset = useMemo(() => STRATEGY_CATALOG.find((s) => s.key === strategyMode) || STRATEGY_CATALOG[0], [strategyMode]);
   const modelAllocation = useMemo(() => (strategyMode === CUSTOM_STRATEGY_VALUE ? 1 : (activePreset?.default_allocation ?? 1)), [activePreset, strategyMode]);

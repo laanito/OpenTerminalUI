@@ -12,6 +12,7 @@ import type {
   ChartBatchSource,
 } from "./types";
 import { DEFAULT_EQUITY_MARKET } from "../types/markets";
+import { nativeCurrencyForSymbol } from "../lib/currency";
 
 export async function getHistory(
   symbol: string,
@@ -33,7 +34,7 @@ export async function getHistory(
       return {
         ticker: symbol.toUpperCase(),
         interval,
-        currency: market.toUpperCase() === "NSE" || market.toUpperCase() === "BSE" ? "INR" : "USD",
+        currency: nativeCurrencyForSymbol(symbol, market),
         data: (Array.isArray(unified.data) ? unified.data : []).map((row) => ({
           t: Math.floor(Number(row.t) / 1000),
           o: Number(row.o),

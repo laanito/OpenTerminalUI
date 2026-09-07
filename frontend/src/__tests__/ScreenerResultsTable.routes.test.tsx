@@ -40,6 +40,7 @@ describe("Screener results routing", () => {
             ticker: "AAPL",
             company: "Apple Inc.",
             sector: "Technology",
+            currency: "EUR",
             market_cap: 1000000000,
             pe: 24,
             roe_pct: 21,
@@ -71,5 +72,6 @@ describe("Screener results routing", () => {
     fireEvent.click(screen.getByRole("button", { name: "News" }));
     expect(setTickerMock).toHaveBeenCalledWith("AAPL");
     expect(navigateMock).toHaveBeenCalledWith("/equity/security/AAPL?tab=news");
+    expect(screen.getByText(/€/)).toBeInTheDocument();
   });
 });

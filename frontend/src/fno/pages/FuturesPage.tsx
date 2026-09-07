@@ -54,6 +54,7 @@ export function FuturesPage() {
     <div className="space-y-3">
       <SharedChartToolbar
         symbol={symbol}
+        currency="INR"
         ltp={tick?.ltp ?? null}
         changePct={tick?.change_pct ?? null}
         ohlc={ohlc}
@@ -91,7 +92,7 @@ export function FuturesPage() {
           <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs">
             <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Latest</div>
             <div className="mt-1 text-lg font-semibold text-terminal-accent">
-              {typeof tick?.ltp === "number" ? formatDisplayMoney(tick.ltp) : "-"}
+              {typeof tick?.ltp === "number" ? formatDisplayMoney(tick.ltp, "INR") : "-"}
             </div>
             <div className={tick && tick.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
               {tick ? `${tick.change_pct >= 0 ? "+" : ""}${tick.change_pct.toFixed(2)}%` : "-"}
@@ -116,7 +117,7 @@ export function FuturesPage() {
         <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-5">
           <div>
             <div className="text-[10px] uppercase text-terminal-muted">ATM</div>
-            <div>{typeof summaryQuery.data?.atm_strike === "number" ? formatDisplayMoney(summaryQuery.data.atm_strike) : "-"}</div>
+            <div>{typeof summaryQuery.data?.atm_strike === "number" ? formatDisplayMoney(summaryQuery.data.atm_strike, "INR") : "-"}</div>
           </div>
           <div>
             <div className="text-[10px] uppercase text-terminal-muted">PCR</div>
@@ -124,18 +125,18 @@ export function FuturesPage() {
           </div>
           <div>
             <div className="text-[10px] uppercase text-terminal-muted">Max Pain</div>
-            <div>{typeof summaryQuery.data?.max_pain === "number" ? formatDisplayMoney(summaryQuery.data.max_pain) : "-"}</div>
+            <div>{typeof summaryQuery.data?.max_pain === "number" ? formatDisplayMoney(summaryQuery.data.max_pain, "INR") : "-"}</div>
           </div>
           <div>
             <div className="text-[10px] uppercase text-terminal-muted">Support</div>
             <div>
-              {summaryQuery.data?.support_resistance?.support?.slice(0, 2).map((v) => formatDisplayMoney(v)).join(", ") || "-"}
+              {summaryQuery.data?.support_resistance?.support?.slice(0, 2).map((v) => formatDisplayMoney(v, "INR")).join(", ") || "-"}
             </div>
           </div>
           <div>
             <div className="text-[10px] uppercase text-terminal-muted">Resistance</div>
             <div>
-              {summaryQuery.data?.support_resistance?.resistance?.slice(0, 2).map((v) => formatDisplayMoney(v)).join(", ") || "-"}
+              {summaryQuery.data?.support_resistance?.resistance?.slice(0, 2).map((v) => formatDisplayMoney(v, "INR")).join(", ") || "-"}
             </div>
           </div>
         </div>

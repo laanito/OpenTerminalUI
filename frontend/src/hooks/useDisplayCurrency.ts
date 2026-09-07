@@ -7,9 +7,12 @@ import {
   type MoneyFormatOptions,
   type PairQuotes,
   currencyMeta,
+  financialUnitForCurrency,
   formatMoneyIn,
+  nativeCurrencyForInstrument,
   nativeCurrencyForSymbol,
   resolveDisplayAmount,
+  resolveFinancialDisplayAmount,
 } from "../lib/currency";
 import { useCrossRates } from "./useCrossRates";
 import { useMarketStatus } from "./useStocks";
@@ -50,11 +53,6 @@ export function useDisplayCurrency() {
 
   const marketNative: CurrencyCode = useMemo(() => nativeCurrencyForSymbol(null, selectedMarket), [selectedMarket]);
 
-  // Display-currency presentation defaults (used by callers that render a fixed
-  // unit header next to scaleFinancialAmount).
-  const financialUnit = displayCurrency === "INR" ? "Cr" : "M";
-  const financialDivisor = displayCurrency === "INR" ? 1e7 : 1e6;
-
   // Convert a value (in `fromCurrency`, defaulting to the active market's native
   // currency) into the display currency. Returns the resolved value plus the
   // currency it is actually expressed in (the native one when no rate exists).
@@ -83,32 +81,41 @@ export function useDisplayCurrency() {
   // Back-compat alias kept for existing callers.
   const formatDisplayMoney = (value: Amount, fromCurrency?: CurrencyCode): string => formatMoney(value, fromCurrency);
 
+  const resolvedFinancialCurrency = (fromCurrency?: CurrencyCode): CurrencyCode =>
+    resolveDisplayAmount(1, fromCurrency ?? marketNative, displayCurrency, pairs).currency;
+
+  const financialUnitFor = (fromCurrency?: CurrencyCode): "Cr" | "M" =>
+    financialUnitForCurrency(resolvedFinancialCurrency(fromCurrency));
+
+  const financialUnit = financialUnitFor();
+
   const scaleFinancialAmount = (value: Amount, fromCurrency?: CurrencyCode): number => {
-    const converted = convertAmount(value, fromCurrency);
-    if (!Number.isFinite(converted)) return Number.NaN;
-    return converted / financialDivisor;
+    if (value === null || value === undefined || !Number.isFinite(value)) return Number.NaN;
+    return resolveFinancialDisplayAmount(value, fromCurrency ?? marketNative, displayCurrency, pairs).value;
   };
 
   // Fixed-unit compact form (display currency symbol + the `financialUnit`
   // header callers render beside it). Distinct from formatCompactMoney, which
   // picks the magnitude tier (K/M/B) per value.
-  const displayMeta = currencyMeta(displayCurrency);
   const formatFinancialCompact = (value: number, fromCurrency?: CurrencyCode): string => {
-    const scaled = scaleFinancialAmount(value, fromCurrency);
-    if (!Number.isFinite(scaled)) return "-";
-    return `${displayMeta.symbol} ${scaled.toLocaleString(displayMeta.locale, { maximumFractionDigits: 2 })} ${financialUnit}`;
+    if (!Number.isFinite(value)) return "-";
+    const resolved = resolveFinancialDisplayAmount(value, fromCurrency ?? marketNative, displayCurrency, pairs);
+    const meta = currencyMeta(resolved.currency);
+    return `${meta.symbol} ${resolved.value.toLocaleString(meta.locale, { maximumFractionDigits: 2 })} ${resolved.unit}`;
   };
 
   return {
     displayCurrency,
     marketNative,
     nativeFor: nativeCurrencyForSymbol,
+    nativeForInstrument: nativeCurrencyForInstrument,
     convertAmount,
     formatMoney,
     formatSignedMoney,
     formatCompactMoney,
     formatDisplayMoney,
     financialUnit,
+    financialUnitFor,
     scaleFinancialAmount,
     formatFinancialCompact,
   };

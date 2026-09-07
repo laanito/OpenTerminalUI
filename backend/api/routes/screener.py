@@ -377,6 +377,10 @@ async def _hydrate_missing_screener_rows(
                     "rev_growth_pct": None,
                     "eps_growth_pct": None,
                     "beta": snap.get("beta"),
+                    "market": snap.get("market"),
+                    "exchange": snap.get("exchange"),
+                    "country_code": snap.get("country_code"),
+                    "currency": snap.get("currency"),
                     "piotroski_f_score": None,
                     "altman_z_score": None,
                 }

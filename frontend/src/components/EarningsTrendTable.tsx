@@ -1,4 +1,6 @@
 import { useEarningsAnalysis } from "../hooks/useStocks";
+import { useDisplayCurrency } from "../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../lib/currency";
 
 function pctCell(value: number | null | undefined) {
   if (value == null || !Number.isFinite(value)) return <span className="text-terminal-muted">-</span>;
@@ -12,8 +14,9 @@ function trendArrow(value: string): string {
   return "?";
 }
 
-export function EarningsTrendTable({ symbol }: { symbol: string }) {
+export function EarningsTrendTable({ symbol, currency }: { symbol: string; currency?: CurrencyCode }) {
   const { data, isLoading } = useEarningsAnalysis(symbol);
+  const { formatCompactMoney } = useDisplayCurrency();
 
   if (isLoading) return <div className="text-xs text-terminal-muted">Loading earnings analysis...</div>;
   if (!data) return <div className="text-xs text-terminal-muted">No earnings analysis available.</div>;
@@ -50,10 +53,10 @@ export function EarningsTrendTable({ symbol }: { symbol: string }) {
             {rows.map((row) => (
               <tr key={`${row.symbol}-${row.quarter}-${row.quarter_end_date}`} className="border-b border-terminal-border/50">
                 <td className="px-2 py-1">{row.quarter}</td>
-                <td className="px-2 py-1 text-right">{Number(row.revenue).toLocaleString("en-IN")}</td>
+                <td className="px-2 py-1 text-right">{formatCompactMoney(Number(row.revenue), currency)}</td>
                 <td className="px-2 py-1 text-right">{pctCell(row.revenue_qoq_pct)}</td>
                 <td className="px-2 py-1 text-right">{pctCell(row.revenue_yoy_pct)}</td>
-                <td className="px-2 py-1 text-right">{Number(row.net_profit).toLocaleString("en-IN")}</td>
+                <td className="px-2 py-1 text-right">{formatCompactMoney(Number(row.net_profit), currency)}</td>
                 <td className="px-2 py-1 text-right">{pctCell(row.net_profit_qoq_pct)}</td>
                 <td className="px-2 py-1 text-right">{pctCell(row.net_profit_yoy_pct)}</td>
                 <td className="px-2 py-1 text-right">{row.eps == null ? "-" : Number(row.eps).toFixed(2)}</td>

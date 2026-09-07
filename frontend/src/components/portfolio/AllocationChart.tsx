@@ -16,7 +16,7 @@ type Props = {
 const BASE_HUES = [210, 285, 28, 175, 252, 46, 325, 192, 112, 8];
 
 function fmtMoney(value: number): string {
-  return value.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
 function clamp(n: number, lo: number, hi: number): number {

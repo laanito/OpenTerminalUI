@@ -250,6 +250,7 @@ export type PortfolioItem = {
   pnl: number | null;
   exchange?: string | null;
   country_code?: string | null;
+  currency?: string | null;
   flag_emoji?: string | null;
   has_futures?: boolean;
   has_options?: boolean;

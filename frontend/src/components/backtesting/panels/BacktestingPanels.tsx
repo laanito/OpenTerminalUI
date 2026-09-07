@@ -547,7 +547,7 @@ export function MonteCarloSimulationPanel(props: {
 }) {
   const { medianPath, p10Path, p90Path, startValue, endMedian } = props;
   const hasData = medianPath.length > 1 && p10Path.length === medianPath.length && p90Path.length === medianPath.length;
-  const fmt = (n: number) => n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 
   const toPoints = (arr: number[], min: number, max: number) => {
     const span = max - min || 1;

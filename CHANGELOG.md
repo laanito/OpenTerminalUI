@@ -7,6 +7,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Changed
+- **Instrument-aware currency and locale semantics** — provider currency metadata
+  now takes precedence over symbol/market inference in security, portfolio, and
+  screener views; chart and backtest fallbacks share the same exchange-aware
+  currency map. Financial-statement units follow the currency a value actually
+  resolved to, including honest native-currency fallback when FX is unavailable.
+  INR is explicit on India derivatives, while generic charts, screeners, and
+  timestamps no longer apply Indian digit grouping globally. Mixed-currency
+  portfolio and journal aggregates are identified instead of receiving a false
+  single-currency label.
 - **Market-context defaults** — generic screener, backtesting, chart, factor,
   risk, report, Model Lab, Portfolio Lab, symbol-search, and paper-trading paths
   now inherit the selected market or fall back to the fork-wide US/NASDAQ

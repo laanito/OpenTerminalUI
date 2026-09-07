@@ -12,15 +12,18 @@ import {
 } from "recharts";
 
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../../lib/currency";
 import { useFinancials } from "../../hooks/useStocks";
 
 interface QuarterlyResultsProps {
   ticker: string;
+  currency?: CurrencyCode;
 }
 
-export const QuarterlyResults: React.FC<QuarterlyResultsProps> = ({ ticker }) => {
+export const QuarterlyResults: React.FC<QuarterlyResultsProps> = ({ ticker, currency }) => {
   const { data, isLoading, error } = useFinancials(ticker, "quarterly");
-  const { financialUnit, formatFinancialCompact, scaleFinancialAmount } = useDisplayCurrency();
+  const { financialUnitFor, formatFinancialCompact, scaleFinancialAmount } = useDisplayCurrency();
+  const financialUnit = financialUnitFor(currency);
 
   const chartData = useMemo(() => {
     if (!data?.income_statement?.length) return [];
@@ -36,12 +39,12 @@ export const QuarterlyResults: React.FC<QuarterlyResultsProps> = ({ ticker }) =>
       const opProfit = getVal("Operating Income");
       return {
         period,
-        salesScaled: scaleFinancialAmount(sales),
-        netProfitScaled: scaleFinancialAmount(getVal("Net Income")),
+        salesScaled: scaleFinancialAmount(sales, currency),
+        netProfitScaled: scaleFinancialAmount(getVal("Net Income"), currency),
         opm: sales ? (opProfit / sales) * 100 : 0,
       };
     });
-  }, [data, scaleFinancialAmount]);
+  }, [currency, data, scaleFinancialAmount]);
 
   if (isLoading) return <div className="h-64 animate-pulse rounded border border-terminal-border bg-terminal-panel"></div>;
   if (error) return <div className="text-terminal-neg">Failed to load quarterly data</div>;
@@ -67,7 +70,7 @@ export const QuarterlyResults: React.FC<QuarterlyResultsProps> = ({ ticker }) =>
                 }
                 const scaled = Number(value ?? 0);
                 const base = scaled * (financialUnit === "Cr" ? 1e7 : 1e6);
-                return [formatFinancialCompact(base), key];
+                return [formatFinancialCompact(base, currency), key];
               }}
               contentStyle={{ borderRadius: "4px", border: "1px solid #2a2f3a", background: "#0c0f14", color: "#d8dde7" }}
             />

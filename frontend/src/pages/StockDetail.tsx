@@ -45,6 +45,7 @@ import type { ChartKind, ChartTimeframe, IndicatorConfig } from "../shared/chart
 import { quickAddToFirstPortfolio } from "../shared/portfolioQuickAdd";
 import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
+import { nativeCurrencyForInstrument } from "../lib/currency";
 import { isCryptoSymbol, isIndexSymbol, isIndianSymbol } from "../utils/ticker";
 
 type TabId = "overview" | "market-depth" | "financials" | "analysis" | "peers" | "valuation" | "shareholding" | "events" | "earnings" | "crypto-fundamentals" | "notes";
@@ -304,6 +305,11 @@ export function StockDetailPage() {
     displayedChangePct === null ? "-" : `${displayedChangePct >= 0 ? "+" : ""}${displayedChangePct.toFixed(2)}%`;
   const timeframe = selectedChartTimeframe;
   const stockClassification = stockForOverview?.classification;
+  const instrumentCurrency = nativeCurrencyForInstrument(
+    stockClassification?.currency ?? chart?.currency,
+    ticker,
+    stockClassification?.exchange ?? selectedMarket,
+  );
   const ohlcForToolbar =
     crosshair ??
     (chartRealtimeMeta.currentBar
@@ -372,7 +378,7 @@ export function StockDetailPage() {
   };
   const formatPrice = (value: number | null | undefined) => {
     if (value == null || Number.isNaN(value)) return "-";
-    return formatDisplayMoney(value);
+    return formatDisplayMoney(value, instrumentCurrency);
   };
   const mergePrependDedupe = (
     existing: Array<{ t: number; o: number; h: number; l: number; c: number; v: number }>,
@@ -434,6 +440,7 @@ export function StockDetailPage() {
           </div>
           <SharedChartToolbar
             symbol={ticker}
+            currency={instrumentCurrency}
             ltp={displayedLatestPrice}
             changePct={displayedChangePct}
             ohlc={ohlcForToolbar}
@@ -526,7 +533,7 @@ export function StockDetailPage() {
         <div className="space-y-4">
           <TerminalPanel title="Latest Price" className="rounded-sm">
             <div className="mt-1 text-xl font-bold text-terminal-accent tabular-nums">
-              {displayedLatestPrice !== null ? formatDisplayMoney(displayedLatestPrice) : "-"}
+              {displayedLatestPrice !== null ? formatDisplayMoney(displayedLatestPrice, instrumentCurrency) : "-"}
             </div>
             <div className={`mt-1 text-sm font-semibold tabular-nums ${moveClass}`}>{changeText}</div>
             <div className={`mt-1 text-sm font-semibold tabular-nums ${moveClass}`}>{changePctText}</div>
@@ -649,6 +656,7 @@ export function StockDetailPage() {
           <div className="space-y-6">
             <OverviewPanel
               stock={stockForOverview}
+              currency={instrumentCurrency}
               momPct={returnsData?.["1m"] ?? null}
               qoqPct={returnsData?.["3m"] ?? null}
               yoyPct={returnsData?.["1y"] ?? null}
@@ -665,12 +673,12 @@ export function StockDetailPage() {
             />
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
               {isIndian && <PromoterHoldingsCard ticker={ticker} />}
-              <CapexTrackerCard ticker={ticker} />
+              <CapexTrackerCard ticker={ticker} currency={instrumentCurrency} />
             </div>
             <ScoreCard ticker={ticker} />
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {isIndian && <ShareholdingChart ticker={ticker} market={selectedMarket} />}
-              <FinancialTrend ticker={ticker} />
+              <FinancialTrend ticker={ticker} currency={instrumentCurrency} />
             </div>
           </div>
         )}
@@ -695,13 +703,13 @@ export function StockDetailPage() {
             ) : financials ? (
               <>
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <FinancialTrend ticker={ticker} />
-                  {financialPeriod === "quarterly" && <QuarterlyResults ticker={ticker} />}
+                  <FinancialTrend ticker={ticker} currency={instrumentCurrency} />
+                  {financialPeriod === "quarterly" && <QuarterlyResults ticker={ticker} currency={instrumentCurrency} />}
                 </div>
                 <div className="mt-6 space-y-6">
-                  <FinancialsTable title="Income Statement" rows={financials.income_statement} period={financialPeriod} />
-                  <FinancialsTable title="Balance Sheet" rows={financials.balance_sheet} period={financialPeriod} />
-                  <FinancialsTable title="Cash Flow" rows={financials.cashflow} period={financialPeriod} />
+                  <FinancialsTable title="Income Statement" rows={financials.income_statement} period={financialPeriod} currency={instrumentCurrency} />
+                  <FinancialsTable title="Balance Sheet" rows={financials.balance_sheet} period={financialPeriod} currency={instrumentCurrency} />
+                  <FinancialsTable title="Cash Flow" rows={financials.cashflow} period={financialPeriod} currency={instrumentCurrency} />
                 </div>
               </>
             ) : (
@@ -714,7 +722,7 @@ export function StockDetailPage() {
           <div className="space-y-6">
             <ScoreCard ticker={ticker} />
             <div className="grid grid-cols-1 gap-6">
-              <QuarterlyResults ticker={ticker} />
+              <QuarterlyResults ticker={ticker} currency={instrumentCurrency} />
               {isIndian && <ShareholdingChart ticker={ticker} market={selectedMarket} />}
             </div>
             <FundamentalMetricsPanel ticker={ticker} />
@@ -730,7 +738,7 @@ export function StockDetailPage() {
         {tab === "earnings" && (
           <div className="space-y-4">
             <QuarterlyFinancialsChart symbol={ticker} />
-            <EarningsTrendTable symbol={ticker} />
+            <EarningsTrendTable symbol={ticker} currency={instrumentCurrency} />
           </div>
         )}
         {tab === "notes" && (

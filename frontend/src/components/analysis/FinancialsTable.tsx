@@ -2,11 +2,13 @@ import { useMemo } from "react";
 
 import type { FinancialSection } from "../../types";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../../lib/currency";
 
 type Props = {
   title: string;
   rows: FinancialSection;
   period?: "annual" | "quarterly";
+  currency?: CurrencyCode;
 };
 
 function numericValue(v: unknown): number | null {
@@ -38,8 +40,9 @@ function fiscalLabel(raw: string, period: "annual" | "quarterly"): string {
   return `FY${fy} Q${toFiscalQuarter(date)}`;
 }
 
-export function FinancialsTable({ title, rows, period = "annual" }: Props) {
-  const { financialUnit, formatFinancialCompact } = useDisplayCurrency();
+export function FinancialsTable({ title, rows, period = "annual", currency }: Props) {
+  const { financialUnitFor, formatFinancialCompact } = useDisplayCurrency();
+  const financialUnit = financialUnitFor(currency);
 
   const columns = useMemo(() => {
     if (rows.length === 0) {
@@ -74,7 +77,7 @@ export function FinancialsTable({ title, rows, period = "annual" }: Props) {
                   const numeric = numericValue(val);
                   return (
                     <td key={col} className="px-2 py-1 text-right">
-                      {numeric !== null ? formatFinancialCompact(numeric) : "-"}
+                      {numeric !== null ? formatFinancialCompact(numeric, currency) : "-"}
                     </td>
                   );
                 })}

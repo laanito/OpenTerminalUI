@@ -32,6 +32,7 @@ SCHEMA_COLUMNS: dict[str, str] = {
     "market": "TEXT",
     "exchange": "TEXT",
     "country_code": "TEXT",
+    "currency": "TEXT",
     "piotroski_f_score": "REAL",
     "altman_z_score": "REAL",
     "updated_at": "TEXT NOT NULL",
@@ -69,9 +70,9 @@ def upsert_screener_rows(rows: list[dict[str, Any]]) -> None:
                 text(
                     f"""
                     INSERT INTO {TABLE_NAME}
-                    (ticker, company_name, sector, industry, current_price, market_cap, pe, pb_calc, ps_calc, ev_ebitda, roe_pct, roa_pct, op_margin_pct, net_margin_pct, rev_growth_pct, eps_growth_pct, beta, market, exchange, country_code, piotroski_f_score, altman_z_score, updated_at)
+                    (ticker, company_name, sector, industry, current_price, market_cap, pe, pb_calc, ps_calc, ev_ebitda, roe_pct, roa_pct, op_margin_pct, net_margin_pct, rev_growth_pct, eps_growth_pct, beta, market, exchange, country_code, currency, piotroski_f_score, altman_z_score, updated_at)
                     VALUES
-                    (:ticker, :company_name, :sector, :industry, :current_price, :market_cap, :pe, :pb_calc, :ps_calc, :ev_ebitda, :roe_pct, :roa_pct, :op_margin_pct, :net_margin_pct, :rev_growth_pct, :eps_growth_pct, :beta, :market, :exchange, :country_code, :piotroski_f_score, :altman_z_score, :updated_at)
+                    (:ticker, :company_name, :sector, :industry, :current_price, :market_cap, :pe, :pb_calc, :ps_calc, :ev_ebitda, :roe_pct, :roa_pct, :op_margin_pct, :net_margin_pct, :rev_growth_pct, :eps_growth_pct, :beta, :market, :exchange, :country_code, :currency, :piotroski_f_score, :altman_z_score, :updated_at)
                     ON CONFLICT(ticker) DO UPDATE SET
                         company_name=excluded.company_name,
                         sector=excluded.sector,
@@ -92,6 +93,7 @@ def upsert_screener_rows(rows: list[dict[str, Any]]) -> None:
                         market=excluded.market,
                         exchange=excluded.exchange,
                         country_code=excluded.country_code,
+                        currency=excluded.currency,
                         piotroski_f_score=excluded.piotroski_f_score,
                         altman_z_score=excluded.altman_z_score,
                         updated_at=excluded.updated_at

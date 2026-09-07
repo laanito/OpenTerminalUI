@@ -120,5 +120,5 @@ export function canApplyTailUpdate<T extends ComparableChartBar>(previous: T[], 
 
 export function formatCompact(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "-";
-  return value.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }

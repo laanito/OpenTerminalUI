@@ -29,6 +29,7 @@ import { fetchChainSummary } from "../fno/api/fnoApi";
 import { fetchCollectionBriefing } from "../api/client";
 import { useSettingsStore } from "../store/settingsStore";
 import type { PortfolioItem } from "../types";
+import { nativeCurrencyForInstrument, type CurrencyCode } from "../lib/currency";
 import { getWorkspacePresetConfig, readWorkspacePreset } from "../workspace/presets";
 
 type MarketRow = {
@@ -242,6 +243,7 @@ export function HomePage() {
   const [newsLog, setNewsLog] = useState<NewsLatestApiItem[]>([]);
   const [snapshot, setSnapshot] = useState<DashboardSnapshot>(EMPTY_SNAPSHOT);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [portfolioCurrency, setPortfolioCurrency] = useState<CurrencyCode | null>(null);
   const [activePreset, setActivePreset] = useState(readWorkspacePreset);
   const [performancePoints, setPerformancePoints] = useState<number[]>(FALLBACK_PERFORMANCE_POINTS);
   const [performanceBenchmarkPoints, setPerformanceBenchmarkPoints] = useState<number[]>([]);
@@ -265,15 +267,22 @@ export function HomePage() {
     if (portfolioRes.status === "fulfilled") {
       const data = portfolioRes.value;
       setPortfolioItems(data.items || []);
-      const derivedValue = data.summary.total_value ?? data.items.reduce((acc, row) => acc + Number(row.current_value ?? 0), 0);
-      next.equityValue = Number.isFinite(derivedValue) ? derivedValue : null;
-      next.equityCost = Number(data.summary.total_cost ?? 0);
-      next.equityPnl =
-        typeof data.summary.overall_pnl === "number"
-          ? data.summary.overall_pnl
-          : next.equityValue != null
-            ? next.equityValue - next.equityCost
-            : null;
+      const currencies = new Set((data.items || []).map((row) =>
+        nativeCurrencyForInstrument(row.currency, row.ticker, row.exchange || row.country_code || selectedMarket)
+      ));
+      const resolvedPortfolioCurrency = currencies.size === 1 ? currencies.values().next().value ?? null : null;
+      setPortfolioCurrency(resolvedPortfolioCurrency);
+      if (currencies.size <= 1) {
+        const derivedValue = data.summary.total_value ?? data.items.reduce((acc, row) => acc + Number(row.current_value ?? 0), 0);
+        next.equityValue = Number.isFinite(derivedValue) ? derivedValue : null;
+        next.equityCost = Number(data.summary.total_cost ?? 0);
+        next.equityPnl =
+          typeof data.summary.overall_pnl === "number"
+            ? data.summary.overall_pnl
+            : next.equityValue != null
+              ? next.equityValue - next.equityCost
+              : null;
+      }
       next.holdingsCount = data.items.length;
     }
 
@@ -343,7 +352,7 @@ export function HomePage() {
     setPerformanceLabels(nextPerformanceLabels);
     next.updatedAt = Date.now();
     setSnapshot(next);
-  }, []);
+  }, [selectedMarket]);
 
   useEffect(() => {
     void loadSnapshot();
@@ -525,7 +534,7 @@ export function HomePage() {
   );
 
   const updatedLabel = snapshot.updatedAt
-    ? new Date(snapshot.updatedAt).toLocaleTimeString("en-IN", { hour12: false })
+    ? new Date(snapshot.updatedAt).toLocaleTimeString(undefined, { hour12: false })
     : "--:--:--";
 
   const profileMissingFields = useMemo(() => {
@@ -715,7 +724,7 @@ export function HomePage() {
                 <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
                   <MetricCard
                     label="Net Liquidation"
-                    value={formatMoney(snapshot.equityValue)}
+                    value={portfolioItems.length > 0 && !portfolioCurrency ? "Mixed currencies" : formatMoney(snapshot.equityValue, portfolioCurrency ?? undefined)}
                     tone={getMetricTone(snapshot.equityPnl)}
                     delta={
                       snapshot.equityPnl == null
@@ -838,7 +847,9 @@ export function HomePage() {
                     points={performanceSeries}
                     benchmarkPoints={benchmarkSeries}
                     ariaLabel="Portfolio HQ chart"
-                    valueFormatter={(value) => formatMoney(value)}
+                    valueFormatter={(value) => portfolioCurrency
+                      ? formatMoney(value, portfolioCurrency)
+                      : value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   />
                 </div>
               </div>

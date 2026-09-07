@@ -13,15 +13,18 @@ import {
 } from "recharts";
 
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
+import type { CurrencyCode } from "../../lib/currency";
 import { useFinancials } from "../../hooks/useStocks";
 
 interface FinancialTrendProps {
   ticker: string;
+  currency?: CurrencyCode;
 }
 
-export const FinancialTrend: React.FC<FinancialTrendProps> = ({ ticker }) => {
+export const FinancialTrend: React.FC<FinancialTrendProps> = ({ ticker, currency }) => {
   const { data, isLoading, error } = useFinancials(ticker, "annual");
-  const { financialUnit, scaleFinancialAmount } = useDisplayCurrency();
+  const { financialUnitFor, scaleFinancialAmount } = useDisplayCurrency();
+  const financialUnit = financialUnitFor(currency);
   const [metricType, setMetricType] = useState<"revenue_profit" | "margins">("revenue_profit");
 
   const chartData = useMemo(() => {
@@ -38,12 +41,12 @@ export const FinancialTrend: React.FC<FinancialTrendProps> = ({ ticker }) => {
       const netIncome = getVal("Net Income");
       return {
         year,
-        revenueScaled: scaleFinancialAmount(revenue),
-        netIncomeScaled: scaleFinancialAmount(netIncome),
+        revenueScaled: scaleFinancialAmount(revenue, currency),
+        netIncomeScaled: scaleFinancialAmount(netIncome, currency),
         margin: revenue ? (netIncome / revenue) * 100 : 0,
       };
     });
-  }, [data, scaleFinancialAmount]);
+  }, [currency, data, scaleFinancialAmount]);
 
   if (isLoading) return <div className="h-64 animate-pulse rounded border border-terminal-border bg-terminal-panel"></div>;
   if (error) return <div className="text-terminal-neg">Failed to load financials</div>;
