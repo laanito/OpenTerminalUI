@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PortfolioManager } from "../components/portfolio/PortfolioManager";
 
 const fetchPortfoliosMock = vi.fn();
+const addPortfolioHoldingMock = vi.fn();
 const createPortfolioMock = vi.fn();
 const updatePortfolioMock = vi.fn();
 const fetchAiRiskInsightsMock = vi.fn();
@@ -12,7 +13,7 @@ const fetchPortfolioCorrelationMock = vi.fn();
 const fetchPortfolioRiskMetricsMock = vi.fn();
 
 vi.mock("../api/client", () => ({
-  addPortfolioHolding: vi.fn(),
+  addPortfolioHolding: (...args: unknown[]) => addPortfolioHoldingMock(...args),
   addPortfolioTransaction: vi.fn(),
   createPortfolio: (...args: unknown[]) => createPortfolioMock(...args),
   deletePortfolioById: vi.fn(),
@@ -56,6 +57,7 @@ describe("PortfolioManager thesis capture", () => {
   beforeEach(() => {
     for (const mock of [
       fetchPortfoliosMock,
+      addPortfolioHoldingMock,
       createPortfolioMock,
       updatePortfolioMock,
       fetchAiRiskInsightsMock,
@@ -75,6 +77,7 @@ describe("PortfolioManager thesis capture", () => {
       },
     ]);
     updatePortfolioMock.mockResolvedValue(undefined);
+    addPortfolioHoldingMock.mockResolvedValue(undefined);
     fetchPortfolioAnalyticsMock.mockResolvedValue({
       allocation_by_sector: [{ name: "Technology", value: 75 }],
     });
@@ -132,6 +135,27 @@ describe("PortfolioManager thesis capture", () => {
       expect(createPortfolioMock).toHaveBeenCalledWith(
         expect.objectContaining({ description: "Diversify across inflation regimes." }),
       ),
+    );
+  });
+
+  it("labels holding-entry fields and submits their values", async () => {
+    render(<PortfolioManager />);
+
+    await screen.findByRole("textbox", { name: "Portfolio thesis" });
+    const holdingForm = within(screen.getByRole("group", { name: "Add holding" }));
+    fireEvent.change(holdingForm.getByRole("textbox", { name: "Symbol" }), { target: { value: "msft" } });
+    fireEvent.change(holdingForm.getByRole("spinbutton", { name: "Quantity" }), { target: { value: "12" } });
+    fireEvent.change(holdingForm.getByRole("spinbutton", { name: "Unit price" }), { target: { value: "415.25" } });
+    fireEvent.change(holdingForm.getByLabelText("Purchase date"), { target: { value: "2026-09-05" } });
+    fireEvent.click(holdingForm.getByRole("button", { name: "Add" }));
+
+    await waitFor(() =>
+      expect(addPortfolioHoldingMock).toHaveBeenCalledWith("p1", {
+        symbol: "MSFT",
+        shares: 12,
+        cost_basis_per_share: 415.25,
+        purchase_date: "2026-09-05",
+      }),
     );
   });
 
