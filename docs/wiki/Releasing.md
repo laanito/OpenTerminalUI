@@ -101,10 +101,11 @@ of the runtime matrix above:
 | Market context survives chart and screener navigation | `frontend/src/__tests__/ChartWorkstationPage.toolbar.test.tsx`, `frontend/src/__tests__/chartWorkstationPage.links.test.ts`, `frontend/src/__tests__/ScreenerResultsTable.routes.test.tsx` |
 | Current documentation is separated from historical and partial references | `docs/README.md`, maintained wiki pages, and the release grep/checklist above |
 
-The host operator must still confirm the three runtime smoke rows after the
-release-prep PR merges and before tagging. The v1.6 browser-smoke, shared LLM-job,
-performance, and expanded high-risk coverage work remains deliberately outside
-this release.
+The maintainer completed host/user verification, release PR #125 merged, and a
+final Portfolio holding-entry clarity issue found during live use was fixed and
+verified in PR #126. Tag/GitHub release `v1.5.0` were published from `1d2f3ca` on
+2026-09-07. The v1.6 browser-smoke, shared LLM-job, performance, and expanded
+high-risk coverage work remains deliberately outside this release.
 
 ## Cutting the release
 
