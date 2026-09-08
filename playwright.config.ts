@@ -4,39 +4,50 @@ const { defineConfig, devices } = require("./frontend/node_modules/@playwright/t
 
 const E2E_FRONTEND_PORT = Number(process.env.E2E_FRONTEND_PORT || 4173);
 const E2E_BACKEND_PORT = Number(process.env.E2E_BACKEND_PORT || 8010);
+const USE_EXISTING_SERVER = process.env.PLAYWRIGHT_USE_EXISTING_SERVER === "1";
+const WITH_BACKEND = process.env.PLAYWRIGHT_WITH_BACKEND !== "0";
 
 let ROOT_DIR = process.cwd();
 if (!fs.existsSync(path.join(ROOT_DIR, "data")) && fs.existsSync(path.join(ROOT_DIR, "..", "data"))) {
   ROOT_DIR = path.resolve(ROOT_DIR, "..");
 }
-console.log("DEBUG: ROOT_DIR =", ROOT_DIR);
-
-const SQLITE_PATH = path.join(ROOT_DIR, "data", "playwright-e2e.db").replace(/\\/g, "/");
+const VENV_PYTHON = path.join(ROOT_DIR, "backend", ".venv", process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
+const PYTHON_COMMAND = process.env.PLAYWRIGHT_PYTHON || (fs.existsSync(VENV_PYTHON) ? VENV_PYTHON : process.platform === "win32" ? "python" : "python3");
+// A process-scoped database prevents a previous local run from changing the
+// next run's starting state. The files are ignored by the repository's *.db
+// rule and can be inspected after a failure.
+const SQLITE_PATH = path.join(ROOT_DIR, "data", `playwright-e2e-${process.pid}.db`).replace(/\\/g, "/");
 const SQLITE_URL = `sqlite:///${SQLITE_PATH}`;
 const DATABASE_URL = SQLITE_URL.replace("sqlite:///", "sqlite+aiosqlite:///");
-const AUTH_STATE_PATH = process.env.PLAYWRIGHT_AUTH_STATE_PATH || path.join(ROOT_DIR, "playwright", ".auth", "user.json");
-console.log("DEBUG: SQLITE_URL =", SQLITE_URL);
-console.log("DEBUG: DATABASE_URL =", DATABASE_URL);
+const AUTH_STATE_PATH = process.env.PLAYWRIGHT_AUTH_STATE_PATH || path.join(ROOT_DIR, "frontend", "test-results", ".auth", "user.json");
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || `http://127.0.0.1:${E2E_FRONTEND_PORT}`;
+const CHROMIUM_LAUNCH_OPTIONS = {
+  args: ["--disable-gpu"],
+  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH } : {}),
+};
 
 export default defineConfig({
   testDir: path.join(ROOT_DIR, "frontend", "tests", "e2e"),
   timeout: 60_000,
-  workers: 2,
+  workers: process.env.CI ? 1 : 2,
+  retries: process.env.CI ? 1 : 0,
+  forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
+  outputDir: path.join(ROOT_DIR, "frontend", "test-results"),
   globalSetup: path.join(ROOT_DIR, "frontend", "tests", "e2e", "global-setup.ts"),
   expect: {
     timeout: 15_000,
   },
   use: {
-    baseURL: `http://127.0.0.1:${E2E_FRONTEND_PORT}`,
+    baseURL: BASE_URL,
     trace: "on-first-retry",
     navigationTimeout: 45_000,
     actionTimeout: 15_000,
     storageState: AUTH_STATE_PATH,
   },
-  webServer: [
-    {
-      command: `python -m uvicorn backend.main:app --host 127.0.0.1 --port ${E2E_BACKEND_PORT}`,
+  webServer: USE_EXISTING_SERVER ? undefined : [
+    ...(WITH_BACKEND ? [{
+      command: `${PYTHON_COMMAND} -m uvicorn backend.main:app --host 127.0.0.1 --port ${E2E_BACKEND_PORT}`,
       cwd: ROOT_DIR,
       port: E2E_BACKEND_PORT,
       reuseExistingServer: true,
@@ -49,7 +60,7 @@ export default defineConfig({
         OPENTERMINALUI_SQLITE_URL: SQLITE_URL,
         DATABASE_URL,
       },
-    },
+    }] : []),
     {
       command: `npm --prefix frontend run build && npm --prefix frontend run preview -- --host 127.0.0.1 --port ${E2E_FRONTEND_PORT} --strictPort`,
       cwd: ROOT_DIR,
@@ -67,7 +78,18 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: CHROMIUM_LAUNCH_OPTIONS,
+      },
+    },
+    {
+      name: "mobile-chromium",
+      testMatch: ["**/mobile-interactions.spec.ts", "**/terminal-shell-go-bar.spec.ts"],
+      use: {
+        ...devices["Pixel 7"],
+        launchOptions: CHROMIUM_LAUNCH_OPTIONS,
+      },
     },
   ],
 });

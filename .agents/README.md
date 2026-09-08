@@ -231,10 +231,12 @@ surface-inventory guard, backend compile/tests, and the frontend build. Run
 focused tests during development, then the broadest relevant checks before
 handing off.
 
-Playwright is currently **manual-only**, not part of every PR gate. Several E2E
-specs predate the 1.0 integrity/de-India changes and need rewriting; do not assume
-an E2E failure is a new product regression without checking the fixture and
-expectation. Do not silently ignore genuine failures either.
+The deterministic Playwright `@smoke` subset is part of every PR gate. The rest
+of the browser suite remains manual and is classified in
+`frontend/tests/e2e/README.md`; several specs predate the 1.0 integrity/de-India
+changes and need rewriting. Do not assume a legacy E2E failure is a new product
+regression without checking the fixture and expectation, and do not silently
+ignore genuine failures either.
 
 Documentation-only changes do not require the full application suite, but check
 links, paths, commands, spelling, and the rendered diff.

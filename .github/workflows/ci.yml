@@ -1,8 +1,8 @@
 name: CI
 
-# Fast checks (backend pytest, frontend build + Vitest, mock-detection guard) gate
-# every PR and every push to main. Playwright e2e is manual-only (workflow_dispatch)
-# — see the gated steps below and docs/wiki/Roadmap.md → "e2e suite (parked)".
+# Backend, frontend, integrity, and a deterministic Chromium browser smoke set
+# gate every PR and every push to main. The broader legacy Playwright journeys
+# remain available for manual rehabilitation.
 on:
   push:
     branches: [main]
@@ -83,21 +83,14 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
-      # Playwright e2e is manual-only: `gh workflow run CI` or the Actions "Run
-      # workflow" button. It is NOT on the per-commit/PR gate because the specs
-      # currently assert data the v1.0 integrity work deliberately removed
-      # (de-India defaults, synthetic order-book/quotes) and must be rewritten
-      # before they can gate again. See docs/wiki/Roadmap.md → "e2e suite (parked)".
       - name: Install Playwright browsers
-        if: github.event_name == 'workflow_dispatch'
         run: |
           cd frontend
           npx playwright install --with-deps chromium
 
-      - name: Playwright smoke tests
-        if: github.event_name == 'workflow_dispatch'
+      - name: Playwright critical smoke tests
         run: |
-          npm run test:e2e --prefix frontend
+          npm run test:e2e:smoke --prefix frontend
 
       - name: Coverage PR comment
         if: github.event_name == 'pull_request'

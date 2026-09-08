@@ -206,7 +206,10 @@ of defaults, commands, contracts, and sources of truth.
 
 - [ ] Rehabilitate the valuable Playwright journeys using deterministic fixtures
       and seeded authentication, then restore an appropriate browser smoke set to
-      the regular gate.
+      the regular gate. The foundation pass consolidated the root configuration,
+      isolated database state, made auth deterministic, classified the 29 legacy
+      spec files, and restored login plus authenticated shell/GO-bar coverage to
+      regular Chromium CI; promote further journeys incrementally.
 - [ ] Replace per-card LLM request handling with a shared, cancellable job
       lifecycle: server-owned deadlines, provider capability detection, bounded
       retry/repair, typed failure states, and SSE or NDJSON progress/streaming
@@ -266,9 +269,10 @@ ordered v1.6 milestone above.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.
-- [ ] **Rewrite/rehabilitate Playwright E2E.** The suite is manual-only because
-      some specs assert pre-1.0 synthetic data and India-first defaults. Update
-      fixtures and assertions before making it a required PR gate again.
+- [ ] **Rewrite/rehabilitate Playwright E2E.** A small deterministic Chromium
+      smoke set now gates PRs. The remaining specs are classified in
+      `frontend/tests/e2e/README.md`; update their fixtures and assertions before
+      promoting them from the manual suite.
 - [ ] **Expand test depth.** Continue chart, portfolio, scanner, provider-failure,
       and PostgreSQL/SQLite coverage, especially around recent v1.2 paths.
 - [ ] **Performance pass.** Reduce initial frontend load/chunk size and inspect
