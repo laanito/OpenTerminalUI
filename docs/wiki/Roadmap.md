@@ -449,9 +449,14 @@ and one accurate set of defaults, commands, contracts, and sources of truth.
 
 ### v1.6 — Stable baseline
 
-Rehabilitate valuable Playwright journeys with deterministic fixtures and seeded
-authentication; restore an appropriate browser smoke set to the regular gate;
-replace per-card LLM calls with a shared cancellable lifecycle that supports
+The first browser-foundation pass consolidated the divergent Playwright
+configurations, made authentication and each run's SQLite state deterministic,
+classified all retained journeys, and restored a small Chromium login and
+authenticated shell/GO-bar set to the regular gate. Continue promoting valuable
+journeys only after their fixtures are independent of live providers and retired
+pre-v1 behavior.
+
+Next, replace per-card LLM calls with a shared cancellable lifecycle that supports
 server-owned deadlines, typed failures, validated response repair, and optional
 SSE/NDJSON progress or streaming with a stable fallback; reduce initial
 bundle/load and expensive news/AI/market-data costs; close the high-risk test
@@ -516,11 +521,11 @@ turn that into an enforced, ongoing guarantee.
   already carries `source`), **never** a hand-written per-panel label that can lie.
   Build only after both hold. (Decided 2026-06-30.)
 
-### e2e suite (parked — needs rewrite, 2026-07-02)
+### e2e suite (rehabilitation active — 2026-09-08)
 
-The Playwright e2e specs (`frontend/tests/e2e/`) are **manual-only** in CI
-(`workflow_dispatch`), not on the per-commit/PR gate. They were written against
-pre-1.0 behaviour and now assert exactly what the 1.0 integrity work removed:
+A deterministic `@smoke` subset of the Playwright specs
+(`frontend/tests/e2e/`) now runs in Chromium on every PR and push to `main`.
+The broader suite remains manual while its pre-1.0 assumptions are rehabilitated:
 
 - `hotkey-trading` / `multi-timeframe` expect India defaults (`RELIANCE`, `TCS`)
   — changed by the de-India work; the shell now defaults to US symbols.
@@ -529,10 +534,11 @@ pre-1.0 behaviour and now assert exactly what the 1.0 integrity work removed:
 - `correlation-dashboard`, `statlab-v2-tabs`, `terminal-shell-go-bar` depend on
   live data unavailable in headless CI (NSE 403s, Binance 451, no API keys).
 
-The fast gate (backend pytest + coverage, frontend build + Vitest, mock-detection
-guard) still runs on every PR and push to main. **Follow-up:** rewrite the specs
-against post-de-India reality with deterministic fixtures / seeded auth so they
-don't require live upstreams, then re-enable on the PR gate.
+The canonical configuration is the root `playwright.config.ts`; suite classes and
+promotion rules are documented in `frontend/tests/e2e/README.md`. Authentication
+uses a fixed test identity and each run starts on a process-scoped SQLite database.
+Promote individual journeys only after post-de-India fixtures remove live upstream
+requirements; do not make the whole legacy suite a gate by assertion-count alone.
 
 ### Degraded stubs → real data
 

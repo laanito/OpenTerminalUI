@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("login page renders", async ({ page }) => {
+test("@smoke login page renders", async ({ page }) => {
   await page.goto("/login", { waitUntil: "domcontentloaded" });
 
   const legacyHeading = page.getByRole("heading", { name: /AUTHENTICATE/i });
