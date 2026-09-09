@@ -980,4 +980,9 @@ export type InsightData = {
   note_count?: number;
   /** Interrogation only: related notes on other tickers/themes folded in semantically. */
   related_count?: number;
+  failure?: {
+    code: "disabled" | "provider_unavailable" | "timeout" | "invalid_response" | "provider_error" | string;
+    message: string;
+    retryable: boolean;
+  };
 };

@@ -657,7 +657,7 @@ export function PortfolioManager() {
                 description="Narrative interpretation of the available portfolio risk and exposure evidence"
                 disabled={!riskMetrics}
                 disabledMessage="Portfolio risk metrics are unavailable; there is nothing factual to assess yet."
-                fetcher={() =>
+                fetcher={(_, options) =>
                   fetchAiRiskInsights(
                     {
                       risk_metrics: riskMetrics || {},
@@ -665,6 +665,7 @@ export function PortfolioManager() {
                       correlation: correlation?.matrix || [],
                     },
                     "portfolio",
+                    options,
                   )
                 }
               />

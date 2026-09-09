@@ -1600,7 +1600,7 @@ export function BacktestingPage() {
         <AiInsightCard
           title="AI Backtest Analysis"
           description={`${activePreset?.label || strategyMode} · Gemma assessment of return, risk, and overfitting`}
-          fetcher={() =>
+          fetcher={(_, options) =>
             explainBacktest(activePreset?.label || String(strategyMode), {
               total_return: result?.result?.total_return,
               sharpe: result?.result?.sharpe,
@@ -1613,7 +1613,7 @@ export function BacktestingPage() {
               net_pnl: pnlAmount,
               initial_capital: initialCapital,
               final_equity: finalEquity,
-            })
+            }, options)
           }
         />
       )}

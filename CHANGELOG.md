@@ -6,7 +6,17 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Cancellable AI insight lifecycle** — market, risk, portfolio, screener, and
+  backtest insight cards now use a shared NDJSON progress contract with explicit
+  cancellation and stable non-streaming fallback. Browser cancellation stops the
+  server-side provider task rather than leaving inference running.
+
 ### Changed
+- **Validated AI results and typed degradation** — shared insight output is
+  published only when it satisfies the section schema, with one bounded repair;
+  disabled, unavailable, timed-out, invalid, and provider-error states are typed
+  and rendered with actionable card copy. The server owns the generation deadline.
 - **Deterministic browser-test foundation** — consolidated Playwright on one
   root configuration, seeded a stable test identity, isolated each run's SQLite
   state, classified the retained legacy journeys, and restored a focused

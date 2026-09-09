@@ -8,6 +8,7 @@ sectioned narrative via a local LLM:
   grounded in the user's own notes (v1.2 "research interrogates")
 * ``POST /api/ai/backtest-explain``      - plain-English assessment of a backtest
 * ``POST /api/ai/risk-insights``         - narrative interpretation of portfolio risk
+* ``POST /api/ai/insights/stream``       - cancellable lifecycle for POST insights
 
 All share one structured-output schema (``llm_insights.INSIGHT_SCHEMA``) and
 degrade gracefully when LLM is unavailable.
@@ -20,6 +21,8 @@ import math
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -32,6 +35,7 @@ from backend.models.notes import NoteORM
 from backend.models.user import User
 from backend.services.brain import brain_service
 from backend.services.crypto_fundamentals import get_fundamentals as get_crypto_fundamentals
+from backend.services.insight_lifecycle import stream_insight_lifecycle
 from backend.services.llm_insights import run_insight
 from backend.services.llm_sentiment import score_articles
 from backend.services.news_terms import INDEX_NAME_BY_SYMBOL, is_index_symbol
@@ -40,6 +44,12 @@ from backend.shared.market_classifier import is_crypto_symbol
 router = APIRouter()
 
 AssetType = Literal["equity", "crypto", "index"]
+InsightKind = Literal["backtest", "collection", "risk"]
+
+
+class InsightStreamRequest(BaseModel):
+    kind: InsightKind
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 def _fmt(value: Any, suffix: str = "") -> str:
@@ -557,4 +567,26 @@ async def risk_insights(payload: dict[str, Any]) -> dict[str, Any]:
         user_content,
         max_tokens=900,
         unavailable_summary="AI risk analysis is unavailable - start your local LLM (e.g. Ollama).",
+    )
+
+
+@router.post("/ai/insights/stream")
+async def insight_stream(payload: InsightStreamRequest) -> StreamingResponse:
+    """Stream a cancellable lifecycle for the shared POST-based insight families."""
+
+    async def run() -> dict[str, Any]:
+        if payload.kind == "backtest":
+            return await backtest_explain(payload.payload)
+        if payload.kind == "collection":
+            return await collection_briefing(payload.payload)
+        return await risk_insights(payload.payload)
+
+    async def events():
+        async for event in stream_insight_lifecycle(run):
+            yield json.dumps(event, separators=(",", ":")) + "\n"
+
+    return StreamingResponse(
+        events(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

@@ -145,7 +145,7 @@ function ScreenerWorkspace() {
             <AiInsightCard
               title="AI Screener Analysis"
               description={`Gemma-powered assessment of the top ${Math.min(result.results.length, 10)} results in this screen`}
-              fetcher={() => fetchCollectionBriefing(result.results.slice(0, 10).map((i: any) => String(i.ticker || i.symbol || "")), "screen results")}
+              fetcher={(_, options) => fetchCollectionBriefing(result.results.slice(0, 10).map((i: any) => String(i.ticker || i.symbol || "")), "screen results", undefined, options)}
             />
           </div>
         )}

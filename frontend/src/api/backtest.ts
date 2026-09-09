@@ -7,6 +7,7 @@ import type {
   BacktestJobResult,
   InsightData,
 } from "./types";
+import { streamInsight, type InsightRequestOptions } from "./insightLifecycle";
 
 // LLM-backed calls: generation routinely exceeds the api client's default 30s
 // timeout, so give them a roomier budget (mirrors sentiment.ts / brain.ts).
@@ -15,17 +16,41 @@ const AI_TIMEOUT = { timeout: 180_000 } as const;
 export async function explainBacktest(
   strategy: string,
   metrics?: Record<string, any>,
+  options: InsightRequestOptions = {},
 ): Promise<InsightData> {
-  const { data } = await api.post<InsightData>("/ai/backtest-explain", { strategy, metrics: metrics || {} }, AI_TIMEOUT);
-  return data;
+  const payload = { strategy, metrics: metrics || {} };
+  return streamInsight(
+    "backtest",
+    payload,
+    async () => {
+      const { data } = await api.post<InsightData>("/ai/backtest-explain", payload, {
+        ...AI_TIMEOUT,
+        signal: options.signal,
+      });
+      return data;
+    },
+    options,
+  );
 }
 
 export async function fetchRiskInsights(
   scope: string,
   metrics?: Record<string, any>,
+  options: InsightRequestOptions = {},
 ): Promise<InsightData> {
-  const { data } = await api.post<InsightData>("/ai/risk-insights", { scope, metrics: metrics || {} }, AI_TIMEOUT);
-  return data;
+  const payload = { scope, metrics: metrics || {} };
+  return streamInsight(
+    "risk",
+    payload,
+    async () => {
+      const { data } = await api.post<InsightData>("/ai/risk-insights", payload, {
+        ...AI_TIMEOUT,
+        signal: options.signal,
+      });
+      return data;
+    },
+    options,
+  );
 }
 
 export async function runBacktest(payload: BacktestPayload): Promise<BacktestResponse> {

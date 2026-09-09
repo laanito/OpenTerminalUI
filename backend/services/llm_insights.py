@@ -23,6 +23,11 @@ from backend.services.llm_client import (
 _VALID_TONES = {"positive", "negative", "neutral"}
 logger = logging.getLogger(__name__)
 
+
+class InvalidInsightResponse(LLMError):
+    """The provider answered, but the insight did not satisfy our contract."""
+
+
 # Unified structured-output schema shared by every insight endpoint so a single
 # frontend card can render all of them.
 INSIGHT_SCHEMA: dict[str, Any] = {
@@ -57,26 +62,49 @@ def current_model() -> str:
     return get_settings().llm_model
 
 
-def _sanitize_sections(raw: Any) -> list[dict[str, Any]]:
+def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
+    if not isinstance(raw, dict):
+        raise InvalidInsightResponse("Insight response is not an object")
+    raw_summary = raw.get("summary")
+    if not isinstance(raw_summary, str):
+        raise InvalidInsightResponse("Insight summary is not a string")
+    summary = raw_summary.strip()
+    raw_sections = raw.get("sections")
+    if (
+        not summary
+        or len(summary) > 600
+        or not isinstance(raw_sections, list)
+        or not 2 <= len(raw_sections) <= 4
+    ):
+        raise InvalidInsightResponse("Insight response does not satisfy the required schema")
     sections: list[dict[str, Any]] = []
-    if not isinstance(raw, list):
-        return sections
-    for node in raw:
+    for node in raw_sections:
         if not isinstance(node, dict):
-            continue
-        title = str(node.get("title") or "").strip()[:64]
-        tone = str(node.get("tone") or "neutral").strip().lower()
+            raise InvalidInsightResponse("Insight section is not an object")
+        title = node.get("title")
+        tone = node.get("tone")
+        points = node.get("points")
+        if not isinstance(title, str) or not title.strip() or len(title.strip()) > 48:
+            raise InvalidInsightResponse("Insight section title is invalid")
         if tone not in _VALID_TONES:
-            tone = "neutral"
-        points_raw = node.get("points")
-        points = [
-            str(p).strip()[:240]
-            for p in (points_raw if isinstance(points_raw, list) else [])
-            if str(p).strip()
-        ]
-        if title and points:
-            sections.append({"title": title, "tone": tone, "points": points[:5]})
-    return sections[:4]
+            raise InvalidInsightResponse("Insight section tone is invalid")
+        if not isinstance(points, list) or not 1 <= len(points) <= 5:
+            raise InvalidInsightResponse("Insight section points are invalid")
+        clean_points: list[str] = []
+        for point in points:
+            if not isinstance(point, str) or not point.strip() or len(point.strip()) > 220:
+                raise InvalidInsightResponse("Insight section point is invalid")
+            clean_points.append(point.strip())
+        sections.append({"title": title.strip(), "tone": tone, "points": clean_points})
+    return summary, sections
+
+
+def _parse_insight(content: str) -> tuple[str, list[dict[str, Any]]]:
+    try:
+        parsed = parse_json_response(content)
+    except LLMError as exc:
+        raise InvalidInsightResponse(str(exc)) from exc
+    return _validate_insight(parsed)
 
 
 async def run_insight(
@@ -102,9 +130,26 @@ async def run_insight(
         "generated_at": generated_at,
     }
 
+    def unavailable(code: str, *, retryable: bool) -> dict[str, Any]:
+        return {
+            **base,
+            "failure": {
+                "code": code,
+                "message": unavailable_summary,
+                "retryable": retryable,
+            },
+        }
+
     client = get_llm_client()
-    if not settings.llm_enabled or not await client.health():
-        return base
+    if not settings.llm_enabled:
+        return unavailable("disabled", retryable=False)
+    try:
+        healthy = await client.health()
+    except Exception as exc:
+        logger.warning("LLM health check failed: %s", exc)
+        healthy = False
+    if not healthy:
+        return unavailable("provider_unavailable", retryable=True)
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -125,8 +170,8 @@ async def run_insight(
                 frequency_penalty=0.3,
             )
             try:
-                parsed = parse_json_response(content)
-            except LLMError as exc:
+                summary, sections = _parse_insight(content)
+            except InvalidInsightResponse as exc:
                 logger.warning("LLM insight returned malformed structured output; retrying once: %s", exc)
                 content = await client.chat(
                     messages,
@@ -135,15 +180,17 @@ async def run_insight(
                     json_schema=INSIGHT_SCHEMA,
                     frequency_penalty=0.0,
                 )
-                parsed = parse_json_response(content)
-    except (LLMError, asyncio.TimeoutError) as exc:
+                summary, sections = _parse_insight(content)
+    except asyncio.TimeoutError as exc:
         logger.warning("LLM insight unavailable after bounded generation: %s", exc)
-        return base
+        return unavailable("timeout", retryable=True)
+    except InvalidInsightResponse as exc:
+        logger.warning("LLM insight invalid after bounded repair: %s", exc)
+        return unavailable("invalid_response", retryable=True)
+    except LLMError as exc:
+        logger.warning("LLM insight unavailable after bounded generation: %s", exc)
+        return unavailable("provider_error", retryable=True)
 
-    summary = str(parsed.get("summary") or "").strip()
-    sections = _sanitize_sections(parsed.get("sections"))
-    if not summary and not sections:
-        return base
     return {
         "engine": "llm",
         "model": model,

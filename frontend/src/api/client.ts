@@ -20,6 +20,7 @@ export * from "./analytics";
 export * from "./news";
 export * from "./sentiment";
 export * from "./backtest";
+export * from "./insightLifecycle";
 export * from "./python";
 export * from "./crypto";
 export * from "./fno";

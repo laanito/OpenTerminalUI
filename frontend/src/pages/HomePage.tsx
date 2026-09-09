@@ -685,7 +685,7 @@ export function HomePage() {
                 description="Provider-agnostic interpretation of the displayed cross-asset snapshot"
                 disabled={!marketRows.some((row) => row.ltp > 0)}
                 disabledMessage="Live market observations are unavailable; an outlook cannot be grounded yet."
-                fetcher={() =>
+                fetcher={(_, options) =>
                   fetchCollectionBriefing(
                     MARKET_PULSE_SYMBOLS,
                     "global markets",
@@ -698,6 +698,7 @@ export function HomePage() {
                         change: row.chg,
                         change_pct: row.chgPct,
                       })),
+                    options,
                   )
                 }
               />
