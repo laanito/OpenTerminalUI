@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { TerminalBadge } from "../../components/terminal/TerminalBadge";
 import { TerminalButton } from "../../components/terminal/TerminalButton";
@@ -25,7 +25,11 @@ import { ScreenerProvider, useScreenerContext } from "./screener/ScreenerContext
 import { StatusBar } from "./screener/StatusBar";
 import { ViewToggle } from "./screener/ViewToggle";
 import { MultiMarketScanPanel } from "./screener/MultiMarketScanPanel";
-import { ScreenVizLoader } from "./screener/viz/ScreenVizLoader";
+import { lazyWithRetry } from "../../utils/lazyWithRetry";
+
+const ScreenVizLoader = lazyWithRetry(() =>
+  import("./screener/viz/ScreenVizLoader").then((module) => ({ default: module.ScreenVizLoader })),
+);
 
 function ScreenerWorkspace() {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
@@ -151,7 +155,11 @@ function ScreenerWorkspace() {
         )}
 
         {view === "table" || view === "split" ? <ResultsTable /> : null}
-        {view !== "table" ? <ScreenVizLoader screenId={selectedPresetId} vizData={(result?.viz_data || {}) as Record<string, unknown>} /> : null}
+        {view !== "table" ? (
+          <Suspense fallback={<div className="p-3 text-xs text-terminal-muted">Loading screen visualizations...</div>}>
+            <ScreenVizLoader screenId={selectedPresetId} vizData={(result?.viz_data || {}) as Record<string, unknown>} />
+          </Suspense>
+        ) : null}
         {selectedRow && mobileDetailOpen ? (
           <div className="xl:hidden">
             <CompanyDetailDrawer />

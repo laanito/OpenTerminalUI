@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchNewsSummaries, fetchStockEmotion, scoreNewsArticles, searchLatestNews, type ArticleSentiment, type NewsLatestApiItem } from "../api/client";
 import { EmotionIndicator } from "../components/terminal/EmotionIndicator";
 import { NewsArticleRow } from "../components/market/NewsArticleRow";
+import { SentimentTrend } from "../components/market/SentimentTrend";
 import { newsSentimentEngineLabel, newsSentimentScoreKey } from "../components/market/newsAiSentiment";
 import { NotesPanel } from "../components/notes/NotesPanel";
 import { useStock } from "../hooks/useStocks";
@@ -659,14 +659,7 @@ export function NewsPage() {
         )}
 
         <div className="mt-3 h-28 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={summary.daily_sentiment}>
-              <XAxis dataKey="date" hide />
-              <YAxis domain={[-1, 1]} hide />
-              <Tooltip contentStyle={{ borderRadius: "4px", border: `1px solid ${terminalColors.border}`, background: terminalColors.panel, color: terminalColors.text }} labelStyle={{ color: terminalColors.muted }} />
-              <Line type="monotone" dataKey="avg_score" stroke={terminalColors.accent} strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <SentimentTrend data={summary.daily_sentiment ?? []} />
         </div>
         {marketSentimentQuery.data?.sectors?.length ? (
           <div className="mt-3">
