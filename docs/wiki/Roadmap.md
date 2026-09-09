@@ -456,9 +456,12 @@ authenticated shell/GO-bar set to the regular gate. Continue promoting valuable
 journeys only after their fixtures are independent of live providers and retired
 pre-v1 behavior.
 
-Next, replace per-card LLM calls with a shared cancellable lifecycle that supports
-server-owned deadlines, typed failures, validated response repair, and optional
-SSE/NDJSON progress or streaming with a stable fallback; reduce initial
+The first LLM lifecycle pass gives POST-based market, risk, portfolio, screener,
+and backtest cards shared cancellable NDJSON progress, server-owned deadlines,
+typed failures, strict response validation with one bounded repair, and stable
+non-streaming fallback. Cached briefing/interrogation GETs are now abortable but
+retain their existing contract; provider capability-driven token streaming is
+the remaining lifecycle follow-up. Then reduce initial
 bundle/load and expensive news/AI/market-data costs; close the high-risk test
 gaps found by the surface audit; complete public API and feature-state
 documentation; and verify clean installation and release paths.

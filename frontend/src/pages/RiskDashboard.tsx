@@ -350,12 +350,12 @@ export function RiskDashboardPage() {
           <AiInsightCard
             title="AI Risk Insights"
             description={`${mode === "ticker" ? storeTicker : "Portfolio"} · Gemma reading of volatility, concentration, and correlation`}
-            fetcher={() =>
+            fetcher={(_, options) =>
               fetchRiskInsights(mode === "ticker" ? `${storeTicker} and peers` : "the portfolio", {
                 ...(summary && typeof summary === "object" ? summary : {}),
                 correlation_assets: correlation?.assets,
                 factor_exposures: factorExposures?.exposures,
-              })
+              }, options)
             }
           />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">

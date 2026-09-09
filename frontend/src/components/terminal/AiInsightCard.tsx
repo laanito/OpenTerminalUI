@@ -1,24 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { terminalColors } from "../../theme/terminal";
+import type { InsightData, InsightSection } from "../../api/types";
+import type { InsightPhase, InsightRequestOptions } from "../../api/insightLifecycle";
 
-export type InsightSection = {
-  title: string;
-  tone: "positive" | "negative" | "neutral";
-  points: string[];
-};
-
-export type InsightData = {
-  engine: string;
-  model: string;
-  summary: string;
-  sections: InsightSection[];
-  generated_at?: string;
-  /** Interrogation grounding: how many of the user's own notes fed the analysis. */
-  note_count?: number;
-  /** Interrogation grounding: related notes on other tickers/themes folded in. */
-  related_count?: number;
-};
+export type { InsightData, InsightSection } from "../../api/types";
 
 type Props = {
   title: string;
@@ -26,7 +12,7 @@ type Props = {
   disabled?: boolean;
   disabledMessage?: string;
   /** Resolves the insight. `refresh` is true after the first attempt. */
-  fetcher: (refresh?: boolean) => Promise<InsightData>;
+  fetcher: (refresh?: boolean, options?: InsightRequestOptions) => Promise<InsightData>;
 };
 
 function toneColor(tone: InsightSection["tone"]): string {
@@ -35,28 +21,72 @@ function toneColor(tone: InsightSection["tone"]): string {
   return terminalColors.muted;
 }
 
+function unavailableMessage(data: InsightData): string {
+  switch (data.failure?.code) {
+    case "timeout":
+      return "The model exceeded the server-owned generation deadline. You can retry when the provider is less busy.";
+    case "invalid_response":
+      return "The model response was not valid after one bounded repair attempt. No partial analysis was published.";
+    case "provider_error":
+      return "The model provider failed during generation. Check its logs or retry.";
+    case "disabled":
+      return "LLM insights are disabled by the host configuration.";
+    default:
+      return "Start your LLM endpoint (e.g. Ollama), then click Regenerate.";
+  }
+}
+
 /**
  * On-demand AI analysis card backed by the local LLM. Kept lazy because
  * local LLM inference is slow — nothing runs until the user asks for it.
  */
 export function AiInsightCard({ title, description, disabled = false, disabledMessage, fetcher }: Props) {
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error" | "cancelled">("idle");
   const [data, setData] = useState<InsightData | null>(null);
+  const [progress, setProgress] = useState<{ phase: InsightPhase; elapsed: number } | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      controllerRef.current?.abort();
+    };
+  }, []);
 
   const run = useCallback(async () => {
     if (disabled) return;
+    const controller = new AbortController();
+    controllerRef.current?.abort();
+    controllerRef.current = controller;
     setStatus("loading");
     setData(null);
+    setProgress({ phase: "queued", elapsed: 0 });
     try {
       // A button labelled Regenerate must not simply return the same cached AI
       // payload. Fetchers that do not cache may safely ignore this argument.
-      const result = await fetcher(status !== "idle");
+      const result = await fetcher(status !== "idle", {
+        signal: controller.signal,
+        onProgress: (phase, elapsed) => {
+          if (mountedRef.current && controllerRef.current === controller) {
+            setProgress({ phase, elapsed });
+          }
+        },
+      });
+      if (controller.signal.aborted || !mountedRef.current) return;
       setData(result);
       setStatus("done");
-    } catch {
-      setStatus("error");
+    } catch (error) {
+      if (mountedRef.current) setStatus(controller.signal.aborted ? "cancelled" : "error");
+    } finally {
+      if (controllerRef.current === controller) controllerRef.current = null;
     }
   }, [disabled, fetcher, status]);
+
+  const cancel = useCallback(() => {
+    controllerRef.current?.abort();
+  }, []);
 
   const engineLive = data?.engine === "llm";
   const engineLabel = engineLive
@@ -86,10 +116,10 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
           )}
           <button
             className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-text hover:border-terminal-accent disabled:opacity-50"
-            onClick={run}
-            disabled={status === "loading" || disabled}
+            onClick={status === "loading" ? cancel : run}
+            disabled={disabled && status !== "loading"}
           >
-            {status === "loading" ? "Analyzing…" : status === "idle" ? "Generate" : "Regenerate"}
+            {status === "loading" ? "Cancel" : status === "idle" || status === "cancelled" ? "Generate" : "Regenerate"}
           </button>
         </div>
       </div>
@@ -104,10 +134,17 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
 
       {status === "loading" && (
         <div className="mt-3 space-y-2">
-          <div className="text-[11px] text-terminal-muted">
-            Generating analysis with the local LLM…
+          <div className="text-[11px] text-terminal-muted" aria-live="polite">
+            {progress?.phase === "queued" ? "Preparing analysis…" : "Generating analysis with the local LLM…"}
+            {progress?.elapsed ? ` ${Math.round(progress.elapsed)}s` : ""}
           </div>
           <div className="h-24 animate-pulse rounded bg-terminal-bg" />
+        </div>
+      )}
+
+      {status === "cancelled" && (
+        <div className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2 text-xs text-terminal-muted">
+          Analysis cancelled. No result was published.
         </div>
       )}
 
@@ -144,7 +181,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
           ))}
           {data.engine !== "llm" && !data.sections.length && (
             <div className="text-[11px] text-terminal-muted">
-              Start your LLM endpoint (e.g. Ollama), then click Regenerate.
+              {unavailableMessage(data)}
             </div>
           )}
           {data.note_count !== undefined && (

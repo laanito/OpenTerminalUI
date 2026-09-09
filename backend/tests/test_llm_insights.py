@@ -33,6 +33,8 @@ def test_run_insight_unavailable_when_disabled(monkeypatch) -> None:
     assert result["engine"] == "unavailable"
     assert result["sections"] == []
     assert result["summary"]
+    assert result["failure"]["code"] == "disabled"
+    assert result["failure"]["retryable"] is False
 
 
 def test_run_insight_parses_model_output(monkeypatch) -> None:
@@ -56,6 +58,7 @@ def test_run_insight_falls_back_on_unparseable_output(monkeypatch) -> None:
     monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient("not json at all"))
     result = asyncio.run(llm_insights.run_insight("system", "user"))
     assert result["engine"] == "unavailable"
+    assert result["failure"]["code"] == "invalid_response"
 
 
 def test_run_insight_retries_malformed_structured_output_once(monkeypatch) -> None:
@@ -101,17 +104,31 @@ def test_run_insight_bounds_the_whole_provider_operation(monkeypatch) -> None:
     result = asyncio.run(llm_insights.run_insight("system", "user"))
 
     assert result["engine"] == "unavailable"
+    assert result["failure"]["code"] == "timeout"
 
 
-def test_sanitize_sections_filters_invalid() -> None:
-    raw = [
-        {"title": "Good", "tone": "weird", "points": ["a", "b"]},
-        {"title": "", "tone": "positive", "points": ["x"]},
-        {"title": "NoPoints", "tone": "negative", "points": []},
-        "garbage",
-    ]
-    out = llm_insights._sanitize_sections(raw)
-    assert len(out) == 1
-    assert out[0]["title"] == "Good"
-    assert out[0]["tone"] == "neutral"
-    assert out[0]["points"] == ["a", "b"]
+def test_run_insight_rejects_schema_incomplete_sections_after_one_repair(monkeypatch) -> None:
+    content = '{"summary":"Too little evidence","sections":[{"title":"Only","tone":"neutral","points":["One"]}]}'
+    client = _FakeClient(content)
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: client)
+
+    result = asyncio.run(llm_insights.run_insight("system", "user"))
+
+    assert result["engine"] == "unavailable"
+    assert result["failure"]["code"] == "invalid_response"
+
+
+def test_run_insight_rejects_values_outside_the_published_schema(monkeypatch) -> None:
+    content = (
+        '{"summary":"Summary","sections":['
+        '{"title":"' + ("x" * 49) + '","tone":"neutral","points":["One"]},'
+        '{"title":"Risk","tone":"negative","points":["Two"]}]}'
+    )
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient(content))
+
+    result = asyncio.run(llm_insights.run_insight("system", "user"))
+
+    assert result["engine"] == "unavailable"
+    assert result["failure"]["code"] == "invalid_response"

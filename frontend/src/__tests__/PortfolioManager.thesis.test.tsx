@@ -174,6 +174,7 @@ describe("PortfolioManager thesis capture", () => {
           correlation: [[{ x: "AAPL", y: "MSFT", value: 0.8 }]],
         },
         "portfolio",
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       ),
     );
   });

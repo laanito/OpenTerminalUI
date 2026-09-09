@@ -7,6 +7,7 @@ import type {
   StockEmotion,
   InsightData,
 } from "./types";
+import { streamInsight, type InsightRequestOptions } from "./insightLifecycle";
 
 // LLM generation regularly runs far past the api client's default 30s timeout —
 // a local/cloud model producing a sectioned briefing can take a minute or more,
@@ -50,9 +51,15 @@ export async function fetchStockEmotion(
   return data;
 }
 
-export async function fetchStockBriefing(ticker: string, market?: string, refresh = false): Promise<InsightData> {
+export async function fetchStockBriefing(
+  ticker: string,
+  market?: string,
+  refresh = false,
+  options: InsightRequestOptions = {},
+): Promise<InsightData> {
   const { data } = await api.get<InsightData>(`/ai/briefing/${encodeURIComponent(ticker)}`, {
     params: { market, refresh },
+    signal: options.signal,
     ...AI_TIMEOUT,
   });
   return data;
@@ -62,9 +69,15 @@ export async function fetchStockBriefing(ticker: string, market?: string, refres
 // case (and your own recorded notes) rather than another bullish briefing. Authed
 // endpoint — folds in the user's notes on this ticker; goes through the same
 // authed `api` instance as the briefing.
-export async function fetchStockInterrogation(ticker: string, market?: string, refresh = false): Promise<InsightData> {
+export async function fetchStockInterrogation(
+  ticker: string,
+  market?: string,
+  refresh = false,
+  options: InsightRequestOptions = {},
+): Promise<InsightData> {
   const { data } = await api.get<InsightData>(`/ai/interrogate/${encodeURIComponent(ticker)}`, {
     params: { market, refresh },
+    signal: options.signal,
     ...AI_TIMEOUT,
   });
   return data;
@@ -95,9 +108,24 @@ export async function scoreNewsArticles(
   return data;
 }
 
-export async function fetchAiRiskInsights(metrics: Record<string, any>, scope = "portfolio"): Promise<InsightData> {
-  const { data } = await api.post<InsightData>("/ai/risk-insights", { metrics, scope }, AI_TIMEOUT);
-  return data;
+export async function fetchAiRiskInsights(
+  metrics: Record<string, any>,
+  scope = "portfolio",
+  options: InsightRequestOptions = {},
+): Promise<InsightData> {
+  const payload = { metrics, scope };
+  return streamInsight(
+    "risk",
+    payload,
+    async () => {
+      const { data } = await api.post<InsightData>("/ai/risk-insights", payload, {
+        ...AI_TIMEOUT,
+        signal: options.signal,
+      });
+      return data;
+    },
+    options,
+  );
 }
 
 export type CollectionBriefingFact = {
@@ -112,8 +140,19 @@ export async function fetchCollectionBriefing(
   symbols: string[],
   scope = "collection",
   facts?: CollectionBriefingFact[],
+  options: InsightRequestOptions = {},
 ): Promise<InsightData> {
   const payload = facts ? { symbols, scope, facts } : { symbols, scope };
-  const { data } = await api.post<InsightData>("/ai/collection-briefing", payload, AI_TIMEOUT);
-  return data;
+  return streamInsight(
+    "collection",
+    payload,
+    async () => {
+      const { data } = await api.post<InsightData>("/ai/collection-briefing", payload, {
+        ...AI_TIMEOUT,
+        signal: options.signal,
+      });
+      return data;
+    },
+    options,
+  );
 }

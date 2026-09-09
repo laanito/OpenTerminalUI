@@ -783,7 +783,7 @@ export function CockpitDashboard() {
             <AiInsightCard
               title="AI Portfolio Briefing"
               description={`Gemma-powered analysis of themes and posture for ${portfolioSymbols.length} active holdings`}
-              fetcher={() => fetchCollectionBriefing(portfolioSymbols, "portfolio")}
+              fetcher={(_, options) => fetchCollectionBriefing(portfolioSymbols, "portfolio", undefined, options)}
             />
           </div>
         )}

@@ -215,7 +215,12 @@ of defaults, commands, contracts, and sources of truth.
       retry/repair, typed failure states, and SSE or NDJSON progress/streaming
       with a stable non-streaming fallback. Publish structured insight sections
       only after schema validation, and cover interruption, malformed streams,
-      slow providers, cancellation, and fallback behavior.
+      slow providers, cancellation, and fallback behavior. The first lifecycle
+      pass adds typed NDJSON progress, browser-to-provider cancellation, strict
+      validation with bounded repair, and stable fallback for POST-based market,
+      risk, portfolio, screener, and backtest cards. Cached briefing/interrogation
+      GETs are abortable but still use their existing non-streaming contracts;
+      provider capability-driven token streaming remains a follow-up.
 - [ ] Profile and reduce initial frontend load/chunk cost and the most expensive
       news, AI, and market-data paths without weakening correctness or fallbacks.
 - [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
