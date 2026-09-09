@@ -22,7 +22,14 @@ def test_postgres_lane_uses_migrated_disposable_database() -> None:
     assert engine.url.username and engine.url.username.endswith(("_ci", "_test"))
 
     inspector = inspect(engine)
-    for table in ("users", "portfolios", "portfolio_holdings", "notes", "api_keys"):
+    for table in (
+        "users",
+        "portfolios",
+        "portfolio_holdings",
+        "portfolio_transactions",
+        "notes",
+        "api_keys",
+    ):
         assert inspector.has_table(table), f"missing migrated PostgreSQL table: {table}"
 
     with engine.connect() as connection:

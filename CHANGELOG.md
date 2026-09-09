@@ -8,8 +8,9 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ### Added
 - **Disposable PostgreSQL CI contract** — a separate pgvector/PostgreSQL 16 job
-  now migrates a fresh `openterminalui_ci` database and exercises owner-scoped
-  portfolio plus external-note ingestion contracts. Normal pytest remains
+  now migrates a fresh `openterminalui_ci` database, closes the migration gap for
+  owner-scoped portfolios, notes, and API keys, and exercises portfolio plus
+  external-note ingestion contracts. Normal pytest remains
   forcibly isolated on SQLite; PostgreSQL tests require GitHub Actions, an
   explicit localhost opt-in, and `_ci`/`_test` database and user names,
   preventing accidental use of the deployment database.
