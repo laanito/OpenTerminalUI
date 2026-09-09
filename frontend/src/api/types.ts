@@ -506,6 +506,8 @@ export type NewsLatestApiItem = {
   sentiment?: { label: string; score: number; confidence: number };
 };
 
+export type DailySentimentPoint = { date: string; avg_score: number; count: number };
+
 export type NewsSentimentSummary = {
   ticker: string;
   score: number;
@@ -518,7 +520,7 @@ export type NewsSentimentSummary = {
   bullish_pct?: number;
   bearish_pct?: number;
   neutral_pct?: number;
-  daily_sentiment?: any[];
+  daily_sentiment?: DailySentimentPoint[];
 };
 
 export type MarketSentimentSummary = {

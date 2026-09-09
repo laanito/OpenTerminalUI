@@ -464,8 +464,10 @@ retain their existing contract; provider capability-driven token streaming is
 the remaining lifecycle follow-up. The first performance pass defers the
 decorative Three.js scene until document load plus browser idle and skips it for
 reduced-motion/data-saver users, reducing measured production entry plus router
-JavaScript from ~219.4 to ~93.2 KiB gzip. Continue route-level and expensive
-news/AI/market-data profiling; close the high-risk test
+JavaScript from ~219.4 to ~93.2 KiB gzip. The next route pass removes the 134.8
+KiB gzip Recharts dependency from cold News and default-table Screener loads via
+an accessible inline sentiment trend and a lazy visualization boundary. Continue
+expensive news/AI/market-data profiling; close the high-risk test
 gaps found by the surface audit; complete public API and feature-state
 documentation; and verify clean installation and release paths.
 
