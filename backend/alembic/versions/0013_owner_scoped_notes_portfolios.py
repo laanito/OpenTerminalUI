@@ -1,6 +1,6 @@
 """add owner-scoped notes and portfolio tables
 
-Revision ID: 0013_owner_scoped_notes_portfolios
+Revision ID: 0013_owner_data
 Revises: 0012_remove_global_watchlists
 Create Date: 2026-09-09
 
@@ -17,7 +17,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0013_owner_scoped_notes_portfolios"
+revision = "0013_owner_data"
 down_revision = "0012_remove_global_watchlists"
 branch_labels = None
 depends_on = None
