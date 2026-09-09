@@ -4,18 +4,58 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
 
-# Force the test suite onto an isolated, throwaway SQLite database BEFORE any
-# backend module imports settings/db. This keeps tests hermetic regardless of a
-# local `.env` (which may point DATABASE_URL at the Docker-only `postgres` host).
-# load_local_env() uses os.environ.setdefault, so setting it here wins.
-if not os.environ.get("OPENTERMINALUI_TEST_DB_INITIALIZED"):
+def _explicit_postgres_test_url() -> str | None:
+    """Return a deliberately isolated PostgreSQL test URL, or reject it.
+
+    Normal pytest runs must never inherit DATABASE_URL: on a deployment host it
+    can point at the live Compose database. The PostgreSQL CI contract therefore
+    needs a separate URL, an explicit opt-in, localhost, and unmistakably
+    disposable database/user names.
+    """
+    raw = os.environ.get("OPENTERMINALUI_TEST_DATABASE_URL")
+    if not raw:
+        return None
+    if os.environ.get("OPENTERMINALUI_ALLOW_POSTGRES_TESTS") != "1":
+        raise RuntimeError(
+            "OPENTERMINALUI_TEST_DATABASE_URL requires OPENTERMINALUI_ALLOW_POSTGRES_TESTS=1",
+        )
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        raise RuntimeError("PostgreSQL contract tests may run only in GitHub Actions")
+
+    parsed = urlparse(raw)
+    database = parsed.path.lstrip("/").split("/", 1)[0]
+    disposable_suffixes = ("_ci", "_test")
+    if parsed.scheme != "postgresql+asyncpg":
+        raise RuntimeError(
+            "PostgreSQL test opt-in requires a postgresql+asyncpg URL",
+        )
+    if parsed.hostname not in {"127.0.0.1", "localhost"}:
+        raise RuntimeError("PostgreSQL tests are restricted to a localhost service")
+    if not database.endswith(disposable_suffixes):
+        raise RuntimeError("PostgreSQL test database name must end in _ci or _test")
+    if not (parsed.username or "").endswith(disposable_suffixes):
+        raise RuntimeError("PostgreSQL test user name must end in _ci or _test")
+    return raw
+
+
+# Force normal tests onto an isolated, throwaway SQLite database BEFORE any
+# backend module imports settings/db. This remains hermetic regardless of a
+# local `.env` or ambient DATABASE_URL pointing at the live Compose database.
+# Only the guarded, GitHub Actions CI contract above may select PostgreSQL.
+# load_local_env() uses os.environ.setdefault, so setting it here wins. Do not
+# honor an ambient "already initialized" marker: that could bypass isolation on
+# a deployment host.
+_postgres_test_url = _explicit_postgres_test_url()
+if _postgres_test_url:
+    os.environ["DATABASE_URL"] = _postgres_test_url
+else:
     _test_db = Path(tempfile.gettempdir()) / "openterminalui_pytest.db"
     os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_test_db}"
-    os.environ["OPENTERMINALUI_TEST_DB_INITIALIZED"] = "1"
 
 # Never auto-seed the instrument universe during tests: some tests enter the app
 # lifespan via `with TestClient(app)`, and seeding would hit the network.

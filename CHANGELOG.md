@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Disposable PostgreSQL CI contract** — a separate pgvector/PostgreSQL 16 job
+  now migrates a fresh `openterminalui_ci` database and exercises owner-scoped
+  portfolio plus external-note ingestion contracts. Normal pytest remains
+  forcibly isolated on SQLite; PostgreSQL tests require GitHub Actions, an
+  explicit localhost opt-in, and `_ci`/`_test` database and user names,
+  preventing accidental use of the deployment database.
 - **Cancellable AI insight lifecycle** — market, risk, portfolio, screener, and
   backtest insight cards now use a shared NDJSON progress contract with explicit
   cancellation and stable non-streaming fallback. Browser cancellation stops the

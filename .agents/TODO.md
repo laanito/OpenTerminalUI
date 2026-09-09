@@ -237,7 +237,12 @@ of defaults, commands, contracts, and sources of truth.
       the measured pre-run route path.
       Further route-level and expensive data-path profiling remains.
 - [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
-      scanner, and chart regression coverage identified by the v1.4 audit.
+      scanner, and chart regression coverage identified by the v1.4 audit. The
+      first database-parity lane migrates a disposable PostgreSQL 16/pgvector CI
+      service and runs owner-scoped portfolio plus external-note ingestion
+      contracts; normal tests remain locked to isolated SQLite, and guarded
+      PostgreSQL targeting is GitHub-Actions-only and rejects deployment database
+      names and hosts.
 - [ ] Complete the public API reference, supported/configured/degraded feature
       matrix, clean-install verification, and final v1 release checklist.
 - [ ] Convert the accepted v2 cross-market-intelligence promise into concrete

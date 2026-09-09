@@ -7,8 +7,11 @@ point of retiring the shared table -- never leaks one user's holdings to another
 """
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from fastapi.testclient import TestClient
 
+from backend.api.routes import portfolios as portfolio_routes
 from backend.main import app
 
 
@@ -43,7 +46,24 @@ def _qty_for(body: dict, ticker: str) -> float:
     return sum(float(r["quantity"]) for r in body["items"] if r["ticker"] == ticker)
 
 
-def test_primary_stays_fixed_and_aggregates_lots() -> None:
+def test_primary_stays_fixed_and_aggregates_lots(monkeypatch) -> None:
+    async def no_live_snapshot(_symbol: str) -> dict:
+        return {}
+
+    async def usd_classification(_symbol: str) -> SimpleNamespace:
+        return SimpleNamespace(
+            model_dump=lambda: {
+                "exchange": "NASDAQ",
+                "country_code": "US",
+                "currency": "USD",
+                "flag_emoji": "🇺🇸",
+                "has_futures": False,
+                "has_options": True,
+            },
+        )
+
+    monkeypatch.setattr(portfolio_routes, "fetch_stock_snapshot_coalesced", no_live_snapshot)
+    monkeypatch.setattr(portfolio_routes.market_classifier, "classify", usd_classification)
     client = TestClient(app)
     headers = _auth_headers(client, "primary-lots@example.com")
 
