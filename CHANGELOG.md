@@ -20,7 +20,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   93.2 KiB gzip while preserving the immediate CSS terminal background. News
   now draws its small sentiment trend with accessible SVG, and Screener defers
   its optional chart workspace, removing the 134.8 KiB gzip Recharts dependency
-  from both cold default routes.
+  from both cold default routes. Backtesting now waits for a completed result
+  before loading its chart, heatmap, mosaic, and 3D analytics modules, removing
+  about 433.4 KiB gzip from the pre-run route path in the measured production
+  build while preserving the complete result workspace.
 - **Validated AI results and typed degradation** — shared insight output is
   published only when it satisfies the section schema, with one bounded repair;
   disabled, unavailable, timed-out, invalid, and provider-error states are typed
