@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import type { Bar } from "oakscriptjs";
@@ -14,27 +14,7 @@ import {
   type BacktestJobResult,
 } from "../api/client";
 import { AiInsightCard } from "../components/terminal/AiInsightCard";
-import {
-  ChartTabPanel,
-  ComparePanel,
-  DrawdownTerrain3DPanel,
-  DistributionPanel,
-  DrawdownPanel,
-  EquityCurvePanel,
-  MonthlyHeatmapPanel,
-  ParameterSurface3DPanel,
-  RegimeEfficacy3DPanel,
-  RollingMetricsPanel,
-  OrderbookLiquidity3DPanel,
-  ImpliedVolatilitySurface3DPanel,
-  VolatilitySurface3DPanel,
-  MonteCarloSimulationPanel,
-  TradesPanel,
-} from "../components/backtesting/panels/BacktestingPanels";
 import type { Surface3DPoint } from "../components/backtesting/panels/Backtesting3D";
-import { ParameterSensitivityHeatmap } from "../components/backtesting/panels/ParameterSensitivityHeatmap";
-import { WalkForwardTimeline } from "../components/backtesting/panels/WalkForwardTimeline";
-import { MosaicWorkspace } from "../components/backtesting/workspace/MosaicWorkspace";
 import type { PanelRendererMap } from "../components/backtesting/workspace/PanelRegistry";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { SavedViewsControl } from "../components/savedViews/SavedViewsControl";
@@ -46,6 +26,38 @@ import { useStockStore } from "../store/stockStore";
 import { terminalColors } from "../theme/terminal";
 import { formatMoneyIn, nativeCurrencyForSymbol } from "../lib/currency";
 import { consumePendingSavedView } from "../workspace/savedViewRestore";
+import { lazyWithRetry } from "../utils/lazyWithRetry";
+
+const backtestingPanels = () => import("../components/backtesting/panels/BacktestingPanels");
+const lazyPanel = <K extends keyof Awaited<ReturnType<typeof backtestingPanels>>>(name: K) =>
+  lazyWithRetry(() => backtestingPanels().then((module) => ({ default: module[name] })));
+
+const ChartTabPanel = lazyPanel("ChartTabPanel");
+const ComparePanel = lazyPanel("ComparePanel");
+const DrawdownTerrain3DPanel = lazyPanel("DrawdownTerrain3DPanel");
+const DistributionPanel = lazyPanel("DistributionPanel");
+const DrawdownPanel = lazyPanel("DrawdownPanel");
+const EquityCurvePanel = lazyPanel("EquityCurvePanel");
+const MonthlyHeatmapPanel = lazyPanel("MonthlyHeatmapPanel");
+const ParameterSurface3DPanel = lazyPanel("ParameterSurface3DPanel");
+const RegimeEfficacy3DPanel = lazyPanel("RegimeEfficacy3DPanel");
+const RollingMetricsPanel = lazyPanel("RollingMetricsPanel");
+const OrderbookLiquidity3DPanel = lazyPanel("OrderbookLiquidity3DPanel");
+const ImpliedVolatilitySurface3DPanel = lazyPanel("ImpliedVolatilitySurface3DPanel");
+const VolatilitySurface3DPanel = lazyPanel("VolatilitySurface3DPanel");
+const MonteCarloSimulationPanel = lazyPanel("MonteCarloSimulationPanel");
+const TradesPanel = lazyPanel("TradesPanel");
+const ParameterSensitivityHeatmap = lazyWithRetry(() =>
+  import("../components/backtesting/panels/ParameterSensitivityHeatmap").then((module) => ({
+    default: module.ParameterSensitivityHeatmap,
+  })),
+);
+const WalkForwardTimeline = lazyWithRetry(() =>
+  import("../components/backtesting/panels/WalkForwardTimeline").then((module) => ({ default: module.WalkForwardTimeline })),
+);
+const MosaicWorkspace = lazyWithRetry(() =>
+  import("../components/backtesting/workspace/MosaicWorkspace").then((module) => ({ default: module.MosaicWorkspace })),
+);
 
 type JobState = "idle" | "queued" | "running" | "done" | "failed";
 type BacktestTimeframe = "1D" | "1W" | "1M";
@@ -1618,28 +1630,42 @@ export function BacktestingPage() {
         />
       )}
 
-      {proWorkspaceEnabled ? (
-        <TerminalPanel title="Backtest Pro Workspace" subtitle="Mosaic terminal mode (Cmd/Ctrl+K)">
-          <MosaicWorkspace renderers={proRenderers} onCommand={handleWorkspaceCommand} />
-        </TerminalPanel>
+      {result?.result ? (
+        <Suspense
+          fallback={
+            <TerminalPanel title="Backtest Visualizations">
+              <div className="p-3 text-xs text-terminal-muted">Loading result workspace...</div>
+            </TerminalPanel>
+          }
+        >
+          {proWorkspaceEnabled ? (
+            <TerminalPanel title="Backtest Pro Workspace" subtitle="Mosaic terminal mode (Cmd/Ctrl+K)">
+              <MosaicWorkspace renderers={proRenderers} onCommand={handleWorkspaceCommand} />
+            </TerminalPanel>
+          ) : (
+            <TerminalPanel title="Backtest Visualizations" subtitle={`${tradedAsset} ${market}`}>
+              <div className="mb-3 flex flex-wrap gap-2">
+                {VIZ_TABS.map((tab) => {
+                  const active = tab.key === activeTab;
+                  return (
+                    <button
+                      key={tab.key}
+                      className={`rounded border px-2 py-1 text-[11px] ${active ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`}
+                      onClick={() => setActiveTab(tab.key)}
+                    >
+                      <span className="mr-1">{tab.icon}</span>
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {renderActiveTab()}
+            </TerminalPanel>
+          )}
+        </Suspense>
       ) : (
-        <TerminalPanel title="Backtest Visualizations" subtitle={`${tradedAsset} ${market}`}>
-          <div className="mb-3 flex flex-wrap gap-2">
-            {VIZ_TABS.map((tab) => {
-              const active = tab.key === activeTab;
-              return (
-                <button
-                  key={tab.key}
-                  className={`rounded border px-2 py-1 text-[11px] ${active ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`}
-                  onClick={() => setActiveTab(tab.key)}
-                >
-                  <span className="mr-1">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-          {renderActiveTab()}
+        <TerminalPanel title="Backtest Visualizations" subtitle="Result workspace loads on demand">
+          <div className="p-3 text-xs text-terminal-muted">Run a backtest to load charts and result analytics.</div>
         </TerminalPanel>
       )}
 
@@ -1655,36 +1681,36 @@ export function BacktestingPage() {
         </TerminalPanel>
         <TerminalPanel title="Walk-Forward + Sensitivity" subtitle="Validation timeline and parameter response">
           <div className="space-y-3">
-            <WalkForwardTimeline windows={walkForwardWindows} />
-            <ParameterSensitivityHeatmap rows={sensitivityRows} title="Backtest Parameter Sensitivity" />
+            <Suspense fallback={<div className="p-3 text-xs text-terminal-muted">Loading validation charts...</div>}>
+              {walkForwardWindows.length ? (
+                <WalkForwardTimeline windows={walkForwardWindows} />
+              ) : (
+                <div className="rounded border border-terminal-border/40 bg-terminal-bg/40 p-3 text-xs text-terminal-muted">No walk-forward windows available.</div>
+              )}
+              {sensitivityRows.length ? (
+                <ParameterSensitivityHeatmap rows={sensitivityRows} title="Backtest Parameter Sensitivity" />
+              ) : (
+                <div className="rounded border border-terminal-border/40 bg-terminal-bg/40 p-3 text-xs text-terminal-muted">No sensitivity grid available.</div>
+              )}
+            </Suspense>
           </div>
         </TerminalPanel>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 2xl:grid-cols-[1.6fr_1fr]">
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-          <TerminalPanel title="Return Distribution" subtitle="Standalone distribution plot">
-            {renderDistributionTab()}
-          </TerminalPanel>
-          <TerminalPanel title="3D Terrain" subtitle="Standalone drawdown terrain">
-            {renderTerrain3DTab()}
-          </TerminalPanel>
-          <TerminalPanel title="3D Regimes" subtitle="Standalone regime efficacy">
-            {renderRegime3DTab()}
-          </TerminalPanel>
-          <TerminalPanel title="Orderbook Liquidity Engine 3D" subtitle="Independent depth + spread topology">
-            {renderOrderbook3DTab()}
-          </TerminalPanel>
-          <TerminalPanel title="Implied Volatility Surface 3D" subtitle="Synthetic IV smile + term surface">
-            {renderImpliedVol3DTab()}
-          </TerminalPanel>
-          <TerminalPanel title="Volatility Surface 3D" subtitle="Realized volatility regime surface">
-            {renderVolatilitySurface3DTab()}
-          </TerminalPanel>
-          <TerminalPanel title="Monte Carlo Simulation" subtitle="Bootstrapped forward equity scenarios">
-            {renderMonteCarloTab()}
-          </TerminalPanel>
-        </div>
+      <div className={`grid grid-cols-1 gap-3 ${result?.result ? "2xl:grid-cols-[1.6fr_1fr]" : ""}`}>
+        {result?.result ? (
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <Suspense fallback={<div className="p-3 text-xs text-terminal-muted">Loading extended analytics...</div>}>
+              <TerminalPanel title="Return Distribution" subtitle="Standalone distribution plot">{renderDistributionTab()}</TerminalPanel>
+              <TerminalPanel title="3D Terrain" subtitle="Standalone drawdown terrain">{renderTerrain3DTab()}</TerminalPanel>
+              <TerminalPanel title="3D Regimes" subtitle="Standalone regime efficacy">{renderRegime3DTab()}</TerminalPanel>
+              <TerminalPanel title="Orderbook Liquidity Engine 3D" subtitle="Independent depth + spread topology">{renderOrderbook3DTab()}</TerminalPanel>
+              <TerminalPanel title="Implied Volatility Surface 3D" subtitle="Synthetic IV smile + term surface">{renderImpliedVol3DTab()}</TerminalPanel>
+              <TerminalPanel title="Volatility Surface 3D" subtitle="Realized volatility regime surface">{renderVolatilitySurface3DTab()}</TerminalPanel>
+              <TerminalPanel title="Monte Carlo Simulation" subtitle="Bootstrapped forward equity scenarios">{renderMonteCarloTab()}</TerminalPanel>
+            </Suspense>
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 gap-3 h-[44vh] min-h-[300px] sticky top-3">
           <TerminalPanel title="Trade Blotter" subtitle="Execution ledger" className="h-1/2" bodyClassName="flex h-full min-h-0 flex-col overflow-hidden">
             <div className="mb-2 grid grid-cols-2 gap-2 rounded border border-terminal-border/40 bg-terminal-bg px-2 py-1 text-[11px] md:grid-cols-2">

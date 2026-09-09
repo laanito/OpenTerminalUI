@@ -466,8 +466,10 @@ decorative Three.js scene until document load plus browser idle and skips it for
 reduced-motion/data-saver users, reducing measured production entry plus router
 JavaScript from ~219.4 to ~93.2 KiB gzip. The next route pass removes the 134.8
 KiB gzip Recharts dependency from cold News and default-table Screener loads via
-an accessible inline sentiment trend and a lazy visualization boundary. Continue
-expensive news/AI/market-data profiling; close the high-risk test
+an accessible inline sentiment trend and a lazy visualization boundary. A third
+pass keeps Backtesting's chart, heatmap, mosaic, and 3D result modules behind a
+completed-result boundary, removing about 433.4 KiB gzip from the measured
+pre-run route path. Continue expensive news/AI/market-data profiling; close the high-risk test
 gaps found by the surface audit; complete public API and feature-state
 documentation; and verify clean installation and release paths.
 

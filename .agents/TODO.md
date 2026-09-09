@@ -229,6 +229,9 @@ of defaults, commands, contracts, and sources of truth.
       gzip. A route-level pass replaces the small News trend with accessible SVG
       and defers Screener visualizations until a non-table view is selected, so
       neither cold default route pulls the 134.8 KiB gzip Recharts vendor chunk.
+      A third pass defers Backtesting result charts, heatmaps, mosaic UI, and 3D
+      panels until a completed result exists, removing about 433.4 KiB gzip from
+      the measured pre-run route path.
       Further route-level and expensive data-path profiling remains.
 - [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
       scanner, and chart regression coverage identified by the v1.4 audit.
