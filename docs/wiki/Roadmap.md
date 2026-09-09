@@ -473,8 +473,12 @@ an accessible inline sentiment trend and a lazy visualization boundary. A third
 pass keeps Backtesting's chart, heatmap, mosaic, and 3D result modules behind a
 completed-result boundary, removing about 433.4 KiB gzip from the measured
 pre-run route path. Continue expensive news/AI/market-data profiling; close the high-risk test
-gaps found by the surface audit; complete public API and feature-state
-documentation; and verify clean installation and release paths.
+gaps found by the surface audit. The first database-parity lane now migrates a
+disposable PostgreSQL 16/pgvector service in CI and exercises owner-scoped
+portfolio and external-note ingestion while keeping normal tests forcibly on
+isolated SQLite and restricting PostgreSQL targets to disposable GitHub Actions
+services. Complete public API and feature-state documentation; and verify clean
+installation and release paths.
 
 Define concrete v2 journeys only after the consolidated v1 surface is known.
 Cross-market intelligence should then connect intentional interfaces instead of
