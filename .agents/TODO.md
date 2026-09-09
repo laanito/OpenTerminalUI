@@ -209,7 +209,10 @@ of defaults, commands, contracts, and sources of truth.
       the regular gate. The foundation pass consolidated the root configuration,
       isolated database state, made auth deterministic, classified the 29 legacy
       spec files, and restored login plus authenticated shell/GO-bar coverage to
-      regular Chromium CI; promote further journeys incrementally.
+      regular Chromium CI. The next promotion replaces Backtesting's obsolete
+      empty-state assertions with a deterministic submit/poll/result fixture and
+      exercises its lazy equity and trade-analysis workspace in the regular
+      backend-free smoke gate; promote further journeys incrementally.
 - [ ] Replace per-card LLM request handling with a shared, cancellable job
       lifecycle: server-owned deadlines, provider capability detection, bounded
       retry/repair, typed failure states, and SSE or NDJSON progress/streaming

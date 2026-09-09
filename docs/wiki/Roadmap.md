@@ -452,9 +452,12 @@ and one accurate set of defaults, commands, contracts, and sources of truth.
 The first browser-foundation pass consolidated the divergent Playwright
 configurations, made authentication and each run's SQLite state deterministic,
 classified all retained journeys, and restored a small Chromium login and
-authenticated shell/GO-bar set to the regular gate. Continue promoting valuable
-journeys only after their fixtures are independent of live providers and retired
-pre-v1 behavior.
+authenticated shell/GO-bar set to the regular gate. The next promotion replaces
+Backtesting's retired empty-result assumptions with a deterministic
+submit/poll/result journey that exercises the lazy equity and trade-analysis
+workspace without a backend or provider. Continue promoting valuable journeys
+only after their fixtures are independent of live providers and retired pre-v1
+behavior.
 
 The first LLM lifecycle pass gives POST-based market, risk, portfolio, screener,
 and backtest cards shared cancellable NDJSON progress, server-owned deadlines,
