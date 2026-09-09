@@ -13,6 +13,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   server-side provider task rather than leaving inference running.
 
 ### Changed
+- **Faster initial terminal load** — the decorative Three.js background now
+  loads after the document and browser idle boundary instead of blocking the
+  first route, and stays disabled for reduced-motion or data-saver users. The
+  measured production entry plus router payload falls from about 219.4 KiB to
+  93.2 KiB gzip while preserving the immediate CSS terminal background.
 - **Validated AI results and typed degradation** — shared insight output is
   published only when it satisfies the section schema, with one bounded repair;
   disabled, unavailable, timed-out, invalid, and provider-error states are typed
