@@ -1,64 +1,91 @@
-import { expect, test } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
 
-function makeJwt(payload: Record<string, unknown>): string {
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  return `x.${encoded}.y`;
+import { expect, test, type Route } from "@playwright/test";
+
+type BacktestFixture = {
+  submit: Record<string, unknown>;
+  status: Record<string, unknown>;
+  result: Record<string, unknown>;
+  analytics: Record<string, unknown>;
+};
+
+const corsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET,POST,OPTIONS",
+  "access-control-allow-headers": "*",
+};
+
+async function fulfillJson(route: Route, body: unknown) {
+  if (route.request().method() === "OPTIONS") {
+    await route.fulfill({ status: 204, headers: corsHeaders });
+    return;
+  }
+  await route.fulfill({
+    status: 200,
+    headers: corsHeaders,
+    contentType: "application/json",
+    body: JSON.stringify(body),
+  });
 }
 
-test("backtesting tabs and compare panel render with mocked jobs", async ({ page }) => {
-  test.slow();
-  const accessToken = makeJwt({
-    sub: "e2e-user",
-    email: "e2e@example.com",
-    role: "trader",
-    exp: Math.floor(Date.now() / 1000) + 3600,
+test("@smoke backtesting submits a deterministic job and loads result analytics", async ({ page }) => {
+  const fixturePath = path.resolve(process.cwd(), "tests/e2e/fixtures/backtest-result.json");
+  const fixture = JSON.parse(fs.readFileSync(fixturePath, "utf8")) as BacktestFixture;
+  let submittedPayload: Record<string, unknown> | null = null;
+
+  await page.route("**/api/**", async (route) => {
+    const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+
+    if (request.method() === "OPTIONS") {
+      await fulfillJson(route, {});
+    } else if (pathname.endsWith("/data/version/active")) {
+      await fulfillJson(route, { id: "e2e-data-version", name: "E2E snapshot" });
+    } else if (pathname.endsWith("/v1/backtest/submit")) {
+      submittedPayload = request.postDataJSON() as Record<string, unknown>;
+      await fulfillJson(route, fixture.submit);
+    } else if (pathname.includes("/v1/backtest/status/")) {
+      await fulfillJson(route, fixture.status);
+    } else if (pathname.includes("/v1/backtest/result/")) {
+      await fulfillJson(route, fixture.result);
+    } else if (pathname.includes("/backtests/") && pathname.endsWith("/analytics")) {
+      await fulfillJson(route, fixture.analytics);
+    } else if (pathname.endsWith("/v1/backtest/validate/walkforward")) {
+      await fulfillJson(route, { validation: { windows: [] } });
+    } else if (pathname.endsWith("/v1/backtest/optimize")) {
+      await fulfillJson(route, { optimization: { trials: [] } });
+    } else if (pathname.endsWith("/search")) {
+      await fulfillJson(route, { results: [] });
+    } else {
+      await fulfillJson(route, { items: [] });
+    }
   });
-  const refreshToken = makeJwt({ exp: Math.floor(Date.now() / 1000) + 7200 });
 
-  await page.addInitScript(
-    ([at, rt]) => {
-      localStorage.setItem("ot-access-token", at);
-      localStorage.setItem("ot-refresh-token", rt);
-    },
-    [accessToken, refreshToken],
-  );
+  await page.goto("/backtesting", { waitUntil: "domcontentloaded" });
 
-  await page.goto("/backtesting");
-  await expect(page.getByText("Backtesting Control Deck")).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByText("Run a backtest to load charts and result analytics.")).toBeVisible();
+  await page.getByRole("combobox", { name: "Model", exact: true }).selectOption("premarket_orb_breakout");
+  await page.getByRole("button", { name: "Run", exact: true }).click();
+
+  await expect.poll(() => submittedPayload).toMatchObject({
+    symbol: "AAPL",
+    market: "NASDAQ",
+    strategy: "example:premarket_orb_breakout",
+  });
+  await expect(page.getByText("Status: DONE")).toBeVisible();
+  await expect(page.getByText("12.00%", { exact: true }).first()).toBeVisible();
+
   const vizPanel = page
     .locator("section")
     .filter({ has: page.locator(".ot-type-panel-title", { hasText: "Backtest Visualizations" }) })
     .first();
-
-  const modelSelect = page.getByRole("combobox", { name: "Model", exact: true });
-  await expect(modelSelect).toContainText("Premarket + ORB Breakout");
-  await modelSelect.selectOption("premarket_orb_breakout");
-  await expect(page.getByText("breakout", { exact: true })).toBeVisible();
-
-  await vizPanel.getByRole("button", { name: /^Equity Curve$/ }).scrollIntoViewIfNeeded();
+  await expect(vizPanel.getByRole("button", { name: /^Equity Curve$/ })).toBeVisible();
   await vizPanel.getByRole("button", { name: /^Equity Curve$/ }).click();
-  await expect(page.getByText("Run a backtest to see equity curve")).toBeVisible();
-
-  await vizPanel.getByRole("button", { name: /^Drawdown$/ }).click();
-  await expect(page.getByText("Run a backtest to see drawdown profile")).toBeVisible();
-
-  await vizPanel.getByRole("button", { name: /^Monthly Returns$/ }).click();
-  await expect(page.getByText("Run a backtest to see monthly return heatmap")).toBeVisible();
-
-  await expect(page.getByText("Return Distribution")).toBeVisible();
-
-  await vizPanel.getByRole("button", { name: /^Rolling Metrics$/ }).click();
-  await expect(page.getByText("Run a backtest to see rolling metrics")).toBeVisible();
+  await expect(vizPanel.locator("svg").first()).toBeVisible();
 
   await vizPanel.getByRole("button", { name: /^Trade Analysis$/ }).click();
-  await expect(page.getByText("Run a backtest to see trade analytics")).toBeVisible();
-
-  const compareTabButton = vizPanel.getByRole("button", { name: /Compare$/ });
-  await compareTabButton.scrollIntoViewIfNeeded();
-  await compareTabButton.click();
-  await expect(page.getByRole("button", { name: "Run Comparison" })).toBeDisabled();
-  await page.getByRole("button", { name: /\[TREND\] SMA Crossover/ }).click();
-  await page.getByRole("button", { name: /\[TREND\] MACD Crossover/ }).click();
-  await expect(page.getByRole("button", { name: "Run Comparison" })).toBeEnabled();
-  await expect(page.getByText("Comparison Results")).toBeVisible();
+  await expect(vizPanel.getByText("Win Rate: 100.00%", { exact: true })).toBeVisible();
+  await expect(page.getByText("Return Distribution", { exact: true })).toBeVisible();
+  await expect(page.getByText("Run a backtest to load charts and result analytics.")).toHaveCount(0);
 });

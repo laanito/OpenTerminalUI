@@ -1,0 +1,79 @@
+{
+  "submit": {
+    "job_id": "backtest-e2e-1",
+    "run_id": "backtest-e2e-1",
+    "status": "pending",
+    "progress": 0
+  },
+  "status": {
+    "job_id": "backtest-e2e-1",
+    "run_id": "backtest-e2e-1",
+    "status": "done",
+    "progress": 100
+  },
+  "result": {
+    "job_id": "backtest-e2e-1",
+    "status": "done",
+    "summary": {},
+    "charts": {},
+    "trades": [],
+    "logs": "Fixture backtest completed",
+    "result": {
+      "asset": "AAPL",
+      "initial_cash": 100000,
+      "final_equity": 112000,
+      "pnl_amount": 12000,
+      "ending_cash": 112000,
+      "total_return": 0.12,
+      "sharpe": 1.4,
+      "max_drawdown": -0.04,
+      "equity_curve": [
+        { "date": "2026-01-02", "equity": 100000, "cash": 100000 },
+        { "date": "2026-01-30", "equity": 104000, "cash": 104000 },
+        { "date": "2026-02-13", "equity": 108000, "cash": 108000 },
+        { "date": "2026-02-27", "equity": 112000, "cash": 112000 }
+      ],
+      "trades": []
+    }
+  },
+  "analytics": {
+    "analytics": {
+      "monthly_returns": [
+        { "year": 2026, "month": 1, "return_pct": 4 },
+        { "year": 2026, "month": 2, "return_pct": 7.69 }
+      ],
+      "drawdown_series": [
+        { "date": "2026-01-02", "drawdown_pct": 0, "equity": 100000, "peak": 100000 },
+        { "date": "2026-01-30", "drawdown_pct": -2, "equity": 104000, "peak": 106122 },
+        { "date": "2026-02-13", "drawdown_pct": -4, "equity": 108000, "peak": 112500 },
+        { "date": "2026-02-27", "drawdown_pct": 0, "equity": 112000, "peak": 112000 }
+      ],
+      "rolling_metrics": [
+        { "date": "2026-02-13", "rolling_sharpe": 1.2, "rolling_volatility": 14, "rolling_return": 8 },
+        { "date": "2026-02-27", "rolling_sharpe": 1.4, "rolling_volatility": 13, "rolling_return": 12 }
+      ],
+      "return_distribution": {
+        "bins": [-1, 0, 1],
+        "counts": [1, 2, 1],
+        "stats": { "mean": 0.4, "median": 0.3, "std": 0.8, "skewness": 0.1, "kurtosis": -0.2 }
+      },
+      "trade_analytics": {
+        "scatter": [
+          { "entry_date": "2026-01-05", "exit_date": "2026-01-09", "pnl": 1200, "return_pct": 3.2, "holding_days": 4 }
+        ],
+        "streaks": {
+          "max_win_streak": 1,
+          "max_loss_streak": 0,
+          "current_streak": 1,
+          "current_streak_type": "win"
+        },
+        "summary": {
+          "win_rate": 100,
+          "profit_factor": 2.5,
+          "expectancy": 1200,
+          "avg_holding_days": 4
+        }
+      }
+    }
+  }
+}

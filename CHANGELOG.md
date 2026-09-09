@@ -32,6 +32,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   root configuration, seeded a stable test identity, isolated each run's SQLite
   state, classified the retained legacy journeys, and restored a focused
   Chromium login plus authenticated shell/navigation smoke set to regular CI.
+  Backtesting now also has a provider-free submit/poll/result smoke journey that
+  verifies the production lazy result workspace with deterministic analytics.
 
 ## [1.5.0] - 2026-09-07
 
