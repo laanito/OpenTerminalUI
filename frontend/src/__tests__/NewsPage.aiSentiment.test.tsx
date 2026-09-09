@@ -59,7 +59,9 @@ describe("NewsPage AI sentiment", () => {
         source: "Wire",
         url: `https://example.com/${index}`,
         summary: `Publisher summary ${index}`,
-        published_at: "2026-09-02T12:00:00.000Z",
+        // The page intentionally filters by the selected rolling window. Keep
+        // this fixture current so the regression does not expire with wall time.
+        published_at: new Date().toISOString(),
         sentiment: { label: "Neutral", score: 0, confidence: 0.3 },
       })),
     );

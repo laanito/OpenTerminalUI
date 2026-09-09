@@ -461,8 +461,11 @@ and backtest cards shared cancellable NDJSON progress, server-owned deadlines,
 typed failures, strict response validation with one bounded repair, and stable
 non-streaming fallback. Cached briefing/interrogation GETs are now abortable but
 retain their existing contract; provider capability-driven token streaming is
-the remaining lifecycle follow-up. Then reduce initial
-bundle/load and expensive news/AI/market-data costs; close the high-risk test
+the remaining lifecycle follow-up. The first performance pass defers the
+decorative Three.js scene until document load plus browser idle and skips it for
+reduced-motion/data-saver users, reducing measured production entry plus router
+JavaScript from ~219.4 to ~93.2 KiB gzip. Continue route-level and expensive
+news/AI/market-data profiling; close the high-risk test
 gaps found by the surface audit; complete public API and feature-state
 documentation; and verify clean installation and release paths.
 

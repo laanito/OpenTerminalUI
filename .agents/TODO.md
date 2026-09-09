@@ -223,6 +223,10 @@ of defaults, commands, contracts, and sources of truth.
       provider capability-driven token streaming remains a follow-up.
 - [ ] Profile and reduce initial frontend load/chunk cost and the most expensive
       news, AI, and market-data paths without weakening correctness or fallbacks.
+      The first measured pass moves the decorative Three.js scene behind the
+      document-load/browser-idle boundary and respects reduced-motion/data-saver;
+      production entry plus router JavaScript falls from ~219.4 to ~93.2 KiB
+      gzip. Route-level and expensive data-path profiling remains.
 - [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
       scanner, and chart regression coverage identified by the v1.4 audit.
 - [ ] Complete the public API reference, supported/configured/degraded feature
