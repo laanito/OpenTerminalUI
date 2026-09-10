@@ -4,9 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-10**, from `main` at `1173594` (through PR #137), plus
-the v1.6.0 release-preparation work on this branch. The latest tag and published
-GitHub release remain **v1.5.0** at `1d2f3ca` until host verification.
+Last audited: **2026-09-10**, from `main` at `0dc86db` (through PR #139).
+The latest tag and published GitHub release are **v1.6.0** at that commit.
 
 ## Read order and sources of truth
 
@@ -58,7 +57,8 @@ investing, trading, and scalping; and eventually interact with brokers through
 strictly controlled execution. The major-generation targets are:
 
 1. **v1 — coherent, honest fork:** one product identity, intentional surface
-   area, accurate contracts and docs, and no accidental inherited defaults.
+   area, accurate contracts and docs, no accidental inherited defaults, and
+   trustworthy base-currency accounting for multi-market portfolios.
 2. **v2 — cross-market intelligence:** markets and asset classes explain one
    another rather than existing as isolated screens.
 3. **v3 — multi-dimensional validation:** fundamentals, technicals, sentiment,
@@ -80,21 +80,25 @@ release-level interpretation and safety boundaries.
 
 ## Current release and development state
 
-- Current release: **v1.5.0**, tagged and published from `1d2f3ca` after the
-  maintainer's host/user verification. Keep `backend/config/settings.py` and
-  `frontend/package.json` in lockstep when releasing.
-- Release candidate: **v1.6.0**, with implementation and automated verification
-  complete through PR #137. This branch aligns release metadata; host smoke,
-  merge, tag, and GitHub release remain maintainer-gated.
+- Current release: **v1.6.0**, tagged and published from `0dc86db` after the
+  maintainer's host/user verification and the API-key listing fix in PR #139.
+  Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
+  releasing.
+- Planned final v1 milestone: **v1.7.0 — multi-currency portfolio accounting**.
+  It promotes the existing portfolio currency to an explicit reporting base,
+  persists transaction/native currency semantics, and normalizes ledger and
+  analytics results using traceable current and historical FX rates. Missing
+  conversions must remain partial/degraded rather than produce false totals.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
   deliberate API-key note ingestion, and an explicit journal-gap review. Feature
   work, release verification, tag, and GitHub release are complete. The release
   gate recorded 817 backend tests and 296 frontend tests, plus compile, build,
   production-mock, and Compose checks.
-- The remaining v1 arc is now **fork consolidation**: v1.4 audited and pruned
+- The remaining v1 arc is now **fork consolidation and accounting truth**: v1.4 audited and pruned
   the exposed surface, v1.5 makes fork identity/defaults/contracts consistent,
-  and v1.6 establishes the stable baseline before v2 cross-market intelligence.
+  and v1.6 establishes the stable baseline. v1.7 then closes backend
+  base-currency accounting before v2 cross-market intelligence.
   The v1.4 inventory, stub decisions, initial orphan removal, and hidden
   compatibility hardening have landed; primary experimental destinations are
   now adjudicated. Watchlists and their reports/dividend views are owner-scoped;
@@ -128,8 +132,9 @@ release-level interpretation and safety boundaries.
   verification completed through PR #137: deterministic browser journeys,
   resilient streamed insight jobs, cold-route reductions, PostgreSQL parity,
   the generated API contract, and a disposable clean-install gate. Automated
-  release preparation is complete on this branch; deployment-host smoke, merge,
-  tag, and GitHub release remain human-gated.
+  release preparation landed in PR #138. Host/user testing then found the API-key
+  list response mismatch; PR #139 fixed it without a migration and passed the
+  full gate. Tag and GitHub release `v1.6.0` were published from `0dc86db`.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

@@ -77,7 +77,8 @@ never silently faked.
   converts them when a supported cross-rate is available. When a collection
   spans native currencies, aggregate monetary labels are withheld and the UI
   says `Mixed currencies` rather than assigning an incorrect symbol. Full
-  base-currency accounting remains a post-v1 portfolio contract.
+  base-currency accounting is planned as the v1.7 milestone; until then, display
+  conversion must not be interpreted as ledger or analytics normalization.
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,
   quote-backed simulator, not broker execution, and it does not update Paper
   portfolios. Ops shows measured system state only; global restricted-list and
