@@ -52,6 +52,7 @@ function renderPage() {
 describe("NewsPage AI sentiment", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const publishedAt = new Date().toISOString();
     fetchLatestNewsMock.mockResolvedValue(
       Array.from({ length: 25 }, (_, index) => ({
         id: `article-${index}`,
@@ -60,8 +61,9 @@ describe("NewsPage AI sentiment", () => {
         url: `https://example.com/${index}`,
         summary: `Publisher summary ${index}`,
         // The page intentionally filters by the selected rolling window. Keep
-        // this fixture current so the regression does not expire with wall time.
-        published_at: new Date().toISOString(),
+        // this fixture current without giving successive rows different sort
+        // timestamps when the loop crosses a millisecond boundary.
+        published_at: publishedAt,
         sentiment: { label: "Neutral", score: 0, confidence: 0.3 },
       })),
     );

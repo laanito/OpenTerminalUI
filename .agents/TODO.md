@@ -1,8 +1,8 @@
 # Current project state and backlog
 
-Last audited: **2026-09-07**, from `main` at `1d2f3ca` (PR #126), plus the
-post-release handoff changes on this branch. The latest tag and published GitHub
-release are **v1.5.0** at `1d2f3ca`.
+Last audited: **2026-09-10**, from `main` at `1173594` (PR #137), plus the
+v1.6.0 release-preparation changes on this branch. The latest tag and published
+GitHub release remain **v1.5.0** at `1d2f3ca` until host verification.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -204,7 +204,7 @@ of defaults, commands, contracts, and sources of truth.
 
 ### v1.6 — stable baseline
 
-- [ ] Rehabilitate the valuable Playwright journeys using deterministic fixtures
+- [x] Rehabilitate the valuable Playwright journeys using deterministic fixtures
       and seeded authentication, then restore an appropriate browser smoke set to
       the regular gate. The foundation pass consolidated the root configuration,
       isolated database state, made auth deterministic, classified the 29 legacy
@@ -213,7 +213,7 @@ of defaults, commands, contracts, and sources of truth.
       empty-state assertions with a deterministic submit/poll/result fixture and
       exercises its lazy equity and trade-analysis workspace in the regular
       backend-free smoke gate; promote further journeys incrementally.
-- [ ] Replace per-card LLM request handling with a shared, cancellable job
+- [x] Replace per-card LLM request handling with a shared, cancellable job
       lifecycle: server-owned deadlines, provider capability detection, bounded
       retry/repair, typed failure states, and SSE or NDJSON progress/streaming
       with a stable non-streaming fallback. Publish structured insight sections
@@ -227,7 +227,7 @@ of defaults, commands, contracts, and sources of truth.
       POST cards, with real received-character progress and final-only validated
       publication; unsupported or malformed streams fall back through the bounded
       completion/repair path.
-- [ ] Profile and reduce initial frontend load/chunk cost and the most expensive
+- [x] Profile and reduce initial frontend load/chunk cost and the most expensive
       news, AI, and market-data paths without weakening correctness or fallbacks.
       The first measured pass moves the decorative Three.js scene behind the
       document-load/browser-idle boundary and respects reduced-motion/data-saver;
@@ -239,7 +239,7 @@ of defaults, commands, contracts, and sources of truth.
       panels until a completed result exists, removing about 433.4 KiB gzip from
       the measured pre-run route path.
       Further route-level and expensive data-path profiling remains.
-- [ ] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
+- [x] Expand high-risk SQLite/PostgreSQL, provider-failure, navigation, portfolio,
       scanner, and chart regression coverage identified by the v1.4 audit. The
       first database-parity lane migrates a disposable PostgreSQL 16/pgvector CI
       service and runs owner-scoped portfolio plus external-note ingestion
@@ -260,7 +260,12 @@ of defaults, commands, contracts, and sources of truth.
       cache files are excluded from the Docker build context. CI action majors
       use their maintained Node 24 runtime while the application stays on the
       independently versioned Node 22 LTS baseline.
-- [ ] Complete the final v1 release checklist and host/user smoke matrix.
+- [x] Complete automated v1.6 release preparation: align backend/frontend
+      versions, changelog, roadmap, public site, generated API version, release
+      ledger, and agent handoff.
+- [ ] Confirm the host smoke matrix and tag v1.6.0. After this release-prep branch
+      merges, verify the SQLite/keyless and PostgreSQL/pgvector keyless/keyed rows
+      in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
 - [ ] Convert the accepted v2 cross-market-intelligence promise into concrete
       user journeys and contracts only after the consolidated v1 surface is known.
 
@@ -288,8 +293,11 @@ inherited ambiguity.
   then found that the newly adjacent portfolio thesis left holding-entry fields
   ambiguous; PR #126 added visible labels, semantic grouping, and a responsive
   layout. The maintainer verified the fix, and tag/GitHub release `v1.5.0` were
-  published from `1d2f3ca`. v1.6 is now active; start from its explicit baseline
-  items rather than implementing data stubs merely to make the inventory fuller.
+  published from `1d2f3ca`. v1.6 implementation completed through PR #137:
+  deterministic browser smoke, resilient streamed insight jobs, measured route
+  boundaries, PostgreSQL parity, generated API contracts, and disposable clean
+  installation are all regular gates. This branch completes automated v1.6.0
+  release preparation; host smoke, merge, tag, and GitHub release remain.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly

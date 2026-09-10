@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-10
+
+The **"stable baseline"** release completes v1's fork-consolidation arc: the
+retained product now has deterministic browser and PostgreSQL gates, a shared
+resilient AI-insight lifecycle, measured cold-route boundaries, a generated
+public API contract, and a verified fresh-install path before v2 begins building
+cross-market intelligence.
+
 ### Added
 - **Disposable clean-install verification** — CI now builds the application with
   the locked Node 22 frontend and Python 3.11 runtime, migrates and boots a fresh

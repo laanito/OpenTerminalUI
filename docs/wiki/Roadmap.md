@@ -447,7 +447,10 @@ tag, and GitHub release are complete.
 **Exit condition:** a new human or external agent encounters one product identity
 and one accurate set of defaults, commands, contracts, and sources of truth.
 
-### v1.6 — Stable baseline
+### v1.6.0 — Stable baseline ✅ release-prepared 2026-09-10
+
+Prepared as **v1.6.0 (2026-09-10)** after implementation PRs #132–#137. The
+release tag follows the host smoke check described in [Releasing](Releasing).
 
 The first browser-foundation pass consolidated the divergent Playwright
 configurations, made authentication and each run's SQLite state deterministic,
@@ -489,8 +492,9 @@ PostgreSQL/pgvector volume, boots the documented Redis-backed Compose stack, and
 checks health, SPA, Swagger, OpenAPI, and a fresh-database authentication round
 trip before deleting its GitHub-run-ID-namespaced project and volumes. It refuses
 self-hosted runners. CI actions use maintained Node 24-based majors independently
-of the application's Node 22 LTS baseline. Final host/user smoke verification and
-release preparation remain.
+of the application's Node 22 LTS baseline. Automated release preparation is
+complete; final host/user smoke verification, merge, tag, and GitHub release
+remain.
 
 Define concrete v2 journeys only after the consolidated v1 surface is known.
 Cross-market intelligence should then connect intentional interfaces instead of
