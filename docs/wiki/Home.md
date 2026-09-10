@@ -24,7 +24,7 @@ OpenTerminalUI is a terminal-first market analysis platform for US, EU, and cryp
 - [Data Providers](Data-Providers)
 - [Limitations](Limitations) — what works keyless vs. needs keys, and honest caveats
 - [Contributing](Contributing)
-- [Roadmap](Roadmap) — shipped releases and the v1.5/v1.6 consolidation plan
+- [Roadmap](Roadmap) — shipped releases and the remaining v1.6/v1.7 plan
 - [Releasing](Releasing) — how we cut a tagged release
 
 ## Smoke Routes

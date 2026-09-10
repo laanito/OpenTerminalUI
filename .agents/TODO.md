@@ -97,7 +97,7 @@ Strength engine, paid market-data adapters, and general dashboard coverage work.
 
 The maintainer selected **a coherent, honest fork** as the v1 completion promise.
 Do not pull unrelated feature ideas into v1 merely because they are listed in the
-continuous backlog. The work proceeds in three minor-release arcs; exact PR
+continuous backlog. The work proceeds in four minor-release arcs; exact PR
 boundaries should follow the audit rather than being guessed in advance.
 
 ### v1.4 — surface truth
@@ -266,12 +266,41 @@ of defaults, commands, contracts, and sources of truth.
 - [ ] Confirm the host smoke matrix and tag v1.6.0. After this release-prep branch
       merges, verify the SQLite/keyless and PostgreSQL/pgvector keyless/keyed rows
       in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
-- [ ] Convert the accepted v2 cross-market-intelligence promise into concrete
-      user journeys and contracts only after the consolidated v1 surface is known.
+- [x] Identify the final prerequisite before v2: backend base-currency portfolio
+      accounting, now planned as v1.7 rather than left as a post-v1 limitation.
 
 **Exit:** the retained fork installs, documents, navigates, degrades, and tests as
-one dependable product; v2 can build across intentional interfaces rather than
-inherited ambiguity.
+one dependable product; v1.7 can establish comparable cross-currency values
+across those intentional interfaces.
+
+### v1.7 — multi-currency portfolio accounting
+
+- [ ] Treat each portfolio's existing `currency` as its explicit accounting base
+      and distinguish it from instrument/native and transaction currencies.
+- [ ] Persist currency on trades, cash movements, dividends, and fees through an
+      additive, backwards-compatible migration. Do not guess and rewrite legacy
+      amounts when their currency cannot be established safely.
+- [ ] Add current and historical FX-rate lookup with timestamp, provider,
+      freshness, cache, and explicit unavailable/degraded semantics.
+- [ ] Normalize backend cash, cost basis, market value, net liquidation,
+      realised/unrealised P&L, income, fees, allocations, exposures, and supported
+      history into the portfolio base currency while retaining explanatory native
+      amounts.
+- [ ] Separate security return from FX return where the available price and rate
+      history supports it.
+- [ ] Move Portfolio Manager, dashboard summaries, Journal, reports,
+      risk/analytics, portfolio-seeded backtests, and AI context onto the shared
+      backend accounting contract; keep display conversion presentation-only.
+- [ ] Add deterministic mixed-currency and migration coverage on SQLite and
+      disposable PostgreSQL, including buys/sells, cash flows, fees, missing and
+      stale rates, and historical valuation.
+- [ ] Document the API contract, migration behavior, limitations, and operational
+      FX dependencies; complete normal release preparation and host verification.
+
+**Exit:** mixed-currency ledger activity and portfolio analytics reconcile in one
+explicit base currency from traceable FX inputs, and missing conversions produce
+partial/degraded output instead of misleading totals. Only then turn the v2
+cross-market-intelligence promise into concrete journeys and contracts.
 
 ## Current handoff boundary
 

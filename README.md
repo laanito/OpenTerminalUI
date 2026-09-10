@@ -64,7 +64,10 @@ no longer present fabricated or cross-user state as production data.
 **v1.6 — Stable baseline** completes the coherent-fork arc with deterministic
 browser journeys, shared resilient LLM jobs, leaner initial routes, PostgreSQL
 parity checks, generated public API contracts, and clean-install verification.
-After its host smoke and release tag, v2 cross-market intelligence is next.
+**v1.7 — Multi-currency portfolio accounting** is the final planned v1
+milestone: normalize ledger activity, valuation, P&L, allocation, and supported
+history into an explicit portfolio base currency before v2 cross-market
+intelligence.
 
 NSE/BSE **F&O** stays supported. See the [Roadmap](docs/wiki/Roadmap.md) for what's shipped and what's next.
 

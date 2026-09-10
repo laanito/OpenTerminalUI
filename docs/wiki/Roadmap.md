@@ -160,8 +160,9 @@ table is direction, not permission to bump a major version for marketing alone.
 
 ## Release plan
 
-The fork has shipped v1.0 through v1.3. The remaining v1 releases finish the fork
-as one coherent product before v2 adds a cross-market intelligence layer. See
+The fork has shipped v1.0 through v1.5. The remaining v1 releases finish the fork
+as one coherent product and establish trustworthy multi-currency accounting
+before v2 adds a cross-market intelligence layer. See
 [Releasing](Releasing.md) for mechanics and `CHANGELOG.md` for curated history.
 
 > **What "stable" means here.** For a private-investing terminal whose north star
@@ -496,12 +497,56 @@ of the application's Node 22 LTS baseline. Automated release preparation is
 complete; final host/user smoke verification, merge, tag, and GitHub release
 remain.
 
-Define concrete v2 journeys only after the consolidated v1 surface is known.
-Cross-market intelligence should then connect intentional interfaces instead of
-building across inherited ambiguity.
+The stable baseline is the platform for one final v1 correctness milestone:
+base-currency portfolio accounting. Cross-market intelligence should then
+connect intentional interfaces and comparable values instead of building across
+inherited ambiguity or display-only currency conversion.
 
 **Exit condition:** the retained fork installs, documents, navigates, degrades,
-and tests as one dependable product, ready for the v2 cross-market promise.
+and tests as one dependable product, ready for the v1.7 accounting contract.
+
+### v1.7.0 — Multi-currency portfolio accounting 🧭 planned
+
+Make a portfolio's existing `currency` field an explicit accounting base rather
+than merely a cash/display label. Every aggregate monetary value must be
+calculated from compatible units or withheld with an actionable degraded state.
+This is the last planned v1 milestone because trustworthy cross-market
+comparison in v2 depends on trustworthy cross-currency portfolio truth.
+
+- **Define the ledger contract.** Record the native/transaction currency for
+  trades, cash movements, dividends, and fees; define portfolio currency as the
+  reporting base; and migrate existing rows conservatively without rewriting
+  amounts whose currency cannot be established.
+- **Add current and historical FX valuation.** Convert present positions with a
+  current, timestamped rate and acquisition/disposal cash flows with a dated
+  rate. Cache rates with provider and freshness metadata, and return partial or
+  degraded results when a required rate is unavailable rather than silently
+  using `1.0`, a seeded fallback, or a stale display value.
+- **Normalize portfolio calculations on the backend.** Return base-currency cash,
+  cost basis, market value, net liquidation value, realised/unrealised P&L,
+  income, fees, allocation, exposure, and historical performance. Keep native
+  amounts alongside converted amounts where they explain the result.
+- **Separate investment and currency effects.** Attribute security return and FX
+  return independently wherever the available history supports it; never imply
+  that a currency move was instrument performance.
+- **Align every consumer.** Portfolio Manager, dashboard summaries, Journal,
+  reports, risk/analytics, backtests seeded from a portfolio, and AI context must
+  consume the same backend accounting contract. The display-currency selector
+  may re-express a result, but must not become an alternative calculation path.
+- **Protect portability and ownership.** Ship additive Alembic migrations and
+  SQLite/PostgreSQL parity coverage without touching deployment databases in
+  tests. Preserve per-user ownership across portfolio, transaction, and derived
+  accounting endpoints.
+- **Close the release contract.** Cover mixed-currency buys/sells, fees,
+  dividends, deposits/withdrawals, unavailable and stale rates, historical
+  valuation, and legacy-row migration with deterministic tests and documented
+  API semantics.
+
+**Exit condition:** a mixed-currency portfolio has one explicit base currency;
+its ledger, current totals, P&L, allocation, and supported history reconcile in
+that currency from traceable FX inputs, while incomplete conversions are clearly
+partial rather than numerically misleading. v2 may then compare markets and
+assets on a sound accounting base.
 
 ### Continuous — depth & coverage (demand-pulled, not a release theme)
 

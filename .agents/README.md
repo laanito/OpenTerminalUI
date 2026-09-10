@@ -58,7 +58,8 @@ investing, trading, and scalping; and eventually interact with brokers through
 strictly controlled execution. The major-generation targets are:
 
 1. **v1 — coherent, honest fork:** one product identity, intentional surface
-   area, accurate contracts and docs, and no accidental inherited defaults.
+   area, accurate contracts and docs, no accidental inherited defaults, and
+   trustworthy base-currency accounting for multi-market portfolios.
 2. **v2 — cross-market intelligence:** markets and asset classes explain one
    another rather than existing as isolated screens.
 3. **v3 — multi-dimensional validation:** fundamentals, technicals, sentiment,
@@ -86,15 +87,21 @@ release-level interpretation and safety boundaries.
 - Release candidate: **v1.6.0**, with implementation and automated verification
   complete through PR #137. This branch aligns release metadata; host smoke,
   merge, tag, and GitHub release remain maintainer-gated.
+- Planned final v1 milestone: **v1.7.0 — multi-currency portfolio accounting**.
+  It promotes the existing portfolio currency to an explicit reporting base,
+  persists transaction/native currency semantics, and normalizes ledger and
+  analytics results using traceable current and historical FX rates. Missing
+  conversions must remain partial/degraded rather than produce false totals.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
   deliberate API-key note ingestion, and an explicit journal-gap review. Feature
   work, release verification, tag, and GitHub release are complete. The release
   gate recorded 817 backend tests and 296 frontend tests, plus compile, build,
   production-mock, and Compose checks.
-- The remaining v1 arc is now **fork consolidation**: v1.4 audited and pruned
+- The remaining v1 arc is now **fork consolidation and accounting truth**: v1.4 audited and pruned
   the exposed surface, v1.5 makes fork identity/defaults/contracts consistent,
-  and v1.6 establishes the stable baseline before v2 cross-market intelligence.
+  and v1.6 establishes the stable baseline. v1.7 then closes backend
+  base-currency accounting before v2 cross-market intelligence.
   The v1.4 inventory, stub decisions, initial orphan removal, and hidden
   compatibility hardening have landed; primary experimental destinations are
   now adjudicated. Watchlists and their reports/dividend views are owner-scoped;
