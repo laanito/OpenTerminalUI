@@ -483,8 +483,14 @@ isolated SQLite and restricting PostgreSQL targets to disposable GitHub Actions
 services. The complete generated API contract now pairs a checked-in OpenAPI
 document with a human endpoint/family matrix, including effective bearer,
 API-key permission, unauthenticated, and product-state metadata; CI rejects
-route, schema, auth, and classification drift. Clean-install and final release
-verification remain.
+route, schema, auth, and classification drift. The clean-install CI lane now
+builds the locked Node 22/Python 3.11 image, migrates a fresh isolated
+PostgreSQL/pgvector volume, boots the documented Redis-backed Compose stack, and
+checks health, SPA, Swagger, OpenAPI, and a fresh-database authentication round
+trip before deleting its GitHub-run-ID-namespaced project and volumes. It refuses
+self-hosted runners. CI actions use maintained Node 24-based majors independently
+of the application's Node 22 LTS baseline. Final host/user smoke verification and
+release preparation remain.
 
 Define concrete v2 journeys only after the consolidated v1 surface is known.
 Cross-market intelligence should then connect intentional interfaces instead of

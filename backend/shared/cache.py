@@ -62,6 +62,38 @@ class MultiTierCache:
             self._db_conn.close()
             self._db_conn = None
 
+    async def health(self) -> dict[str, Any]:
+        """Report cache-tier readiness without turning degradation into a crash."""
+        redis_status = "disabled"
+        if self.redis_url:
+            redis_status = "unavailable"
+            if self._redis is not None:
+                try:
+                    await self._redis.ping()
+                    redis_status = "ok"
+                except Exception as exc:
+                    logger.warning("L2 Cache (Redis) health check failed: %s", exc)
+
+        sqlite_status = "unavailable"
+        if self._db_conn is not None:
+            def _ping_sqlite() -> None:
+                with self._db_lock:
+                    self._db_conn.execute("SELECT 1").fetchone()
+
+            try:
+                await asyncio.to_thread(_ping_sqlite)
+                sqlite_status = "ok"
+            except Exception as exc:
+                logger.warning("L3 Cache (SQLite) health check failed: %s", exc)
+
+        degraded = sqlite_status != "ok" or redis_status == "unavailable"
+        return {
+            "status": "degraded" if degraded else "ok",
+            "l1": {"status": "ok", "entries": len(self._l1_cache)},
+            "redis": {"status": redis_status, "configured": bool(self.redis_url)},
+            "sqlite": {"status": sqlite_status},
+        }
+
     def _get_l1(self, key: str) -> Optional[Any]:
         if key in self._l1_cache:
             expiry, value = self._l1_cache[key]

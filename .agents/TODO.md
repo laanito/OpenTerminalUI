@@ -251,7 +251,16 @@ of defaults, commands, contracts, and sources of truth.
       running OpenAPI schema plus the audited surface inventory. The checked-in
       JSON contract and human index describe bearer, API-key permission, and
       unauthenticated boundaries per operation, and CI rejects drift.
-- [ ] Complete clean-install verification and the final v1 release checklist.
+- [x] Verify a clean install in CI by building the locked Node 22/Python 3.11
+      image, starting an isolated default PostgreSQL/pgvector plus Redis stack,
+      applying Alembic to a fresh volume, and checking health, SPA, Swagger,
+      OpenAPI, and fresh-database authentication. The GitHub-hosted-runner-only
+      verifier uses a run-ID-namespaced project and unmistakable CI database
+      identity, then destroys only those disposable volumes. Local database and
+      cache files are excluded from the Docker build context. CI action majors
+      use their maintained Node 24 runtime while the application stays on the
+      independently versioned Node 22 LTS baseline.
+- [ ] Complete the final v1 release checklist and host/user smoke matrix.
 - [ ] Convert the accepted v2 cross-market-intelligence promise into concrete
       user journeys and contracts only after the consolidated v1 surface is known.
 

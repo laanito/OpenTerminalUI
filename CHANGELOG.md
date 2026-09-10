@@ -7,6 +7,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Disposable clean-install verification** — CI now builds the application with
+  the locked Node 22 frontend and Python 3.11 runtime, migrates and boots a fresh
+  PostgreSQL/pgvector plus Redis Compose project, checks health, SPA, Swagger,
+  OpenAPI, and fresh-database authentication, then destroys only its
+  CI-namespaced volumes. Docker build context exclusions keep local databases and
+  caches out of images, while blank template credentials preserve honest no-key
+  first boot. The newly exercised deep-health endpoint now reports Redis and
+  SQLite cache-tier readiness instead of failing on a missing cache method.
 - **Generated API contract** — a complete checked-in OpenAPI document and human
   endpoint/family matrix now cover every backend operation, including effective
   bearer middleware, API-key permission, unauthenticated, and audited product
@@ -30,6 +38,9 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   invalid streams fall back within the same bounded lifecycle.
 
 ### Changed
+- **Node 24 GitHub Actions runtime** — CI action majors now use their maintained
+  Node 24 implementations, removing the runner's forced compatibility override;
+  the application image remains on the separately versioned Node 22 LTS baseline.
 - **Faster initial terminal load** — the decorative Three.js background now
   loads after the document and browser idle boundary instead of blocking the
   first route, and stays disabled for reduced-motion or data-saver users. The

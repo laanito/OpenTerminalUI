@@ -4,9 +4,9 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-10**, from `main` at `039c8e5` (through PR #135), plus
-the API-reference work on this branch. The latest tag and published GitHub
-release are **v1.5.0** at `1d2f3ca`.
+Last audited: **2026-09-10**, from `main` at `d8cb8bc` (through PR #136), plus
+the clean-install verification work on this branch. The latest tag and published
+GitHub release are **v1.5.0** at `1d2f3ca`.
 
 ## Read order and sources of truth
 
@@ -121,7 +121,10 @@ release-level interpretation and safety boundaries.
   testing found ambiguous unlabelled holding-entry fields beside the newly
   visible portfolio thesis; PR #126 added persistent labels and a responsive
   layout. The maintainer verified the fix, and `v1.5.0` was tagged and published
-  at `1d2f3ca`. **v1.6 — Stable baseline** is now the active milestone.
+  at `1d2f3ca`. **v1.6 — Stable baseline** is now the active milestone. The
+  generated API contract landed in PR #136. The current clean-install pass makes
+  the documented default Compose bootstrap a disposable CI contract; the
+  deployment-host smoke matrix and release preparation remain human-gated.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube
