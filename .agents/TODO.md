@@ -209,7 +209,7 @@ of defaults, commands, contracts, and sources of truth.
       the regular gate. The foundation pass consolidated the root configuration,
       isolated database state, made auth deterministic, classified the 29 legacy
       spec files, and restored login plus authenticated shell/GO-bar coverage to
-      regular Chromium CI. The next promotion replaces Backtesting's obsolete
+      regular Chromium CI. The first promoted journey replaces Backtesting's obsolete
       empty-state assertions with a deterministic submit/poll/result fixture and
       exercises its lazy equity and trade-analysis workspace in the regular
       backend-free smoke gate; promote further journeys incrementally.
@@ -246,8 +246,12 @@ of defaults, commands, contracts, and sources of truth.
       contracts; normal tests remain locked to isolated SQLite, and guarded
       PostgreSQL targeting is GitHub-Actions-only and rejects deployment database
       names and hosts.
-- [ ] Complete the public API reference, supported/configured/degraded feature
-      matrix, clean-install verification, and final v1 release checklist.
+- [x] Generate the complete public API reference and
+      supported/configuration-gated/experimental/hidden family matrix from the
+      running OpenAPI schema plus the audited surface inventory. The checked-in
+      JSON contract and human index describe bearer, API-key permission, and
+      unauthenticated boundaries per operation, and CI rejects drift.
+- [ ] Complete clean-install verification and the final v1 release checklist.
 - [ ] Convert the accepted v2 cross-market-intelligence promise into concrete
       user journeys and contracts only after the consolidated v1 surface is known.
 

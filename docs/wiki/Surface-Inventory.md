@@ -20,7 +20,10 @@ does not by itself make a feature useful enough for primary navigation.
 
 ## Snapshot
 
-- FastAPI publishes **394 paths / 439 operations / 86 tag families**.
+- The v1.4 audit measured **394 paths / 439 operations / 86 tag families**.
+  The living generated [API reference](../API_REFERENCE.md) now reports current
+  counts and authentication per operation; CI rejects drift in both that
+  reference and this inventory.
 - The equity sidebar previously advertised 43 destinations. The current v1.4
   state retains 32 and hides 11 incomplete, unsafe-as-general-UI, or
   empty-data products.
@@ -34,6 +37,13 @@ the generated OpenAPI schema with:
 
 ```bash
 PYTHONPATH=. backend/.venv/bin/python scripts/check_surface_inventory.py
+```
+
+Regenerate the canonical human and machine API references after any route,
+schema, authentication, or classification change:
+
+```bash
+PYTHONPATH=. backend/.venv/bin/python scripts/generate_api_reference.py
 ```
 
 The primary navigation classification lives beside the UI in

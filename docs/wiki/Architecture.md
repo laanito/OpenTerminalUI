@@ -64,7 +64,10 @@ Route handlers should stay thin. Domain computation and provider orchestration
 belong in services or domain packages. Public API families and their supported,
 gated, experimental, or hidden state are checked against
 `docs/surface-inventory.json`; adding a new OpenAPI tag requires an explicit
-classification.
+classification. `backend/openapi_contract.py` adds the effective middleware and
+API-key security boundary that FastAPI cannot infer, while
+`scripts/generate_api_reference.py` produces the checked-in human and JSON
+contracts and fails CI when they drift.
 
 ## Authentication and ownership
 
@@ -133,4 +136,4 @@ because a direct route still exists.
 | Second Brain | `backend/services/brain/` |
 | Frontend routes | `frontend/src/App.tsx` |
 | Primary navigation | `frontend/src/components/layout/` |
-| Surface contract | `docs/surface-inventory.json` |
+| Surface contract | `docs/surface-inventory.json`, `docs/openapi.json`, `docs/API_REFERENCE.md` |

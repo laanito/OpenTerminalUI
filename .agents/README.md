@@ -4,8 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-07**, from `main` at `1d2f3ca` (PR #126), plus the
-post-release handoff changes on this branch. The latest tag and published GitHub
+Last audited: **2026-09-10**, from `main` at `039c8e5` (through PR #135), plus
+the API-reference work on this branch. The latest tag and published GitHub
 release are **v1.5.0** at `1d2f3ca`.
 
 ## Read order and sources of truth
@@ -19,7 +19,10 @@ release are **v1.5.0** at `1d2f3ca`.
 
 When changing the product surface, also read `docs/wiki/Surface-Inventory.md`
 and its machine-readable `docs/surface-inventory.json` before adding, removing,
-or advertising a route.
+or advertising a route. The complete generated API contract lives in
+`docs/API_REFERENCE.md` and `docs/openapi.json`; regenerate it with
+`scripts/generate_api_reference.py` after route, schema, auth, or classification
+changes.
 
 The code and recent Git history win when prose disagrees. Older plans, RFCs,
 architecture proposals, and QC records are historical unless `docs/README.md`
@@ -222,6 +225,7 @@ The PR CI gate uses Python 3.11 and Node 22. It runs:
 python -m compileall backend
 python scripts/check_no_production_mocks.py
 PYTHONPATH=. python scripts/check_surface_inventory.py
+PYTHONPATH=. python scripts/generate_api_reference.py --check
 PYTHONPATH=. pytest backend/tests -q --cov=backend --cov-fail-under=45
 cd frontend && npm ci && npm run build && npx vitest run
 ```

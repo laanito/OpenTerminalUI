@@ -4,9 +4,17 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 import warnings
 from collections import Counter
 from pathlib import Path
+
+# This is a schema-only command. Force disposable SQLite before importing the
+# app so a production host cannot accidentally bind it to the deployment DB.
+_SCHEMA_DB = Path(tempfile.gettempdir()) / "openterminalui_surface_inventory.db"
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_SCHEMA_DB}"
+os.environ["OPENTERMINALUI_INSTRUMENT_AUTOSEED"] = "0"
 
 from backend.main import app
 

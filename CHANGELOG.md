@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Generated API contract** — a complete checked-in OpenAPI document and human
+  endpoint/family matrix now cover every backend operation, including effective
+  bearer middleware, API-key permission, unauthenticated, and audited product
+  state metadata. Runtime `/docs` exposes the same accurate authentication
+  boundary, the schema-generator dependencies are pinned, and CI rejects
+  generated-reference drift.
 - **Disposable PostgreSQL CI contract** — a separate pgvector/PostgreSQL 16 job
   now migrates a fresh `openterminalui_ci` database, closes the migration gap for
   owner-scoped portfolios, notes, and API keys, and exercises portfolio plus

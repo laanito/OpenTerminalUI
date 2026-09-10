@@ -48,8 +48,15 @@ Run before opening a PR:
 make gate
 ```
 
-This runs the production-mock and surface-inventory guards, backend compile and
-pytest coverage gate, frontend build, and Vitest.
+This runs the production-mock, surface-inventory, and generated API-reference
+guards, backend compile and pytest coverage gate, frontend build, and Vitest.
+
+After changing a route, request/response schema, authentication boundary, or
+surface classification, regenerate the checked-in API contract:
+
+```bash
+PYTHONPATH=. backend/.venv/bin/python scripts/generate_api_reference.py
+```
 
 If you run individual checks:
 
@@ -58,7 +65,8 @@ PYTHONPATH=. backend/.venv/bin/python -m pytest backend/tests -x -q --cov=backen
 cd frontend && npm test
 ```
 
-Playwright remains manual-only while its inherited fixtures are rehabilitated:
+The deterministic Chromium `@smoke` subset runs in regular CI. Broader inherited
+journeys remain manual while their fixtures are rehabilitated:
 
 ```bash
 cd frontend && npm run test:e2e

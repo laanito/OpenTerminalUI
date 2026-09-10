@@ -452,7 +452,7 @@ and one accurate set of defaults, commands, contracts, and sources of truth.
 The first browser-foundation pass consolidated the divergent Playwright
 configurations, made authentication and each run's SQLite state deterministic,
 classified all retained journeys, and restored a small Chromium login and
-authenticated shell/GO-bar set to the regular gate. The next promotion replaces
+authenticated shell/GO-bar set to the regular gate. The first promoted journey replaces
 Backtesting's retired empty-result assumptions with a deterministic
 submit/poll/result journey that exercises the lazy equity and trade-analysis
 workspace without a backend or provider. Continue promoting valuable journeys
@@ -480,8 +480,11 @@ gaps found by the surface audit. The first database-parity lane now migrates a
 disposable PostgreSQL 16/pgvector service in CI and exercises owner-scoped
 portfolio and external-note ingestion while keeping normal tests forcibly on
 isolated SQLite and restricting PostgreSQL targets to disposable GitHub Actions
-services. Complete public API and feature-state documentation; and verify clean
-installation and release paths.
+services. The complete generated API contract now pairs a checked-in OpenAPI
+document with a human endpoint/family matrix, including effective bearer,
+API-key permission, unauthenticated, and product-state metadata; CI rejects
+route, schema, auth, and classification drift. Clean-install and final release
+verification remain.
 
 Define concrete v2 journeys only after the consolidated v1 surface is known.
 Cross-market intelligence should then connect intentional interfaces instead of
