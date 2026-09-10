@@ -107,6 +107,26 @@ verified in PR #126. Tag/GitHub release `v1.5.0` were published from `1d2f3ca` o
 2026-09-07. The v1.6 browser-smoke, shared LLM-job, performance, and expanded
 high-risk coverage work remains deliberately outside this release.
 
+### v1.6.0 verification ledger (in progress)
+
+Release-prep automation currently covers these stable-baseline contracts:
+
+| Contract | Evidence |
+|---|---|
+| Deterministic authenticated browser shell and Backtesting result journey | `frontend/tests/e2e/auth-smoke.spec.ts`, `frontend/tests/e2e/critical-shell-smoke.spec.ts`, `frontend/tests/e2e/backtesting-tabs.spec.ts` |
+| Shared cancellable, validated, streaming insight lifecycle | `backend/tests/test_insight_lifecycle.py`, `backend/tests/test_ai_insight_stream.py`, `frontend/src/__tests__/AiInsightCard.test.tsx` |
+| Cold-route bundle boundaries | production Vite build plus lazy-loading component tests |
+| Disposable PostgreSQL ownership and ingestion parity | CI `postgres-contract` job and guarded PostgreSQL tests |
+| Complete generated API schemas, auth metadata, and family matrix | `docs/openapi.json`, `docs/API_REFERENCE.md`, `scripts/generate_api_reference.py --check` |
+| Fresh default Docker Compose build, migration, boot, and endpoint smoke | CI `clean-install` job, `scripts/verify_clean_install.sh` |
+
+The clean-install job is intentionally restricted to GitHub-hosted Actions and
+uses a run-ID-namespaced Compose project plus a CI-specific database, user,
+ports, and disposable volumes. It refuses self-hosted runners and must not be
+repurposed to tear down a deployment host. The no-key/configured-key runtime
+smoke matrix above still requires maintainer verification before the release
+tag.
+
 ## Cutting the release
 
 ```bash

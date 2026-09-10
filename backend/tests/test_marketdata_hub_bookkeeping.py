@@ -14,6 +14,11 @@ def test_subscribe_unsubscribe_bookkeeping() -> None:
         hub = MarketDataHub()
         ws = DummyWebSocket()
 
+        assert hub.is_running is False
+        hub._running = True  # noqa: SLF001
+        assert hub.is_running is True
+        hub._running = False  # noqa: SLF001
+
         async with hub._lock:  # noqa: SLF001
             hub._connections[ws] = set()  # noqa: SLF001
 

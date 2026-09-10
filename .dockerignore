@@ -20,3 +20,9 @@ backend/.env
 .env
 .env.*
 !.env.example
+# Never bake local portfolios, notes, caches, or test databases into an image.
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3

@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -178,6 +179,7 @@ async def healthz() -> dict[str, object]:
     hub = get_marketdata_hub()
     fetcher = await get_unified_fetcher()
     cache_health = await cache_instance.health()
+    hub_metrics = await hub.metrics_snapshot()
 
     return {
         "status": "ok",
@@ -185,8 +187,8 @@ async def healthz() -> dict[str, object]:
         "cache": cache_health,
         "marketdata_hub": {
             "status": "ok" if hub.is_running else "stopped",
-            "clients": len(hub.clients),
-            "subscriptions": sum(len(s) for s in hub.subscriptions.values()),
+            "clients": hub_metrics["ws_connected_clients"],
+            "subscriptions": hub_metrics["ws_subscriptions"],
         },
         "unified_fetcher": {
             "initialized": fetcher is not None,
@@ -195,17 +197,18 @@ async def healthz() -> dict[str, object]:
 
 
 @app.get("/metrics-lite", tags=["health"])
-def metrics_lite() -> dict[str, object]:
+async def metrics_lite() -> dict[str, object]:
     from backend.shared.ws_manager import get_marketdata_hub
     hub = get_marketdata_hub()
     from backend.bg_services.scanner_alert_scheduler import get_scanner_alert_scheduler_service
     scanner_service = get_scanner_alert_scheduler_service()
-    scanner_status = scanner_service.get_status() if scanner_service else {}
+    scanner_status = scanner_service.status_snapshot() if scanner_service else {}
+    hub_metrics = await hub.metrics_snapshot()
 
     return {
-        "ws_clients": len(hub.clients),
-        "ws_subscriptions": sum(len(s) for s in hub.subscriptions.values()),
-        "scanner_alert_last_run": scanner_status.get("last_run"),
+        "ws_clients": hub_metrics["ws_connected_clients"],
+        "ws_subscriptions": hub_metrics["ws_subscriptions"],
+        "scanner_alert_last_run": scanner_status.get("last_run_at"),
         "scanner_alert_last_status": scanner_status.get("last_status"),
         "scanner_alert_scanned_symbols": scanner_status.get("last_scanned_symbols"),
         "last_kite_stream_status": hub.kite_stream_status(),

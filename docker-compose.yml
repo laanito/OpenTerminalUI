@@ -58,8 +58,6 @@ services:
         - action: rebuild
           path: ./frontend
         - action: rebuild
-          path: ./config
-        - action: rebuild
           path: ./data
     restart: unless-stopped
 

@@ -103,6 +103,11 @@ class MarketDataHub:
         self._bus.register_local_listener(self._on_bus_message)
         self._market_status_task: asyncio.Task | None = None
 
+    @property
+    def is_running(self) -> bool:
+        """Whether the hub's background lifecycle has been started."""
+        return self._running
+
     async def start(self) -> None:
         async with self._lock:
             if self._running:

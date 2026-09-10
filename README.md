@@ -597,7 +597,7 @@ once: `ollama pull nomic-embed-text`. On Postgres the index uses **pgvector**
 (`CREATE EXTENSION vector` is attempted automatically; it falls back to numpy
 cosine if unavailable); on SQLite it uses an in-process numpy cosine search.
 
-These can also be set under `app:` in `config/settings.yaml`. The legacy
+These can also be set under `app:` in `backend/config/settings.yaml`. The legacy
 `LM_STUDIO_*` / `OLLAMA_BASE_URL` / `OPENAI_API_KEY` variables are still honored.
 
 ### External note ingestion
