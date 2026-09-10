@@ -188,17 +188,19 @@ class LLMClient:
         *,
         temperature: float = 0.1,
         max_tokens: int = 512,
+        json_schema: dict[str, Any] | None = None,
         frequency_penalty: float = 0.0,
     ) -> AsyncIterator[str]:
         """Yield text deltas from an OpenAI-compatible SSE chat completion.
 
-        Streaming is intentionally limited to plain-text completions. Structured
-        output keeps using :meth:`chat`, whose response-format fallback ladder and
-        truncation retry require seeing the complete response.
+        A schema augments the prompt but deliberately does not send
+        ``response_format``: several compatible providers support token streaming
+        but reject streaming plus structured response modes. Callers must buffer
+        and validate the complete response before publishing structured data.
         """
         payload: dict[str, Any] = {
             "model": self.model,
-            "messages": messages,
+            "messages": self._augment_messages(messages, json_schema),
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": True,

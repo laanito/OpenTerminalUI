@@ -17,7 +17,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 - **Cancellable AI insight lifecycle** — market, risk, portfolio, screener, and
   backtest insight cards now use a shared NDJSON progress contract with explicit
   cancellation and stable non-streaming fallback. Browser cancellation stops the
-  server-side provider task rather than leaving inference running.
+  server-side provider task rather than leaving inference running. Compatible
+  providers now stream structured-response tokens through that lifecycle, giving
+  the card real response-arrival progress while withholding sections until the
+  complete result passes schema validation. Unsupported, interrupted, empty, or
+  invalid streams fall back within the same bounded lifecycle.
 
 ### Changed
 - **Faster initial terminal load** — the decorative Three.js background now

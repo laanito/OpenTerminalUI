@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -108,5 +108,22 @@ describe("AiInsightCard", () => {
 
     expect(await screen.findByText("Analysis cancelled. No result was published.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled();
+  });
+
+  it("shows provider response progress without rendering unvalidated tokens", async () => {
+    let finish: (result: InsightData) => void = () => undefined;
+    const fetcher = vi.fn((_refresh, options) => new Promise<InsightData>((resolve) => {
+      finish = resolve;
+      options?.onProgress?.("generating", 2);
+      options?.onTokenProgress?.(128);
+    }));
+
+    render(<AiInsightCard title="AI Risk Assessment" fetcher={fetcher} />);
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+
+    expect(await screen.findByText(/receiving response \(128 chars\)/i)).toBeInTheDocument();
+    expect(screen.queryByText(/unvalidated/i)).not.toBeInTheDocument();
+    await act(async () => finish(firstResult));
+    expect(await screen.findByText("Initial analysis")).toBeInTheDocument();
   });
 });

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query
@@ -460,6 +461,14 @@ async def news_sentiment(payload: dict[str, Any]) -> dict[str, Any]:
 @router.post("/ai/backtest-explain")
 async def backtest_explain(payload: dict[str, Any]) -> dict[str, Any]:
     """Return a plain-English assessment of a backtest result."""
+    return await _backtest_explain(payload)
+
+
+async def _backtest_explain(
+    payload: dict[str, Any],
+    *,
+    on_token: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
     metrics = payload.get("metrics") if isinstance(payload, dict) else None
     metrics = metrics if isinstance(metrics, dict) else {}
     strategy = str((payload or {}).get("strategy") or "the strategy").strip() or "the strategy"
@@ -481,12 +490,21 @@ async def backtest_explain(payload: dict[str, Any]) -> dict[str, Any]:
         user_content,
         max_tokens=900,
         unavailable_summary="AI backtest analysis is unavailable - start your local LLM (e.g. Ollama).",
+        on_token=on_token,
     )
 
 
 @router.post("/ai/collection-briefing")
 async def collection_briefing(payload: dict[str, Any]) -> dict[str, Any]:
     """Return an AI briefing for a collection of symbols (Screener/Watchlist)."""
+    return await _collection_briefing(payload)
+
+
+async def _collection_briefing(
+    payload: dict[str, Any],
+    *,
+    on_token: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
     symbols = payload.get("symbols") or []
     if not isinstance(symbols, list):
         symbols = []
@@ -539,12 +557,21 @@ async def collection_briefing(payload: dict[str, Any]) -> dict[str, Any]:
         user_content,
         max_tokens=900,
         unavailable_summary=f"AI {scope} analysis is unavailable - start your local LLM (e.g. Ollama).",
+        on_token=on_token,
     )
 
 
 @router.post("/ai/risk-insights")
 async def risk_insights(payload: dict[str, Any]) -> dict[str, Any]:
     """Return a narrative interpretation of portfolio/ticker risk metrics."""
+    return await _risk_insights(payload)
+
+
+async def _risk_insights(
+    payload: dict[str, Any],
+    *,
+    on_token: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
     metrics = payload.get("metrics") if isinstance(payload, dict) else None
     metrics = metrics if isinstance(metrics, dict) else {}
     scope = str((payload or {}).get("scope") or "the portfolio").strip() or "the portfolio"
@@ -567,6 +594,7 @@ async def risk_insights(payload: dict[str, Any]) -> dict[str, Any]:
         user_content,
         max_tokens=900,
         unavailable_summary="AI risk analysis is unavailable - start your local LLM (e.g. Ollama).",
+        on_token=on_token,
     )
 
 
@@ -581,8 +609,18 @@ async def insight_stream(payload: InsightStreamRequest) -> StreamingResponse:
             return await collection_briefing(payload.payload)
         return await risk_insights(payload.payload)
 
+    async def run_stream(on_token: Callable[[str], None]) -> dict[str, Any]:
+        if payload.kind == "backtest":
+            return await _backtest_explain(payload.payload, on_token=on_token)
+        if payload.kind == "collection":
+            return await _collection_briefing(payload.payload, on_token=on_token)
+        return await _risk_insights(payload.payload, on_token=on_token)
+
     async def events():
-        async for event in stream_insight_lifecycle(run):
+        async for event in stream_insight_lifecycle(
+            run,
+            streaming_operation=run_stream,
+        ):
             yield json.dumps(event, separators=(",", ":")) + "\n"
 
     return StreamingResponse(

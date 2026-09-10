@@ -130,3 +130,25 @@ Chart endpoint now supports pagination for candle backfill:
 - `cursor`: unix timestamp; returns candles strictly older than cursor
 - `meta.pagination.cursor`: next cursor to request older candles
 - `meta.pagination.has_more`: whether older candles remain
+
+## AI insight lifecycle
+
+### POST `/api/ai/insights/stream`
+
+Runs the shared `backtest`, `collection`, or `risk` insight flow as newline-
+delimited JSON. The request body is `{ "kind": "risk", "payload": {...} }`.
+Events are emitted in this order:
+
+- `start` and `progress` describe the queued/generating lifecycle.
+- `delta` carries a provisional provider token plus cumulative
+  `received_chars`. Deltas prove that a compatible provider is responding but
+  are not validated insight data.
+- `result` is the only publishable insight. Its summary and sections have passed
+  the shared schema validation.
+- `error` represents an unexpected lifecycle failure.
+
+Providers that reject streaming, end early, emit no content, or return malformed
+structured output fall back to the bounded non-streaming completion and repair
+path. The stable `/api/ai/backtest-explain`, `/api/ai/collection-briefing`, and
+`/api/ai/risk-insights` endpoints remain available. Cancelling the HTTP response
+cancels the server-side provider task.

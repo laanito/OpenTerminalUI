@@ -53,6 +53,134 @@ def test_run_insight_parses_model_output(monkeypatch) -> None:
     assert result["sections"][0]["points"] == ["Growing revenue", "Strong ROE"]
 
 
+def test_run_insight_streams_tokens_but_publishes_only_validated_result(monkeypatch) -> None:
+    chunks = [
+        '{"summary":"Streaming works.","sections":[',
+        '{"title":"Evidence","tone":"positive","points":["Observed"]},',
+        '{"title":"Risk","tone":"negative","points":["Limited"]}]}',
+    ]
+
+    class _StreamingClient:
+        async def health(self) -> bool:
+            return True
+
+        async def chat_stream(self, messages, **kwargs):  # noqa: ANN001
+            assert kwargs["json_schema"] == llm_insights.INSIGHT_SCHEMA
+            for chunk in chunks:
+                yield chunk
+
+        async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001
+            raise AssertionError("valid streaming output must not restart completion")
+
+    received: list[str] = []
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _StreamingClient())
+
+    result = asyncio.run(
+        llm_insights.run_insight("system", "user", on_token=received.append)
+    )
+
+    assert received == chunks
+    assert result["engine"] == "llm"
+    assert result["summary"] == "Streaming works."
+    assert len(result["sections"]) == 2
+
+
+def test_run_insight_falls_back_when_structured_stream_is_invalid(monkeypatch) -> None:
+    valid = (
+        '{"summary":"Stable fallback.","sections":['
+        '{"title":"Evidence","tone":"neutral","points":["Observed"]},'
+        '{"title":"Risk","tone":"negative","points":["Limited"]}]}'
+    )
+
+    class _InvalidStreamClient:
+        chat_calls = 0
+
+        async def health(self) -> bool:
+            return True
+
+        async def chat_stream(self, messages, **kwargs):  # noqa: ANN001
+            yield "not structured json"
+
+        async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001
+            self.chat_calls += 1
+            return valid
+
+    client = _InvalidStreamClient()
+    received: list[str] = []
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: client)
+
+    result = asyncio.run(
+        llm_insights.run_insight("system", "user", on_token=received.append)
+    )
+
+    assert received == ["not structured json"]
+    assert client.chat_calls == 1
+    assert result["summary"] == "Stable fallback."
+
+
+def test_run_insight_falls_back_when_provider_stream_is_interrupted(monkeypatch) -> None:
+    valid = (
+        '{"summary":"Recovered.","sections":['
+        '{"title":"Evidence","tone":"neutral","points":["Observed"]},'
+        '{"title":"Risk","tone":"negative","points":["Limited"]}]}'
+    )
+
+    class _InterruptedStreamClient:
+        async def health(self) -> bool:
+            return True
+
+        async def chat_stream(self, messages, **kwargs):  # noqa: ANN001
+            yield '{"summary":"unfinished'
+            raise llm_insights.LLMError("provider disconnected")
+
+        async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001
+            return valid
+
+    received: list[str] = []
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(
+        llm_insights,
+        "get_llm_client",
+        lambda: _InterruptedStreamClient(),
+    )
+
+    result = asyncio.run(
+        llm_insights.run_insight("system", "user", on_token=received.append)
+    )
+
+    assert received == ['{"summary":"unfinished']
+    assert result["summary"] == "Recovered."
+
+
+def test_run_insight_bounds_streaming_provider_operation(monkeypatch) -> None:
+    class _SlowStreamingClient:
+        async def health(self) -> bool:
+            return True
+
+        async def chat_stream(self, messages, **kwargs):  # noqa: ANN001
+            await asyncio.sleep(0.05)
+            yield "too late"
+
+        async def chat(self, messages, **kwargs) -> str:  # noqa: ANN001
+            raise AssertionError("the expired lifecycle must not start a fallback")
+
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True, timeout=0.001))
+    monkeypatch.setattr(
+        llm_insights,
+        "get_llm_client",
+        lambda: _SlowStreamingClient(),
+    )
+
+    result = asyncio.run(
+        llm_insights.run_insight("system", "user", on_token=lambda _token: None)
+    )
+
+    assert result["engine"] == "unavailable"
+    assert result["failure"]["code"] == "timeout"
+
+
 def test_run_insight_falls_back_on_unparseable_output(monkeypatch) -> None:
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
     monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient("not json at all"))

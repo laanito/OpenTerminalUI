@@ -204,6 +204,24 @@ async def test_chat_stream_parses_sse_deltas_and_usage_trailer(monkeypatch) -> N
 
 
 @pytest.mark.asyncio
+async def test_chat_stream_adds_schema_directive_without_response_format(monkeypatch) -> None:
+    _FakeStreamingClient.response = _FakeStreamResponse(
+        ['data: {"choices":[{"delta":{"content":"{}"}}]}', "data: [DONE]"]
+    )
+    monkeypatch.setattr(llm_client_mod.httpx, "AsyncClient", _FakeStreamingClient)
+
+    chunks = [
+        chunk
+        async for chunk in _client().chat_stream(msgs_ref(), json_schema=_SCHEMA)
+    ]
+
+    assert chunks == ["{}"]
+    assert "response_format" not in _FakeStreamingClient.payload
+    assert _FakeStreamingClient.payload["messages"][-1]["role"] == "system"
+    assert "JSON Schema" in _FakeStreamingClient.payload["messages"][-1]["content"]
+
+
+@pytest.mark.asyncio
 async def test_chat_stream_closes_provider_response_when_consumer_stops(monkeypatch) -> None:
     _FakeStreamingClient.response = _FakeStreamResponse(
         [
