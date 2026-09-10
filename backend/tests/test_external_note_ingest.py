@@ -128,3 +128,38 @@ def test_api_key_permissions_are_validated() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_created_api_key_can_be_listed_without_exposing_secret() -> None:
+    client = TestClient(app)
+    suffix = uuid.uuid4().hex[:10]
+    email = f"listed-api-key-{suffix}@example.com"
+    password = "external-notes-password"
+    assert client.post(
+        "/api/auth/register",
+        json={"email": email, "password": password, "role": "trader"},
+    ).status_code == 200
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    auth = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    created = client.post(
+        "/api/settings/api-keys",
+        headers=auth,
+        json={"name": "Hermes", "permissions": "read_write"},
+    )
+    assert created.status_code == 200
+
+    listed = client.get("/api/settings/api-keys", headers=auth)
+
+    assert listed.status_code == 200
+    assert len(listed.json()) == 1
+    item = listed.json()[0]
+    assert item["id"] == created.json()["id"]
+    assert item["prefix"] == created.json()["prefix"]
+    assert item["name"] == "Hermes"
+    assert item["permissions"] == "read_write"
+    assert "key" not in item
