@@ -40,6 +40,19 @@ class APIKeyResponse(BaseModel):
 class APIKeyNewResponse(APIKeyResponse):
     key: str # Full key only returned once
 
+
+def _response_payload(api_key: APIKeyORM) -> dict[str, object]:
+    """Map the persistence name ``key_prefix`` to the public ``prefix`` field."""
+    return {
+        "id": api_key.id,
+        "name": api_key.name,
+        "prefix": api_key.key_prefix,
+        "permissions": api_key.permissions,
+        "is_active": api_key.is_active,
+        "last_used_at": api_key.last_used_at,
+        "created_at": api_key.created_at,
+    }
+
 @router.post("/settings/api-keys", response_model=APIKeyNewResponse)
 def create_api_key(
     data: APIKeyCreate, 
@@ -59,16 +72,7 @@ def create_api_key(
     db.commit()
     db.refresh(new_key)
     
-    return {
-        "id": new_key.id,
-        "name": new_key.name,
-        "prefix": new_key.key_prefix,
-        "permissions": new_key.permissions,
-        "is_active": new_key.is_active,
-        "last_used_at": new_key.last_used_at,
-        "created_at": new_key.created_at,
-        "key": full_key
-    }
+    return {**_response_payload(new_key), "key": full_key}
 
 @router.get("/settings/api-keys", response_model=List[APIKeyResponse])
 def list_api_keys(
@@ -79,7 +83,7 @@ def list_api_keys(
         APIKeyORM.is_active == 1,
         APIKeyORM.user_id == current_user.id
     ).all()
-    return keys
+    return [_response_payload(api_key) for api_key in keys]
 
 @router.delete("/settings/api-keys/{key_id}")
 def revoke_api_key(

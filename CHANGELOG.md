@@ -71,6 +71,11 @@ cross-market intelligence.
   Backtesting now also has a provider-free submit/poll/result smoke journey that
   verifies the production lazy result workspace with deterministic analytics.
 
+### Fixed
+- **Automation API-key listing** — map the persisted `key_prefix` field to the
+  public `prefix` response contract so Settings can retrieve created keys without
+  a FastAPI response-validation failure; full key secrets remain creation-only.
+
 ## [1.5.0] - 2026-09-07
 
 The **"fork consistency"** release gives the retained product one identity and
