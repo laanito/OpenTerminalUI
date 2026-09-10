@@ -107,7 +107,7 @@ verified in PR #126. Tag/GitHub release `v1.5.0` were published from `1d2f3ca` o
 2026-09-07. The v1.6 browser-smoke, shared LLM-job, performance, and expanded
 high-risk coverage work remains deliberately outside this release.
 
-### v1.6.0 verification ledger (release-prepared)
+### v1.6.0 verification ledger
 
 Release-prep automation currently covers these stable-baseline contracts:
 
@@ -124,9 +124,10 @@ Automated release preparation completed after PR #137 passed the full CI gate.
 The clean-install job is intentionally restricted to GitHub-hosted Actions and
 uses a run-ID-namespaced Compose project plus a CI-specific database, user,
 ports, and disposable volumes. It refuses self-hosted runners and must not be
-repurposed to tear down a deployment host. The no-key/configured-key runtime
-smoke matrix above, release-prep merge, tag, and GitHub release still require
-maintainer completion.
+repurposed to tear down a deployment host. Release PR #138 merged. Host/user
+verification then exposed an API-key list response mismatch, fixed without a
+migration in PR #139; its complete CI gate passed. Tag and GitHub release
+`v1.6.0` were published from `0dc86db` on 2026-09-10.
 
 ## Cutting the release
 

@@ -4,9 +4,8 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last audited: **2026-09-10**, from `main` at `1173594` (through PR #137), plus
-the v1.6.0 release-preparation work on this branch. The latest tag and published
-GitHub release remain **v1.5.0** at `1d2f3ca` until host verification.
+Last audited: **2026-09-10**, from `main` at `0dc86db` (through PR #139).
+The latest tag and published GitHub release are **v1.6.0** at that commit.
 
 ## Read order and sources of truth
 
@@ -81,12 +80,10 @@ release-level interpretation and safety boundaries.
 
 ## Current release and development state
 
-- Current release: **v1.5.0**, tagged and published from `1d2f3ca` after the
-  maintainer's host/user verification. Keep `backend/config/settings.py` and
-  `frontend/package.json` in lockstep when releasing.
-- Release candidate: **v1.6.0**, with implementation and automated verification
-  complete through PR #137. This branch aligns release metadata; host smoke,
-  merge, tag, and GitHub release remain maintainer-gated.
+- Current release: **v1.6.0**, tagged and published from `0dc86db` after the
+  maintainer's host/user verification and the API-key listing fix in PR #139.
+  Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
+  releasing.
 - Planned final v1 milestone: **v1.7.0 — multi-currency portfolio accounting**.
   It promotes the existing portfolio currency to an explicit reporting base,
   persists transaction/native currency semantics, and normalizes ledger and
@@ -135,8 +132,9 @@ release-level interpretation and safety boundaries.
   verification completed through PR #137: deterministic browser journeys,
   resilient streamed insight jobs, cold-route reductions, PostgreSQL parity,
   the generated API contract, and a disposable clean-install gate. Automated
-  release preparation is complete on this branch; deployment-host smoke, merge,
-  tag, and GitHub release remain human-gated.
+  release preparation landed in PR #138. Host/user testing then found the API-key
+  list response mismatch; PR #139 fixed it without a migration and passed the
+  full gate. Tag and GitHub release `v1.6.0` were published from `0dc86db`.
 - General MCP tooling and automatic external market/news indexing remain
   deferred. The supported automation boundary is the authenticated, idempotent
   external-note endpoint intended for deliberate inputs such as Hermes YouTube

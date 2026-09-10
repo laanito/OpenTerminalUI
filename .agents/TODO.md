@@ -1,8 +1,7 @@
 # Current project state and backlog
 
-Last audited: **2026-09-10**, from `main` at `1173594` (PR #137), plus the
-v1.6.0 release-preparation changes on this branch. The latest tag and published
-GitHub release remain **v1.5.0** at `1d2f3ca` until host verification.
+Last audited: **2026-09-10**, from `main` at `0dc86db` (through PR #139).
+The latest tag and published GitHub release are **v1.6.0** at that commit.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -263,9 +262,10 @@ of defaults, commands, contracts, and sources of truth.
 - [x] Complete automated v1.6 release preparation: align backend/frontend
       versions, changelog, roadmap, public site, generated API version, release
       ledger, and agent handoff.
-- [ ] Confirm the host smoke matrix and tag v1.6.0. After this release-prep branch
-      merges, verify the SQLite/keyless and PostgreSQL/pgvector keyless/keyed rows
-      in `docs/wiki/Releasing.md`, then create the tag and GitHub release.
+- [x] Publish v1.6.0. Release PR #138 merged; host/user testing then found the
+      API-key list response mismatch, PR #139 fixed it without a migration and
+      passed the full CI gate, and tag/GitHub release `v1.6.0` were published
+      from `0dc86db`.
 - [x] Identify the final prerequisite before v2: backend base-currency portfolio
       accounting, now planned as v1.7 rather than left as a post-v1 limitation.
 
@@ -325,8 +325,10 @@ cross-market-intelligence promise into concrete journeys and contracts.
   published from `1d2f3ca`. v1.6 implementation completed through PR #137:
   deterministic browser smoke, resilient streamed insight jobs, measured route
   boundaries, PostgreSQL parity, generated API contracts, and disposable clean
-  installation are all regular gates. This branch completes automated v1.6.0
-  release preparation; host smoke, merge, tag, and GitHub release remain.
+  installation are all regular gates. Release PR #138 merged; host/user testing
+  exposed an API-key list serializer mismatch, fixed in PR #139. The maintainer
+  verified the result, and tag/GitHub release `v1.6.0` were published from
+  `0dc86db`. v1.7 multi-currency portfolio accounting is now the active plan.
 - Hermes-style pipelines can already send selected summaries through
   `PUT /api/v1/notes/external` with a `read_write` API key and stable
   source/external ID. Do not design a broad MCP surface unless it is explicitly
@@ -340,7 +342,7 @@ cross-market-intelligence promise into concrete journeys and contracts.
 
 These are the clearest remaining items from the current roadmap and code state.
 They are demand-pulled or later-generation inputs, not a substitute for the
-ordered v1.6 milestone above.
+ordered v1.7 milestone above.
 
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old

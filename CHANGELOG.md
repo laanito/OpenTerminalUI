@@ -19,8 +19,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 The **"stable baseline"** release completes v1's fork-consolidation arc: the
 retained product now has deterministic browser and PostgreSQL gates, a shared
 resilient AI-insight lifecycle, measured cold-route boundaries, a generated
-public API contract, and a verified fresh-install path before v2 begins building
-cross-market intelligence.
+public API contract, and a verified fresh-install path before v1.7 establishes
+base-currency portfolio accounting and v2 begins cross-market intelligence.
 
 ### Added
 - **Disposable clean-install verification** — CI now builds the application with

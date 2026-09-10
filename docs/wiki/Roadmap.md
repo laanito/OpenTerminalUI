@@ -160,7 +160,7 @@ table is direction, not permission to bump a major version for marketing alone.
 
 ## Release plan
 
-The fork has shipped v1.0 through v1.5. The remaining v1 releases finish the fork
+The fork has shipped v1.0 through v1.6. The remaining v1 release finishes the fork
 as one coherent product and establish trustworthy multi-currency accounting
 before v2 adds a cross-market intelligence layer. See
 [Releasing](Releasing.md) for mechanics and `CHANGELOG.md` for curated history.
@@ -448,10 +448,11 @@ tag, and GitHub release are complete.
 **Exit condition:** a new human or external agent encounters one product identity
 and one accurate set of defaults, commands, contracts, and sources of truth.
 
-### v1.6.0 — Stable baseline ✅ release-prepared 2026-09-10
+### v1.6.0 — Stable baseline ✅ released 2026-09-10
 
-Prepared as **v1.6.0 (2026-09-10)** after implementation PRs #132–#137. The
-release tag follows the host smoke check described in [Releasing](Releasing).
+Released as **v1.6.0 (2026-09-10)** from `0dc86db` after implementation PRs
+#132–#137, release PR #138, host/user verification, and the API-key list response
+fix in PR #139.
 
 The first browser-foundation pass consolidated the divergent Playwright
 configurations, made authentication and each run's SQLite state deterministic,
@@ -493,9 +494,9 @@ PostgreSQL/pgvector volume, boots the documented Redis-backed Compose stack, and
 checks health, SPA, Swagger, OpenAPI, and a fresh-database authentication round
 trip before deleting its GitHub-run-ID-namespaced project and volumes. It refuses
 self-hosted runners. CI actions use maintained Node 24-based majors independently
-of the application's Node 22 LTS baseline. Automated release preparation is
-complete; final host/user smoke verification, merge, tag, and GitHub release
-remain.
+of the application's Node 22 LTS baseline. Release preparation, final host/user
+verification, the discovered API-key serializer fix, tag, and GitHub release are
+complete.
 
 The stable baseline is the platform for one final v1 correctness milestone:
 base-currency portfolio accounting. Cross-market intelligence should then

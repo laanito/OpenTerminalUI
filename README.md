@@ -61,7 +61,7 @@ every primary destination and public API family is classified, dead and duplicat
 surfaces are removed, configuration gates are visible, and compatibility tools
 no longer present fabricated or cross-user state as production data.
 
-**v1.6 — Stable baseline** completes the coherent-fork arc with deterministic
+**v1.6 — Stable baseline** completed the coherent-fork arc with deterministic
 browser journeys, shared resilient LLM jobs, leaner initial routes, PostgreSQL
 parity checks, generated public API contracts, and clean-install verification.
 **v1.7 — Multi-currency portfolio accounting** is the final planned v1
