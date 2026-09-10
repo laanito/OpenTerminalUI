@@ -14,12 +14,16 @@ contract.
 | Architecture | [`wiki/Architecture.md`](wiki/Architecture.md) |
 | Configuration and provider limits | [`wiki/Limitations.md`](wiki/Limitations.md), [`.env.example`](../.env.example) |
 | Product roadmap and releases | [`wiki/Roadmap.md`](wiki/Roadmap.md), [`wiki/Releasing.md`](wiki/Releasing.md) |
+| Complete API contract | [`API_REFERENCE.md`](API_REFERENCE.md), [`openapi.json`](openapi.json) |
 | Supported/hidden surface classification | [`wiki/Surface-Inventory.md`](wiki/Surface-Inventory.md), [`surface-inventory.json`](surface-inventory.json) |
 | External-agent handoff | [`.agents/README.md`](../.agents/README.md), [`.agents/TODO.md`](../.agents/TODO.md) |
 
-The running backend's `/docs` and `/openapi.json` are the endpoint-level API
-reference. `surface-inventory.json` classifies API families; `API_V1.md` is only
-a historical partial snapshot.
+`API_REFERENCE.md` is the generated human index and `openapi.json` is its
+complete machine-readable contract. The running backend serves the same route
+schemas at `/docs` and `/openapi.json`; its security metadata includes the
+bearer middleware and API-key boundaries that FastAPI cannot infer by itself.
+`surface-inventory.json` classifies API families; `API_V1.md` remains only a
+historical partial snapshot.
 
 ## Historical and scoped records
 

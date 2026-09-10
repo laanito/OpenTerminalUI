@@ -26,6 +26,7 @@
   <a href="#screenshots">Screenshots</a> |
   <a href="#architecture">Architecture</a> |
   <a href="#quick-start">Quick Start</a> |
+  <a href="docs/API_REFERENCE.md">API</a> |
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
@@ -622,6 +623,11 @@ Retries with the same `source` and `external_id` update the same owner-scoped
 note. Successful writes schedule the normal incremental Second Brain reindex.
 `source` is limited to 16 URL-safe characters, `external_id` to 38 characters,
 and `body` to 10,000 characters. General MCP tooling remains deferred.
+
+The generated [API reference](docs/API_REFERENCE.md) indexes every backend
+operation with its authentication and product-support state. Agents and other
+clients can consume the complete checked-in
+[OpenAPI document](docs/openapi.json) without starting the application.
 
 > **Performance:** large models are slow on consumer hardware &mdash; the first
 > analysis for a ticker can take a minute or more (results are then cached). For a

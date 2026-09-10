@@ -26,6 +26,7 @@ from backend.core.service_status import service_status_registry
 from backend.config.env import load_local_env
 from backend.config.security import validate_runtime_secrets
 from backend.config.settings import get_settings
+from backend.openapi_contract import install_openapi_contract
 from backend.shared.cache import cache as cache_instance
 from backend.shared.db import init_db
 from backend.shared.ws_manager import get_marketdata_hub
@@ -225,3 +226,6 @@ def spa_entry(full_path: str) -> FileResponse:
     if index_file.exists():
         return FileResponse(index_file)
     raise HTTPException(status_code=404, detail="Frontend entrypoint not found")
+
+
+install_openapi_contract(app)

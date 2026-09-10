@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: setup setup-backend setup-frontend test test-backend test-frontend build build-frontend check-mocks check-surface gate
+.PHONY: setup setup-backend setup-frontend test test-backend test-frontend build build-frontend check-api check-mocks check-surface gate
 
 setup: setup-backend setup-frontend
 
@@ -27,7 +27,10 @@ build-frontend:
 check-surface:
 	PYTHONPATH=. backend/.venv/bin/python scripts/check_surface_inventory.py
 
+check-api:
+	PYTHONPATH=. backend/.venv/bin/python scripts/generate_api_reference.py --check
+
 check-mocks:
 	backend/.venv/bin/python scripts/check_no_production_mocks.py
 
-gate: check-mocks check-surface test-backend build-frontend test-frontend
+gate: check-mocks check-surface check-api test-backend build-frontend test-frontend

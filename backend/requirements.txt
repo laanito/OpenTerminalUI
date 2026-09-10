@@ -1,11 +1,12 @@
-fastapi
+# OpenAPI is a checked-in contract; keep its generator versions reproducible.
+fastapi==0.137.1
 uvicorn
 pandas
 numpy
 yfinance
 sqlalchemy
 sqlalchemy[asyncio]
-pydantic
+pydantic==2.13.4
 PyYAML
 requests
 httpx

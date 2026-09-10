@@ -40,6 +40,9 @@ jobs:
       - name: Surface inventory guard (all API families classified)
         run: PYTHONPATH=. python scripts/check_surface_inventory.py
 
+      - name: Generated API reference guard
+        run: PYTHONPATH=. python scripts/generate_api_reference.py --check
+
       - name: Run pytest with coverage
         run: PYTHONPATH=. pytest backend/tests -q --cov=backend --cov-fail-under=45 --cov-report=xml --junitxml=pytest-report.xml
 

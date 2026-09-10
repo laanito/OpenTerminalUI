@@ -30,9 +30,11 @@ npm run dev --prefix frontend
 make gate
 ```
 
-The gate matches the regular CI contract: production-mock and surface-inventory
-guards, backend compile and pytest with the 45% coverage floor, frontend build,
-and Vitest. Playwright is manual-only while inherited fixtures are rewritten:
+The gate matches the regular CI contract: production-mock, surface-inventory,
+and generated API-reference guards, backend compile and pytest with the 45%
+coverage floor, frontend build, Vitest, and the deterministic Chromium `@smoke`
+set. Broader inherited Playwright journeys stay manual while their fixtures are
+rewritten:
 
 ```bash
 npm run test:e2e --prefix frontend
@@ -49,6 +51,9 @@ npm run test:e2e --prefix frontend
 - Never present fabricated market data as live. Preserve explicit degraded and
   sample states and keep `scripts/check_no_production_mocks.py` passing.
 - Classify new public API families in `docs/surface-inventory.json`.
+- Regenerate `docs/API_REFERENCE.md` and `docs/openapi.json` with
+  `scripts/generate_api_reference.py` after route, schema, auth, or
+  classification changes.
 - Treat provider failure, quota exhaustion, and missing credentials as normal
   degraded conditions.
 

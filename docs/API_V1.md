@@ -2,9 +2,10 @@
 
 > **Historical partial snapshot.** This file documents a small set of endpoints
 > from an earlier implementation pass; it is not the complete or canonical API
-> reference. Use the running backend's `/docs` or `/openapi.json` and consult
-> [`surface-inventory.json`](surface-inventory.json) for family-level support
-> status.
+> reference. Use the generated [`API_REFERENCE.md`](API_REFERENCE.md) and
+> [`openapi.json`](openapi.json), or a running backend's `/docs`, for the current
+> contract. The generated reference includes authentication and family-level
+> support status.
 
 ## Equity
 
