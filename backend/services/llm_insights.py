@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Any
 
@@ -113,6 +114,7 @@ async def run_insight(
     *,
     max_tokens: int = 900,
     unavailable_summary: str = "AI analysis is unavailable — start your local LLM (e.g. Ollama) to enable it.",
+    on_token: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     """Produce a `{summary, sections}` insight, falling back gracefully.
 
@@ -155,6 +157,31 @@ async def run_insight(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_content},
     ]
+
+    async def complete_and_validate() -> tuple[str, list[dict[str, Any]]]:
+        content = await client.chat(
+            messages,
+            temperature=0.3,
+            max_tokens=max_tokens,
+            json_schema=INSIGHT_SCHEMA,
+            frequency_penalty=0.3,
+        )
+        try:
+            return _parse_insight(content)
+        except InvalidInsightResponse as exc:
+            logger.warning(
+                "LLM insight returned malformed structured output; retrying once: %s",
+                exc,
+            )
+            content = await client.chat(
+                messages,
+                temperature=0.0,
+                max_tokens=max_tokens,
+                json_schema=INSIGHT_SCHEMA,
+                frequency_penalty=0.0,
+            )
+            return _parse_insight(content)
+
     try:
         # The client may make more than one provider request while stepping down
         # its structured-output ladder. Bound the whole operation, including one
@@ -162,25 +189,32 @@ async def run_insight(
         # accepting response_format, so the server always resolves before the
         # browser's five-minute deadline.
         async with asyncio.timeout(settings.llm_timeout_seconds):
-            content = await client.chat(
-                messages,
-                temperature=0.3,
-                max_tokens=max_tokens,
-                json_schema=INSIGHT_SCHEMA,
-                frequency_penalty=0.3,
-            )
-            try:
-                summary, sections = _parse_insight(content)
-            except InvalidInsightResponse as exc:
-                logger.warning("LLM insight returned malformed structured output; retrying once: %s", exc)
-                content = await client.chat(
-                    messages,
-                    temperature=0.0,
-                    max_tokens=max_tokens,
-                    json_schema=INSIGHT_SCHEMA,
-                    frequency_penalty=0.0,
-                )
-                summary, sections = _parse_insight(content)
+            if on_token is None:
+                summary, sections = await complete_and_validate()
+            else:
+                chunks: list[str] = []
+                try:
+                    async for chunk in client.chat_stream(
+                        messages,
+                        temperature=0.3,
+                        max_tokens=max_tokens,
+                        json_schema=INSIGHT_SCHEMA,
+                        frequency_penalty=0.3,
+                    ):
+                        chunks.append(chunk)
+                        on_token(chunk)
+                    if not chunks:
+                        raise LLMError("LLM stream returned no response text")
+                    summary, sections = _parse_insight("".join(chunks))
+                except (LLMError, InvalidInsightResponse) as exc:
+                    # Streaming capability and structured-stream fidelity vary by
+                    # provider. Fall back inside the same server-owned deadline;
+                    # only the final validated result is published as an insight.
+                    logger.warning(
+                        "LLM structured stream unavailable; using bounded completion: %s",
+                        exc,
+                    )
+                    summary, sections = await complete_and_validate()
     except asyncio.TimeoutError as exc:
         logger.warning("LLM insight unavailable after bounded generation: %s", exc)
         return unavailable("timeout", retryable=True)

@@ -44,14 +44,20 @@ describe("streamInsight", () => {
   it("parses lifecycle progress and returns the complete result", async () => {
     fetchApiMock.mockResolvedValue(streamedResponse([
       '{"type":"start","phase":"queued"}\n{"type":"progress","phase":"generating","elapsed_seconds":0}\n',
+      '{"type":"delta","text":"{\\"summary\\":","received_chars":12}\n',
       `${JSON.stringify({ type: "result", result: insight })}\n`,
     ]));
     const progress = vi.fn();
+    const tokenProgress = vi.fn();
     const fallback = vi.fn();
 
-    await expect(streamInsight("risk", { metrics: {} }, fallback, { onProgress: progress })).resolves.toEqual(insight);
+    await expect(streamInsight("risk", { metrics: {} }, fallback, {
+      onProgress: progress,
+      onTokenProgress: tokenProgress,
+    })).resolves.toEqual(insight);
     expect(progress).toHaveBeenCalledWith("queued", 0);
     expect(progress).toHaveBeenCalledWith("generating", 0);
+    expect(tokenProgress).toHaveBeenLastCalledWith(12);
     expect(fallback).not.toHaveBeenCalled();
   });
 

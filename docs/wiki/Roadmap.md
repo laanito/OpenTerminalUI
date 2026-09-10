@@ -463,8 +463,11 @@ The first LLM lifecycle pass gives POST-based market, risk, portfolio, screener,
 and backtest cards shared cancellable NDJSON progress, server-owned deadlines,
 typed failures, strict response validation with one bounded repair, and stable
 non-streaming fallback. Cached briefing/interrogation GETs are now abortable but
-retain their existing contract; provider capability-driven token streaming is
-the remaining lifecycle follow-up. The first performance pass defers the
+retain their existing contract. Compatible providers now stream structured
+response tokens for shared POST insight cards, exposing real response-arrival
+progress while withholding sections until validation; unsupported, interrupted,
+or malformed streams remain on the bounded completion/repair fallback. The first
+performance pass defers the
 decorative Three.js scene until document load plus browser idle and skips it for
 reduced-motion/data-saver users, reducing measured production entry plus router
 JavaScript from ~219.4 to ~93.2 KiB gzip. The next route pass removes the 134.8

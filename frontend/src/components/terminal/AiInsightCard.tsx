@@ -43,7 +43,11 @@ function unavailableMessage(data: InsightData): string {
 export function AiInsightCard({ title, description, disabled = false, disabledMessage, fetcher }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error" | "cancelled">("idle");
   const [data, setData] = useState<InsightData | null>(null);
-  const [progress, setProgress] = useState<{ phase: InsightPhase; elapsed: number } | null>(null);
+  const [progress, setProgress] = useState<{
+    phase: InsightPhase;
+    elapsed: number;
+    receivedCharacters: number;
+  } | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
 
@@ -62,7 +66,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
     controllerRef.current = controller;
     setStatus("loading");
     setData(null);
-    setProgress({ phase: "queued", elapsed: 0 });
+    setProgress({ phase: "queued", elapsed: 0, receivedCharacters: 0 });
     try {
       // A button labelled Regenerate must not simply return the same cached AI
       // payload. Fetchers that do not cache may safely ignore this argument.
@@ -70,7 +74,20 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
         signal: controller.signal,
         onProgress: (phase, elapsed) => {
           if (mountedRef.current && controllerRef.current === controller) {
-            setProgress({ phase, elapsed });
+            setProgress((current) => ({
+              phase,
+              elapsed,
+              receivedCharacters: current?.receivedCharacters ?? 0,
+            }));
+          }
+        },
+        onTokenProgress: (receivedCharacters) => {
+          if (mountedRef.current && controllerRef.current === controller) {
+            setProgress((current) => ({
+              phase: "generating",
+              elapsed: current?.elapsed ?? 0,
+              receivedCharacters,
+            }));
           }
         },
       });
@@ -137,6 +154,9 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
           <div className="text-[11px] text-terminal-muted" aria-live="polite">
             {progress?.phase === "queued" ? "Preparing analysis…" : "Generating analysis with the local LLM…"}
             {progress?.elapsed ? ` ${Math.round(progress.elapsed)}s` : ""}
+            {progress?.receivedCharacters
+              ? ` · receiving response (${progress.receivedCharacters.toLocaleString()} chars)`
+              : ""}
           </div>
           <div className="h-24 animate-pulse rounded bg-terminal-bg" />
         </div>

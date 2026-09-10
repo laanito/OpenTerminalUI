@@ -222,8 +222,11 @@ of defaults, commands, contracts, and sources of truth.
       pass adds typed NDJSON progress, browser-to-provider cancellation, strict
       validation with bounded repair, and stable fallback for POST-based market,
       risk, portfolio, screener, and backtest cards. Cached briefing/interrogation
-      GETs are abortable but still use their existing non-streaming contracts;
-      provider capability-driven token streaming remains a follow-up.
+      GETs are abortable but still use their existing non-streaming contracts.
+      Compatible providers now stream structured-response tokens for the shared
+      POST cards, with real received-character progress and final-only validated
+      publication; unsupported or malformed streams fall back through the bounded
+      completion/repair path.
 - [ ] Profile and reduce initial frontend load/chunk cost and the most expensive
       news, AI, and market-data paths without weakening correctness or fallbacks.
       The first measured pass moves the decorative Three.js scene behind the

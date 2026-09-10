@@ -7,11 +7,13 @@ export type InsightPhase = "queued" | "generating";
 export type InsightRequestOptions = {
   signal?: AbortSignal;
   onProgress?: (phase: InsightPhase, elapsedSeconds: number) => void;
+  onTokenProgress?: (receivedCharacters: number) => void;
 };
 
 type LifecycleEvent =
   | { type: "start"; phase: InsightPhase }
-  | { type: "progress"; phase: InsightPhase; elapsed_seconds?: number }
+  | { type: "progress"; phase: InsightPhase; elapsed_seconds?: number; received_chars?: number }
+  | { type: "delta"; text: string; received_chars: number }
   | { type: "result"; result: InsightData }
   | { type: "error"; error: { code: string; message: string; retryable: boolean } };
 
@@ -45,7 +47,11 @@ export async function streamInsight(
       if (!line.trim()) return;
       const event = JSON.parse(line) as LifecycleEvent;
       if (event.type === "start") options.onProgress?.(event.phase, 0);
-      if (event.type === "progress") options.onProgress?.(event.phase, event.elapsed_seconds ?? 0);
+      if (event.type === "progress") {
+        options.onProgress?.(event.phase, event.elapsed_seconds ?? 0);
+        options.onTokenProgress?.(event.received_chars ?? 0);
+      }
+      if (event.type === "delta") options.onTokenProgress?.(event.received_chars);
       if (event.type === "result") result = event.result;
       if (event.type === "error") throw new Error(event.error.message);
     };
