@@ -107,7 +107,7 @@ verified in PR #126. Tag/GitHub release `v1.5.0` were published from `1d2f3ca` o
 2026-09-07. The v1.6 browser-smoke, shared LLM-job, performance, and expanded
 high-risk coverage work remains deliberately outside this release.
 
-### v1.6.0 verification ledger (in progress)
+### v1.6.0 verification ledger (release-prepared)
 
 Release-prep automation currently covers these stable-baseline contracts:
 
@@ -120,12 +120,13 @@ Release-prep automation currently covers these stable-baseline contracts:
 | Complete generated API schemas, auth metadata, and family matrix | `docs/openapi.json`, `docs/API_REFERENCE.md`, `scripts/generate_api_reference.py --check` |
 | Fresh default Docker Compose build, migration, boot, and endpoint smoke | CI `clean-install` job, `scripts/verify_clean_install.sh` |
 
+Automated release preparation completed after PR #137 passed the full CI gate.
 The clean-install job is intentionally restricted to GitHub-hosted Actions and
 uses a run-ID-namespaced Compose project plus a CI-specific database, user,
 ports, and disposable volumes. It refuses self-hosted runners and must not be
 repurposed to tear down a deployment host. The no-key/configured-key runtime
-smoke matrix above still requires maintainer verification before the release
-tag.
+smoke matrix above, release-prep merge, tag, and GitHub release still require
+maintainer completion.
 
 ## Cutting the release
 
