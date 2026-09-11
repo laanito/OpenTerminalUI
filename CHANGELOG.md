@@ -7,6 +7,21 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Base-currency portfolio accounting contract** — portfolio list, detail, and
+  primary Manager analytics now share one backend calculation engine. Holding
+  costs and ledger activity use dated FX rates, current marks use current rates,
+  fees retain their independent denomination, and realised P&L is replayed from
+  converted transaction history. Reconciled open cost basis is also replayed
+  from dated acquisitions, avoiding the false result produced by converting a
+  multi-date foreign lot's final native average at its first date. Responses
+  keep native/base evidence and the exact FX inputs, report `complete`,
+  `degraded`, or `partial`, and set dependent
+  totals to `null` when a quote, date, denomination, or rate is unavailable
+  instead of assuming parity or zero. Deterministic tests cover mixed-currency
+  totals, dated gains, YTD income, stale rates, missing inputs, and agreement
+  across the three API surfaces. Portfolio Manager consumes this contract for
+  its aggregate cards, base-currency position P&L, ledger cash deltas, and
+  actionable partial/degraded warning instead of relabelling converted values.
 - **Explicit portfolio ledger currencies** — portfolio base currency is now
   named and editable in Portfolio Manager; holding cost basis, transaction
   amounts, and fees persist their own currency fields. The additive `0014`

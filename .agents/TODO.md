@@ -285,12 +285,17 @@ across those intentional interfaces.
 - [ ] Normalize backend cash, cost basis, market value, net liquidation,
       realised/unrealised P&L, income, fees, allocations, exposures, and supported
       history into the portfolio base currency while retaining explanatory native
-      amounts.
+      amounts. The shared accounting engine and portfolio list/detail/Manager
+      analytics contract now cover current holdings plus dated ledger, cost,
+      income, fee, and realised-P&L conversion with explicit partial/degraded
+      semantics. Deep exposure and supported historical surfaces remain.
 - [ ] Separate security return from FX return where the available price and rate
       history supports it.
 - [ ] Move Portfolio Manager, dashboard summaries, Journal, reports,
       risk/analytics, portfolio-seeded backtests, and AI context onto the shared
       backend accounting contract; keep display conversion presentation-only.
+      Portfolio Manager's aggregate cards, position P&L, and transaction cash
+      deltas now consume the contract; the other named consumers remain.
 - [ ] Add deterministic mixed-currency and migration coverage on SQLite and
       disposable PostgreSQL, including buys/sells, cash flows, fees, missing and
       stale rates, and historical valuation.

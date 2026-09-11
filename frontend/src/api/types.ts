@@ -209,11 +209,72 @@ export type MultiPortfolio = {
   description?: string;
   benchmark_symbol?: string | null;
   currency?: string;
-  total_value?: number;
-  cash_balance?: number;
-  net_liquidation_value?: number;
+  total_value?: number | null;
+  cash_balance?: number | null;
+  net_liquidation_value?: number | null;
   starting_cash?: number;
   created_at?: string;
+  accounting?: PortfolioAccountingSummary;
+};
+
+export type PortfolioAccountingIssue = {
+  code: string;
+  scope: string;
+  id: string;
+  source_currency: string | null;
+  target_currency: string;
+  requested_date: string | null;
+  message: string;
+};
+
+export type PortfolioAccountingSummary = {
+  base_currency: string;
+  status: "complete" | "degraded" | "partial";
+  as_of: string;
+  issues: PortfolioAccountingIssue[];
+  degraded_reasons: string[];
+  fx_rates: Array<Record<string, unknown>>;
+  known_totals: Record<string, number>;
+};
+
+export type PortfolioAccounting = PortfolioAccountingSummary & {
+  totals: {
+    total_cost: number | null;
+    total_value: number | null;
+    cash_balance: number | null;
+    net_liquidation_value: number | null;
+    unrealized_pnl: number | null;
+    unrealized_pnl_pct: number | null;
+    realized_pnl: number | null;
+    day_change: number | null;
+    day_change_pct: number | null;
+    dividend_income_ytd: number | null;
+    fees: number | null;
+  };
+  allocation_by_sector: Array<{ name: string; value: number }>;
+  allocation_by_market: Array<{ name: string; value: number }>;
+  top_gainers: Array<Record<string, unknown>>;
+  top_losers: Array<Record<string, unknown>>;
+  holdings: Array<{
+    id: string;
+    symbol: string;
+    cost_basis_native: { amount: number; currency: string | null };
+    cost_basis_base: number | null;
+    cost_basis_method: "ledger_replay" | "holding_record";
+    market_value_native: { amount: number | null; currency: string | null };
+    market_value_base: number | null;
+    unrealized_pnl_base: number | null;
+  }>;
+  transactions: Array<{
+    id: string;
+    type: string;
+    symbol: string;
+    amount_native: { amount: number; currency: string | null };
+    amount_base: number | null;
+    fees_native: { amount: number; currency: string | null };
+    fees_base: number | null;
+    cash_delta_base: number | null;
+  }>;
 };
 
 export type MultiPortfolioHolding = {
@@ -247,23 +308,25 @@ export type MultiPortfolioTransaction = {
 
 export type MultiPortfolioAnalytics = {
   portfolio_id: string;
-  total_value: number;
-  total_cost: number;
-  cash_balance?: number;
-  net_liquidation_value?: number;
-  unrealized_pnl: number;
-  unrealized_pnl_pct: number;
-  realized_pnl: number;
-  day_change: number;
-  day_change_pct: number;
+  total_value: number | null;
+  total_cost: number | null;
+  cash_balance?: number | null;
+  net_liquidation_value?: number | null;
+  unrealized_pnl: number | null;
+  unrealized_pnl_pct: number | null;
+  realized_pnl: number | null;
+  day_change: number | null;
+  day_change_pct: number | null;
   allocation_by_sector: Array<{ name: string; value: number }>;
   allocation_by_market: Array<{ name: string; value: number }>;
   top_gainers: Array<Record<string, unknown>>;
   top_losers: Array<Record<string, unknown>>;
-  dividend_income_ytd: number;
-  annualized_return: number;
+  dividend_income_ytd: number | null;
+  fees: number | null;
+  annualized_return: number | null;
   sharpe_ratio: number;
   max_drawdown: number;
+  accounting?: PortfolioAccounting;
 };
 
 export type ScreenerScanFilter = { field: string; op: string; value: unknown };

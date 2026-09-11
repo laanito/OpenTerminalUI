@@ -7002,6 +7002,783 @@
         "title": "PeerResponse",
         "type": "object"
       },
+      "PortfolioAccountingHolding": {
+        "properties": {
+          "cost_basis_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Basis Base"
+          },
+          "cost_basis_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cost_basis_method": {
+            "enum": [
+              "ledger_replay",
+              "holding_record"
+            ],
+            "title": "Cost Basis Method",
+            "type": "string"
+          },
+          "cost_basis_native": {
+            "$ref": "#/components/schemas/PortfolioNativeAmount"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "market_value_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Base"
+          },
+          "market_value_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "market_value_native": {
+            "$ref": "#/components/schemas/PortfolioNativeAmount"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "unrealized_pnl_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Base"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "cost_basis_native",
+          "cost_basis_base",
+          "cost_basis_fx",
+          "cost_basis_method",
+          "market_value_native",
+          "market_value_base",
+          "market_value_fx",
+          "unrealized_pnl_base"
+        ],
+        "title": "PortfolioAccountingHolding",
+        "type": "object"
+      },
+      "PortfolioAccountingIssue": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "requested_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Date"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "source_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Currency"
+          },
+          "target_currency": {
+            "title": "Target Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "scope",
+          "id",
+          "source_currency",
+          "target_currency",
+          "requested_date",
+          "message"
+        ],
+        "title": "PortfolioAccountingIssue",
+        "type": "object"
+      },
+      "PortfolioAccountingResponse": {
+        "properties": {
+          "allocation_by_market": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAllocationItem"
+            },
+            "title": "Allocation By Market",
+            "type": "array"
+          },
+          "allocation_by_sector": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAllocationItem"
+            },
+            "title": "Allocation By Sector",
+            "type": "array"
+          },
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base_currency": {
+            "title": "Base Currency",
+            "type": "string"
+          },
+          "degraded_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Degraded Reasons",
+            "type": "array"
+          },
+          "fx_rates": {
+            "description": "Deduplicated traceable provider FX-rate evidence used by this valuation",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+            },
+            "title": "Fx Rates",
+            "type": "array"
+          },
+          "holdings": {
+            "description": "Native and base-currency valuation evidence per holding",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAccountingHolding"
+            },
+            "title": "Holdings",
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAccountingIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "known_totals": {
+            "$ref": "#/components/schemas/PortfolioKnownTotals",
+            "description": "Sum of successfully converted components, never a complete total when status is partial"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "degraded",
+              "partial"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "top_gainers": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Top Gainers",
+            "type": "array"
+          },
+          "top_losers": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Top Losers",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/PortfolioAccountingTotals"
+          },
+          "transactions": {
+            "description": "Native and base-currency valuation evidence per ledger row",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAccountingTransaction"
+            },
+            "title": "Transactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "base_currency",
+          "status",
+          "as_of",
+          "issues",
+          "degraded_reasons",
+          "fx_rates",
+          "known_totals",
+          "totals",
+          "allocation_by_sector",
+          "allocation_by_market",
+          "top_gainers",
+          "top_losers",
+          "holdings",
+          "transactions"
+        ],
+        "title": "PortfolioAccountingResponse",
+        "type": "object"
+      },
+      "PortfolioAccountingSummary": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base_currency": {
+            "title": "Base Currency",
+            "type": "string"
+          },
+          "degraded_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Degraded Reasons",
+            "type": "array"
+          },
+          "fx_rates": {
+            "description": "Deduplicated traceable provider FX-rate evidence used by this valuation",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+            },
+            "title": "Fx Rates",
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAccountingIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "known_totals": {
+            "$ref": "#/components/schemas/PortfolioKnownTotals",
+            "description": "Sum of successfully converted components, never a complete total when status is partial"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "degraded",
+              "partial"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_currency",
+          "status",
+          "as_of",
+          "issues",
+          "degraded_reasons",
+          "fx_rates",
+          "known_totals"
+        ],
+        "title": "PortfolioAccountingSummary",
+        "type": "object"
+      },
+      "PortfolioAccountingTotals": {
+        "properties": {
+          "cash_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Balance"
+          },
+          "day_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change"
+          },
+          "day_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Pct"
+          },
+          "dividend_income_ytd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dividend Income Ytd"
+          },
+          "fees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fees"
+          },
+          "net_liquidation_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Liquidation Value"
+          },
+          "realized_pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realized Pnl"
+          },
+          "total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Cost"
+          },
+          "total_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Value"
+          },
+          "unrealized_pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl"
+          },
+          "unrealized_pnl_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Pct"
+          }
+        },
+        "required": [
+          "total_cost",
+          "total_value",
+          "cash_balance",
+          "net_liquidation_value",
+          "unrealized_pnl",
+          "unrealized_pnl_pct",
+          "realized_pnl",
+          "day_change",
+          "day_change_pct",
+          "dividend_income_ytd",
+          "fees"
+        ],
+        "title": "PortfolioAccountingTotals",
+        "type": "object"
+      },
+      "PortfolioAccountingTransaction": {
+        "properties": {
+          "amount_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Base"
+          },
+          "amount_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "amount_native": {
+            "$ref": "#/components/schemas/PortfolioNativeAmount"
+          },
+          "cash_delta_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Delta Base"
+          },
+          "fees_base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fees Base"
+          },
+          "fees_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fees_native": {
+            "$ref": "#/components/schemas/PortfolioNativeAmount"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "symbol",
+          "amount_native",
+          "amount_base",
+          "amount_fx",
+          "fees_native",
+          "fees_base",
+          "fees_fx",
+          "cash_delta_base"
+        ],
+        "title": "PortfolioAccountingTransaction",
+        "type": "object"
+      },
+      "PortfolioAllocationItem": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "PortfolioAllocationItem",
+        "type": "object"
+      },
+      "PortfolioAnalyticsResponse": {
+        "properties": {
+          "accounting": {
+            "$ref": "#/components/schemas/PortfolioAccountingResponse"
+          },
+          "allocation_by_market": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAllocationItem"
+            },
+            "title": "Allocation By Market",
+            "type": "array"
+          },
+          "allocation_by_sector": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioAllocationItem"
+            },
+            "title": "Allocation By Sector",
+            "type": "array"
+          },
+          "annualized_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annualized Return"
+          },
+          "cash_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Balance"
+          },
+          "day_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change"
+          },
+          "day_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Pct"
+          },
+          "dividend_income_ytd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dividend Income Ytd"
+          },
+          "fees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fees"
+          },
+          "max_drawdown": {
+            "title": "Max Drawdown",
+            "type": "number"
+          },
+          "net_liquidation_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Liquidation Value"
+          },
+          "portfolio_id": {
+            "title": "Portfolio Id",
+            "type": "string"
+          },
+          "realized_pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realized Pnl"
+          },
+          "sharpe_ratio": {
+            "title": "Sharpe Ratio",
+            "type": "number"
+          },
+          "top_gainers": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Top Gainers",
+            "type": "array"
+          },
+          "top_losers": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Top Losers",
+            "type": "array"
+          },
+          "total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Cost"
+          },
+          "total_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Value"
+          },
+          "unrealized_pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl"
+          },
+          "unrealized_pnl_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Pct"
+          }
+        },
+        "required": [
+          "portfolio_id",
+          "total_cost",
+          "total_value",
+          "cash_balance",
+          "net_liquidation_value",
+          "unrealized_pnl",
+          "unrealized_pnl_pct",
+          "realized_pnl",
+          "day_change",
+          "day_change_pct",
+          "dividend_income_ytd",
+          "fees",
+          "allocation_by_sector",
+          "allocation_by_market",
+          "top_gainers",
+          "top_losers",
+          "annualized_return",
+          "sharpe_ratio",
+          "max_drawdown",
+          "accounting"
+        ],
+        "title": "PortfolioAnalyticsResponse",
+        "type": "object"
+      },
       "PortfolioDefinitionCreate": {
         "properties": {
           "benchmark_symbol": {
@@ -7136,6 +7913,273 @@
           "created_at"
         ],
         "title": "PortfolioDefinitionSummary",
+        "type": "object"
+      },
+      "PortfolioDetailResponse": {
+        "properties": {
+          "accounting": {
+            "$ref": "#/components/schemas/PortfolioAccountingResponse"
+          },
+          "benchmark_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Symbol"
+          },
+          "cash_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Balance"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "day_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change"
+          },
+          "day_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Pct"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "dividend_income_ytd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dividend Income Ytd"
+          },
+          "fees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fees"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "net_liquidation_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Liquidation Value"
+          },
+          "realized_pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realized Pnl"
+          },
+          "starting_cash": {
+            "title": "Starting Cash",
+            "type": "number"
+          },
+          "total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Cost"
+          },
+          "total_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Value"
+          },
+          "unrealized_pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl"
+          },
+          "unrealized_pnl_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Pct"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "benchmark_symbol",
+          "currency",
+          "starting_cash",
+          "created_at",
+          "total_cost",
+          "total_value",
+          "cash_balance",
+          "net_liquidation_value",
+          "unrealized_pnl",
+          "unrealized_pnl_pct",
+          "realized_pnl",
+          "day_change",
+          "day_change_pct",
+          "dividend_income_ytd",
+          "fees",
+          "accounting"
+        ],
+        "title": "PortfolioDetailResponse",
+        "type": "object"
+      },
+      "PortfolioFXRateEvidence": {
+        "properties": {
+          "base_currency": {
+            "description": "Currency of the native/source amount",
+            "title": "Base Currency",
+            "type": "string"
+          },
+          "cache_status": {
+            "title": "Cache Status",
+            "type": "string"
+          },
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "degraded_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degraded Reason"
+          },
+          "freshness": {
+            "title": "Freshness",
+            "type": "string"
+          },
+          "quote_currency": {
+            "description": "Portfolio accounting base currency",
+            "title": "Quote Currency",
+            "type": "string"
+          },
+          "rate": {
+            "title": "Rate",
+            "type": "number"
+          },
+          "rate_at": {
+            "format": "date-time",
+            "title": "Rate At",
+            "type": "string"
+          },
+          "requested_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Date"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_symbol": {
+            "title": "Source Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_currency",
+          "quote_currency",
+          "rate",
+          "rate_at",
+          "requested_date",
+          "source",
+          "source_symbol",
+          "freshness",
+          "cache_status",
+          "degraded",
+          "degraded_reason"
+        ],
+        "title": "PortfolioFXRateEvidence",
         "type": "object"
       },
       "PortfolioHoldingCreateRequest": {
@@ -7280,6 +8324,140 @@
         "title": "PortfolioHoldingsResponse",
         "type": "object"
       },
+      "PortfolioKnownTotals": {
+        "properties": {
+          "cash_balance": {
+            "title": "Cash Balance",
+            "type": "number"
+          },
+          "cost_basis": {
+            "title": "Cost Basis",
+            "type": "number"
+          },
+          "dividend_income": {
+            "title": "Dividend Income",
+            "type": "number"
+          },
+          "fees": {
+            "title": "Fees",
+            "type": "number"
+          },
+          "market_value": {
+            "title": "Market Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "cost_basis",
+          "market_value",
+          "cash_balance",
+          "fees",
+          "dividend_income"
+        ],
+        "title": "PortfolioKnownTotals",
+        "type": "object"
+      },
+      "PortfolioListItemResponse": {
+        "properties": {
+          "accounting": {
+            "$ref": "#/components/schemas/PortfolioAccountingSummary"
+          },
+          "benchmark_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Symbol"
+          },
+          "cash_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Balance"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "net_liquidation_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Liquidation Value"
+          },
+          "total_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Value"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "benchmark_symbol",
+          "currency",
+          "created_at",
+          "total_value",
+          "cash_balance",
+          "net_liquidation_value",
+          "accounting"
+        ],
+        "title": "PortfolioListItemResponse",
+        "type": "object"
+      },
+      "PortfolioListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioListItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PortfolioListResponse",
+        "type": "object"
+      },
       "PortfolioMutualFundCreate": {
         "properties": {
           "avg_nav": {
@@ -7349,6 +8527,38 @@
           "avg_nav"
         ],
         "title": "PortfolioMutualFundCreate",
+        "type": "object"
+      },
+      "PortfolioNativeAmount": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "PortfolioNativeAmount",
         "type": "object"
       },
       "PortfolioReport": {
@@ -25982,9 +27192,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response List Portfolios Api Portfolios Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PortfolioListResponse"
                 }
               }
             },
@@ -26171,9 +27379,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Portfolio Api Portfolios  Portfolio Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PortfolioDetailResponse"
                 }
               }
             },
@@ -26291,9 +27497,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Portfolio Analytics Api Portfolios  Portfolio Id  Analytics Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PortfolioAnalyticsResponse"
                 }
               }
             },

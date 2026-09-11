@@ -82,7 +82,31 @@ describe("PortfolioManager thesis capture", () => {
     addPortfolioHoldingMock.mockResolvedValue(undefined);
     addPortfolioTransactionMock.mockResolvedValue(undefined);
     fetchPortfolioAnalyticsMock.mockResolvedValue({
+      total_value: 288,
+      total_cost: 220,
+      cash_balance: 1430,
+      net_liquidation_value: 1718,
+      unrealized_pnl: 68,
+      unrealized_pnl_pct: 30.91,
+      realized_pnl: 0,
+      day_change: 6.24,
+      day_change_pct: 2,
+      dividend_income_ytd: 0,
+      annualized_return: 4,
+      sharpe_ratio: 1.1,
+      max_drawdown: -0.12,
       allocation_by_sector: [{ name: "Technology", value: 75 }],
+      allocation_by_market: [],
+      top_gainers: [],
+      top_losers: [],
+      accounting: {
+        base_currency: "USD",
+        status: "complete",
+        issues: [],
+        degraded_reasons: [],
+        holdings: [],
+        transactions: [],
+      },
     });
     fetchPortfolioCorrelationMock.mockResolvedValue({
       symbols: ["AAPL", "MSFT"],
@@ -122,6 +146,15 @@ describe("PortfolioManager thesis capture", () => {
         currency: "USD",
       }),
     );
+  });
+
+  it("renders normalized aggregates from the backend accounting contract", async () => {
+    render(<PortfolioManager />);
+
+    expect(await screen.findByText("1718")).toBeInTheDocument();
+    expect(screen.getByText("1430")).toBeInTheDocument();
+    expect(screen.queryByText("Mixed currencies")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Accounting is/)).not.toBeInTheDocument();
   });
 
   it("captures a thesis when creating a portfolio", async () => {
