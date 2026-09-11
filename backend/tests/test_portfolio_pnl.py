@@ -89,12 +89,12 @@ def test_analytics_realized_pnl_is_capital_gain() -> None:
     client.post(
         f"/api/portfolios/{pid}/transactions",
         headers=headers,
-        json={"symbol": "AAPL", "type": "buy", "shares": 10, "price": 100, "date": "2026-01-01"},
+        json={"symbol": "AAPL", "type": "buy", "shares": 10, "price": 100, "currency": "USD", "date": "2026-01-01"},
     )
     client.post(
         f"/api/portfolios/{pid}/transactions",
         headers=headers,
-        json={"symbol": "AAPL", "type": "sell", "shares": 5, "price": 150, "date": "2026-02-01"},
+        json={"symbol": "AAPL", "type": "sell", "shares": 5, "price": 150, "currency": "USD", "date": "2026-02-01"},
     )
     analytics = client.get(f"/api/portfolios/{pid}/analytics", headers=headers)
     assert analytics.status_code == 200, analytics.text

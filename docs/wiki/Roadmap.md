@@ -531,7 +531,11 @@ comparison in v2 depends on trustworthy cross-currency portfolio truth.
 - **Normalize portfolio calculations on the backend.** Return base-currency cash,
   cost basis, market value, net liquidation value, realised/unrealised P&L,
   income, fees, allocation, exposure, and historical performance. Keep native
-  amounts alongside converted amounts where they explain the result.
+  amounts alongside converted amounts where they explain the result. Portfolio
+  list, detail, and Manager analytics now use one shared engine for current
+  valuation plus dated ledger/cost/P&L conversion, returning traceable native and
+  FX evidence with complete/degraded/partial status. Deep exposure and supported
+  historical surfaces remain to be moved onto it.
 - **Separate investment and currency effects.** Attribute security return and FX
   return independently wherever the available history supports it; never imply
   that a currency move was instrument performance.
@@ -539,6 +543,8 @@ comparison in v2 depends on trustworthy cross-currency portfolio truth.
   reports, risk/analytics, backtests seeded from a portfolio, and AI context must
   consume the same backend accounting contract. The display-currency selector
   may re-express a result, but must not become an alternative calculation path.
+  Portfolio Manager now uses backend base totals for its cards, position P&L,
+  and ledger cash deltas; the other named consumers remain to be aligned.
 - **Protect portability and ownership.** Ship additive Alembic migrations and
   SQLite/PostgreSQL parity coverage without touching deployment databases in
   tests. Preserve per-user ownership across portfolio, transaction, and derived

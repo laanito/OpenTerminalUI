@@ -183,41 +183,36 @@ export function PortfolioManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const selectedPortfolio = useMemo(() => portfolios.find((p) => p.id === selectedId) || null, [portfolios, selectedId]);
+  const cashCurrency = toCurrencyCode(analytics?.accounting?.base_currency || selectedPortfolio?.currency);
+  const accountingHoldings = useMemo(
+    () => new Map((analytics?.accounting?.holdings || []).map((row) => [row.id, row])),
+    [analytics],
+  );
+  const accountingTransactions = useMemo(
+    () => new Map((analytics?.accounting?.transactions || []).map((row) => [row.id, row])),
+    [analytics],
+  );
   const perfSeries = useMemo(() => {
-    if (!holdings.length) return [];
-    const comparable = holdings.every((holding) => {
-      const costCurrency = asCurrencyCode(holding.cost_basis_currency);
-      return costCurrency != null && costCurrency === currencyFor(holding);
-    });
-    if (!comparable) return [];
+    if (!holdings.length || holdings.some((holding) => {
+      const evidence = accountingHoldings.get(holding.id);
+      return evidence?.cost_basis_base == null || evidence.market_value_base == null;
+    })) return [];
     let cumulative = 100;
     return holdings.map((h, idx) => {
-      const current = Number(h.current_price || h.cost_basis_per_share || 0);
-      const ret = h.cost_basis_per_share > 0 ? (current - h.cost_basis_per_share) / h.cost_basis_per_share : 0;
+      const evidence = accountingHoldings.get(h.id)!;
+      const cost = Number(evidence.cost_basis_base || 0);
+      const ret = cost > 0 ? Number(evidence.unrealized_pnl_base || 0) / cost : 0;
       cumulative *= 1 + ret / Math.max(1, holdings.length);
       return { i: idx + 1, value: cumulative };
     });
-  }, [holdings, selectedMarket]);
+  }, [accountingHoldings, holdings]);
 
-  const selectedPortfolio = useMemo(() => portfolios.find((p) => p.id === selectedId) || null, [portfolios, selectedId]);
-  const cashCurrency = toCurrencyCode(selectedPortfolio?.currency);
-  const holdingCurrency = useMemo<CurrencyCode | null>(() => {
-    const currencies = new Set(holdings.map(currencyFor));
-    if (currencies.size === 0) return cashCurrency;
-    return currencies.size === 1 ? currencies.values().next().value ?? cashCurrency : null;
-  }, [cashCurrency, holdings, selectedMarket]);
-  const holdingHasComparablePrices = (holding: MultiPortfolioHolding) => {
-    const costCurrency = asCurrencyCode(holding.cost_basis_currency);
-    return costCurrency != null && costCurrency === currencyFor(holding);
+  const formatBaseAggregate = (value: number | null | undefined) => {
+    if (value === undefined) return "-";
+    if (!analytics?.accounting) return "Needs accounting";
+    return value === null ? "Needs FX" : formatMoney(value, cashCurrency);
   };
-  const holdingCostsComparable = holdings.every(holdingHasComparablePrices);
-  const ledgerComparableToBase = transactions.every((transaction) =>
-    transaction.currency === cashCurrency
-    && (transaction.fees <= 0 || transaction.fees_currency === cashCurrency),
-  );
-  const netCurrency = holdingCurrency === cashCurrency && ledgerComparableToBase ? cashCurrency : null;
-  const formatHoldingAggregate = (value: number | null | undefined) =>
-    holdingCurrency ? formatMoney(value, holdingCurrency) : "Mixed currencies";
   const formatLedgerAmount = (value: number | null | undefined, currency?: string | null) => {
     const knownCurrency = asCurrencyCode(currency);
     if (knownCurrency) return formatMoney(value, knownCurrency);
@@ -395,22 +390,22 @@ export function PortfolioManager() {
       </aside>
 
       <section className="space-y-2">
-        {!holdingCurrency || !holdingCostsComparable || !ledgerComparableToBase ? (
+        {analytics && analytics.accounting?.status !== "complete" ? (
           <div className="rounded border border-terminal-warn/50 bg-terminal-warn/10 px-3 py-2 text-xs text-terminal-warn">
-            Some holding or ledger amounts require FX conversion or have unknown legacy currency. Affected aggregates stay unlabelled until backend base-currency accounting is complete.
+            Accounting is {analytics.accounting?.status || "unavailable"}: {analytics.accounting?.issues[0]?.message || analytics.accounting?.degraded_reasons[0] || "the backend accounting contract is unavailable"}. Affected totals remain unavailable; available values are accounted in {cashCurrency} before optional display conversion.
           </div>
         ) : null}
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Net Liquidation</div><div className="text-terminal-text">{analytics ? (netCurrency ? formatMoney(analytics.net_liquidation_value ?? analytics.total_value, netCurrency) : "Mixed currencies") : "-"}</div><div className="text-[10px] text-terminal-muted">holdings + cash</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Cash</div><div className={Number(analytics?.cash_balance ?? 0) >= 0 ? "text-terminal-text" : "text-terminal-neg"}>{analytics?.cash_balance != null ? (ledgerComparableToBase ? formatMoney(analytics.cash_balance, cashCurrency) : "Needs FX") : "-"}</div><div className="text-[10px] text-terminal-muted">from ledger</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Holdings Value</div><div className="text-terminal-text">{formatHoldingAggregate(analytics?.total_value)}</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Day P&L</div><div className={Number(analytics?.day_change || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatHoldingAggregate(analytics?.day_change)} ({metricFmt(analytics?.day_change_pct)}%)</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Unrealized P&L</div><div className={Number(analytics?.unrealized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{holdingCostsComparable ? <>{formatHoldingAggregate(analytics?.unrealized_pnl)} ({metricFmt(analytics?.unrealized_pnl_pct)}%)</> : "Needs FX"}</div><div className="text-[10px] text-terminal-muted">open positions</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Net Liquidation</div><div className="text-terminal-text">{formatBaseAggregate(analytics?.net_liquidation_value)}</div><div className="text-[10px] text-terminal-muted">holdings + cash · base {cashCurrency}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Cash</div><div className={Number(analytics?.cash_balance ?? 0) >= 0 ? "text-terminal-text" : "text-terminal-neg"}>{formatBaseAggregate(analytics?.cash_balance)}</div><div className="text-[10px] text-terminal-muted">from ledger · base {cashCurrency}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Holdings Value</div><div className="text-terminal-text">{formatBaseAggregate(analytics?.total_value)}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Day P&L</div><div className={Number(analytics?.day_change || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatBaseAggregate(analytics?.day_change)}{analytics?.day_change_pct != null ? ` (${metricFmt(analytics.day_change_pct)}%)` : ""}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Unrealized P&L</div><div className={Number(analytics?.unrealized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatBaseAggregate(analytics?.unrealized_pnl)}{analytics?.unrealized_pnl_pct != null ? ` (${metricFmt(analytics.unrealized_pnl_pct)}%)` : ""}</div><div className="text-[10px] text-terminal-muted">open positions · base {cashCurrency}</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Sharpe</div><div className="text-terminal-text">{metricFmt(analytics?.sharpe_ratio)}</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Annualized Return</div><div className="text-terminal-text">{metricFmt(analytics?.annualized_return)}%</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Annualized Return</div><div className="text-terminal-text">{!analytics?.accounting || analytics.annualized_return == null ? "-" : `${metricFmt(analytics.annualized_return)}%`}</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Max Drawdown</div><div className="text-terminal-neg">{metricFmt(analytics?.max_drawdown)}%</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Dividend YTD</div><div className="text-terminal-text">{ledgerComparableToBase ? formatMoney(analytics?.dividend_income_ytd, cashCurrency) : "Needs FX"}</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Realized P&L</div><div className={Number(analytics?.realized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{ledgerComparableToBase && holdingCostsComparable ? formatMoney(analytics?.realized_pnl, cashCurrency) : "Needs FX"}</div><div className="text-[10px] text-terminal-muted">booked gains</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Dividend YTD</div><div className="text-terminal-text">{formatBaseAggregate(analytics?.dividend_income_ytd)}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Realized P&L</div><div className={Number(analytics?.realized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatBaseAggregate(analytics?.realized_pnl)}</div><div className="text-[10px] text-terminal-muted">booked gains · base {cashCurrency}</div></div>
         </div>
 
         <div className="rounded border border-terminal-border bg-terminal-panel p-2">
@@ -555,8 +550,8 @@ export function PortfolioManager() {
               { key: "avgCost", title: "Avg Cost", type: "currency", align: "right", sortable: true, getValue: (r) => r.cost_basis_per_share, render: (r) => formatLedgerAmount(r.cost_basis_per_share, r.cost_basis_currency) },
               { key: "current", title: "Current", type: "currency", align: "right", sortable: true, getValue: (r) => r.current_price || 0, render: (r) => formatMoney(r.current_price || 0, currencyFor(r)) },
               { key: "value", title: "Market Value", type: "large-number", align: "right", sortable: true, getValue: (r) => (r.current_price || 0) * r.shares, render: (r) => formatCompactMoney((r.current_price || 0) * r.shares, currencyFor(r)) },
-              { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => holdingHasComparablePrices(r) ? ((r.current_price || 0) - r.cost_basis_per_share) * r.shares : 0, render: (r) => holdingHasComparablePrices(r) ? formatCompactMoney(((r.current_price || 0) - r.cost_basis_per_share) * r.shares, currencyFor(r)) : "Needs FX" },
-              { key: "pnlPct", title: "P&L%", type: "percent", align: "right", sortable: true, getValue: (r) => holdingHasComparablePrices(r) && r.cost_basis_per_share > 0 ? (((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100 : 0, render: (r) => holdingHasComparablePrices(r) && r.cost_basis_per_share > 0 ? `${metricFmt((((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100)}%` : "Needs FX" },
+              { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => accountingHoldings.get(r.id)?.unrealized_pnl_base ?? 0, render: (r) => { const value = accountingHoldings.get(r.id)?.unrealized_pnl_base; return value == null ? "Needs FX" : formatCompactMoney(value, cashCurrency); } },
+              { key: "pnlPct", title: "P&L%", type: "percent", align: "right", sortable: true, getValue: (r) => { const evidence = accountingHoldings.get(r.id); return evidence?.unrealized_pnl_base != null && evidence.cost_basis_base ? evidence.unrealized_pnl_base / evidence.cost_basis_base * 100 : 0; }, render: (r) => { const evidence = accountingHoldings.get(r.id); return evidence?.unrealized_pnl_base != null && evidence.cost_basis_base ? `${metricFmt(evidence.unrealized_pnl_base / evidence.cost_basis_base * 100)}%` : "Needs FX"; } },
               {
                 key: "actions",
                 title: "",
@@ -666,7 +661,7 @@ export function PortfolioManager() {
               { key: "shares", title: "Shares", type: "number", align: "right", sortable: true, getValue: (r) => (TX_NEEDS_SHARES[r.type] ? r.shares : 0), render: (r) => (TX_NEEDS_SHARES[r.type] ? metricFmt(r.shares) : "—") },
               { key: "price", title: "Price / Amt", type: "currency", align: "right", sortable: true, getValue: (r) => r.price, render: (r) => formatLedgerAmount(r.price, r.currency) },
               { key: "fees", title: "Fees", type: "currency", align: "right", sortable: true, getValue: (r) => r.fees, render: (r) => r.fees > 0 ? formatLedgerAmount(r.fees, r.fees_currency) : "—" },
-              { key: "cash", title: "Cash Δ", type: "large-number", align: "right", sortable: true, getValue: (r) => r.currency && (r.fees <= 0 || r.currency === r.fees_currency) ? cashDeltaPreview(r.type, r.shares, r.price, r.fees) : 0, render: (r) => r.currency && (r.fees <= 0 || r.currency === r.fees_currency) ? formatLedgerAmount(cashDeltaPreview(r.type, r.shares, r.price, r.fees), r.currency) : "Split / unknown currencies" },
+              { key: "cash", title: "Cash Δ", type: "large-number", align: "right", sortable: true, getValue: (r) => accountingTransactions.get(r.id)?.cash_delta_base ?? 0, render: (r) => { const value = accountingTransactions.get(r.id)?.cash_delta_base; return value == null ? "Needs FX" : formatMoney(value, cashCurrency); } },
               { key: "notes", title: "Notes", type: "text", getValue: (r) => r.notes || "" },
             ]}
           />

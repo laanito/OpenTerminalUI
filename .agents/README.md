@@ -91,7 +91,11 @@ release-level interpretation and safety boundaries.
   conversions must remain partial/degraded rather than produce false totals.
   Implementation has established the traceable current/historical FX resolver
   and explicit nullable holding, transaction, and fee currency evidence; legacy
-  rows remain unknown. Backend base-currency calculations are the next boundary.
+  rows remain unknown. Portfolio list, detail, and Manager analytics now share a
+  backend base-currency engine with native evidence and explicit
+  complete/degraded/partial results, and Portfolio Manager renders that contract.
+  Remaining downstream consumer, deep-exposure, history, and return-attribution
+  alignment is the next boundary.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
   deliberate API-key note ingestion, and an explicit journal-gap review. Feature

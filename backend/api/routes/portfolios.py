@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any
+from datetime import date, datetime, timezone
+from typing import Any, Literal
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -23,9 +23,9 @@ from backend.services.legacy_holdings import (
     manager_holdings_as_legacy,
     primary_portfolio,
 )
+from backend.services.forex_service import service as forex_service
+from backend.services.portfolio_accounting import calculate_portfolio_accounting
 from backend.services.portfolio_analytics import portfolio_analytics_service
-from backend.services.portfolio_cash import cash_balance
-from backend.services.portfolio_pnl import realized_pnl
 from backend.shared.market_classifier import is_crypto_symbol, market_classifier
 
 router = APIRouter()
@@ -146,6 +146,170 @@ class PortfolioTransactionsResponse(BaseModel):
     items: list[PortfolioTransactionResponse]
 
 
+class PortfolioAccountingIssue(BaseModel):
+    code: str
+    scope: str
+    id: str
+    source_currency: str | None
+    target_currency: str
+    requested_date: date | None
+    message: str
+
+
+class PortfolioFXRateEvidence(BaseModel):
+    base_currency: str = Field(description="Currency of the native/source amount")
+    quote_currency: str = Field(description="Portfolio accounting base currency")
+    rate: float
+    rate_at: datetime
+    requested_date: date | None
+    source: str
+    source_symbol: str
+    freshness: str
+    cache_status: str
+    degraded: bool
+    degraded_reason: str | None
+
+
+class PortfolioNativeAmount(BaseModel):
+    amount: float | None
+    currency: str | None
+
+
+class PortfolioAccountingHolding(BaseModel):
+    id: str
+    symbol: str
+    cost_basis_native: PortfolioNativeAmount
+    cost_basis_base: float | None
+    cost_basis_fx: PortfolioFXRateEvidence | None
+    cost_basis_method: Literal["ledger_replay", "holding_record"]
+    market_value_native: PortfolioNativeAmount
+    market_value_base: float | None
+    market_value_fx: PortfolioFXRateEvidence | None
+    unrealized_pnl_base: float | None
+
+
+class PortfolioAccountingTransaction(BaseModel):
+    id: str
+    type: str
+    symbol: str
+    amount_native: PortfolioNativeAmount
+    amount_base: float | None
+    amount_fx: PortfolioFXRateEvidence | None
+    fees_native: PortfolioNativeAmount
+    fees_base: float | None
+    fees_fx: PortfolioFXRateEvidence | None
+    cash_delta_base: float | None
+
+
+class PortfolioKnownTotals(BaseModel):
+    cost_basis: float
+    market_value: float
+    cash_balance: float
+    fees: float
+    dividend_income: float
+
+
+class PortfolioAllocationItem(BaseModel):
+    name: str
+    value: float
+
+
+class PortfolioAccountingSummary(BaseModel):
+    base_currency: str
+    status: Literal["complete", "degraded", "partial"]
+    as_of: datetime
+    issues: list[PortfolioAccountingIssue]
+    degraded_reasons: list[str]
+    fx_rates: list[PortfolioFXRateEvidence] = Field(description="Deduplicated traceable provider FX-rate evidence used by this valuation")
+    known_totals: PortfolioKnownTotals = Field(description="Sum of successfully converted components, never a complete total when status is partial")
+
+
+class PortfolioAccountingTotals(BaseModel):
+    total_cost: float | None
+    total_value: float | None
+    cash_balance: float | None
+    net_liquidation_value: float | None
+    unrealized_pnl: float | None
+    unrealized_pnl_pct: float | None
+    realized_pnl: float | None
+    day_change: float | None
+    day_change_pct: float | None
+    dividend_income_ytd: float | None
+    fees: float | None
+
+
+class PortfolioAccountingResponse(PortfolioAccountingSummary):
+    totals: PortfolioAccountingTotals
+    allocation_by_sector: list[PortfolioAllocationItem]
+    allocation_by_market: list[PortfolioAllocationItem]
+    top_gainers: list[dict[str, Any]]
+    top_losers: list[dict[str, Any]]
+    holdings: list[PortfolioAccountingHolding] = Field(description="Native and base-currency valuation evidence per holding")
+    transactions: list[PortfolioAccountingTransaction] = Field(description="Native and base-currency valuation evidence per ledger row")
+
+
+class PortfolioListItemResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    benchmark_symbol: str | None
+    currency: str
+    created_at: str
+    total_value: float | None
+    cash_balance: float | None
+    net_liquidation_value: float | None
+    accounting: PortfolioAccountingSummary
+
+
+class PortfolioListResponse(BaseModel):
+    items: list[PortfolioListItemResponse]
+
+
+class PortfolioDetailResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    benchmark_symbol: str | None
+    currency: str
+    starting_cash: float
+    created_at: str
+    total_cost: float | None
+    total_value: float | None
+    cash_balance: float | None
+    net_liquidation_value: float | None
+    unrealized_pnl: float | None
+    unrealized_pnl_pct: float | None
+    realized_pnl: float | None
+    day_change: float | None
+    day_change_pct: float | None
+    dividend_income_ytd: float | None
+    fees: float | None
+    accounting: PortfolioAccountingResponse
+
+
+class PortfolioAnalyticsResponse(BaseModel):
+    portfolio_id: str
+    total_cost: float | None
+    total_value: float | None
+    cash_balance: float | None
+    net_liquidation_value: float | None
+    unrealized_pnl: float | None
+    unrealized_pnl_pct: float | None
+    realized_pnl: float | None
+    day_change: float | None
+    day_change_pct: float | None
+    dividend_income_ytd: float | None
+    fees: float | None
+    allocation_by_sector: list[PortfolioAllocationItem]
+    allocation_by_market: list[PortfolioAllocationItem]
+    top_gainers: list[dict[str, Any]]
+    top_losers: list[dict[str, Any]]
+    annualized_return: float | None
+    sharpe_ratio: float
+    max_drawdown: float
+    accounting: PortfolioAccountingResponse
+
+
 def _portfolio_for_user(db: Session, portfolio_id: str, user_id: str) -> PortfolioORM:
     row = db.query(PortfolioORM).filter(PortfolioORM.id == portfolio_id, PortfolioORM.user_id == user_id).first()
     if row is None:
@@ -158,6 +322,30 @@ async def _quote_map(symbols: list[str]) -> dict[str, dict[str, Any]]:
     for sym in symbols:
         out[sym] = await fetch_stock_snapshot_coalesced(sym)
     return out
+
+
+async def _portfolio_accounting(
+    portfolio: PortfolioORM,
+    holdings: list[PortfolioHoldingORM],
+    transactions: list[PortfolioTransactionORM],
+    quotes: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    return await calculate_portfolio_accounting(
+        base_currency=portfolio.currency,
+        starting_cash=portfolio.starting_cash,
+        holdings=holdings,
+        transactions=transactions,
+        quotes=quotes,
+        resolve_rate=forex_service.get_valuation_rate,
+    )
+
+
+def _accounting_summary(accounting: dict[str, Any]) -> dict[str, Any]:
+    """Keep collection responses useful without duplicating row-level evidence."""
+    return {
+        key: accounting[key]
+        for key in ("base_currency", "status", "as_of", "issues", "degraded_reasons", "fx_rates", "known_totals")
+    }
 
 
 async def _legacy_summary_for_holdings(holdings: list[PortfolioHoldingORM]) -> dict[str, Any]:
@@ -266,7 +454,7 @@ def create_portfolio(
     return {"id": row.id, "name": row.name}
 
 
-@router.get("/portfolios")
+@router.get("/portfolios", response_model=PortfolioListResponse)
 async def list_portfolios(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -282,12 +470,9 @@ async def list_portfolios(
         holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == row.id).all()
         symbols = sorted({h.symbol for h in holdings if h.symbol})
         quotes = await _quote_map(symbols) if symbols else {}
-        total_value = 0.0
-        for h in holdings:
-            px = float((quotes.get(h.symbol, {}) or {}).get("current_price") or 0.0)
-            total_value += float(h.shares) * px
         transactions = db.query(PortfolioTransactionORM).filter(PortfolioTransactionORM.portfolio_id == row.id).all()
-        cash = cash_balance(row.starting_cash, transactions)
+        accounting = await _portfolio_accounting(row, holdings, transactions, quotes)
+        totals = accounting["totals"]
         out.append(
             {
                 "id": row.id,
@@ -296,9 +481,10 @@ async def list_portfolios(
                 "benchmark_symbol": row.benchmark_symbol,
                 "currency": row.currency,
                 "created_at": row.created_at.isoformat(),
-                "total_value": total_value,
-                "cash_balance": cash,
-                "net_liquidation_value": total_value + cash,
+                "total_value": totals["total_value"],
+                "cash_balance": totals["cash_balance"],
+                "net_liquidation_value": totals["net_liquidation_value"],
+                "accounting": _accounting_summary(accounting),
             }
         )
     return {"items": out}
@@ -328,14 +514,18 @@ async def get_primary_portfolio_summary(
     return summary
 
 
-@router.get("/portfolios/{portfolio_id}")
-def get_portfolio(
+@router.get("/portfolios/{portfolio_id}", response_model=PortfolioDetailResponse)
+async def get_portfolio(
     portfolio_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     row = _portfolio_for_user(db, portfolio_id, current_user.id)
+    holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == portfolio_id).all()
     transactions = db.query(PortfolioTransactionORM).filter(PortfolioTransactionORM.portfolio_id == portfolio_id).all()
+    symbols = sorted({holding.symbol for holding in holdings if holding.symbol})
+    quotes = await _quote_map(symbols) if symbols else {}
+    accounting = await _portfolio_accounting(row, holdings, transactions, quotes)
     return {
         "id": row.id,
         "name": row.name,
@@ -343,7 +533,8 @@ def get_portfolio(
         "benchmark_symbol": row.benchmark_symbol,
         "currency": row.currency,
         "starting_cash": row.starting_cash,
-        "cash_balance": cash_balance(row.starting_cash, transactions),
+        **accounting["totals"],
+        "accounting": accounting,
         "created_at": row.created_at.isoformat(),
     }
 
@@ -603,7 +794,7 @@ def list_portfolio_transactions(
     }
 
 
-@router.get("/portfolios/{portfolio_id}/analytics")
+@router.get("/portfolios/{portfolio_id}/analytics", response_model=PortfolioAnalyticsResponse)
 async def get_portfolio_analytics(
     portfolio_id: str,
     db: Session = Depends(get_db),
@@ -616,27 +807,8 @@ async def get_portfolio_analytics(
     symbols = sorted({h.symbol for h in holdings if h.symbol})
     quotes = await _quote_map(symbols) if symbols else {}
 
-    total_cost = 0.0
-    total_value = 0.0
-    sectors: dict[str, float] = {}
-    markets: dict[str, float] = {}
-    top_rows: list[dict[str, Any]] = []
     holding_views: list[SimpleNamespace] = []
     for h in holdings:
-        snap = quotes.get(h.symbol, {}) or {}
-        px = float(snap.get("current_price") or 0.0)
-        mv = float(h.shares) * px
-        cost = float(h.shares) * float(h.cost_basis_per_share)
-        pnl = mv - cost
-        total_value += mv
-        total_cost += cost
-        sector = str(snap.get("sector") or "Unknown")
-        sectors[sector] = sectors.get(sector, 0.0) + mv
-        ex = str(snap.get("exchange") or "Unknown")
-        mk = "NSE" if ex in {"NSE", "BSE"} else "US"
-        markets[mk] = markets.get(mk, 0.0) + mv
-        chg = float(snap.get("change_pct") or 0.0)
-        top_rows.append({"symbol": h.symbol, "pnl_pct": (pnl / cost * 100.0) if cost > 0 else 0.0, "day_change_pct": chg})
         holding_views.append(
             SimpleNamespace(
                 ticker=h.symbol,
@@ -645,22 +817,8 @@ async def get_portfolio_analytics(
             )
         )
 
-    unrealized = total_value - total_cost
-    # Realized P&L = capital gains from sells (cost basis subtracted), NOT proceeds.
-    # Dividend income is tracked separately in `dividend_income_ytd`.
-    realized = realized_pnl(transactions)
-    cash = cash_balance(portfolio.starting_cash, transactions)
-
-    top_gainers = sorted(top_rows, key=lambda x: x["pnl_pct"], reverse=True)[:5]
-    top_losers = sorted(top_rows, key=lambda x: x["pnl_pct"])[:5]
-    day_change = 0.0
-    for h in holdings:
-        snap = quotes.get(h.symbol, {}) or {}
-        px = float(snap.get("current_price") or 0.0)
-        mv = float(h.shares) * px
-        chg_pct = float(snap.get("change_pct") or 0.0)
-        day_change += mv * (chg_pct / 100.0)
-    day_change_pct = (day_change / total_value) * 100.0 if total_value > 0 else 0.0
+    accounting = await _portfolio_accounting(portfolio, holdings, transactions, quotes)
+    totals = accounting["totals"]
 
     def _as_utc(dt: datetime) -> datetime:
         # Bare date strings parse to naive datetimes; treat them as UTC so they
@@ -683,13 +841,13 @@ async def get_portfolio_analytics(
     inception = min(inception_candidates) if inception_candidates else now
     years = max((now - inception).days / 365.25, 1 / 365.25)
     initial_capital = float(portfolio.starting_cash or 0.0)
-    # Current equity = holdings marked to market + cash (which already reflects
-    # proceeds, dividends, deposits and buys via the ledger).
-    final_equity = float(total_value + cash)
-    if initial_capital > 0 and final_equity > 0:
+    # Current equity is available only when every required ledger and mark
+    # conversion succeeded; a partial result must not become a return figure.
+    final_equity = totals["net_liquidation_value"]
+    if initial_capital > 0 and final_equity is not None and final_equity > 0:
         annualized_return = ((final_equity / initial_capital) ** (1 / years) - 1.0) * 100.0
     else:
-        annualized_return = 0.0
+        annualized_return = None
 
     sharpe_ratio = 0.0
     max_drawdown = 0.0
@@ -704,23 +862,15 @@ async def get_portfolio_analytics(
 
     return {
         "portfolio_id": portfolio_id,
-        "total_value": total_value,
-        "total_cost": total_cost,
-        "cash_balance": cash,
-        "net_liquidation_value": total_value + cash,
-        "unrealized_pnl": unrealized,
-        "unrealized_pnl_pct": (unrealized / total_cost * 100.0) if total_cost > 0 else 0.0,
-        "realized_pnl": realized,
-        "day_change": day_change,
-        "day_change_pct": day_change_pct,
-        "allocation_by_sector": [{"name": k, "value": v} for k, v in sorted(sectors.items(), key=lambda x: x[1], reverse=True)],
-        "allocation_by_market": [{"name": k, "value": v} for k, v in sorted(markets.items(), key=lambda x: x[1], reverse=True)],
-        "top_gainers": top_gainers,
-        "top_losers": top_losers,
-        "dividend_income_ytd": sum(float(t.price) for t in transactions if t.type == "dividend"),
+        **totals,
+        "allocation_by_sector": accounting["allocation_by_sector"],
+        "allocation_by_market": accounting["allocation_by_market"],
+        "top_gainers": accounting["top_gainers"],
+        "top_losers": accounting["top_losers"],
         "annualized_return": annualized_return,
         "sharpe_ratio": sharpe_ratio,
         "max_drawdown": max_drawdown,
+        "accounting": accounting,
     }
 
 

@@ -78,7 +78,7 @@ def test_portfolio_cash_balance_reflects_transactions() -> None:
     buy = client.post(
         f"/api/portfolios/{pid}/transactions",
         headers=headers,
-        json={"symbol": "AAPL", "type": "buy", "shares": 10, "price": 150, "date": "2026-01-05", "fees": 2},
+        json={"symbol": "AAPL", "type": "buy", "shares": 10, "price": 150, "currency": "USD", "date": "2026-01-05", "fees": 2, "fees_currency": "USD"},
     )
     assert buy.status_code == 200, buy.text
     assert client.get(f"/api/portfolios/{pid}", headers=headers).json()["cash_balance"] == 10_000 - 1502
@@ -87,7 +87,7 @@ def test_portfolio_cash_balance_reflects_transactions() -> None:
     dep = client.post(
         f"/api/portfolios/{pid}/transactions",
         headers=headers,
-        json={"type": "deposit", "price": 5_000, "date": "2026-01-06"},
+        json={"type": "deposit", "price": 5_000, "currency": "USD", "date": "2026-01-06"},
     )
     assert dep.status_code == 200, dep.text
     assert client.get(f"/api/portfolios/{pid}", headers=headers).json()["cash_balance"] == 10_000 - 1502 + 5_000
@@ -96,12 +96,12 @@ def test_portfolio_cash_balance_reflects_transactions() -> None:
     client.post(
         f"/api/portfolios/{pid}/transactions",
         headers=headers,
-        json={"symbol": "AAPL", "type": "dividend", "price": 12, "date": "2026-02-01"},
+        json={"symbol": "AAPL", "type": "dividend", "price": 12, "currency": "USD", "date": "2026-02-01"},
     )
     client.post(
         f"/api/portfolios/{pid}/transactions",
         headers=headers,
-        json={"symbol": "AAPL", "type": "sell", "shares": 4, "price": 160, "date": "2026-02-02", "fees": 1},
+        json={"symbol": "AAPL", "type": "sell", "shares": 4, "price": 160, "currency": "USD", "date": "2026-02-02", "fees": 1, "fees_currency": "USD"},
     )
     expected = 10_000 - 1502 + 5_000 + 12 + (4 * 160 - 1)
     assert client.get(f"/api/portfolios/{pid}", headers=headers).json()["cash_balance"] == expected
