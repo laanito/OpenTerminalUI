@@ -38,6 +38,7 @@ def init_db() -> None:
     _ensure_fundamentals_pit_columns()
     _ensure_alerts_columns()
     _ensure_instrument_master_columns()
+    _ensure_portfolio_currency_columns()
 
 
 def _ensure_news_sentiment_columns() -> None:
@@ -139,3 +140,22 @@ def _ensure_alerts_columns() -> None:
             if col in existing:
                 continue
             conn.execute(text(f"ALTER TABLE alerts ADD COLUMN {col} {ddl}"))
+
+
+def _ensure_portfolio_currency_columns() -> None:
+    table_columns = {
+        "portfolio_holdings": {"cost_basis_currency": "VARCHAR(8)"},
+        "portfolio_transactions": {
+            "currency": "VARCHAR(8)",
+            "fees_currency": "VARCHAR(8)",
+        },
+    }
+    inspector = inspect(engine)
+    with engine.begin() as conn:
+        for table_name, columns_to_add in table_columns.items():
+            if not inspector.has_table(table_name):
+                continue
+            existing = {str(column["name"]) for column in inspector.get_columns(table_name)}
+            for column_name, ddl in columns_to_add.items():
+                if column_name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {ddl}"))

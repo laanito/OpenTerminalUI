@@ -7,6 +7,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Explicit portfolio ledger currencies** — portfolio base currency is now
+  named and editable in Portfolio Manager; holding cost basis, transaction
+  amounts, and fees persist their own currency fields. The additive `0014`
+  migration leaves legacy denominations nullable instead of guessing from the
+  portfolio, preserves supplied evidence across downgrade/version replay, and
+  is covered by SQLite startup plus disposable PostgreSQL schema checks. New
+  UI writes include currency, CSV imports accept a currency column, and mixed or
+  unknown row-level amounts are labelled or withheld instead of silently
+  formatted as the portfolio base.
 - **Traceable FX valuation lookup** — `GET /api/forex/rate` now resolves a
   current or dated conversion between supported currencies with the provider,
   source symbol, effective timestamp, cache state, freshness, and explicit

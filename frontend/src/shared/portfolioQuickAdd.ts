@@ -1,6 +1,11 @@
 import { addPortfolioHolding, fetchPortfolios } from "../api/client";
 
-export async function quickAddToFirstPortfolio(symbol: string, costHint?: number, notes = "Added from chart context menu"): Promise<boolean> {
+export async function quickAddToFirstPortfolio(
+  symbol: string,
+  costHint?: number,
+  notes = "Added from chart context menu",
+  currency?: string | null,
+): Promise<boolean> {
   const clean = String(symbol || "").trim().toUpperCase();
   if (!clean) return false;
   const portfolios = await fetchPortfolios();
@@ -11,6 +16,7 @@ export async function quickAddToFirstPortfolio(symbol: string, costHint?: number
     symbol: clean,
     shares: 1,
     cost_basis_per_share: cost,
+    ...(currency ? { currency: currency.trim().toUpperCase() } : {}),
     purchase_date: new Date().toISOString().slice(0, 10),
     notes,
   });

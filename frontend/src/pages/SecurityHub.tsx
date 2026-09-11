@@ -462,7 +462,7 @@ export function SecurityHubPage() {
                   crosshairSyncGroupId="security-hub"
                   comparisonSeries={compareSymbols.length > 0 ? comparisonSeriesData.filter(s => s.symbol !== activeTicker) : []}
                   onAddToPortfolio={(symbol, priceHint) => {
-                    void quickAddToFirstPortfolio(symbol, priceHint, "Added from Security Hub chart");
+                    void quickAddToFirstPortfolio(symbol, priceHint, "Added from Security Hub chart", String(stock?.currency || "") || null);
                   }}
                 />
               </div>

@@ -52,12 +52,12 @@ export async function fetchPortfolioHoldings(portfolioId: string): Promise<Multi
   return Array.isArray(data?.items) ? data.items : [];
 }
 
-export async function addPortfolioHolding(portfolioId: string, payload: { symbol: string; shares: number; cost_basis_per_share: number; purchase_date: string; notes?: string; lot_id?: string }): Promise<{ id: string; symbol: string }> {
+export async function addPortfolioHolding(portfolioId: string, payload: { symbol: string; shares: number; cost_basis_per_share: number; currency?: string; purchase_date: string; notes?: string; lot_id?: string }): Promise<{ id: string; symbol: string }> {
   const { data } = await api.post<{ id: string; symbol: string }>(`/portfolios/${encodeURIComponent(portfolioId)}/holdings`, payload);
   return data;
 }
 
-export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: PortfolioTransactionType; shares?: number; price?: number; date: string; fees?: number; lot_id?: string; notes?: string }): Promise<{ id: string; status: string }> {
+export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: PortfolioTransactionType; shares?: number; price?: number; currency?: string; date: string; fees?: number; fees_currency?: string; lot_id?: string; notes?: string }): Promise<{ id: string; status: string }> {
   const { data } = await api.post<{ id: string; status: string }>(`/portfolios/${encodeURIComponent(portfolioId)}/transactions`, payload);
   return data;
 }

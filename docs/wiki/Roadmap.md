@@ -517,7 +517,9 @@ comparison in v2 depends on trustworthy cross-currency portfolio truth.
 - **Define the ledger contract.** Record the native/transaction currency for
   trades, cash movements, dividends, and fees; define portfolio currency as the
   reporting base; and migrate existing rows conservatively without rewriting
-  amounts whose currency cannot be established.
+  amounts whose currency cannot be established. The additive `0014` migration
+  and Portfolio Manager now persist this evidence explicitly; legacy rows stay
+  nullable for later remediation rather than inheriting a guessed denomination.
 - **Add current and historical FX valuation.** Convert present positions with a
   current, timestamped rate and acquisition/disposal cash flows with a dated
   rate. Cache rates with provider and freshness metadata, and return partial or

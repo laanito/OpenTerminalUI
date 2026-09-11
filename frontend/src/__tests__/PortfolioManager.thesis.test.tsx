@@ -5,6 +5,7 @@ import { PortfolioManager } from "../components/portfolio/PortfolioManager";
 
 const fetchPortfoliosMock = vi.fn();
 const addPortfolioHoldingMock = vi.fn();
+const addPortfolioTransactionMock = vi.fn();
 const createPortfolioMock = vi.fn();
 const updatePortfolioMock = vi.fn();
 const fetchAiRiskInsightsMock = vi.fn();
@@ -14,7 +15,7 @@ const fetchPortfolioRiskMetricsMock = vi.fn();
 
 vi.mock("../api/client", () => ({
   addPortfolioHolding: (...args: unknown[]) => addPortfolioHoldingMock(...args),
-  addPortfolioTransaction: vi.fn(),
+  addPortfolioTransaction: (...args: unknown[]) => addPortfolioTransactionMock(...args),
   createPortfolio: (...args: unknown[]) => createPortfolioMock(...args),
   deletePortfolioById: vi.fn(),
   fetchAiRiskInsights: (...args: unknown[]) => fetchAiRiskInsightsMock(...args),
@@ -58,6 +59,7 @@ describe("PortfolioManager thesis capture", () => {
     for (const mock of [
       fetchPortfoliosMock,
       addPortfolioHoldingMock,
+      addPortfolioTransactionMock,
       createPortfolioMock,
       updatePortfolioMock,
       fetchAiRiskInsightsMock,
@@ -78,6 +80,7 @@ describe("PortfolioManager thesis capture", () => {
     ]);
     updatePortfolioMock.mockResolvedValue(undefined);
     addPortfolioHoldingMock.mockResolvedValue(undefined);
+    addPortfolioTransactionMock.mockResolvedValue(undefined);
     fetchPortfolioAnalyticsMock.mockResolvedValue({
       allocation_by_sector: [{ name: "Technology", value: 75 }],
     });
@@ -116,6 +119,7 @@ describe("PortfolioManager thesis capture", () => {
         name: "Core",
         description: "Reduce exposure if margin leadership breaks.",
         benchmark_symbol: "S&P500",
+        currency: "USD",
       }),
     );
   });
@@ -154,7 +158,34 @@ describe("PortfolioManager thesis capture", () => {
         symbol: "MSFT",
         shares: 12,
         cost_basis_per_share: 415.25,
+        currency: "USD",
         purchase_date: "2026-09-05",
+      }),
+    );
+  });
+
+  it("records amount and fee currencies explicitly", async () => {
+    render(<PortfolioManager />);
+
+    await screen.findByRole("textbox", { name: "Portfolio thesis" });
+    const transactionForm = within(screen.getByText("Record Transaction").parentElement as HTMLElement);
+    fireEvent.change(transactionForm.getByRole("combobox", { name: "Currency" }), { target: { value: "EUR" } });
+    fireEvent.change(transactionForm.getByRole("spinbutton", { name: "Fees" }), { target: { value: "2" } });
+    fireEvent.change(transactionForm.getByRole("combobox", { name: "Fee currency" }), { target: { value: "GBP" } });
+    fireEvent.change(transactionForm.getByLabelText("Date"), { target: { value: "2026-09-06" } });
+    fireEvent.click(transactionForm.getByRole("button", { name: "Record" }));
+
+    await waitFor(() =>
+      expect(addPortfolioTransactionMock).toHaveBeenCalledWith("p1", {
+        type: "buy",
+        symbol: "AAPL",
+        shares: 10,
+        price: 100,
+        currency: "EUR",
+        fees: 2,
+        fees_currency: "GBP",
+        date: "2026-09-06",
+        notes: undefined,
       }),
     );
   });

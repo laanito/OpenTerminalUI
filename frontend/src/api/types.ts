@@ -221,6 +221,7 @@ export type MultiPortfolioHolding = {
   symbol: string;
   shares: number;
   cost_basis_per_share: number;
+  cost_basis_currency?: string | null;
   purchase_date: string;
   notes?: string;
   lot_id?: string;
@@ -236,8 +237,10 @@ export type MultiPortfolioTransaction = {
   type: PortfolioTransactionType;
   shares: number;
   price: number;
+  currency?: string | null;
   date: string;
   fees: number;
+  fees_currency?: string | null;
   lot_id?: string;
   notes?: string;
 };

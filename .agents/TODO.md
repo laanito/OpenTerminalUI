@@ -275,9 +275,9 @@ across those intentional interfaces.
 
 ### v1.7 — multi-currency portfolio accounting
 
-- [ ] Treat each portfolio's existing `currency` as its explicit accounting base
+- [x] Treat each portfolio's existing `currency` as its explicit accounting base
       and distinguish it from instrument/native and transaction currencies.
-- [ ] Persist currency on trades, cash movements, dividends, and fees through an
+- [x] Persist currency on trades, cash movements, dividends, and fees through an
       additive, backwards-compatible migration. Do not guess and rewrite legacy
       amounts when their currency cannot be established safely.
 - [x] Add current and historical FX-rate lookup with timestamp, provider,

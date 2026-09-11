@@ -29,6 +29,7 @@ import { ChartPanelHeader } from "./ChartPanelHeader";
 import { ChartPanelFooter } from "./ChartPanelFooter";
 import type { QuoteTick } from "../../realtime/useQuotesStream";
 import { quickAddToFirstPortfolio } from "../../shared/portfolioQuickAdd";
+import { nativeCurrencyForSymbol } from "../../lib/currency";
 import {
   buildActiveChartAlertPreview,
   buildIndicatorAlertDraft,
@@ -562,7 +563,12 @@ export function ChartPanel({
                 setAlertDraft(draft);
               }}
               onAddToPortfolio={(symbol, priceHint) => {
-                void quickAddToFirstPortfolio(symbol, priceHint, "Added from Chart Workstation");
+                void quickAddToFirstPortfolio(
+                  symbol,
+                  priceHint,
+                  "Added from Chart Workstation",
+                  nativeCurrencyForSymbol(symbol, slot.market),
+                );
               }}
             />
             {showVolumeProfile ? <VolumeProfile profile={volumeProfile} liveQuote={liveQuote} /> : null}

@@ -43,21 +43,22 @@ import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 import { useSettingsStore } from "../../store/settingsStore";
-import type { CurrencyCode } from "../../lib/currency";
+import { asCurrencyCode, type CurrencyCode } from "../../lib/currency";
 import { TX_TYPES, TX_NEEDS_SYMBOL, TX_NEEDS_SHARES, cashDeltaPreview } from "../../utils/portfolioCash";
 import {
   CSV_SYMBOL_COLUMNS,
   CSV_SHARES_COLUMNS,
   CSV_COST_COLUMNS,
   CSV_DATE_COLUMNS,
+  CSV_CURRENCY_COLUMNS,
 } from "../../utils/portfolioMigration";
 
 const BENCHMARKS = ["S&P500", "NASDAQ", "DOW", "MSCIWI", "NIFTY50"];
 
-const CURRENCY_CODES: readonly CurrencyCode[] = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "INR", "SEK", "DKK", "NOK"];
+const CURRENCY_CODES: readonly CurrencyCode[] = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "INR", "HKD", "SEK", "DKK", "NOK"];
 
-// A portfolio's currency arrives as a plain string; coerce to a known code
-// (falling back to USD) so cash amounts format without fabricating a currency.
+// UI selectors use the currencies with known formatting metadata. Older or
+// malformed portfolio values fall back to USD until a user selects a valid base.
 function toCurrencyCode(code: string | undefined | null): CurrencyCode {
   const up = (code || "USD").toUpperCase();
   return (CURRENCY_CODES as readonly string[]).includes(up) ? (up as CurrencyCode) : "USD";
@@ -93,14 +94,17 @@ export function PortfolioManager() {
   const [newName, setNewName] = useState("Core Portfolio");
   const [newDescription, setNewDescription] = useState("");
   const [newBenchmark, setNewBenchmark] = useState(BENCHMARKS[0]);
+  const [newCurrency, setNewCurrency] = useState<CurrencyCode>("USD");
   const [newCash, setNewCash] = useState(100000);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editBenchmark, setEditBenchmark] = useState(BENCHMARKS[0]);
+  const [editCurrency, setEditCurrency] = useState<CurrencyCode>("USD");
 
   const [addSymbol, setAddSymbol] = useState("AAPL");
   const [addShares, setAddShares] = useState(10);
   const [addCost, setAddCost] = useState(100);
+  const [addCurrency, setAddCurrency] = useState<CurrencyCode>("USD");
   const [addDate, setAddDate] = useState(new Date().toISOString().slice(0, 10));
 
   const [transactions, setTransactions] = useState<MultiPortfolioTransaction[]>([]);
@@ -108,7 +112,9 @@ export function PortfolioManager() {
   const [txSymbol, setTxSymbol] = useState("AAPL");
   const [txShares, setTxShares] = useState(10);
   const [txPrice, setTxPrice] = useState(100);
+  const [txCurrency, setTxCurrency] = useState<CurrencyCode>("USD");
   const [txFees, setTxFees] = useState(0);
+  const [txFeesCurrency, setTxFeesCurrency] = useState<CurrencyCode>("USD");
   const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
   const [txNotes, setTxNotes] = useState("");
   const txFormRef = useRef<HTMLDivElement>(null);
@@ -135,6 +141,11 @@ export function PortfolioManager() {
           setEditName(selected.name || "");
           setEditDescription(selected.description || "");
           setEditBenchmark(selected.benchmark_symbol || BENCHMARKS[0]);
+          const baseCurrency = toCurrencyCode(selected.currency);
+          setEditCurrency(baseCurrency);
+          setAddCurrency(baseCurrency);
+          setTxCurrency(baseCurrency);
+          setTxFeesCurrency(baseCurrency);
         }
         // Deep analytics hit market data and are slower; load them in the
         // background (scoped to the selected portfolio) so the core view renders
@@ -174,6 +185,11 @@ export function PortfolioManager() {
 
   const perfSeries = useMemo(() => {
     if (!holdings.length) return [];
+    const comparable = holdings.every((holding) => {
+      const costCurrency = asCurrencyCode(holding.cost_basis_currency);
+      return costCurrency != null && costCurrency === currencyFor(holding);
+    });
+    if (!comparable) return [];
     let cumulative = 100;
     return holdings.map((h, idx) => {
       const current = Number(h.current_price || h.cost_basis_per_share || 0);
@@ -181,7 +197,7 @@ export function PortfolioManager() {
       cumulative *= 1 + ret / Math.max(1, holdings.length);
       return { i: idx + 1, value: cumulative };
     });
-  }, [holdings]);
+  }, [holdings, selectedMarket]);
 
   const selectedPortfolio = useMemo(() => portfolios.find((p) => p.id === selectedId) || null, [portfolios, selectedId]);
   const cashCurrency = toCurrencyCode(selectedPortfolio?.currency);
@@ -190,11 +206,26 @@ export function PortfolioManager() {
     if (currencies.size === 0) return cashCurrency;
     return currencies.size === 1 ? currencies.values().next().value ?? cashCurrency : null;
   }, [cashCurrency, holdings, selectedMarket]);
-  const netCurrency = holdingCurrency === cashCurrency ? cashCurrency : null;
+  const holdingHasComparablePrices = (holding: MultiPortfolioHolding) => {
+    const costCurrency = asCurrencyCode(holding.cost_basis_currency);
+    return costCurrency != null && costCurrency === currencyFor(holding);
+  };
+  const holdingCostsComparable = holdings.every(holdingHasComparablePrices);
+  const ledgerComparableToBase = transactions.every((transaction) =>
+    transaction.currency === cashCurrency
+    && (transaction.fees <= 0 || transaction.fees_currency === cashCurrency),
+  );
+  const netCurrency = holdingCurrency === cashCurrency && ledgerComparableToBase ? cashCurrency : null;
   const formatHoldingAggregate = (value: number | null | undefined) =>
     holdingCurrency ? formatMoney(value, holdingCurrency) : "Mixed currencies";
+  const formatLedgerAmount = (value: number | null | undefined, currency?: string | null) => {
+    const knownCurrency = asCurrencyCode(currency);
+    if (knownCurrency) return formatMoney(value, knownCurrency);
+    return `${metricFmt(value)} (${currency?.toUpperCase() || "currency unknown"})`;
+  };
   const portfolioSymbols = useMemo(() => Array.from(new Set(holdings.map((h) => h.symbol).filter(Boolean))), [holdings]);
-  const txPreview = cashDeltaPreview(txType, txShares, txPrice, txFees);
+  const txCurrenciesCompatible = txFees <= 0 || txCurrency === txFeesCurrency;
+  const txPreview = cashDeltaPreview(txType, txShares, txPrice, txCurrenciesCompatible ? txFees : 0);
 
   // Pre-fill the Record Transaction form to sell a specific position (full size
   // at the current price by default; user can adjust before recording). Turns a
@@ -204,6 +235,9 @@ export function PortfolioManager() {
     setTxSymbol(row.symbol);
     setTxShares(row.shares);
     setTxPrice(Number(row.current_price || row.cost_basis_per_share || 0));
+    const rowCurrency = toCurrencyCode(row.currency || row.cost_basis_currency);
+    setTxCurrency(rowCurrency);
+    setTxFeesCurrency(rowCurrency);
     setError(null);
     setStatus(`Selling ${row.symbol} — review shares/price, then Record`);
     requestAnimationFrame(() => txFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
@@ -234,7 +268,9 @@ export function PortfolioManager() {
         symbol: needsSymbol ? symbol : undefined,
         shares: needsShares ? txShares : 0,
         price: txPrice,
+        currency: txCurrency,
         fees: txFees,
+        fees_currency: txFeesCurrency,
         date: txDate,
         notes: txNotes.trim() || undefined,
       });
@@ -266,6 +302,7 @@ export function PortfolioManager() {
       const sharesIdx = findIdx(CSV_SHARES_COLUMNS);
       const costIdx = findIdx(CSV_COST_COLUMNS);
       const dateIdx = findIdx(CSV_DATE_COLUMNS);
+      const currencyIdx = findIdx(CSV_CURRENCY_COLUMNS);
       if (symbolIdx < 0 || sharesIdx < 0 || costIdx < 0) {
         setError("CSV header requires symbol, shares, and cost columns");
         return;
@@ -277,12 +314,16 @@ export function PortfolioManager() {
         const shares = Number(cols[sharesIdx] || 0);
         const cost = Number(cols[costIdx] || 0);
         const purchaseDate = dateIdx >= 0 && cols[dateIdx] ? cols[dateIdx] : new Date().toISOString().slice(0, 10);
+        const currency = currencyIdx >= 0 && cols[currencyIdx]
+          ? String(cols[currencyIdx]).trim().toUpperCase()
+          : addCurrency;
         if (!symbol || !Number.isFinite(shares) || shares <= 0 || !Number.isFinite(cost) || cost <= 0) continue;
         // Sequential imports preserve deterministic API load and easier failure reporting.
         await addPortfolioHolding(selectedId, {
           symbol,
           shares,
           cost_basis_per_share: cost,
+          currency,
           purchase_date: purchaseDate,
         });
         imported += 1;
@@ -324,6 +365,9 @@ export function PortfolioManager() {
           <select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={newBenchmark} onChange={(e) => setNewBenchmark(e.target.value)}>
             {BENCHMARKS.map((x) => <option key={x} value={x}>{x}</option>)}
           </select>
+          <TerminalInput as="select" value={newCurrency} onChange={(e) => setNewCurrency(e.target.value as CurrencyCode)} aria-label="Portfolio base currency">
+            {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code} base currency</option>)}
+          </TerminalInput>
           <TerminalInput type="number" value={newCash} onChange={(e) => setNewCash(Number(e.target.value) || 0)} placeholder="Starting cash" />
           <TerminalButton
             variant="accent"
@@ -334,6 +378,7 @@ export function PortfolioManager() {
                   name: newName,
                   description: newDescription.trim(),
                   benchmark_symbol: newBenchmark,
+                  currency: newCurrency,
                   starting_cash: newCash,
                 });
                 setStatus(`Created ${created.name}`);
@@ -350,22 +395,22 @@ export function PortfolioManager() {
       </aside>
 
       <section className="space-y-2">
-        {!holdingCurrency ? (
+        {!holdingCurrency || !holdingCostsComparable || !ledgerComparableToBase ? (
           <div className="rounded border border-terminal-warn/50 bg-terminal-warn/10 px-3 py-2 text-xs text-terminal-warn">
-            Holdings span multiple native currencies. Aggregate monetary analytics stay unlabelled until the backend normalizes them through FX rates.
+            Some holding or ledger amounts require FX conversion or have unknown legacy currency. Affected aggregates stay unlabelled until backend base-currency accounting is complete.
           </div>
         ) : null}
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Net Liquidation</div><div className="text-terminal-text">{analytics ? (netCurrency ? formatMoney(analytics.net_liquidation_value ?? analytics.total_value, netCurrency) : "Mixed currencies") : "-"}</div><div className="text-[10px] text-terminal-muted">holdings + cash</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Cash</div><div className={Number(analytics?.cash_balance ?? 0) >= 0 ? "text-terminal-text" : "text-terminal-neg"}>{analytics?.cash_balance != null ? formatMoney(analytics.cash_balance, cashCurrency) : "-"}</div><div className="text-[10px] text-terminal-muted">from ledger</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Cash</div><div className={Number(analytics?.cash_balance ?? 0) >= 0 ? "text-terminal-text" : "text-terminal-neg"}>{analytics?.cash_balance != null ? (ledgerComparableToBase ? formatMoney(analytics.cash_balance, cashCurrency) : "Needs FX") : "-"}</div><div className="text-[10px] text-terminal-muted">from ledger</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Holdings Value</div><div className="text-terminal-text">{formatHoldingAggregate(analytics?.total_value)}</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Day P&L</div><div className={Number(analytics?.day_change || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatHoldingAggregate(analytics?.day_change)} ({metricFmt(analytics?.day_change_pct)}%)</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Unrealized P&L</div><div className={Number(analytics?.unrealized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatHoldingAggregate(analytics?.unrealized_pnl)} ({metricFmt(analytics?.unrealized_pnl_pct)}%)</div><div className="text-[10px] text-terminal-muted">open positions</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Unrealized P&L</div><div className={Number(analytics?.unrealized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{holdingCostsComparable ? <>{formatHoldingAggregate(analytics?.unrealized_pnl)} ({metricFmt(analytics?.unrealized_pnl_pct)}%)</> : "Needs FX"}</div><div className="text-[10px] text-terminal-muted">open positions</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Sharpe</div><div className="text-terminal-text">{metricFmt(analytics?.sharpe_ratio)}</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Annualized Return</div><div className="text-terminal-text">{metricFmt(analytics?.annualized_return)}%</div></div>
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Max Drawdown</div><div className="text-terminal-neg">{metricFmt(analytics?.max_drawdown)}%</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Dividend YTD</div><div className="text-terminal-text">{formatHoldingAggregate(analytics?.dividend_income_ytd)}</div></div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Realized P&L</div><div className={Number(analytics?.realized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{formatMoney(analytics?.realized_pnl, cashCurrency)}</div><div className="text-[10px] text-terminal-muted">booked gains</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Dividend YTD</div><div className="text-terminal-text">{ledgerComparableToBase ? formatMoney(analytics?.dividend_income_ytd, cashCurrency) : "Needs FX"}</div></div>
+          <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Realized P&L</div><div className={Number(analytics?.realized_pnl || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{ledgerComparableToBase && holdingCostsComparable ? formatMoney(analytics?.realized_pnl, cashCurrency) : "Needs FX"}</div><div className="text-[10px] text-terminal-muted">booked gains</div></div>
         </div>
 
         <div className="rounded border border-terminal-border bg-terminal-panel p-2">
@@ -374,6 +419,9 @@ export function PortfolioManager() {
             <TerminalInput className="w-40" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Name" />
             <TerminalInput as="select" className="w-28" value={editBenchmark} onChange={(e) => setEditBenchmark(e.target.value)}>
               {BENCHMARKS.map((x) => <option key={x} value={x}>{x}</option>)}
+            </TerminalInput>
+            <TerminalInput as="select" className="w-24" value={editCurrency} onChange={(e) => setEditCurrency(e.target.value as CurrencyCode)} aria-label="Accounting base currency">
+              {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
             </TerminalInput>
             <TerminalButton
               size="sm"
@@ -387,6 +435,7 @@ export function PortfolioManager() {
                     name: editName.trim() || selectedPortfolio.name,
                     description: editDescription.trim(),
                     benchmark_symbol: editBenchmark,
+                    currency: editCurrency,
                   });
                   setStatus("Portfolio updated");
                   await loadAll(selectedPortfolio.id);
@@ -434,7 +483,7 @@ export function PortfolioManager() {
             </label>
             <fieldset className="rounded border border-terminal-border/70 bg-terminal-bg/30 p-2">
               <legend className="px-1 text-xs font-semibold text-terminal-muted">Add holding</legend>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                 <label className="block text-[11px] text-terminal-muted">
                   <span className="mb-1 block">Symbol</span>
                   <TerminalInput className="w-full" value={addSymbol} onChange={(e) => setAddSymbol(e.target.value.toUpperCase())} placeholder="AAPL" />
@@ -451,6 +500,12 @@ export function PortfolioManager() {
                   <span className="mb-1 block">Purchase date</span>
                   <TerminalInput className="w-full" type="date" value={addDate} onChange={(e) => setAddDate(e.target.value)} />
                 </label>
+                <label className="block text-[11px] text-terminal-muted">
+                  <span className="mb-1 block">Cost currency</span>
+                  <TerminalInput as="select" className="w-full" value={addCurrency} onChange={(e) => setAddCurrency(e.target.value as CurrencyCode)}>
+                    {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
+                  </TerminalInput>
+                </label>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                 <TerminalButton
@@ -459,7 +514,7 @@ export function PortfolioManager() {
                     if (!selectedId) return;
                     try {
                       setError(null);
-                      await addPortfolioHolding(selectedId, { symbol: addSymbol, shares: addShares, cost_basis_per_share: addCost, purchase_date: addDate });
+                      await addPortfolioHolding(selectedId, { symbol: addSymbol, shares: addShares, cost_basis_per_share: addCost, currency: addCurrency, purchase_date: addDate });
                       setStatus(`Added ${addSymbol}`);
                       await loadAll(selectedId);
                     } catch (err) {
@@ -497,11 +552,11 @@ export function PortfolioManager() {
             columns={[
               { key: "symbol", title: "Symbol", type: "text", frozen: true, width: 100, sortable: true, getValue: (r) => r.symbol },
               { key: "shares", title: "Shares", type: "number", align: "right", sortable: true, getValue: (r) => r.shares },
-              { key: "avgCost", title: "Avg Cost", type: "currency", align: "right", sortable: true, getValue: (r) => r.cost_basis_per_share, render: (r) => formatMoney(r.cost_basis_per_share, currencyFor(r)) },
+              { key: "avgCost", title: "Avg Cost", type: "currency", align: "right", sortable: true, getValue: (r) => r.cost_basis_per_share, render: (r) => formatLedgerAmount(r.cost_basis_per_share, r.cost_basis_currency) },
               { key: "current", title: "Current", type: "currency", align: "right", sortable: true, getValue: (r) => r.current_price || 0, render: (r) => formatMoney(r.current_price || 0, currencyFor(r)) },
               { key: "value", title: "Market Value", type: "large-number", align: "right", sortable: true, getValue: (r) => (r.current_price || 0) * r.shares, render: (r) => formatCompactMoney((r.current_price || 0) * r.shares, currencyFor(r)) },
-              { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => ((r.current_price || 0) - r.cost_basis_per_share) * r.shares, render: (r) => formatCompactMoney(((r.current_price || 0) - r.cost_basis_per_share) * r.shares, currencyFor(r)) },
-              { key: "pnlPct", title: "P&L%", type: "percent", align: "right", sortable: true, getValue: (r) => (r.cost_basis_per_share > 0 ? (((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100 : 0) },
+              { key: "pnl", title: "P&L", type: "large-number", align: "right", sortable: true, getValue: (r) => holdingHasComparablePrices(r) ? ((r.current_price || 0) - r.cost_basis_per_share) * r.shares : 0, render: (r) => holdingHasComparablePrices(r) ? formatCompactMoney(((r.current_price || 0) - r.cost_basis_per_share) * r.shares, currencyFor(r)) : "Needs FX" },
+              { key: "pnlPct", title: "P&L%", type: "percent", align: "right", sortable: true, getValue: (r) => holdingHasComparablePrices(r) && r.cost_basis_per_share > 0 ? (((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100 : 0, render: (r) => holdingHasComparablePrices(r) && r.cost_basis_per_share > 0 ? `${metricFmt((((r.current_price || 0) - r.cost_basis_per_share) / r.cost_basis_per_share) * 100)}%` : "Needs FX" },
               {
                 key: "actions",
                 title: "",
@@ -553,8 +608,29 @@ export function PortfolioManager() {
               <TerminalInput className="w-24" type="number" value={txPrice} onChange={(e) => setTxPrice(Number(e.target.value) || 0)} />
             </label>
             <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-terminal-muted">Currency</span>
+              <TerminalInput
+                as="select"
+                className="w-20"
+                value={txCurrency}
+                onChange={(e) => {
+                  const nextCurrency = e.target.value as CurrencyCode;
+                  setTxCurrency(nextCurrency);
+                  setTxFeesCurrency(nextCurrency);
+                }}
+              >
+                {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
+              </TerminalInput>
+            </label>
+            <label className="flex flex-col gap-0.5">
               <span className="text-[10px] text-terminal-muted">Fees</span>
               <TerminalInput className="w-20" type="number" value={txFees} onChange={(e) => setTxFees(Number(e.target.value) || 0)} />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-terminal-muted">Fee currency</span>
+              <TerminalInput as="select" className="w-20" value={txFeesCurrency} onChange={(e) => setTxFeesCurrency(e.target.value as CurrencyCode)}>
+                {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
+              </TerminalInput>
             </label>
             <label className="flex flex-col gap-0.5">
               <span className="text-[10px] text-terminal-muted">Date</span>
@@ -571,8 +647,9 @@ export function PortfolioManager() {
           <div className="mb-2 text-[11px] text-terminal-muted">
             Cash impact:{" "}
             <span className={txPreview >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
-              {txPreview >= 0 ? "+" : ""}{formatMoney(txPreview, cashCurrency)}
+              {txPreview >= 0 ? "+" : ""}{formatMoney(txPreview, txCurrency)}
             </span>
+            {!txCurrenciesCompatible ? `; fees -${formatMoney(txFees, txFeesCurrency)}` : null}
           </div>
           {transactions.length === 0 ? (
             <div className="mb-2 text-[11px] text-terminal-muted">No transactions yet — record a deposit to fund the portfolio, then buy/sell.</div>
@@ -587,9 +664,9 @@ export function PortfolioManager() {
               { key: "type", title: "Type", type: "text", width: 90, sortable: true, getValue: (r) => r.type },
               { key: "symbol", title: "Symbol", type: "text", width: 90, sortable: true, getValue: (r) => (r.symbol === "CASH" ? "—" : r.symbol) },
               { key: "shares", title: "Shares", type: "number", align: "right", sortable: true, getValue: (r) => (TX_NEEDS_SHARES[r.type] ? r.shares : 0), render: (r) => (TX_NEEDS_SHARES[r.type] ? metricFmt(r.shares) : "—") },
-              { key: "price", title: "Price / Amt", type: "currency", align: "right", sortable: true, getValue: (r) => r.price, render: (r) => formatMoney(r.price, cashCurrency) },
-              { key: "fees", title: "Fees", type: "currency", align: "right", sortable: true, getValue: (r) => r.fees, render: (r) => formatMoney(r.fees || 0, cashCurrency) },
-              { key: "cash", title: "Cash Δ", type: "large-number", align: "right", sortable: true, getValue: (r) => cashDeltaPreview(r.type, r.shares, r.price, r.fees), render: (r) => formatMoney(cashDeltaPreview(r.type, r.shares, r.price, r.fees), cashCurrency) },
+              { key: "price", title: "Price / Amt", type: "currency", align: "right", sortable: true, getValue: (r) => r.price, render: (r) => formatLedgerAmount(r.price, r.currency) },
+              { key: "fees", title: "Fees", type: "currency", align: "right", sortable: true, getValue: (r) => r.fees, render: (r) => r.fees > 0 ? formatLedgerAmount(r.fees, r.fees_currency) : "—" },
+              { key: "cash", title: "Cash Δ", type: "large-number", align: "right", sortable: true, getValue: (r) => r.currency && (r.fees <= 0 || r.currency === r.fees_currency) ? cashDeltaPreview(r.type, r.shares, r.price, r.fees) : 0, render: (r) => r.currency && (r.fees <= 0 || r.currency === r.fees_currency) ? formatLedgerAmount(cashDeltaPreview(r.type, r.shares, r.price, r.fees), r.currency) : "Split / unknown currencies" },
               { key: "notes", title: "Notes", type: "text", getValue: (r) => r.notes || "" },
             ]}
           />

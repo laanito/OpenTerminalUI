@@ -34,3 +34,9 @@ def test_postgres_lane_uses_migrated_disposable_database() -> None:
 
     with engine.connect() as connection:
         assert connection.execute(text("SELECT 1")).scalar_one() == 1
+
+    holding_columns = {column["name"]: column for column in inspector.get_columns("portfolio_holdings")}
+    transaction_columns = {column["name"]: column for column in inspector.get_columns("portfolio_transactions")}
+    assert holding_columns["cost_basis_currency"]["nullable"] is True
+    assert transaction_columns["currency"]["nullable"] is True
+    assert transaction_columns["fees_currency"]["nullable"] is True

@@ -196,7 +196,7 @@ export function MultiMarketScanPanel() {
     }
   };
 
-  const onAddToPortfolio = async (symbol: string, costHint?: number) => {
+  const onAddToPortfolio = async (symbol: string, costHint?: number, currency?: unknown) => {
     if (!symbol) return;
     try {
       const portfolios = await fetchPortfolios();
@@ -206,10 +206,12 @@ export function MultiMarketScanPanel() {
         return;
       }
       const safeCost = Number.isFinite(Number(costHint)) && Number(costHint) > 0 ? Number(costHint) : 1;
+      const explicitCurrency = typeof currency === "string" ? currency.trim().toUpperCase() : "";
       await addPortfolioHolding(target.id, {
         symbol,
         shares: 1,
         cost_basis_per_share: safeCost,
+        ...(explicitCurrency ? { currency: explicitCurrency } : {}),
         purchase_date: new Date().toISOString().slice(0, 10),
         notes: "Added from Screener context menu",
       });
@@ -336,7 +338,10 @@ export function MultiMarketScanPanel() {
             <TerminalButton size="sm" variant="default" onClick={() => openSecurity(selectedSymbol, "overview")}>Security Hub</TerminalButton>
             <TerminalButton size="sm" variant="default" onClick={() => openSecurity(selectedSymbol, "news")}>News</TerminalButton>
             <TerminalButton size="sm" variant="default" onClick={() => void onAddToWatchlist(selectedSymbol)}>Add Watchlist</TerminalButton>
-            <TerminalButton size="sm" variant="default" onClick={() => void onAddToPortfolio(selectedSymbol)}>Add Portfolio</TerminalButton>
+            <TerminalButton size="sm" variant="default" onClick={() => {
+              const selectedRow = rows.find((row) => getRowSymbol(row) === selectedSymbol);
+              void onAddToPortfolio(selectedSymbol, getRowPrice(selectedRow || {}), selectedRow?.currency);
+            }}>Add Portfolio</TerminalButton>
           </div>
         ) : null}
 
@@ -389,7 +394,7 @@ export function MultiMarketScanPanel() {
           onAddToPortfolio={(row) => {
             const symbol = getRowSymbol(row);
             const px = getRowPrice(row);
-            if (symbol) void onAddToPortfolio(symbol, px);
+            if (symbol) void onAddToPortfolio(symbol, px, row.currency);
           }}
           onViewDetails={(row) => {
             const symbol = getRowSymbol(row);
