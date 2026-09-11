@@ -486,7 +486,7 @@ export function StockDetailPage() {
                 showSessionShading={showSessionShading}
                 extendedHours={extendedHoursConfig}
                 onAddToPortfolio={(symbol, priceHint) => {
-                  void quickAddToFirstPortfolio(symbol, priceHint, "Added from Stock Detail chart");
+                  void quickAddToFirstPortfolio(symbol, priceHint, "Added from Stock Detail chart", instrumentCurrency);
                 }}
               />
             ) : (

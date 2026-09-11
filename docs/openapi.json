@@ -7145,6 +7145,18 @@
             "title": "Cost Basis Per Share",
             "type": "number"
           },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Currency of the recorded cost basis; omission is preserved as unknown",
+            "title": "Currency"
+          },
           "lot_id": {
             "default": "",
             "title": "Lot Id",
@@ -7176,6 +7188,96 @@
           "cost_basis_per_share"
         ],
         "title": "PortfolioHoldingCreateRequest",
+        "type": "object"
+      },
+      "PortfolioHoldingResponse": {
+        "properties": {
+          "cost_basis_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Persisted currency of the recorded cost basis; null means legacy/unknown",
+            "title": "Cost Basis Currency"
+          },
+          "cost_basis_per_share": {
+            "title": "Cost Basis Per Share",
+            "type": "number"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Live provider currency of current_price",
+            "title": "Currency"
+          },
+          "current_price": {
+            "title": "Current Price",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_id": {
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "purchase_date": {
+            "title": "Purchase Date",
+            "type": "string"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "shares",
+          "cost_basis_per_share",
+          "cost_basis_currency",
+          "purchase_date",
+          "notes",
+          "lot_id",
+          "current_price",
+          "currency"
+        ],
+        "title": "PortfolioHoldingResponse",
+        "type": "object"
+      },
+      "PortfolioHoldingsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioHoldingResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PortfolioHoldingsResponse",
         "type": "object"
       },
       "PortfolioMutualFundCreate": {
@@ -7518,6 +7620,18 @@
       },
       "PortfolioTransactionCreateRequest": {
         "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Currency of price or cash amount; omission is preserved as unknown",
+            "title": "Currency"
+          },
           "date": {
             "title": "Date",
             "type": "string"
@@ -7527,6 +7641,18 @@
             "minimum": 0.0,
             "title": "Fees",
             "type": "number"
+          },
+          "fees_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Currency of fees; omission is preserved as unknown",
+            "title": "Fees Currency"
           },
           "lot_id": {
             "default": "",
@@ -7566,6 +7692,101 @@
           "date"
         ],
         "title": "PortfolioTransactionCreateRequest",
+        "type": "object"
+      },
+      "PortfolioTransactionResponse": {
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Persisted price/amount currency; null means legacy/unknown",
+            "title": "Currency"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "fees": {
+            "title": "Fees",
+            "type": "number"
+          },
+          "fees_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Persisted fee currency; null means legacy/unknown",
+            "title": "Fees Currency"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_id": {
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "price": {
+            "title": "Price",
+            "type": "number"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "type",
+          "shares",
+          "price",
+          "currency",
+          "date",
+          "fees",
+          "fees_currency",
+          "lot_id",
+          "notes"
+        ],
+        "title": "PortfolioTransactionResponse",
+        "type": "object"
+      },
+      "PortfolioTransactionsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioTransactionResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PortfolioTransactionsResponse",
         "type": "object"
       },
       "PortfolioUpdateRequest": {
@@ -26556,9 +26777,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response List Portfolio Holdings Api Portfolios  Portfolio Id  Holdings Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PortfolioHoldingsResponse"
                 }
               }
             },
@@ -26676,9 +26895,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response List Portfolio Transactions Api Portfolios  Portfolio Id  Transactions Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PortfolioTransactionsResponse"
                 }
               }
             },

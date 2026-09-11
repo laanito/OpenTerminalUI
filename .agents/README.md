@@ -89,6 +89,9 @@ release-level interpretation and safety boundaries.
   persists transaction/native currency semantics, and normalizes ledger and
   analytics results using traceable current and historical FX rates. Missing
   conversions must remain partial/degraded rather than produce false totals.
+  Implementation has established the traceable current/historical FX resolver
+  and explicit nullable holding, transaction, and fee currency evidence; legacy
+  rows remain unknown. Backend base-currency calculations are the next boundary.
 - **v1.3 — The second brain gets depth** shipped
   deterministic long-note chunking, source-aware retrieval, progressive answers,
   deliberate API-key note ingestion, and an explicit journal-gap review. Feature

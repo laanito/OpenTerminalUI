@@ -714,6 +714,7 @@ class PortfolioHoldingORM(Base):
     symbol: Mapped[str] = mapped_column(String(64), index=True)
     shares: Mapped[float] = mapped_column(Float, default=0.0)
     cost_basis_per_share: Mapped[float] = mapped_column(Float, default=0.0)
+    cost_basis_currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     purchase_date: Mapped[str] = mapped_column(String(16), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
     lot_id: Mapped[str] = mapped_column(String(64), default="")
@@ -729,8 +730,10 @@ class PortfolioTransactionORM(Base):
     type: Mapped[str] = mapped_column(String(16), index=True)  # buy|sell|dividend
     shares: Mapped[float] = mapped_column(Float, default=0.0)
     price: Mapped[float] = mapped_column(Float, default=0.0)
+    currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     date: Mapped[str] = mapped_column(String(16), index=True)
     fees: Mapped[float] = mapped_column(Float, default=0.0)
+    fees_currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     lot_id: Mapped[str] = mapped_column(String(64), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)

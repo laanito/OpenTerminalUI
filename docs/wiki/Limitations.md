@@ -73,11 +73,13 @@ never silently faked.
   (P/E, financials, peers, shareholding) are intentionally hidden because they
   don't apply to an index.
 - **Cross-currency portfolio and journal totals are not FX-normalized on the
-  backend yet.** Individual instruments use provider-native currency and the UI
-  converts them when a supported cross-rate is available. When a collection
-  spans native currencies, aggregate monetary labels are withheld and the UI
-  says `Mixed currencies` rather than assigning an incorrect symbol. Full
-  base-currency accounting is planned as the v1.7 milestone; until then, display
+  backend yet.** Portfolio holdings and transactions now retain explicit cost,
+  amount, and fee currencies, while legacy rows with no reliable denomination
+  remain `null`. Individual instruments still use provider-native currency and
+  the UI converts them when a supported cross-rate is available. When a
+  collection spans native currencies, aggregate monetary labels are withheld
+  and the UI says `Mixed currencies` rather than assigning an incorrect symbol.
+  Full base-currency calculation remains v1.7 work; until then, display
   conversion must not be interpreted as ledger or analytics normalization.
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,
   quote-backed simulator, not broker execution, and it does not update Paper

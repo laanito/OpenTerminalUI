@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -31,12 +31,26 @@ from backend.shared.market_classifier import is_crypto_symbol, market_classifier
 router = APIRouter()
 
 
+def _normalize_currency_code(value: str | None, *, default: str | None = None) -> str | None:
+    normalized = str(value or "").strip().upper()
+    if not normalized:
+        return default
+    if len(normalized) != 3 or not normalized.isascii() or not normalized.isalpha():
+        raise ValueError("currency must be a 3-letter ISO-style code")
+    return normalized
+
+
 class PortfolioCreateRequest(BaseModel):
     name: str
     description: str = ""
     benchmark_symbol: str | None = None
     currency: str = "USD"
     starting_cash: float = Field(default=0.0, ge=0)
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def normalize_currency(cls, value: str | None) -> str:
+        return _normalize_currency_code(value, default="USD") or "USD"
 
 
 class PortfolioUpdateRequest(BaseModel):
@@ -45,14 +59,28 @@ class PortfolioUpdateRequest(BaseModel):
     benchmark_symbol: str | None = None
     currency: str | None = None
 
+    @field_validator("currency", mode="before")
+    @classmethod
+    def normalize_currency(cls, value: str | None) -> str | None:
+        return _normalize_currency_code(value)
+
 
 class PortfolioHoldingCreateRequest(BaseModel):
     symbol: str
     shares: float = Field(gt=0)
     cost_basis_per_share: float = Field(gt=0)
+    currency: str | None = Field(
+        default=None,
+        description="Currency of the recorded cost basis; omission is preserved as unknown",
+    )
     purchase_date: str = ""
     notes: str = ""
     lot_id: str = ""
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def normalize_currency(cls, value: str | None) -> str | None:
+        return _normalize_currency_code(value)
 
 
 class PortfolioTransactionCreateRequest(BaseModel):
@@ -62,10 +90,60 @@ class PortfolioTransactionCreateRequest(BaseModel):
     type: str = Field(pattern="^(buy|sell|dividend|deposit|withdrawal)$")
     shares: float = Field(default=0.0, ge=0)
     price: float = Field(default=0.0, ge=0)
+    currency: str | None = Field(
+        default=None,
+        description="Currency of price or cash amount; omission is preserved as unknown",
+    )
     date: str
     fees: float = Field(default=0.0, ge=0)
+    fees_currency: str | None = Field(
+        default=None,
+        description="Currency of fees; omission is preserved as unknown",
+    )
     lot_id: str = ""
     notes: str = ""
+
+    @field_validator("currency", "fees_currency", mode="before")
+    @classmethod
+    def normalize_currencies(cls, value: str | None) -> str | None:
+        return _normalize_currency_code(value)
+
+
+class PortfolioHoldingResponse(BaseModel):
+    id: str
+    symbol: str
+    shares: float
+    cost_basis_per_share: float
+    cost_basis_currency: str | None = Field(
+        description="Persisted currency of the recorded cost basis; null means legacy/unknown",
+    )
+    purchase_date: str
+    notes: str
+    lot_id: str
+    current_price: float
+    currency: str | None = Field(description="Live provider currency of current_price")
+
+
+class PortfolioHoldingsResponse(BaseModel):
+    items: list[PortfolioHoldingResponse]
+
+
+class PortfolioTransactionResponse(BaseModel):
+    id: str
+    symbol: str
+    type: str
+    shares: float
+    price: float
+    currency: str | None = Field(description="Persisted price/amount currency; null means legacy/unknown")
+    date: str
+    fees: float
+    fees_currency: str | None = Field(description="Persisted fee currency; null means legacy/unknown")
+    lot_id: str
+    notes: str
+
+
+class PortfolioTransactionsResponse(BaseModel):
+    items: list[PortfolioTransactionResponse]
 
 
 def _portfolio_for_user(db: Session, portfolio_id: str, user_id: str) -> PortfolioORM:
@@ -321,6 +399,7 @@ def add_portfolio_holding(
         symbol=symbol,
         shares=float(payload.shares),
         cost_basis_per_share=float(payload.cost_basis_per_share),
+        cost_basis_currency=payload.currency,
         purchase_date=payload.purchase_date,
         notes=payload.notes,
         lot_id=lot_id,
@@ -333,8 +412,10 @@ def add_portfolio_holding(
             type="buy",
             shares=float(payload.shares),
             price=float(payload.cost_basis_per_share),
+            currency=payload.currency,
             date=payload.purchase_date or datetime.now(timezone.utc).date().isoformat(),
             fees=0.0,
+            fees_currency=None,
             lot_id=lot_id,
             notes=payload.notes,
         )
@@ -350,7 +431,7 @@ def add_portfolio_holding(
     return {"id": row.id, "symbol": row.symbol}
 
 
-@router.get("/portfolios/{portfolio_id}/holdings")
+@router.get("/portfolios/{portfolio_id}/holdings", response_model=PortfolioHoldingsResponse)
 async def list_portfolio_holdings(
     portfolio_id: str,
     db: Session = Depends(get_db),
@@ -372,6 +453,7 @@ async def list_portfolio_holdings(
                 "symbol": r.symbol,
                 "shares": r.shares,
                 "cost_basis_per_share": r.cost_basis_per_share,
+                "cost_basis_currency": r.cost_basis_currency,
                 "purchase_date": r.purchase_date,
                 "notes": r.notes,
                 "lot_id": r.lot_id,
@@ -405,8 +487,10 @@ def add_portfolio_transaction(
         type=payload.type,
         shares=float(payload.shares),
         price=float(payload.price),
+        currency=payload.currency,
         date=payload.date,
         fees=float(payload.fees),
+        fees_currency=payload.fees_currency,
         lot_id=payload.lot_id.strip(),
         notes=payload.notes,
     )
@@ -431,12 +515,18 @@ def add_portfolio_transaction(
                     symbol=symbol,
                     shares=float(payload.shares),
                     cost_basis_per_share=float(payload.price),
+                    cost_basis_currency=payload.currency,
                     purchase_date=payload.date,
                     notes=payload.notes,
                     lot_id=lot_id,
                 )
             )
         else:
+            if row.cost_basis_currency != payload.currency:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Cannot combine buys with different or unknown currencies in one lot; use a new lot_id",
+                )
             old_shares = float(row.shares)
             add_shares = float(payload.shares)
             new_shares = old_shares + add_shares
@@ -480,7 +570,7 @@ def add_portfolio_transaction(
     return {"id": tx.id, "status": "created"}
 
 
-@router.get("/portfolios/{portfolio_id}/transactions")
+@router.get("/portfolios/{portfolio_id}/transactions", response_model=PortfolioTransactionsResponse)
 def list_portfolio_transactions(
     portfolio_id: str,
     db: Session = Depends(get_db),
@@ -501,8 +591,10 @@ def list_portfolio_transactions(
                 "type": r.type,
                 "shares": r.shares,
                 "price": r.price,
+                "currency": r.currency,
                 "date": r.date,
                 "fees": r.fees,
+                "fees_currency": r.fees_currency,
                 "lot_id": r.lot_id,
                 "notes": r.notes,
             }
