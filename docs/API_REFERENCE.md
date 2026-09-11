@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **440 operations** across **395 paths** and **86 families**.
-- Authentication: **395 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **441 operations** across **396 paths** and **86 families**.
+- Authentication: **396 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -68,7 +68,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `fno` | `configuration-gated` | 18 |
 | `fno-flow` | `configuration-gated` | 3 |
 | `fno-signals` | `configuration-gated` | 1 |
-| `forex` | `supported` | 3 |
+| `forex` | `supported` | 4 |
 | `framework` | `experimental` | 2 |
 | `fundamentals` | `supported` | 9 |
 | `futures` | `supported` | 2 |
@@ -536,6 +536,7 @@ State: **supported**
 | `GET` | `/api/forex/central-banks` | Bearer token | Get Central Banks |
 | `GET` | `/api/forex/cross-rates` | Bearer token | Get Cross Rates |
 | `GET` | `/api/forex/pairs/{pair}` | Bearer token | Get Pair Chart |
+| `GET` | `/api/forex/rate` | Bearer token | Resolve an FX valuation rate |
 
 ### `framework`
 

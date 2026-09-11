@@ -4344,6 +4344,114 @@
         "title": "ExternalNoteUpsertResponse",
         "type": "object"
       },
+      "FXValuationRateResponse": {
+        "properties": {
+          "base_currency": {
+            "description": "Currency of the amount being converted",
+            "title": "Base Currency",
+            "type": "string"
+          },
+          "cache_status": {
+            "description": "Whether the provider result came from the live cache, stale fallback, or identity conversion",
+            "enum": [
+              "fresh",
+              "stale",
+              "identity"
+            ],
+            "title": "Cache Status",
+            "type": "string"
+          },
+          "degraded": {
+            "description": "Whether consumers should treat the rate as degraded",
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "degraded_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Actionable explanation when degraded",
+            "title": "Degraded Reason"
+          },
+          "freshness": {
+            "description": "Temporal classification of the selected rate",
+            "enum": [
+              "current",
+              "historical",
+              "stale"
+            ],
+            "title": "Freshness",
+            "type": "string"
+          },
+          "quote_currency": {
+            "description": "Currency the amount is converted into",
+            "title": "Quote Currency",
+            "type": "string"
+          },
+          "rate": {
+            "description": "Quote-currency units per one base-currency unit",
+            "exclusiveMinimum": 0.0,
+            "title": "Rate",
+            "type": "number"
+          },
+          "rate_at": {
+            "description": "Provider timestamp of the selected rate",
+            "format": "date-time",
+            "title": "Rate At",
+            "type": "string"
+          },
+          "requested_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Requested historical UTC date, if any",
+            "title": "Requested Date"
+          },
+          "source": {
+            "description": "Provider responsible for the selected rate",
+            "enum": [
+              "identity",
+              "yahoo",
+              "finnhub",
+              "cache",
+              "unknown"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_symbol": {
+            "description": "Provider symbol used directly or inversely",
+            "title": "Source Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_currency",
+          "quote_currency",
+          "rate",
+          "rate_at",
+          "requested_date",
+          "source",
+          "source_symbol",
+          "freshness",
+          "cache_status",
+          "degraded",
+          "degraded_reason"
+        ],
+        "title": "FXValuationRateResponse",
+        "type": "object"
+      },
       "FactorConfigRequest": {
         "properties": {
           "field": {
@@ -17936,6 +18044,93 @@
           }
         ],
         "summary": "Get Pair Chart",
+        "tags": [
+          "forex"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "forex": "supported"
+        }
+      }
+    },
+    "/api/forex/rate": {
+      "get": {
+        "description": "Returns a traceable current rate, or the last available market close on or before the requested UTC date. Missing rates fail explicitly; only same-currency identity conversions return 1.0 without a provider lookup.",
+        "operationId": "get_valuation_rate_api_forex_rate_get",
+        "parameters": [
+          {
+            "description": "Currency of the source amount, for example EUR",
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "description": "Currency of the source amount, for example EUR",
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Currency to convert into, for example USD",
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "description": "Currency to convert into, for example USD",
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional historical valuation date (UTC)",
+            "in": "query",
+            "name": "at",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional historical valuation date (UTC)",
+              "title": "At"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FXValuationRateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resolve an FX valuation rate",
         "tags": [
           "forex"
         ],

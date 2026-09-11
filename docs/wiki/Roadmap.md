@@ -522,7 +522,10 @@ comparison in v2 depends on trustworthy cross-currency portfolio truth.
   current, timestamped rate and acquisition/disposal cash flows with a dated
   rate. Cache rates with provider and freshness metadata, and return partial or
   degraded results when a required rate is unavailable rather than silently
-  using `1.0`, a seeded fallback, or a stale display value.
+  using `1.0`, a seeded fallback, or a stale display value. The shared
+  `GET /api/forex/rate` resolver now establishes this traceable input contract;
+  subsequent ledger and analytics work consumes it rather than implementing
+  another conversion path.
 - **Normalize portfolio calculations on the backend.** Return base-currency cash,
   cost basis, market value, net liquidation value, realised/unrealised P&L,
   income, fees, allocation, exposure, and historical performance. Keep native

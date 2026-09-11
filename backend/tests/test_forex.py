@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -98,17 +98,22 @@ def _yahoo_quote_payload() -> list[dict]:
     ]
 
 
-def _yahoo_chart_payload(*, start_price: float, closes: list[float] | None = None) -> dict:
+def _yahoo_chart_payload(
+    *,
+    start_price: float,
+    closes: list[float] | None = None,
+    timestamps: list[int] | None = None,
+) -> dict:
     close_series = closes or [start_price, start_price + 0.0020, start_price + 0.0040]
     open_series = [round(value - 0.0010, 6) for value in close_series]
     high_series = [round(value + 0.0015, 6) for value in close_series]
     low_series = [round(value - 0.0018, 6) for value in close_series]
-    timestamps = [1711065600, 1711152000, 1711238400]
+    timestamp_series = timestamps or [1711065600, 1711152000, 1711238400]
     return {
         "chart": {
             "result": [
                 {
-                    "timestamp": timestamps,
+                    "timestamp": timestamp_series,
                     "indicators": {
                         "quote": [
                             {
@@ -271,6 +276,153 @@ def test_pair_chart_endpoint_rejects_invalid_pair() -> None:
 
     assert response.status_code == 400
     assert "6-letter FX symbol" in response.json()["detail"]
+
+
+def test_valuation_rate_endpoint_returns_traceable_current_rate() -> None:
+    timestamps = [
+        int((FIXED_NOW - timedelta(days=2)).timestamp()),
+        int((FIXED_NOW - timedelta(days=1)).timestamp()),
+        int(FIXED_NOW.timestamp()),
+    ]
+    yahoo = _FakeYahoo(
+        chart_payloads={
+            "EURUSD=X": _yahoo_chart_payload(
+                start_price=1.081,
+                closes=[1.082, 1.084, 1.086],
+                timestamps=timestamps,
+            )
+        }
+    )
+    client = TestClient(_build_app(_build_service(yahoo=yahoo, finnhub=_FakeFinnhub())))
+
+    response = client.get("/api/forex/rate?base=eur&quote=usd")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "base_currency": "EUR",
+        "quote_currency": "USD",
+        "rate": 1.086,
+        "rate_at": "2026-03-22T12:00:00Z",
+        "requested_date": None,
+        "source": "yahoo",
+        "source_symbol": "EURUSD=X",
+        "freshness": "current",
+        "cache_status": "fresh",
+        "degraded": False,
+        "degraded_reason": None,
+    }
+    assert yahoo.chart_calls == [("EURUSD=X", "5d", "1d")]
+
+
+def test_valuation_rate_endpoint_uses_prior_market_close_for_historical_date() -> None:
+    friday = datetime(2026, 3, 20, 21, 0, tzinfo=timezone.utc)
+    monday = datetime(2026, 3, 23, 21, 0, tzinfo=timezone.utc)
+    yahoo = _FakeYahoo(
+        chart_payloads={
+            "GBPUSD=X": _yahoo_chart_payload(
+                start_price=1.27,
+                closes=[1.27, 1.275],
+                timestamps=[int(friday.timestamp()), int(monday.timestamp())],
+            )
+        }
+    )
+    client = TestClient(_build_app(_build_service(yahoo=yahoo, finnhub=_FakeFinnhub())))
+
+    response = client.get("/api/forex/rate?base=GBP&quote=USD&at=2026-03-22")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["rate"] == 1.27
+    assert body["rate_at"] == "2026-03-20T21:00:00Z"
+    assert body["requested_date"] == "2026-03-22"
+    assert body["freshness"] == "historical"
+    assert body["degraded"] is False
+
+
+def test_valuation_rate_endpoint_returns_identity_without_provider_lookup() -> None:
+    yahoo = _FakeYahoo()
+    finnhub = _FakeFinnhub()
+    client = TestClient(_build_app(_build_service(yahoo=yahoo, finnhub=finnhub)))
+
+    response = client.get("/api/forex/rate?base=USD&quote=usd&at=2026-03-20")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["rate"] == 1.0
+    assert body["source"] == "identity"
+    assert body["freshness"] == "historical"
+    assert body["cache_status"] == "identity"
+    assert yahoo.chart_calls == []
+    assert finnhub.candle_calls == []
+
+
+def test_valuation_rate_endpoint_rejects_future_date() -> None:
+    client = TestClient(_build_app(_build_service(yahoo=_FakeYahoo(), finnhub=_FakeFinnhub())))
+
+    response = client.get("/api/forex/rate?base=EUR&quote=USD&at=2026-03-23")
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "historical FX date cannot be in the future"
+
+
+def test_valuation_rate_endpoint_marks_stale_cache_as_degraded() -> None:
+    cache = _FakeCache()
+    stale_key = cache.build_key("forex_pair_chart_stale", "EURUSD", {"interval": "1d", "range": "5d"})
+    cache.data[stale_key] = {
+        "pair": "EURUSD",
+        "source_symbol": "EURUSD=X",
+        "base_currency": "EUR",
+        "quote_currency": "USD",
+        "interval": "1d",
+        "market": "FX",
+        "as_of": FIXED_NOW - timedelta(days=1),
+        "current_rate": 1.083,
+        "candles": [
+            {
+                "t": int((FIXED_NOW - timedelta(days=1)).timestamp()),
+                "o": 1.08,
+                "h": 1.084,
+                "l": 1.079,
+                "c": 1.083,
+                "v": 0,
+            }
+        ],
+    }
+    service = _build_service(
+        yahoo=_FakeYahoo(chart_payloads={"EURUSD=X": RuntimeError("yahoo unavailable")}),
+        finnhub=_FakeFinnhub(),
+        cache=cache,
+    )
+    client = TestClient(_build_app(service))
+
+    response = client.get("/api/forex/rate?base=EUR&quote=USD")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["rate"] == 1.083
+    assert body["source"] == "yahoo"
+    assert body["cache_status"] == "stale"
+    assert body["degraded"] is True
+    assert "live providers unavailable" in body["degraded_reason"]
+
+
+def test_valuation_rate_endpoint_rejects_distant_historical_fallback() -> None:
+    old_close = datetime(2026, 3, 1, 21, 0, tzinfo=timezone.utc)
+    yahoo = _FakeYahoo(
+        chart_payloads={
+            "EURUSD=X": _yahoo_chart_payload(
+                start_price=1.08,
+                closes=[1.08],
+                timestamps=[int(old_close.timestamp())],
+            )
+        }
+    )
+    client = TestClient(_build_app(_build_service(yahoo=yahoo, finnhub=_FakeFinnhub())))
+
+    response = client.get("/api/forex/rate?base=EUR&quote=USD&at=2026-03-20")
+
+    assert response.status_code == 502
+    assert "19 days before 2026-03-20" in response.json()["detail"]
 
 
 def test_central_banks_endpoint_returns_rate_decision_calendar() -> None:

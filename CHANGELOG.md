@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Traceable FX valuation lookup** — `GET /api/forex/rate` now resolves a
+  current or dated conversion between supported currencies with the provider,
+  source symbol, effective timestamp, cache state, freshness, and explicit
+  degraded reason. Historical requests use the last market close on or before
+  the requested date, identity conversions remain auditable, and missing or
+  unacceptably distant rates fail instead of silently becoming `1.0`.
+
 ### Changed
 - **v1 roadmap accounting boundary** — base-currency portfolio accounting is now
   the explicit v1.7 milestone rather than an unspecified post-v1 limitation.

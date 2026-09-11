@@ -280,7 +280,7 @@ across those intentional interfaces.
 - [ ] Persist currency on trades, cash movements, dividends, and fees through an
       additive, backwards-compatible migration. Do not guess and rewrite legacy
       amounts when their currency cannot be established safely.
-- [ ] Add current and historical FX-rate lookup with timestamp, provider,
+- [x] Add current and historical FX-rate lookup with timestamp, provider,
       freshness, cache, and explicit unavailable/degraded semantics.
 - [ ] Normalize backend cash, cost basis, market value, net liquidation,
       realised/unrealised P&L, income, fees, allocations, exposures, and supported

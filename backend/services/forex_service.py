@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, Callable
+from datetime import date, datetime, time, timedelta, timezone
+from typing import Any, Callable, Literal
 
 from backend.core.finnhub_client import FinnhubClient
 from backend.core.yahoo_client import YahooClient
@@ -31,7 +31,11 @@ _PAIR_RANGE_TO_DELTA: dict[str, timedelta] = {
     "1y": timedelta(days=366),
     "2y": timedelta(days=732),
     "5y": timedelta(days=366 * 5),
+    "10y": timedelta(days=366 * 10),
+    "max": timedelta(days=366 * 50),
 }
+
+_MAX_ACCEPTABLE_RATE_AGE = timedelta(days=7)
 
 _FINNHUB_RESOLUTION_MAP: dict[str, str] = {
     "1m": "1",
@@ -281,6 +285,16 @@ class PairResolution:
     range_str: str
 
 
+def _provider_from_source_symbol(
+    source_symbol: str,
+) -> Literal["yahoo", "finnhub", "cache", "unknown"]:
+    if source_symbol.startswith("OANDA:"):
+        return "finnhub"
+    if source_symbol.endswith("=X"):
+        return "yahoo"
+    return "cache" if source_symbol == "stale-cache" else "unknown"
+
+
 class ForexService:
     def __init__(
         self,
@@ -326,6 +340,26 @@ class ForexService:
         normalized_interval = str(interval or DEFAULT_PAIR_INTERVAL).strip().lower() or DEFAULT_PAIR_INTERVAL
         normalized_range = str(range_str or DEFAULT_PAIR_RANGE).strip().lower() or DEFAULT_PAIR_RANGE
         return PairResolution(interval=normalized_interval, range_str=normalized_range)
+
+    def _valuation_range(self, requested_date: date) -> str:
+        age = (self._now().date() - requested_date).days
+        if age <= 5:
+            return "5d"
+        if age <= 31:
+            return "1mo"
+        if age <= 93:
+            return "3mo"
+        if age <= 186:
+            return "6mo"
+        if age <= 366:
+            return "1y"
+        if age <= 732:
+            return "2y"
+        if age <= 366 * 5:
+            return "5y"
+        if age <= 366 * 10:
+            return "10y"
+        return "max"
 
     async def _finnhub_get_forex_rates(self, base_currency: str) -> dict[str, Any]:
         getter = getattr(self._finnhub, "get_forex_rates", None)
@@ -553,20 +587,115 @@ class ForexService:
 
         cached = await self._cache.get(key)
         if isinstance(cached, dict):
-            return cached
+            return {**cached, "_cache_status": "fresh"}
 
         try:
             payload = await self._build_pair_chart_payload(normalized_pair, resolution.interval, resolution.range_str)
-        except Exception:
+        except Exception as exc:
             stale = await self._cache.get(stale_key)
             if isinstance(stale, dict):
-                return stale
-            raise
+                return {**stale, "_cache_status": "stale"}
+            if isinstance(exc, RuntimeError):
+                raise
+            raise RuntimeError(f"No FX chart data available for {normalized_pair}") from exc
 
         ttl = self._chart_ttl()
         await self._cache.set(key, payload, ttl=ttl)
         await self._cache.set(stale_key, payload, ttl=max(ttl * 6, ttl))
-        return payload
+        return {**payload, "_cache_status": "fresh"}
+
+    async def get_valuation_rate(
+        self,
+        base_currency: str,
+        quote_currency: str,
+        requested_date: date | None = None,
+    ) -> dict[str, Any]:
+        base = str(base_currency or "").strip().upper()
+        quote = str(quote_currency or "").strip().upper()
+        unsupported = [currency for currency in (base, quote) if currency not in SUPPORTED_CURRENCIES]
+        if unsupported:
+            raise ValueError(
+                "currencies must use supported codes: USD, EUR, GBP, JPY, CHF, AUD, CAD, INR"
+            )
+
+        today = self._now().date()
+        if requested_date is not None and requested_date > today:
+            raise ValueError("historical FX date cannot be in the future")
+
+        if base == quote:
+            rate_at = (
+                datetime.combine(requested_date, time.min, tzinfo=timezone.utc)
+                if requested_date is not None
+                else self._now()
+            )
+            return {
+                "base_currency": base,
+                "quote_currency": quote,
+                "rate": 1.0,
+                "rate_at": rate_at,
+                "requested_date": requested_date,
+                "source": "identity",
+                "source_symbol": f"{base}{quote}",
+                "freshness": "historical" if requested_date is not None else "current",
+                "cache_status": "identity",
+                "degraded": False,
+                "degraded_reason": None,
+            }
+
+        range_str = self._valuation_range(requested_date or today)
+        chart = await self.get_pair_chart(f"{base}{quote}", interval="1d", range_str=range_str)
+        raw_candles = chart.get("candles") if isinstance(chart.get("candles"), list) else []
+        candles = [row for row in raw_candles if isinstance(row, dict)]
+        if not candles:
+            raise RuntimeError(f"No FX rate data available for {base}{quote}")
+
+        if requested_date is None:
+            candle = max(candles, key=lambda row: _f(row.get("t"), -1))
+        else:
+            requested_cutoff = datetime.combine(requested_date, time.max, tzinfo=timezone.utc).timestamp()
+            eligible = [row for row in candles if _f(row.get("t"), -1) <= requested_cutoff]
+            if not eligible:
+                raise RuntimeError(f"No FX rate available on or before {requested_date.isoformat()} for {base}{quote}")
+            candle = max(eligible, key=lambda row: _f(row.get("t"), -1))
+
+        rate = _f(candle.get("c"), -1)
+        if rate <= 0:
+            raise RuntimeError(f"No valid FX rate available for {base}{quote}")
+
+        rate_at = datetime.fromtimestamp(int(candle["t"]), tz=timezone.utc)
+        cache_status = str(chart.get("_cache_status") or "fresh")
+        source_symbol = str(chart.get("source_symbol") or "unknown")
+        degraded_reasons: list[str] = []
+        if cache_status == "stale":
+            degraded_reasons.append("live providers unavailable; serving the stale cache")
+
+        if requested_date is None:
+            rate_age = self._now() - rate_at
+            freshness = "current" if rate_age <= _MAX_ACCEPTABLE_RATE_AGE else "stale"
+            if freshness == "stale":
+                degraded_reasons.append(f"latest provider rate is {rate_age.days} days old")
+        else:
+            historical_gap = requested_date - rate_at.date()
+            if historical_gap > _MAX_ACCEPTABLE_RATE_AGE:
+                raise RuntimeError(
+                    f"Nearest FX rate for {base}{quote} is {historical_gap.days} days before "
+                    f"{requested_date.isoformat()}"
+                )
+            freshness = "historical"
+
+        return {
+            "base_currency": base,
+            "quote_currency": quote,
+            "rate": round(rate, 6),
+            "rate_at": rate_at,
+            "requested_date": requested_date,
+            "source": _provider_from_source_symbol(source_symbol),
+            "source_symbol": source_symbol,
+            "freshness": freshness,
+            "cache_status": cache_status,
+            "degraded": bool(degraded_reasons),
+            "degraded_reason": "; ".join(degraded_reasons) or None,
+        }
 
     async def get_central_banks(self) -> dict[str, Any]:
         key = self._cache.build_key("forex_central_banks", "calendar", {"currencies": SUPPORTED_CURRENCIES})
