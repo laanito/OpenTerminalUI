@@ -344,6 +344,9 @@ cross-market-intelligence promise into concrete journeys and contracts.
 - [x] Expose `effective_at` in the manual Notes composer/editor, including clear
       semantics, timezone-safe serialization, visible Notes loading/failure
       states, queued-indexing feedback, and manual-reindex progress/results.
+- [x] Fall back to ordinary chat completion when a configured provider rejects,
+      interrupts, or returns no visible text from Second Brain streaming; only
+      degrade after both provider paths fail.
 - [ ] Evaluate retrieval against the growing Hermes corpus: build dated question
       cases with expected current and historical evidence, then tune topic
       identity, explicit supersession, source-specific decay, diversity, and

@@ -463,8 +463,8 @@ async def ask_stream(
         "llm": True,
     }
     emitted = False
+    client = get_llm_client()
     try:
-        client = get_llm_client()
         async for text in client.chat_stream(
             request.messages,
             temperature=0.2,
@@ -474,8 +474,39 @@ async def ask_stream(
             yield {"type": "delta", "text": text}
         if not emitted:
             raise LLMError("LLM stream returned no answer text")
-    except LLMError as exc:
-        logger.warning("Brain streaming synthesis failed: %s", exc)
-        yield {"type": "result", "result": _llm_unavailable(request)}
+    except LLMError as stream_exc:
+        # OpenAI-compatible providers vary in their streaming support and chunk
+        # shapes. A failed/empty stream does not mean ordinary chat completion is
+        # unavailable, so replace any partial output with one complete result.
+        logger.warning(
+            "Brain streaming synthesis unavailable; retrying without streaming: %s",
+            stream_exc,
+        )
+        try:
+            answer = await client.chat(
+                request.messages,
+                temperature=0.2,
+                max_tokens=600,
+            )
+            if not answer.strip():
+                raise LLMError("LLM completion returned no answer text")
+        except LLMError as completion_exc:
+            logger.warning(
+                "Brain non-streaming synthesis fallback failed: %s",
+                completion_exc,
+            )
+            yield {"type": "result", "result": _llm_unavailable(request)}
+            return
+        yield {
+            "type": "result",
+            "result": _with_scope(
+                {
+                    "answer": answer.strip(),
+                    "citations": request.citations,
+                    "llm": True,
+                },
+                request.sources,
+            ),
+        }
         return
     yield {"type": "done"}

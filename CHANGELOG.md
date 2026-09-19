@@ -27,6 +27,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   request failure with retry, and the queued background-indexing state after a
   save. Manual Second Brain reindexing reports active work and its final chunk
   totals instead of looking like a stalled screen.
+- **Provider-tolerant Second Brain answers** — an unsupported, empty, or
+  interrupted provider stream now retries through the ordinary chat-completion
+  contract and replaces partial output with the complete answer. The Brain only
+  reports the LLM unavailable when both provider paths fail.
 
 ## [1.7.0] - 2026-09-15
 

@@ -9,6 +9,7 @@ import pytest
 
 from backend.services.brain import brain_service
 from backend.services.brain.vector_store import VectorMatch, _cosine_topk
+from backend.services.llm_client import LLMError
 
 
 def _chunk(vec, **kw):
@@ -480,9 +481,7 @@ async def test_ask_stream_yields_metadata_deltas_and_done(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_ask_stream_replaces_interrupted_output_with_complete_fallback(monkeypatch):
-    from backend.services.llm_client import LLMError
-
+async def test_ask_stream_replaces_interrupted_output_with_non_streaming_answer(monkeypatch):
     request = brain_service._SynthesisRequest(
         sources=["note"],
         citations=[{"n": 1, "source": "note"}],
@@ -494,6 +493,9 @@ async def test_ask_stream_replaces_interrupted_output_with_complete_fallback(mon
             yield "unfinished"
             raise LLMError("provider disconnected")
 
+        async def chat(self, messages, **kwargs):
+            return "Recovered complete answer [1]."
+
     async def prepare(*args, **kwargs):
         return None, request
 
@@ -504,10 +506,67 @@ async def test_ask_stream_replaces_interrupted_output_with_complete_fallback(mon
 
     assert [event["type"] for event in events] == ["start", "delta", "result"]
     fallback = events[-1]["result"]
-    assert fallback["answer"].startswith("I found relevant private writing")
+    assert fallback["answer"] == "Recovered complete answer [1]."
     assert fallback["citations"] == request.citations
     assert fallback["sources"] == ["note"]
-    assert fallback["error"] == "llm_unavailable"
+    assert fallback["llm"] is True
+
+
+@pytest.mark.asyncio
+async def test_ask_stream_retries_empty_provider_stream_as_completion(monkeypatch):
+    request = brain_service._SynthesisRequest(
+        sources=["journal"],
+        citations=[{"n": 1, "source": "journal"}],
+        messages=[{"role": "user", "content": "grounded context"}],
+    )
+
+    class NonStreamingClient:
+        async def chat_stream(self, messages, **kwargs):
+            if False:
+                yield ""
+
+        async def chat(self, messages, **kwargs):
+            return "Provider supports ordinary completion [1]."
+
+    async def prepare(*args, **kwargs):
+        return None, request
+
+    monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda: NonStreamingClient())
+
+    events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
+
+    assert [event["type"] for event in events] == ["start", "result"]
+    assert events[-1]["result"]["answer"] == "Provider supports ordinary completion [1]."
+    assert events[-1]["result"]["llm"] is True
+
+
+@pytest.mark.asyncio
+async def test_ask_stream_degrades_only_when_stream_and_completion_fail(monkeypatch):
+    request = brain_service._SynthesisRequest(
+        sources=["note"],
+        citations=[{"n": 1, "source": "note"}],
+        messages=[{"role": "user", "content": "grounded context"}],
+    )
+
+    class UnavailableClient:
+        async def chat_stream(self, messages, **kwargs):
+            raise LLMError("stream unsupported")
+            yield  # pragma: no cover - makes this an async generator
+
+        async def chat(self, messages, **kwargs):
+            raise LLMError("completion unavailable")
+
+    async def prepare(*args, **kwargs):
+        return None, request
+
+    monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda: UnavailableClient())
+
+    events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
+
+    assert [event["type"] for event in events] == ["start", "result"]
+    assert events[-1]["result"]["error"] == "llm_unavailable"
 
 
 @pytest.mark.asyncio
