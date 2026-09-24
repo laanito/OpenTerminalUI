@@ -79,8 +79,9 @@ never silently faked.
   returns native-quote percentage moves, without FX normalization or a claim
   that one market caused another to move. The unified history path does not yet
   identify the underlying provider in this response. A contextual browser page
-  offers dated comparison from equity and crypto research, but not a multi-source
-  market explanation in this first slice.
+  offers dated comparison and symbol suggestions from equity and crypto research,
+  but suggested identifiers do not guarantee usable daily history and this is
+  not a multi-source market explanation.
 - **Portfolio FX depends on external daily market history.** Accounting supports
   USD, EUR, GBP, JPY, CHF, AUD, CAD, and INR conversions through Yahoo daily FX
   charts with a Finnhub candle fallback when configured. Dated conversion uses

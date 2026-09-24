@@ -1,8 +1,8 @@
 # Current project state and backlog
 
-Last audited: **2026-09-24**, from `main` at `00aed8e` (through the cross-market
-comparison API PR #161), plus browser comparison work on this branch. The latest
-tag and published GitHub release are **v1.7.0** at `0473307`.
+Last audited: **2026-09-24**, from `main` at `ee8e00e` (through the browser
+cross-market comparison PR #162), plus symbol-suggestion UX work on this branch.
+The latest tag and published GitHub release are **v1.7.0** at `0473307`.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -389,8 +389,10 @@ intelligence promise, or claim that contradiction handling is solved.
 - [x] Add a contextual browser comparison journey from equity and crypto
       research. The user can choose one anchor and up to six proxies across
       1/3/6-month windows; the page shows dated, pairwise returns, overlap,
-      current/stale/unavailable states, and source/FX caveats. Keep it
-      experimental while host testing confirms provider coverage and UX.
+      current/stale/unavailable states, and source/FX caveats. Host testing
+      confirmed the initial function. Instrument-search suggestions for
+      anchor/proxy symbols and quick-add/remove proxy choices followed UX feedback;
+      keep the price-only journey experimental while wider coverage matures.
 - [ ] Extend from price co-movement into cross-market explanation only when
       fundamentals, macro, sentiment, and technical evidence have their own
       freshness/provenance contracts. Do not infer causation from correlated
