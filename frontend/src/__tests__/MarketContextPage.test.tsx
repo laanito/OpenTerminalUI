@@ -4,11 +4,14 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { compareMarketContext } from "../api/marketContext";
+import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
 vi.mock("../api/marketContext", () => ({ compareMarketContext: vi.fn() }));
+vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
+const searchMock = vi.mocked(searchSymbols);
 
 function renderPage(path: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -24,6 +27,7 @@ function renderPage(path: string) {
 describe("MarketContextPage", () => {
   beforeEach(() => {
     compareMock.mockReset();
+    searchMock.mockReset();
   });
 
   it("shows dated available, stale, and unavailable comparisons without inventing returns", async () => {
@@ -107,5 +111,72 @@ describe("MarketContextPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(compareMock).toHaveBeenCalledTimes(2));
     expect(await screen.findByText(/Requested 1M; retrieved/)).toBeInTheDocument();
+  });
+
+  it("adds suggested proxies and searched symbols without comparing until Apply", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [],
+    });
+    searchMock.mockResolvedValue([
+      { ticker: "SAP.DE", name: "SAP", exchange: "XETRA" },
+      { ticker: "AAPL", name: "Apple", exchange: "NASDAQ" },
+    ]);
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    await waitFor(() => expect(compareMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole("button", { name: "Add BTC-USD" }));
+    expect(screen.getByRole("textbox", { name: "Comparison symbols" })).toHaveValue("SPY, BTC-USD");
+    expect(compareMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Find a proxy to add" }), { target: { value: "SAP" } });
+    expect(await screen.findByRole("option", { name: /SAP.DE/ })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /AAPL/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: /SAP.DE/ }));
+    expect(screen.getByRole("textbox", { name: "Comparison symbols" })).toHaveValue("SPY, BTC-USD, SAP.DE");
+    expect(compareMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Compare dated moves" }));
+    await waitFor(() => expect(compareMock).toHaveBeenCalledWith("AAPL", ["SPY", "BTC-USD", "SAP.DE"], "1M"));
+  });
+
+  it("enforces the proxy limit and keeps manual entry available when lookup fails", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [],
+    });
+    searchMock.mockRejectedValue(new Error("Search unavailable"));
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY,QQQ,BTC-USD,SAP.DE,MSFT,GOOG");
+    await waitFor(() => expect(compareMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole("button", { name: "Add ETH-USD" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Choose no more than six comparison symbols.");
+    expect(screen.getByRole("textbox", { name: "Comparison symbols" })).toHaveValue("SPY,QQQ,BTC-USD,SAP.DE,MSFT,GOOG");
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Find a proxy to add" }), { target: { value: "IBM" } });
+    expect(await screen.findByText("Suggestions unavailable; enter a symbol manually.")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Comparison symbols" })).toBeInTheDocument();
+  });
+
+  it("accepts a keyboard-picked anchor without submitting the form", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [],
+    });
+    searchMock.mockResolvedValue([{ ticker: "TSLA", name: "Tesla", exchange: "NASDAQ" }]);
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    await waitFor(() => expect(compareMock).toHaveBeenCalledTimes(1));
+
+    const anchor = screen.getByRole("combobox", { name: "Anchor symbol" });
+    fireEvent.change(anchor, { target: { value: "TSL" } });
+    expect(await screen.findByRole("option", { name: /TSLA/ })).toBeInTheDocument();
+    fireEvent.keyDown(anchor, { key: "Enter" });
+    expect(anchor).toHaveValue("TSLA");
+    expect(compareMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Compare dated moves" }));
+    await waitFor(() => expect(compareMock).toHaveBeenCalledWith("TSLA", ["SPY"], "1M"));
   });
 });

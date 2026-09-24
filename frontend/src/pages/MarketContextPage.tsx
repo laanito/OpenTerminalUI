@@ -4,10 +4,19 @@ import { useSearchParams } from "react-router-dom";
 
 import { compareMarketContext, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
+import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 
 const SYMBOL_PATTERN = /^[A-Z0-9^._=-]{1,40}$/;
 const PERIODS: MarketContextPeriod[] = ["1M", "3M", "6M"];
+const PROXY_SUGGESTIONS = [
+  { symbol: "SPY", label: "US broad market" },
+  { symbol: "QQQ", label: "US tech" },
+  { symbol: "^FTSE", label: "UK index" },
+  { symbol: "^GDAXI", label: "German index" },
+  { symbol: "BTC-USD", label: "Bitcoin" },
+  { symbol: "ETH-USD", label: "Ethereum" },
+] as const;
 
 function defaultProxies(anchor: string): string[] {
   return ["SPY", "BTC-USD", "QQQ"].filter((symbol) => symbol !== anchor).slice(0, 2);
@@ -54,7 +63,12 @@ export function MarketContextPage() {
   const [anchorInput, setAnchorInput] = useState(appliedAnchor);
   const [proxiesInput, setProxiesInput] = useState(appliedProxies);
   const [periodInput, setPeriodInput] = useState<MarketContextPeriod>(appliedPeriod);
+  const [proxyLookup, setProxyLookup] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const selectedProxies = useMemo(
+    () => [...new Set(proxiesInput.split(",").map((part) => part.trim().toUpperCase()).filter(Boolean))],
+    [proxiesInput],
+  );
 
   useEffect(() => {
     setAnchorInput(appliedAnchor);
@@ -86,6 +100,27 @@ export function MarketContextPage() {
     setSearchParams({ symbol: next.anchor, proxies: next.comparisons.join(","), period: periodInput });
   }
 
+  function addProxy(symbol: string) {
+    const normalized = symbol.trim().toUpperCase();
+    if (normalized === anchorInput.trim().toUpperCase()) {
+      setFormError("The anchor cannot also be a comparison symbol.");
+      return;
+    }
+    if (selectedProxies.includes(normalized)) return;
+    if (selectedProxies.length >= 6) {
+      setFormError("Choose no more than six comparison symbols.");
+      return;
+    }
+    setProxiesInput([...selectedProxies, normalized].join(", "));
+    setProxyLookup("");
+    setFormError(null);
+  }
+
+  function removeProxy(symbol: string) {
+    setProxiesInput(selectedProxies.filter((item) => item !== symbol).join(", "));
+    setFormError(null);
+  }
+
   return (
     <div className="h-full min-h-0 space-y-3 overflow-auto p-3">
       <div>
@@ -97,15 +132,15 @@ export function MarketContextPage() {
 
       <TerminalPanel title="Select evidence" subtitle="One anchor · up to six comparison symbols">
         <form onSubmit={applySelection} className="flex flex-wrap items-end gap-3">
-          <label className="min-w-[130px] flex-1 text-xs text-terminal-muted">
-            Anchor symbol
-            <input
+          <div className="min-w-[130px] flex-1">
+            <SymbolSuggestions
+              label="Anchor symbol"
               value={anchorInput}
-              onChange={(event) => setAnchorInput(event.target.value.toUpperCase())}
-              className="mt-1 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-2 text-sm text-terminal-text"
-              aria-label="Anchor symbol"
+              onChange={setAnchorInput}
+              onPick={setAnchorInput}
+              placeholder="AAPL, SAP.DE, BTC-USD…"
             />
-          </label>
+          </div>
           <label className="min-w-[220px] flex-[2] text-xs text-terminal-muted">
             Comparison symbols (comma separated)
             <input
@@ -130,6 +165,37 @@ export function MarketContextPage() {
             Compare dated moves
           </button>
         </form>
+        <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <SymbolSuggestions
+            label="Find a proxy to add"
+            value={proxyLookup}
+            onChange={setProxyLookup}
+            onPick={addProxy}
+            exclude={[anchorInput, ...selectedProxies]}
+            placeholder="Search US, EU, or crypto symbols"
+          />
+          <div>
+            <p className="text-xs text-terminal-muted">Suggested proxies</p>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {PROXY_SUGGESTIONS.filter(({ symbol }) => symbol !== anchorInput.trim().toUpperCase()).map(({ symbol, label }) => {
+                const added = selectedProxies.includes(symbol);
+                return (
+                  <button
+                    key={symbol}
+                    type="button"
+                    onClick={() => added ? removeProxy(symbol) : addProxy(symbol)}
+                    className={`rounded border px-2 py-1 text-xs ${added ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-text hover:border-terminal-accent"}`}
+                    aria-label={`${added ? "Remove" : "Add"} ${symbol}`}
+                    title={label}
+                  >
+                    {added ? "✓ " : "+ "}{symbol} <span className="text-terminal-muted">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-terminal-muted">Suggestions identify symbols; daily-history availability is checked when you compare.</p>
         {formError || selection.error ? <p role="alert" className="mt-2 text-xs text-terminal-neg">{formError || selection.error}</p> : null}
       </TerminalPanel>
 

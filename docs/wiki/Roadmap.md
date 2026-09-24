@@ -269,10 +269,12 @@ missing dates or treat a provider failure as a zero return.
 The contextual `/equity/market-context` page now opens from stock, Security Hub,
 and crypto research. Users can choose the anchor, up to six proxies, and the
 window; the page shows dated results, overlap, stale/unavailable states, and
-explicit source caveats. This remains an experimental, price-only journey, not
-the full v2 cross-market explanation promise. Returns are in each instrument's
-native quote currency, **not** FX-normalized portfolio returns; the unified
-history path does not yet expose the underlying provider identity. Neither
+explicit source caveats. After host testing confirmed the initial function,
+instrument-search suggestions and one-click proxy choices make symbol selection
+less dependent on memorized tickers. This remains an experimental, price-only
+journey, not the full v2 cross-market explanation promise. Returns are in each
+instrument's native quote currency, **not** FX-normalized portfolio returns;
+the unified history path does not yet expose the underlying provider identity. Neither
 relative returns nor co-movement establish causation. Fundamentals, macro,
 sentiment, and technical evidence become separate later layers only when they
 have honest coverage and provenance contracts.
