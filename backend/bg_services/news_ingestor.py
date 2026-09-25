@@ -5,6 +5,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 from backend.api.deps import get_unified_fetcher
@@ -28,19 +29,28 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _to_iso(raw: Any) -> str:
+def _to_iso(raw: Any) -> str | None:
     if isinstance(raw, (int, float)):
         if raw > 0:
-            return datetime.fromtimestamp(raw, tz=timezone.utc).isoformat()
+            try:
+                return datetime.fromtimestamp(raw, tz=timezone.utc).isoformat()
+            except (OverflowError, OSError, ValueError):
+                return None
     if isinstance(raw, str):
         text = raw.strip()
         if not text:
-            return _now_iso()
+            return None
         try:
-            return datetime.fromisoformat(text.replace("Z", "+00:00")).isoformat()
+            dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
         except Exception:
-            return _now_iso()
-    return _now_iso()
+            try:
+                dt = parsedate_to_datetime(text)
+            except Exception:
+                return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).isoformat()
+    return None
 
 
 def _normalize_tickers(raw: Any) -> list[str]:
@@ -87,7 +97,8 @@ def normalize_news_record(row: dict[str, Any], provider: str) -> NormalizedNews 
     if provider_key == "finnhub":
         url = str(row.get("url") or "").strip()
         title = str(row.get("headline") or row.get("title") or "").strip()
-        if not url or not title:
+        published_at = _to_iso(row.get("datetime"))
+        if not url or not title or not published_at:
             return None
         payload = NormalizedNews(
             source=str(row.get("source") or "Finnhub").strip() or "Finnhub",
@@ -95,7 +106,7 @@ def normalize_news_record(row: dict[str, Any], provider: str) -> NormalizedNews 
             url=url,
             summary=str(row.get("summary") or "").strip(),
             image_url=str(row.get("image") or "").strip(),
-            published_at=_to_iso(row.get("datetime")),
+            published_at=published_at,
             tickers=_normalize_tickers(row.get("related")),
         )
         _attach_sentiment(payload)
@@ -104,7 +115,8 @@ def normalize_news_record(row: dict[str, Any], provider: str) -> NormalizedNews 
     if provider_key == "fmp":
         url = str(row.get("url") or row.get("link") or "").strip()
         title = str(row.get("title") or row.get("headline") or "").strip()
-        if not url or not title:
+        published_at = _to_iso(row.get("publishedDate") or row.get("publishedAt"))
+        if not url or not title or not published_at:
             return None
         payload = NormalizedNews(
             source=str(row.get("site") or row.get("source") or "FMP").strip() or "FMP",
@@ -112,7 +124,7 @@ def normalize_news_record(row: dict[str, Any], provider: str) -> NormalizedNews 
             url=url,
             summary=str(row.get("text") or row.get("summary") or "").strip(),
             image_url=str(row.get("image") or row.get("image_url") or "").strip(),
-            published_at=_to_iso(row.get("publishedDate") or row.get("publishedAt")),
+            published_at=published_at,
             tickers=_normalize_tickers(row.get("symbol") or row.get("ticker")),
         )
         _attach_sentiment(payload)
@@ -250,6 +262,10 @@ class NewsIngestor:
                     if not title or not url:
                         continue
 
+                    published_at = _to_iso(row.get("providerPublishTime") or row.get("pubDate"))
+                    if not published_at:
+                        continue
+
                     summary = str(row.get("summary") or "").strip()
                     # Only tag the article with this ticker if it's actually about it.
                     if not self._row_matches_ticker(ticker, title, summary):
@@ -264,7 +280,7 @@ class NewsIngestor:
                         url=url,
                         summary=summary,
                         image_url="",
-                        published_at=_to_iso(row.get("providerPublishTime") or row.get("pubDate")),
+                        published_at=published_at,
                         tickers=[ticker],
                         sentiment_score=float(sentiment.get("score", 0.0)),
                         sentiment_label=str(sentiment.get("label", "Neutral")),

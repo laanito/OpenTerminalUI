@@ -397,6 +397,13 @@ intelligence promise, or claim that contradiction handling is solved.
       fundamentals, macro, sentiment, and technical evidence have their own
       freshness/provenance contracts. Do not infer causation from correlated
       price moves or treat native-quote returns as FX-normalized performance.
+  - [x] First news-provenance prerequisite: live news parsing and background
+        ingestion no longer invent a publication date when the source omits or
+        corrupts one. Undated rows are skipped; previously stored rows are not
+        retroactively verified.
+  - [ ] Add an on-demand, dated-headline context layer with source links and
+        explicit retrieval/coverage limits. Show articles alongside the selected
+        comparison window as possible context, never as causal attribution.
 
 ## Current handoff boundary
 

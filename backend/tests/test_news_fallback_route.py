@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from xml.etree import ElementTree as ET
 
 from backend.api.routes import news
 
@@ -20,6 +21,27 @@ def test_yahoo_news_row_normalization() -> None:
     assert item["source"] == "ExampleWire"
     assert "Revenue beats estimates" in item["summary"]
     assert "sentiment" in item
+
+
+def test_news_without_valid_publication_date_is_not_dated_now() -> None:
+    assert news._yahoo_news_row_to_payload({"title": "Undated", "link": "https://example.com/y"}) is None
+    assert news._yahoo_news_row_to_payload({"title": "Invalid", "link": "https://example.com/y", "pubDate": "bad"}) is None
+    rss_item = ET.fromstring("<item><title>Undated</title><link>https://example.com/r</link></item>")
+    assert news._rss_item_to_payload(rss_item) is None
+    assert news._normalize_items([
+        {"title": "Undated", "url": "https://example.com/a"},
+        {"title": "Invalid", "url": "https://example.com/b", "publishedAt": "bad"},
+        {"title": "Dated", "url": "https://example.com/c", "publishedAt": "2026-02-15T10:00:00Z"},
+    ]) == [
+        {
+            "id": news._stable_id("https://example.com/c", "Dated", "2026-02-15T10:00:00+00:00"),
+            "title": "Dated",
+            "source": "Unknown",
+            "publishedAt": "2026-02-15T10:00:00+00:00",
+            "url": "https://example.com/c",
+            "summary": "",
+        },
+    ]
 
 
 def test_sentiment_uses_fallback_when_db_empty(monkeypatch) -> None:

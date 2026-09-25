@@ -104,6 +104,19 @@ def test_normalize_news_record_fmp() -> None:
     assert item.tickers == ["ONGC"]
 
 
+def test_news_ingestor_skips_missing_or_invalid_publication_dates() -> None:
+    finnhub = {"headline": "Undated", "url": "https://example.com/a"}
+    fmp = {"title": "Invalid", "url": "https://example.com/b", "publishedDate": "bad"}
+    assert normalize_news_record(finnhub, provider="finnhub") is None
+    assert normalize_news_record(fmp, provider="fmp") is None
+
+
+def test_news_ingestor_accepts_yahoo_rss_date() -> None:
+    from backend.bg_services.news_ingestor import _to_iso
+
+    assert _to_iso("Wed, 01 Jan 2025 12:00:00 GMT") == "2025-01-01T12:00:00+00:00"
+
+
 def test_news_dedupe_by_url_keeps_latest_seen() -> None:
     ingestor = NewsIngestor()
     one = NormalizedNews(
@@ -153,8 +166,8 @@ def test_fetch_yahoo_gates_crypto_junk(monkeypatch) -> None:
     yahoo = _FakeYahoo(
         {
             "Bitcoin crypto": [
-                {"title": "Bitcoin surges past $70k", "link": "https://x/btc", "publisher": "CoinDesk"},
-                {"title": "Greenland Mines expands drilling", "link": "https://x/mine", "publisher": "Mining Weekly"},
+                {"title": "Bitcoin surges past $70k", "link": "https://x/btc", "publisher": "CoinDesk", "providerPublishTime": 1735689600},
+                {"title": "Greenland Mines expands drilling", "link": "https://x/mine", "publisher": "Mining Weekly", "providerPublishTime": 1735689600},
             ]
         }
     )
@@ -171,7 +184,7 @@ def test_fetch_yahoo_equity_trusts_query(monkeypatch) -> None:
     mod = _NEWS_INGESTOR_MODULE
     monkeypatch.setattr(mod, "_db_tickers", lambda limit=40: ["AAPL"])
     yahoo = _FakeYahoo(
-        {"AAPL stock news": [{"title": "Apple supplier update", "link": "https://x/aapl", "publisher": "Reuters"}]}
+        {"AAPL stock news": [{"title": "Apple supplier update", "link": "https://x/aapl", "publisher": "Reuters", "providerPublishTime": 1735689600}]}
     )
     items = asyncio.run(mod.NewsIngestor()._fetch_yahoo(_FakeFetcher(yahoo)))  # noqa: SLF001
     assert [i.title for i in items] == ["Apple supplier update"]
