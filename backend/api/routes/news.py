@@ -79,7 +79,22 @@ def _to_iso_from_epoch(value: Any) -> str | None:
         return None
     if epoch <= 0:
         return None
-    return datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat()
+    try:
+        return datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat()
+    except (OverflowError, OSError, ValueError):
+        return None
+
+
+def _to_iso_from_text(raw: Any) -> str | None:
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        dt = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).isoformat()
+    except ValueError:
+        return None
 
 
 def _stable_id(url: str, title: str, published_at: str) -> str:
@@ -96,9 +111,9 @@ def _normalize_items(rows: list[dict[str, Any]]) -> list[dict[str, str]]:
             continue
         source = str(row.get("source") or row.get("site") or "Unknown").strip() or "Unknown"
         summary = str(row.get("summary") or row.get("text") or "").strip()
-        published_at = _to_iso_from_epoch(row.get("datetime")) or str(row.get("publishedAt") or "").strip()
+        published_at = _to_iso_from_epoch(row.get("datetime")) or _to_iso_from_text(row.get("publishedAt"))
         if not published_at:
-            published_at = datetime.now(timezone.utc).isoformat()
+            continue
         item = {
             "id": _stable_id(url, title, published_at),
             "title": title,
@@ -201,16 +216,16 @@ def _strip_html(text: str) -> str:
     return " ".join(clean.split()).strip()
 
 
-def _to_iso_from_rss_date(raw: str | None) -> str:
+def _to_iso_from_rss_date(raw: str | None) -> str | None:
     if not raw:
-        return datetime.now(timezone.utc).isoformat()
+        return None
     try:
         dt = parsedate_to_datetime(raw)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.astimezone(timezone.utc).isoformat()
     except Exception:
-        return datetime.now(timezone.utc).isoformat()
+        return None
 
 
 def _sentiment_payload(title: str, summary: str) -> dict[str, Any]:
@@ -223,7 +238,7 @@ def _rss_item_to_payload(item: ET.Element, default_source: str = "Google News") 
     summary = _strip_html((item.findtext("description") or "").strip())
     source = (item.findtext("source") or "").strip() or default_source
     published_at = _to_iso_from_rss_date(item.findtext("pubDate"))
-    if not title or not url:
+    if not title or not url or not published_at:
         return None
     sentiment = _sentiment_payload(title, summary)
     return {
@@ -317,7 +332,7 @@ def _yahoo_news_row_to_payload(row: dict[str, Any]) -> dict[str, Any] | None:
     summary = _strip_html(str(row.get("summary") or row.get("description") or "").strip())
     source = str(row.get("publisher") or row.get("source") or "Yahoo Finance").strip() or "Yahoo Finance"
     published_at = _to_iso_from_epoch(row.get("providerPublishTime")) or _to_iso_from_rss_date(str(row.get("pubDate") or ""))
-    if not title or not url:
+    if not title or not url or not published_at:
         return None
     sentiment = _sentiment_payload(title, summary)
     return {

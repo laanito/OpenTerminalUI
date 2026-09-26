@@ -82,6 +82,12 @@ never silently faked.
   offers dated comparison and symbol suggestions from equity and crypto research,
   but suggested identifiers do not guarantee usable daily history and this is
   not a multi-source market explanation.
+- **News dates are source dates only for newly parsed items.** Live news parsing
+  and background ingestion now skip articles with missing or invalid publication
+  dates rather than assigning the fetch time. Older stored articles are not
+  retroactively verified and may contain dates assigned by the previous parser.
+  Keyless live feeds provide recent, incomplete coverage, not a historical news
+  archive or evidence that a headline caused a market move.
 - **Portfolio FX depends on external daily market history.** Accounting supports
   USD, EUR, GBP, JPY, CHF, AUD, CAD, and INR conversions through Yahoo daily FX
   charts with a Finnhub candle fallback when configured. Dated conversion uses
