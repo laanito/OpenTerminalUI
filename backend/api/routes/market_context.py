@@ -7,11 +7,13 @@ import logging
 import re
 from datetime import date, datetime, timezone
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.api.deps import get_unified_fetcher
+from backend.api.routes.news import _fetch_ticker_news
 from backend.auth.deps import get_current_user
 from backend.models import User
 from backend.services.cross_market_context import FETCH_RANGES, _daily_closes, compare_closes
@@ -19,6 +21,8 @@ from backend.services.cross_market_context import FETCH_RANGES, _daily_closes, c
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
 logger = logging.getLogger(__name__)
+_NEWS_FETCH_LIMIT = 50
+_NEWS_DISPLAY_LIMIT = 8
 
 
 class MarketComparisonRequest(BaseModel):
@@ -50,6 +54,40 @@ class MarketComparisonResponse(BaseModel):
     return_basis: Literal["native_quote_currency_unadjusted"]
     method: Literal["same_utc_date_daily_closes"]
     comparisons: list[MarketComparisonRow]
+
+
+class MarketHeadlinesRequest(BaseModel):
+    anchor: str = Field(min_length=1, max_length=40)
+    comparison: str = Field(min_length=1, max_length=40)
+    start_date: date
+    end_date: date
+
+
+class MarketHeadline(BaseModel):
+    title: str
+    url: str
+    source: str
+    published_at: datetime
+
+
+class MarketHeadlineGroup(BaseModel):
+    symbol: str
+    status: Literal["available", "feed_error"]
+    examined_count: int
+    matched_count: int
+    headlines: list[MarketHeadline]
+
+
+class MarketHeadlinesResponse(BaseModel):
+    anchor: str
+    comparison: str
+    start_date: date
+    end_date: date
+    retrieved_at: datetime
+    source: Literal["current_keyless_feeds"]
+    fetch_limit_per_symbol: int
+    display_limit_per_symbol: int
+    groups: list[MarketHeadlineGroup]
 
 
 def _symbol(raw: str) -> str:
@@ -105,4 +143,69 @@ async def compare_market_context(
         "return_basis": "native_quote_currency_unadjusted",
         "method": "same_utc_date_daily_closes",
         "comparisons": rows,
+    }
+
+
+@router.post("/headlines", response_model=MarketHeadlinesResponse)
+async def get_market_context_headlines(
+    payload: MarketHeadlinesRequest,
+    _: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Find source-dated candidate headlines in one observed comparison window."""
+    anchor = _symbol(payload.anchor)
+    comparison = _symbol(payload.comparison)
+    if anchor == comparison:
+        raise HTTPException(status_code=422, detail="Anchor cannot be a comparison symbol")
+    if payload.end_date < payload.start_date or (payload.end_date - payload.start_date).days > 200:
+        raise HTTPException(status_code=422, detail="Headline window must span 0–200 days")
+
+    async def load(symbol: str) -> dict[str, Any]:
+        try:
+            candidates = await _fetch_ticker_news(symbol, market=None, limit=_NEWS_FETCH_LIMIT)
+        except Exception as exc:
+            logger.warning("Market-context headline fetch failed for %s: %s", symbol, exc)
+            return {"symbol": symbol, "status": "feed_error", "examined_count": 0, "matched_count": 0, "headlines": []}
+
+        matched = []
+        for item in candidates:
+            try:
+                published = datetime.fromisoformat(str(item["published_at"]).replace("Z", "+00:00"))
+                if published.tzinfo is None:
+                    continue
+                published_utc = published.astimezone(timezone.utc)
+                if not payload.start_date <= published_utc.date() <= payload.end_date:
+                    continue
+                title = str(item["title"]).strip()
+                url = str(item["url"]).strip()
+                parsed_url = urlsplit(url)
+                if not title or parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+                    continue
+            except (KeyError, TypeError, ValueError):
+                continue
+            matched.append({
+                "title": title,
+                "url": url,
+                "source": str(item.get("source") or "Unknown"),
+                "published_at": published_utc,
+            })
+        matched.sort(key=lambda item: item["published_at"], reverse=True)
+        return {
+            "symbol": symbol,
+            "status": "available",
+            "examined_count": len(candidates),
+            "matched_count": len(matched),
+            "headlines": matched[:_NEWS_DISPLAY_LIMIT],
+        }
+
+    groups = await asyncio.gather(load(anchor), load(comparison))
+    return {
+        "anchor": anchor,
+        "comparison": comparison,
+        "start_date": payload.start_date,
+        "end_date": payload.end_date,
+        "retrieved_at": datetime.now(timezone.utc),
+        "source": "current_keyless_feeds",
+        "fetch_limit_per_symbol": _NEWS_FETCH_LIMIT,
+        "display_limit_per_symbol": _NEWS_DISPLAY_LIMIT,
+        "groups": groups,
     }

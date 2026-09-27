@@ -282,10 +282,13 @@ have honest coverage and provenance contracts.
 Dated news is the first candidate for that next layer. As a prerequisite, new
 live-feed and background-ingested articles without a parseable source publication
 date are discarded instead of silently receiving the fetch time. Previously
-stored news is not retroactively date-verified. A following on-demand view can
-place linked headlines beside a selected comparison period, explicitly limited
-to what the currently available feeds return; it must not present those
-headlines as a complete historical record or as the cause of a price move.
+stored news is not retroactively date-verified. The on-demand comparison view
+now places linked, source-dated headline candidates alongside each pair's actual
+shared-close window. It checks at most 50 current keyless-feed candidates per
+symbol, shows at most eight matches per symbol, and exposes partial feed failure.
+The result is neither a complete historical record nor evidence that a headline
+caused a price move. Fundamentals, macro, and technical context remain later
+evidence layers.
 
 ## Release plan
 

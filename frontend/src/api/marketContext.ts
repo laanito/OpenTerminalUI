@@ -27,11 +27,50 @@ export interface MarketComparisonResponse {
   comparisons: MarketComparisonRow[];
 }
 
+export interface MarketHeadline {
+  title: string;
+  url: string;
+  source: string;
+  published_at: string;
+}
+
+export interface MarketHeadlineGroup {
+  symbol: string;
+  status: "available" | "feed_error";
+  examined_count: number;
+  matched_count: number;
+  headlines: MarketHeadline[];
+}
+
+export interface MarketHeadlinesResponse {
+  anchor: string;
+  comparison: string;
+  start_date: string;
+  end_date: string;
+  retrieved_at: string;
+  source: "current_keyless_feeds";
+  fetch_limit_per_symbol: number;
+  display_limit_per_symbol: number;
+  groups: MarketHeadlineGroup[];
+}
+
 export async function compareMarketContext(
   anchor: string,
   comparisons: string[],
   period: MarketContextPeriod,
 ): Promise<MarketComparisonResponse> {
   const response = await api.post<MarketComparisonResponse>("/market-context/compare", { anchor, comparisons, period });
+  return response.data;
+}
+
+export async function fetchMarketContextHeadlines(
+  anchor: string,
+  comparison: string,
+  startDate: string,
+  endDate: string,
+): Promise<MarketHeadlinesResponse> {
+  const response = await api.post<MarketHeadlinesResponse>("/market-context/headlines", {
+    anchor, comparison, start_date: startDate, end_date: endDate,
+  });
   return response.data;
 }

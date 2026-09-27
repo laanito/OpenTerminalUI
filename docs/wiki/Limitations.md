@@ -81,7 +81,11 @@ never silently faked.
   identify the underlying provider in this response. A contextual browser page
   offers dated comparison and symbol suggestions from equity and crypto research,
   but suggested identifiers do not guarantee usable daily history and this is
-  not a multi-source market explanation.
+  not a multi-source market explanation. An optional on-demand panel checks
+  current keyless news feeds for source-dated headlines within each pair's actual
+  shared-close window. It examines at most 50 recent candidates and displays at
+  most eight matches per symbol; empty results do not imply no news occurred.
+  Headlines are possible context, not causal attribution.
 - **News dates are source dates only for newly parsed items.** Live news parsing
   and background ingestion now skip articles with missing or invalid publication
   dates rather than assigning the fetch time. Older stored articles are not

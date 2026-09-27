@@ -6966,6 +6966,169 @@
         "title": "MarketComparisonRow",
         "type": "object"
       },
+      "MarketHeadline": {
+        "properties": {
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "source",
+          "published_at"
+        ],
+        "title": "MarketHeadline",
+        "type": "object"
+      },
+      "MarketHeadlineGroup": {
+        "properties": {
+          "examined_count": {
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "headlines": {
+            "items": {
+              "$ref": "#/components/schemas/MarketHeadline"
+            },
+            "title": "Headlines",
+            "type": "array"
+          },
+          "matched_count": {
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "feed_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "status",
+          "examined_count",
+          "matched_count",
+          "headlines"
+        ],
+        "title": "MarketHeadlineGroup",
+        "type": "object"
+      },
+      "MarketHeadlinesRequest": {
+        "properties": {
+          "anchor": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparison": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Comparison",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison",
+          "start_date",
+          "end_date"
+        ],
+        "title": "MarketHeadlinesRequest",
+        "type": "object"
+      },
+      "MarketHeadlinesResponse": {
+        "properties": {
+          "anchor": {
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparison": {
+            "title": "Comparison",
+            "type": "string"
+          },
+          "display_limit_per_symbol": {
+            "title": "Display Limit Per Symbol",
+            "type": "integer"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "fetch_limit_per_symbol": {
+            "title": "Fetch Limit Per Symbol",
+            "type": "integer"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/MarketHeadlineGroup"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "source": {
+            "const": "current_keyless_feeds",
+            "title": "Source",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison",
+          "start_date",
+          "end_date",
+          "retrieved_at",
+          "source",
+          "fetch_limit_per_symbol",
+          "display_limit_per_symbol",
+          "groups"
+        ],
+        "title": "MarketHeadlinesResponse",
+        "type": "object"
+      },
       "ModelSpec": {
         "properties": {
           "id": {
@@ -24213,6 +24376,60 @@
           }
         ],
         "summary": "Compare Market Context",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/headlines": {
+      "post": {
+        "description": "Find source-dated candidate headlines in one observed comparison window.",
+        "operationId": "get_market_context_headlines_api_market_context_headlines_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketHeadlinesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketHeadlinesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Market Context Headlines",
         "tags": [
           "market-context"
         ],
