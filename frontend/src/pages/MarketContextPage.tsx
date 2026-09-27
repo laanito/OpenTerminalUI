@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 
-import { compareMarketContext, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { compareMarketContext, fetchMarketContextHeadlines, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -50,6 +50,76 @@ function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
   return "No usable daily history for this comparison.";
+}
+
+function DatedHeadlines({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const startDate = row.start_date || "";
+  const endDate = row.end_date || "";
+  const query = useQuery({
+    queryKey: ["market-context-headlines", anchor, row.symbol, startDate, endDate],
+    queryFn: () => fetchMarketContextHeadlines(anchor, row.symbol, startDate, endDate),
+    enabled: open && !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button
+        type="button"
+        className="text-xs text-terminal-accent underline"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+      >
+        {open ? "Hide" : "Show"} dated headlines for {anchor} vs {row.symbol}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2 text-xs">
+          <p className="text-terminal-muted">
+            Possible context, not a cause of these moves. This searches only the current keyless feeds; results are neither a complete archive nor independently verified publication dates.
+          </p>
+          {query.isPending ? <p role="status" className="text-terminal-muted">Checking current headline feeds…</p> : null}
+          {query.isError ? (
+            <p role="alert" className="text-terminal-neg">
+              {extractApiErrorMessage(query.error, "Could not check headline feeds.")}
+              <button type="button" className="ml-2 underline" onClick={() => void query.refetch()}>Retry headlines</button>
+            </p>
+          ) : null}
+          {query.data ? (
+            <>
+              <p className="text-terminal-muted">
+                Checked {new Date(query.data.retrieved_at).toLocaleString()} · up to {query.data.fetch_limit_per_symbol} recent candidates per symbol, showing at most {query.data.display_limit_per_symbol} matches each.
+              </p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {query.data.groups.map((group) => (
+                  <div key={group.symbol} className="rounded border border-terminal-border p-2">
+                    <h3 className="font-semibold text-terminal-text">{group.symbol}</h3>
+                    {group.status === "feed_error" ? (
+                      <p className="mt-1 text-terminal-warn">Feed unavailable; headlines could not be checked.</p>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-terminal-muted">{group.matched_count} dated matches among {group.examined_count} recent candidates.</p>
+                        {group.headlines.length === 0 ? <p className="mt-1 text-terminal-muted">No matches in this limited feed; this does not mean no news occurred.</p> : null}
+                        <ul className="mt-2 space-y-2">
+                          {group.headlines.map((headline) => (
+                            <li key={headline.url}>
+                              <a href={headline.url} target="_blank" rel="noopener noreferrer" className="text-terminal-accent underline">{headline.title}</a>
+                              <p className="text-terminal-muted">{headline.source} · {new Date(headline.published_at).toLocaleString()}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export function MarketContextPage() {
@@ -233,6 +303,7 @@ export function MarketContextPage() {
                       Shared closes: {row.start_date} to {row.end_date} · {row.observations} observations.
                       Latest source dates: {selection.anchor} {row.anchor_latest_date}, {row.symbol} {row.comparison_latest_date}.
                     </p>
+                    <DatedHeadlines anchor={selection.anchor} row={row} />
                   </>
                 ) : (
                   <p className="mt-2 text-sm text-terminal-muted">{unavailableReason(row)} Latest dates: {selection.anchor} {row.anchor_latest_date || "unknown"}, {row.symbol} {row.comparison_latest_date || "unknown"}.</p>

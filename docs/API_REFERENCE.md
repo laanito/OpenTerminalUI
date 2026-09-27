@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **451 operations** across **403 paths** and **87 families**.
-- Authentication: **406 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **452 operations** across **404 paths** and **87 families**.
+- Authentication: **407 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 1 |
+| `market-context` | `experimental` | 2 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -675,6 +675,7 @@ State: **experimental**
 | Method | Path | Authentication | Summary |
 |---|---|---|---|
 | `POST` | `/api/market-context/compare` | Bearer token | Compare Market Context |
+| `POST` | `/api/market-context/headlines` | Bearer token | Get Market Context Headlines |
 
 ### `model-lab`
 

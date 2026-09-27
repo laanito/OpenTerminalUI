@@ -96,3 +96,40 @@ def test_route_rejects_anchor_as_comparison_and_bad_symbols() -> None:
     client = _client({})
     assert client.post("/api/market-context/compare", json={"anchor": "AAPL", "comparisons": ["aapl"]}).status_code == 422
     assert client.post("/api/market-context/compare", json={"anchor": "AAPL", "comparisons": ["bad symbol"]}).status_code == 422
+
+
+def test_headline_context_filters_to_pair_window_and_keeps_partial_feed(monkeypatch) -> None:
+    async def fake_news(symbol: str, market: str | None, limit: int) -> list[dict[str, str]]:
+        assert market is None
+        assert limit == 50
+        if symbol == "SPY":
+            raise RuntimeError("feed down")
+        return [
+            {"title": "In window", "url": "https://example.com/in", "source": "Wire", "published_at": "2026-09-02T00:30:00+02:00"},
+            {"title": "At end", "url": "https://example.com/end", "source": "Wire", "published_at": "2026-09-10T23:00:00Z"},
+            {"title": "Too late", "url": "https://example.com/late", "source": "Wire", "published_at": "2026-09-11T00:00:00Z"},
+            {"title": "Undated", "url": "https://example.com/no-date", "source": "Wire"},
+            {"title": "Unsafe", "url": "javascript:alert(1)", "source": "Wire", "published_at": "2026-09-05T10:00:00Z"},
+        ]
+
+    monkeypatch.setattr(market_context, "_fetch_ticker_news", fake_news)
+    client = _client({})
+    response = client.post("/api/market-context/headlines", json={
+        "anchor": "aapl", "comparison": "spy", "start_date": "2026-09-02", "end_date": "2026-09-10",
+    })
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source"] == "current_keyless_feeds"
+    assert payload["fetch_limit_per_symbol"] == 50
+    assert payload["groups"][0]["examined_count"] == 5
+    assert payload["groups"][0]["matched_count"] == 1
+    assert [item["title"] for item in payload["groups"][0]["headlines"]] == ["At end"]
+    assert payload["groups"][1]["status"] == "feed_error"
+
+
+def test_headline_context_rejects_invalid_pair_and_oversized_window() -> None:
+    client = _client({})
+    base = {"anchor": "AAPL", "comparison": "SPY", "start_date": "2026-09-01", "end_date": "2026-09-10"}
+    assert client.post("/api/market-context/headlines", json={**base, "comparison": "AAPL"}).status_code == 422
+    assert client.post("/api/market-context/headlines", json={**base, "end_date": "2026-08-30"}).status_code == 422
+    assert client.post("/api/market-context/headlines", json={**base, "start_date": "2026-01-01"}).status_code == 422

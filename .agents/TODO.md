@@ -401,9 +401,11 @@ intelligence promise, or claim that contradiction handling is solved.
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not
         retroactively verified.
-  - [ ] Add an on-demand, dated-headline context layer with source links and
-        explicit retrieval/coverage limits. Show articles alongside the selected
-        comparison window as possible context, never as causal attribution.
+  - [x] Add an on-demand, dated-headline context layer with source links and
+        explicit retrieval/coverage limits. It checks current keyless feeds for
+        each symbol inside the selected pair's actual overlap window, reports
+        partial feed failure, and never treats headlines as causal attribution
+        or a complete historical archive.
 
 ## Current handoff boundary
 
