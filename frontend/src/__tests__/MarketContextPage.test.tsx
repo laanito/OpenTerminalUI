@@ -45,6 +45,7 @@ describe("MarketContextPage", () => {
           symbol: "SPY", status: "available", reason: null,
           start_date: "2026-08-25", end_date: "2026-09-23",
           anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-23",
+          anchor_history_source: "crypto", comparison_history_source: "yahoo",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
         },
@@ -52,6 +53,7 @@ describe("MarketContextPage", () => {
           symbol: "QQQ", status: "available", reason: null,
           start_date: "2026-08-25", end_date: "2026-09-10",
           anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-10",
+          anchor_history_source: "crypto", comparison_history_source: "fmp",
           observations: 12, freshness: "stale",
           anchor_return_pct: 4, comparison_return_pct: 1, relative_return_pp: 3,
         },
@@ -59,6 +61,7 @@ describe("MarketContextPage", () => {
           symbol: "SAP.DE", status: "unavailable", reason: "provider_error",
           start_date: null, end_date: null,
           anchor_latest_date: null, comparison_latest_date: null,
+          anchor_history_source: null, comparison_history_source: null,
           observations: null, freshness: null,
           anchor_return_pct: null, comparison_return_pct: null, relative_return_pp: null,
         },
@@ -71,6 +74,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText("+5.25%")).toBeInTheDocument();
     expect(screen.getByText("+3.15 pp")).toBeInTheDocument();
     expect(screen.getByText("Stale history")).toBeInTheDocument();
+    expect(screen.getByText(/BTC-USD Crypto adapter · SPY Yahoo Finance/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
     expect(screen.getByText(/not FX-normalized/)).toBeInTheDocument();
   });
@@ -190,6 +194,7 @@ describe("MarketContextPage", () => {
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
         anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
         observations: 7, freshness: "current", anchor_return_pct: 2,
         comparison_return_pct: 1, relative_return_pp: 1,
       }],

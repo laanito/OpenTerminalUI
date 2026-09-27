@@ -77,8 +77,9 @@ never silently faked.
   comparison API aligns each selected proxy with an anchor on common UTC daily
   close dates and exposes stale, missing, and insufficient-overlap states. It
   returns native-quote percentage moves, without FX normalization or a claim
-  that one market caused another to move. The unified history path does not yet
-  identify the underlying provider in this response. A contextual browser page
+  that one market caused another to move. The response identifies the selected
+  history path for each symbol, including adapter failover, but a multi-provider
+  adapter can still obscure its internal feed. A contextual browser page
   offers dated comparison and symbol suggestions from equity and crypto research,
   but suggested identifiers do not guarantee usable daily history and this is
   not a multi-source market explanation. An optional on-demand panel checks

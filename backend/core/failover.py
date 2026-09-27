@@ -54,6 +54,25 @@ async def call_with_failover(
     cooldown_seconds: int,
     **kwargs: Any,
 ) -> Any:
+    result, _ = await call_with_failover_with_source(
+        chain,
+        method,
+        *args,
+        failure_threshold=failure_threshold,
+        cooldown_seconds=cooldown_seconds,
+        **kwargs,
+    )
+    return result
+
+
+async def call_with_failover_with_source(
+    chain: list[FailoverSlot],
+    method: str,
+    *args: Any,
+    failure_threshold: int,
+    cooldown_seconds: int,
+    **kwargs: Any,
+) -> tuple[Any, str]:
     if not chain:
         raise RuntimeError("No providers registered")
 
@@ -67,7 +86,7 @@ async def call_with_failover(
         try:
             result = await fn(*args, **kwargs)
             slot.mark_success()
-            return result
+            return result, slot.name
         except Exception as exc:
             slot.mark_failure(exc, threshold=failure_threshold, cooldown_seconds=cooldown_seconds)
             last_exc = exc

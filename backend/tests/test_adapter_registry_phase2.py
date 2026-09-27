@@ -107,3 +107,7 @@ async def test_adapter_registry_invoke_falls_back_and_tracks_health() -> None:
     assert health["kite"]["available"] is False
     assert health["kite"]["last_error"] == "primary down"
     assert health["yahoo"]["available"] is True
+
+    sourced_quote, source = await registry.invoke_with_source("NSE", "get_quote", "RELIANCE")
+    assert sourced_quote is not None
+    assert source == "yahoo"

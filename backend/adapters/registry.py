@@ -12,7 +12,7 @@ from backend.adapters.crypto import CryptoDataAdapter
 from backend.adapters.kite import KiteAdapter
 from backend.adapters.yahoo import YahooFinanceAdapter
 from backend.adapters.us_options_adapter import USOptionsAdapter
-from backend.core.failover import FailoverSlot, call_with_failover
+from backend.core.failover import FailoverSlot, call_with_failover, call_with_failover_with_source
 
 
 @dataclass
@@ -112,6 +112,20 @@ class AdapterRegistry:
     async def invoke(self, exchange: str, method: str, *args: Any, **kwargs: Any) -> Any:
         try:
             return await call_with_failover(
+                self._slots_for_exchange(exchange),
+                method,
+                *args,
+                failure_threshold=self.failure_threshold,
+                cooldown_seconds=self.cooldown_seconds,
+                **kwargs,
+            )
+        except RuntimeError as exc:
+            raise RuntimeError(f"All adapters failed for {exchange}:{method}: {exc}") from exc
+
+    async def invoke_with_source(self, exchange: str, method: str, *args: Any, **kwargs: Any) -> tuple[Any, str]:
+        """Invoke a chain and identify the adapter that returned the result."""
+        try:
+            return await call_with_failover_with_source(
                 self._slots_for_exchange(exchange),
                 method,
                 *args,

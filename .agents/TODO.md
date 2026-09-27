@@ -406,6 +406,10 @@ intelligence promise, or claim that contradiction handling is solved.
         each symbol inside the selected pair's actual overlap window, reports
         partial feed failure, and never treats headlines as causal attribution
         or a complete historical archive.
+  - [x] Identify the selected history path for each symbol in the observed
+        comparison, including which adapter won failover, and leave the path
+        unknown when there is no usable history. A multi-provider adapter may
+        still hide its internal feed; this is not end-to-end provider identity.
 
 ## Current handoff boundary
 

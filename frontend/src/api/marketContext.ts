@@ -10,6 +10,8 @@ export interface MarketComparisonRow {
   end_date: string | null;
   anchor_latest_date: string | null;
   comparison_latest_date: string | null;
+  anchor_history_source: string | null;
+  comparison_history_source: string | null;
   observations: number | null;
   freshness: "current" | "stale" | null;
   anchor_return_pct: number | null;

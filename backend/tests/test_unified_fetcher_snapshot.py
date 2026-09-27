@@ -74,6 +74,9 @@ class _RegistryStub:
             return self.history
         raise AssertionError(f"Unexpected invoke: {exchange}:{method}:{args}")
 
+    async def invoke_with_source(self, exchange: str, method: str, *args):
+        return await self.invoke(exchange, method, *args), "alpaca"
+
 
 def _us_classification(symbol: str) -> StockClassification:
     return StockClassification(
@@ -165,7 +168,9 @@ def test_fetch_history_uses_adapter_registry_and_returns_chart_payload(monkeypat
         kite=_DummyKite(),
     )
 
-    payload = asyncio.run(fetcher.fetch_history("AAPL", range_str="1mo", interval="1d"))
+    payload, source = asyncio.run(fetcher.fetch_history_with_source("AAPL", range_str="1mo", interval="1d"))
+    assert source == "alpaca"
+    assert asyncio.run(fetcher.fetch_history("AAPL", range_str="1mo", interval="1d")) == payload
 
     result = payload["chart"]["result"][0]
     assert result["timestamp"] == [1710000000, 1710086400]

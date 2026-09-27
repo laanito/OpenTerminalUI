@@ -6823,6 +6823,17 @@
       },
       "MarketComparisonRow": {
         "properties": {
+          "anchor_history_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor History Source"
+          },
           "anchor_latest_date": {
             "anyOf": [
               {
@@ -6845,6 +6856,17 @@
               }
             ],
             "title": "Anchor Return Pct"
+          },
+          "comparison_history_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison History Source"
           },
           "comparison_latest_date": {
             "anyOf": [
