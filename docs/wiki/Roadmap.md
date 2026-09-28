@@ -274,8 +274,11 @@ instrument-search suggestions and one-click proxy choices make symbol selection
 less dependent on memorized tickers. This remains an experimental, price-only
 journey, not the full v2 cross-market explanation promise. Returns are in each
 instrument's native quote currency, **not** FX-normalized portfolio returns;
-the unified history path does not yet expose the underlying provider identity. Neither
-relative returns nor co-movement establish causation. Fundamentals, macro,
+the comparison now identifies each symbol's selected history path, including
+which adapter won failover, or leaves it unknown when no usable history was
+returned. An adapter with its own internal feed selection (notably crypto) does
+not yet expose that deeper provider identity. Neither relative returns nor
+co-movement establish causation. Fundamentals, macro,
 sentiment, and technical evidence become separate later layers only when they
 have honest coverage and provenance contracts.
 

@@ -39,6 +39,8 @@ class MarketComparisonRow(BaseModel):
     end_date: date | None = None
     anchor_latest_date: date | None = None
     comparison_latest_date: date | None = None
+    anchor_history_source: str | None = None
+    comparison_history_source: str | None = None
     observations: int | None = None
     freshness: Literal["current", "stale"] | None = None
     anchor_return_pct: float | None = None
@@ -112,19 +114,28 @@ async def compare_market_context(
         raise HTTPException(status_code=422, detail="At least one comparison symbol is required")
 
     histories: dict[str, dict[date, float]] = {}
+    sources: dict[str, str | None] = {}
     errors: set[str] = set()
     semaphore = asyncio.Semaphore(3)
 
     async def load(symbol: str) -> None:
         async with semaphore:
             try:
-                raw = await fetcher.fetch_history(symbol, range_str=FETCH_RANGES[payload.period], interval="1d")
+                if hasattr(fetcher, "fetch_history_with_source"):
+                    raw, source = await fetcher.fetch_history_with_source(
+                        symbol, range_str=FETCH_RANGES[payload.period], interval="1d"
+                    )
+                else:
+                    raw = await fetcher.fetch_history(symbol, range_str=FETCH_RANGES[payload.period], interval="1d")
+                    source = None
                 histories[symbol] = _daily_closes(raw)
+                sources[symbol] = source if histories[symbol] else None
             except Exception as exc:
                 # A provider failure must not turn a partial comparison into a 500.
                 logger.warning("Market-context history failed for %s: %s", symbol, exc)
                 errors.add(symbol)
                 histories[symbol] = {}
+                sources[symbol] = None
 
     await asyncio.gather(*(load(symbol) for symbol in [anchor, *comparisons]))
 
@@ -133,7 +144,12 @@ async def compare_market_context(
         result = compare_closes(histories[anchor], histories[symbol], period=payload.period)
         if result["status"] == "unavailable" and (anchor in errors or symbol in errors):
             result["reason"] = "provider_error"
-        rows.append({"symbol": symbol, **result})
+        rows.append({
+            "symbol": symbol,
+            **result,
+            "anchor_history_source": sources[anchor],
+            "comparison_history_source": sources[symbol],
+        })
 
     return {
         "anchor": anchor,

@@ -46,6 +46,18 @@ function formatPoints(value: number | null): string {
   return `${value > 0 ? "+" : ""}${value.toFixed(2)} pp`;
 }
 
+function sourceLabel(source: string | null): string {
+  const labels: Record<string, string> = {
+    yahoo: "Yahoo Finance",
+    fmp: "FMP",
+    alpaca: "Alpaca",
+    kite: "Kite",
+    crypto: "Crypto adapter",
+    us_options: "US options adapter",
+  };
+  return source ? (labels[source] || source) : "Not identified";
+}
+
 function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
@@ -272,7 +284,8 @@ export function MarketContextPage() {
       <TerminalPanel title="Observed comparison" subtitle={`${selection.anchor} · ${appliedPeriod} requested window`}>
         <p className="mb-3 text-xs text-terminal-muted">
           Daily closes are paired only when both symbols have an observation on the same UTC date. Returns are in each
-          symbol’s native quote currency, not FX-normalized. The underlying history provider is not identified by this API.
+          symbol’s native quote currency, not FX-normalized. The identified price-history source is shown per symbol;
+          it may differ across the pair or be unavailable.
         </p>
         {query.isPending && !selection.error ? <p role="status" className="text-sm text-terminal-muted">Loading dated market history…</p> : null}
         {query.isError ? (
@@ -303,10 +316,16 @@ export function MarketContextPage() {
                       Shared closes: {row.start_date} to {row.end_date} · {row.observations} observations.
                       Latest source dates: {selection.anchor} {row.anchor_latest_date}, {row.symbol} {row.comparison_latest_date}.
                     </p>
+                    <p className="mt-1 text-xs text-terminal-muted">
+                      Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.
+                    </p>
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                   </>
                 ) : (
-                  <p className="mt-2 text-sm text-terminal-muted">{unavailableReason(row)} Latest dates: {selection.anchor} {row.anchor_latest_date || "unknown"}, {row.symbol} {row.comparison_latest_date || "unknown"}.</p>
+                  <>
+                    <p className="mt-2 text-sm text-terminal-muted">{unavailableReason(row)} Latest dates: {selection.anchor} {row.anchor_latest_date || "unknown"}, {row.symbol} {row.comparison_latest_date || "unknown"}.</p>
+                    <p className="mt-1 text-xs text-terminal-muted">Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.</p>
+                  </>
                 )}
               </div>
             ))}

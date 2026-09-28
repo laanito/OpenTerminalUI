@@ -65,6 +65,10 @@ def _client(data: dict[str, Any]) -> TestClient:
                 raise value
             return value
 
+        async def fetch_history_with_source(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> tuple[Any, str]:
+            data = await self.fetch_history(ticker, range_str=range_str, interval=interval)
+            return data, "yahoo" if ticker == "AAPL" else "fmp"
+
     app = FastAPI()
     app.include_router(market_context.router)
     app.dependency_overrides[get_current_user] = lambda: object()
@@ -89,13 +93,26 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["return_basis"] == "native_quote_currency_unadjusted"
     assert [row["symbol"] for row in payload["comparisons"]] == ["SPY", "BTC-USD"]
     assert payload["comparisons"][0]["status"] == "available"
+    assert payload["comparisons"][0]["anchor_history_source"] == "yahoo"
+    assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
     assert payload["comparisons"][1]["reason"] == "provider_error"
+    assert payload["comparisons"][1]["comparison_history_source"] is None
 
 
 def test_route_rejects_anchor_as_comparison_and_bad_symbols() -> None:
     client = _client({})
     assert client.post("/api/market-context/compare", json={"anchor": "AAPL", "comparisons": ["aapl"]}).status_code == 422
     assert client.post("/api/market-context/compare", json={"anchor": "AAPL", "comparisons": ["bad symbol"]}).status_code == 422
+
+
+def test_route_does_not_attribute_unusable_history() -> None:
+    client = _client({"AAPL": {}, "SPY": {}})
+    response = client.post("/api/market-context/compare", json={"anchor": "AAPL", "comparisons": ["SPY"]})
+    assert response.status_code == 200
+    row = response.json()["comparisons"][0]
+    assert row["status"] == "unavailable"
+    assert row["anchor_history_source"] is None
+    assert row["comparison_history_source"] is None
 
 
 def test_headline_context_filters_to_pair_window_and_keeps_partial_feed(monkeypatch) -> None:
