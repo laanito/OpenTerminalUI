@@ -10,6 +10,7 @@ from backend.api.deps import get_unified_fetcher
 from backend.api.routes import market_context
 from backend.auth.deps import get_current_user
 from backend.services.cross_market_context import _daily_closes, compare_closes
+from backend.services.economic_data import get_economic_data_service
 
 
 def _chart(closes: dict[date, float]) -> dict[str, Any]:
@@ -150,3 +151,46 @@ def test_headline_context_rejects_invalid_pair_and_oversized_window() -> None:
     assert client.post("/api/market-context/headlines", json={**base, "comparison": "AAPL"}).status_code == 422
     assert client.post("/api/market-context/headlines", json={**base, "end_date": "2026-08-30"}).status_code == 422
     assert client.post("/api/market-context/headlines", json={**base, "start_date": "2026-01-01"}).status_code == 422
+
+
+def _macro_client(live: dict[str, Any]) -> TestClient:
+    class FakeService:
+        async def get_live_calendar(self, start: str, end: str) -> dict[str, Any]:
+            assert start == "2026-09-02"
+            assert end == "2026-09-10"
+            return live
+
+    app = FastAPI()
+    app.include_router(market_context.router)
+    app.dependency_overrides[get_current_user] = lambda: object()
+    app.dependency_overrides[get_economic_data_service] = lambda: FakeService()
+    return TestClient(app)
+
+
+def test_macro_context_filters_provider_rows_to_requested_dates() -> None:
+    client = _macro_client({
+        "status": "available", "reason": None, "source": "fmp", "retrieved_at": "2026-09-11T10:00:00Z",
+        "events": [
+            {"date": "2026-09-05", "event_name": "Rate decision", "country": "US", "impact": "high"},
+            {"date": "2026-09-11", "event_name": "Outside window", "country": "EU", "impact": "medium"},
+            {"date": "bad", "event_name": "Undated", "country": "US", "impact": "low"},
+        ],
+    })
+    response = client.post("/api/market-context/macro-events", json={"start_date": "2026-09-02", "end_date": "2026-09-10"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source"] == "fmp"
+    assert payload["matched_count"] == 1
+    assert [event["event_name"] for event in payload["events"]] == ["Rate decision"]
+
+
+def test_macro_context_preserves_unavailable_state_without_sample() -> None:
+    client = _macro_client({
+        "status": "unavailable", "reason": "missing_api_key", "source": None,
+        "retrieved_at": "2026-09-11T10:00:00Z", "events": [],
+    })
+    response = client.post("/api/market-context/macro-events", json={"start_date": "2026-09-02", "end_date": "2026-09-10"})
+    assert response.status_code == 200
+    assert response.json()["reason"] == "missing_api_key"
+    assert response.json()["events"] == []
+    assert client.post("/api/market-context/macro-events", json={"start_date": "2026-01-01", "end_date": "2026-09-10"}).status_code == 422

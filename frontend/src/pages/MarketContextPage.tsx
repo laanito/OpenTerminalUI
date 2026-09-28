@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 
-import { compareMarketContext, fetchMarketContextHeadlines, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { compareMarketContext, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -126,6 +126,64 @@ function DatedHeadlines({ anchor, row }: { anchor: string; row: MarketComparison
                   </div>
                 ))}
               </div>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DatedMacroEvents({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const startDate = row.start_date || "";
+  const endDate = row.end_date || "";
+  const query = useQuery({
+    queryKey: ["market-context-macro-events", startDate, endDate],
+    queryFn: () => fetchMarketContextMacroEvents(startDate, endDate),
+    enabled: open && !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} economic calendar events for ${anchor} vs ${row.symbol}`}>
+        {open ? "Hide" : "Show"} economic calendar events for {row.start_date} to {row.end_date}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2 text-xs">
+          <p className="text-terminal-muted">
+            Global calendar context, not events attributed to either asset or proof of what moved prices. Only configured live Finnhub or FMP data is used; historical coverage may be incomplete.
+          </p>
+          {query.isPending ? <p role="status" className="text-terminal-muted">Checking live economic calendar…</p> : null}
+          {query.isError ? (
+            <p role="alert" className="text-terminal-neg">
+              {extractApiErrorMessage(query.error, "Could not check economic calendar.")}
+              <button type="button" className="ml-2 underline" onClick={() => void query.refetch()}>Retry events</button>
+            </p>
+          ) : null}
+          {query.data?.status === "unavailable" ? (
+            <p className="text-terminal-warn">
+              {query.data.reason === "missing_api_key"
+                ? "Live calendar unavailable: configure FINNHUB_API_KEY or FMP_API_KEY. No sample events are shown here."
+                : "The configured calendar providers failed. No sample events are shown here."}
+            </p>
+          ) : null}
+          {query.data?.status === "available" ? (
+            <>
+              <p className="text-terminal-muted">
+                {query.data.source === "finnhub" ? "Finnhub" : "FMP"} · checked {new Date(query.data.retrieved_at).toLocaleString()} · showing up to {query.data.display_limit} of {query.data.matched_count} returned events.
+              </p>
+              {query.data.events.length === 0 ? <p className="text-terminal-muted">No events returned for this window; this does not establish that none occurred.</p> : null}
+              <ul className="space-y-1">
+                {query.data.events.map((event, index) => (
+                  <li key={`${event.date}-${event.event_name}-${index}`} className="rounded border border-terminal-border p-2 text-terminal-text">
+                    {event.date} · {event.country || "Region unspecified"} · {event.event_name}
+                    <span className="ml-2 text-terminal-muted">Impact: {event.impact}</span>
+                  </li>
+                ))}
+              </ul>
             </>
           ) : null}
         </div>
@@ -320,6 +378,7 @@ export function MarketContextPage() {
                       Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.
                     </p>
                     <DatedHeadlines anchor={selection.anchor} row={row} />
+                    <DatedMacroEvents anchor={selection.anchor} row={row} />
                   </>
                 ) : (
                   <>

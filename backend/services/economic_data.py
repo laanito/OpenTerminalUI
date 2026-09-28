@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -69,69 +69,104 @@ class EconomicDataService:
         if cached:
             return cached
 
-        events = []
-
-        # Try Finnhub
-        if self.finnhub_key:
-            try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    resp = await client.get(
-                        f"{self.base_finnhub}/calendar/economic",
-                        params={"from": start_date, "to": end_date, "token": self.finnhub_key}
-                    )
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        for ev in data.get("economicCalendar", []):
-                            events.append({
-                                "date": ev.get("date", "").split(" ")[0],
-                                "time": ev.get("date", "").split(" ")[1] if " " in ev.get("date", "") else "00:00:00",
-                                "country": ev.get("country"),
-                                "event_name": ev.get("event"),
-                                "impact": self._map_impact(ev.get("impact")),
-                                "actual": ev.get("actual"),
-                                "forecast": ev.get("estimate"),
-                                "previous": ev.get("prev"),
-                                "unit": ev.get("unit"),
-                                "currency": ev.get("currency")
-                            })
-            except Exception as e:
-                logger.error(f"Finnhub calendar error: {e}")
-
-        # Try FMP if Finnhub failed or returned little
-        if not events and self.fmp_key:
-            try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    resp = await client.get(
-                        f"{self.base_fmp}/economic-calendar",
-                        params={"from": start_date, "to": end_date, "apikey": self.fmp_key}
-                    )
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        for ev in data:
-                            events.append({
-                                "date": ev.get("date", "").split(" ")[0],
-                                "time": "00:00:00", # FMP date usually just YYYY-MM-DD
-                                "country": ev.get("country"),
-                                "event_name": ev.get("event"),
-                                "impact": "medium", # FMP doesn't always provide impact level clearly
-                                "actual": ev.get("actual"),
-                                "forecast": ev.get("estimate"),
-                                "previous": ev.get("previous"),
-                                "unit": "",
-                                "currency": ""
-                            })
-            except Exception as e:
-                logger.error(f"FMP calendar error: {e}")
-
-        # Mock data if both fail or keys missing
-        if not events:
-            events = self._get_mock_calendar(start_date, end_date)
+        live = await self.get_live_calendar(start_date, end_date)
+        # Keep the existing, explicitly flagged sample behavior for the legacy
+        # calendar surface. Evidence consumers must use get_live_calendar.
+        events = live["events"] or self._get_mock_calendar(start_date, end_date)
 
         # Sort by date
         events.sort(key=lambda x: (x["date"], x["time"]))
 
         await cache.set(cache_key, events, ttl=3600)
         return events
+
+    async def get_live_calendar(self, start_date: str, end_date: str) -> Dict[str, Any]:
+        """Live-only calendar evidence with provider and degradation status."""
+        configured = ",".join(source for source, key in (("finnhub", self.finnhub_key), ("fmp", self.fmp_key)) if key)
+        cache_key = cache.build_key("econ", "calendar_live", {"from": start_date, "to": end_date, "providers": configured})
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        if not self.finnhub_key and not self.fmp_key:
+            result = {"status": "unavailable", "reason": "missing_api_key", "source": None, "events": []}
+        else:
+            result = {"status": "unavailable", "reason": "provider_error", "source": None, "events": []}
+            for source, key in (("finnhub", self.finnhub_key), ("fmp", self.fmp_key)):
+                if not key:
+                    continue
+                try:
+                    events = await self._fetch_live_calendar_source(source, key, start_date, end_date)
+                except Exception as exc:
+                    # HTTP client exceptions can embed tokenized request URLs.
+                    logger.warning("%s live calendar failed (%s)", source, type(exc).__name__)
+                    continue
+                result = {"status": "available", "reason": None, "source": source, "events": events}
+                if events:
+                    break
+
+        result["retrieved_at"] = datetime.now(timezone.utc).isoformat()
+        await cache.set(cache_key, result, ttl=3600 if result["status"] == "available" else 60)
+        return result
+
+    async def _fetch_live_calendar_source(self, source: str, key: str, start_date: str, end_date: str) -> List[Dict[str, Any]]:
+        if source == "finnhub":
+            url = f"{self.base_finnhub}/calendar/economic"
+            params = {"from": start_date, "to": end_date, "token": key}
+        else:
+            url = f"{self.base_fmp}/economic-calendar"
+            params = {"from": start_date, "to": end_date, "apikey": key}
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        if source == "finnhub":
+            if not isinstance(data, dict) or not isinstance(data.get("economicCalendar"), list):
+                raise ValueError("Unexpected Finnhub calendar response")
+            rows = data["economicCalendar"]
+        else:
+            rows = data
+        if not isinstance(rows, list):
+            raise ValueError(f"Unexpected {source} calendar response")
+        events: List[Dict[str, Any]] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            raw_date = str(row.get("date") or "").strip()
+            date_parts = raw_date.replace("T", " ").split(" ")
+            date_part = date_parts[0]
+            try:
+                datetime.strptime(date_part, "%Y-%m-%d")
+            except ValueError:
+                continue
+            event_name = str(row.get("event") or "").strip()
+            if not event_name:
+                continue
+            events.append({
+                "date": date_part,
+                "time": date_parts[1] if source == "finnhub" and len(date_parts) > 1 else "00:00:00",
+                "country": row.get("country"),
+                "event_name": event_name,
+                "impact": self._calendar_impact(row.get("impact")) if source == "finnhub" else "unknown",
+                "actual": row.get("actual"),
+                "forecast": row.get("estimate"),
+                "previous": row.get("prev" if source == "finnhub" else "previous"),
+                "unit": row.get("unit") if source == "finnhub" else None,
+                "currency": row.get("currency") if source == "finnhub" else None,
+            })
+        return events
+
+    @staticmethod
+    def _calendar_impact(raw: Any) -> str:
+        """Do not infer a low-impact event from an absent or unknown provider code."""
+        value = str(raw).strip().lower() if raw is not None else ""
+        return {
+            "3": "high", "high": "high",
+            "2": "medium", "medium": "medium", "med": "medium",
+            "1": "low", "low": "low",
+        }.get(value, "unknown")
 
     async def get_macro_indicators(self, country: Optional[str] = None) -> Dict[str, Any]:
         """Fetch key macro indicators, optionally filtered to one region.

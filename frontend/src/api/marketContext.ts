@@ -56,6 +56,25 @@ export interface MarketHeadlinesResponse {
   groups: MarketHeadlineGroup[];
 }
 
+export interface MarketMacroEvent {
+  date: string;
+  country: string | null;
+  event_name: string;
+  impact: "high" | "medium" | "low" | "unknown";
+}
+
+export interface MarketMacroEventsResponse {
+  start_date: string;
+  end_date: string;
+  retrieved_at: string;
+  status: "available" | "unavailable";
+  reason: "missing_api_key" | "provider_error" | null;
+  source: "finnhub" | "fmp" | null;
+  matched_count: number;
+  display_limit: number;
+  events: MarketMacroEvent[];
+}
+
 export async function compareMarketContext(
   anchor: string,
   comparisons: string[],
@@ -73,6 +92,16 @@ export async function fetchMarketContextHeadlines(
 ): Promise<MarketHeadlinesResponse> {
   const response = await api.post<MarketHeadlinesResponse>("/market-context/headlines", {
     anchor, comparison, start_date: startDate, end_date: endDate,
+  });
+  return response.data;
+}
+
+export async function fetchMarketContextMacroEvents(
+  startDate: string,
+  endDate: string,
+): Promise<MarketMacroEventsResponse> {
+  const response = await api.post<MarketMacroEventsResponse>("/market-context/macro-events", {
+    start_date: startDate, end_date: endDate,
   });
   return response.data;
 }

@@ -39,7 +39,7 @@ export function EconomicTerminal() {
   // Filters
   const [filters, setFilters] = useState({
     countries: [] as string[],
-    impacts: ["high", "medium", "low"],
+    impacts: ["high", "medium", "low", "unknown"],
     categories: [] as string[]
   });
 
@@ -125,7 +125,7 @@ export function EconomicTerminal() {
                 </div>
 
                 <div className="flex gap-2">
-                  {["high", "medium", "low"].map(impact => (
+                  {["high", "medium", "low", "unknown"].map(impact => (
                     <label key={impact} className="flex items-center gap-1 text-[10px] uppercase cursor-pointer">
                       <input
                         type="checkbox"
