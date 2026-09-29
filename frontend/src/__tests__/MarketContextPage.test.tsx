@@ -3,15 +3,16 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { compareMarketContext, fetchMarketContextHeadlines } from "../api/marketContext";
+import { compareMarketContext, fetchMarketContextHeadlines, fetchMarketContextMacroEvents } from "../api/marketContext";
 import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
-vi.mock("../api/marketContext", () => ({ compareMarketContext: vi.fn(), fetchMarketContextHeadlines: vi.fn() }));
+vi.mock("../api/marketContext", () => ({ compareMarketContext: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn() }));
 vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
 const headlinesMock = vi.mocked(fetchMarketContextHeadlines);
+const macroMock = vi.mocked(fetchMarketContextMacroEvents);
 const searchMock = vi.mocked(searchSymbols);
 
 function renderPage(path: string) {
@@ -29,6 +30,7 @@ describe("MarketContextPage", () => {
   beforeEach(() => {
     compareMock.mockReset();
     headlinesMock.mockReset();
+    macroMock.mockReset();
     searchMock.mockReset();
   });
 
@@ -219,5 +221,59 @@ describe("MarketContextPage", () => {
     expect(await screen.findByRole("link", { name: "Apple supply update" })).toHaveAttribute("href", "https://example.com/apple");
     expect(screen.getByText(/not a cause of these moves/)).toBeInTheDocument();
     expect(screen.getByText(/this does not mean no news occurred/)).toBeInTheDocument();
+  });
+
+  it("shows live-only macro calendar availability for the actual pair window", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+      }],
+    });
+    macroMock.mockResolvedValueOnce({
+      start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:01:00Z",
+      status: "unavailable", reason: "missing_api_key", source: null,
+      matched_count: 0, display_limit: 30, events: [],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
+    expect(macroMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show economic calendar events for AAPL vs SPY" }));
+    await waitFor(() => expect(macroMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
+    expect(await screen.findByText(/No sample events are shown here/)).toBeInTheDocument();
+    expect(screen.getByText(/not events attributed to either asset/)).toBeInTheDocument();
+  });
+
+  it("shows provider-attributed calendar events without claiming asset relevance", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+      }],
+    });
+    macroMock.mockResolvedValue({
+      start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:01:00Z",
+      status: "available", reason: null, source: "fmp",
+      matched_count: 1, display_limit: 30,
+      events: [{ date: "2026-09-05", country: "US", event_name: "Rate decision", impact: "unknown" }],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    fireEvent.click(await screen.findByRole("button", { name: "Show economic calendar events for AAPL vs SPY" }));
+    expect(await screen.findByText(/Rate decision/)).toBeInTheDocument();
+    expect(screen.getByText(/FMP · checked/)).toBeInTheDocument();
+    expect(screen.getByText(/Impact: unknown/)).toBeInTheDocument();
   });
 });

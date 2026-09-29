@@ -290,8 +290,18 @@ now places linked, source-dated headline candidates alongside each pair's actual
 shared-close window. It checks at most 50 current keyless-feed candidates per
 symbol, shows at most eight matches per symbol, and exposes partial feed failure.
 The result is neither a complete historical record nor evidence that a headline
-caused a price move. Fundamentals, macro, and technical context remain later
-evidence layers.
+caused a price move. Fundamentals, historical macro observations, and technical
+context remain later evidence layers.
+
+A first macro-context candidate now uses the same pair window to request the
+configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
+surface, this evidence path never falls back to sample events: missing keys and
+provider errors are explicit. It identifies the responding provider and caps the
+display at 30 returned events while reporting the match count. Coverage can be
+incomplete, event impact can be unknown, and a global calendar event is neither
+automatically relevant to either asset nor evidence that it caused a move.
+Historical macro *observations* and release vintages remain separate future
+work; this is a calendar, not an economic-series explanation.
 
 ## Release plan
 

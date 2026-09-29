@@ -87,6 +87,13 @@ never silently faked.
   shared-close window. It examines at most 50 recent candidates and displays at
   most eight matches per symbol; empty results do not imply no news occurred.
   Headlines are possible context, not causal attribution.
+- **Economic calendar context is configuration-gated and non-causal.** An
+  optional comparison panel checks the actual pair window against configured
+  Finnhub/FMP calendar feeds. It never uses the sample fallback of the legacy
+  calendar surface, explicitly reports missing keys or provider failure, and
+  shows at most 30 returned events with the match count. Historical provider
+  coverage may be incomplete; these global events are not automatically tied
+  to either asset, and event dates do not establish price causation.
 - **News dates are source dates only for newly parsed items.** Live news parsing
   and background ingestion now skip articles with missing or invalid publication
   dates rather than assigning the fetch time. Older stored articles are not

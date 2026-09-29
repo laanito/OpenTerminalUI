@@ -410,6 +410,11 @@ intelligence promise, or claim that contradiction handling is solved.
         comparison, including which adapter won failover, and leave the path
         unknown when there is no usable history. A multi-provider adapter may
         still hide its internal feed; this is not end-to-end provider identity.
+  - [x] Add an on-demand, live-only economic-calendar layer for each pair's
+        observed date window. It requires configured Finnhub or FMP access,
+        reports provider and missing-key/error states, never uses the legacy
+        sample calendar, and treats events as global context rather than asset
+        attribution or proof of causation.
 
 ## Current handoff boundary
 

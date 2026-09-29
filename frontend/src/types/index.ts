@@ -555,7 +555,7 @@ export type EconomicEvent = {
   time: string;
   country: string;
   event_name: string;
-  impact: 'high' | 'medium' | 'low';
+  impact: 'high' | 'medium' | 'low' | 'unknown';
   actual?: number | string | null;
   forecast?: number | string | null;
   previous?: number | string | null;

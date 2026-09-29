@@ -17,12 +17,14 @@ from backend.api.routes.news import _fetch_ticker_news
 from backend.auth.deps import get_current_user
 from backend.models import User
 from backend.services.cross_market_context import FETCH_RANGES, _daily_closes, compare_closes
+from backend.services.economic_data import EconomicDataService, get_economic_data_service
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
 logger = logging.getLogger(__name__)
 _NEWS_FETCH_LIMIT = 50
 _NEWS_DISPLAY_LIMIT = 8
+_MACRO_DISPLAY_LIMIT = 30
 
 
 class MarketComparisonRequest(BaseModel):
@@ -92,11 +94,40 @@ class MarketHeadlinesResponse(BaseModel):
     groups: list[MarketHeadlineGroup]
 
 
+class MarketMacroEventsRequest(BaseModel):
+    start_date: date
+    end_date: date
+
+
+class MarketMacroEvent(BaseModel):
+    date: date
+    country: str | None = None
+    event_name: str
+    impact: Literal["high", "medium", "low", "unknown"]
+
+
+class MarketMacroEventsResponse(BaseModel):
+    start_date: date
+    end_date: date
+    retrieved_at: datetime
+    status: Literal["available", "unavailable"]
+    reason: Literal["missing_api_key", "provider_error"] | None
+    source: Literal["finnhub", "fmp"] | None
+    matched_count: int
+    display_limit: int
+    events: list[MarketMacroEvent]
+
+
 def _symbol(raw: str) -> str:
     value = raw.strip().upper()
     if not _SYMBOL.fullmatch(value):
         raise HTTPException(status_code=422, detail=f"Invalid market symbol: {raw!r}")
     return value
+
+
+def _validate_context_window(start_date: date, end_date: date) -> None:
+    if end_date < start_date or (end_date - start_date).days > 200:
+        raise HTTPException(status_code=422, detail="Context window must span 0–200 days")
 
 
 @router.post("/compare", response_model=MarketComparisonResponse)
@@ -172,8 +203,7 @@ async def get_market_context_headlines(
     comparison = _symbol(payload.comparison)
     if anchor == comparison:
         raise HTTPException(status_code=422, detail="Anchor cannot be a comparison symbol")
-    if payload.end_date < payload.start_date or (payload.end_date - payload.start_date).days > 200:
-        raise HTTPException(status_code=422, detail="Headline window must span 0–200 days")
+    _validate_context_window(payload.start_date, payload.end_date)
 
     async def load(symbol: str) -> dict[str, Any]:
         try:
@@ -224,4 +254,44 @@ async def get_market_context_headlines(
         "fetch_limit_per_symbol": _NEWS_FETCH_LIMIT,
         "display_limit_per_symbol": _NEWS_DISPLAY_LIMIT,
         "groups": groups,
+    }
+
+
+@router.post("/macro-events", response_model=MarketMacroEventsResponse)
+async def get_market_context_macro_events(
+    payload: MarketMacroEventsRequest,
+    _: User = Depends(get_current_user),
+    service: EconomicDataService = Depends(get_economic_data_service),
+) -> dict[str, Any]:
+    """Return live-only calendar candidates, never the legacy sample fallback."""
+    _validate_context_window(payload.start_date, payload.end_date)
+    live = await service.get_live_calendar(payload.start_date.isoformat(), payload.end_date.isoformat())
+    events = []
+    for item in live["events"]:
+        try:
+            event_date = date.fromisoformat(str(item["date"]))
+            if not payload.start_date <= event_date <= payload.end_date:
+                continue
+            name = str(item["event_name"]).strip()
+            if not name:
+                continue
+        except (KeyError, TypeError, ValueError):
+            continue
+        events.append({
+            "date": event_date,
+            "country": str(item.get("country") or "").strip() or None,
+            "event_name": name,
+            "impact": item.get("impact") if item.get("impact") in {"high", "medium", "low"} else "unknown",
+        })
+    events.sort(key=lambda item: (item["date"], item["event_name"]), reverse=True)
+    return {
+        "start_date": payload.start_date,
+        "end_date": payload.end_date,
+        "retrieved_at": live["retrieved_at"],
+        "status": live["status"],
+        "reason": live["reason"],
+        "source": live["source"],
+        "matched_count": len(events),
+        "display_limit": _MACRO_DISPLAY_LIMIT,
+        "events": events[:_MACRO_DISPLAY_LIMIT],
     }
