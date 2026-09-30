@@ -50,6 +50,10 @@ describe("MarketContextPage", () => {
           anchor_history_source: "crypto", comparison_history_source: "yahoo",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
+          points: [
+            { date: "2026-08-25", anchor_index: 100, comparison_index: 100 },
+            { date: "2026-09-23", anchor_index: 105.25, comparison_index: 102.1 },
+          ],
         },
         {
           symbol: "QQQ", status: "available", reason: null,
@@ -58,6 +62,10 @@ describe("MarketContextPage", () => {
           anchor_history_source: "crypto", comparison_history_source: "fmp",
           observations: 12, freshness: "stale",
           anchor_return_pct: 4, comparison_return_pct: 1, relative_return_pp: 3,
+          points: [
+            { date: "2026-08-25", anchor_index: 100, comparison_index: 100 },
+            { date: "2026-09-10", anchor_index: 104, comparison_index: 101 },
+          ],
         },
         {
           symbol: "SAP.DE", status: "unavailable", reason: "provider_error",
@@ -66,6 +74,7 @@ describe("MarketContextPage", () => {
           anchor_history_source: null, comparison_history_source: null,
           observations: null, freshness: null,
           anchor_return_pct: null, comparison_return_pct: null, relative_return_pp: null,
+          points: [],
         },
       ],
     });
@@ -79,6 +88,13 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/BTC-USD Crypto adapter · SPY Yahoo Finance/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
     expect(screen.getByText(/not FX-normalized/)).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /Indexed daily-close paths/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show aligned price paths for BTC-USD vs SPY" }));
+    expect(screen.getByRole("img", { name: /Indexed daily-close paths for BTC-USD and SPY/ })).toBeInTheDocument();
+    expect(screen.getByText(/Both paths start at 100 on the first shared close/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText("View exact aligned observations"));
+    expect(screen.getByRole("columnheader", { name: "BTC-USD index" })).toBeInTheDocument();
+    expect(screen.getByText("105.25")).toBeInTheDocument();
   });
 
   it("validates editable symbols before applying a new query", async () => {
@@ -199,6 +215,10 @@ describe("MarketContextPage", () => {
         anchor_history_source: "yahoo", comparison_history_source: "yahoo",
         observations: 7, freshness: "current", anchor_return_pct: 2,
         comparison_return_pct: 1, relative_return_pp: 1,
+        points: [
+          { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-10", anchor_index: 102, comparison_index: 101 },
+        ],
       }],
     });
     headlinesMock.mockResolvedValue({
@@ -234,6 +254,10 @@ describe("MarketContextPage", () => {
         anchor_history_source: "yahoo", comparison_history_source: "yahoo",
         observations: 7, freshness: "current", anchor_return_pct: 2,
         comparison_return_pct: 1, relative_return_pp: 1,
+        points: [
+          { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-10", anchor_index: 102, comparison_index: 101 },
+        ],
       }],
     });
     macroMock.mockResolvedValueOnce({
@@ -262,6 +286,10 @@ describe("MarketContextPage", () => {
         anchor_history_source: "yahoo", comparison_history_source: "yahoo",
         observations: 7, freshness: "current", anchor_return_pct: 2,
         comparison_return_pct: 1, relative_return_pp: 1,
+        points: [
+          { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-10", anchor_index: 102, comparison_index: 101 },
+        ],
       }],
     });
     macroMock.mockResolvedValue({

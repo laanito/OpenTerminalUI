@@ -392,7 +392,8 @@ intelligence promise, or claim that contradiction handling is solved.
       current/stale/unavailable states, and source/FX caveats. Host testing
       confirmed the initial function. Instrument-search suggestions for
       anchor/proxy symbols and quick-add/remove proxy choices followed UX feedback;
-      keep the price-only journey experimental while wider coverage matures.
+      keep the comparison math experimental and price-only while wider evidence
+      coverage matures.
 - [ ] Extend from price co-movement into cross-market explanation only when
       fundamentals, macro, sentiment, and technical evidence have their own
       freshness/provenance contracts. Do not infer causation from correlated
@@ -415,6 +416,10 @@ intelligence promise, or claim that contradiction handling is solved.
         reports provider and missing-key/error states, never uses the legacy
         sample calendar, and treats events as global context rather than asset
         attribution or proof of causation.
+  - [x] Expose the exact shared-close trajectory behind each available pair,
+        rebased to 100 at the first shared date, with an on-demand chart and
+        inspectable observation table. No missing dates are filled in; the path
+        remains native-quote, not FX-normalized or causal evidence.
 
 ## Current handoff boundary
 

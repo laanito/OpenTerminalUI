@@ -33,6 +33,12 @@ class MarketComparisonRequest(BaseModel):
     period: Literal["1M", "3M", "6M"] = "1M"
 
 
+class MarketComparisonPoint(BaseModel):
+    date: date
+    anchor_index: float
+    comparison_index: float
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -48,6 +54,7 @@ class MarketComparisonRow(BaseModel):
     anchor_return_pct: float | None = None
     comparison_return_pct: float | None = None
     relative_return_pp: float | None = None
+    points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
 class MarketComparisonResponse(BaseModel):
