@@ -79,10 +79,12 @@ never silently faked.
   returns native-quote percentage moves, without FX normalization or a claim
   that one market caused another to move. The response identifies the selected
   history path for each symbol, including adapter failover, but a multi-provider
-  adapter can still obscure its internal feed. A contextual browser page
-  offers dated comparison and symbol suggestions from equity and crypto research,
-  but suggested identifiers do not guarantee usable daily history and this is
-  not a multi-source market explanation. An optional on-demand panel checks
+  adapter can still obscure its internal feed. A contextual browser page opens
+  from equity and crypto research and offers dated comparison, symbol
+  suggestions, and an inspectable pairwise path rebased to 100 on the first
+  shared close. The path plots only actual shared dates, with no interpolation.
+  Suggested identifiers do not guarantee usable daily history, and this is not
+  a multi-source market explanation. An optional on-demand panel checks
   current keyless news feeds for source-dated headlines within each pair's actual
   shared-close window. It examines at most 50 recent candidates and displays at
   most eight matches per symbol; empty results do not imply no news occurred.

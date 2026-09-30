@@ -42,6 +42,13 @@ def test_pairwise_alignment_excludes_crypto_weekend_and_exposes_dates() -> None:
     assert result["comparison_latest_date"] == "2026-09-24"
     assert result["freshness"] == "current"
     assert result["anchor_return_pct"] == 21.7822
+    assert len(result["points"]) == result["observations"]
+    assert result["points"][0] == {
+        "date": result["start_date"], "anchor_index": 100.0, "comparison_index": 100.0,
+    }
+    assert result["points"][-1]["date"] == result["end_date"]
+    assert round(result["points"][-1]["anchor_index"] - 100.0, 4) == result["anchor_return_pct"]
+    assert all(date.fromisoformat(point["date"]).weekday() < 5 for point in result["points"])
 
 
 def test_short_or_disjoint_history_never_claims_full_period_return() -> None:
@@ -94,10 +101,12 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["return_basis"] == "native_quote_currency_unadjusted"
     assert [row["symbol"] for row in payload["comparisons"]] == ["SPY", "BTC-USD"]
     assert payload["comparisons"][0]["status"] == "available"
+    assert len(payload["comparisons"][0]["points"]) == payload["comparisons"][0]["observations"]
     assert payload["comparisons"][0]["anchor_history_source"] == "yahoo"
     assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
     assert payload["comparisons"][1]["reason"] == "provider_error"
     assert payload["comparisons"][1]["comparison_history_source"] is None
+    assert payload["comparisons"][1]["points"] == []
 
 
 def test_route_rejects_anchor_as_comparison_and_bad_symbols() -> None:

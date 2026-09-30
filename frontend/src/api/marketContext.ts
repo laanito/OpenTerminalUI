@@ -2,6 +2,12 @@ import { api } from "./base";
 
 export type MarketContextPeriod = "1M" | "3M" | "6M";
 
+export interface MarketComparisonPoint {
+  date: string;
+  anchor_index: number;
+  comparison_index: number;
+}
+
 export interface MarketComparisonRow {
   symbol: string;
   status: "available" | "unavailable";
@@ -17,6 +23,7 @@ export interface MarketComparisonRow {
   anchor_return_pct: number | null;
   comparison_return_pct: number | null;
   relative_return_pp: number | null;
+  points: MarketComparisonPoint[];
 }
 
 export interface MarketComparisonResponse {

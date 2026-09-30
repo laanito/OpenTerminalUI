@@ -6722,6 +6722,30 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "MarketComparisonPoint": {
+        "properties": {
+          "anchor_index": {
+            "title": "Anchor Index",
+            "type": "number"
+          },
+          "comparison_index": {
+            "title": "Comparison Index",
+            "type": "number"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "anchor_index",
+          "comparison_index"
+        ],
+        "title": "MarketComparisonPoint",
+        "type": "object"
+      },
       "MarketComparisonRequest": {
         "properties": {
           "anchor": {
@@ -6928,6 +6952,13 @@
               }
             ],
             "title": "Observations"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/MarketComparisonPoint"
+            },
+            "title": "Points",
+            "type": "array"
           },
           "reason": {
             "anyOf": [

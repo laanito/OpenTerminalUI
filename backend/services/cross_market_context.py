@@ -55,6 +55,14 @@ def compare_closes(
     start, end = shared[0], shared[-1]
     anchor_return = (anchor[end] / anchor[start] - 1.0) * 100.0
     comparison_return = (comparison[end] / comparison[start] - 1.0) * 100.0
+    points = [
+        {
+            "date": day.isoformat(),
+            "anchor_index": round(anchor[day] / anchor[start] * 100.0, 4),
+            "comparison_index": round(comparison[day] / comparison[start] * 100.0, 4),
+        }
+        for day in shared
+    ]
     observed_today = today or datetime.now(timezone.utc).date()
     return {
         "status": "available",
@@ -67,4 +75,5 @@ def compare_closes(
         "anchor_return_pct": round(anchor_return, 4),
         "comparison_return_pct": round(comparison_return, 4),
         "relative_return_pp": round(anchor_return - comparison_return, 4),
+        "points": points,
     }

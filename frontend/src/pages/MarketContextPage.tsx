@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { compareMarketContext, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
@@ -62,6 +63,51 @@ function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
   return "No usable daily history for this comparison.";
+}
+
+function AlignedPaths({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  if (!row.points || row.points.length < 2) return null;
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        {open ? "Hide" : "Show"} aligned price paths for {anchor} vs {row.symbol}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2">
+          <p className="text-xs text-terminal-muted">
+            Both paths start at 100 on the first shared close. Only observed shared UTC dates are plotted; no dates are filled in.
+            Values remain in each symbol’s native quote currency, not FX-normalized. Timing alone does not show causation.
+          </p>
+          <div className="h-56 w-full" role="img" aria-label={`Indexed daily-close paths for ${anchor} and ${row.symbol} from ${row.start_date} to ${row.end_date}`}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={row.points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
+                <XAxis dataKey="date" tickFormatter={(date: string) => date.slice(5)} stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} minTickGap={25} />
+                <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} domain={["auto", "auto"]} />
+                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }} formatter={(value) => typeof value === "number" ? value.toFixed(2) : value} />
+                <Line type="linear" dataKey="anchor_index" name={anchor} stroke="var(--ot-color-accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+                <Line type="linear" dataKey="comparison_index" name={row.symbol} stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-terminal-muted">{anchor}: accent line · {row.symbol}: amber line · {row.points.length} shared closes.</p>
+          <details className="text-xs text-terminal-muted">
+            <summary className="cursor-pointer text-terminal-accent">View exact aligned observations</summary>
+            <div className="mt-2 max-h-56 overflow-auto">
+              <table className="w-full text-left">
+                <thead><tr><th className="py-1 pr-3">UTC date</th><th className="py-1 pr-3">{anchor} index</th><th className="py-1">{row.symbol} index</th></tr></thead>
+                <tbody>{row.points.map((point) => (
+                  <tr key={point.date}><td className="py-0.5 pr-3">{point.date}</td><td className="py-0.5 pr-3">{point.anchor_index.toFixed(2)}</td><td className="py-0.5">{point.comparison_index.toFixed(2)}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function DatedHeadlines({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
@@ -377,6 +423,7 @@ export function MarketContextPage() {
                     <p className="mt-1 text-xs text-terminal-muted">
                       Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.
                     </p>
+                    <AlignedPaths anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
                   </>
