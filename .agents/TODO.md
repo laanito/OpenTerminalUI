@@ -491,9 +491,15 @@ ordered v1.7 milestone above.
       adapter gated by the user's exchange subscriptions.
 - [ ] **EU and crypto heatmaps.** The heatmap universe remains IN/US-oriented;
       extend it using `instrument_master` and the crypto universe.
-- [ ] **Economic calendar views and source.** Add daily/weekly views. The live
-      forward-calendar source is unresolved; the existing sample fallback must
-      remain visibly labelled.
+- [ ] **Economic calendar provider reliability.** Host testing of the v2
+      comparison panel returned `provider_error` with configured keys. Check the
+      failing provider responses and account access, then validate a dependable
+      forward/historical calendar source or replace the adapters. Keep the
+      comparison panel live-only with an explicit unavailable state; never
+      substitute the legacy sample events as evidence. This is unscheduled, not
+      a blocker for the current price-comparison work.
+- [ ] **Economic calendar views.** Add daily/weekly views to the legacy
+      month-grid calendar. Its sample fallback must remain visibly labelled.
 - [ ] **Degraded data surfaces.** Bonds/fixed income, hotlists/movers, insider
       trades, portions of ETF screener/flows, and tape/time-and-sales still need
       real sources or fuller implementations. Preserve degraded markers until a

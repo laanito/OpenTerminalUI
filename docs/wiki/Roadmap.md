@@ -856,9 +856,12 @@ Real but unscheduled; pull into a milestone when it fits.
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode
   only; allow per-article capture from any News mode.
-- **Live economic-calendar source** — find a free/cheap forward calendar feed
-  (Finnhub's is premium-only, FMP's free quota depletes); until then 1.0 ships the
-  labelled sample fallback.
+- **Reliable economic-calendar provider** — host testing of the v2 comparison
+  panel returned a provider failure despite configured keys. Inspect provider
+  responses and account access, then validate a dependable calendar source or
+  replace the adapters. This remains unscheduled; the comparison panel must
+  stay live-only and explicitly unavailable on failure. The separate legacy
+  calendar may still show its clearly labelled sample fallback.
 - **Config/key management** — cleaner provider credential handling (deferred).
 
 ## Completed
