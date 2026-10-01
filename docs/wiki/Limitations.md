@@ -20,7 +20,7 @@ to upstream availability and rate limits.
 | **Fundamentals / financials / earnings** | partial via Yahoo | `FMP_API_KEY` — full US fundamentals, estimates, profiles | reduced coverage, labelled where empty |
 | **Real-time US ticks** | delayed / polled quotes | `FINNHUB_API_KEY` — live WebSocket ticks | delayed quotes (not fabricated) |
 | **Macro indicators / yield curve / 2s10s** | — | `FRED_API_KEY` — live US/EU/China series | degraded banner (no fabricated curve) |
-| **Economic calendar** | labelled **sample** fallback | _(no free live source today)_ | sample events, flagged `sample: true` |
+| **Economic calendar** | legacy page has a labelled **sample** fallback; comparison context is unavailable without live data | `FINNHUB_API_KEY` or `FMP_API_KEY` enables live-provider attempts, subject to access and availability | legacy samples stay labelled; comparison never uses them |
 | **Commodities** | — | `FMP_API_KEY` | degraded banner |
 | **Dividends calendar / history** | ✅ Yahoo (`events=div`) + FMP when keyed | `FMP_API_KEY` enriches | works keyless via Yahoo |
 | **Portfolio FX accounting** | ✅ Yahoo daily FX, with Finnhub fallback when configured | `FINNHUB_API_KEY` improves fallback availability | unavailable conversions become partial; parity is never assumed |
@@ -44,9 +44,11 @@ through contextual links or old bookmarks, but are not advertised as stable
 products. Missing data is surfaced with a degraded banner or explicit label,
 never silently faked.
 
-- **No live economic-calendar source.** The calendar ships a labelled **sample**
-  fallback. Finnhub's calendar is premium-only and FMP's free quota depletes fast;
-  a free/cheap forward feed is a tracked backlog item.
+- **No dependable live economic-calendar source yet.** The legacy calendar can
+  show a labelled **sample** fallback. The comparison panel instead attempts
+  configured Finnhub/FMP feeds and reports failure without showing samples.
+  Host testing encountered a provider failure with configured keys; validating
+  provider access and finding a reliable source are tracked, unscheduled work.
 - **Dividend forward dates are estimates.** For regular distributors with no free
   forward calendar, the next ex-date is *projected* from historical cadence and
   labelled `Estimated` — treat it as a projection, not a confirmed date.
