@@ -29,10 +29,10 @@ def _date_to_str(value: date | str | None) -> str:
 
 
 def _parse_date(value: Any) -> date | None:
-    if isinstance(value, date):
-        return value
     if isinstance(value, datetime):
         return value.date()
+    if isinstance(value, date):
+        return value
     if value in (None, ""):
         return None
     text = str(value).strip()[:10]
@@ -60,8 +60,22 @@ def _market_for_symbol(symbol: str) -> str:
 
 
 def conservative_release_date(fiscal_period_end: date, period_type: str = "annual") -> date:
-    lag_days = 120 if period_type.lower().startswith("annual") else 60
+    normalized = period_type.strip().lower()
+    lag_days = 120 if normalized.startswith(("annual", "fy", "year")) else 60
     return fiscal_period_end + timedelta(days=lag_days)
+
+
+def _snapshot_rank(row: FundamentalsPitORM) -> tuple[bool, date, bool, str]:
+    # Legacy rows can contain an undated period label such as "FY". A dated
+    # fiscal end is more useful than that label; at the same end, prefer a
+    # source-reported release over an estimated availability date.
+    period_end = _parse_date(row.fiscal_period)
+    return (
+        period_end is not None,
+        period_end or date.min,
+        not bool(row.release_date_estimated),
+        row.as_of_date,
+    )
 
 
 def get_fundamentals(
@@ -80,16 +94,14 @@ def get_fundamentals(
             FundamentalsPitORM.as_of_date <= as_of_str,
             FundamentalsPitORM.data_version_id == resolved_version_id,
         )
-        .order_by(
-            FundamentalsPitORM.metric.asc(),
-            FundamentalsPitORM.fiscal_period.desc(),
-            FundamentalsPitORM.as_of_date.desc(),
-        )
+        .order_by(FundamentalsPitORM.metric.asc(), FundamentalsPitORM.as_of_date.desc())
         .all()
     )
     latest_by_metric: dict[str, FundamentalsPitORM] = {}
     for row in rows:
-        latest_by_metric.setdefault(row.metric, row)
+        current = latest_by_metric.get(row.metric)
+        if current is None or _snapshot_rank(row) > _snapshot_rank(current):
+            latest_by_metric[row.metric] = row
     return resolved_version_id, [
         {
             "symbol": row.symbol,
@@ -181,10 +193,16 @@ def _records_from_fmp_rows(symbol: str, rows: list[dict[str, Any]], source: str,
         fiscal_end = _parse_date(row.get("date") or row.get("calendarYear"))
         if fiscal_end is None:
             continue
-        accepted = _parse_date(row.get("acceptedDate") or row.get("fillingDate") or row.get("filingDate"))
-        release_date = accepted or conservative_release_date(fiscal_end, str(row.get("period") or "annual"))
-        estimated = accepted is None
-        fiscal_period = str(row.get("period") or fiscal_end.isoformat())
+        # A fiscal period end is not a publication date. Prefer a source-reported
+        # acceptance/filing date, but never make a period visible before it ended.
+        reported_date = next(
+            (parsed for key in ("acceptedDate", "fillingDate", "filingDate")
+             if (parsed := _parse_date(row.get(key))) is not None and parsed >= fiscal_end),
+            None,
+        )
+        release_date = reported_date or conservative_release_date(fiscal_end, str(row.get("period") or "annual"))
+        estimated = reported_date is None
+        fiscal_period = fiscal_end.isoformat()
         for raw_key, metric in metric_map.items():
             value = _to_float(row.get(raw_key))
             if value is None:
@@ -256,13 +274,16 @@ async def fetch_and_store_pit_fundamentals(
                 metric=str(item["metric"]),
                 value=float(item["value"]),
                 fiscal_period=str(item.get("fiscal_period") or ""),
-                as_of_release_date=_parse_date(item.get("as_of_release_date")) or datetime.now(timezone.utc).date(),
+                as_of_release_date=release_date,
                 release_date_estimated=bool(item.get("release_date_estimated")),
                 source=str(item.get("source") or ""),
                 market=str(item.get("market") or _market_for_symbol(symbol)),
             )
             for item in raw
-            if isinstance(item, dict) and _to_float(item.get("value")) is not None
+            if isinstance(item, dict)
+            and _to_float(item.get("value")) is not None
+            and (release_date := _parse_date(item.get("as_of_release_date"))) is not None
+            and ((period_end := _parse_date(item.get("fiscal_period"))) is None or release_date >= period_end)
         ]
     return upsert_pit_records(db, records, data_version_id=data_version_id)
 

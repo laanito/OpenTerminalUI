@@ -297,6 +297,15 @@ The result is neither a complete historical record nor evidence that a headline
 caused a price move. Fundamentals, historical macro observations, and technical
 context remain later evidence layers.
 
+As a prerequisite for fundamentals context, the existing point-in-time ingest
+now preserves the actual fiscal period end, rejects release dates before that
+end, and never substitutes ingestion time for a missing release date. Source-
+reported dates and conservative estimates remain distinguished in as-of
+snapshots. This improves the stored data contract, but does **not** make a
+current fundamentals snapshot historically known, verify revisions, or yet add
+fundamentals to comparisons. A bounded, source-dated comparison layer remains
+the next separate step.
+
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
 surface, this evidence path never falls back to sample events: missing keys and
