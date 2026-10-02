@@ -398,6 +398,17 @@ intelligence promise, or claim that contradiction handling is solved.
       fundamentals, macro, sentiment, and technical evidence have their own
       freshness/provenance contracts. Do not infer causation from correlated
       price moves or treat native-quote returns as FX-normalized performance.
+  - [x] Tighten the existing point-in-time fundamentals ingestion prerequisite:
+        source-reported filing/acceptance dates cannot precede the fiscal end,
+        missing/invalid dates are never replaced with ingestion time, FY annual
+        estimates use the annual lag, and dated fiscal ends take precedence in
+        as-of snapshots. Estimated dates remain explicitly marked. This does
+        not yet add fundamentals to the comparison or verify historical
+        revisions and source coverage.
+  - [ ] Add bounded fundamentals context only after a source-dated, versioned
+        evidence contract is defined for the selected comparison window. Do not
+        present current snapshots or estimated availability dates as facts
+        known on a historical day; expose unavailable/partial coverage instead.
   - [x] First news-provenance prerequisite: live news parsing and background
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not

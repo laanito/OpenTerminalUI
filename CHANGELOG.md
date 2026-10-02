@@ -37,6 +37,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   last update in the record.
 
 ### Changed
+- **Point-in-time fundamentals dating** — ingested FMP records retain their
+  fiscal period end and use only source-reported filing/acceptance dates that
+  follow it; otherwise availability is conservatively estimated and marked.
+  Missing release dates are no longer replaced with ingestion time, FY annual
+  estimates use the annual lag, and as-of snapshots prefer dated fiscal periods
+  and confirmed releases. This does not yet expose fundamentals in comparisons.
 - **Temporal retrieval and supersession** — Second Brain queries retrieve a
   broader semantic candidate pool and apply a bounded recency signal only among
   relevant evidence. Dated context instructs synthesis to treat newer
