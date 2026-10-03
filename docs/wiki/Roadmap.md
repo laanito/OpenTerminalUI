@@ -294,17 +294,23 @@ now places linked, source-dated headline candidates alongside each pair's actual
 shared-close window. It checks at most 50 current keyless-feed candidates per
 symbol, shows at most eight matches per symbol, and exposes partial feed failure.
 The result is neither a complete historical record nor evidence that a headline
-caused a price move. Fundamentals, historical macro observations, and technical
+caused a price move. Full fundamentals, historical macro observations, and technical
 context remain later evidence layers.
 
 As a prerequisite for fundamentals context, the existing point-in-time ingest
 now preserves the actual fiscal period end, rejects release dates before that
 end, and never substitutes ingestion time for a missing release date. Source-
 reported dates and conservative estimates remain distinguished in as-of
-snapshots. This improves the stored data contract, but does **not** make a
-current fundamentals snapshot historically known, verify revisions, or yet add
-fundamentals to comparisons. A bounded, source-dated comparison layer remains
-the next separate step.
+snapshots. This improves the stored data contract but does **not** make a
+current snapshot historically known or verify revisions. The comparison now
+offers a separate on-demand candidate panel: for each symbol, it fetches
+current provider records and shows only source-reported filing/acceptance dates
+within the pair's actual window for revenue, net income, EPS, and free cash
+flow. Estimated release dates are excluded; empty and failed checks are
+explicit. Provider units are not normalized across issuers or currencies. The
+retrieval is not a historical vintage archive, so these candidates cannot yet
+explain past price moves or establish exactly what was known on a given day.
+Versioned/revision-aware fundamentals evidence remains future work.
 
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar

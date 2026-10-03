@@ -203,3 +203,60 @@ def test_macro_context_preserves_unavailable_state_without_sample() -> None:
     assert response.json()["reason"] == "missing_api_key"
     assert response.json()["events"] == []
     assert client.post("/api/market-context/macro-events", json={"start_date": "2026-01-01", "end_date": "2026-09-10"}).status_code == 422
+
+
+def _fundamentals_client(data: dict[str, Any]) -> TestClient:
+    class FakeFetcher:
+        async def fetch_pit_fundamentals_records(self, symbol: str) -> list[dict[str, Any]]:
+            value = data[symbol]
+            if isinstance(value, Exception):
+                raise value
+            return value
+
+    app = FastAPI()
+    app.include_router(market_context.router)
+    app.dependency_overrides[get_current_user] = lambda: object()
+    app.dependency_overrides[get_unified_fetcher] = lambda: FakeFetcher()
+    return TestClient(app)
+
+
+def test_fundamental_releases_keep_only_source_dated_window_candidates() -> None:
+    dated = {
+        "symbol": "AAPL", "metric": "revenue", "value": 100.0,
+        "fiscal_period": "2026-06-30", "as_of_release_date": date(2026, 9, 5),
+        "release_date_estimated": False, "source": "fmp",
+    }
+    client = _fundamentals_client({
+        "AAPL": [
+            dated, dict(dated),
+            {**dated, "metric": "net_income", "value": 15.0, "release_date_estimated": True},
+            {**dated, "metric": "eps", "as_of_release_date": "2026-09-11"},
+            {**dated, "metric": "eps", "fiscal_period": "2026-10-01"},
+            {**dated, "metric": "free_cash_flow", "value": float("nan")},
+            {**dated, "metric": "total_assets"},
+        ],
+        "SPY": [],
+    })
+    response = client.post("/api/market-context/fundamental-releases", json={
+        "anchor": "aapl", "comparison": "spy", "start_date": "2026-09-02", "end_date": "2026-09-10",
+    })
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source"] == "on_demand_pit_fetch"
+    assert payload["groups"][0]["examined_count"] == 7
+    assert payload["groups"][0]["matched_count"] == 1
+    assert payload["groups"][0]["releases"] == [{
+        "release_date": "2026-09-05", "fiscal_period_end": "2026-06-30",
+        "metric": "revenue", "value": 100.0, "source": "fmp",
+    }]
+    assert payload["groups"][1]["status"] == "no_usable_records"
+
+
+def test_fundamental_releases_keep_partial_failure_and_validate_window() -> None:
+    client = _fundamentals_client({"AAPL": [], "SPY": RuntimeError("provider failed")})
+    base = {"anchor": "AAPL", "comparison": "SPY", "start_date": "2026-09-02", "end_date": "2026-09-10"}
+    response = client.post("/api/market-context/fundamental-releases", json=base)
+    assert response.status_code == 200
+    assert [group["status"] for group in response.json()["groups"]] == ["no_usable_records", "feed_error"]
+    assert client.post("/api/market-context/fundamental-releases", json={**base, "comparison": "AAPL"}).status_code == 422
+    assert client.post("/api/market-context/fundamental-releases", json={**base, "start_date": "2026-01-01"}).status_code == 422

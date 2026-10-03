@@ -3,16 +3,17 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { compareMarketContext, fetchMarketContextHeadlines, fetchMarketContextMacroEvents } from "../api/marketContext";
+import { compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents } from "../api/marketContext";
 import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
-vi.mock("../api/marketContext", () => ({ compareMarketContext: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn() }));
+vi.mock("../api/marketContext", () => ({ compareMarketContext: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn() }));
 vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
 const headlinesMock = vi.mocked(fetchMarketContextHeadlines);
 const macroMock = vi.mocked(fetchMarketContextMacroEvents);
+const fundamentalsMock = vi.mocked(fetchMarketContextFundamentalReleases);
 const searchMock = vi.mocked(searchSymbols);
 
 function renderPage(path: string) {
@@ -31,6 +32,7 @@ describe("MarketContextPage", () => {
     compareMock.mockReset();
     headlinesMock.mockReset();
     macroMock.mockReset();
+    fundamentalsMock.mockReset();
     searchMock.mockReset();
   });
 
@@ -303,5 +305,44 @@ describe("MarketContextPage", () => {
     expect(await screen.findByText(/Rate decision/)).toBeInTheDocument();
     expect(screen.getByText(/FMP · checked/)).toBeInTheDocument();
     expect(screen.getByText(/Impact: unknown/)).toBeInTheDocument();
+  });
+
+  it("loads only on-demand source-dated fundamental candidates for the pair window", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+        points: [
+          { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-10", anchor_index: 102, comparison_index: 101 },
+        ],
+      }],
+    });
+    fundamentalsMock.mockResolvedValue({
+      anchor: "AAPL", comparison: "SPY", start_date: "2026-09-02", end_date: "2026-09-10",
+      retrieved_at: "2026-09-11T10:01:00Z", source: "on_demand_pit_fetch", display_limit_per_symbol: 16,
+      groups: [
+        { symbol: "AAPL", status: "available", examined_count: 22, matched_count: 1, releases: [
+          { release_date: "2026-09-05", fiscal_period_end: "2026-06-30", metric: "revenue", value: 1234567, source: "fmp" },
+        ] },
+        { symbol: "SPY", status: "no_usable_records", examined_count: 0, matched_count: 0, releases: [] },
+      ],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
+    expect(fundamentalsMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show dated fundamentals for AAPL vs SPY" }));
+    await waitFor(() => expect(fundamentalsMock).toHaveBeenCalledWith("AAPL", "SPY", "2026-09-02", "2026-09-10"));
+    expect(await screen.findByText(/2026-09-05 · Revenue/)).toBeInTheDocument();
+    expect(screen.getByText(/Fiscal period ended 2026-06-30 · FMP/)).toBeInTheDocument();
+    expect(screen.getByText(/No source-dated records returned/)).toBeInTheDocument();
+    expect(screen.getByText(/no verified revision history/)).toBeInTheDocument();
   });
 });

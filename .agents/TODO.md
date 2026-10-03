@@ -403,12 +403,16 @@ intelligence promise, or claim that contradiction handling is solved.
         missing/invalid dates are never replaced with ingestion time, FY annual
         estimates use the annual lag, and dated fiscal ends take precedence in
         as-of snapshots. Estimated dates remain explicitly marked. This does
-        not yet add fundamentals to the comparison or verify historical
-        revisions and source coverage.
-  - [ ] Add bounded fundamentals context only after a source-dated, versioned
-        evidence contract is defined for the selected comparison window. Do not
-        present current snapshots or estimated availability dates as facts
-        known on a historical day; expose unavailable/partial coverage instead.
+        not verify historical revisions or source coverage.
+  - [x] Add an on-demand fundamentals release-candidate panel for each pair's
+        observed window. It fetches current provider records, retains only
+        source-reported filing/acceptance dates and a bounded metric set,
+        reports no-usable-records or per-symbol feed failure, and never treats
+        estimated dates or current snapshots as historical evidence. Values
+        retain provider units and are not cross-issuer comparisons.
+  - [ ] Establish a versioned/revision-aware fundamentals evidence contract
+        and tested historical coverage before using these candidates to explain
+        old price moves or asserting what was known at a past point in time.
   - [x] First news-provenance prerequisite: live news parsing and background
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not
