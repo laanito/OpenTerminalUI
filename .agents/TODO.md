@@ -435,6 +435,16 @@ intelligence promise, or claim that contradiction handling is solved.
         rebased to 100 at the first shared date, with an on-demand chart and
         inspectable observation table. No missing dates are filled in; the path
         remains native-quote, not FX-normalized or causal evidence.
+  - [x] Add a first deterministic technical-observation layer on that same
+        shared-date path: maximum observed drawdown with peak/trough dates and
+        the latest gap from a 20-shared-close average. Missing observations are
+        never filled, and fewer than 20 shared closes leave the average gap
+        unavailable. These unadjusted-close measures can be distorted by
+        corporate actions and are descriptive, not trading signals.
+  - [ ] Add a split/dividend-adjusted and provider-provenance contract before
+        treating technical measures as decision-grade cross-market signals;
+        separate native per-asset sessions from pair-shared sampling when
+        users need standard daily indicators (notably crypto weekends).
 
 ## Current handoff boundary
 

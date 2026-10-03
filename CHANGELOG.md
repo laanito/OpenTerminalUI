@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Shared-date technical observations** — available market comparisons now
+  show maximum observed drawdown and distance from a 20-shared-close average
+  for each symbol, with explicit observation dates and insufficient-data state.
+  These unadjusted-close measures are descriptive and may reflect corporate
+  actions; they are not trading signals.
 - **Dated fundamentals candidates in market comparisons** — an on-demand
   panel checks each pair's observed window for source-reported revenue, net
   income, EPS, and free-cash-flow releases. Estimated dates are excluded;

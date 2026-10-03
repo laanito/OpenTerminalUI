@@ -52,6 +52,11 @@ describe("MarketContextPage", () => {
           anchor_history_source: "crypto", comparison_history_source: "yahoo",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
+          technical_observations: {
+            basis: "shared_utc_date_unadjusted_closes", as_of_date: "2026-09-23",
+            anchor: { max_drawdown_pct: 12.5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 3.25 },
+            comparison: { max_drawdown_pct: 0, max_drawdown_peak_date: null, max_drawdown_trough_date: null, sma20_gap_pct: null },
+          },
           points: [
             { date: "2026-08-25", anchor_index: 100, comparison_index: 100 },
             { date: "2026-09-23", anchor_index: 105.25, comparison_index: 102.1 },
@@ -94,6 +99,11 @@ describe("MarketContextPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Show aligned price paths for BTC-USD vs SPY" }));
     expect(screen.getByRole("img", { name: /Indexed daily-close paths for BTC-USD and SPY/ })).toBeInTheDocument();
     expect(screen.getByText(/Both paths start at 100 on the first shared close/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for BTC-USD vs SPY" }));
+    expect(screen.getByText(/Maximum observed drawdown: 12.50%/)).toBeInTheDocument();
+    expect(screen.getByText(/20-shared-close average gap: \+3.25%/)).toBeInTheDocument();
+    expect(screen.getByText(/Unavailable \(fewer than 20 shared closes\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Crypto weekend closes are omitted/)).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact aligned observations"));
     expect(screen.getByRole("columnheader", { name: "BTC-USD index" })).toBeInTheDocument();
     expect(screen.getByText("105.25")).toBeInTheDocument();

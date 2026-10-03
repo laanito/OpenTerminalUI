@@ -14,6 +14,34 @@ PERIOD_DAYS = {"1M": 30, "3M": 90, "6M": 180}
 FETCH_RANGES = {"1M": "3mo", "3M": "6mo", "6M": "1y"}
 
 
+def _technical_measures(closes: dict[date, float], shared: list[date]) -> dict[str, Any]:
+    """Descriptive measures on the exact observed dates used by a pair."""
+    peak = closes[shared[0]]
+    peak_date = shared[0]
+    worst_drawdown = 0.0
+    worst_peak_date: date | None = None
+    worst_trough_date: date | None = None
+    for day in shared[1:]:
+        close = closes[day]
+        if close > peak:
+            peak, peak_date = close, day
+        drawdown = (peak - close) / peak * 100.0
+        if drawdown > worst_drawdown:
+            worst_drawdown = drawdown
+            worst_peak_date, worst_trough_date = peak_date, day
+
+    sma20_gap: float | None = None
+    if len(shared) >= 20:
+        mean = sum(closes[day] for day in shared[-20:]) / 20.0
+        sma20_gap = (closes[shared[-1]] / mean - 1.0) * 100.0
+    return {
+        "max_drawdown_pct": round(worst_drawdown, 4),
+        "max_drawdown_peak_date": worst_peak_date.isoformat() if worst_peak_date else None,
+        "max_drawdown_trough_date": worst_trough_date.isoformat() if worst_trough_date else None,
+        "sma20_gap_pct": round(sma20_gap, 4) if sma20_gap is not None else None,
+    }
+
+
 def _daily_closes(raw: Any) -> dict[date, float]:
     frame = _parse_yahoo_chart(raw if isinstance(raw, dict) else {})
     if frame.empty or "Close" not in frame:
@@ -75,5 +103,11 @@ def compare_closes(
         "anchor_return_pct": round(anchor_return, 4),
         "comparison_return_pct": round(comparison_return, 4),
         "relative_return_pp": round(anchor_return - comparison_return, 4),
+        "technical_observations": {
+            "basis": "shared_utc_date_unadjusted_closes",
+            "as_of_date": end.isoformat(),
+            "anchor": _technical_measures(anchor, shared),
+            "comparison": _technical_measures(comparison, shared),
+        },
         "points": points,
     }

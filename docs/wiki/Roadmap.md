@@ -283,8 +283,18 @@ which adapter won failover, or leaves it unknown when no usable history was
 returned. An adapter with its own internal feed selection (notably crypto) does
 not yet expose that deeper provider identity. Neither relative returns nor
 co-movement establish causation. Full fundamentals, historical macro
-observations, sentiment, and technical evidence become separate later layers
+observations, sentiment, and decision-grade technical evidence become separate later layers
 only when they have honest coverage and provenance contracts.
+
+The same aligned closes now support a first descriptive technical layer:
+maximum observed drawdown with its peak/trough dates, and the last close's
+percentage gap from the previous 20 shared closes. Fewer than 20 observations
+leave the latter unavailable. The calculation uses each pair's actual shared
+dates without interpolation, so crypto weekends disappear alongside a weekday-
+only proxy. These closes are unadjusted; splits or other corporate actions may
+distort the measures. This is not a standard per-asset daily indicator, a
+trading signal, or causal explanation. Adjusted history and deeper provider
+provenance remain prerequisites for decision-grade technical evidence.
 
 Dated news is the first candidate for that next layer. As a prerequisite, new
 live-feed and background-ingested articles without a parseable source publication
@@ -294,8 +304,8 @@ now places linked, source-dated headline candidates alongside each pair's actual
 shared-close window. It checks at most 50 current keyless-feed candidates per
 symbol, shows at most eight matches per symbol, and exposes partial feed failure.
 The result is neither a complete historical record nor evidence that a headline
-caused a price move. Full fundamentals, historical macro observations, and technical
-context remain later evidence layers.
+caused a price move. Full fundamentals, historical macro observations, and
+decision-grade technical context remain later evidence layers.
 
 As a prerequisite for fundamentals context, the existing point-in-time ingest
 now preserves the actual fiscal period end, rejects release dates before that

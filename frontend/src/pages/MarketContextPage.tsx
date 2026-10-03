@@ -110,6 +110,45 @@ function AlignedPaths({ anchor, row }: { anchor: string; row: MarketComparisonRo
   );
 }
 
+function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const technical = row.technical_observations;
+  if (!technical) return null;
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        {open ? "Hide" : "Show"} observed technical measures for {anchor} vs {row.symbol}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2 text-xs">
+          <p className="text-terminal-muted">
+            As of {technical.as_of_date}. Calculated only from the pair’s shared, unadjusted daily closes—no missing dates filled in.
+            Crypto weekend closes are omitted when the other asset has no close. Splits and other corporate actions can distort unadjusted prices.
+            These are descriptive observations, not trading signals or causes of price moves.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {([{ symbol: anchor, measures: technical.anchor }, { symbol: row.symbol, measures: technical.comparison }]).map(({ symbol, measures }) => (
+              <div key={symbol} className="rounded border border-terminal-border p-2 text-terminal-text">
+                <h3 className="font-semibold">{symbol}</h3>
+                <p className="mt-1">Maximum observed drawdown: {measures.max_drawdown_pct.toFixed(2)}%</p>
+                <p className="text-terminal-muted">
+                  {measures.max_drawdown_peak_date && measures.max_drawdown_trough_date
+                    ? `Peak ${measures.max_drawdown_peak_date} → trough ${measures.max_drawdown_trough_date}`
+                    : "No decline from an earlier shared-date peak."}
+                </p>
+                <p className="mt-1">
+                  20-shared-close average gap: {measures.sma20_gap_pct == null ? "Unavailable (fewer than 20 shared closes)" : formatPercent(measures.sma20_gap_pct)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function DatedHeadlines({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
   const [open, setOpen] = useState(false);
   const startDate = row.start_date || "";
@@ -498,6 +537,7 @@ export function MarketContextPage() {
                       Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.
                     </p>
                     <AlignedPaths anchor={selection.anchor} row={row} />
+                    <TechnicalObservations anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
                     <DatedFundamentalReleases anchor={selection.anchor} row={row} />

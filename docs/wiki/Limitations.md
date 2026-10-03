@@ -91,6 +91,13 @@ never silently faked.
   shared-close window. It examines at most 50 recent candidates and displays at
   most eight matches per symbol; empty results do not imply no news occurred.
   Headlines are possible context, not causal attribution.
+- **Technical observations use shared, unadjusted closes.** Maximum observed
+  drawdown and the gap from a 20-shared-close average are calculated only on
+  the pair's actual common UTC dates; with fewer than 20 closes the average
+  gap is unavailable. Crypto weekends may be omitted when the proxy has no
+  close, and splits or other corporate actions can distort unadjusted values.
+  These are descriptive measures, not standard per-asset daily indicators,
+  trading signals, or evidence of causation.
 - **Economic calendar context is configuration-gated and non-causal.** An
   optional comparison panel checks the actual pair window against configured
   Finnhub/FMP calendar feeds. It never uses the sample fallback of the legacy

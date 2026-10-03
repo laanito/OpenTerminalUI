@@ -63,6 +63,39 @@ def test_invalid_closes_are_ignored() -> None:
     assert closes == {date(2026, 9, 1): 100.0}
 
 
+def test_technical_measures_use_only_shared_unadjusted_closes() -> None:
+    start = date(2026, 8, 1)
+    days = [start + timedelta(days=i) for i in range(31)]
+    anchor = {day: 100.0 for day in days}
+    anchor[days[5]] = 120.0
+    anchor[days[10]] = 90.0
+    anchor[days[-1]] = 110.0
+    comparison = {day: 100.0 + i for i, day in enumerate(days)}
+    comparison[start + timedelta(days=31)] = 500.0  # never part of the pair
+
+    result = compare_closes(anchor, comparison, period="1M", today=days[-1])
+    technical = result["technical_observations"]
+    assert technical["basis"] == "shared_utc_date_unadjusted_closes"
+    assert technical["as_of_date"] == days[-1].isoformat()
+    assert technical["anchor"] == {
+        "max_drawdown_pct": 25.0,
+        "max_drawdown_peak_date": days[5].isoformat(),
+        "max_drawdown_trough_date": days[10].isoformat(),
+        "sma20_gap_pct": 9.4527,
+    }
+    assert technical["comparison"]["max_drawdown_pct"] == 0.0
+    assert technical["comparison"]["max_drawdown_peak_date"] is None
+
+
+def test_short_shared_path_marks_sma20_unavailable() -> None:
+    first = date(2026, 8, 1)
+    last = first + timedelta(days=30)
+    result = compare_closes({first: 100, last: 90}, {first: 100, last: 110}, period="1M", today=last)
+    assert result["status"] == "available"
+    assert result["technical_observations"]["anchor"]["sma20_gap_pct"] is None
+    assert result["technical_observations"]["anchor"]["max_drawdown_pct"] == 10.0
+
+
 def _client(data: dict[str, Any]) -> TestClient:
     class FakeFetcher:
         async def fetch_history(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> Any:
@@ -104,8 +137,10 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert len(payload["comparisons"][0]["points"]) == payload["comparisons"][0]["observations"]
     assert payload["comparisons"][0]["anchor_history_source"] == "yahoo"
     assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
+    assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_unadjusted_closes"
     assert payload["comparisons"][1]["reason"] == "provider_error"
     assert payload["comparisons"][1]["comparison_history_source"] is None
+    assert payload["comparisons"][1]["technical_observations"] is None
     assert payload["comparisons"][1]["points"] == []
 
 

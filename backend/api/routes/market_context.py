@@ -42,6 +42,20 @@ class MarketComparisonPoint(BaseModel):
     comparison_index: float
 
 
+class MarketTechnicalMeasures(BaseModel):
+    max_drawdown_pct: float
+    max_drawdown_peak_date: date | None
+    max_drawdown_trough_date: date | None
+    sma20_gap_pct: float | None
+
+
+class MarketTechnicalObservations(BaseModel):
+    basis: Literal["shared_utc_date_unadjusted_closes"]
+    as_of_date: date
+    anchor: MarketTechnicalMeasures
+    comparison: MarketTechnicalMeasures
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -57,6 +71,7 @@ class MarketComparisonRow(BaseModel):
     anchor_return_pct: float | None = None
     comparison_return_pct: float | None = None
     relative_return_pp: float | None = None
+    technical_observations: MarketTechnicalObservations | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 

@@ -7010,6 +7010,16 @@
           "symbol": {
             "title": "Symbol",
             "type": "string"
+          },
+          "technical_observations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketTechnicalObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -7497,6 +7507,85 @@
           "events"
         ],
         "title": "MarketMacroEventsResponse",
+        "type": "object"
+      },
+      "MarketTechnicalMeasures": {
+        "properties": {
+          "max_drawdown_pct": {
+            "title": "Max Drawdown Pct",
+            "type": "number"
+          },
+          "max_drawdown_peak_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Drawdown Peak Date"
+          },
+          "max_drawdown_trough_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Drawdown Trough Date"
+          },
+          "sma20_gap_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma20 Gap Pct"
+          }
+        },
+        "required": [
+          "max_drawdown_pct",
+          "max_drawdown_peak_date",
+          "max_drawdown_trough_date",
+          "sma20_gap_pct"
+        ],
+        "title": "MarketTechnicalMeasures",
+        "type": "object"
+      },
+      "MarketTechnicalObservations": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/MarketTechnicalMeasures"
+          },
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "basis": {
+            "const": "shared_utc_date_unadjusted_closes",
+            "title": "Basis",
+            "type": "string"
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/MarketTechnicalMeasures"
+          }
+        },
+        "required": [
+          "basis",
+          "as_of_date",
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketTechnicalObservations",
         "type": "object"
       },
       "ModelSpec": {
