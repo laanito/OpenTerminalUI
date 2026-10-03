@@ -8,6 +8,20 @@ export interface MarketComparisonPoint {
   comparison_index: number;
 }
 
+export interface MarketTechnicalMeasures {
+  max_drawdown_pct: number;
+  max_drawdown_peak_date: string | null;
+  max_drawdown_trough_date: string | null;
+  sma20_gap_pct: number | null;
+}
+
+export interface MarketTechnicalObservations {
+  basis: "shared_utc_date_unadjusted_closes";
+  as_of_date: string;
+  anchor: MarketTechnicalMeasures;
+  comparison: MarketTechnicalMeasures;
+}
+
 export interface MarketComparisonRow {
   symbol: string;
   status: "available" | "unavailable";
@@ -23,6 +37,7 @@ export interface MarketComparisonRow {
   anchor_return_pct: number | null;
   comparison_return_pct: number | null;
   relative_return_pp: number | null;
+  technical_observations?: MarketTechnicalObservations | null;
   points: MarketComparisonPoint[];
 }
 
