@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Dated fundamentals candidates in market comparisons** — an on-demand
+  panel checks each pair's observed window for source-reported revenue, net
+  income, EPS, and free-cash-flow releases. Estimated dates are excluded;
+  missing coverage and per-symbol failures remain explicit. Values retain
+  provider units and no historical revision fidelity is claimed.
 - **Private Brain retrieval evaluation harness** — a read-only runner scores
   dated, owner-reviewed cases for current/history recall, chronology order,
   unrelated-source intrusions, and index freshness. Real Hermes cases remain

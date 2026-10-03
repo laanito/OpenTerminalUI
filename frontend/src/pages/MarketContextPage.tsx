@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { compareMarketContext, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -238,6 +238,80 @@ function DatedMacroEvents({ anchor, row }: { anchor: string; row: MarketComparis
   );
 }
 
+const FUNDAMENTAL_LABELS: Record<string, string> = {
+  revenue: "Revenue",
+  net_income: "Net income",
+  eps: "EPS",
+  free_cash_flow: "Free cash flow",
+};
+
+function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const startDate = row.start_date || "";
+  const endDate = row.end_date || "";
+  const query = useQuery({
+    queryKey: ["market-context-fundamental-releases", anchor, row.symbol, startDate, endDate],
+    queryFn: () => fetchMarketContextFundamentalReleases(anchor, row.symbol, startDate, endDate),
+    enabled: open && !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        {open ? "Hide" : "Show"} dated fundamentals for {anchor} vs {row.symbol}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2 text-xs">
+          <p className="text-terminal-muted">
+            Source-reported filing/acceptance dates within this pair’s observed window. Estimated release dates are excluded. This on-demand provider snapshot is incomplete, has no verified revision history, and cannot prove what a market knew on a past day. Values retain provider units; do not compare them across currencies or issuers as normalized performance.
+          </p>
+          {query.isPending ? <p role="status" className="text-terminal-muted">Checking dated fundamental releases…</p> : null}
+          {query.isError ? (
+            <p role="alert" className="text-terminal-neg">
+              {extractApiErrorMessage(query.error, "Could not check fundamental releases.")}
+              <button type="button" className="ml-2 underline" onClick={() => void query.refetch()}>Retry fundamentals</button>
+            </p>
+          ) : null}
+          {query.data ? (
+            <>
+              <p className="text-terminal-muted">
+                Checked {new Date(query.data.retrieved_at).toLocaleString()} · showing at most {query.data.display_limit_per_symbol} source-dated records per symbol.
+              </p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {query.data.groups.map((group) => (
+                  <div key={group.symbol} className="rounded border border-terminal-border p-2">
+                    <h3 className="font-semibold text-terminal-text">{group.symbol}</h3>
+                    {group.status === "feed_error" ? <p className="mt-1 text-terminal-warn">Provider check failed; coverage is unknown.</p> : null}
+                    {group.status === "no_usable_records" ? (
+                      <p className="mt-1 text-terminal-muted">No source-dated records returned for this window. Access or historical coverage may be limited; this does not mean no release occurred.</p>
+                    ) : null}
+                    {group.status === "available" ? (
+                      <>
+                        <p className="mt-1 text-terminal-muted">{group.matched_count} eligible records among {group.examined_count} fetched candidates.</p>
+                        <ul className="mt-2 space-y-2">
+                          {group.releases.map((release) => (
+                            <li key={`${release.release_date}-${release.fiscal_period_end}-${release.metric}-${release.source}`} className="rounded border border-terminal-border p-2 text-terminal-text">
+                              <span className="font-medium">{release.release_date} · {FUNDAMENTAL_LABELS[release.metric]}</span>
+                              <span className="ml-2">{new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(release.value)}</span>
+                              <p className="text-terminal-muted">Fiscal period ended {release.fiscal_period_end} · {sourceLabel(release.source)}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function MarketContextPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const appliedAnchor = (searchParams.get("symbol") || "AAPL").trim().toUpperCase();
@@ -426,6 +500,7 @@ export function MarketContextPage() {
                     <AlignedPaths anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
+                    <DatedFundamentalReleases anchor={selection.anchor} row={row} />
                   </>
                 ) : (
                   <>

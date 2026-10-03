@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import re
 from datetime import date, datetime, timezone
 from typing import Any, Literal
@@ -25,6 +26,8 @@ logger = logging.getLogger(__name__)
 _NEWS_FETCH_LIMIT = 50
 _NEWS_DISPLAY_LIMIT = 8
 _MACRO_DISPLAY_LIMIT = 30
+_FUNDAMENTAL_DISPLAY_LIMIT = 16
+_FUNDAMENTAL_METRICS = frozenset({"revenue", "net_income", "eps", "free_cash_flow"})
 
 
 class MarketComparisonRequest(BaseModel):
@@ -123,6 +126,40 @@ class MarketMacroEventsResponse(BaseModel):
     matched_count: int
     display_limit: int
     events: list[MarketMacroEvent]
+
+
+class MarketFundamentalsRequest(BaseModel):
+    anchor: str = Field(min_length=1, max_length=40)
+    comparison: str = Field(min_length=1, max_length=40)
+    start_date: date
+    end_date: date
+
+
+class MarketFundamentalRelease(BaseModel):
+    release_date: date
+    fiscal_period_end: date
+    metric: Literal["revenue", "net_income", "eps", "free_cash_flow"]
+    value: float
+    source: str
+
+
+class MarketFundamentalsGroup(BaseModel):
+    symbol: str
+    status: Literal["available", "no_usable_records", "feed_error"]
+    examined_count: int
+    matched_count: int
+    releases: list[MarketFundamentalRelease]
+
+
+class MarketFundamentalsResponse(BaseModel):
+    anchor: str
+    comparison: str
+    start_date: date
+    end_date: date
+    retrieved_at: datetime
+    source: Literal["on_demand_pit_fetch"]
+    display_limit_per_symbol: int
+    groups: list[MarketFundamentalsGroup]
 
 
 def _symbol(raw: str) -> str:
@@ -301,4 +338,81 @@ async def get_market_context_macro_events(
         "matched_count": len(events),
         "display_limit": _MACRO_DISPLAY_LIMIT,
         "events": events[:_MACRO_DISPLAY_LIMIT],
+    }
+
+
+@router.post("/fundamental-releases", response_model=MarketFundamentalsResponse)
+async def get_market_context_fundamental_releases(
+    payload: MarketFundamentalsRequest,
+    _: User = Depends(get_current_user),
+    fetcher: Any = Depends(get_unified_fetcher),
+) -> dict[str, Any]:
+    """Return dated release candidates, not a revised historical fundamentals tape."""
+    anchor = _symbol(payload.anchor)
+    comparison = _symbol(payload.comparison)
+    if anchor == comparison:
+        raise HTTPException(status_code=422, detail="Anchor cannot be a comparison symbol")
+    _validate_context_window(payload.start_date, payload.end_date)
+
+    async def load(symbol: str) -> dict[str, Any]:
+        try:
+            raw = await fetcher.fetch_pit_fundamentals_records(symbol)
+            if not isinstance(raw, list):
+                raise ValueError("Unexpected fundamentals response")
+        except Exception as exc:
+            # Provider errors may include tokenized URLs; log only their type.
+            logger.warning("Market-context fundamentals failed for %s (%s)", symbol, type(exc).__name__)
+            return {"symbol": symbol, "status": "feed_error", "examined_count": 0, "matched_count": 0, "releases": []}
+
+        releases: list[dict[str, Any]] = []
+        seen: set[tuple[date, date, str, str]] = set()
+        for item in raw:
+            if not isinstance(item, dict) or item.get("release_date_estimated") is not False:
+                continue
+            try:
+                release_date = date.fromisoformat(str(item["as_of_release_date"]))
+                fiscal_end = date.fromisoformat(str(item["fiscal_period"]))
+                metric = str(item["metric"])
+                source = str(item["source"]).strip()
+                value = float(item["value"])
+            except (KeyError, OverflowError, TypeError, ValueError):
+                continue
+            if (
+                metric not in _FUNDAMENTAL_METRICS
+                or not source
+                or not math.isfinite(value)
+                or release_date < fiscal_end
+                or not payload.start_date <= release_date <= payload.end_date
+            ):
+                continue
+            identity = (release_date, fiscal_end, metric, source)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            releases.append({
+                "release_date": release_date,
+                "fiscal_period_end": fiscal_end,
+                "metric": metric,
+                "value": value,
+                "source": source,
+            })
+        releases.sort(key=lambda item: (item["release_date"], item["fiscal_period_end"], item["metric"]), reverse=True)
+        return {
+            "symbol": symbol,
+            "status": "available" if releases else "no_usable_records",
+            "examined_count": len(raw),
+            "matched_count": len(releases),
+            "releases": releases[:_FUNDAMENTAL_DISPLAY_LIMIT],
+        }
+
+    groups = await asyncio.gather(load(anchor), load(comparison))
+    return {
+        "anchor": anchor,
+        "comparison": comparison,
+        "start_date": payload.start_date,
+        "end_date": payload.end_date,
+        "retrieved_at": datetime.now(timezone.utc),
+        "source": "on_demand_pit_fetch",
+        "display_limit_per_symbol": _FUNDAMENTAL_DISPLAY_LIMIT,
+        "groups": groups,
     }

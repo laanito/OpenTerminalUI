@@ -7019,6 +7019,177 @@
         "title": "MarketComparisonRow",
         "type": "object"
       },
+      "MarketFundamentalRelease": {
+        "properties": {
+          "fiscal_period_end": {
+            "format": "date",
+            "title": "Fiscal Period End",
+            "type": "string"
+          },
+          "metric": {
+            "enum": [
+              "revenue",
+              "net_income",
+              "eps",
+              "free_cash_flow"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "release_date": {
+            "format": "date",
+            "title": "Release Date",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "release_date",
+          "fiscal_period_end",
+          "metric",
+          "value",
+          "source"
+        ],
+        "title": "MarketFundamentalRelease",
+        "type": "object"
+      },
+      "MarketFundamentalsGroup": {
+        "properties": {
+          "examined_count": {
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "matched_count": {
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "releases": {
+            "items": {
+              "$ref": "#/components/schemas/MarketFundamentalRelease"
+            },
+            "title": "Releases",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_usable_records",
+              "feed_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "status",
+          "examined_count",
+          "matched_count",
+          "releases"
+        ],
+        "title": "MarketFundamentalsGroup",
+        "type": "object"
+      },
+      "MarketFundamentalsRequest": {
+        "properties": {
+          "anchor": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparison": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Comparison",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison",
+          "start_date",
+          "end_date"
+        ],
+        "title": "MarketFundamentalsRequest",
+        "type": "object"
+      },
+      "MarketFundamentalsResponse": {
+        "properties": {
+          "anchor": {
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparison": {
+            "title": "Comparison",
+            "type": "string"
+          },
+          "display_limit_per_symbol": {
+            "title": "Display Limit Per Symbol",
+            "type": "integer"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/MarketFundamentalsGroup"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "source": {
+            "const": "on_demand_pit_fetch",
+            "title": "Source",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison",
+          "start_date",
+          "end_date",
+          "retrieved_at",
+          "source",
+          "display_limit_per_symbol",
+          "groups"
+        ],
+        "title": "MarketFundamentalsResponse",
+        "type": "object"
+      },
       "MarketHeadline": {
         "properties": {
           "published_at": {
@@ -24575,6 +24746,60 @@
           }
         ],
         "summary": "Compare Market Context",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/fundamental-releases": {
+      "post": {
+        "description": "Return dated release candidates, not a revised historical fundamentals tape.",
+        "operationId": "get_market_context_fundamental_releases_api_market_context_fundamental_releases_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketFundamentalsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketFundamentalsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Market Context Fundamental Releases",
         "tags": [
           "market-context"
         ],

@@ -98,6 +98,13 @@ never silently faked.
   shows at most 30 returned events with the match count. Historical provider
   coverage may be incomplete; these global events are not automatically tied
   to either asset, and event dates do not establish price causation.
+- **Fundamental release context is a candidate snapshot, not a historical
+  vintage.** The comparison panel checks current provider records on demand
+  and displays only source-reported filing/acceptance dates in the observed
+  pair window for four metrics. It excludes estimated release dates and reports
+  unavailable/partial checks; missing records do not prove no release occurred.
+  Provider values are not normalized across currencies or issuers, and later
+  revisions may differ from what was known on the displayed date.
 - **News dates are source dates only for newly parsed items.** Live news parsing
   and background ingestion now skip articles with missing or invalid publication
   dates rather than assigning the fetch time. Older stored articles are not

@@ -82,6 +82,33 @@ export interface MarketMacroEventsResponse {
   events: MarketMacroEvent[];
 }
 
+export interface MarketFundamentalRelease {
+  release_date: string;
+  fiscal_period_end: string;
+  metric: "revenue" | "net_income" | "eps" | "free_cash_flow";
+  value: number;
+  source: string;
+}
+
+export interface MarketFundamentalsGroup {
+  symbol: string;
+  status: "available" | "no_usable_records" | "feed_error";
+  examined_count: number;
+  matched_count: number;
+  releases: MarketFundamentalRelease[];
+}
+
+export interface MarketFundamentalsResponse {
+  anchor: string;
+  comparison: string;
+  start_date: string;
+  end_date: string;
+  retrieved_at: string;
+  source: "on_demand_pit_fetch";
+  display_limit_per_symbol: number;
+  groups: MarketFundamentalsGroup[];
+}
+
 export async function compareMarketContext(
   anchor: string,
   comparisons: string[],
@@ -109,6 +136,18 @@ export async function fetchMarketContextMacroEvents(
 ): Promise<MarketMacroEventsResponse> {
   const response = await api.post<MarketMacroEventsResponse>("/market-context/macro-events", {
     start_date: startDate, end_date: endDate,
+  });
+  return response.data;
+}
+
+export async function fetchMarketContextFundamentalReleases(
+  anchor: string,
+  comparison: string,
+  startDate: string,
+  endDate: string,
+): Promise<MarketFundamentalsResponse> {
+  const response = await api.post<MarketFundamentalsResponse>("/market-context/fundamental-releases", {
+    anchor, comparison, start_date: startDate, end_date: endDate,
   });
   return response.data;
 }
