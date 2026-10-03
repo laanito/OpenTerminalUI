@@ -96,6 +96,10 @@ never silently faked.
   the pair's actual common UTC dates; with fewer than 20 closes the average
   gap is unavailable. Crypto weekends may be omitted when the proxy has no
   close, and splits or other corporate actions can distort unadjusted values.
+  A Yahoo chart response with event metadata now discloses split/dividend
+  markers reported in the observed pair window. No markers reported does not
+  prove there were none; paths without event metadata remain unavailable.
+  The markers do not adjust the plotted prices or derived measures.
   These are descriptive measures, not standard per-asset daily indicators,
   trading signals, or evidence of causation.
 - **Economic calendar context is configuration-gated and non-causal.** An

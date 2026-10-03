@@ -22,6 +22,13 @@ export interface MarketTechnicalObservations {
   comparison: MarketTechnicalMeasures;
 }
 
+export interface MarketActionDisclosure {
+  source: "yahoo_chart" | "unavailable";
+  matched_count: number;
+  display_limit: number;
+  actions: { date: string; type: "split" | "dividend" }[];
+}
+
 export interface MarketComparisonRow {
   symbol: string;
   status: "available" | "unavailable";
@@ -38,6 +45,7 @@ export interface MarketComparisonRow {
   comparison_return_pct: number | null;
   relative_return_pp: number | null;
   technical_observations?: MarketTechnicalObservations | null;
+  action_disclosure?: { anchor: MarketActionDisclosure; comparison: MarketActionDisclosure } | null;
   points: MarketComparisonPoint[];
 }
 

@@ -6722,6 +6722,41 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "MarketActionDisclosure": {
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/MarketCorporateAction"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "display_limit": {
+            "title": "Display Limit",
+            "type": "integer"
+          },
+          "matched_count": {
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "source": {
+            "enum": [
+              "yahoo_chart",
+              "unavailable"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "matched_count",
+          "display_limit",
+          "actions"
+        ],
+        "title": "MarketActionDisclosure",
+        "type": "object"
+      },
       "MarketComparisonPoint": {
         "properties": {
           "anchor_index": {
@@ -6847,6 +6882,16 @@
       },
       "MarketComparisonRow": {
         "properties": {
+          "action_disclosure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketPairActionDisclosure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "anchor_history_source": {
             "anyOf": [
               {
@@ -7027,6 +7072,29 @@
           "status"
         ],
         "title": "MarketComparisonRow",
+        "type": "object"
+      },
+      "MarketCorporateAction": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "split",
+              "dividend"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "type"
+        ],
+        "title": "MarketCorporateAction",
         "type": "object"
       },
       "MarketFundamentalRelease": {
@@ -7507,6 +7575,22 @@
           "events"
         ],
         "title": "MarketMacroEventsResponse",
+        "type": "object"
+      },
+      "MarketPairActionDisclosure": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/MarketActionDisclosure"
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/MarketActionDisclosure"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketPairActionDisclosure",
         "type": "object"
       },
       "MarketTechnicalMeasures": {

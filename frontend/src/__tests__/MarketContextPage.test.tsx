@@ -57,6 +57,10 @@ describe("MarketContextPage", () => {
             anchor: { max_drawdown_pct: 12.5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 3.25 },
             comparison: { max_drawdown_pct: 0, max_drawdown_peak_date: null, max_drawdown_trough_date: null, sma20_gap_pct: null },
           },
+          action_disclosure: {
+            anchor: { source: "unavailable", matched_count: 0, display_limit: 20, actions: [] },
+            comparison: { source: "yahoo_chart", matched_count: 1, display_limit: 20, actions: [{ date: "2026-09-10", type: "dividend" }] },
+          },
           points: [
             { date: "2026-08-25", anchor_index: 100, comparison_index: 100 },
             { date: "2026-09-23", anchor_index: 105.25, comparison_index: 102.1 },
@@ -104,6 +108,9 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/20-shared-close average gap: \+3.25%/)).toBeInTheDocument();
     expect(screen.getByText(/Unavailable \(fewer than 20 shared closes\)/)).toBeInTheDocument();
     expect(screen.getByText(/Crypto weekend closes are omitted/)).toBeInTheDocument();
+    expect(screen.getByText("2026-09-10 · dividend")).toBeInTheDocument();
+    expect(screen.getByText(/Action metadata unavailable from the selected history path/)).toBeInTheDocument();
+    expect(screen.getByText(/not a complete action audit/)).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact aligned observations"));
     expect(screen.getByRole("columnheader", { name: "BTC-USD index" })).toBeInTheDocument();
     expect(screen.getByText("105.25")).toBeInTheDocument();

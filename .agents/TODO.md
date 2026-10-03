@@ -441,6 +441,11 @@ intelligence promise, or claim that contradiction handling is solved.
         never filled, and fewer than 20 shared closes leave the average gap
         unavailable. These unadjusted-close measures can be distorted by
         corporate actions and are descriptive, not trading signals.
+  - [x] Disclose dated split/dividend markers when the selected Yahoo chart
+        response contains event metadata, filtered to the pair's observed
+        window and shown beside the unadjusted technical measures. A source with no
+        reported markers is not certified action-free; paths without event
+        metadata remain unavailable. This does not adjust the price series.
   - [ ] Add a split/dividend-adjusted and provider-provenance contract before
         treating technical measures as decision-grade cross-market signals;
         separate native per-asset sessions from pair-shared sampling when

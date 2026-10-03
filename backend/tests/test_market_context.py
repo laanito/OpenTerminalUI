@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.api.deps import get_unified_fetcher
 from backend.api.routes import market_context
 from backend.auth.deps import get_current_user
-from backend.services.cross_market_context import _daily_closes, compare_closes
+from backend.services.cross_market_context import _daily_closes, compare_closes, yahoo_action_metadata_present, yahoo_reported_actions
 from backend.services.economic_data import get_economic_data_service
 
 
@@ -96,6 +96,23 @@ def test_short_shared_path_marks_sma20_unavailable() -> None:
     assert result["technical_observations"]["anchor"]["max_drawdown_pct"] == 10.0
 
 
+def test_yahoo_action_parser_keeps_only_dated_split_and_dividend_markers() -> None:
+    split_time = int(datetime(2026, 9, 5, tzinfo=timezone.utc).timestamp())
+    dividend_time = int(datetime(2026, 9, 6, tzinfo=timezone.utc).timestamp())
+    raw = _chart({date(2026, 9, 5): 100.0})
+    raw["chart"]["result"][0]["events"] = {
+        "splits": {str(split_time): {"date": split_time}, "invalid": {"date": "bad"}},
+        "dividends": {str(dividend_time): {"date": dividend_time, "amount": 1.25}},
+    }
+    assert yahoo_reported_actions(raw) == [
+        {"date": "2026-09-06", "type": "dividend"},
+        {"date": "2026-09-05", "type": "split"},
+    ]
+    assert yahoo_action_metadata_present(raw) is True
+    assert yahoo_action_metadata_present(_chart({date(2026, 9, 5): 100.0})) is False
+    assert yahoo_reported_actions({"chart": []}) == []
+
+
 def _client(data: dict[str, Any]) -> TestClient:
     class FakeFetcher:
         async def fetch_history(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> Any:
@@ -137,6 +154,7 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert len(payload["comparisons"][0]["points"]) == payload["comparisons"][0]["observations"]
     assert payload["comparisons"][0]["anchor_history_source"] == "yahoo"
     assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
+    assert payload["comparisons"][0]["action_disclosure"]["anchor"]["source"] == "unavailable"
     assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_unadjusted_closes"
     assert payload["comparisons"][1]["reason"] == "provider_error"
     assert payload["comparisons"][1]["comparison_history_source"] is None
@@ -158,6 +176,40 @@ def test_route_does_not_attribute_unusable_history() -> None:
     assert row["status"] == "unavailable"
     assert row["anchor_history_source"] is None
     assert row["comparison_history_source"] is None
+
+
+def test_route_discloses_only_yahoo_reported_actions_in_observed_window() -> None:
+    start = date(2026, 8, 24)
+    days = [start + timedelta(days=i) for i in range(32)]
+    anchor_chart = _chart({day: 100.0 + i for i, day in enumerate(days)})
+    inside = int(datetime(2026, 9, 5, tzinfo=timezone.utc).timestamp())
+    outside = int(datetime(2026, 8, 24, tzinfo=timezone.utc).timestamp())
+    anchor_chart["chart"]["result"][0]["events"] = {
+        "splits": {str(inside): {"date": inside}, str(outside): {"date": outside}},
+    }
+    client = _client({
+        "AAPL": anchor_chart,
+        "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)}),
+    })
+    response = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
+    })
+    assert response.status_code == 200
+    row = response.json()["comparisons"][0]
+    assert row["action_disclosure"]["anchor"] == {
+        "source": "yahoo_chart", "matched_count": 1, "display_limit": 20,
+        "actions": [{"date": "2026-09-05", "type": "split"}],
+    }
+    assert row["action_disclosure"]["comparison"]["source"] == "unavailable"
+    assert row["action_disclosure"]["comparison"]["actions"] == []
+
+    anchor_chart["chart"]["result"][0]["events"] = {}
+    empty_response = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
+    })
+    assert empty_response.json()["comparisons"][0]["action_disclosure"]["anchor"] == {
+        "source": "yahoo_chart", "matched_count": 0, "display_limit": 20, "actions": [],
+    }
 
 
 def test_headline_context_filters_to_pair_window_and_keeps_partial_feed(monkeypatch) -> None:

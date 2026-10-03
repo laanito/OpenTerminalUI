@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Corporate-action disclosure for comparison paths** — when a selected
+  Yahoo chart response contains event metadata, its split/dividend dates appear
+  beside the unadjusted technical measures. Empty marker lists are not proof
+  that no action occurred; paths without event metadata report unavailable.
 - **Shared-date technical observations** — available market comparisons now
   show maximum observed drawdown and distance from a 20-shared-close average
   for each symbol, with explicit observation dates and insufficient-data state.
