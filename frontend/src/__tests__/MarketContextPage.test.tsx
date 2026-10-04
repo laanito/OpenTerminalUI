@@ -390,10 +390,10 @@ describe("MarketContextPage", () => {
       anchor: "AAPL", comparison: "SPY", start_date: "2026-09-02", end_date: "2026-09-10",
       retrieved_at: "2026-09-11T10:01:00Z", source: "on_demand_pit_fetch", display_limit_per_symbol: 16,
       groups: [
-        { symbol: "AAPL", status: "available", examined_count: 22, matched_count: 1, releases: [
+        { symbol: "AAPL", status: "available", examined_count: 22, matched_count: 1, conflicting_count: 1, releases: [
           { release_date: "2026-09-05", fiscal_period_end: "2026-06-30", metric: "revenue", value: 1234567, source: "fmp" },
-        ] },
-        { symbol: "SPY", status: "no_usable_records", examined_count: 0, matched_count: 0, releases: [] },
+        ], conflicts: [{ release_date: "2026-09-06", fiscal_period_end: "2026-06-30", metric: "eps", source: "fmp", distinct_value_count: 2 }] },
+        { symbol: "SPY", status: "no_usable_records", examined_count: 0, matched_count: 0, conflicting_count: 0, releases: [], conflicts: [] },
       ],
     });
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
@@ -406,5 +406,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/Fiscal period ended 2026-06-30 · FMP/)).toBeInTheDocument();
     expect(screen.getByText(/No source-dated records returned/)).toBeInTheDocument();
     expect(screen.getByText(/no verified revision history/)).toBeInTheDocument();
+    expect(screen.getByText(/1 conflicting provider record withheld/)).toBeInTheDocument();
+    expect(screen.getByText(/2026-09-06 · EPS · fiscal period 2026-06-30 · FMP: 2 different values/)).toBeInTheDocument();
   });
 });

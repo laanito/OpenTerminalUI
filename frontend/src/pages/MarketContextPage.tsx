@@ -381,7 +381,7 @@ function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: Market
       {open ? (
         <div className="mt-2 space-y-2 text-xs">
           <p className="text-terminal-muted">
-            Source-reported filing/acceptance dates within this pair’s observed window. Estimated release dates are excluded. This on-demand provider snapshot is incomplete, has no verified revision history, and cannot prove what a market knew on a past day. Values retain provider units; do not compare them across currencies or issuers as normalized performance.
+            Source-reported filing/acceptance dates within this pair’s observed window. Estimated release dates are excluded. Conflicting values for the same provider record are withheld, not treated as verified revisions. This on-demand snapshot is incomplete, has no verified revision history, and cannot prove what a market knew on a past day. Values retain provider units; do not compare them across currencies or issuers as normalized performance.
           </p>
           {query.isPending ? <p role="status" className="text-terminal-muted">Checking dated fundamental releases…</p> : null}
           {query.isError ? (
@@ -403,6 +403,9 @@ function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: Market
                     {group.status === "no_usable_records" ? (
                       <p className="mt-1 text-terminal-muted">No source-dated records returned for this window. Access or historical coverage may be limited; this does not mean no release occurred.</p>
                     ) : null}
+                    {group.status === "ambiguous" ? (
+                      <p className="mt-1 text-terminal-warn">Only conflicting source-dated values were found; no numeric release is shown.</p>
+                    ) : null}
                     {group.status === "available" ? (
                       <>
                         <p className="mt-1 text-terminal-muted">{group.matched_count} eligible records among {group.examined_count} fetched candidates.</p>
@@ -416,6 +419,18 @@ function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: Market
                           ))}
                         </ul>
                       </>
+                    ) : null}
+                    {group.conflicting_count > 0 ? (
+                      <div className="mt-2 text-terminal-warn">
+                        <p>{group.conflicting_count} conflicting provider record{group.conflicting_count === 1 ? "" : "s"} withheld; showing up to {query.data.display_limit_per_symbol}.</p>
+                        <ul className="mt-1 space-y-1">
+                          {group.conflicts.map((conflict) => (
+                            <li key={`${conflict.release_date}-${conflict.fiscal_period_end}-${conflict.metric}-${conflict.source}`}>
+                              {conflict.release_date} · {FUNDAMENTAL_LABELS[conflict.metric]} · fiscal period {conflict.fiscal_period_end} · {sourceLabel(conflict.source)}: {conflict.distinct_value_count} different values
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ) : null}
                   </div>
                 ))}

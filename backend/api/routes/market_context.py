@@ -212,12 +212,22 @@ class MarketFundamentalRelease(BaseModel):
     source: str
 
 
+class MarketFundamentalConflict(BaseModel):
+    release_date: date
+    fiscal_period_end: date
+    metric: Literal["revenue", "net_income", "eps", "free_cash_flow"]
+    source: str
+    distinct_value_count: int
+
+
 class MarketFundamentalsGroup(BaseModel):
     symbol: str
-    status: Literal["available", "no_usable_records", "feed_error"]
+    status: Literal["available", "ambiguous", "no_usable_records", "feed_error"]
     examined_count: int
     matched_count: int
+    conflicting_count: int
     releases: list[MarketFundamentalRelease]
+    conflicts: list[MarketFundamentalConflict]
 
 
 class MarketFundamentalsResponse(BaseModel):
@@ -482,10 +492,12 @@ async def get_market_context_fundamental_releases(
         except Exception as exc:
             # Provider errors may include tokenized URLs; log only their type.
             logger.warning("Market-context fundamentals failed for %s (%s)", symbol, type(exc).__name__)
-            return {"symbol": symbol, "status": "feed_error", "examined_count": 0, "matched_count": 0, "releases": []}
+            return {
+                "symbol": symbol, "status": "feed_error", "examined_count": 0,
+                "matched_count": 0, "conflicting_count": 0, "releases": [], "conflicts": [],
+            }
 
-        releases: list[dict[str, Any]] = []
-        seen: set[tuple[date, date, str, str]] = set()
+        values_by_identity: dict[tuple[date, date, str, str], set[float]] = {}
         for item in raw:
             if not isinstance(item, dict) or item.get("release_date_estimated") is not False:
                 continue
@@ -506,23 +518,37 @@ async def get_market_context_fundamental_releases(
             ):
                 continue
             identity = (release_date, fiscal_end, metric, source)
-            if identity in seen:
+            values_by_identity.setdefault(identity, set()).add(value)
+
+        releases: list[dict[str, Any]] = []
+        conflicts: list[dict[str, Any]] = []
+        for (release_date, fiscal_end, metric, source), values in values_by_identity.items():
+            if len(values) > 1:
+                conflicts.append({
+                    "release_date": release_date,
+                    "fiscal_period_end": fiscal_end,
+                    "metric": metric,
+                    "source": source,
+                    "distinct_value_count": len(values),
+                })
                 continue
-            seen.add(identity)
             releases.append({
                 "release_date": release_date,
                 "fiscal_period_end": fiscal_end,
                 "metric": metric,
-                "value": value,
+                "value": next(iter(values)),
                 "source": source,
             })
         releases.sort(key=lambda item: (item["release_date"], item["fiscal_period_end"], item["metric"]), reverse=True)
+        conflicts.sort(key=lambda item: (item["release_date"], item["fiscal_period_end"], item["metric"]), reverse=True)
         return {
             "symbol": symbol,
-            "status": "available" if releases else "no_usable_records",
+            "status": "available" if releases else "ambiguous" if conflicts else "no_usable_records",
             "examined_count": len(raw),
             "matched_count": len(releases),
+            "conflicting_count": len(conflicts),
             "releases": releases[:_FUNDAMENTAL_DISPLAY_LIMIT],
+            "conflicts": conflicts[:_FUNDAMENTAL_DISPLAY_LIMIT],
         }
 
     groups = await asyncio.gather(load(anchor), load(comparison))

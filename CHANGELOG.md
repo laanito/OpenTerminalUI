@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Fundamental-candidate conflict disclosure** — when a current provider
+  fetch returns different numeric values for the same source-dated metric,
+  period, and provider, the comparison withholds that value and shows the
+  conflict instead of silently choosing the first. This is not a historical
+  revision archive.
 - **Separate adjusted-close observations** — where Yahoo supplies adjusted
   closes for every pair-shared date, comparisons now show per-asset adjusted
   return, drawdown, and 20-shared-close gap beside—not instead of—the raw

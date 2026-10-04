@@ -7223,6 +7223,47 @@
         "title": "MarketCorporateAction",
         "type": "object"
       },
+      "MarketFundamentalConflict": {
+        "properties": {
+          "distinct_value_count": {
+            "title": "Distinct Value Count",
+            "type": "integer"
+          },
+          "fiscal_period_end": {
+            "format": "date",
+            "title": "Fiscal Period End",
+            "type": "string"
+          },
+          "metric": {
+            "enum": [
+              "revenue",
+              "net_income",
+              "eps",
+              "free_cash_flow"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "release_date": {
+            "format": "date",
+            "title": "Release Date",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "release_date",
+          "fiscal_period_end",
+          "metric",
+          "source",
+          "distinct_value_count"
+        ],
+        "title": "MarketFundamentalConflict",
+        "type": "object"
+      },
       "MarketFundamentalRelease": {
         "properties": {
           "fiscal_period_end": {
@@ -7266,6 +7307,17 @@
       },
       "MarketFundamentalsGroup": {
         "properties": {
+          "conflicting_count": {
+            "title": "Conflicting Count",
+            "type": "integer"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/MarketFundamentalConflict"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
           "examined_count": {
             "title": "Examined Count",
             "type": "integer"
@@ -7284,6 +7336,7 @@
           "status": {
             "enum": [
               "available",
+              "ambiguous",
               "no_usable_records",
               "feed_error"
             ],
@@ -7300,7 +7353,9 @@
           "status",
           "examined_count",
           "matched_count",
-          "releases"
+          "conflicting_count",
+          "releases",
+          "conflicts"
         ],
         "title": "MarketFundamentalsGroup",
         "type": "object"

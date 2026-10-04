@@ -91,6 +91,13 @@ never silently faked.
   shared-close window. It examines at most 50 recent candidates and displays at
   most eight matches per symbol; empty results do not imply no news occurred.
   Headlines are possible context, not causal attribution.
+- **Dated fundamentals are current-feed candidates, not a revision archive.**
+  Only source-reported filing/acceptance dates in the observed pair window are
+  shown. Estimated dates and invalid records are excluded. Conflicting values
+  for the same metric, fiscal period, release date, and provider are withheld
+  and disclosed, not assigned an invented order or treated as verified
+  revisions. Empty results do not establish that no release occurred, and a
+  current provider snapshot cannot prove what was known at a past date.
 - **Technical observations use shared, unadjusted closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average
