@@ -102,6 +102,12 @@ never silently faked.
   and disclosed, not assigned an invented order or treated as verified
   revisions. Empty results do not establish that no release occurred, and a
   current provider snapshot cannot prove what was known at a past date.
+  An explicit owner-scoped capture API can now preserve the eligible values
+  this terminal saw at a UTC retrieval time, including conflicting values and
+  an empty/error status. It is opt-in, not a backfill; the existing on-demand
+  panel does not automatically archive its checks. Captures cannot establish
+  market knowledge before they were made, and a fetcher returning an empty
+  list may still hide upstream provider failure.
 - **Technical observations use shared, unadjusted closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average

@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Explicit fundamentals observation captures** — an authenticated,
+  owner-scoped API can snapshot the source-dated values retrieved now, with UTC
+  capture time, status, content hash, list/read, and explicit deletion. Conflicting
+  values remain distinct. The new table does not rewrite legacy fundamentals,
+  backfill past vintages, or make current-fetch records historical proof.
 - **Adapter-selected Yahoo chart metadata** — market comparisons now retain
   reported split/dividend events and adjusted closes when the selected crypto
   or Yahoo adapter used a Yahoo chart. Adjusted values are aligned only to

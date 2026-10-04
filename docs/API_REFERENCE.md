@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **454 operations** across **406 paths** and **87 families**.
-- Authentication: **409 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **458 operations** across **408 paths** and **87 families**.
+- Authentication: **413 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 4 |
+| `market-context` | `experimental` | 8 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -675,6 +675,10 @@ State: **experimental**
 | Method | Path | Authentication | Summary |
 |---|---|---|---|
 | `POST` | `/api/market-context/compare` | Bearer token | Compare Market Context |
+| `GET` | `/api/market-context/fundamental-captures` | Bearer token | List Fundamental Captures |
+| `POST` | `/api/market-context/fundamental-captures` | Bearer token | Capture Fundamentals |
+| `DELETE` | `/api/market-context/fundamental-captures/{capture_id}` | Bearer token | Delete Fundamental Capture |
+| `GET` | `/api/market-context/fundamental-captures/{capture_id}` | Bearer token | Get Fundamental Capture |
 | `POST` | `/api/market-context/fundamental-releases` | Bearer token | Get Market Context Fundamental Releases |
 | `POST` | `/api/market-context/headlines` | Bearer token | Get Market Context Headlines |
 | `POST` | `/api/market-context/macro-events` | Bearer token | Get Market Context Macro Events |

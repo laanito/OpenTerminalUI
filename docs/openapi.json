@@ -1676,6 +1676,47 @@
         "title": "CapexTrackerResponse",
         "type": "object"
       },
+      "CapturedFundamentalRecord": {
+        "properties": {
+          "fiscal_period_end": {
+            "format": "date",
+            "title": "Fiscal Period End",
+            "type": "string"
+          },
+          "metric": {
+            "enum": [
+              "revenue",
+              "net_income",
+              "eps",
+              "free_cash_flow"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "release_date": {
+            "format": "date",
+            "title": "Release Date",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "release_date",
+          "fiscal_period_end",
+          "metric",
+          "value",
+          "source"
+        ],
+        "title": "CapturedFundamentalRecord",
+        "type": "object"
+      },
       "CausalityRequest": {
         "properties": {
           "lookback_days": {
@@ -5541,6 +5582,142 @@
           "portfolio_construction"
         ],
         "title": "FrameworkBacktestRequest",
+        "type": "object"
+      },
+      "FundamentalCaptureDetail": {
+        "properties": {
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "evidence_scope": {
+            "const": "terminal_observation_only",
+            "default": "terminal_observation_only",
+            "title": "Evidence Scope",
+            "type": "string"
+          },
+          "examined_count": {
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "record_count": {
+            "title": "Record Count",
+            "type": "integer"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/CapturedFundamentalRecord"
+            },
+            "title": "Records",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "records_observed",
+              "no_eligible_records_observed",
+              "fetch_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "captured_at",
+          "status",
+          "examined_count",
+          "record_count",
+          "content_hash",
+          "records"
+        ],
+        "title": "FundamentalCaptureDetail",
+        "type": "object"
+      },
+      "FundamentalCaptureRequest": {
+        "properties": {
+          "symbol": {
+            "examples": [
+              "AAPL"
+            ],
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "title": "FundamentalCaptureRequest",
+        "type": "object"
+      },
+      "FundamentalCaptureSummary": {
+        "properties": {
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "evidence_scope": {
+            "const": "terminal_observation_only",
+            "default": "terminal_observation_only",
+            "title": "Evidence Scope",
+            "type": "string"
+          },
+          "examined_count": {
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "record_count": {
+            "title": "Record Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "records_observed",
+              "no_eligible_records_observed",
+              "fetch_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "captured_at",
+          "status",
+          "examined_count",
+          "record_count",
+          "content_hash"
+        ],
+        "title": "FundamentalCaptureSummary",
         "type": "object"
       },
       "GenerateReportRequest": {
@@ -25204,6 +25381,234 @@
           }
         ],
         "summary": "Compare Market Context",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/fundamental-captures": {
+      "get": {
+        "operationId": "list_fundamental_captures_api_market_context_fundamental_captures_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Symbol"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FundamentalCaptureSummary"
+                  },
+                  "title": "Response List Fundamental Captures Api Market Context Fundamental Captures Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Fundamental Captures",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      },
+      "post": {
+        "description": "Record what this terminal observed now, never a backdated market vintage.",
+        "operationId": "capture_fundamentals_api_market_context_fundamental_captures_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FundamentalCaptureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundamentalCaptureDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Capture Fundamentals",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/fundamental-captures/{capture_id}": {
+      "delete": {
+        "operationId": "delete_fundamental_capture_api_market_context_fundamental_captures__capture_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Fundamental Capture",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      },
+      "get": {
+        "operationId": "get_fundamental_capture_api_market_context_fundamental_captures__capture_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundamentalCaptureDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Fundamental Capture",
         "tags": [
           "market-context"
         ],

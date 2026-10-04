@@ -344,7 +344,13 @@ first row. This does not identify a revision sequence. Provider units are not
 normalized across issuers or currencies. The
 retrieval is not a historical vintage archive, so these candidates cannot yet
 explain past price moves or establish exactly what was known on a given day.
-Versioned/revision-aware fundamentals evidence remains future work.
+An explicit, owner-scoped capture API now records a normalized set of distinct
+source-dated values, retrieval status and UTC capture time as an immutable
+snapshot. Repeated captures can reveal what this terminal observed changing
+after the first capture; they do not backfill earlier provider vintages or
+establish what the market knew on the source-reported release date. No automatic
+capture or browser review journey is claimed yet. Tested historical coverage
+and a revision-aware explanation contract remain future work.
 
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
