@@ -135,12 +135,22 @@ export interface MarketFundamentalRelease {
   source: string;
 }
 
+export interface MarketFundamentalConflict {
+  release_date: string;
+  fiscal_period_end: string;
+  metric: MarketFundamentalRelease["metric"];
+  source: string;
+  distinct_value_count: number;
+}
+
 export interface MarketFundamentalsGroup {
   symbol: string;
-  status: "available" | "no_usable_records" | "feed_error";
+  status: "available" | "ambiguous" | "no_usable_records" | "feed_error";
   examined_count: number;
   matched_count: number;
+  conflicting_count: number;
   releases: MarketFundamentalRelease[];
+  conflicts: MarketFundamentalConflict[];
 }
 
 export interface MarketFundamentalsResponse {

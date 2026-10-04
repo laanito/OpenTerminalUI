@@ -329,7 +329,11 @@ offers a separate on-demand candidate panel: for each symbol, it fetches
 current provider records and shows only source-reported filing/acceptance dates
 within the pair's actual window for revenue, net income, EPS, and free cash
 flow. Estimated release dates are excluded; empty and failed checks are
-explicit. Provider units are not normalized across issuers or currencies. The
+explicit. If one current fetch contains different values for the same metric,
+fiscal period, release date, and provider, the disputed numeric value is
+withheld and the conflict is disclosed rather than selecting an arbitrary
+first row. This does not identify a revision sequence. Provider units are not
+normalized across issuers or currencies. The
 retrieval is not a historical vintage archive, so these candidates cannot yet
 explain past price moves or establish exactly what was known on a given day.
 Versioned/revision-aware fundamentals evidence remains future work.

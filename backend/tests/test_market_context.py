@@ -403,11 +403,45 @@ def test_fundamental_releases_keep_only_source_dated_window_candidates() -> None
     assert payload["source"] == "on_demand_pit_fetch"
     assert payload["groups"][0]["examined_count"] == 7
     assert payload["groups"][0]["matched_count"] == 1
+    assert payload["groups"][0]["conflicting_count"] == 0
+    assert payload["groups"][0]["conflicts"] == []
     assert payload["groups"][0]["releases"] == [{
         "release_date": "2026-09-05", "fiscal_period_end": "2026-06-30",
         "metric": "revenue", "value": 100.0, "source": "fmp",
     }]
     assert payload["groups"][1]["status"] == "no_usable_records"
+
+
+def test_fundamental_releases_withhold_conflicting_values_without_guessing_revision_order() -> None:
+    dated = {
+        "symbol": "AAPL", "metric": "revenue", "fiscal_period": "2026-06-30",
+        "as_of_release_date": "2026-09-05", "release_date_estimated": False, "source": "fmp",
+    }
+    client = _fundamentals_client({
+        "AAPL": [
+            {**dated, "value": 100.0}, {**dated, "value": 110.0},
+            {**dated, "value": 100.0},
+            {**dated, "metric": "eps", "value": 2.0},
+        ],
+        "SPY": [{**dated, "symbol": "SPY", "value": 110.0}, {**dated, "symbol": "SPY", "value": 100.0}],
+    })
+    response = client.post("/api/market-context/fundamental-releases", json={
+        "anchor": "AAPL", "comparison": "SPY", "start_date": "2026-09-02", "end_date": "2026-09-10",
+    })
+    assert response.status_code == 200
+    anchor, comparison = response.json()["groups"]
+    assert anchor["status"] == "available"
+    assert anchor["matched_count"] == 1
+    assert anchor["releases"][0]["metric"] == "eps"
+    assert anchor["conflicting_count"] == 1
+    assert anchor["conflicts"] == [{
+        "release_date": "2026-09-05", "fiscal_period_end": "2026-06-30",
+        "metric": "revenue", "source": "fmp", "distinct_value_count": 2,
+    }]
+    assert comparison["status"] == "ambiguous"
+    assert comparison["matched_count"] == 0
+    assert comparison["releases"] == []
+    assert comparison["conflicting_count"] == 1
 
 
 def test_fundamental_releases_keep_partial_failure_and_validate_window() -> None:

@@ -410,6 +410,10 @@ intelligence promise, or claim that contradiction handling is solved.
         reports no-usable-records or per-symbol feed failure, and never treats
         estimated dates or current snapshots as historical evidence. Values
         retain provider units and are not cross-issuer comparisons.
+  - [x] Withhold conflicting numeric values for the same source-dated metric,
+        fiscal period, and provider instead of silently taking the first
+        candidate. Report conflict counts and identities separately; conflicting
+        current-fetch rows are not verified historical revisions.
   - [ ] Establish a versioned/revision-aware fundamentals evidence contract
         and tested historical coverage before using these candidates to explain
         old price moves or asserting what was known at a past point in time.
