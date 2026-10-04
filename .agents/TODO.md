@@ -414,6 +414,13 @@ intelligence promise, or claim that contradiction handling is solved.
         fiscal period, and provider instead of silently taking the first
         candidate. Report conflict counts and identities separately; conflicting
         current-fetch rows are not verified historical revisions.
+  - [x] Add an explicit, owner-scoped append-only capture foundation for
+        source-dated current-fetch candidates. Store the terminal's UTC retrieval
+        time, all distinct eligible values (including conflicts), status, and a
+        stable content hash; list/read and explicit owner deletion stay scoped.
+        No old provider vintages are backfilled, and capture does not assert
+        market knowledge before the terminal observed the records. A browser
+        capture/review journey remains future work.
   - [ ] Establish a versioned/revision-aware fundamentals evidence contract
         and tested historical coverage before using these candidates to explain
         old price moves or asserting what was known at a past point in time.

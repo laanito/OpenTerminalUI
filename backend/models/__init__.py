@@ -67,6 +67,7 @@ from backend.models.user import RefreshToken, User, UserRole
 from backend.models.journal import JournalEntry
 from backend.models.brain import BrainChunkORM
 from backend.models.brain_memo import BrainMemoORM
+from backend.models.fundamental_capture import FundamentalCaptureORM
 from backend.models.notes import NoteORM
 from backend.models.notification import Notification
 
@@ -82,6 +83,7 @@ __all__ = [
     "CorpActionORM",
     "PriceEodORM",
     "FundamentalsPitORM",
+    "FundamentalCaptureORM",
     "UniverseMembershipORM",
     "ScanPresetORM",
     "ScanRunORM",

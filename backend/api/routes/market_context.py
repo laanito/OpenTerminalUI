@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import math
 import re
 from datetime import date, datetime, timezone
 from typing import Any, Literal
@@ -27,6 +26,7 @@ from backend.services.cross_market_context import (
     yahoo_reported_actions,
 )
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
+from backend.services.fundamental_evidence import source_dated_candidates
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
@@ -35,7 +35,6 @@ _NEWS_FETCH_LIMIT = 50
 _NEWS_DISPLAY_LIMIT = 8
 _MACRO_DISPLAY_LIMIT = 30
 _FUNDAMENTAL_DISPLAY_LIMIT = 16
-_FUNDAMENTAL_METRICS = frozenset({"revenue", "net_income", "eps", "free_cash_flow"})
 _ACTION_DISPLAY_LIMIT = 20
 
 
@@ -529,27 +528,9 @@ async def get_market_context_fundamental_releases(
             }
 
         values_by_identity: dict[tuple[date, date, str, str], set[float]] = {}
-        for item in raw:
-            if not isinstance(item, dict) or item.get("release_date_estimated") is not False:
-                continue
-            try:
-                release_date = date.fromisoformat(str(item["as_of_release_date"]))
-                fiscal_end = date.fromisoformat(str(item["fiscal_period"]))
-                metric = str(item["metric"])
-                source = str(item["source"]).strip()
-                value = float(item["value"])
-            except (KeyError, OverflowError, TypeError, ValueError):
-                continue
-            if (
-                metric not in _FUNDAMENTAL_METRICS
-                or not source
-                or not math.isfinite(value)
-                or release_date < fiscal_end
-                or not payload.start_date <= release_date <= payload.end_date
-            ):
-                continue
-            identity = (release_date, fiscal_end, metric, source)
-            values_by_identity.setdefault(identity, set()).add(value)
+        for item in source_dated_candidates(raw, start_date=payload.start_date, end_date=payload.end_date):
+            identity = (item["release_date"], item["fiscal_period_end"], item["metric"], item["source"])
+            values_by_identity.setdefault(identity, set()).add(item["value"])
 
         releases: list[dict[str, Any]] = []
         conflicts: list[dict[str, Any]] = []
