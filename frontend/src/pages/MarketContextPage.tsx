@@ -143,6 +143,35 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
               </div>
             ))}
           </div>
+          {row.action_disclosure ? (
+            <div className="border-t border-terminal-border pt-2">
+              <p className="text-terminal-muted">
+                Corporate-action markers reported by the selected Yahoo chart response within this window. These are not a complete action audit and the prices above remain unadjusted.
+              </p>
+              <div className="mt-2 grid gap-3 md:grid-cols-2">
+                {([
+                  { symbol: anchor, disclosure: row.action_disclosure.anchor },
+                  { symbol: row.symbol, disclosure: row.action_disclosure.comparison },
+                ]).map(({ symbol, disclosure }) => (
+                  <div key={symbol} className="rounded border border-terminal-border p-2">
+                    <h4 className="font-semibold text-terminal-text">{symbol} action markers</h4>
+                    {disclosure.source === "unavailable" ? (
+                      <p className="mt-1 text-terminal-muted">Action metadata unavailable from the selected history path.</p>
+                    ) : disclosure.matched_count === 0 ? (
+                      <p className="mt-1 text-terminal-muted">No actions reported in this response; completeness is not verified.</p>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-terminal-muted">{disclosure.matched_count} reported; showing up to {disclosure.display_limit}.</p>
+                        <ul className="mt-1 space-y-1 text-terminal-text">
+                          {disclosure.actions.map((action) => <li key={`${action.date}-${action.type}`}>{action.date} · {action.type}</li>)}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

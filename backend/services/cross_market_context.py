@@ -14,6 +14,51 @@ PERIOD_DAYS = {"1M": 30, "3M": 90, "6M": 180}
 FETCH_RANGES = {"1M": "3mo", "3M": "6mo", "6M": "1y"}
 
 
+def yahoo_action_metadata_present(raw: Any) -> bool:
+    if not isinstance(raw, dict):
+        return False
+    chart = raw.get("chart")
+    if not isinstance(chart, dict):
+        return False
+    results = chart.get("result")
+    return (
+        isinstance(results, list)
+        and bool(results)
+        and isinstance(results[0], dict)
+        and isinstance(results[0].get("events"), dict)
+    )
+
+
+def yahoo_reported_actions(raw: Any) -> list[dict[str, str]]:
+    """Extract dated split/dividend markers from a Yahoo chart response only."""
+    if not isinstance(raw, dict):
+        return []
+    chart = raw.get("chart")
+    if not isinstance(chart, dict):
+        return []
+    results = chart.get("result")
+    if not isinstance(results, list) or not results or not isinstance(results[0], dict):
+        return []
+    events = results[0].get("events") or {}
+    if not isinstance(events, dict):
+        return []
+    actions: set[tuple[str, str]] = set()
+    for event_key, action_type in (("splits", "split"), ("dividends", "dividend")):
+        group = events.get(event_key) or {}
+        if not isinstance(group, dict):
+            continue
+        for key, item in group.items():
+            if not isinstance(item, dict):
+                continue
+            try:
+                timestamp = int(item.get("date") or key)
+                day = datetime.fromtimestamp(timestamp, tz=timezone.utc).date().isoformat()
+            except (OSError, OverflowError, TypeError, ValueError):
+                continue
+            actions.add((day, action_type))
+    return [{"date": day, "type": action_type} for day, action_type in sorted(actions, reverse=True)]
+
+
 def _technical_measures(closes: dict[date, float], shared: list[date]) -> dict[str, Any]:
     """Descriptive measures on the exact observed dates used by a pair."""
     peak = closes[shared[0]]

@@ -292,7 +292,11 @@ percentage gap from the previous 20 shared closes. Fewer than 20 observations
 leave the latter unavailable. The calculation uses each pair's actual shared
 dates without interpolation, so crypto weekends disappear alongside a weekday-
 only proxy. These closes are unadjusted; splits or other corporate actions may
-distort the measures. This is not a standard per-asset daily indicator, a
+distort the measures. When a selected Yahoo chart response includes event
+metadata, the comparison discloses reported split/dividend dates inside the
+observed window. An empty list is not proof that no action happened, and paths
+without event metadata remain unavailable. Markers do not adjust the path
+or technical measures. This is not a standard per-asset daily indicator, a
 trading signal, or causal explanation. Adjusted history and deeper provider
 provenance remain prerequisites for decision-grade technical evidence.
 

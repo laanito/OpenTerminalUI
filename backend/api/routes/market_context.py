@@ -17,7 +17,13 @@ from backend.api.deps import get_unified_fetcher
 from backend.api.routes.news import _fetch_ticker_news
 from backend.auth.deps import get_current_user
 from backend.models import User
-from backend.services.cross_market_context import FETCH_RANGES, _daily_closes, compare_closes
+from backend.services.cross_market_context import (
+    FETCH_RANGES,
+    _daily_closes,
+    compare_closes,
+    yahoo_action_metadata_present,
+    yahoo_reported_actions,
+)
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
@@ -28,6 +34,7 @@ _NEWS_DISPLAY_LIMIT = 8
 _MACRO_DISPLAY_LIMIT = 30
 _FUNDAMENTAL_DISPLAY_LIMIT = 16
 _FUNDAMENTAL_METRICS = frozenset({"revenue", "net_income", "eps", "free_cash_flow"})
+_ACTION_DISPLAY_LIMIT = 20
 
 
 class MarketComparisonRequest(BaseModel):
@@ -56,6 +63,23 @@ class MarketTechnicalObservations(BaseModel):
     comparison: MarketTechnicalMeasures
 
 
+class MarketCorporateAction(BaseModel):
+    date: date
+    type: Literal["split", "dividend"]
+
+
+class MarketActionDisclosure(BaseModel):
+    source: Literal["yahoo_chart", "unavailable"]
+    matched_count: int
+    display_limit: int
+    actions: list[MarketCorporateAction]
+
+
+class MarketPairActionDisclosure(BaseModel):
+    anchor: MarketActionDisclosure
+    comparison: MarketActionDisclosure
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -72,6 +96,7 @@ class MarketComparisonRow(BaseModel):
     comparison_return_pct: float | None = None
     relative_return_pp: float | None = None
     technical_observations: MarketTechnicalObservations | None = None
+    action_disclosure: MarketPairActionDisclosure | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
@@ -205,6 +230,8 @@ async def compare_market_context(
 
     histories: dict[str, dict[date, float]] = {}
     sources: dict[str, str | None] = {}
+    reported_actions: dict[str, list[dict[str, str]]] = {}
+    action_metadata_available: set[str] = set()
     errors: set[str] = set()
     semaphore = asyncio.Semaphore(3)
 
@@ -220,12 +247,18 @@ async def compare_market_context(
                     source = None
                 histories[symbol] = _daily_closes(raw)
                 sources[symbol] = source if histories[symbol] else None
+                if sources[symbol] == "yahoo" and yahoo_action_metadata_present(raw):
+                    action_metadata_available.add(symbol)
+                    reported_actions[symbol] = yahoo_reported_actions(raw)
+                else:
+                    reported_actions[symbol] = []
             except Exception as exc:
                 # A provider failure must not turn a partial comparison into a 500.
                 logger.warning("Market-context history failed for %s: %s", symbol, exc)
                 errors.add(symbol)
                 histories[symbol] = {}
                 sources[symbol] = None
+                reported_actions[symbol] = []
 
     await asyncio.gather(*(load(symbol) for symbol in [anchor, *comparisons]))
 
@@ -234,6 +267,20 @@ async def compare_market_context(
         result = compare_closes(histories[anchor], histories[symbol], period=payload.period)
         if result["status"] == "unavailable" and (anchor in errors or symbol in errors):
             result["reason"] = "provider_error"
+        if result["status"] == "available":
+            def disclosure(asset: str) -> dict[str, Any]:
+                matched = [
+                    action for action in reported_actions[asset]
+                    if result["start_date"] <= action["date"] <= result["end_date"]
+                ]
+                return {
+                    "source": "yahoo_chart" if asset in action_metadata_available else "unavailable",
+                    "matched_count": len(matched),
+                    "display_limit": _ACTION_DISPLAY_LIMIT,
+                    "actions": matched[:_ACTION_DISPLAY_LIMIT],
+                }
+
+            result["action_disclosure"] = {"anchor": disclosure(anchor), "comparison": disclosure(symbol)}
         rows.append({
             "symbol": symbol,
             **result,
