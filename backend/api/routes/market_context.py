@@ -22,6 +22,7 @@ from backend.services.cross_market_context import (
     _daily_closes,
     compare_closes,
     yahoo_action_metadata_present,
+    yahoo_adjusted_closes,
     yahoo_reported_actions,
 )
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
@@ -80,6 +81,18 @@ class MarketPairActionDisclosure(BaseModel):
     comparison: MarketActionDisclosure
 
 
+class MarketAdjustedCloseCoverage(BaseModel):
+    status: Literal["complete", "partial", "unavailable"]
+    source: Literal["yahoo_adjclose"] | None
+    available_observations: int
+    shared_observations: int
+
+
+class MarketPairAdjustedCloseCoverage(BaseModel):
+    anchor: MarketAdjustedCloseCoverage
+    comparison: MarketAdjustedCloseCoverage
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -97,6 +110,7 @@ class MarketComparisonRow(BaseModel):
     relative_return_pp: float | None = None
     technical_observations: MarketTechnicalObservations | None = None
     action_disclosure: MarketPairActionDisclosure | None = None
+    adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
@@ -232,6 +246,7 @@ async def compare_market_context(
     sources: dict[str, str | None] = {}
     reported_actions: dict[str, list[dict[str, str]]] = {}
     action_metadata_available: set[str] = set()
+    adjusted_closes: dict[str, dict[date, float]] = {}
     errors: set[str] = set()
     semaphore = asyncio.Semaphore(3)
 
@@ -247,6 +262,7 @@ async def compare_market_context(
                     source = None
                 histories[symbol] = _daily_closes(raw)
                 sources[symbol] = source if histories[symbol] else None
+                adjusted_closes[symbol] = yahoo_adjusted_closes(raw) if sources[symbol] == "yahoo" else {}
                 if sources[symbol] == "yahoo" and yahoo_action_metadata_present(raw):
                     action_metadata_available.add(symbol)
                     reported_actions[symbol] = yahoo_reported_actions(raw)
@@ -259,6 +275,7 @@ async def compare_market_context(
                 histories[symbol] = {}
                 sources[symbol] = None
                 reported_actions[symbol] = []
+                adjusted_closes[symbol] = {}
 
     await asyncio.gather(*(load(symbol) for symbol in [anchor, *comparisons]))
 
@@ -281,6 +298,22 @@ async def compare_market_context(
                 }
 
             result["action_disclosure"] = {"anchor": disclosure(anchor), "comparison": disclosure(symbol)}
+            shared_dates = [date.fromisoformat(point["date"]) for point in result["points"]]
+
+            def adjusted_coverage(asset: str) -> dict[str, Any]:
+                available = sum(day in adjusted_closes[asset] for day in shared_dates)
+                total = len(shared_dates)
+                return {
+                    "status": "complete" if available == total else "partial" if available else "unavailable",
+                    "source": "yahoo_adjclose" if available else None,
+                    "available_observations": available,
+                    "shared_observations": total,
+                }
+
+            result["adjusted_close_coverage"] = {
+                "anchor": adjusted_coverage(anchor),
+                "comparison": adjusted_coverage(symbol),
+            }
         rows.append({
             "symbol": symbol,
             **result,

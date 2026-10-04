@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Adjusted-close coverage disclosure** — comparisons now report how many
+  shared dates have usable Yahoo adjusted closes, or mark the selected history
+  path unavailable for this metadata. The adjusted values are not used in the
+  chart, returns, or technical measures; no vintage or adjustment audit is
+  implied.
 - **Corporate-action disclosure for comparison paths** — when a selected
   Yahoo chart response contains event metadata, its split/dividend dates appear
   beside the unadjusted technical measures. Empty marker lists are not proof

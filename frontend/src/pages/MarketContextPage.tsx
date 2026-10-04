@@ -143,6 +143,25 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
               </div>
             ))}
           </div>
+          {row.adjusted_close_coverage ? (
+            <div className="border-t border-terminal-border pt-2">
+              <p className="text-terminal-muted">
+                Provider-adjusted close coverage on these shared dates. This is a current, retrospective Yahoo series—not a historical vintage or verification of every corporate action. The chart, returns, and measures above still use unadjusted closes.
+              </p>
+              <div className="mt-2 grid gap-3 md:grid-cols-2">
+                {([
+                  { symbol: anchor, coverage: row.adjusted_close_coverage.anchor },
+                  { symbol: row.symbol, coverage: row.adjusted_close_coverage.comparison },
+                ]).map(({ symbol, coverage }) => (
+                  <p key={symbol} className="rounded border border-terminal-border p-2 text-terminal-text">
+                    {symbol}: {coverage.status === "unavailable"
+                      ? "No usable provider-adjusted closes in this response."
+                      : `${coverage.status} · ${coverage.available_observations}/${coverage.shared_observations} shared closes from Yahoo adjclose.`}
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {row.action_disclosure ? (
             <div className="border-t border-terminal-border pt-2">
               <p className="text-terminal-muted">

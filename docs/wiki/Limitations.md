@@ -100,6 +100,10 @@ never silently faked.
   markers reported in the observed pair window. No markers reported does not
   prove there were none; paths without event metadata remain unavailable.
   The markers do not adjust the plotted prices or derived measures.
+  The same panel reports whether Yahoo supplied adjusted closes on all, some,
+  or none of the pair's shared dates. This is coverage of a retrospective
+  provider series, not verified adjustment quality or a historical vintage;
+  neither the plotted path nor the technical calculations use those values.
   These are descriptive measures, not standard per-asset daily indicators,
   trading signals, or evidence of causation.
 - **Economic calendar context is configuration-gated and non-causal.** An

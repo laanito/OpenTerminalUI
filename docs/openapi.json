@@ -6757,6 +6757,47 @@
         "title": "MarketActionDisclosure",
         "type": "object"
       },
+      "MarketAdjustedCloseCoverage": {
+        "properties": {
+          "available_observations": {
+            "title": "Available Observations",
+            "type": "integer"
+          },
+          "shared_observations": {
+            "title": "Shared Observations",
+            "type": "integer"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "const": "yahoo_adjclose",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "source",
+          "available_observations",
+          "shared_observations"
+        ],
+        "title": "MarketAdjustedCloseCoverage",
+        "type": "object"
+      },
       "MarketComparisonPoint": {
         "properties": {
           "anchor_index": {
@@ -6886,6 +6927,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/MarketPairActionDisclosure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "adjusted_close_coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketPairAdjustedCloseCoverage"
               },
               {
                 "type": "null"
@@ -7591,6 +7642,22 @@
           "comparison"
         ],
         "title": "MarketPairActionDisclosure",
+        "type": "object"
+      },
+      "MarketPairAdjustedCloseCoverage": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/MarketAdjustedCloseCoverage"
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/MarketAdjustedCloseCoverage"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketPairAdjustedCloseCoverage",
         "type": "object"
       },
       "MarketTechnicalMeasures": {

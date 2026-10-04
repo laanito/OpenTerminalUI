@@ -14,6 +14,39 @@ PERIOD_DAYS = {"1M": 30, "3M": 90, "6M": 180}
 FETCH_RANGES = {"1M": "3mo", "3M": "6mo", "6M": "1y"}
 
 
+def yahoo_adjusted_closes(raw: Any) -> dict[date, float]:
+    """Read provider-supplied adjusted closes without assuming their vintage."""
+    if not isinstance(raw, dict):
+        return {}
+    chart = raw.get("chart")
+    if not isinstance(chart, dict):
+        return {}
+    results = chart.get("result")
+    if not isinstance(results, list) or not results or not isinstance(results[0], dict):
+        return {}
+    result = results[0]
+    timestamps = result.get("timestamp")
+    indicators = result.get("indicators")
+    if not isinstance(timestamps, list) or not isinstance(indicators, dict):
+        return {}
+    adjusted = indicators.get("adjclose")
+    if not isinstance(adjusted, list) or not adjusted or not isinstance(adjusted[0], dict):
+        return {}
+    values = adjusted[0].get("adjclose")
+    if not isinstance(values, list):
+        return {}
+    closes: dict[date, float] = {}
+    for timestamp, value in zip(timestamps, values):
+        try:
+            day = datetime.fromtimestamp(int(timestamp), tz=timezone.utc).date()
+            close = float(value)
+        except (OSError, OverflowError, TypeError, ValueError):
+            continue
+        if math.isfinite(close) and close > 0:
+            closes[day] = close
+    return closes
+
+
 def yahoo_action_metadata_present(raw: Any) -> bool:
     if not isinstance(raw, dict):
         return False

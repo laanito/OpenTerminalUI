@@ -446,6 +446,11 @@ intelligence promise, or claim that contradiction handling is solved.
         window and shown beside the unadjusted technical measures. A source with no
         reported markers is not certified action-free; paths without event
         metadata remain unavailable. This does not adjust the price series.
+  - [x] Report complete/partial/unavailable coverage of provider-supplied Yahoo
+        adjusted closes on the exact pair-shared dates. This is retrospective
+        availability metadata only; raw paths, returns, and technical measures
+        remain unchanged, and a complete count does not verify adjustment
+        correctness or historical vintage.
   - [ ] Add a split/dividend-adjusted and provider-provenance contract before
         treating technical measures as decision-grade cross-market signals;
         separate native per-asset sessions from pair-shared sampling when
