@@ -73,9 +73,11 @@ def _range_to_dates(range_str: str) -> tuple[date, date]:
     return end - timedelta(days=days), end
 
 
-def _chart_payload_from_rows(rows: list[OHLCV]) -> dict[str, Any]:
+def _chart_payload_from_rows(
+    rows: list[OHLCV], *, provider_chart: dict[str, Any] | None = None
+) -> dict[str, Any]:
     ordered = sorted(rows, key=lambda row: int(row.t))
-    return {
+    payload = {
         "chart": {
             "result": [
                 {
@@ -96,6 +98,26 @@ def _chart_payload_from_rows(rows: list[OHLCV]) -> dict[str, Any]:
             "error": None,
         }
     }
+    if provider_chart is not None:
+        results = (provider_chart.get("chart") or {}).get("result") or []
+        original = results[0] if isinstance(results, list) and results and isinstance(results[0], dict) else {}
+        if isinstance(original.get("events"), dict):
+            payload["chart"]["result"][0]["events"] = original["events"]
+        timestamps = original.get("timestamp")
+        indicators = original.get("indicators")
+        adjusted = indicators.get("adjclose") if isinstance(indicators, dict) else None
+        values = adjusted[0].get("adjclose") if isinstance(adjusted, list) and adjusted and isinstance(adjusted[0], dict) else None
+        if isinstance(timestamps, list) and isinstance(values, list):
+            by_timestamp: dict[int, Any] = {}
+            for timestamp, value in zip(timestamps, values):
+                try:
+                    by_timestamp[int(timestamp)] = value
+                except (TypeError, ValueError):
+                    continue
+            payload["chart"]["result"][0]["indicators"]["adjclose"] = [{
+                "adjclose": [by_timestamp.get(int(row.t)) for row in ordered]
+            }]
+    return payload
 
 
 def _quote_payload_from_adapter(quote: QuoteResponse) -> dict[str, Any]:
@@ -216,16 +238,19 @@ class UnifiedFetcher:
             start_date, end_date = _range_to_dates(range_str)
             try:
                 if include_feed:
-                    (rows, feed), source = await get_adapter_registry().invoke_with_source(
-                        exchange, "get_history_with_provider", adapter_symbol, interval, start_date, end_date
+                    (rows, feed, provider_chart), source = await get_adapter_registry().invoke_with_source(
+                        exchange, "get_history_with_evidence", adapter_symbol, interval, start_date, end_date
                     )
                 else:
                     rows, source = await get_adapter_registry().invoke_with_source(
                         exchange, "get_history", adapter_symbol, interval, start_date, end_date
                     )
                     feed = None
+                    provider_chart = None
                 if isinstance(rows, list) and rows:
-                    return _chart_payload_from_rows(rows), source, feed
+                    return _chart_payload_from_rows(
+                        rows, provider_chart=provider_chart if feed == "yahoo_chart" else None
+                    ), source, feed
             except Exception as e:
                 logger.debug("Adapter history failed for %s via %s: %s", symbol, exchange, e)
 

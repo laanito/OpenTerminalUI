@@ -97,6 +97,13 @@ class DataAdapter(ABC):
         """Return per-call feed identity when the adapter can establish it."""
         return await self.get_history(symbol, timeframe, start, end), None
 
+    async def get_history_with_evidence(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], str | None, dict[str, Any] | None]:
+        """Optionally retain the selected provider response for provenance metadata."""
+        rows, feed = await self.get_history_with_provider(symbol, timeframe, start, end)
+        return rows, feed, None
+
     @abstractmethod
     async def search_instruments(self, query: str) -> list[Instrument]: ...
 

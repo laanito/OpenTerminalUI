@@ -312,8 +312,11 @@ async def compare_market_context(
                 histories[symbol] = _daily_closes(raw)
                 sources[symbol] = source if histories[symbol] else None
                 feeds[symbol] = feed if histories[symbol] else None
-                adjusted_closes[symbol] = yahoo_adjusted_closes(raw) if sources[symbol] == "yahoo" else {}
-                if sources[symbol] == "yahoo" and yahoo_action_metadata_present(raw):
+                yahoo_evidence = feeds[symbol] == "yahoo_chart" or (
+                    feeds[symbol] is None and sources[symbol] == "yahoo"
+                )
+                adjusted_closes[symbol] = yahoo_adjusted_closes(raw) if yahoo_evidence else {}
+                if yahoo_evidence and yahoo_action_metadata_present(raw):
                     action_metadata_available.add(symbol)
                     reported_actions[symbol] = yahoo_reported_actions(raw)
                 else:

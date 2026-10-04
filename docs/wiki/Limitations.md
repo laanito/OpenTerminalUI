@@ -83,8 +83,9 @@ never silently faked.
   history path for each symbol, including adapter failover. Crypto and Yahoo
   adapters now report the underlying feed used for that request; other adapter
   internals remain unknown unless reported. A known feed is not a quality
-  guarantee, and converting adapter rows still loses Yahoo action and adjusted
-  metadata. A contextual browser page opens
+  guarantee. Crypto/Yahoo adapters retain reported actions and adjusted closes
+  from the selected chart, aligned to rows they accepted; missing metadata is
+  still unavailable and adjustment quality is not audited. A contextual browser page opens
   from equity and crypto research and offers dated comparison, symbol
   suggestions, and an inspectable pairwise path rebased to 100 on the first
   shared close. The path plots only actual shared dates, with no interpolation.

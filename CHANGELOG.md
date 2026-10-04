@@ -7,11 +7,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Adapter-selected Yahoo chart metadata** — market comparisons now retain
+  reported split/dividend events and adjusted closes when the selected crypto
+  or Yahoo adapter used a Yahoo chart. Adjusted values are aligned only to
+  accepted price rows; raw comparisons are unchanged, and provider metadata is
+  not an audit of adjustment quality.
 - **Underlying history-feed disclosure** — market comparisons now separate
   the winning adapter from the per-request feed reported by crypto and Yahoo
   adapters, including failover. Other adapters remain unknown when they do not
-  report a feed; this does not validate prices or restore metadata discarded
-  during adapter conversion.
+  report a feed; feed identity alone does not validate prices or metadata.
 - **Own-date technical observations** — comparisons now show a separate
   descriptive drawdown and 20-close gap for each asset on all of its available
   UTC close dates inside the pair window. Counts disclose dates outside pair
