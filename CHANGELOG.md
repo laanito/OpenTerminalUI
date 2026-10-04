@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Underlying history-feed disclosure** — market comparisons now separate
+  the winning adapter from the per-request feed reported by crypto and Yahoo
+  adapters, including failover. Other adapters remain unknown when they do not
+  report a feed; this does not validate prices or restore metadata discarded
+  during adapter conversion.
 - **Own-date technical observations** — comparisons now show a separate
   descriptive drawdown and 20-close gap for each asset on all of its available
   UTC close dates inside the pair window. Counts disclose dates outside pair

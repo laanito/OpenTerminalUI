@@ -428,8 +428,13 @@ intelligence promise, or claim that contradiction handling is solved.
         or a complete historical archive.
   - [x] Identify the selected history path for each symbol in the observed
         comparison, including which adapter won failover, and leave the path
-        unknown when there is no usable history. A multi-provider adapter may
-        still hide its internal feed; this is not end-to-end provider identity.
+        unknown when there is no usable history. This is not, by itself,
+        end-to-end feed identity.
+  - [x] Add per-request underlying-feed disclosure for the crypto and Yahoo
+        history adapters, preserving the selected adapter separately across
+        failover. Other adapters leave their internal feed unknown unless they
+        report it; feed identity is not data-quality verification, and adapted
+        rows still discard Yahoo event/adjusted metadata.
   - [x] Add an on-demand, live-only economic-calendar layer for each pair's
         observed date window. It requires configured Finnhub or FMP access,
         reports provider and missing-key/error states, never uses the legacy
@@ -459,7 +464,7 @@ intelligence promise, or claim that contradiction handling is solved.
         contract for each asset only when Yahoo adjusted closes cover every
         pair-shared date. Keep raw comparison results unchanged and partial
         adjusted series unavailable; this does not verify adjustment quality,
-        source vintage, or the adapter's deeper provider identity.
+        source vintage, or all adapters' deeper provider identity.
   - [x] Add a separate unadjusted own-date technical observation for each asset
         inside the actual pair window. Report its observation count and dates
         beyond the pair overlap so crypto weekends no longer silently vanish

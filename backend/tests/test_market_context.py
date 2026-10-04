@@ -151,7 +151,10 @@ def test_adjusted_observations_require_complete_shared_dates() -> None:
     assert adjusted_observations({days[0]: 90.0, days[2]: 80.0}, days) is None
 
 
-def _client(data: dict[str, Any], sources: dict[str, str] | None = None) -> TestClient:
+def _client(
+    data: dict[str, Any], sources: dict[str, str] | None = None,
+    feeds: dict[str, str] | None = None,
+) -> TestClient:
     class FakeFetcher:
         async def fetch_history(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> Any:
             assert range_str == "3mo"
@@ -164,6 +167,12 @@ def _client(data: dict[str, Any], sources: dict[str, str] | None = None) -> Test
         async def fetch_history_with_source(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> tuple[Any, str]:
             data = await self.fetch_history(ticker, range_str=range_str, interval=interval)
             return data, sources.get(ticker, "fmp") if sources is not None else ("yahoo" if ticker == "AAPL" else "fmp")
+
+        async def fetch_history_with_provenance(
+            self, ticker: str, range_str: str = "1y", interval: str = "1d"
+        ) -> tuple[Any, str, str | None]:
+            raw, source = await self.fetch_history_with_source(ticker, range_str=range_str, interval=interval)
+            return raw, source, feeds.get(ticker) if feeds else None
 
     app = FastAPI()
     app.include_router(market_context.router)
@@ -192,11 +201,13 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert len(payload["comparisons"][0]["points"]) == payload["comparisons"][0]["observations"]
     assert payload["comparisons"][0]["anchor_history_source"] == "yahoo"
     assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
+    assert payload["comparisons"][0]["anchor_history_feed"] is None
     assert payload["comparisons"][0]["action_disclosure"]["anchor"]["source"] == "unavailable"
     assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_unadjusted_closes"
     assert payload["comparisons"][0]["native_technical_observations"]["basis"] == "per_asset_utc_date_unadjusted_closes_within_pair_window"
     assert payload["comparisons"][1]["reason"] == "provider_error"
     assert payload["comparisons"][1]["comparison_history_source"] is None
+    assert payload["comparisons"][1]["comparison_history_feed"] is None
     assert payload["comparisons"][1]["technical_observations"] is None
     assert payload["comparisons"][1]["native_technical_observations"] is None
     assert payload["comparisons"][1]["points"] == []
@@ -216,6 +227,24 @@ def test_route_does_not_attribute_unusable_history() -> None:
     assert row["status"] == "unavailable"
     assert row["anchor_history_source"] is None
     assert row["comparison_history_source"] is None
+
+
+def test_route_reports_selected_underlying_feed_without_inference() -> None:
+    start = date(2026, 8, 24)
+    days = [start + timedelta(days=i) for i in range(32)]
+    client = _client(
+        {"BTC-USD": _chart({day: 100.0 + i for i, day in enumerate(days)}),
+         "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)})},
+        sources={"BTC-USD": "crypto", "SPY": "alpaca"},
+        feeds={"BTC-USD": "yahoo_chart"},
+    )
+    row = client.post("/api/market-context/compare", json={
+        "anchor": "BTC-USD", "comparisons": ["SPY"], "period": "1M",
+    }).json()["comparisons"][0]
+    assert row["anchor_history_source"] == "crypto"
+    assert row["anchor_history_feed"] == "yahoo_chart"
+    assert row["comparison_history_source"] == "alpaca"
+    assert row["comparison_history_feed"] is None
 
 
 def test_route_discloses_only_yahoo_reported_actions_in_observed_window() -> None:

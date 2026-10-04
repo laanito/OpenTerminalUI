@@ -38,6 +38,7 @@ class YahooFinanceAdapter(DataAdapter):
 
     async def get_history(self, symbol: str, timeframe: str, start: date, end: date) -> list[OHLCV]:
         rng_days = max(1, (end - start).days)
+        is_intraday = timeframe.endswith("m") or timeframe.endswith("h")
 
         # Yahoo limits: 1m (7 days), 2m/5m/15m/30m/90m (60 days), 60m/1h (730 days).
         # We try to use the requested timeframe if it's within limits, else fallback gracefully.
@@ -45,7 +46,6 @@ class YahooFinanceAdapter(DataAdapter):
         if timeframe in ["1d", "1wk", "1mo"]:
             interval_str = timeframe
         else:
-            is_intraday = timeframe.endswith("m") or timeframe.endswith("h")
             if not is_intraday:
                 interval_str = "1d"
             else:
@@ -85,6 +85,12 @@ class YahooFinanceAdapter(DataAdapter):
             except Exception:
                 continue
         return out
+
+    async def get_history_with_provider(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], str | None]:
+        rows = await self.get_history(symbol, timeframe, start, end)
+        return rows, "yahoo_chart" if rows else None
 
     async def search_instruments(self, query: str) -> list[Instrument]:
         q = query.strip()

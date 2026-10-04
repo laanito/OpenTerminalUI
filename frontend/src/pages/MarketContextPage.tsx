@@ -59,6 +59,12 @@ function sourceLabel(source: string | null): string {
   return source ? (labels[source] || source) : "Not identified";
 }
 
+function historyPathLabel(source: string | null, feed: string | null | undefined): string {
+  if (!feed) return sourceLabel(source);
+  const feedLabel = feed === "yahoo_chart" ? "Yahoo chart" : feed === "fmp_historical_price" ? "FMP historical prices" : feed;
+  return `${sourceLabel(source)} → ${feedLabel}`;
+}
+
 function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
@@ -656,7 +662,7 @@ export function MarketContextPage() {
                       Latest source dates: {selection.anchor} {row.anchor_latest_date}, {row.symbol} {row.comparison_latest_date}.
                     </p>
                     <p className="mt-1 text-xs text-terminal-muted">
-                      Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.
+                      Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.
                     </p>
                     <AlignedPaths anchor={selection.anchor} row={row} />
                     <TechnicalObservations anchor={selection.anchor} row={row} />
@@ -667,7 +673,7 @@ export function MarketContextPage() {
                 ) : (
                   <>
                     <p className="mt-2 text-sm text-terminal-muted">{unavailableReason(row)} Latest dates: {selection.anchor} {row.anchor_latest_date || "unknown"}, {row.symbol} {row.comparison_latest_date || "unknown"}.</p>
-                    <p className="mt-1 text-xs text-terminal-muted">Price-history sources: {selection.anchor} {sourceLabel(row.anchor_history_source)} · {row.symbol} {sourceLabel(row.comparison_history_source)}.</p>
+                    <p className="mt-1 text-xs text-terminal-muted">Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.</p>
                   </>
                 )}
               </div>

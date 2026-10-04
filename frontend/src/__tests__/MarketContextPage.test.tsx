@@ -50,6 +50,7 @@ describe("MarketContextPage", () => {
           start_date: "2026-08-25", end_date: "2026-09-23",
           anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-23",
           anchor_history_source: "crypto", comparison_history_source: "yahoo",
+          anchor_history_feed: "yahoo_chart", comparison_history_feed: "yahoo_chart",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
           technical_observations: {
@@ -107,7 +108,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText("+5.25%")).toBeInTheDocument();
     expect(screen.getByText("+3.15 pp")).toBeInTheDocument();
     expect(screen.getByText("Stale history")).toBeInTheDocument();
-    expect(screen.getByText(/BTC-USD Crypto adapter · SPY Yahoo Finance/)).toBeInTheDocument();
+    expect(screen.getByText(/BTC-USD Crypto adapter → Yahoo chart · SPY Yahoo Finance → Yahoo chart/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
     expect(screen.getByText(/not FX-normalized/)).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: /Indexed daily-close paths/ })).not.toBeInTheDocument();

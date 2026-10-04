@@ -91,6 +91,12 @@ class DataAdapter(ABC):
     @abstractmethod
     async def get_history(self, symbol: str, timeframe: str, start: date, end: date) -> list[OHLCV]: ...
 
+    async def get_history_with_provider(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], str | None]:
+        """Return per-call feed identity when the adapter can establish it."""
+        return await self.get_history(symbol, timeframe, start, end), None
+
     @abstractmethod
     async def search_instruments(self, query: str) -> list[Instrument]: ...
 

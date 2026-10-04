@@ -193,17 +193,39 @@ class UnifiedFetcher:
         self, ticker: str, range_str: str = "1y", interval: str = "1d"
     ) -> tuple[Dict[str, Any], str | None]:
         """Return history with the provider that supplied it, including adapter failover."""
+        data, source, _ = await self._fetch_history_with_details(
+            ticker, range_str=range_str, interval=interval, include_feed=False
+        )
+        return data, source
+
+    async def fetch_history_with_provenance(
+        self, ticker: str, range_str: str = "1y", interval: str = "1d"
+    ) -> tuple[Dict[str, Any], str | None, str | None]:
+        """Return the winning adapter and the feed it reported for this request."""
+        return await self._fetch_history_with_details(
+            ticker, range_str=range_str, interval=interval, include_feed=True
+        )
+
+    async def _fetch_history_with_details(
+        self, ticker: str, *, range_str: str, interval: str, include_feed: bool
+    ) -> tuple[Dict[str, Any], str | None, str | None]:
         symbol = ticker.strip().upper()
         exchange, adapter_symbol = await _adapter_exchange_and_symbol(symbol)
 
         if exchange:
             start_date, end_date = _range_to_dates(range_str)
             try:
-                rows, source = await get_adapter_registry().invoke_with_source(
-                    exchange, "get_history", adapter_symbol, interval, start_date, end_date
-                )
+                if include_feed:
+                    (rows, feed), source = await get_adapter_registry().invoke_with_source(
+                        exchange, "get_history_with_provider", adapter_symbol, interval, start_date, end_date
+                    )
+                else:
+                    rows, source = await get_adapter_registry().invoke_with_source(
+                        exchange, "get_history", adapter_symbol, interval, start_date, end_date
+                    )
+                    feed = None
                 if isinstance(rows, list) and rows:
-                    return _chart_payload_from_rows(rows), source
+                    return _chart_payload_from_rows(rows), source, feed
             except Exception as e:
                 logger.debug("Adapter history failed for %s via %s: %s", symbol, exchange, e)
 
@@ -211,18 +233,18 @@ class UnifiedFetcher:
             yahoo_sym = await market_classifier.yfinance_symbol(symbol)
             data = await self.yahoo.get_chart(yahoo_sym, range_str, interval)
             if data and "chart" in data:
-                return data, "yahoo"
+                return data, "yahoo", "yahoo_chart" if include_feed else None
         except Exception as e:
             logger.warning(f"Yahoo history failed for {symbol}: {e}")
 
         try:
             fmp_data = await self.fmp.get_historical_price_full(symbol)
             if fmp_data:
-                return fmp_data, "fmp"
+                return fmp_data, "fmp", "fmp_historical_price" if include_feed else None
         except Exception as e:
             logger.warning(f"FMP history failed for {symbol}: {e}")
 
-        return {}, None
+        return {}, None, None
 
     async def fetch_quote(self, ticker: str) -> Dict[str, Any]:
         symbol = ticker.strip().upper()
