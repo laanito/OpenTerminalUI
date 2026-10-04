@@ -61,6 +61,10 @@ describe("MarketContextPage", () => {
             anchor: { source: "unavailable", matched_count: 0, display_limit: 20, actions: [] },
             comparison: { source: "yahoo_chart", matched_count: 1, display_limit: 20, actions: [{ date: "2026-09-10", type: "dividend" }] },
           },
+          adjusted_close_coverage: {
+            anchor: { status: "unavailable", source: null, available_observations: 0, shared_observations: 21 },
+            comparison: { status: "partial", source: "yahoo_adjclose", available_observations: 20, shared_observations: 21 },
+          },
           points: [
             { date: "2026-08-25", anchor_index: 100, comparison_index: 100 },
             { date: "2026-09-23", anchor_index: 105.25, comparison_index: 102.1 },
@@ -111,6 +115,9 @@ describe("MarketContextPage", () => {
     expect(screen.getByText("2026-09-10 · dividend")).toBeInTheDocument();
     expect(screen.getByText(/Action metadata unavailable from the selected history path/)).toBeInTheDocument();
     expect(screen.getByText(/not a complete action audit/)).toBeInTheDocument();
+    expect(screen.getByText(/SPY: partial · 20\/21 shared closes from Yahoo adjclose/)).toBeInTheDocument();
+    expect(screen.getByText(/BTC-USD: No usable provider-adjusted closes/)).toBeInTheDocument();
+    expect(screen.getByText(/still use unadjusted closes/)).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact aligned observations"));
     expect(screen.getByRole("columnheader", { name: "BTC-USD index" })).toBeInTheDocument();
     expect(screen.getByText("105.25")).toBeInTheDocument();

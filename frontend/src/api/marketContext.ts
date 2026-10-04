@@ -29,6 +29,13 @@ export interface MarketActionDisclosure {
   actions: { date: string; type: "split" | "dividend" }[];
 }
 
+export interface MarketAdjustedCloseCoverage {
+  status: "complete" | "partial" | "unavailable";
+  source: "yahoo_adjclose" | null;
+  available_observations: number;
+  shared_observations: number;
+}
+
 export interface MarketComparisonRow {
   symbol: string;
   status: "available" | "unavailable";
@@ -46,6 +53,7 @@ export interface MarketComparisonRow {
   relative_return_pp: number | null;
   technical_observations?: MarketTechnicalObservations | null;
   action_disclosure?: { anchor: MarketActionDisclosure; comparison: MarketActionDisclosure } | null;
+  adjusted_close_coverage?: { anchor: MarketAdjustedCloseCoverage; comparison: MarketAdjustedCloseCoverage } | null;
   points: MarketComparisonPoint[];
 }
 

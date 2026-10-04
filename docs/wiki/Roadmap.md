@@ -296,7 +296,11 @@ distort the measures. When a selected Yahoo chart response includes event
 metadata, the comparison discloses reported split/dividend dates inside the
 observed window. An empty list is not proof that no action happened, and paths
 without event metadata remain unavailable. Markers do not adjust the path
-or technical measures. This is not a standard per-asset daily indicator, a
+or technical measures. The panel also reports complete, partial, or unavailable
+Yahoo adjusted-close coverage on the exact shared dates; values are not used
+in the current comparison, and provider coverage is not verification of
+adjustment quality or historical vintage. This is not a standard per-asset
+daily indicator, a
 trading signal, or causal explanation. Adjusted history and deeper provider
 provenance remain prerequisites for decision-grade technical evidence.
 
