@@ -280,8 +280,11 @@ bounded context, not the full v2 cross-market explanation promise. Returns are
 in each instrument's native quote currency, **not** FX-normalized portfolio returns;
 the comparison now identifies each symbol's selected history path, including
 which adapter won failover, or leaves it unknown when no usable history was
-returned. An adapter with its own internal feed selection (notably crypto) does
-not yet expose that deeper provider identity. Neither relative returns nor
+returned. The comparison now also records the underlying feed reported for
+each request by the crypto and Yahoo adapters, while keeping the winning
+adapter separate; other adapters leave their internal feed unidentified unless
+they report it. Adapted rows still discard Yahoo event and adjusted-close
+metadata, and a named feed does not verify data quality. Neither relative returns nor
 co-movement establish causation. Full fundamentals, historical macro
 observations, sentiment, and decision-grade technical evidence become separate later layers
 only when they have honest coverage and provenance contracts.

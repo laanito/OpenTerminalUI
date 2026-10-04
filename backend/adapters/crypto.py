@@ -82,6 +82,12 @@ class CryptoDataAdapter(DataAdapter):
                 continue
         return out
 
+    async def get_history_with_provider(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], str | None]:
+        rows = await self.get_history(symbol, timeframe, start, end)
+        return rows, "yahoo_chart" if rows else None
+
     async def search_instruments(self, query: str) -> list[Instrument]:
         rows = self._core.search(query, limit=20)
         return [Instrument(symbol=r["symbol"], name=r["name"], exchange="CRYPTO", currency="USD") for r in rows]

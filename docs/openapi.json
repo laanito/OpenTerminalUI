@@ -7018,6 +7018,17 @@
               }
             ]
           },
+          "anchor_history_feed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor History Feed"
+          },
           "anchor_history_source": {
             "anyOf": [
               {
@@ -7051,6 +7062,17 @@
               }
             ],
             "title": "Anchor Return Pct"
+          },
+          "comparison_history_feed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison History Feed"
           },
           "comparison_history_source": {
             "anyOf": [

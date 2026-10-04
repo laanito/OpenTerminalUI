@@ -131,6 +131,8 @@ class MarketComparisonRow(BaseModel):
     comparison_latest_date: date | None = None
     anchor_history_source: str | None = None
     comparison_history_source: str | None = None
+    anchor_history_feed: str | None = None
+    comparison_history_feed: str | None = None
     observations: int | None = None
     freshness: Literal["current", "stale"] | None = None
     anchor_return_pct: float | None = None
@@ -284,6 +286,7 @@ async def compare_market_context(
 
     histories: dict[str, dict[date, float]] = {}
     sources: dict[str, str | None] = {}
+    feeds: dict[str, str | None] = {}
     reported_actions: dict[str, list[dict[str, str]]] = {}
     action_metadata_available: set[str] = set()
     adjusted_closes: dict[str, dict[date, float]] = {}
@@ -293,15 +296,22 @@ async def compare_market_context(
     async def load(symbol: str) -> None:
         async with semaphore:
             try:
-                if hasattr(fetcher, "fetch_history_with_source"):
+                if hasattr(fetcher, "fetch_history_with_provenance"):
+                    raw, source, feed = await fetcher.fetch_history_with_provenance(
+                        symbol, range_str=FETCH_RANGES[payload.period], interval="1d"
+                    )
+                elif hasattr(fetcher, "fetch_history_with_source"):
                     raw, source = await fetcher.fetch_history_with_source(
                         symbol, range_str=FETCH_RANGES[payload.period], interval="1d"
                     )
+                    feed = None
                 else:
                     raw = await fetcher.fetch_history(symbol, range_str=FETCH_RANGES[payload.period], interval="1d")
                     source = None
+                    feed = None
                 histories[symbol] = _daily_closes(raw)
                 sources[symbol] = source if histories[symbol] else None
+                feeds[symbol] = feed if histories[symbol] else None
                 adjusted_closes[symbol] = yahoo_adjusted_closes(raw) if sources[symbol] == "yahoo" else {}
                 if sources[symbol] == "yahoo" and yahoo_action_metadata_present(raw):
                     action_metadata_available.add(symbol)
@@ -314,6 +324,7 @@ async def compare_market_context(
                 errors.add(symbol)
                 histories[symbol] = {}
                 sources[symbol] = None
+                feeds[symbol] = None
                 reported_actions[symbol] = []
                 adjusted_closes[symbol] = {}
 
@@ -369,6 +380,8 @@ async def compare_market_context(
             **result,
             "anchor_history_source": sources[anchor],
             "comparison_history_source": sources[symbol],
+            "anchor_history_feed": feeds[anchor],
+            "comparison_history_feed": feeds[symbol],
         })
 
     return {

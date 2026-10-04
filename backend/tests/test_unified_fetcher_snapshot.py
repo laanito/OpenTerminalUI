@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import date
 
+from backend.adapters.crypto import CryptoDataAdapter
+from backend.adapters.yahoo import YahooFinanceAdapter
 from backend.adapters.base import OHLCV, QuoteResponse
 from backend.core.unified_fetcher import UnifiedFetcher
 from backend.shared.market_classifier import StockClassification, market_classifier
@@ -63,19 +66,24 @@ class _DummyKite:
 
 
 class _RegistryStub:
-    def __init__(self, *, quote: QuoteResponse | None = None, history: list[OHLCV] | None = None) -> None:
+    def __init__(self, *, quote: QuoteResponse | None = None, history: list[OHLCV] | None = None,
+                 history_feed: str | None = None, history_source: str = "alpaca") -> None:
         self.quote = quote
         self.history = history or []
+        self.history_feed = history_feed
+        self.history_source = history_source
 
     async def invoke(self, exchange: str, method: str, *args):
         if method == "get_quote":
             return self.quote
         if method == "get_history":
             return self.history
+        if method == "get_history_with_provider":
+            return self.history, self.history_feed
         raise AssertionError(f"Unexpected invoke: {exchange}:{method}:{args}")
 
     async def invoke_with_source(self, exchange: str, method: str, *args):
-        return await self.invoke(exchange, method, *args), "alpaca"
+        return await self.invoke(exchange, method, *args), self.history_source
 
 
 def _us_classification(symbol: str) -> StockClassification:
@@ -177,6 +185,40 @@ def test_fetch_history_uses_adapter_registry_and_returns_chart_payload(monkeypat
     quote = result["indicators"]["quote"][0]
     assert quote["open"] == [100.0, 100.5]
     assert quote["close"] == [100.5, 101.5]
+
+
+def test_history_provenance_identifies_feed_without_changing_existing_source_contract(monkeypatch) -> None:
+    history = [OHLCV(t=1710000000, o=100.0, h=101.0, l=99.5, c=100.5, v=1000.0)]
+    monkeypatch.setattr(
+        "backend.core.unified_fetcher.get_adapter_registry",
+        lambda: _RegistryStub(history=history, history_source="crypto", history_feed="yahoo_chart"),
+    )
+    fetcher = UnifiedFetcher(nse=_DummyNSE(), yahoo=_DummyYahoo(), fmp=_DummyFMP(), finnhub=_DummyFinnhub(), kite=_DummyKite())
+    payload, source, feed = asyncio.run(fetcher.fetch_history_with_provenance("BTC-USD", range_str="1mo"))
+    assert payload["chart"]["result"][0]["indicators"]["quote"][0]["close"] == [100.5]
+    assert (source, feed) == ("crypto", "yahoo_chart")
+    assert asyncio.run(fetcher.fetch_history_with_source("BTC-USD", range_str="1mo"))[1] == "crypto"
+
+
+def test_crypto_and_yahoo_adapters_report_only_the_feed_used_for_history() -> None:
+    class HistoryYahoo:
+        async def get_chart(self, symbol: str, range_str: str, interval: str):
+            assert symbol == "BTC-USD"
+            assert interval == "1d"
+            return {"chart": {"result": [{
+                "timestamp": [1710000000],
+                "indicators": {"quote": [{
+                    "open": [100.0], "high": [101.0], "low": [99.0],
+                    "close": [100.5], "volume": [1000.0],
+                }]},
+            }]}}
+
+    start, end = date(2024, 3, 1), date(2024, 3, 15)
+    for adapter in (CryptoDataAdapter(yahoo=HistoryYahoo()), YahooFinanceAdapter(yahoo=HistoryYahoo())):
+        rows, feed = asyncio.run(adapter.get_history_with_provider("BTC-USD", "1d", start, end))
+        assert len(rows) == 1
+        assert rows[0].c == 100.5
+        assert feed == "yahoo_chart"
 
 
 def test_fetch_stock_snapshot_uses_unified_quote_path_for_price(monkeypatch) -> None:
