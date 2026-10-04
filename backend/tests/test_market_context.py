@@ -232,8 +232,14 @@ def test_route_does_not_attribute_unusable_history() -> None:
 def test_route_reports_selected_underlying_feed_without_inference() -> None:
     start = date(2026, 8, 24)
     days = [start + timedelta(days=i) for i in range(32)]
+    crypto_chart = _chart({day: 100.0 + i for i, day in enumerate(days)})
+    crypto_chart["chart"]["result"][0]["indicators"]["adjclose"] = [{
+        "adjclose": [90.0 + i for i in range(32)]
+    }]
+    split = int(datetime(2026, 9, 5, tzinfo=timezone.utc).timestamp())
+    crypto_chart["chart"]["result"][0]["events"] = {"splits": {str(split): {"date": split}}}
     client = _client(
-        {"BTC-USD": _chart({day: 100.0 + i for i, day in enumerate(days)}),
+        {"BTC-USD": crypto_chart,
          "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)})},
         sources={"BTC-USD": "crypto", "SPY": "alpaca"},
         feeds={"BTC-USD": "yahoo_chart"},
@@ -245,6 +251,10 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
     assert row["anchor_history_feed"] == "yahoo_chart"
     assert row["comparison_history_source"] == "alpaca"
     assert row["comparison_history_feed"] is None
+    assert row["adjusted_close_coverage"]["anchor"]["status"] == "complete"
+    assert row["adjusted_observations"]["anchor"]["return_pct"] != row["anchor_return_pct"]
+    assert row["action_disclosure"]["anchor"]["actions"] == [{"date": "2026-09-05", "type": "split"}]
+    assert row["action_disclosure"]["comparison"]["source"] == "unavailable"
 
 
 def test_route_discloses_only_yahoo_reported_actions_in_observed_window() -> None:

@@ -433,8 +433,13 @@ intelligence promise, or claim that contradiction handling is solved.
   - [x] Add per-request underlying-feed disclosure for the crypto and Yahoo
         history adapters, preserving the selected adapter separately across
         failover. Other adapters leave their internal feed unknown unless they
-        report it; feed identity is not data-quality verification, and adapted
-        rows still discard Yahoo event/adjusted metadata.
+        report it; feed identity is not data-quality verification.
+  - [x] Retain split/dividend events and adjusted-close values from the same
+        selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
+        values to rows the adapter actually accepted, without changing the raw
+        price path or making a second provider request. Missing metadata stays
+        unavailable; feed identity and coverage do not verify adjustment
+        correctness or historical vintage.
   - [x] Add an on-demand, live-only economic-calendar layer for each pair's
         observed date window. It requires configured Finnhub or FMP access,
         reports provider and missing-key/error states, never uses the legacy

@@ -283,8 +283,10 @@ which adapter won failover, or leaves it unknown when no usable history was
 returned. The comparison now also records the underlying feed reported for
 each request by the crypto and Yahoo adapters, while keeping the winning
 adapter separate; other adapters leave their internal feed unidentified unless
-they report it. Adapted rows still discard Yahoo event and adjusted-close
-metadata, and a named feed does not verify data quality. Neither relative returns nor
+they report it. Crypto/Yahoo adapters now retain event metadata and adjusted
+closes from that same selected chart, aligning adjusted values only to rows
+accepted by the adapter. Missing metadata remains unavailable, and a named
+feed does not verify data quality. Neither relative returns nor
 co-movement establish causation. Full fundamentals, historical macro
 observations, sentiment, and decision-grade technical evidence become separate later layers
 only when they have honest coverage and provenance contracts.

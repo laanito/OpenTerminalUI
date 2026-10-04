@@ -56,6 +56,12 @@ class CryptoDataAdapter(DataAdapter):
         )
 
     async def get_history(self, symbol: str, timeframe: str, start: date, end: date) -> list[OHLCV]:
+        rows, _ = await self._history_with_chart(symbol, timeframe, start, end)
+        return rows
+
+    async def _history_with_chart(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], dict[str, Any] | None]:
         s = symbol.strip().upper().replace("CRYPTO:", "")
         pair = s if "-" in s else f"{s}-USD"
         rng_days = max(1, (end - start).days)
@@ -63,7 +69,7 @@ class CryptoDataAdapter(DataAdapter):
         row = await self._core.candles(pair, interval=timeframe or "1d", range_str=range_str)
         chart = ((row or {}).get("chart") or {}).get("result") or []
         if not chart:
-            return []
+            return [], row if isinstance(row, dict) else None
         payload = chart[0]
         timestamps = payload.get("timestamp") or []
         quote = (((payload.get("indicators") or {}).get("quote") or [{}])[0]) if isinstance(payload, dict) else {}
@@ -80,13 +86,19 @@ class CryptoDataAdapter(DataAdapter):
                 out.append(OHLCV(t=int(ts), o=float(o), h=float(h), l=float(l), c=float(c), v=float(v or 0)))
             except Exception:
                 continue
-        return out
+        return out, row if isinstance(row, dict) else None
 
     async def get_history_with_provider(
         self, symbol: str, timeframe: str, start: date, end: date
     ) -> tuple[list[OHLCV], str | None]:
-        rows = await self.get_history(symbol, timeframe, start, end)
+        rows, _ = await self._history_with_chart(symbol, timeframe, start, end)
         return rows, "yahoo_chart" if rows else None
+
+    async def get_history_with_evidence(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], str | None, dict[str, Any] | None]:
+        rows, chart = await self._history_with_chart(symbol, timeframe, start, end)
+        return rows, "yahoo_chart" if rows else None, chart
 
     async def search_instruments(self, query: str) -> list[Instrument]:
         rows = self._core.search(query, limit=20)
