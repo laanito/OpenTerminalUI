@@ -22,6 +22,20 @@ export interface MarketTechnicalObservations {
   comparison: MarketTechnicalMeasures;
 }
 
+export interface MarketNativeAssetTechnicalObservations {
+  start_date: string;
+  end_date: string;
+  observations: number;
+  additional_dates_vs_pair: number;
+  technical_measures: MarketTechnicalMeasures;
+}
+
+export interface MarketNativeTechnicalObservations {
+  basis: "per_asset_utc_date_unadjusted_closes_within_pair_window";
+  anchor: MarketNativeAssetTechnicalObservations;
+  comparison: MarketNativeAssetTechnicalObservations;
+}
+
 export interface MarketActionDisclosure {
   source: "yahoo_chart" | "unavailable";
   matched_count: number;
@@ -65,6 +79,7 @@ export interface MarketComparisonRow {
   comparison_return_pct: number | null;
   relative_return_pp: number | null;
   technical_observations?: MarketTechnicalObservations | null;
+  native_technical_observations?: MarketNativeTechnicalObservations | null;
   action_disclosure?: { anchor: MarketActionDisclosure; comparison: MarketActionDisclosure } | null;
   adjusted_close_coverage?: { anchor: MarketAdjustedCloseCoverage; comparison: MarketAdjustedCloseCoverage } | null;
   adjusted_observations?: MarketAdjustedObservations | null;

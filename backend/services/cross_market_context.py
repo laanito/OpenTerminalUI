@@ -130,6 +130,21 @@ def adjusted_observations(closes: dict[date, float], shared: list[date]) -> dict
     }
 
 
+def _native_technical_observations(
+    closes: dict[date, float], shared: list[date]
+) -> dict[str, Any]:
+    """Measure one asset's own dated closes inside the pair's observed window."""
+    start, end = shared[0], shared[-1]
+    native = sorted(day for day in closes if start <= day <= end)
+    return {
+        "start_date": native[0].isoformat(),
+        "end_date": native[-1].isoformat(),
+        "observations": len(native),
+        "additional_dates_vs_pair": len(set(native) - set(shared)),
+        "technical_measures": _technical_measures(closes, native),
+    }
+
+
 def _daily_closes(raw: Any) -> dict[date, float]:
     frame = _parse_yahoo_chart(raw if isinstance(raw, dict) else {})
     if frame.empty or "Close" not in frame:
@@ -196,6 +211,11 @@ def compare_closes(
             "as_of_date": end.isoformat(),
             "anchor": _technical_measures(anchor, shared),
             "comparison": _technical_measures(comparison, shared),
+        },
+        "native_technical_observations": {
+            "basis": "per_asset_utc_date_unadjusted_closes_within_pair_window",
+            "anchor": _native_technical_observations(anchor, shared),
+            "comparison": _native_technical_observations(comparison, shared),
         },
         "points": points,
     }

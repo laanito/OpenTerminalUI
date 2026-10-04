@@ -303,9 +303,12 @@ adjusted return, drawdown, and 20-shared-close gap for each asset only when its
 Yahoo adjusted series is complete on every pair-shared date; a partial series
 does not silently shrink the window. The original path, returns, and measures
 remain unadjusted. Provider coverage is not verification of adjustment quality
-or historical vintage. This is not a standard per-asset
-daily indicator, a
-trading signal, or causal explanation. Adjusted history and deeper provider
+or historical vintage. A separate own-date observation now calculates
+unadjusted drawdown and 20-close gap for each asset within the same observed
+pair window, reporting how many additional dates were used. This keeps crypto
+weekends visible without changing the shared-date comparison. Provider UTC
+dates are not verified exchange sessions, so these are not standard per-asset
+daily indicators, trading signals, or causal explanations. Adjusted history and deeper provider
 provenance remain prerequisites for decision-grade technical evidence.
 
 Dated news is the first candidate for that next layer. As a prerequisite, new

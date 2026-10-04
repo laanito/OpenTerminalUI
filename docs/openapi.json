@@ -7113,6 +7113,16 @@
             ],
             "title": "Freshness"
           },
+          "native_technical_observations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketNativeTechnicalObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "observations": {
             "anyOf": [
               {
@@ -7756,6 +7766,62 @@
           "events"
         ],
         "title": "MarketMacroEventsResponse",
+        "type": "object"
+      },
+      "MarketNativeAssetTechnicalObservations": {
+        "properties": {
+          "additional_dates_vs_pair": {
+            "title": "Additional Dates Vs Pair",
+            "type": "integer"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "observations": {
+            "title": "Observations",
+            "type": "integer"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "technical_measures": {
+            "$ref": "#/components/schemas/MarketTechnicalMeasures"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "observations",
+          "additional_dates_vs_pair",
+          "technical_measures"
+        ],
+        "title": "MarketNativeAssetTechnicalObservations",
+        "type": "object"
+      },
+      "MarketNativeTechnicalObservations": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/MarketNativeAssetTechnicalObservations"
+          },
+          "basis": {
+            "const": "per_asset_utc_date_unadjusted_closes_within_pair_window",
+            "title": "Basis",
+            "type": "string"
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/MarketNativeAssetTechnicalObservations"
+          }
+        },
+        "required": [
+          "basis",
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketNativeTechnicalObservations",
         "type": "object"
       },
       "MarketPairActionDisclosure": {

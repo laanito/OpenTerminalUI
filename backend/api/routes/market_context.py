@@ -65,6 +65,20 @@ class MarketTechnicalObservations(BaseModel):
     comparison: MarketTechnicalMeasures
 
 
+class MarketNativeAssetTechnicalObservations(BaseModel):
+    start_date: date
+    end_date: date
+    observations: int
+    additional_dates_vs_pair: int
+    technical_measures: MarketTechnicalMeasures
+
+
+class MarketNativeTechnicalObservations(BaseModel):
+    basis: Literal["per_asset_utc_date_unadjusted_closes_within_pair_window"]
+    anchor: MarketNativeAssetTechnicalObservations
+    comparison: MarketNativeAssetTechnicalObservations
+
+
 class MarketCorporateAction(BaseModel):
     date: date
     type: Literal["split", "dividend"]
@@ -123,6 +137,7 @@ class MarketComparisonRow(BaseModel):
     comparison_return_pct: float | None = None
     relative_return_pp: float | None = None
     technical_observations: MarketTechnicalObservations | None = None
+    native_technical_observations: MarketNativeTechnicalObservations | None = None
     action_disclosure: MarketPairActionDisclosure | None = None
     adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
     adjusted_observations: MarketAdjustedObservations | None = None

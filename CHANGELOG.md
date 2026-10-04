@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Own-date technical observations** — comparisons now show a separate
+  descriptive drawdown and 20-close gap for each asset on all of its available
+  UTC close dates inside the pair window. Counts disclose dates outside pair
+  overlap, notably crypto weekends; the paired path and returns are unchanged.
 - **Fundamental-candidate conflict disclosure** — when a current provider
   fetch returns different numeric values for the same source-dated metric,
   period, and provider, the comparison withholds that value and shows the
