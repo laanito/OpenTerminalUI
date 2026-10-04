@@ -103,7 +103,10 @@ never silently faked.
   The same panel reports whether Yahoo supplied adjusted closes on all, some,
   or none of the pair's shared dates. This is coverage of a retrospective
   provider series, not verified adjustment quality or a historical vintage;
-  neither the plotted path nor the technical calculations use those values.
+  the primary plotted path and calculations remain unadjusted. A separate
+  adjusted return, drawdown, and 20-shared-close gap are available per asset
+  only with complete Yahoo adjusted coverage on the exact shared dates.
+  Partial coverage never changes the window or produces a partial measure.
   These are descriptive measures, not standard per-asset daily indicators,
   trading signals, or evidence of causation.
 - **Economic calendar context is configuration-gated and non-causal.** An

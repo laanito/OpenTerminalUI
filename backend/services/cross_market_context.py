@@ -120,6 +120,16 @@ def _technical_measures(closes: dict[date, float], shared: list[date]) -> dict[s
     }
 
 
+def adjusted_observations(closes: dict[date, float], shared: list[date]) -> dict[str, Any] | None:
+    """Use one complete provider-adjusted series on the raw pair's exact dates."""
+    if len(shared) < 2 or any(day not in closes for day in shared):
+        return None
+    return {
+        "return_pct": round((closes[shared[-1]] / closes[shared[0]] - 1.0) * 100.0, 4),
+        "technical_measures": _technical_measures(closes, shared),
+    }
+
+
 def _daily_closes(raw: Any) -> dict[date, float]:
     frame = _parse_yahoo_chart(raw if isinstance(raw, dict) else {})
     if frame.empty or "Close" not in frame:

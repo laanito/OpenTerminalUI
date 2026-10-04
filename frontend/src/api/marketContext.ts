@@ -36,6 +36,19 @@ export interface MarketAdjustedCloseCoverage {
   shared_observations: number;
 }
 
+export interface MarketAdjustedAssetObservations {
+  return_pct: number;
+  technical_measures: MarketTechnicalMeasures;
+}
+
+export interface MarketAdjustedObservations {
+  basis: "shared_utc_date_provider_adjusted_closes";
+  source: "yahoo_adjclose";
+  as_of_date: string;
+  anchor: MarketAdjustedAssetObservations | null;
+  comparison: MarketAdjustedAssetObservations | null;
+}
+
 export interface MarketComparisonRow {
   symbol: string;
   status: "available" | "unavailable";
@@ -54,6 +67,7 @@ export interface MarketComparisonRow {
   technical_observations?: MarketTechnicalObservations | null;
   action_disclosure?: { anchor: MarketActionDisclosure; comparison: MarketActionDisclosure } | null;
   adjusted_close_coverage?: { anchor: MarketAdjustedCloseCoverage; comparison: MarketAdjustedCloseCoverage } | null;
+  adjusted_observations?: MarketAdjustedObservations | null;
   points: MarketComparisonPoint[];
 }
 

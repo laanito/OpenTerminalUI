@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.api.deps import get_unified_fetcher
 from backend.api.routes import market_context
 from backend.auth.deps import get_current_user
-from backend.services.cross_market_context import _daily_closes, compare_closes, yahoo_action_metadata_present, yahoo_adjusted_closes, yahoo_reported_actions
+from backend.services.cross_market_context import _daily_closes, adjusted_observations, compare_closes, yahoo_action_metadata_present, yahoo_adjusted_closes, yahoo_reported_actions
 from backend.services.economic_data import get_economic_data_service
 
 
@@ -121,7 +121,17 @@ def test_adjusted_close_parser_skips_missing_and_invalid_provider_values() -> No
     assert yahoo_adjusted_closes(_chart({days[0]: 100.0})) == {}
 
 
-def _client(data: dict[str, Any]) -> TestClient:
+def test_adjusted_observations_require_complete_shared_dates() -> None:
+    days = [date(2026, 9, 1) + timedelta(days=i) for i in range(3)]
+    adjusted = {days[0]: 90.0, days[1]: 100.0, days[2]: 80.0}
+    result = adjusted_observations(adjusted, days)
+    assert result is not None
+    assert result["return_pct"] == -11.1111
+    assert result["technical_measures"]["max_drawdown_pct"] == 20.0
+    assert adjusted_observations({days[0]: 90.0, days[2]: 80.0}, days) is None
+
+
+def _client(data: dict[str, Any], sources: dict[str, str] | None = None) -> TestClient:
     class FakeFetcher:
         async def fetch_history(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> Any:
             assert range_str == "3mo"
@@ -133,7 +143,7 @@ def _client(data: dict[str, Any]) -> TestClient:
 
         async def fetch_history_with_source(self, ticker: str, range_str: str = "1y", interval: str = "1d") -> tuple[Any, str]:
             data = await self.fetch_history(ticker, range_str=range_str, interval=interval)
-            return data, "yahoo" if ticker == "AAPL" else "fmp"
+            return data, sources.get(ticker, "fmp") if sources is not None else ("yahoo" if ticker == "AAPL" else "fmp")
 
     app = FastAPI()
     app.include_router(market_context.router)
@@ -241,12 +251,36 @@ def test_route_reports_adjusted_close_coverage_without_changing_raw_returns() ->
     }
     assert row["anchor_return_pct"] == 29.703  # still uses raw 101 -> 131
     assert row["points"][0]["anchor_index"] == 100.0
+    assert row["adjusted_observations"] is None
 
     adjusted[5] = 95.0
     complete = client.post("/api/market-context/compare", json={
         "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
     })
     assert complete.json()["comparisons"][0]["adjusted_close_coverage"]["anchor"]["status"] == "complete"
+    adjusted_row = complete.json()["comparisons"][0]["adjusted_observations"]
+    assert adjusted_row["basis"] == "shared_utc_date_provider_adjusted_closes"
+    assert adjusted_row["source"] == "yahoo_adjclose"
+    assert adjusted_row["anchor"]["return_pct"] == 32.967  # 91 -> 121, not raw 101 -> 131
+    assert adjusted_row["comparison"] is None  # fmp cannot borrow Yahoo-shaped adjclose fields
+    assert adjusted_row["anchor"]["technical_measures"]["sma20_gap_pct"] is not None
+
+
+def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> None:
+    start = date(2026, 8, 24)
+    days = [start + timedelta(days=i) for i in range(32)]
+    anchor_chart = _chart({day: 100.0 + i for i, day in enumerate(days)})
+    comparison_chart = _chart({day: 200.0 + i for i, day in enumerate(days)})
+    anchor_chart["chart"]["result"][0]["indicators"]["adjclose"] = [{"adjclose": [90.0 + i for i in range(32)]}]
+    comparison_chart["chart"]["result"][0]["indicators"]["adjclose"] = [{"adjclose": [190.0 + i for i in range(32)]}]
+    client = _client({"AAPL": anchor_chart, "SPY": comparison_chart}, sources={"AAPL": "yahoo", "SPY": "yahoo"})
+    row = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
+    }).json()["comparisons"][0]
+    assert row["adjusted_close_coverage"]["comparison"]["status"] == "complete"
+    assert row["adjusted_observations"]["as_of_date"] == row["end_date"]
+    assert row["adjusted_observations"]["anchor"]["return_pct"] == 32.967
+    assert row["adjusted_observations"]["comparison"]["return_pct"] == 15.7068
 
 
 def test_headline_context_filters_to_pair_window_and_keeps_partial_feed(monkeypatch) -> None:
