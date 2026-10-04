@@ -6757,6 +6757,23 @@
         "title": "MarketActionDisclosure",
         "type": "object"
       },
+      "MarketAdjustedAssetObservations": {
+        "properties": {
+          "return_pct": {
+            "title": "Return Pct",
+            "type": "number"
+          },
+          "technical_measures": {
+            "$ref": "#/components/schemas/MarketTechnicalMeasures"
+          }
+        },
+        "required": [
+          "return_pct",
+          "technical_measures"
+        ],
+        "title": "MarketAdjustedAssetObservations",
+        "type": "object"
+      },
       "MarketAdjustedCloseCoverage": {
         "properties": {
           "available_observations": {
@@ -6796,6 +6813,54 @@
           "shared_observations"
         ],
         "title": "MarketAdjustedCloseCoverage",
+        "type": "object"
+      },
+      "MarketAdjustedObservations": {
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketAdjustedAssetObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "basis": {
+            "const": "shared_utc_date_provider_adjusted_closes",
+            "title": "Basis",
+            "type": "string"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketAdjustedAssetObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "const": "yahoo_adjclose",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "basis",
+          "source",
+          "as_of_date",
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketAdjustedObservations",
         "type": "object"
       },
       "MarketComparisonPoint": {
@@ -6937,6 +7002,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/MarketPairAdjustedCloseCoverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "adjusted_observations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketAdjustedObservations"
               },
               {
                 "type": "null"

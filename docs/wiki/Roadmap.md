@@ -298,8 +298,12 @@ observed window. An empty list is not proof that no action happened, and paths
 without event metadata remain unavailable. Markers do not adjust the path
 or technical measures. The panel also reports complete, partial, or unavailable
 Yahoo adjusted-close coverage on the exact shared dates; values are not used
-in the current comparison, and provider coverage is not verification of
-adjustment quality or historical vintage. This is not a standard per-asset
+in the primary comparison. A separate descriptive observation now calculates
+adjusted return, drawdown, and 20-shared-close gap for each asset only when its
+Yahoo adjusted series is complete on every pair-shared date; a partial series
+does not silently shrink the window. The original path, returns, and measures
+remain unadjusted. Provider coverage is not verification of adjustment quality
+or historical vintage. This is not a standard per-asset
 daily indicator, a
 trading signal, or causal explanation. Adjusted history and deeper provider
 provenance remain prerequisites for decision-grade technical evidence.

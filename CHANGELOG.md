@@ -7,11 +7,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Separate adjusted-close observations** — where Yahoo supplies adjusted
+  closes for every pair-shared date, comparisons now show per-asset adjusted
+  return, drawdown, and 20-shared-close gap beside—not instead of—the raw
+  comparison. Partial coverage produces no adjusted measure; adjustment quality
+  and historical vintage remain unverified.
 - **Adjusted-close coverage disclosure** — comparisons now report how many
   shared dates have usable Yahoo adjusted closes, or mark the selected history
-  path unavailable for this metadata. The adjusted values are not used in the
-  chart, returns, or technical measures; no vintage or adjustment audit is
-  implied.
+  path unavailable for this metadata. The primary chart, returns, and technical
+  measures remain unadjusted; no vintage or adjustment audit is implied.
 - **Corporate-action disclosure for comparison paths** — when a selected
   Yahoo chart response contains event metadata, its split/dividend dates appear
   beside the unadjusted technical measures. Empty marker lists are not proof

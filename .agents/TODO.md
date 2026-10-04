@@ -451,6 +451,11 @@ intelligence promise, or claim that contradiction handling is solved.
         availability metadata only; raw paths, returns, and technical measures
         remain unchanged, and a complete count does not verify adjustment
         correctness or historical vintage.
+  - [x] Expose a separate descriptive adjusted-return and technical-observation
+        contract for each asset only when Yahoo adjusted closes cover every
+        pair-shared date. Keep raw comparison results unchanged and partial
+        adjusted series unavailable; this does not verify adjustment quality,
+        source vintage, or the adapter's deeper provider identity.
   - [ ] Add a split/dividend-adjusted and provider-provenance contract before
         treating technical measures as decision-grade cross-market signals;
         separate native per-asset sessions from pair-shared sampling when

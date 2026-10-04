@@ -20,6 +20,7 @@ from backend.models import User
 from backend.services.cross_market_context import (
     FETCH_RANGES,
     _daily_closes,
+    adjusted_observations,
     compare_closes,
     yahoo_action_metadata_present,
     yahoo_adjusted_closes,
@@ -93,6 +94,19 @@ class MarketPairAdjustedCloseCoverage(BaseModel):
     comparison: MarketAdjustedCloseCoverage
 
 
+class MarketAdjustedAssetObservations(BaseModel):
+    return_pct: float
+    technical_measures: MarketTechnicalMeasures
+
+
+class MarketAdjustedObservations(BaseModel):
+    basis: Literal["shared_utc_date_provider_adjusted_closes"]
+    source: Literal["yahoo_adjclose"]
+    as_of_date: date
+    anchor: MarketAdjustedAssetObservations | None
+    comparison: MarketAdjustedAssetObservations | None
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -111,6 +125,7 @@ class MarketComparisonRow(BaseModel):
     technical_observations: MarketTechnicalObservations | None = None
     action_disclosure: MarketPairActionDisclosure | None = None
     adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
+    adjusted_observations: MarketAdjustedObservations | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
@@ -314,6 +329,16 @@ async def compare_market_context(
                 "anchor": adjusted_coverage(anchor),
                 "comparison": adjusted_coverage(symbol),
             }
+            adjusted_anchor = adjusted_observations(adjusted_closes[anchor], shared_dates)
+            adjusted_comparison = adjusted_observations(adjusted_closes[symbol], shared_dates)
+            if adjusted_anchor is not None or adjusted_comparison is not None:
+                result["adjusted_observations"] = {
+                    "basis": "shared_utc_date_provider_adjusted_closes",
+                    "source": "yahoo_adjclose",
+                    "as_of_date": shared_dates[-1],
+                    "anchor": adjusted_anchor,
+                    "comparison": adjusted_comparison,
+                }
         rows.append({
             "symbol": symbol,
             **result,

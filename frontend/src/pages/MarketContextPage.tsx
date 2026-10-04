@@ -146,7 +146,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
           {row.adjusted_close_coverage ? (
             <div className="border-t border-terminal-border pt-2">
               <p className="text-terminal-muted">
-                Provider-adjusted close coverage on these shared dates. This is a current, retrospective Yahoo series—not a historical vintage or verification of every corporate action. The chart, returns, and measures above still use unadjusted closes.
+                Provider-adjusted close coverage on these shared dates. This is a current, retrospective Yahoo series—not a historical vintage or verification of every corporate action. The primary chart, returns, and measures above still use unadjusted closes.
               </p>
               <div className="mt-2 grid gap-3 md:grid-cols-2">
                 {([
@@ -160,6 +160,35 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
                   </p>
                 ))}
               </div>
+              {row.adjusted_observations ? (
+                <div className="mt-3">
+                  <p className="text-terminal-muted">
+                    Separate Yahoo-adjusted observations as of {row.adjusted_observations.as_of_date}. Calculated only when an asset has adjusted closes on every pair-shared date; a missing date never gets filled or silently changes the window. These are descriptive, not verified trading signals.
+                  </p>
+                  <div className="mt-2 grid gap-3 md:grid-cols-2">
+                    {([
+                      { symbol: anchor, observations: row.adjusted_observations.anchor },
+                      { symbol: row.symbol, observations: row.adjusted_observations.comparison },
+                    ]).map(({ symbol, observations }) => (
+                      <div key={symbol} className="rounded border border-terminal-border p-2 text-terminal-text">
+                        <h4 className="font-semibold">{symbol} adjusted observations</h4>
+                        {observations ? (
+                          <>
+                            <p className="mt-1">Adjusted return: {formatPercent(observations.return_pct)}</p>
+                            <p>Maximum observed drawdown: {observations.technical_measures.max_drawdown_pct.toFixed(2)}%</p>
+                            <p className="text-terminal-muted">
+                              {observations.technical_measures.max_drawdown_peak_date && observations.technical_measures.max_drawdown_trough_date
+                                ? `Peak ${observations.technical_measures.max_drawdown_peak_date} → trough ${observations.technical_measures.max_drawdown_trough_date}`
+                                : "No decline from an earlier shared-date peak."}
+                            </p>
+                            <p>20-shared-close average gap: {observations.technical_measures.sma20_gap_pct == null ? "Unavailable (fewer than 20 shared closes)" : formatPercent(observations.technical_measures.sma20_gap_pct)}</p>
+                          </>
+                        ) : <p className="mt-1 text-terminal-muted">Unavailable without complete Yahoo-adjusted coverage.</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {row.action_disclosure ? (
