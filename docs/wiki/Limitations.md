@@ -114,6 +114,10 @@ never silently faked.
   adjusted return, drawdown, and 20-shared-close gap are available per asset
   only with complete Yahoo adjusted coverage on the exact shared dates.
   Partial coverage never changes the window or produces a partial measure.
+  A separate unadjusted own-date view uses each asset's available UTC closes
+  within that same pair window and reports dates beyond pair overlap, including
+  crypto weekends. It does not alter the paired comparison or certify that
+  provider UTC dates are standard exchange sessions.
   These are descriptive measures, not standard per-asset daily indicators,
   trading signals, or evidence of causation.
 - **Economic calendar context is configuration-gated and non-causal.** An

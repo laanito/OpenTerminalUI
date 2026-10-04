@@ -143,6 +143,36 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
               </div>
             ))}
           </div>
+          {row.native_technical_observations ? (
+            <div className="border-t border-terminal-border pt-2">
+              <h3 className="font-semibold text-terminal-text">Each asset’s own dated closes</h3>
+              <p className="mt-1 text-terminal-muted">
+                Same observed pair window, but each asset uses all of its own available UTC close dates. Extra dates—such as crypto weekends—are included here, not in the paired comparison above. These unadjusted, provider-dated observations are not verified exchange-session indicators or trading signals.
+              </p>
+              <div className="mt-2 grid gap-3 md:grid-cols-2">
+                {([
+                  { symbol: anchor, native: row.native_technical_observations.anchor },
+                  { symbol: row.symbol, native: row.native_technical_observations.comparison },
+                ]).map(({ symbol, native }) => (
+                  <div key={symbol} className="rounded border border-terminal-border p-2 text-terminal-text">
+                    <h4 className="font-semibold">{symbol} own-date measures</h4>
+                    <p className="mt-1 text-terminal-muted">
+                      {native.observations} closes, {native.start_date} to {native.end_date} · {native.additional_dates_vs_pair} dates beyond pair overlap
+                    </p>
+                    <p className="mt-1">Maximum observed drawdown: {native.technical_measures.max_drawdown_pct.toFixed(2)}%</p>
+                    <p className="text-terminal-muted">
+                      {native.technical_measures.max_drawdown_peak_date && native.technical_measures.max_drawdown_trough_date
+                        ? `Peak ${native.technical_measures.max_drawdown_peak_date} → trough ${native.technical_measures.max_drawdown_trough_date}`
+                        : "No decline from an earlier own-date peak."}
+                    </p>
+                    <p className="mt-1">
+                      20-own-close average gap: {native.technical_measures.sma20_gap_pct == null ? "Unavailable (fewer than 20 own closes)" : formatPercent(native.technical_measures.sma20_gap_pct)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {row.adjusted_close_coverage ? (
             <div className="border-t border-terminal-border pt-2">
               <p className="text-terminal-muted">

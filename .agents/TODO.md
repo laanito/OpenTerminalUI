@@ -460,6 +460,11 @@ intelligence promise, or claim that contradiction handling is solved.
         pair-shared date. Keep raw comparison results unchanged and partial
         adjusted series unavailable; this does not verify adjustment quality,
         source vintage, or the adapter's deeper provider identity.
+  - [x] Add a separate unadjusted own-date technical observation for each asset
+        inside the actual pair window. Report its observation count and dates
+        beyond the pair overlap so crypto weekends no longer silently vanish
+        from this descriptive view. The primary comparison remains shared-date;
+        provider UTC dates are not verified exchange sessions.
   - [ ] Add a split/dividend-adjusted and provider-provenance contract before
         treating technical measures as decision-grade cross-market signals;
         separate native per-asset sessions from pair-shared sampling when

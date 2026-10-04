@@ -87,6 +87,26 @@ def test_technical_measures_use_only_shared_unadjusted_closes() -> None:
     assert technical["comparison"]["max_drawdown_peak_date"] is None
 
 
+def test_native_observations_keep_crypto_weekends_out_of_pair_measures() -> None:
+    start = date(2026, 9, 1)
+    days = [start + timedelta(days=i) for i in range(30)]
+    weekdays = [day for day in days if day.weekday() < 5]
+    crypto = {day: 100.0 + i for i, day in enumerate(days)}
+    proxy = {day: 200.0 + i for i, day in enumerate(weekdays)}
+    result = compare_closes(crypto, proxy, period="1M", today=days[-1])
+    assert result["status"] == "available"
+    native = result["native_technical_observations"]
+    assert native["basis"] == "per_asset_utc_date_unadjusted_closes_within_pair_window"
+    assert native["anchor"]["observations"] == 30
+    assert native["anchor"]["additional_dates_vs_pair"] == 8
+    assert native["comparison"]["observations"] == len(weekdays)
+    assert native["comparison"]["additional_dates_vs_pair"] == 0
+    assert native["anchor"]["start_date"] == result["start_date"]
+    assert native["anchor"]["end_date"] == result["end_date"]
+    assert native["anchor"]["technical_measures"]["sma20_gap_pct"] != result["technical_observations"]["anchor"]["sma20_gap_pct"]
+    assert len(result["points"]) == len(weekdays)
+
+
 def test_short_shared_path_marks_sma20_unavailable() -> None:
     first = date(2026, 8, 1)
     last = first + timedelta(days=30)
@@ -174,9 +194,11 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
     assert payload["comparisons"][0]["action_disclosure"]["anchor"]["source"] == "unavailable"
     assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_unadjusted_closes"
+    assert payload["comparisons"][0]["native_technical_observations"]["basis"] == "per_asset_utc_date_unadjusted_closes_within_pair_window"
     assert payload["comparisons"][1]["reason"] == "provider_error"
     assert payload["comparisons"][1]["comparison_history_source"] is None
     assert payload["comparisons"][1]["technical_observations"] is None
+    assert payload["comparisons"][1]["native_technical_observations"] is None
     assert payload["comparisons"][1]["points"] == []
 
 
