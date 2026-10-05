@@ -425,6 +425,12 @@ intelligence promise, or claim that contradiction handling is solved.
         across dates rather than archiving the bounded panel response. Show the
         owner's recent captures and original values, including conflicting or
         failed/empty observations, without implying historical market knowledge.
+  - [x] Add a versioned, owner-scoped terminal-observation as-of lookup. It
+        selects the latest retained capture at or before a timezone-aware
+        requested instant, including failed/empty fetches instead of silently
+        falling back to an older success. Deletion can remove past observations;
+        no retained capture does not prove none ever existed. This is not a
+        provider vintage or market-knowledge timeline.
   - [ ] Establish a versioned/revision-aware fundamentals evidence contract
         and tested historical coverage before using these candidates to explain
         old price moves or asserting what was known at a past point in time.

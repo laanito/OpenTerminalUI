@@ -352,7 +352,11 @@ establish what the market knew on the source-reported release date. Users can
 now deliberately capture either symbol from the comparison's fundamentals
 panel and review recent saved values there; the capture fetches all currently
 eligible dates, not just the pair's bounded panel response. No automatic
-capture is claimed. Tested historical coverage
+capture is claimed. A versioned as-of API can now select the latest retained
+owner capture at or before a timezone-aware instant, including failed/empty
+observations. Deletion can make old captures unavailable, so no retained capture
+is not proof that none ever existed. This remains a terminal-observation timeline,
+not a provider revision archive. Tested historical coverage
 and a revision-aware explanation contract remain future work.
 
 A first macro-context candidate now uses the same pair window to request the

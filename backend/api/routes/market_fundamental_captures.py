@@ -50,6 +50,18 @@ class FundamentalCaptureDetail(FundamentalCaptureSummary):
     records: list[CapturedFundamentalRecord]
 
 
+class ObservedFundamentalsAsOf(BaseModel):
+    contract_version: Literal[1] = 1
+    symbol: str
+    requested_as_of: datetime
+    selection_status: Literal["capture_found", "no_retained_capture"]
+    selection_basis: Literal[
+        "latest_retained_owner_capture_at_or_before_requested_at"
+    ] = "latest_retained_owner_capture_at_or_before_requested_at"
+    evidence_scope: Literal["terminal_observation_only"] = "terminal_observation_only"
+    capture: FundamentalCaptureDetail | None
+
+
 def _summary(row: FundamentalCaptureORM) -> dict[str, Any]:
     captured_at = row.captured_at
     if captured_at.tzinfo is None:
@@ -123,6 +135,38 @@ def list_fundamental_captures(
         query = query.filter(FundamentalCaptureORM.symbol == _symbol(symbol))
     rows = query.order_by(FundamentalCaptureORM.captured_at.desc(), FundamentalCaptureORM.id.desc()).limit(limit).all()
     return [_summary(row) for row in rows]
+
+
+@router.get("/observed-as-of", response_model=ObservedFundamentalsAsOf)
+def get_observed_fundamentals_as_of(
+    symbol: str,
+    as_of: datetime = Query(
+        description="Timezone-aware instant; selects the latest retained owner capture at or before this UTC instant."
+    ),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Return terminal-observed state, not a provider or market historical vintage."""
+    normalized_symbol = _symbol(symbol)
+    if as_of.utcoffset() is None:
+        raise HTTPException(status_code=422, detail="as_of must include a timezone offset")
+    requested_at = as_of.astimezone(timezone.utc)
+    row = (
+        db.query(FundamentalCaptureORM)
+        .filter(
+            FundamentalCaptureORM.user_id == current_user.id,
+            FundamentalCaptureORM.symbol == normalized_symbol,
+            FundamentalCaptureORM.captured_at <= requested_at,
+        )
+        .order_by(FundamentalCaptureORM.captured_at.desc(), FundamentalCaptureORM.id.desc())
+        .first()
+    )
+    return {
+        "symbol": normalized_symbol,
+        "requested_as_of": requested_at,
+        "selection_status": "capture_found" if row is not None else "no_retained_capture",
+        "capture": {**_summary(row), "records": row.records} if row is not None else None,
+    }
 
 
 @router.get("/{capture_id}", response_model=FundamentalCaptureDetail)
