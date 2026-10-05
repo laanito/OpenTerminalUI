@@ -104,8 +104,9 @@ never silently faked.
   current provider snapshot cannot prove what was known at a past date.
   An explicit owner-scoped capture API can now preserve the eligible values
   this terminal saw at a UTC retrieval time, including conflicting values and
-  an empty/error status. It is opt-in, not a backfill; the existing on-demand
-  panel does not automatically archive its checks. Captures cannot establish
+  an empty/error status. The comparison panel offers explicit capture and
+  review, but saving makes a new fetch across eligible dates; it does not
+  archive the panel's bounded response or happen automatically. Captures cannot establish
   market knowledge before they were made, and a fetcher returning an empty
   list may still hide upstream provider failure.
 - **Technical observations use shared, unadjusted closes.** Maximum observed

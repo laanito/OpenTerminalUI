@@ -419,8 +419,12 @@ intelligence promise, or claim that contradiction handling is solved.
         time, all distinct eligible values (including conflicts), status, and a
         stable content hash; list/read and explicit owner deletion stay scoped.
         No old provider vintages are backfilled, and capture does not assert
-        market knowledge before the terminal observed the records. A browser
-        capture/review journey remains future work.
+        market knowledge before the terminal observed the records.
+  - [x] Add an explicit browser capture/review journey from each available
+        comparison's fundamentals panel. Saving fetches current eligible records
+        across dates rather than archiving the bounded panel response. Show the
+        owner's recent captures and original values, including conflicting or
+        failed/empty observations, without implying historical market knowledge.
   - [ ] Establish a versioned/revision-aware fundamentals evidence contract
         and tested historical coverage before using these candidates to explain
         old price moves or asserting what was known at a past point in time.

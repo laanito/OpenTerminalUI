@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Fundamentals capture and review in cross-market context** — the comparison
+  panel now lets a user deliberately capture current eligible fundamentals for
+  either symbol and inspect recent saved observations, including conflicts and
+  empty or failed fetches. A capture is a new fetch across eligible dates, not
+  an archive of the date-limited panel or a historical market vintage.
 - **Explicit fundamentals observation captures** — an authenticated,
   owner-scoped API can snapshot the source-dated values retrieved now, with UTC
   capture time, status, content hash, list/read, and explicit deletion. Conflicting
