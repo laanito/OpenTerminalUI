@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **459 operations** across **409 paths** and **87 families**.
-- Authentication: **414 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **460 operations** across **410 paths** and **87 families**.
+- Authentication: **415 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 9 |
+| `market-context` | `experimental` | 10 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -678,6 +678,7 @@ State: **experimental**
 | `GET` | `/api/market-context/fundamental-captures` | Bearer token | List Fundamental Captures |
 | `POST` | `/api/market-context/fundamental-captures` | Bearer token | Capture Fundamentals |
 | `GET` | `/api/market-context/fundamental-captures/observed-as-of` | Bearer token | Get Observed Fundamentals As Of |
+| `GET` | `/api/market-context/fundamental-captures/observed-delta` | Bearer token | Compare Observed Fundamentals |
 | `DELETE` | `/api/market-context/fundamental-captures/{capture_id}` | Bearer token | Delete Fundamental Capture |
 | `GET` | `/api/market-context/fundamental-captures/{capture_id}` | Bearer token | Get Fundamental Capture |
 | `POST` | `/api/market-context/fundamental-releases` | Bearer token | Get Market Context Fundamental Releases |

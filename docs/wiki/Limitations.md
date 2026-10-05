@@ -112,7 +112,10 @@ never silently faked.
   Explicit deletion can erase a past observation, so no retained capture does
   not mean none ever existed. Captures cannot establish market knowledge before
   they were made, and a fetcher returning an empty list may still hide upstream
-  provider failure.
+  provider failure. Comparing two retained captures shows changes in provider
+  candidate sets, not verified provider revisions or retractions. Failed/empty
+  captures have no comparable value set; records missing from a later fetch may
+  reflect provider coverage rather than a real-world event.
 - **Technical observations use shared, unadjusted closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average

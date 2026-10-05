@@ -356,7 +356,12 @@ capture is claimed. A versioned as-of API can now select the latest retained
 owner capture at or before a timezone-aware instant, including failed/empty
 observations. Deletion can make old captures unavailable, so no retained capture
 is not proof that none ever existed. This remains a terminal-observation timeline,
-not a provider revision archive. Tested historical coverage
+not a provider revision archive. Users can also compare adjacent retained captures
+for the same symbol. The API compares complete value sets by source-dated metric
+identity and reports differences without assigning a revision order to values
+inside a capture. Empty or failed observations are not comparable. A candidate
+appearing or disappearing between fetches does not prove a new disclosure or
+retraction. Tested historical coverage
 and a revision-aware explanation contract remain future work.
 
 A first macro-context candidate now uses the same pair window to request the

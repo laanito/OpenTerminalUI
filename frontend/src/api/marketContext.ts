@@ -196,6 +196,29 @@ export interface FundamentalCaptureDetail extends FundamentalCaptureSummary {
   records: MarketFundamentalRelease[];
 }
 
+export interface ObservedFundamentalDelta {
+  release_date: string;
+  fiscal_period_end: string;
+  metric: MarketFundamentalRelease["metric"];
+  source: string;
+  kind: "only_in_earlier" | "only_in_later" | "value_set_different";
+  earlier_values: number[];
+  later_values: number[];
+}
+
+export interface ObservedFundamentalsDeltaResponse {
+  contract_version: 1;
+  evidence_scope: "terminal_observation_only";
+  comparison_basis: "retained_capture_candidate_sets";
+  symbol: string;
+  earlier_capture: FundamentalCaptureSummary;
+  later_capture: FundamentalCaptureSummary;
+  comparison_status: "comparable" | "unavailable";
+  reason: "earlier_capture_not_records_observed" | "later_capture_not_records_observed" | null;
+  unchanged_identity_count: number;
+  deltas: ObservedFundamentalDelta[];
+}
+
 export async function compareMarketContext(
   anchor: string,
   comparisons: string[],
@@ -251,5 +274,12 @@ export async function listMarketFundamentalCaptures(symbol: string): Promise<Fun
 
 export async function getMarketFundamentalCapture(id: string): Promise<FundamentalCaptureDetail> {
   const response = await api.get<FundamentalCaptureDetail>(`/market-context/fundamental-captures/${encodeURIComponent(id)}`);
+  return response.data;
+}
+
+export async function compareMarketFundamentalCaptures(fromId: string, toId: string): Promise<ObservedFundamentalsDeltaResponse> {
+  const response = await api.get<ObservedFundamentalsDeltaResponse>("/market-context/fundamental-captures/observed-delta", {
+    params: { from_id: fromId, to_id: toId },
+  });
   return response.data;
 }

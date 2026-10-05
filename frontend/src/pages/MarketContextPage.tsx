@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -400,6 +400,7 @@ const FUNDAMENTAL_LABELS: Record<string, string> = {
 function FundamentalCaptureReview({ symbol }: { symbol: string }) {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [comparison, setComparison] = useState<{ fromId: string; toId: string } | null>(null);
   const listKey = ["market-fundamental-captures", symbol];
   const captures = useQuery({
     queryKey: listKey,
@@ -410,6 +411,12 @@ function FundamentalCaptureReview({ symbol }: { symbol: string }) {
     queryKey: ["market-fundamental-capture", selectedId],
     queryFn: () => getMarketFundamentalCapture(selectedId!),
     enabled: selectedId !== null,
+    retry: false,
+  });
+  const delta = useQuery({
+    queryKey: ["market-fundamental-observed-delta", comparison?.fromId, comparison?.toId],
+    queryFn: () => compareMarketFundamentalCaptures(comparison!.fromId, comparison!.toId),
+    enabled: comparison !== null,
     retry: false,
   });
   const capture = useMutation({
@@ -444,11 +451,20 @@ function FundamentalCaptureReview({ symbol }: { symbol: string }) {
             <>
               <p className="mt-1 text-terminal-muted">Showing the latest {captures.data.length} captures (up to 20).</p>
               <ul className="mt-2 max-h-32 space-y-1 overflow-auto">
-                {captures.data.map((item) => (
+                {captures.data.map((item, index) => (
                   <li key={item.id}>
                     <button type="button" className="text-left text-terminal-accent underline" aria-pressed={selectedId === item.id} onClick={() => setSelectedId(item.id)}>
                       Review {symbol} capture from {new Date(item.captured_at).toLocaleString()} · {item.record_count} records · {item.status.replace(/_/g, " ")}
                     </button>
+                    {index + 1 < captures.data.length ? (
+                      <button
+                        type="button"
+                        className="ml-2 text-terminal-accent underline"
+                        onClick={() => setComparison({ fromId: captures.data[index + 1].id, toId: item.id })}
+                      >
+                        Compare {symbol} capture from {new Date(item.captured_at).toLocaleString()} with previous
+                      </button>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -476,6 +492,35 @@ function FundamentalCaptureReview({ symbol }: { symbol: string }) {
               ))}
             </ul>
           ) : null}
+        </div>
+      ) : null}
+      {comparison && delta.isPending ? <p role="status" className="mt-2 text-terminal-muted">Comparing saved observations…</p> : null}
+      {comparison && delta.isError ? <p role="alert" className="mt-2 text-terminal-neg">{extractApiErrorMessage(delta.error, "Could not compare saved observations.")}</p> : null}
+      {delta.data ? (
+        <div className="mt-3 rounded border border-terminal-border p-2">
+          <h4 className="font-semibold text-terminal-text">Observed changes between {symbol} captures</h4>
+          <p className="mt-1 text-terminal-muted">
+            {new Date(delta.data.earlier_capture.captured_at).toLocaleString()} → {new Date(delta.data.later_capture.captured_at).toLocaleString()}.
+            Differences are in retained provider candidate sets, not verified revisions, retractions, or proof of market knowledge.
+          </p>
+          {delta.data.comparison_status === "unavailable" ? (
+            <p className="mt-2 text-terminal-warn">Cannot compare values: {delta.data.reason === "earlier_capture_not_records_observed" ? "the earlier" : "the later"} capture had no eligible records observed or its fetch failed.</p>
+          ) : (
+            <>
+              <p className="mt-2 text-terminal-muted">{delta.data.unchanged_identity_count} unchanged source-dated identities · {delta.data.deltas.length} differing identities.</p>
+              {delta.data.deltas.length === 0 ? <p className="mt-1 text-terminal-muted">No candidate-set differences observed; coverage outside these fetches remains unknown.</p> : null}
+              <ul className="mt-2 max-h-56 space-y-2 overflow-auto text-terminal-text">
+                {delta.data.deltas.map((item) => (
+                  <li key={`${item.release_date}-${item.fiscal_period_end}-${item.metric}-${item.source}`} className="rounded border border-terminal-border p-2">
+                    {item.release_date} · {FUNDAMENTAL_LABELS[item.metric]} · fiscal period {item.fiscal_period_end} · {sourceLabel(item.source)}
+                    <p className="text-terminal-muted">
+                      {item.kind.replace(/_/g, " ")} · earlier: {item.earlier_values.length ? item.earlier_values.join(", ") : "none observed"} · later: {item.later_values.length ? item.later_values.join(", ") : "none observed"}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       ) : null}
     </div>
