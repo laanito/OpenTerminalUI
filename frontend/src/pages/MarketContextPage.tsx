@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -397,6 +397,91 @@ const FUNDAMENTAL_LABELS: Record<string, string> = {
   free_cash_flow: "Free cash flow",
 };
 
+function FundamentalCaptureReview({ symbol }: { symbol: string }) {
+  const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const listKey = ["market-fundamental-captures", symbol];
+  const captures = useQuery({
+    queryKey: listKey,
+    queryFn: () => listMarketFundamentalCaptures(symbol),
+    retry: false,
+  });
+  const detail = useQuery({
+    queryKey: ["market-fundamental-capture", selectedId],
+    queryFn: () => getMarketFundamentalCapture(selectedId!),
+    enabled: selectedId !== null,
+    retry: false,
+  });
+  const capture = useMutation({
+    mutationFn: () => captureMarketFundamentals(symbol),
+    onSuccess: (result) => {
+      queryClient.setQueryData(["market-fundamental-capture", result.id], result);
+      setSelectedId(result.id);
+      void queryClient.invalidateQueries({ queryKey: listKey });
+    },
+  });
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <p className="text-terminal-muted">
+        Save a new observation for {symbol} only when you choose to. This fetches current provider data across all eligible dates, not just this pair’s window; it does not save the panel above. The saved UTC time says when this terminal saw the values, not when the market first knew them.
+      </p>
+      <button type="button" className="mt-2 rounded border border-terminal-accent px-2 py-1 text-terminal-accent disabled:opacity-50" disabled={capture.isPending} onClick={() => capture.mutate()}>
+        {capture.isPending ? `Capturing ${symbol}…` : `Capture current fundamentals for ${symbol}`}
+      </button>
+      {capture.isError ? <p role="alert" className="mt-2 text-terminal-neg">{extractApiErrorMessage(capture.error, "Could not save the capture.")}</p> : null}
+      {captures.isPending ? <p role="status" className="mt-2 text-terminal-muted">Loading saved observations for {symbol}…</p> : null}
+      {captures.isError ? (
+        <p role="alert" className="mt-2 text-terminal-neg">
+          {extractApiErrorMessage(captures.error, "Could not load saved observations.")}
+          <button type="button" className="ml-2 underline" onClick={() => void captures.refetch()}>Retry saved observations</button>
+        </p>
+      ) : null}
+      {captures.data ? (
+        <div className="mt-3">
+          <h4 className="font-semibold text-terminal-text">Saved observations for {symbol}</h4>
+          {captures.data.length === 0 ? <p className="mt-1 text-terminal-muted">None saved yet.</p> : (
+            <>
+              <p className="mt-1 text-terminal-muted">Showing the latest {captures.data.length} captures (up to 20).</p>
+              <ul className="mt-2 max-h-32 space-y-1 overflow-auto">
+                {captures.data.map((item) => (
+                  <li key={item.id}>
+                    <button type="button" className="text-left text-terminal-accent underline" aria-pressed={selectedId === item.id} onClick={() => setSelectedId(item.id)}>
+                      Review {symbol} capture from {new Date(item.captured_at).toLocaleString()} · {item.record_count} records · {item.status.replace(/_/g, " ")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      ) : null}
+      {selectedId && detail.isPending ? <p role="status" className="mt-2 text-terminal-muted">Loading saved capture…</p> : null}
+      {selectedId && detail.isError ? <p role="alert" className="mt-2 text-terminal-neg">{extractApiErrorMessage(detail.error, "Could not load this capture.")}</p> : null}
+      {detail.data ? (
+        <div className="mt-3 rounded border border-terminal-border p-2">
+          <h4 className="font-semibold text-terminal-text">Saved {detail.data.symbol} observation</h4>
+          <p className="mt-1 text-terminal-muted">
+            Captured {new Date(detail.data.captured_at).toLocaleString()} · {detail.data.record_count} distinct eligible values from {detail.data.examined_count} fetched candidates · {detail.data.status.replace(/_/g, " ")}.
+          </p>
+          {detail.data.status === "fetch_error" ? <p className="mt-1 text-terminal-warn">The fetch failed; this capture says nothing about available fundamentals.</p> : null}
+          {detail.data.status === "no_eligible_records_observed" ? <p className="mt-1 text-terminal-muted">No eligible values were observed in this fetch; this does not prove none existed.</p> : null}
+          <p className="mt-1 text-terminal-muted">Distinct conflicting values remain visible below. Units are provider-native; this is a terminal observation, not a verified historical revision or price-move explanation.</p>
+          {detail.data.records.length > 0 ? (
+            <ul className="mt-2 max-h-56 space-y-1 overflow-auto text-terminal-text">
+              {detail.data.records.map((record) => (
+                <li key={`${record.release_date}-${record.fiscal_period_end}-${record.metric}-${record.source}-${record.value}`}>
+                  {record.release_date} · {FUNDAMENTAL_LABELS[record.metric]} {new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(record.value)} · fiscal period {record.fiscal_period_end} · {sourceLabel(record.source)}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
   const [open, setOpen] = useState(false);
   const startDate = row.start_date || "";
@@ -473,6 +558,13 @@ function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: Market
               </div>
             </>
           ) : null}
+          <div className="grid gap-3 md:grid-cols-2">
+            {[anchor, row.symbol].map((symbol) => (
+              <div key={symbol} className="rounded border border-terminal-border p-2">
+                <FundamentalCaptureReview symbol={symbol} />
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

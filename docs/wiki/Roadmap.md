@@ -348,8 +348,11 @@ An explicit, owner-scoped capture API now records a normalized set of distinct
 source-dated values, retrieval status and UTC capture time as an immutable
 snapshot. Repeated captures can reveal what this terminal observed changing
 after the first capture; they do not backfill earlier provider vintages or
-establish what the market knew on the source-reported release date. No automatic
-capture or browser review journey is claimed yet. Tested historical coverage
+establish what the market knew on the source-reported release date. Users can
+now deliberately capture either symbol from the comparison's fundamentals
+panel and review recent saved values there; the capture fetches all currently
+eligible dates, not just the pair's bounded panel response. No automatic
+capture is claimed. Tested historical coverage
 and a revision-aware explanation contract remain future work.
 
 A first macro-context candidate now uses the same pair window to request the

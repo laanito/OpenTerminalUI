@@ -3,17 +3,20 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
 import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
-vi.mock("../api/marketContext", () => ({ compareMarketContext: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn() }));
+vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
 vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
 const headlinesMock = vi.mocked(fetchMarketContextHeadlines);
 const macroMock = vi.mocked(fetchMarketContextMacroEvents);
 const fundamentalsMock = vi.mocked(fetchMarketContextFundamentalReleases);
+const captureMock = vi.mocked(captureMarketFundamentals);
+const listCapturesMock = vi.mocked(listMarketFundamentalCaptures);
+const getCaptureMock = vi.mocked(getMarketFundamentalCapture);
 const searchMock = vi.mocked(searchSymbols);
 
 function renderPage(path: string) {
@@ -33,6 +36,9 @@ describe("MarketContextPage", () => {
     headlinesMock.mockReset();
     macroMock.mockReset();
     fundamentalsMock.mockReset();
+    captureMock.mockReset();
+    listCapturesMock.mockReset().mockResolvedValue([]);
+    getCaptureMock.mockReset();
     searchMock.mockReset();
   });
 
@@ -419,5 +425,52 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/no verified revision history/)).toBeInTheDocument();
     expect(screen.getByText(/1 conflicting provider record withheld/)).toBeInTheDocument();
     expect(screen.getByText(/2026-09-06 · EPS · fiscal period 2026-06-30 · FMP: 2 different values/)).toBeInTheDocument();
+  });
+
+  it("deliberately captures and reviews distinct saved values without treating them as historical proof", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+        points: [{ date: "2026-09-02", anchor_index: 100, comparison_index: 100 }, { date: "2026-09-10", anchor_index: 102, comparison_index: 101 }],
+      }],
+    });
+    fundamentalsMock.mockRejectedValue(new Error("Current panel unavailable"));
+    const saved = {
+      id: "capture-1", symbol: "AAPL", captured_at: "2026-09-11T10:05:00Z",
+      status: "records_observed" as const, examined_count: 3, record_count: 2,
+      content_hash: "abc", evidence_scope: "terminal_observation_only" as const,
+      records: [
+        { release_date: "2026-09-05", fiscal_period_end: "2026-06-30", metric: "revenue" as const, value: 100, source: "fmp" },
+        { release_date: "2026-09-05", fiscal_period_end: "2026-06-30", metric: "revenue" as const, value: 110, source: "fmp" },
+      ],
+    };
+    const earlier = { ...saved, id: "capture-0", captured_at: "2026-09-10T09:00:00Z", status: "fetch_error" as const, examined_count: 0, record_count: 0, records: [] };
+    listCapturesMock.mockImplementation(async (symbol) => symbol === "AAPL" ? (captureMock.mock.calls.length > 0 ? [saved, earlier] : [earlier]) : []);
+    captureMock.mockResolvedValue(saved);
+    getCaptureMock.mockImplementation(async (id) => id === earlier.id ? earlier : saved);
+
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
+    expect(captureMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Show dated fundamentals for AAPL vs SPY" }));
+    expect(await screen.findByRole("button", { name: "Capture current fundamentals for AAPL" })).toBeInTheDocument();
+    expect(captureMock).not.toHaveBeenCalled();
+    expect(await screen.findByText("Current panel unavailable")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Review AAPL capture from/ }));
+    expect(await screen.findByText(/The fetch failed; this capture says nothing/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Capture current fundamentals for AAPL" }));
+    await waitFor(() => expect(captureMock).toHaveBeenCalledWith("AAPL"));
+    expect(await screen.findByText(/Revenue 100 · fiscal period 2026-06-30 · FMP/)).toBeInTheDocument();
+    expect(screen.getByText(/Revenue 110 · fiscal period 2026-06-30 · FMP/)).toBeInTheDocument();
+    expect(screen.getByText(/not a verified historical revision/)).toBeInTheDocument();
+    expect(await screen.findAllByRole("button", { name: /Review AAPL capture from/ })).toHaveLength(2);
   });
 });

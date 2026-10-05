@@ -181,6 +181,21 @@ export interface MarketFundamentalsResponse {
   groups: MarketFundamentalsGroup[];
 }
 
+export interface FundamentalCaptureSummary {
+  id: string;
+  symbol: string;
+  captured_at: string;
+  status: "records_observed" | "no_eligible_records_observed" | "fetch_error";
+  examined_count: number;
+  record_count: number;
+  content_hash: string;
+  evidence_scope: "terminal_observation_only";
+}
+
+export interface FundamentalCaptureDetail extends FundamentalCaptureSummary {
+  records: MarketFundamentalRelease[];
+}
+
 export async function compareMarketContext(
   anchor: string,
   comparisons: string[],
@@ -221,5 +236,20 @@ export async function fetchMarketContextFundamentalReleases(
   const response = await api.post<MarketFundamentalsResponse>("/market-context/fundamental-releases", {
     anchor, comparison, start_date: startDate, end_date: endDate,
   });
+  return response.data;
+}
+
+export async function captureMarketFundamentals(symbol: string): Promise<FundamentalCaptureDetail> {
+  const response = await api.post<FundamentalCaptureDetail>("/market-context/fundamental-captures", { symbol });
+  return response.data;
+}
+
+export async function listMarketFundamentalCaptures(symbol: string): Promise<FundamentalCaptureSummary[]> {
+  const response = await api.get<FundamentalCaptureSummary[]>("/market-context/fundamental-captures", { params: { symbol } });
+  return response.data;
+}
+
+export async function getMarketFundamentalCapture(id: string): Promise<FundamentalCaptureDetail> {
+  const response = await api.get<FundamentalCaptureDetail>(`/market-context/fundamental-captures/${encodeURIComponent(id)}`);
   return response.data;
 }
