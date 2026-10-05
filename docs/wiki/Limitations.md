@@ -106,9 +106,13 @@ never silently faked.
   this terminal saw at a UTC retrieval time, including conflicting values and
   an empty/error status. The comparison panel offers explicit capture and
   review, but saving makes a new fetch across eligible dates; it does not
-  archive the panel's bounded response or happen automatically. Captures cannot establish
-  market knowledge before they were made, and a fetcher returning an empty
-  list may still hide upstream provider failure.
+  archive the panel's bounded response or happen automatically. A versioned
+  as-of lookup selects only the latest retained owner capture at or before a
+  requested instant; a failed/empty capture is not replaced by an older success.
+  Explicit deletion can erase a past observation, so no retained capture does
+  not mean none ever existed. Captures cannot establish market knowledge before
+  they were made, and a fetcher returning an empty list may still hide upstream
+  provider failure.
 - **Technical observations use shared, unadjusted closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average

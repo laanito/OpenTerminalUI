@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import Any
 
@@ -116,3 +116,46 @@ def test_capture_hash_is_order_independent_for_the_same_eligible_values() -> Non
     assert first["id"] != second["id"]
     assert first["content_hash"] == second["content_hash"]
     assert first["records"] == second["records"]
+
+
+def test_observed_as_of_uses_owner_capture_time_and_never_falls_back_past_failure() -> None:
+    client, current = _client([[_dated(100.0)], RuntimeError("tokenized provider failure")])
+    first = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    second = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    first_at = datetime.fromisoformat(first["captured_at"])
+    second_at = datetime.fromisoformat(second["captured_at"])
+    assert first_at < second_at
+
+    endpoint = "/api/market-context/fundamental-captures/observed-as-of"
+    before = client.get(endpoint, params={"symbol": "aapl", "as_of": (first_at - timedelta(microseconds=1)).isoformat()})
+    assert before.status_code == 200
+    assert before.json()["selection_status"] == "no_retained_capture"
+    assert before.json()["capture"] is None
+    assert before.json()["evidence_scope"] == "terminal_observation_only"
+    assert before.json()["selection_basis"] == "latest_retained_owner_capture_at_or_before_requested_at"
+
+    at_first = client.get(endpoint, params={"symbol": "AAPL", "as_of": first_at.isoformat()})
+    assert at_first.status_code == 200
+    assert at_first.json()["contract_version"] == 1
+    assert at_first.json()["capture"] == first
+    assert datetime.fromisoformat(at_first.json()["requested_as_of"]) == first_at
+
+    offset = first_at.astimezone(timezone(timedelta(hours=2))).isoformat()
+    assert client.get(endpoint, params={"symbol": "AAPL", "as_of": offset}).json()["capture"] == first
+
+    at_second = client.get(endpoint, params={"symbol": "AAPL", "as_of": second_at.isoformat()})
+    assert at_second.status_code == 200
+    assert at_second.json()["capture"] == second
+    assert at_second.json()["capture"]["status"] == "fetch_error"
+    assert at_second.json()["capture"]["records"] == []
+
+    current["id"] = "other"
+    assert client.get(endpoint, params={"symbol": "AAPL", "as_of": second_at.isoformat()}).json()["capture"] is None
+    assert client.get(endpoint, params={"symbol": "AAPL", "as_of": "2026-09-11T10:00:00"}).status_code == 422
+
+    current["id"] = "owner"
+    assert client.delete(f"/api/market-context/fundamental-captures/{second['id']}").status_code == 204
+    retained = client.get(endpoint, params={"symbol": "AAPL", "as_of": second_at.isoformat()}).json()
+    assert retained["capture"] == first
+    assert client.delete(f"/api/market-context/fundamental-captures/{first['id']}").status_code == 204
+    assert client.get(endpoint, params={"symbol": "AAPL", "as_of": second_at.isoformat()}).json()["selection_status"] == "no_retained_capture"

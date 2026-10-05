@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Terminal-observed fundamentals as-of lookup** — an authenticated API
+  selects the latest retained owner capture at or before a timezone-aware
+  instant. It returns failed/empty observations without falling back to older
+  successes, and distinguishes no retained capture from no provider records.
+  This is not a provider revision history or proof of past market knowledge.
 - **Fundamentals capture and review in cross-market context** — the comparison
   panel now lets a user deliberately capture current eligible fundamentals for
   either symbol and inspect recent saved observations, including conflicts and

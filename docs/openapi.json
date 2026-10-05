@@ -8507,6 +8507,63 @@
         "title": "NotificationCreate",
         "type": "object"
       },
+      "ObservedFundamentalsAsOf": {
+        "properties": {
+          "capture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FundamentalCaptureDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "evidence_scope": {
+            "const": "terminal_observation_only",
+            "default": "terminal_observation_only",
+            "title": "Evidence Scope",
+            "type": "string"
+          },
+          "requested_as_of": {
+            "format": "date-time",
+            "title": "Requested As Of",
+            "type": "string"
+          },
+          "selection_basis": {
+            "const": "latest_retained_owner_capture_at_or_before_requested_at",
+            "default": "latest_retained_owner_capture_at_or_before_requested_at",
+            "title": "Selection Basis",
+            "type": "string"
+          },
+          "selection_status": {
+            "enum": [
+              "capture_found",
+              "no_retained_capture"
+            ],
+            "title": "Selection Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "requested_as_of",
+          "selection_status",
+          "capture"
+        ],
+        "title": "ObservedFundamentalsAsOf",
+        "type": "object"
+      },
       "OhlcvPoint": {
         "properties": {
           "c": {
@@ -25510,6 +25567,73 @@
           }
         ],
         "summary": "Capture Fundamentals",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/fundamental-captures/observed-as-of": {
+      "get": {
+        "description": "Return terminal-observed state, not a provider or market historical vintage.",
+        "operationId": "get_observed_fundamentals_as_of_api_market_context_fundamental_captures_observed_as_of_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": true,
+            "schema": {
+              "title": "Symbol",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Timezone-aware instant; selects the latest retained owner capture at or before this UTC instant.",
+            "in": "query",
+            "name": "as_of",
+            "required": true,
+            "schema": {
+              "description": "Timezone-aware instant; selects the latest retained owner capture at or before this UTC instant.",
+              "format": "date-time",
+              "title": "As Of",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedFundamentalsAsOf"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Observed Fundamentals As Of",
         "tags": [
           "market-context"
         ],
