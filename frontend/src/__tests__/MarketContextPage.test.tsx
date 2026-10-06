@@ -153,6 +153,7 @@ describe("MarketContextPage", () => {
         start_date: "2026-08-25", end_date: "2026-09-23",
         anchor_latest_date: "2026-09-23", comparison_latest_date: "2026-09-23",
         anchor_history_source: "yahoo", comparison_history_source: "fmp",
+        comparison_history_feed: "fmp_historical_price_non_split_adjusted",
         observations: 21, freshness: "current",
         anchor_return_pct: 5, comparison_return_pct: 2, relative_return_pp: 3,
         technical_observations: {
@@ -187,6 +188,7 @@ describe("MarketContextPage", () => {
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
     expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
     expect(screen.getByText("+5.00%")).toBeInTheDocument();
+    expect(screen.getByText(/SPY FMP → FMP EOD bars \(non-split-adjusted\)/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for AAPL vs SPY" }));
     expect(screen.getAllByText("Adjusted return: +6.50%")).toHaveLength(2);
     expect(screen.getByText("Maximum observed drawdown: 4.25%")).toBeInTheDocument();

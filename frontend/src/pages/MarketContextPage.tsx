@@ -63,6 +63,7 @@ function historyPathLabel(source: string | null, feed: string | null | undefined
   if (!feed) return sourceLabel(source);
   const alpacaParts = feed.split(":");
   const feedLabel = feed === "yahoo_chart" ? "Yahoo chart"
+    : feed === "fmp_historical_price_non_split_adjusted" ? "FMP EOD bars (non-split-adjusted)"
     : feed === "fmp_historical_price" ? "FMP historical prices"
     : alpacaParts.length === 3 && alpacaParts[0] === "alpaca_stocks_bars" && alpacaParts[2] === "raw"
       ? `stock bars (${alpacaParts[1].toUpperCase()} feed, raw)`

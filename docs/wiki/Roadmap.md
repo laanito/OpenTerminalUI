@@ -298,6 +298,12 @@ the primary unadjusted label does not silently depend on deployment settings.
 This identifies the request made, not the completeness or correctness of the
 returned bars or their exchange-session calendar.
 
+The direct FMP comparison fallback now requests non-split-adjusted EOD bars,
+validates and normalizes usable rows, and identifies that feed. An empty Yahoo
+chart no longer counts as successful comparison history and cannot hide the
+fallback. The general FMP full-history path remains unchanged. FMP access,
+symbol coverage, raw-price quality, and historical completeness are not assured.
+
 The same aligned closes now support a first descriptive technical layer:
 maximum observed drawdown with its peak/trough dates, and the last close's
 percentage gap from the previous 20 shared closes. Fewer than 20 observations
