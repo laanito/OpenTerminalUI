@@ -313,7 +313,13 @@ unadjusted drawdown and 20-close gap for each asset within the same observed
 pair window, reporting how many additional dates were used. This keeps crypto
 weekends visible without changing the shared-date comparison. Provider UTC
 dates are not verified exchange sessions, so these are not standard per-asset
-daily indicators, trading signals, or causal explanations. Adjusted history and deeper provider
+daily indicators, trading signals, or causal explanations. A parallel Yahoo-
+adjusted own-date view now reports coverage on every accepted close date for
+each asset in that same window. It calculates return, drawdown, and 20-close
+gap only when all those dates have adjusted values; a missing crypto weekend
+cannot be silently dropped just because pair-shared weekdays are complete.
+The primary returns and shared-date measures remain unchanged. Adjustment
+quality, historical vintage, provider session calendars, and deeper provider
 provenance remain prerequisites for decision-grade technical evidence.
 
 Dated news is the first candidate for that next layer. As a prerequisite, new

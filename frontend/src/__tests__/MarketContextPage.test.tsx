@@ -167,6 +167,18 @@ describe("MarketContextPage", () => {
           anchor: { return_pct: 6.5, technical_measures: { max_drawdown_pct: 4.25, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 1.5 } },
           comparison: null,
         },
+        native_adjusted_close_coverage: {
+          anchor: { status: "complete", source: "yahoo_adjclose", available_observations: 23, native_observations: 23 },
+          comparison: { status: "unavailable", source: null, available_observations: 0, native_observations: 21 },
+        },
+        native_adjusted_observations: {
+          basis: "per_asset_utc_date_provider_adjusted_closes_within_pair_window", source: "yahoo_adjclose",
+          anchor: {
+            start_date: "2026-08-25", end_date: "2026-09-23", observations: 23, additional_dates_vs_pair: 2,
+            return_pct: 6.5, technical_measures: { max_drawdown_pct: 3.5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 2.2 },
+          },
+          comparison: null,
+        },
         points: [{ date: "2026-08-25", anchor_index: 100, comparison_index: 100 }, { date: "2026-09-23", anchor_index: 105, comparison_index: 102 }],
       }],
     });
@@ -174,10 +186,14 @@ describe("MarketContextPage", () => {
     expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
     expect(screen.getByText("+5.00%")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for AAPL vs SPY" }));
-    expect(screen.getByText("Adjusted return: +6.50%")).toBeInTheDocument();
+    expect(screen.getAllByText("Adjusted return: +6.50%")).toHaveLength(2);
     expect(screen.getByText("Maximum observed drawdown: 4.25%")).toBeInTheDocument();
     expect(screen.getByText("Unavailable without complete Yahoo-adjusted coverage.")).toBeInTheDocument();
     expect(screen.getByText(/not verified trading signals/)).toBeInTheDocument();
+    expect(screen.getByText("Each asset’s own-date adjusted closes")).toBeInTheDocument();
+    expect(screen.getByText(/23 closes · 2 beyond pair overlap/)).toBeInTheDocument();
+    expect(screen.getByText("20-own-close average gap: +2.20%")).toBeInTheDocument();
+    expect(screen.getByText("Own-date adjusted measures unavailable without complete coverage.")).toBeInTheDocument();
   });
 
   it("validates editable symbols before applying a new query", async () => {

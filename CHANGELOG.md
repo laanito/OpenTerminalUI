@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Own-date Yahoo-adjusted observations** — cross-market comparisons now
+  disclose adjusted-close coverage on each asset's own accepted dates and show
+  a separate return, drawdown, and 20-close gap only when coverage is complete.
+  Crypto weekends can contribute without changing the primary shared-date,
+  unadjusted comparison. Yahoo adjustments remain retrospective and unverified.
 - **Observed fundamentals changes between captures** — an owner-scoped API and
   browser review compare two retained captures of the same symbol, showing
   source-dated candidate sets seen only earlier, only later, or with different

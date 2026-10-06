@@ -120,6 +120,32 @@ class MarketAdjustedObservations(BaseModel):
     comparison: MarketAdjustedAssetObservations | None
 
 
+class MarketNativeAdjustedCloseCoverage(BaseModel):
+    status: Literal["complete", "partial", "unavailable"]
+    source: Literal["yahoo_adjclose"] | None
+    available_observations: int
+    native_observations: int
+
+
+class MarketPairNativeAdjustedCloseCoverage(BaseModel):
+    anchor: MarketNativeAdjustedCloseCoverage
+    comparison: MarketNativeAdjustedCloseCoverage
+
+
+class MarketNativeAdjustedAssetObservations(MarketAdjustedAssetObservations):
+    start_date: date
+    end_date: date
+    observations: int
+    additional_dates_vs_pair: int
+
+
+class MarketNativeAdjustedObservations(BaseModel):
+    basis: Literal["per_asset_utc_date_provider_adjusted_closes_within_pair_window"]
+    source: Literal["yahoo_adjclose"]
+    anchor: MarketNativeAdjustedAssetObservations | None
+    comparison: MarketNativeAdjustedAssetObservations | None
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -142,6 +168,8 @@ class MarketComparisonRow(BaseModel):
     action_disclosure: MarketPairActionDisclosure | None = None
     adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
     adjusted_observations: MarketAdjustedObservations | None = None
+    native_adjusted_close_coverage: MarketPairNativeAdjustedCloseCoverage | None = None
+    native_adjusted_observations: MarketNativeAdjustedObservations | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
@@ -376,6 +404,40 @@ async def compare_market_context(
                     "as_of_date": shared_dates[-1],
                     "anchor": adjusted_anchor,
                     "comparison": adjusted_comparison,
+                }
+
+            native_adjusted: dict[str, dict[str, Any] | None] = {}
+            native_coverage: dict[str, dict[str, Any]] = {}
+            for asset in (anchor, symbol):
+                native_dates = sorted(
+                    day for day in histories[asset]
+                    if shared_dates[0] <= day <= shared_dates[-1]
+                )
+                available = sum(day in adjusted_closes[asset] for day in native_dates)
+                native_coverage[asset] = {
+                    "status": "complete" if available == len(native_dates) else "partial" if available else "unavailable",
+                    "source": "yahoo_adjclose" if available else None,
+                    "available_observations": available,
+                    "native_observations": len(native_dates),
+                }
+                measures = adjusted_observations(adjusted_closes[asset], native_dates)
+                native_adjusted[asset] = None if measures is None else {
+                    **measures,
+                    "start_date": native_dates[0],
+                    "end_date": native_dates[-1],
+                    "observations": len(native_dates),
+                    "additional_dates_vs_pair": len(set(native_dates) - set(shared_dates)),
+                }
+            result["native_adjusted_close_coverage"] = {
+                "anchor": native_coverage[anchor],
+                "comparison": native_coverage[symbol],
+            }
+            if native_adjusted[anchor] is not None or native_adjusted[symbol] is not None:
+                result["native_adjusted_observations"] = {
+                    "basis": "per_asset_utc_date_provider_adjusted_closes_within_pair_window",
+                    "source": "yahoo_adjclose",
+                    "anchor": native_adjusted[anchor],
+                    "comparison": native_adjusted[symbol],
                 }
         rows.append({
             "symbol": symbol,

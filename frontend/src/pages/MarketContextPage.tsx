@@ -225,6 +225,35 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
                   </div>
                 </div>
               ) : null}
+              {row.native_adjusted_close_coverage ? (
+                <div className="mt-3 border-t border-terminal-border pt-2">
+                  <h3 className="font-semibold text-terminal-text">Each asset’s own-date adjusted closes</h3>
+                  <p className="mt-1 text-terminal-muted">
+                    Coverage is checked on every accepted close date for that asset inside the observed pair window, including crypto weekends. Measures appear only with complete coverage; missing dates are never filled. Yahoo adjusted closes are retrospective provider values, not verified corporate-action history or trading signals.
+                  </p>
+                  <div className="mt-2 grid gap-3 md:grid-cols-2">
+                    {([
+                      { symbol: anchor, coverage: row.native_adjusted_close_coverage.anchor, observations: row.native_adjusted_observations?.anchor },
+                      { symbol: row.symbol, coverage: row.native_adjusted_close_coverage.comparison, observations: row.native_adjusted_observations?.comparison },
+                    ]).map(({ symbol, coverage, observations }) => (
+                      <div key={symbol} className="rounded border border-terminal-border p-2 text-terminal-text">
+                        <h4 className="font-semibold">{symbol} own-date adjusted</h4>
+                        <p className="mt-1 text-terminal-muted">
+                          {coverage.status} · {coverage.available_observations}/{coverage.native_observations} own-date closes from {coverage.source === "yahoo_adjclose" ? "Yahoo adjclose" : "an unavailable adjusted feed"}.
+                        </p>
+                        {observations ? (
+                          <>
+                            <p className="mt-1 text-terminal-muted">{observations.start_date} to {observations.end_date} · {observations.observations} closes · {observations.additional_dates_vs_pair} beyond pair overlap.</p>
+                            <p className="mt-1">Adjusted return: {formatPercent(observations.return_pct)}</p>
+                            <p>Maximum observed drawdown: {observations.technical_measures.max_drawdown_pct.toFixed(2)}%</p>
+                            <p>20-own-close average gap: {observations.technical_measures.sma20_gap_pct == null ? "Unavailable (fewer than 20 own closes)" : formatPercent(observations.technical_measures.sma20_gap_pct)}</p>
+                          </>
+                        ) : <p className="mt-1 text-terminal-muted">Own-date adjusted measures unavailable without complete coverage.</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {row.action_disclosure ? (
