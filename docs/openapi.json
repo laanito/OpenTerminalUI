@@ -7146,7 +7146,7 @@
             "type": "string"
           },
           "return_basis": {
-            "const": "native_quote_currency_unadjusted",
+            "const": "native_quote_currency_provider_closes",
             "title": "Return Basis",
             "type": "string"
           }
@@ -7229,6 +7229,22 @@
             ],
             "title": "Anchor Latest Date"
           },
+          "anchor_reported_adjustment_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "raw",
+                  "non_split_adjusted",
+                  "unspecified"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Reported Adjustment Basis"
+          },
           "anchor_return_pct": {
             "anyOf": [
               {
@@ -7273,6 +7289,22 @@
               }
             ],
             "title": "Comparison Latest Date"
+          },
+          "comparison_reported_adjustment_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "raw",
+                  "non_split_adjusted",
+                  "unspecified"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Reported Adjustment Basis"
           },
           "comparison_return_pct": {
             "anyOf": [
@@ -8149,7 +8181,7 @@
             "$ref": "#/components/schemas/MarketNativeAssetTechnicalObservations"
           },
           "basis": {
-            "const": "per_asset_utc_date_unadjusted_closes_within_pair_window",
+            "const": "per_asset_utc_date_provider_closes_within_pair_window",
             "title": "Basis",
             "type": "string"
           },
@@ -8275,7 +8307,7 @@
             "type": "string"
           },
           "basis": {
-            "const": "shared_utc_date_unadjusted_closes",
+            "const": "shared_utc_date_provider_closes",
             "title": "Basis",
             "type": "string"
           },

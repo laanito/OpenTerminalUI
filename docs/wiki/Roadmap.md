@@ -294,7 +294,7 @@ only when they have honest coverage and provenance contracts.
 The Alpaca comparison path now explicitly requests raw stock bars even when
 other Alpaca workflows are configured for a different adjustment. It reports
 the selected Alpaca bar feed and raw adjustment with the winning adapter, so
-the primary unadjusted label does not silently depend on deployment settings.
+the selected raw request does not silently depend on deployment settings.
 This identifies the request made, not the completeness or correctness of the
 returned bars or their exchange-session calendar.
 
@@ -304,13 +304,19 @@ chart no longer counts as successful comparison history and cannot hide the
 fallback. The general FMP full-history path remains unchanged. FMP access,
 symbol coverage, raw-price quality, and historical completeness are not assured.
 
+The primary API and browser now identify their series as native-quote provider
+closes rather than asserting all feeds are unadjusted. They disclose Alpaca raw
+and FMP non-split-adjusted request bases per asset; other selected paths remain
+unspecified. This is request provenance, not verification of returned price
+adjustments, and mixed-basis pairs cannot be treated as decision-grade signals.
+
 The same aligned closes now support a first descriptive technical layer:
 maximum observed drawdown with its peak/trough dates, and the last close's
 percentage gap from the previous 20 shared closes. Fewer than 20 observations
 leave the latter unavailable. The calculation uses each pair's actual shared
 dates without interpolation, so crypto weekends disappear alongside a weekday-
-only proxy. These closes are unadjusted; splits or other corporate actions may
-distort the measures. When a selected Yahoo chart response includes event
+only proxy. Feed adjustment policies may differ; splits or other corporate actions
+may distort or retrospectively change the measures. When a selected Yahoo chart response includes event
 metadata, the comparison discloses reported split/dividend dates inside the
 observed window. An empty list is not proof that no action happened, and paths
 without event metadata remain unavailable. Markers do not adjust the path
@@ -320,9 +326,9 @@ in the primary comparison. A separate descriptive observation now calculates
 adjusted return, drawdown, and 20-shared-close gap for each asset only when its
 Yahoo adjusted series is complete on every pair-shared date; a partial series
 does not silently shrink the window. The original path, returns, and measures
-remain unadjusted. Provider coverage is not verification of adjustment quality
+remain provider-close. Provider coverage is not verification of adjustment quality
 or historical vintage. A separate own-date observation now calculates
-unadjusted drawdown and 20-close gap for each asset within the same observed
+provider-close drawdown and 20-close gap for each asset within the same observed
 pair window, reporting how many additional dates were used. This keeps crypto
 weekends visible without changing the shared-date comparison. Provider UTC
 dates are not verified exchange sessions, so these are not standard per-asset

@@ -16,7 +16,7 @@ export interface MarketTechnicalMeasures {
 }
 
 export interface MarketTechnicalObservations {
-  basis: "shared_utc_date_unadjusted_closes";
+  basis: "shared_utc_date_provider_closes";
   as_of_date: string;
   anchor: MarketTechnicalMeasures;
   comparison: MarketTechnicalMeasures;
@@ -31,7 +31,7 @@ export interface MarketNativeAssetTechnicalObservations {
 }
 
 export interface MarketNativeTechnicalObservations {
-  basis: "per_asset_utc_date_unadjusted_closes_within_pair_window";
+  basis: "per_asset_utc_date_provider_closes_within_pair_window";
   anchor: MarketNativeAssetTechnicalObservations;
   comparison: MarketNativeAssetTechnicalObservations;
 }
@@ -96,6 +96,8 @@ export interface MarketComparisonRow {
   comparison_history_source: string | null;
   anchor_history_feed?: string | null;
   comparison_history_feed?: string | null;
+  anchor_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
+  comparison_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
   observations: number | null;
   freshness: "current" | "stale" | null;
   anchor_return_pct: number | null;
@@ -116,7 +118,7 @@ export interface MarketComparisonResponse {
   period: MarketContextPeriod;
   retrieved_at: string;
   data_source: "unified_history";
-  return_basis: "native_quote_currency_unadjusted";
+  return_basis: "native_quote_currency_provider_closes";
   method: "same_utc_date_daily_closes";
   comparisons: MarketComparisonRow[];
 }

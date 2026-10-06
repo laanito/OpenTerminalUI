@@ -207,13 +207,13 @@ def compare_closes(
         "comparison_return_pct": round(comparison_return, 4),
         "relative_return_pp": round(anchor_return - comparison_return, 4),
         "technical_observations": {
-            "basis": "shared_utc_date_unadjusted_closes",
+            "basis": "shared_utc_date_provider_closes",
             "as_of_date": end.isoformat(),
             "anchor": _technical_measures(anchor, shared),
             "comparison": _technical_measures(comparison, shared),
         },
         "native_technical_observations": {
-            "basis": "per_asset_utc_date_unadjusted_closes_within_pair_window",
+            "basis": "per_asset_utc_date_provider_closes_within_pair_window",
             "anchor": _native_technical_observations(anchor, shared),
             "comparison": _native_technical_observations(comparison, shared),
         },

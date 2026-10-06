@@ -63,7 +63,7 @@ def test_invalid_closes_are_ignored() -> None:
     assert closes == {date(2026, 9, 1): 100.0}
 
 
-def test_technical_measures_use_only_shared_unadjusted_closes() -> None:
+def test_technical_measures_use_only_shared_provider_closes() -> None:
     start = date(2026, 8, 1)
     days = [start + timedelta(days=i) for i in range(31)]
     anchor = {day: 100.0 for day in days}
@@ -75,7 +75,7 @@ def test_technical_measures_use_only_shared_unadjusted_closes() -> None:
 
     result = compare_closes(anchor, comparison, period="1M", today=days[-1])
     technical = result["technical_observations"]
-    assert technical["basis"] == "shared_utc_date_unadjusted_closes"
+    assert technical["basis"] == "shared_utc_date_provider_closes"
     assert technical["as_of_date"] == days[-1].isoformat()
     assert technical["anchor"] == {
         "max_drawdown_pct": 25.0,
@@ -96,7 +96,7 @@ def test_native_observations_keep_crypto_weekends_out_of_pair_measures() -> None
     result = compare_closes(crypto, proxy, period="1M", today=days[-1])
     assert result["status"] == "available"
     native = result["native_technical_observations"]
-    assert native["basis"] == "per_asset_utc_date_unadjusted_closes_within_pair_window"
+    assert native["basis"] == "per_asset_utc_date_provider_closes_within_pair_window"
     assert native["anchor"]["observations"] == 30
     assert native["anchor"]["additional_dates_vs_pair"] == 8
     assert native["comparison"]["observations"] == len(weekdays)
@@ -195,19 +195,22 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["anchor"] == "AAPL"
-    assert payload["return_basis"] == "native_quote_currency_unadjusted"
+    assert payload["return_basis"] == "native_quote_currency_provider_closes"
     assert [row["symbol"] for row in payload["comparisons"]] == ["SPY", "BTC-USD"]
     assert payload["comparisons"][0]["status"] == "available"
     assert len(payload["comparisons"][0]["points"]) == payload["comparisons"][0]["observations"]
     assert payload["comparisons"][0]["anchor_history_source"] == "yahoo"
     assert payload["comparisons"][0]["comparison_history_source"] == "fmp"
     assert payload["comparisons"][0]["anchor_history_feed"] is None
+    assert payload["comparisons"][0]["anchor_reported_adjustment_basis"] == "unspecified"
+    assert payload["comparisons"][0]["comparison_reported_adjustment_basis"] == "unspecified"
     assert payload["comparisons"][0]["action_disclosure"]["anchor"]["source"] == "unavailable"
-    assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_unadjusted_closes"
-    assert payload["comparisons"][0]["native_technical_observations"]["basis"] == "per_asset_utc_date_unadjusted_closes_within_pair_window"
+    assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_provider_closes"
+    assert payload["comparisons"][0]["native_technical_observations"]["basis"] == "per_asset_utc_date_provider_closes_within_pair_window"
     assert payload["comparisons"][1]["reason"] == "provider_error"
     assert payload["comparisons"][1]["comparison_history_source"] is None
     assert payload["comparisons"][1]["comparison_history_feed"] is None
+    assert payload["comparisons"][1]["comparison_reported_adjustment_basis"] is None
     assert payload["comparisons"][1]["technical_observations"] is None
     assert payload["comparisons"][1]["native_technical_observations"] is None
     assert payload["comparisons"][1]["points"] == []
@@ -251,10 +254,28 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
     assert row["anchor_history_feed"] == "yahoo_chart"
     assert row["comparison_history_source"] == "alpaca"
     assert row["comparison_history_feed"] == "alpaca_stocks_bars:iex:raw"
+    assert row["anchor_reported_adjustment_basis"] == "unspecified"
+    assert row["comparison_reported_adjustment_basis"] == "raw"
     assert row["adjusted_close_coverage"]["anchor"]["status"] == "complete"
     assert row["adjusted_observations"]["anchor"]["return_pct"] != row["anchor_return_pct"]
     assert row["action_disclosure"]["anchor"]["actions"] == [{"date": "2026-09-05", "type": "split"}]
     assert row["action_disclosure"]["comparison"]["source"] == "unavailable"
+
+
+def test_route_reports_fmp_non_split_adjustment_without_inferring_other_feeds() -> None:
+    start = date(2026, 8, 24)
+    days = [start + timedelta(days=i) for i in range(32)]
+    client = _client(
+        {"AAPL": _chart({day: 100.0 + i for i, day in enumerate(days)}),
+         "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)})},
+        sources={"AAPL": "yahoo", "SPY": "fmp"},
+        feeds={"AAPL": "yahoo_chart", "SPY": "fmp_historical_price_non_split_adjusted"},
+    )
+    row = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
+    }).json()["comparisons"][0]
+    assert row["anchor_reported_adjustment_basis"] == "unspecified"
+    assert row["comparison_reported_adjustment_basis"] == "non_split_adjusted"
 
 
 def test_route_discloses_only_yahoo_reported_actions_in_observed_window() -> None:

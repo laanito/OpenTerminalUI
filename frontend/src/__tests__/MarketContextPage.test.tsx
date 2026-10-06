@@ -50,7 +50,7 @@ describe("MarketContextPage", () => {
       period: "1M",
       retrieved_at: "2026-09-24T10:00:00Z",
       data_source: "unified_history",
-      return_basis: "native_quote_currency_unadjusted",
+      return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes",
       comparisons: [
         {
@@ -59,15 +59,16 @@ describe("MarketContextPage", () => {
           anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-23",
           anchor_history_source: "crypto", comparison_history_source: "yahoo",
           anchor_history_feed: "yahoo_chart", comparison_history_feed: "yahoo_chart",
+          anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "unspecified",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
           technical_observations: {
-            basis: "shared_utc_date_unadjusted_closes", as_of_date: "2026-09-23",
+            basis: "shared_utc_date_provider_closes", as_of_date: "2026-09-23",
             anchor: { max_drawdown_pct: 12.5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 3.25 },
             comparison: { max_drawdown_pct: 0, max_drawdown_peak_date: null, max_drawdown_trough_date: null, sma20_gap_pct: null },
           },
           native_technical_observations: {
-            basis: "per_asset_utc_date_unadjusted_closes_within_pair_window",
+            basis: "per_asset_utc_date_provider_closes_within_pair_window",
             anchor: { start_date: "2026-08-25", end_date: "2026-09-23", observations: 30, additional_dates_vs_pair: 9,
               technical_measures: { max_drawdown_pct: 10, max_drawdown_peak_date: "2026-09-02", max_drawdown_trough_date: "2026-09-06", sma20_gap_pct: 2.5 } },
             comparison: { start_date: "2026-08-25", end_date: "2026-09-23", observations: 21, additional_dates_vs_pair: 0,
@@ -92,6 +93,7 @@ describe("MarketContextPage", () => {
           anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-10",
           anchor_history_source: "crypto", comparison_history_source: "alpaca",
           comparison_history_feed: "alpaca_stocks_bars:iex:raw",
+          anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "raw",
           observations: 12, freshness: "stale",
           anchor_return_pct: 4, comparison_return_pct: 1, relative_return_pp: 3,
           points: [
@@ -119,7 +121,10 @@ describe("MarketContextPage", () => {
     expect(screen.getByText("Stale history")).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD Crypto adapter → Yahoo chart · SPY Yahoo Finance → Yahoo chart/)).toBeInTheDocument();
     expect(screen.getByText(/QQQ Alpaca → stock bars \(IEX feed, raw\)/)).toBeInTheDocument();
+    expect(screen.getByText(/BTC-USD adjustment basis not verified · SPY adjustment basis not verified/)).toBeInTheDocument();
+    expect(screen.getByText(/QQQ raw requested \(provider-reported\)/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
+    expect(screen.getByText(/SAP.DE no usable history/)).toBeInTheDocument();
     expect(screen.getByText(/not FX-normalized/)).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: /Indexed daily-close paths/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show aligned price paths for BTC-USD vs SPY" }));
@@ -138,7 +143,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/not a complete action audit/)).toBeInTheDocument();
     expect(screen.getByText(/SPY: partial · 20\/21 shared closes from Yahoo adjclose/)).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD: No usable provider-adjusted closes/)).toBeInTheDocument();
-    expect(screen.getByText(/primary chart, returns, and measures above still use unadjusted closes/i)).toBeInTheDocument();
+    expect(screen.getByText(/primary chart, returns, and measures above use the selected providers’ quote closes/i)).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact aligned observations"));
     expect(screen.getByRole("columnheader", { name: "BTC-USD index" })).toBeInTheDocument();
     expect(screen.getByText("105.25")).toBeInTheDocument();
@@ -147,17 +152,18 @@ describe("MarketContextPage", () => {
   it("shows provider-adjusted observations separately without changing primary returns", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-08-25", end_date: "2026-09-23",
         anchor_latest_date: "2026-09-23", comparison_latest_date: "2026-09-23",
         anchor_history_source: "yahoo", comparison_history_source: "fmp",
         comparison_history_feed: "fmp_historical_price_non_split_adjusted",
+        anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "non_split_adjusted",
         observations: 21, freshness: "current",
         anchor_return_pct: 5, comparison_return_pct: 2, relative_return_pp: 3,
         technical_observations: {
-          basis: "shared_utc_date_unadjusted_closes", as_of_date: "2026-09-23",
+          basis: "shared_utc_date_provider_closes", as_of_date: "2026-09-23",
           anchor: { max_drawdown_pct: 5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 1 },
           comparison: { max_drawdown_pct: 2, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 0.5 },
         },
@@ -189,6 +195,7 @@ describe("MarketContextPage", () => {
     expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
     expect(screen.getByText("+5.00%")).toBeInTheDocument();
     expect(screen.getByText(/SPY FMP → FMP EOD bars \(non-split-adjusted\)/)).toBeInTheDocument();
+    expect(screen.getByText(/SPY non-split-adjusted requested \(provider-reported\)/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for AAPL vs SPY" }));
     expect(screen.getAllByText("Adjusted return: +6.50%")).toHaveLength(2);
     expect(screen.getByText("Maximum observed drawdown: 4.25%")).toBeInTheDocument();
@@ -203,7 +210,7 @@ describe("MarketContextPage", () => {
   it("validates editable symbols before applying a new query", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [],
     });
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
@@ -230,7 +237,7 @@ describe("MarketContextPage", () => {
     compareMock.mockRejectedValueOnce(new Error("Provider temporarily unavailable"));
     compareMock.mockResolvedValueOnce({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [],
     });
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
@@ -243,7 +250,7 @@ describe("MarketContextPage", () => {
   it("adds suggested proxies and searched symbols without comparing until Apply", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [],
     });
     searchMock.mockResolvedValue([
@@ -271,7 +278,7 @@ describe("MarketContextPage", () => {
   it("enforces the proxy limit and keeps manual entry available when lookup fails", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [],
     });
     searchMock.mockRejectedValue(new Error("Search unavailable"));
@@ -290,7 +297,7 @@ describe("MarketContextPage", () => {
   it("accepts a keyboard-picked anchor without submitting the form", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [],
     });
     searchMock.mockResolvedValue([{ ticker: "TSLA", name: "Tesla", exchange: "NASDAQ" }]);
@@ -310,7 +317,7 @@ describe("MarketContextPage", () => {
   it("loads limited, source-linked headlines only on demand for the actual pair window", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
@@ -349,7 +356,7 @@ describe("MarketContextPage", () => {
   it("shows live-only macro calendar availability for the actual pair window", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
@@ -381,7 +388,7 @@ describe("MarketContextPage", () => {
   it("shows provider-attributed calendar events without claiming asset relevance", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
@@ -411,7 +418,7 @@ describe("MarketContextPage", () => {
   it("loads only on-demand source-dated fundamental candidates for the pair window", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
@@ -452,7 +459,7 @@ describe("MarketContextPage", () => {
   it("deliberately captures and reviews distinct saved values without treating them as historical proof", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
@@ -507,7 +514,7 @@ describe("MarketContextPage", () => {
   it("shows candidate-set differences between retained captures without calling them revisions", async () => {
     compareMock.mockResolvedValue({
       anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
-      data_source: "unified_history", return_basis: "native_quote_currency_unadjusted",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
       method: "same_utc_date_daily_closes", comparisons: [{
         symbol: "SPY", status: "available", reason: null,
         start_date: "2026-09-02", end_date: "2026-09-10",
