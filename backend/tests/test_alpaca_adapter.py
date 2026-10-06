@@ -33,6 +33,28 @@ async def test_alpaca_adapter_get_history_parses_bars(monkeypatch: pytest.Monkey
 
 
 @pytest.mark.asyncio
+async def test_alpaca_comparison_evidence_forces_raw_and_discloses_feed(monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter = AlpacaAdapter(api_key="key", secret_key="secret", feed="sip", adjustment="split")
+    requested_adjustments: list[str] = []
+
+    async def _fake_request_json(*, base_url: str, path: str, params: dict[str, Any] | None = None, max_attempts: int = 3):  # noqa: ARG001
+        assert base_url == ALPACA_DATA_URL
+        assert path == "/stocks/bars"
+        assert params is not None
+        assert params["feed"] == "sip"
+        requested_adjustments.append(params["adjustment"])
+        return {"bars": {"AAPL": [{"t": "2026-01-01T14:30:00Z", "o": 100, "h": 101, "l": 99, "c": 100.5, "v": 1200}]}}
+
+    monkeypatch.setattr(adapter, "_request_json", _fake_request_json)
+    configured = await adapter.get_history("AAPL", "1d", date(2026, 1, 1), date(2026, 1, 2))
+    rows, feed, chart = await adapter.get_history_with_evidence("AAPL", "1d", date(2026, 1, 1), date(2026, 1, 2))
+    assert requested_adjustments == ["split", "raw"]
+    assert configured == rows
+    assert feed == "alpaca_stocks_bars:sip:raw"
+    assert chart is None
+
+
+@pytest.mark.asyncio
 async def test_alpaca_adapter_missing_credentials_returns_empty() -> None:
     adapter = AlpacaAdapter(api_key="", secret_key="")
     assert await adapter.get_quote("AAPL") is None

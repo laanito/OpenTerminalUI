@@ -120,6 +120,8 @@ class AlpacaAdapter(DataAdapter):
         start: date | None = None,
         end: date | None = None,
         limit: int = 10_000,
+        *,
+        adjustment: str | None = None,
     ) -> list[OHLCV]:
         if not self._enabled:
             return []
@@ -149,7 +151,7 @@ class AlpacaAdapter(DataAdapter):
                 "limit": page_limit,
                 "sort": "asc",
                 "feed": self.feed,
-                "adjustment": self.adjustment,
+                "adjustment": adjustment if adjustment is not None else self.adjustment,
             }
             if next_page_token:
                 params["page_token"] = next_page_token
@@ -219,6 +221,16 @@ class AlpacaAdapter(DataAdapter):
 
     async def get_history(self, symbol: str, timeframe: str, start: date, end: date) -> list[OHLCV]:
         return await self.get_bars(symbol=symbol, timeframe=timeframe, start=start, end=end, limit=10_000)
+
+    async def get_history_with_evidence(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> tuple[list[OHLCV], str | None, dict[str, Any] | None]:
+        """Comparison history must be raw regardless of the general Alpaca setting."""
+        rows = await self.get_bars(
+            symbol=symbol, timeframe=timeframe, start=start, end=end,
+            limit=10_000, adjustment="raw",
+        )
+        return rows, f"alpaca_stocks_bars:{self.feed}:raw", None
 
     async def search_symbols(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
         if not self._enabled:

@@ -242,7 +242,7 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
         {"BTC-USD": crypto_chart,
          "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)})},
         sources={"BTC-USD": "crypto", "SPY": "alpaca"},
-        feeds={"BTC-USD": "yahoo_chart"},
+        feeds={"BTC-USD": "yahoo_chart", "SPY": "alpaca_stocks_bars:iex:raw"},
     )
     row = client.post("/api/market-context/compare", json={
         "anchor": "BTC-USD", "comparisons": ["SPY"], "period": "1M",
@@ -250,7 +250,7 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
     assert row["anchor_history_source"] == "crypto"
     assert row["anchor_history_feed"] == "yahoo_chart"
     assert row["comparison_history_source"] == "alpaca"
-    assert row["comparison_history_feed"] is None
+    assert row["comparison_history_feed"] == "alpaca_stocks_bars:iex:raw"
     assert row["adjusted_close_coverage"]["anchor"]["status"] == "complete"
     assert row["adjusted_observations"]["anchor"]["return_pct"] != row["anchor_return_pct"]
     assert row["action_disclosure"]["anchor"]["actions"] == [{"date": "2026-09-05", "type": "split"}]

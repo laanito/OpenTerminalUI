@@ -61,7 +61,12 @@ function sourceLabel(source: string | null): string {
 
 function historyPathLabel(source: string | null, feed: string | null | undefined): string {
   if (!feed) return sourceLabel(source);
-  const feedLabel = feed === "yahoo_chart" ? "Yahoo chart" : feed === "fmp_historical_price" ? "FMP historical prices" : feed;
+  const alpacaParts = feed.split(":");
+  const feedLabel = feed === "yahoo_chart" ? "Yahoo chart"
+    : feed === "fmp_historical_price" ? "FMP historical prices"
+    : alpacaParts.length === 3 && alpacaParts[0] === "alpaca_stocks_bars" && alpacaParts[2] === "raw"
+      ? `stock bars (${alpacaParts[1].toUpperCase()} feed, raw)`
+      : feed;
   return `${sourceLabel(source)} → ${feedLabel}`;
 }
 

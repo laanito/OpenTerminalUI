@@ -456,6 +456,11 @@ intelligence promise, or claim that contradiction handling is solved.
         history adapters, preserving the selected adapter separately across
         failover. Other adapters leave their internal feed unknown unless they
         report it; feed identity is not data-quality verification.
+  - [x] Make the comparison's Alpaca bars request explicitly raw even when the
+        general Alpaca adapter is configured for adjusted bars, and disclose
+        the selected Alpaca bar feed and raw adjustment on that path. Other
+        Alpaca workflows retain their configured adjustment. Feed disclosure
+        does not verify pricing or exchange-session completeness.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw
