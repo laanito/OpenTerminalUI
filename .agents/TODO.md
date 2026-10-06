@@ -497,6 +497,12 @@ intelligence promise, or claim that contradiction handling is solved.
         beyond the pair overlap so crypto weekends no longer silently vanish
         from this descriptive view. The primary comparison remains shared-date;
         provider UTC dates are not verified exchange sessions.
+  - [x] Report Yahoo-adjusted close coverage on each asset's own accepted dates
+        within the pair window. Calculate a separate adjusted own-date return,
+        drawdown, and 20-close gap only when every own date is covered, including
+        crypto weekends. Never shrink the window to available adjusted values;
+        keep primary unadjusted and pair-shared outputs unchanged. Provider
+        adjustment correctness and session calendars remain unverified.
   - [ ] Add a split/dividend-adjusted and provider-provenance contract before
         treating technical measures as decision-grade cross-market signals;
         separate native per-asset sessions from pair-shared sampling when

@@ -7312,6 +7312,26 @@
             ],
             "title": "Freshness"
           },
+          "native_adjusted_close_coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketPairNativeAdjustedCloseCoverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "native_adjusted_observations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketNativeAdjustedObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "native_technical_observations": {
             "anyOf": [
               {
@@ -7967,6 +7987,128 @@
         "title": "MarketMacroEventsResponse",
         "type": "object"
       },
+      "MarketNativeAdjustedAssetObservations": {
+        "properties": {
+          "additional_dates_vs_pair": {
+            "title": "Additional Dates Vs Pair",
+            "type": "integer"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "observations": {
+            "title": "Observations",
+            "type": "integer"
+          },
+          "return_pct": {
+            "title": "Return Pct",
+            "type": "number"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "technical_measures": {
+            "$ref": "#/components/schemas/MarketTechnicalMeasures"
+          }
+        },
+        "required": [
+          "return_pct",
+          "technical_measures",
+          "start_date",
+          "end_date",
+          "observations",
+          "additional_dates_vs_pair"
+        ],
+        "title": "MarketNativeAdjustedAssetObservations",
+        "type": "object"
+      },
+      "MarketNativeAdjustedCloseCoverage": {
+        "properties": {
+          "available_observations": {
+            "title": "Available Observations",
+            "type": "integer"
+          },
+          "native_observations": {
+            "title": "Native Observations",
+            "type": "integer"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "const": "yahoo_adjclose",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "source",
+          "available_observations",
+          "native_observations"
+        ],
+        "title": "MarketNativeAdjustedCloseCoverage",
+        "type": "object"
+      },
+      "MarketNativeAdjustedObservations": {
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketNativeAdjustedAssetObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "basis": {
+            "const": "per_asset_utc_date_provider_adjusted_closes_within_pair_window",
+            "title": "Basis",
+            "type": "string"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketNativeAdjustedAssetObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "const": "yahoo_adjclose",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "basis",
+          "source",
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketNativeAdjustedObservations",
+        "type": "object"
+      },
       "MarketNativeAssetTechnicalObservations": {
         "properties": {
           "additional_dates_vs_pair": {
@@ -8053,6 +8195,22 @@
           "comparison"
         ],
         "title": "MarketPairAdjustedCloseCoverage",
+        "type": "object"
+      },
+      "MarketPairNativeAdjustedCloseCoverage": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/MarketNativeAdjustedCloseCoverage"
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/MarketNativeAdjustedCloseCoverage"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison"
+        ],
+        "title": "MarketPairNativeAdjustedCloseCoverage",
         "type": "object"
       },
       "MarketTechnicalMeasures": {

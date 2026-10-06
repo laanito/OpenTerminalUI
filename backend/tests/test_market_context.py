@@ -344,6 +344,41 @@ def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> 
     assert row["adjusted_observations"]["comparison"]["return_pct"] == 15.7068
 
 
+def test_native_adjusted_observations_require_complete_own_dates_including_crypto_weekends() -> None:
+    start = date(2026, 8, 24)
+    days = [start + timedelta(days=i) for i in range(32)]
+    weekdays = [day for day in days if day.weekday() < 5]
+    crypto_chart = _chart({day: 100.0 + i for i, day in enumerate(days)})
+    adjusted: list[float | None] = [90.0 + i for i in range(32)]
+    weekend_index = next(i for i, day in enumerate(days) if 2 < i < 30 and day.weekday() >= 5)
+    adjusted[weekend_index] = None
+    crypto_chart["chart"]["result"][0]["indicators"]["adjclose"] = [{"adjclose": adjusted}]
+    client = _client(
+        {"BTC-USD": crypto_chart, "SPY": _chart({day: 200.0 + i for i, day in enumerate(weekdays)})},
+        sources={"BTC-USD": "crypto", "SPY": "fmp"}, feeds={"BTC-USD": "yahoo_chart"},
+    )
+    payload = {"anchor": "BTC-USD", "comparisons": ["SPY"], "period": "1M"}
+    partial = client.post("/api/market-context/compare", json=payload).json()["comparisons"][0]
+    assert partial["adjusted_close_coverage"]["anchor"]["status"] == "complete"
+    assert partial["adjusted_observations"]["anchor"] is not None
+    assert partial["native_adjusted_close_coverage"]["anchor"]["status"] == "partial"
+    assert partial["native_adjusted_close_coverage"]["anchor"]["available_observations"] + 1 == partial["native_adjusted_close_coverage"]["anchor"]["native_observations"]
+    assert partial["native_adjusted_observations"] is None
+    assert partial["native_adjusted_close_coverage"]["comparison"]["status"] == "unavailable"
+
+    adjusted[weekend_index] = 90.0 + weekend_index
+    complete = client.post("/api/market-context/compare", json=payload).json()["comparisons"][0]
+    assert complete["native_adjusted_close_coverage"]["anchor"]["status"] == "complete"
+    native = complete["native_adjusted_observations"]
+    assert native["basis"] == "per_asset_utc_date_provider_adjusted_closes_within_pair_window"
+    assert native["source"] == "yahoo_adjclose"
+    assert native["comparison"] is None
+    assert native["anchor"]["observations"] == complete["native_adjusted_close_coverage"]["anchor"]["native_observations"]
+    assert native["anchor"]["additional_dates_vs_pair"] > 0
+    assert native["anchor"]["technical_measures"]["sma20_gap_pct"] != complete["adjusted_observations"]["anchor"]["technical_measures"]["sma20_gap_pct"]
+    assert complete["anchor_return_pct"] == partial["anchor_return_pct"]
+
+
 def test_headline_context_filters_to_pair_window_and_keeps_partial_feed(monkeypatch) -> None:
     async def fake_news(symbol: str, market: str | None, limit: int) -> list[dict[str, str]]:
         assert market is None
