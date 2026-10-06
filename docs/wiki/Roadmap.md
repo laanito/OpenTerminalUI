@@ -291,6 +291,13 @@ co-movement establish causation. Full fundamentals, historical macro
 observations, sentiment, and decision-grade technical evidence become separate later layers
 only when they have honest coverage and provenance contracts.
 
+The Alpaca comparison path now explicitly requests raw stock bars even when
+other Alpaca workflows are configured for a different adjustment. It reports
+the selected Alpaca bar feed and raw adjustment with the winning adapter, so
+the primary unadjusted label does not silently depend on deployment settings.
+This identifies the request made, not the completeness or correctness of the
+returned bars or their exchange-session calendar.
+
 The same aligned closes now support a first descriptive technical layer:
 maximum observed drawdown with its peak/trough dates, and the last close's
 percentage gap from the previous 20 shared closes. Fewer than 20 observations

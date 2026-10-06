@@ -103,6 +103,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   last update in the record.
 
 ### Changed
+- **Raw Alpaca comparison path** — cross-market comparisons now request raw
+  Alpaca stock bars regardless of the general Alpaca adjustment setting and
+  disclose the selected bar feed plus raw adjustment. Other Alpaca workflows
+  retain their configured setting; feed identity is not price validation.
 - **Point-in-time fundamentals dating** — ingested FMP records retain their
   fiscal period end and use only source-reported filing/acceptance dates that
   follow it; otherwise availability is conservatively estimated and marked.

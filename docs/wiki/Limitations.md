@@ -81,8 +81,10 @@ never silently faked.
   returns native-quote percentage moves, without FX normalization or a claim
   that one market caused another to move. The response identifies the selected
   history path for each symbol, including adapter failover. Crypto and Yahoo
-  adapters now report the underlying feed used for that request; other adapter
-  internals remain unknown unless reported. A known feed is not a quality
+  adapters and the direct FMP fallback report their per-request feed. The Alpaca
+  comparison path requests raw bars and reports its selected bar feed and raw
+  adjustment even if other Alpaca workflows use configured adjustments; other
+  adapter internals remain unknown unless reported. A known feed is not a quality
   guarantee. Crypto/Yahoo adapters retain reported actions and adjusted closes
   from the selected chart, aligned to rows they accepted; missing metadata is
   still unavailable and adjustment quality is not audited. A contextual browser page opens
