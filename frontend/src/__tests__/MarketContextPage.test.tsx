@@ -142,11 +142,58 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/Action metadata unavailable from the selected history path/)).toBeInTheDocument();
     expect(screen.getByText(/not a complete action audit/)).toBeInTheDocument();
     expect(screen.getByText(/SPY: partial · 20\/21 shared closes from Yahoo adjclose/)).toBeInTheDocument();
+    expect(screen.getByText(/Adjusted pair unavailable unless both symbols have Yahoo-adjusted closes/)).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD: No usable provider-adjusted closes/)).toBeInTheDocument();
     expect(screen.getByText(/primary chart, returns, and measures above use the selected providers’ quote closes/i)).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact aligned observations"));
     expect(screen.getByRole("columnheader", { name: "BTC-USD index" })).toBeInTheDocument();
     expect(screen.getByText("105.25")).toBeInTheDocument();
+  });
+
+  it("shows a separate adjusted pair only with complete same-date coverage", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 2, freshness: "current",
+        anchor_return_pct: 2, comparison_return_pct: 1, relative_return_pp: 1,
+        technical_observations: {
+          basis: "shared_utc_date_provider_closes", as_of_date: "2026-09-10",
+          anchor: { max_drawdown_pct: 0, max_drawdown_peak_date: null, max_drawdown_trough_date: null, sma20_gap_pct: null },
+          comparison: { max_drawdown_pct: 0, max_drawdown_peak_date: null, max_drawdown_trough_date: null, sma20_gap_pct: null },
+        },
+        adjusted_close_coverage: {
+          anchor: { status: "complete", source: "yahoo_adjclose", available_observations: 2, shared_observations: 2 },
+          comparison: { status: "complete", source: "yahoo_adjclose", available_observations: 2, shared_observations: 2 },
+        },
+        adjusted_pair: {
+          basis: "shared_utc_date_provider_adjusted_closes", source: "yahoo_adjclose",
+          start_date: "2026-09-02", end_date: "2026-09-10", observations: 2,
+          anchor_return_pct: 3, comparison_return_pct: 1.5, relative_return_pp: 1.5,
+          points: [
+            { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+            { date: "2026-09-10", anchor_index: 103, comparison_index: 101.5 },
+          ],
+        },
+        points: [
+          { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-10", anchor_index: 102, comparison_index: 101 },
+        ],
+      }],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for AAPL vs SPY" }));
+    expect(screen.getByText("Separate adjusted pair comparison")).toBeInTheDocument();
+    expect(screen.getByText(/Adjusted return difference: \+1.50 pp/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText("View exact adjusted pair observations"));
+    expect(screen.getByRole("columnheader", { name: "AAPL adjusted index" })).toBeInTheDocument();
+    expect(screen.getByText("103.00")).toBeInTheDocument();
+    expect(screen.getByText("+2.00%")).toBeInTheDocument();
   });
 
   it("shows provider-adjusted observations separately without changing primary returns", async () => {

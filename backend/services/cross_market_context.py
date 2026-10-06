@@ -130,6 +130,35 @@ def adjusted_observations(closes: dict[date, float], shared: list[date]) -> dict
     }
 
 
+def adjusted_pair_comparison(
+    anchor: dict[date, float], comparison: dict[date, float], shared: list[date]
+) -> dict[str, Any] | None:
+    """Compare two complete adjusted series on the primary pair's exact dates."""
+    if len(shared) < 2 or any(day not in anchor or day not in comparison for day in shared):
+        return None
+    start, end = shared[0], shared[-1]
+    anchor_return = (anchor[end] / anchor[start] - 1.0) * 100.0
+    comparison_return = (comparison[end] / comparison[start] - 1.0) * 100.0
+    return {
+        "basis": "shared_utc_date_provider_adjusted_closes",
+        "source": "yahoo_adjclose",
+        "start_date": start.isoformat(),
+        "end_date": end.isoformat(),
+        "observations": len(shared),
+        "anchor_return_pct": round(anchor_return, 4),
+        "comparison_return_pct": round(comparison_return, 4),
+        "relative_return_pp": round(anchor_return - comparison_return, 4),
+        "points": [
+            {
+                "date": day.isoformat(),
+                "anchor_index": round(anchor[day] / anchor[start] * 100.0, 4),
+                "comparison_index": round(comparison[day] / comparison[start] * 100.0, 4),
+            }
+            for day in shared
+        ],
+    }
+
+
 def _native_technical_observations(
     closes: dict[date, float], shared: list[date]
 ) -> dict[str, Any]:
