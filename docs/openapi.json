@@ -8507,6 +8507,68 @@
         "title": "NotificationCreate",
         "type": "object"
       },
+      "ObservedFundamentalDelta": {
+        "properties": {
+          "earlier_values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Earlier Values",
+            "type": "array"
+          },
+          "fiscal_period_end": {
+            "format": "date",
+            "title": "Fiscal Period End",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "only_in_earlier",
+              "only_in_later",
+              "value_set_different"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "later_values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Later Values",
+            "type": "array"
+          },
+          "metric": {
+            "enum": [
+              "revenue",
+              "net_income",
+              "eps",
+              "free_cash_flow"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "release_date": {
+            "format": "date",
+            "title": "Release Date",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "release_date",
+          "fiscal_period_end",
+          "metric",
+          "source",
+          "kind",
+          "earlier_values",
+          "later_values"
+        ],
+        "title": "ObservedFundamentalDelta",
+        "type": "object"
+      },
       "ObservedFundamentalsAsOf": {
         "properties": {
           "capture": {
@@ -8562,6 +8624,83 @@
           "capture"
         ],
         "title": "ObservedFundamentalsAsOf",
+        "type": "object"
+      },
+      "ObservedFundamentalsDeltaResponse": {
+        "properties": {
+          "comparison_basis": {
+            "const": "retained_capture_candidate_sets",
+            "default": "retained_capture_candidate_sets",
+            "title": "Comparison Basis",
+            "type": "string"
+          },
+          "comparison_status": {
+            "enum": [
+              "comparable",
+              "unavailable"
+            ],
+            "title": "Comparison Status",
+            "type": "string"
+          },
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "deltas": {
+            "items": {
+              "$ref": "#/components/schemas/ObservedFundamentalDelta"
+            },
+            "title": "Deltas",
+            "type": "array"
+          },
+          "earlier_capture": {
+            "$ref": "#/components/schemas/FundamentalCaptureSummary"
+          },
+          "evidence_scope": {
+            "const": "terminal_observation_only",
+            "default": "terminal_observation_only",
+            "title": "Evidence Scope",
+            "type": "string"
+          },
+          "later_capture": {
+            "$ref": "#/components/schemas/FundamentalCaptureSummary"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "earlier_capture_not_records_observed",
+                  "later_capture_not_records_observed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "unchanged_identity_count": {
+            "title": "Unchanged Identity Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "symbol",
+          "earlier_capture",
+          "later_capture",
+          "comparison_status",
+          "reason",
+          "unchanged_identity_count",
+          "deltas"
+        ],
+        "title": "ObservedFundamentalsDeltaResponse",
         "type": "object"
       },
       "OhlcvPoint": {
@@ -25634,6 +25773,74 @@
           }
         ],
         "summary": "Get Observed Fundamentals As Of",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/fundamental-captures/observed-delta": {
+      "get": {
+        "description": "Compare retained candidate sets without inferring provider revisions.",
+        "operationId": "compare_observed_fundamentals_api_market_context_fundamental_captures_observed_delta_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from_id",
+            "required": true,
+            "schema": {
+              "maxLength": 36,
+              "minLength": 1,
+              "title": "From Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_id",
+            "required": true,
+            "schema": {
+              "maxLength": 36,
+              "minLength": 1,
+              "title": "To Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedFundamentalsDeltaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Compare Observed Fundamentals",
         "tags": [
           "market-context"
         ],

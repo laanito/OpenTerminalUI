@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Observed fundamentals changes between captures** — an owner-scoped API and
+  browser review compare two retained captures of the same symbol, showing
+  source-dated candidate sets seen only earlier, only later, or with different
+  values. Empty/failed captures are not compared, and observed differences are
+  not labeled provider revisions or historical market disclosures.
 - **Terminal-observed fundamentals as-of lookup** — an authenticated API
   selects the latest retained owner capture at or before a timezone-aware
   instant. It returns failed/empty observations without falling back to older

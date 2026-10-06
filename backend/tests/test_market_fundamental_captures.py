@@ -19,7 +19,7 @@ from backend.models import FundamentalCaptureORM, User
 from backend.shared.db import Base
 
 
-def _client(responses: list[Any]) -> tuple[TestClient, dict[str, str]]:
+def _client(responses: list[Any], expected_symbols: list[str] | None = None) -> tuple[TestClient, dict[str, str]]:
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine, tables=[User.__table__, FundamentalCaptureORM.__table__])
     session_factory = sessionmaker(bind=engine)
@@ -30,9 +30,11 @@ def _client(responses: list[Any]) -> tuple[TestClient, dict[str, str]]:
         ])
         db.commit()
 
+    pending_symbols = list(expected_symbols) if expected_symbols is not None else ["AAPL"] * len(responses)
+
     class Fetcher:
         async def fetch_pit_fundamentals_records(self, symbol: str) -> list[dict[str, Any]]:
-            assert symbol == "AAPL"
+            assert symbol == pending_symbols.pop(0)
             result = responses.pop(0)
             if isinstance(result, Exception):
                 raise result
@@ -159,3 +161,64 @@ def test_observed_as_of_uses_owner_capture_time_and_never_falls_back_past_failur
     assert retained["capture"] == first
     assert client.delete(f"/api/market-context/fundamental-captures/{first['id']}").status_code == 204
     assert client.get(endpoint, params={"symbol": "AAPL", "as_of": second_at.isoformat()}).json()["selection_status"] == "no_retained_capture"
+
+
+def test_observed_delta_preserves_value_sets_without_inventing_revisions() -> None:
+    client, current = _client([
+        [_dated(100.0), _dated(110.0), {**_dated(3.0), "metric": "eps"}, {**_dated(50.0), "metric": "net_income"}],
+        [_dated(110.0), _dated(120.0), {**_dated(50.0), "metric": "net_income"}, {**_dated(10.0), "metric": "free_cash_flow"}],
+    ])
+    first = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    second = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    endpoint = "/api/market-context/fundamental-captures/observed-delta"
+    params = {"from_id": first["id"], "to_id": second["id"]}
+    response = client.get(endpoint, params=params)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["contract_version"] == 1
+    assert body["evidence_scope"] == "terminal_observation_only"
+    assert body["comparison_basis"] == "retained_capture_candidate_sets"
+    assert body["symbol"] == "AAPL"
+    assert body["comparison_status"] == "comparable"
+    assert body["reason"] is None
+    assert body["unchanged_identity_count"] == 1
+    assert [(row["metric"], row["kind"], row["earlier_values"], row["later_values"]) for row in body["deltas"]] == [
+        ("eps", "only_in_earlier", [3.0], []),
+        ("free_cash_flow", "only_in_later", [], [10.0]),
+        ("revenue", "value_set_different", [100.0, 110.0], [110.0, 120.0]),
+    ]
+
+    assert client.get(endpoint, params={"from_id": second["id"], "to_id": first["id"]}).status_code == 422
+    assert client.get(endpoint, params={"from_id": first["id"], "to_id": first["id"]}).status_code == 422
+    current["id"] = "other"
+    assert client.get(endpoint, params=params).status_code == 404
+    current["id"] = "owner"
+    assert client.delete(f"/api/market-context/fundamental-captures/{first['id']}").status_code == 204
+    assert client.get(endpoint, params=params).status_code == 404
+
+
+def test_observed_delta_is_unavailable_for_failed_or_empty_capture() -> None:
+    client, _ = _client([[_dated(100.0)], [], RuntimeError("tokenized provider failure")])
+    first = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    empty = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    failed = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    endpoint = "/api/market-context/fundamental-captures/observed-delta"
+    to_empty = client.get(endpoint, params={"from_id": first["id"], "to_id": empty["id"]})
+    assert to_empty.status_code == 200
+    assert to_empty.json()["comparison_status"] == "unavailable"
+    assert to_empty.json()["reason"] == "later_capture_not_records_observed"
+    assert to_empty.json()["deltas"] == []
+    from_empty = client.get(endpoint, params={"from_id": empty["id"], "to_id": failed["id"]})
+    assert from_empty.status_code == 200
+    assert from_empty.json()["reason"] == "earlier_capture_not_records_observed"
+    assert "tokenized" not in from_empty.text
+
+
+def test_observed_delta_rejects_different_symbols() -> None:
+    client, _ = _client([[_dated(100.0)], [{**_dated(200.0), "symbol": "MSFT"}]], ["AAPL", "MSFT"])
+    first = client.post("/api/market-context/fundamental-captures", json={"symbol": "AAPL"}).json()
+    second = client.post("/api/market-context/fundamental-captures", json={"symbol": "MSFT"}).json()
+    response = client.get("/api/market-context/fundamental-captures/observed-delta", params={
+        "from_id": first["id"], "to_id": second["id"],
+    })
+    assert response.status_code == 422

@@ -431,6 +431,11 @@ intelligence promise, or claim that contradiction handling is solved.
         falling back to an older success. Deletion can remove past observations;
         no retained capture does not prove none ever existed. This is not a
         provider vintage or market-knowledge timeline.
+  - [x] Compare two retained owner captures of the same symbol by source-dated
+        metric identity and complete observed value sets. Show only-in-earlier,
+        only-in-later, and differing-value sets in the API and browser. Failed
+        or empty captures are not comparable; observed differences are not
+        verified provider revisions, retractions, or new market disclosures.
   - [ ] Establish a versioned/revision-aware fundamentals evidence contract
         and tested historical coverage before using these candidates to explain
         old price moves or asserting what was known at a past point in time.

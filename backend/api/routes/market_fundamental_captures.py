@@ -62,6 +62,29 @@ class ObservedFundamentalsAsOf(BaseModel):
     capture: FundamentalCaptureDetail | None
 
 
+class ObservedFundamentalDelta(BaseModel):
+    release_date: date
+    fiscal_period_end: date
+    metric: Literal["revenue", "net_income", "eps", "free_cash_flow"]
+    source: str
+    kind: Literal["only_in_earlier", "only_in_later", "value_set_different"]
+    earlier_values: list[float]
+    later_values: list[float]
+
+
+class ObservedFundamentalsDeltaResponse(BaseModel):
+    contract_version: Literal[1] = 1
+    evidence_scope: Literal["terminal_observation_only"] = "terminal_observation_only"
+    comparison_basis: Literal["retained_capture_candidate_sets"] = "retained_capture_candidate_sets"
+    symbol: str
+    earlier_capture: FundamentalCaptureSummary
+    later_capture: FundamentalCaptureSummary
+    comparison_status: Literal["comparable", "unavailable"]
+    reason: Literal["earlier_capture_not_records_observed", "later_capture_not_records_observed"] | None
+    unchanged_identity_count: int
+    deltas: list[ObservedFundamentalDelta]
+
+
 def _summary(row: FundamentalCaptureORM) -> dict[str, Any]:
     captured_at = row.captured_at
     if captured_at.tzinfo is None:
@@ -167,6 +190,76 @@ def get_observed_fundamentals_as_of(
         "selection_status": "capture_found" if row is not None else "no_retained_capture",
         "capture": {**_summary(row), "records": row.records} if row is not None else None,
     }
+
+
+def _capture_value_sets(row: FundamentalCaptureORM) -> dict[tuple[str, str, str, str], set[float]]:
+    values: dict[tuple[str, str, str, str], set[float]] = {}
+    for record in row.records:
+        identity = (
+            record["release_date"], record["fiscal_period_end"],
+            record["metric"], record["source"],
+        )
+        values.setdefault(identity, set()).add(float(record["value"]))
+    return values
+
+
+@router.get("/observed-delta", response_model=ObservedFundamentalsDeltaResponse)
+def compare_observed_fundamentals(
+    from_id: str = Query(min_length=1, max_length=36),
+    to_id: str = Query(min_length=1, max_length=36),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Compare retained candidate sets without inferring provider revisions."""
+    rows = db.query(FundamentalCaptureORM).filter(
+        FundamentalCaptureORM.user_id == current_user.id,
+        FundamentalCaptureORM.id.in_([from_id, to_id]),
+    ).all()
+    by_id = {row.id: row for row in rows}
+    if from_id not in by_id or to_id not in by_id:
+        raise HTTPException(status_code=404, detail="Capture not found")
+    earlier, later = by_id[from_id], by_id[to_id]
+    if earlier.symbol != later.symbol or earlier.id == later.id:
+        raise HTTPException(status_code=422, detail="Select two distinct captures for the same symbol")
+    if _summary(earlier)["captured_at"] >= _summary(later)["captured_at"]:
+        raise HTTPException(status_code=422, detail="from_id must precede to_id by capture time")
+
+    result: dict[str, Any] = {
+        "symbol": earlier.symbol,
+        "earlier_capture": _summary(earlier),
+        "later_capture": _summary(later),
+        "comparison_status": "unavailable",
+        "reason": None,
+        "unchanged_identity_count": 0,
+        "deltas": [],
+    }
+    if earlier.status != "records_observed":
+        result["reason"] = "earlier_capture_not_records_observed"
+        return result
+    if later.status != "records_observed":
+        result["reason"] = "later_capture_not_records_observed"
+        return result
+
+    first_values = _capture_value_sets(earlier)
+    last_values = _capture_value_sets(later)
+    result["comparison_status"] = "comparable"
+    for identity in sorted(first_values.keys() | last_values.keys()):
+        first = first_values.get(identity, set())
+        last = last_values.get(identity, set())
+        if first == last:
+            result["unchanged_identity_count"] += 1
+            continue
+        kind = "only_in_earlier" if not last else "only_in_later" if not first else "value_set_different"
+        result["deltas"].append({
+            "release_date": identity[0],
+            "fiscal_period_end": identity[1],
+            "metric": identity[2],
+            "source": identity[3],
+            "kind": kind,
+            "earlier_values": sorted(first),
+            "later_values": sorted(last),
+        })
+    return result
 
 
 @router.get("/{capture_id}", response_model=FundamentalCaptureDetail)
