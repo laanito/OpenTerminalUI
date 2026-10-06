@@ -7040,6 +7040,66 @@
         "title": "MarketAdjustedObservations",
         "type": "object"
       },
+      "MarketAdjustedPairComparison": {
+        "properties": {
+          "anchor_return_pct": {
+            "title": "Anchor Return Pct",
+            "type": "number"
+          },
+          "basis": {
+            "const": "shared_utc_date_provider_adjusted_closes",
+            "title": "Basis",
+            "type": "string"
+          },
+          "comparison_return_pct": {
+            "title": "Comparison Return Pct",
+            "type": "number"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "observations": {
+            "title": "Observations",
+            "type": "integer"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/MarketComparisonPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "relative_return_pp": {
+            "title": "Relative Return Pp",
+            "type": "number"
+          },
+          "source": {
+            "const": "yahoo_adjclose",
+            "title": "Source",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "basis",
+          "source",
+          "start_date",
+          "end_date",
+          "observations",
+          "anchor_return_pct",
+          "comparison_return_pct",
+          "relative_return_pp",
+          "points"
+        ],
+        "title": "MarketAdjustedPairComparison",
+        "type": "object"
+      },
       "MarketComparisonPoint": {
         "properties": {
           "anchor_index": {
@@ -7189,6 +7249,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/MarketAdjustedObservations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "adjusted_pair": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketAdjustedPairComparison"
               },
               {
                 "type": "null"

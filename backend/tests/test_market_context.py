@@ -334,6 +334,7 @@ def test_route_reports_adjusted_close_coverage_without_changing_raw_returns() ->
     assert row["anchor_return_pct"] == 29.703  # still uses raw 101 -> 131
     assert row["points"][0]["anchor_index"] == 100.0
     assert row["adjusted_observations"] is None
+    assert row["adjusted_pair"] is None
 
     adjusted[5] = 95.0
     complete = client.post("/api/market-context/compare", json={
@@ -346,6 +347,7 @@ def test_route_reports_adjusted_close_coverage_without_changing_raw_returns() ->
     assert adjusted_row["anchor"]["return_pct"] == 32.967  # 91 -> 121, not raw 101 -> 131
     assert adjusted_row["comparison"] is None  # fmp cannot borrow Yahoo-shaped adjclose fields
     assert adjusted_row["anchor"]["technical_measures"]["sma20_gap_pct"] is not None
+    assert complete.json()["comparisons"][0]["adjusted_pair"] is None
 
 
 def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> None:
@@ -363,6 +365,19 @@ def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> 
     assert row["adjusted_observations"]["as_of_date"] == row["end_date"]
     assert row["adjusted_observations"]["anchor"]["return_pct"] == 32.967
     assert row["adjusted_observations"]["comparison"]["return_pct"] == 15.7068
+    pair = row["adjusted_pair"]
+    assert pair["basis"] == "shared_utc_date_provider_adjusted_closes"
+    assert pair["source"] == "yahoo_adjclose"
+    assert (pair["start_date"], pair["end_date"], pair["observations"]) == (
+        row["start_date"], row["end_date"], row["observations"]
+    )
+    assert pair["anchor_return_pct"] == 32.967
+    assert pair["comparison_return_pct"] == 15.7068
+    assert pair["relative_return_pp"] == 17.2602
+    assert [point["date"] for point in pair["points"]] == [point["date"] for point in row["points"]]
+    assert pair["points"][0]["anchor_index"] == 100.0
+    assert pair["points"][-1]["anchor_index"] == 132.967
+    assert row["anchor_return_pct"] == 29.703
 
 
 def test_native_adjusted_observations_require_complete_own_dates_including_crypto_weekends() -> None:

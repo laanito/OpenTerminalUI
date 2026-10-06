@@ -507,6 +507,12 @@ intelligence promise, or claim that contradiction handling is solved.
         pair-shared date. Keep primary comparison results unchanged and partial
         adjusted series unavailable; this does not verify adjustment quality,
         source vintage, or all adapters' deeper provider identity.
+  - [x] Add a separate Yahoo-adjusted pair result on the primary comparison's
+        exact shared dates only when both assets have complete adjusted-close
+        coverage. Include the dated indexed path and adjusted return difference;
+        partial or one-sided coverage produces no pair result. The primary
+        provider-close result remains unchanged, and retrospective adjusted
+        values are not verified vintage or decision-grade evidence.
   - [x] Add a separate provider-close own-date technical observation for each asset
         inside the actual pair window. Report its observation count and dates
         beyond the pair overlap so crypto weekends no longer silently vanish

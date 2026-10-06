@@ -238,6 +238,26 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
                   </div>
                 </div>
               ) : null}
+              {row.adjusted_pair ? (
+                <div className="mt-3 rounded border border-terminal-border p-2 text-terminal-text">
+                  <h3 className="font-semibold">Separate adjusted pair comparison</h3>
+                  <p className="mt-1 text-terminal-muted">
+                    Yahoo adjusted closes on all {row.adjusted_pair.observations} primary shared dates, {row.adjusted_pair.start_date} to {row.adjusted_pair.end_date}. Returns remain in native quote currencies, not FX-normalized. This does not replace the provider-close comparison or verify adjustment quality or historical vintage.
+                  </p>
+                  <p className="mt-1">{anchor}: {formatPercent(row.adjusted_pair.anchor_return_pct)} · {row.symbol}: {formatPercent(row.adjusted_pair.comparison_return_pct)} · Adjusted return difference: {formatPoints(row.adjusted_pair.relative_return_pp)}</p>
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-terminal-accent">View exact adjusted pair observations</summary>
+                    <div className="mt-2 max-h-48 overflow-auto">
+                      <table className="w-full text-left">
+                        <thead><tr><th className="py-1 pr-3">UTC date</th><th className="py-1 pr-3">{anchor} adjusted index</th><th className="py-1">{row.symbol} adjusted index</th></tr></thead>
+                        <tbody>{row.adjusted_pair.points.map((point) => (
+                          <tr key={point.date}><td className="py-0.5 pr-3">{point.date}</td><td className="py-0.5 pr-3">{point.anchor_index.toFixed(2)}</td><td className="py-0.5">{point.comparison_index.toFixed(2)}</td></tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </details>
+                </div>
+              ) : <p className="mt-3 text-terminal-muted">Adjusted pair unavailable unless both symbols have Yahoo-adjusted closes on every primary shared date.</p>}
               {row.native_adjusted_close_coverage ? (
                 <div className="mt-3 border-t border-terminal-border pt-2">
                   <h3 className="font-semibold text-terminal-text">Each asset’s own-date adjusted closes</h3>

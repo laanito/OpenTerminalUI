@@ -327,7 +327,10 @@ adjusted return, drawdown, and 20-shared-close gap for each asset only when its
 Yahoo adjusted series is complete on every pair-shared date; a partial series
 does not silently shrink the window. The original path, returns, and measures
 remain provider-close. Provider coverage is not verification of adjustment quality
-or historical vintage. A separate own-date observation now calculates
+or historical vintage. When both assets have complete Yahoo adjusted closes
+on those exact shared dates, a separate adjusted pair path and return difference
+are now available. Partial or one-sided coverage cannot produce that pair; the
+primary provider-close comparison is unchanged. A separate own-date observation now calculates
 provider-close drawdown and 20-close gap for each asset within the same observed
 pair window, reporting how many additional dates were used. This keeps crypto
 weekends visible without changing the shared-date comparison. Provider UTC

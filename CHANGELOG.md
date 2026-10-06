@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Separate adjusted pair comparison** — when both selected Yahoo histories
+  have adjusted closes on every primary shared date, the API and browser show
+  a separate indexed path and adjusted return difference. Partial or one-sided
+  coverage shows no adjusted pair; primary provider-close results are unchanged.
+  Returns remain native-quote, not FX-normalized; Yahoo adjustments are
+  retrospective and unverified.
 - **Honest comparison price basis** — the API and browser now call the primary
   series provider closes rather than asserting every selected feed is unadjusted.
   Per-asset labels distinguish Alpaca raw and FMP non-split-adjusted requests

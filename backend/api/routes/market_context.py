@@ -19,6 +19,7 @@ from backend.models import User
 from backend.services.cross_market_context import (
     FETCH_RANGES,
     _daily_closes,
+    adjusted_pair_comparison,
     adjusted_observations,
     compare_closes,
     yahoo_action_metadata_present,
@@ -130,6 +131,18 @@ class MarketAdjustedObservations(BaseModel):
     comparison: MarketAdjustedAssetObservations | None
 
 
+class MarketAdjustedPairComparison(BaseModel):
+    basis: Literal["shared_utc_date_provider_adjusted_closes"]
+    source: Literal["yahoo_adjclose"]
+    start_date: date
+    end_date: date
+    observations: int
+    anchor_return_pct: float
+    comparison_return_pct: float
+    relative_return_pp: float
+    points: list[MarketComparisonPoint]
+
+
 class MarketNativeAdjustedCloseCoverage(BaseModel):
     status: Literal["complete", "partial", "unavailable"]
     source: Literal["yahoo_adjclose"] | None
@@ -180,6 +193,7 @@ class MarketComparisonRow(BaseModel):
     action_disclosure: MarketPairActionDisclosure | None = None
     adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
     adjusted_observations: MarketAdjustedObservations | None = None
+    adjusted_pair: MarketAdjustedPairComparison | None = None
     native_adjusted_close_coverage: MarketPairNativeAdjustedCloseCoverage | None = None
     native_adjusted_observations: MarketNativeAdjustedObservations | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
@@ -417,6 +431,9 @@ async def compare_market_context(
                     "anchor": adjusted_anchor,
                     "comparison": adjusted_comparison,
                 }
+            result["adjusted_pair"] = adjusted_pair_comparison(
+                adjusted_closes[anchor], adjusted_closes[symbol], shared_dates
+            )
 
             native_adjusted: dict[str, dict[str, Any] | None] = {}
             native_coverage: dict[str, dict[str, Any]] = {}

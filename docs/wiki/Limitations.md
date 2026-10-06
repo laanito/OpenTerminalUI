@@ -146,7 +146,10 @@ never silently faked.
   the primary plotted path and calculations remain provider-close. A separate
   adjusted return, drawdown, and 20-shared-close gap are available per asset
   only with complete Yahoo adjusted coverage on the exact shared dates.
-  Partial coverage never changes the window or produces a partial measure.
+  When both assets have complete Yahoo adjusted coverage, a separate adjusted
+  pair path and return difference use those same dates. Partial or one-sided
+  coverage never changes the window or produces an adjusted pair. The result
+  remains in native quote currencies, not FX-normalized.
   A separate provider-close own-date view uses each asset's available UTC closes
   within that same pair window and reports dates beyond pair overlap, including
   crypto weekends. It does not alter the paired comparison or certify that
