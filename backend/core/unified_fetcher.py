@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, Optional
@@ -118,6 +119,58 @@ def _chart_payload_from_rows(
                 "adjclose": [by_timestamp.get(int(row.t)) for row in ordered]
             }]
     return payload
+
+
+def _fmp_unadjusted_chart_payload(data: Any, symbol: str) -> dict[str, Any]:
+    """Accept only unambiguous, valid FMP EOD rows as raw comparison history."""
+    if not isinstance(data, dict) or str(data.get("symbol", "")).upper() != symbol:
+        return {}
+    historical = data.get("historical")
+    if not isinstance(historical, list):
+        return {}
+    by_day: dict[date, OHLCV] = {}
+    conflicts: set[date] = set()
+    for item in historical:
+        if not isinstance(item, dict):
+            continue
+        if item.get("symbol") and str(item["symbol"]).upper() != symbol:
+            continue
+        try:
+            day_text = item["date"]
+            day = date.fromisoformat(day_text)
+            if day.isoformat() != day_text:
+                continue
+            values = [float(item[key]) for key in ("open", "high", "low", "close", "volume")]
+        except (KeyError, TypeError, ValueError):
+            continue
+        opening, high, low, close, volume = values
+        if not all(math.isfinite(value) for value in values):
+            continue
+        if min(opening, high, low, close) <= 0 or volume < 0 or low > min(opening, close) or high < max(opening, close):
+            continue
+        row = OHLCV(
+            t=int(datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc).timestamp()),
+            o=opening, h=high, l=low, c=close, v=volume,
+        )
+        if day in by_day and by_day[day] != row:
+            conflicts.add(day)
+        else:
+            by_day[day] = row
+    rows = [row for day, row in by_day.items() if day not in conflicts]
+    return _chart_payload_from_rows(rows) if rows else {}
+
+
+def _has_chart_rows(data: Any) -> bool:
+    if not isinstance(data, dict):
+        return False
+    chart = data.get("chart")
+    if not isinstance(chart, dict):
+        return False
+    results = chart.get("result")
+    return bool(
+        isinstance(results, list) and results and isinstance(results[0], dict)
+        and isinstance(results[0].get("timestamp"), list) and results[0]["timestamp"]
+    )
 
 
 def _quote_payload_from_adapter(quote: QuoteResponse) -> dict[str, Any]:
@@ -257,15 +310,21 @@ class UnifiedFetcher:
         try:
             yahoo_sym = await market_classifier.yfinance_symbol(symbol)
             data = await self.yahoo.get_chart(yahoo_sym, range_str, interval)
-            if data and "chart" in data:
+            if (_has_chart_rows(data) if include_feed else data and "chart" in data):
                 return data, "yahoo", "yahoo_chart" if include_feed else None
         except Exception as e:
             logger.warning(f"Yahoo history failed for {symbol}: {e}")
 
         try:
-            fmp_data = await self.fmp.get_historical_price_full(symbol)
-            if fmp_data:
-                return fmp_data, "fmp", "fmp_historical_price" if include_feed else None
+            if include_feed:
+                fmp_data = await self.fmp.get_historical_price_non_split_adjusted(symbol)
+                chart = _fmp_unadjusted_chart_payload(fmp_data, symbol)
+                if chart:
+                    return chart, "fmp", "fmp_historical_price_non_split_adjusted"
+            else:
+                fmp_data = await self.fmp.get_historical_price_full(symbol)
+                if fmp_data:
+                    return fmp_data, "fmp", None
         except Exception as e:
             logger.warning(f"FMP history failed for {symbol}: {e}")
 

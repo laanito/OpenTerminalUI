@@ -7,6 +7,7 @@ from backend.adapters.crypto import CryptoDataAdapter
 from backend.adapters.yahoo import YahooFinanceAdapter
 from backend.adapters.base import OHLCV, QuoteResponse
 from backend.core.unified_fetcher import UnifiedFetcher
+from backend.services.cross_market_context import _daily_closes
 from backend.shared.market_classifier import StockClassification, market_classifier
 
 
@@ -42,6 +43,9 @@ class _DummyFMP:
         return {}
 
     async def get_historical_price_full(self, _symbol: str):
+        return {}
+
+    async def get_historical_price_non_split_adjusted(self, _symbol: str):
         return {}
 
 
@@ -202,6 +206,49 @@ def test_history_provenance_identifies_feed_without_changing_existing_source_con
     assert payload["chart"]["result"][0]["indicators"]["quote"][0]["close"] == [100.5]
     assert (source, feed) == ("crypto", "yahoo_chart")
     assert asyncio.run(fetcher.fetch_history_with_source("BTC-USD", range_str="1mo"))[1] == "crypto"
+
+
+def test_fmp_raw_fallback_normalizes_valid_rows_and_discloses_feed(monkeypatch) -> None:
+    class FMP(_DummyFMP):
+        async def get_historical_price_non_split_adjusted(self, symbol: str):
+            assert symbol == "^GSPC"
+            return {"symbol": symbol, "historical": [
+                {"symbol": symbol, "date": "2026-01-02", "open": 100, "high": 111, "low": 99, "close": 110, "volume": 1000},
+                {"symbol": symbol, "date": "2026-01-01", "open": 100, "high": 101, "low": 98, "close": 100, "volume": 800},
+            ]}
+
+    async def _same_symbol(symbol: str):
+        return symbol
+
+    monkeypatch.setattr(market_classifier, "yfinance_symbol", _same_symbol)
+    fetcher = UnifiedFetcher(nse=_DummyNSE(), yahoo=_DummyYahoo(), fmp=FMP(), finnhub=_DummyFinnhub(), kite=_DummyKite())
+    payload, source, feed = asyncio.run(fetcher.fetch_history_with_provenance("^GSPC"))
+    assert (source, feed) == ("fmp", "fmp_historical_price_non_split_adjusted")
+    result = payload["chart"]["result"][0]
+    assert result["indicators"]["quote"][0]["close"] == [100.0, 110.0]
+    assert result["timestamp"] == [1767225600, 1767312000]
+    assert _daily_closes(payload) == {date(2026, 1, 1): 100.0, date(2026, 1, 2): 110.0}
+
+
+def test_fmp_raw_fallback_rejects_conflicts_and_invalid_rows(monkeypatch) -> None:
+    class FMP(_DummyFMP):
+        async def get_historical_price_full(self, _symbol: str):
+            raise AssertionError("split-adjusted full history must not be used for comparisons")
+
+        async def get_historical_price_non_split_adjusted(self, symbol: str):
+            return {"symbol": symbol, "historical": [
+                {"date": "2026-01-01", "open": 100, "high": 110, "low": 90, "close": 105, "volume": 100},
+                {"date": "2026-01-01", "open": 100, "high": 110, "low": 90, "close": 106, "volume": 100},
+                {"date": "2026-01-02", "open": 100, "high": 110, "low": 90, "close": float("nan"), "volume": 100},
+                {"date": "2026-01-03", "open": 100, "high": 90, "low": 80, "close": 105, "volume": 100},
+            ]}
+
+    async def _same_symbol(symbol: str):
+        return symbol
+
+    monkeypatch.setattr(market_classifier, "yfinance_symbol", _same_symbol)
+    fetcher = UnifiedFetcher(nse=_DummyNSE(), yahoo=_DummyYahoo(), fmp=FMP(), finnhub=_DummyFinnhub(), kite=_DummyKite())
+    assert asyncio.run(fetcher.fetch_history_with_provenance("^GSPC")) == ({}, None, None)
 
 
 def test_adapter_chart_metadata_aligns_to_selected_rows_without_changing_prices(monkeypatch) -> None:

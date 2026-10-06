@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Unadjusted FMP comparison fallback** — when adapter and Yahoo daily history
+  are unavailable, the comparison can use validated FMP non-split-adjusted EOD
+  rows and names that feed. Empty Yahoo charts no longer mask this fallback.
+  Access depends on FMP credentials/plan and symbol coverage; other FMP history
+  consumers are unchanged.
 - **Own-date Yahoo-adjusted observations** — cross-market comparisons now
   disclose adjusted-close coverage on each asset's own accepted dates and show
   a separate return, drawdown, and 20-close gap only when coverage is complete.

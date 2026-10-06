@@ -61,6 +61,18 @@ def test_historical_wraps_flat_array_into_legacy_shape():
     assert out["historical"] == rows
 
 
+def test_unadjusted_historical_uses_separate_stable_endpoint():
+    rows = [{"symbol": "AAPL", "date": "2026-01-02", "open": 10, "high": 11, "low": 9, "close": 10, "volume": 100}]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert "/stable/historical-price-eod/non-split-adjusted" in str(request.url)
+        assert "symbol=AAPL" in str(request.url)
+        return httpx.Response(200, json=rows)
+
+    c = _client(handler)
+    assert asyncio.run(c.get_historical_price_non_split_adjusted("AAPL")) == {"symbol": "AAPL", "historical": rows}
+
+
 def test_non_json_plan_restriction_returns_empty():
     def handler(request: httpx.Request) -> httpx.Response:
         # Mimics the free-tier "Premium Query Parameter ..." plain-text body.

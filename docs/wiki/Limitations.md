@@ -87,7 +87,10 @@ never silently faked.
   adapter internals remain unknown unless reported. A known feed is not a quality
   guarantee. Crypto/Yahoo adapters retain reported actions and adjusted closes
   from the selected chart, aligned to rows they accepted; missing metadata is
-  still unavailable and adjustment quality is not audited. A contextual browser page opens
+  still unavailable and adjustment quality is not audited. The direct FMP
+  comparison fallback uses its non-split-adjusted EOD feed only when it returns
+  usable rows; credentials, plan, symbol coverage, and raw-price quality are
+  not guaranteed. A contextual browser page opens
   from equity and crypto research and offers dated comparison, symbol
   suggestions, and an inspectable pairwise path rebased to 100 on the first
   shared close. The path plots only actual shared dates, with no interpolation.

@@ -187,6 +187,14 @@ class FMPClient:
             return rows  # already wrapped (defensive)
         return {"symbol": sym, "historical": rows if isinstance(rows, list) else []}
 
+    async def get_historical_price_non_split_adjusted(self, symbol: str) -> Dict[str, Any]:
+        """Return raw EOD rows for comparisons that require unadjusted closes."""
+        sym = self._symbol(symbol)
+        rows = await self._get("/historical-price-eod/non-split-adjusted", {"symbol": sym})
+        if isinstance(rows, dict):
+            return rows
+        return {"symbol": sym, "historical": rows if isinstance(rows, list) else []}
+
     async def get_income_statement(self, symbol: str, period: str = "annual", limit: int = 10) -> List[Dict[str, Any]]:
         return await self._get("/income-statement", {"symbol": self._symbol(symbol), "period": period, "limit": limit})
 

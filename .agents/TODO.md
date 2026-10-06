@@ -461,6 +461,11 @@ intelligence promise, or claim that contradiction handling is solved.
         the selected Alpaca bar feed and raw adjustment on that path. Other
         Alpaca workflows retain their configured adjustment. Feed disclosure
         does not verify pricing or exchange-session completeness.
+  - [x] Make the comparison's direct FMP fallback use its non-split-adjusted
+        EOD feed rather than the split-adjusted full feed, normalize only valid
+        unambiguous rows, and disclose that feed. Empty Yahoo charts no longer
+        suppress this fallback. FMP access and symbol coverage remain conditional;
+        this does not verify raw-price quality or historical completeness.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw
