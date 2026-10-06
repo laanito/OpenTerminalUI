@@ -71,6 +71,13 @@ function historyPathLabel(source: string | null, feed: string | null | undefined
   return `${sourceLabel(source)} → ${feedLabel}`;
 }
 
+function adjustmentBasisLabel(basis: MarketComparisonRow["anchor_reported_adjustment_basis"]): string {
+  if (basis === "raw") return "raw requested (provider-reported)";
+  if (basis === "non_split_adjusted") return "non-split-adjusted requested (provider-reported)";
+  if (basis === "unspecified") return "adjustment basis not verified";
+  return "no usable history";
+}
+
 function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
@@ -135,8 +142,8 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
       {open ? (
         <div className="mt-2 space-y-2 text-xs">
           <p className="text-terminal-muted">
-            As of {technical.as_of_date}. Calculated only from the pair’s shared, unadjusted daily closes—no missing dates filled in.
-            Crypto weekend closes are omitted when the other asset has no close. Splits and other corporate actions can distort unadjusted prices.
+            As of {technical.as_of_date}. Calculated only from the pair’s shared provider daily closes—no missing dates filled in.
+            Crypto weekend closes are omitted when the other asset has no close. Adjustment policy can differ across feeds; splits and other corporate actions can distort or change historical prices.
             These are descriptive observations, not trading signals or causes of price moves.
           </p>
           <div className="grid gap-3 md:grid-cols-2">
@@ -159,7 +166,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
             <div className="border-t border-terminal-border pt-2">
               <h3 className="font-semibold text-terminal-text">Each asset’s own dated closes</h3>
               <p className="mt-1 text-terminal-muted">
-                Same observed pair window, but each asset uses all of its own available UTC close dates. Extra dates—such as crypto weekends—are included here, not in the paired comparison above. These unadjusted, provider-dated observations are not verified exchange-session indicators or trading signals.
+                Same observed pair window, but each asset uses all of its own available UTC close dates. Extra dates—such as crypto weekends—are included here, not in the paired comparison above. These provider-dated observations are not verified exchange-session indicators or trading signals.
               </p>
               <div className="mt-2 grid gap-3 md:grid-cols-2">
                 {([
@@ -188,7 +195,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
           {row.adjusted_close_coverage ? (
             <div className="border-t border-terminal-border pt-2">
               <p className="text-terminal-muted">
-                Provider-adjusted close coverage on these shared dates. This is a current, retrospective Yahoo series—not a historical vintage or verification of every corporate action. The primary chart, returns, and measures above still use unadjusted closes.
+                Provider-adjusted close coverage on these shared dates. This is a current, retrospective Yahoo series—not a historical vintage or verification of every corporate action. The primary chart, returns, and measures above use the selected providers’ quote closes, without substituting this adjusted series.
               </p>
               <div className="mt-2 grid gap-3 md:grid-cols-2">
                 {([
@@ -265,7 +272,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
           {row.action_disclosure ? (
             <div className="border-t border-terminal-border pt-2">
               <p className="text-terminal-muted">
-                Corporate-action markers reported by the selected Yahoo chart response within this window. These are not a complete action audit and the prices above remain unadjusted.
+                Corporate-action markers reported by the selected Yahoo chart response within this window. These are not a complete action audit and do not establish the selected closes’ adjustment policy.
               </p>
               <div className="mt-2 grid gap-3 md:grid-cols-2">
                 {([
@@ -802,7 +809,7 @@ export function MarketContextPage() {
         <p className="mb-3 text-xs text-terminal-muted">
           Daily closes are paired only when both symbols have an observation on the same UTC date. Returns are in each
           symbol’s native quote currency, not FX-normalized. The identified price-history source is shown per symbol;
-          it may differ across the pair or be unavailable.
+          it may differ across the pair or be unavailable. Adjustment policy is not verified for every feed.
         </p>
         {query.isPending && !selection.error ? <p role="status" className="text-sm text-terminal-muted">Loading dated market history…</p> : null}
         {query.isError ? (
@@ -836,6 +843,9 @@ export function MarketContextPage() {
                     <p className="mt-1 text-xs text-terminal-muted">
                       Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.
                     </p>
+                    <p className="mt-1 text-xs text-terminal-muted">
+                      Reported price basis: {selection.anchor} {adjustmentBasisLabel(row.anchor_reported_adjustment_basis)} · {row.symbol} {adjustmentBasisLabel(row.comparison_reported_adjustment_basis)}. These labels describe feed requests, not an audit of returned values.
+                    </p>
                     <AlignedPaths anchor={selection.anchor} row={row} />
                     <TechnicalObservations anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
@@ -846,6 +856,7 @@ export function MarketContextPage() {
                   <>
                     <p className="mt-2 text-sm text-terminal-muted">{unavailableReason(row)} Latest dates: {selection.anchor} {row.anchor_latest_date || "unknown"}, {row.symbol} {row.comparison_latest_date || "unknown"}.</p>
                     <p className="mt-1 text-xs text-terminal-muted">Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.</p>
+                    <p className="mt-1 text-xs text-terminal-muted">Reported price basis: {selection.anchor} {adjustmentBasisLabel(row.anchor_reported_adjustment_basis)} · {row.symbol} {adjustmentBasisLabel(row.comparison_reported_adjustment_basis)}.</p>
                   </>
                 )}
               </div>

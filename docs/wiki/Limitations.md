@@ -90,7 +90,10 @@ never silently faked.
   still unavailable and adjustment quality is not audited. The direct FMP
   comparison fallback uses its non-split-adjusted EOD feed only when it returns
   usable rows; credentials, plan, symbol coverage, and raw-price quality are
-  not guaranteed. A contextual browser page opens
+  not guaranteed. The primary API now labels returns as native-quote provider
+  closes, not universally unadjusted prices: Alpaca raw and FMP non-split-
+  adjusted are reported request bases, while other paths remain unspecified.
+  Mixed-basis pairs are still descriptive, not decision-grade. A contextual browser page opens
   from equity and crypto research and offers dated comparison, symbol
   suggestions, and an inspectable pairwise path rebased to 100 on the first
   shared close. The path plots only actual shared dates, with no interpolation.
@@ -121,11 +124,12 @@ never silently faked.
   candidate sets, not verified provider revisions or retractions. Failed/empty
   captures have no comparable value set; records missing from a later fetch may
   reflect provider coverage rather than a real-world event.
-- **Technical observations use shared, unadjusted closes.** Maximum observed
+- **Technical observations use shared provider closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average
   gap is unavailable. Crypto weekends may be omitted when the proxy has no
-  close, and splits or other corporate actions can distort unadjusted values.
+  close. Feed adjustment policies can differ, and splits or other corporate
+  actions can distort or retrospectively change values.
   A Yahoo chart response with event metadata now discloses split/dividend
   markers reported in the observed pair window. No markers reported does not
   prove there were none; paths without event metadata remain unavailable.
@@ -133,17 +137,17 @@ never silently faked.
   Separate Yahoo-adjusted own-date measures now require adjusted closes on
   every accepted close date for that asset inside the observed pair window,
   including crypto weekends. Partial coverage suppresses those measures; the
-  primary comparison remains unadjusted and pair-shared. Adjusted values are
+  primary comparison remains provider-close and pair-shared. Adjusted values are
   retrospective provider data, not verified correction quality, vintage, or
   exchange-session calendars.
   The same panel reports whether Yahoo supplied adjusted closes on all, some,
   or none of the pair's shared dates. This is coverage of a retrospective
   provider series, not verified adjustment quality or a historical vintage;
-  the primary plotted path and calculations remain unadjusted. A separate
+  the primary plotted path and calculations remain provider-close. A separate
   adjusted return, drawdown, and 20-shared-close gap are available per asset
   only with complete Yahoo adjusted coverage on the exact shared dates.
   Partial coverage never changes the window or produces a partial measure.
-  A separate unadjusted own-date view uses each asset's available UTC closes
+  A separate provider-close own-date view uses each asset's available UTC closes
   within that same pair window and reports dates beyond pair overlap, including
   crypto weekends. It does not alter the paired comparison or certify that
   provider UTC dates are standard exchange sessions.

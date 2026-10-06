@@ -38,6 +38,16 @@ _FUNDAMENTAL_DISPLAY_LIMIT = 16
 _ACTION_DISPLAY_LIMIT = 20
 
 
+def _reported_adjustment_basis(feed: str | None, has_history: bool) -> str | None:
+    if not has_history:
+        return None
+    if feed == "fmp_historical_price_non_split_adjusted":
+        return "non_split_adjusted"
+    if feed and feed.startswith("alpaca_stocks_bars:") and feed.endswith(":raw"):
+        return "raw"
+    return "unspecified"
+
+
 class MarketComparisonRequest(BaseModel):
     anchor: str = Field(min_length=1, max_length=40, examples=["AAPL"])
     comparisons: list[str] = Field(min_length=1, max_length=6, examples=[["SPY", "BTC-USD"]])
@@ -58,7 +68,7 @@ class MarketTechnicalMeasures(BaseModel):
 
 
 class MarketTechnicalObservations(BaseModel):
-    basis: Literal["shared_utc_date_unadjusted_closes"]
+    basis: Literal["shared_utc_date_provider_closes"]
     as_of_date: date
     anchor: MarketTechnicalMeasures
     comparison: MarketTechnicalMeasures
@@ -73,7 +83,7 @@ class MarketNativeAssetTechnicalObservations(BaseModel):
 
 
 class MarketNativeTechnicalObservations(BaseModel):
-    basis: Literal["per_asset_utc_date_unadjusted_closes_within_pair_window"]
+    basis: Literal["per_asset_utc_date_provider_closes_within_pair_window"]
     anchor: MarketNativeAssetTechnicalObservations
     comparison: MarketNativeAssetTechnicalObservations
 
@@ -158,6 +168,8 @@ class MarketComparisonRow(BaseModel):
     comparison_history_source: str | None = None
     anchor_history_feed: str | None = None
     comparison_history_feed: str | None = None
+    anchor_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
+    comparison_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
     observations: int | None = None
     freshness: Literal["current", "stale"] | None = None
     anchor_return_pct: float | None = None
@@ -178,7 +190,7 @@ class MarketComparisonResponse(BaseModel):
     period: Literal["1M", "3M", "6M"]
     retrieved_at: datetime
     data_source: Literal["unified_history"]
-    return_basis: Literal["native_quote_currency_unadjusted"]
+    return_basis: Literal["native_quote_currency_provider_closes"]
     method: Literal["same_utc_date_daily_closes"]
     comparisons: list[MarketComparisonRow]
 
@@ -446,6 +458,8 @@ async def compare_market_context(
             "comparison_history_source": sources[symbol],
             "anchor_history_feed": feeds[anchor],
             "comparison_history_feed": feeds[symbol],
+            "anchor_reported_adjustment_basis": _reported_adjustment_basis(feeds[anchor], bool(histories[anchor])),
+            "comparison_reported_adjustment_basis": _reported_adjustment_basis(feeds[symbol], bool(histories[symbol])),
         })
 
     return {
@@ -453,7 +467,7 @@ async def compare_market_context(
         "period": payload.period,
         "retrieved_at": datetime.now(timezone.utc).isoformat(),
         "data_source": "unified_history",
-        "return_basis": "native_quote_currency_unadjusted",
+        "return_basis": "native_quote_currency_provider_closes",
         "method": "same_utc_date_daily_closes",
         "comparisons": rows,
     }

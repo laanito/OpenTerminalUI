@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Honest comparison price basis** — the API and browser now call the primary
+  series provider closes rather than asserting every selected feed is unadjusted.
+  Per-asset labels distinguish Alpaca raw and FMP non-split-adjusted requests
+  from paths with unspecified adjustment basis. Calculations are unchanged;
+  reported requests do not verify returned prices or make mixed-feed pairs
+  decision-grade.
 - **Unadjusted FMP comparison fallback** — when adapter and Yahoo daily history
   are unavailable, the comparison can use validated FMP non-split-adjusted EOD
   rows and names that feed. Empty Yahoo charts no longer mask this fallback.
@@ -16,7 +22,7 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   disclose adjusted-close coverage on each asset's own accepted dates and show
   a separate return, drawdown, and 20-close gap only when coverage is complete.
   Crypto weekends can contribute without changing the primary shared-date,
-  unadjusted comparison. Yahoo adjustments remain retrospective and unverified.
+  provider-close comparison. Yahoo adjustments remain retrospective and unverified.
 - **Observed fundamentals changes between captures** — an owner-scoped API and
   browser review compare two retained captures of the same symbol, showing
   source-dated candidate sets seen only earlier, only later, or with different
@@ -57,21 +63,21 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   revision archive.
 - **Separate adjusted-close observations** — where Yahoo supplies adjusted
   closes for every pair-shared date, comparisons now show per-asset adjusted
-  return, drawdown, and 20-shared-close gap beside—not instead of—the raw
+  return, drawdown, and 20-shared-close gap beside—not instead of—the primary
   comparison. Partial coverage produces no adjusted measure; adjustment quality
   and historical vintage remain unverified.
 - **Adjusted-close coverage disclosure** — comparisons now report how many
   shared dates have usable Yahoo adjusted closes, or mark the selected history
   path unavailable for this metadata. The primary chart, returns, and technical
-  measures remain unadjusted; no vintage or adjustment audit is implied.
+  measures remain provider-close; no vintage or adjustment audit is implied.
 - **Corporate-action disclosure for comparison paths** — when a selected
   Yahoo chart response contains event metadata, its split/dividend dates appear
-  beside the unadjusted technical measures. Empty marker lists are not proof
+  beside the provider-close technical measures. Empty marker lists are not proof
   that no action occurred; paths without event metadata report unavailable.
 - **Shared-date technical observations** — available market comparisons now
   show maximum observed drawdown and distance from a 20-shared-close average
   for each symbol, with explicit observation dates and insufficient-data state.
-  These unadjusted-close measures are descriptive and may reflect corporate
+  These provider-close measures are descriptive and may reflect corporate
   actions; they are not trading signals.
 - **Dated fundamentals candidates in market comparisons** — an on-demand
   panel checks each pair's observed window for source-reported revenue, net

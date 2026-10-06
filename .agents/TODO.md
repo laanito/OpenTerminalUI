@@ -466,6 +466,11 @@ intelligence promise, or claim that contradiction handling is solved.
         unambiguous rows, and disclose that feed. Empty Yahoo charts no longer
         suppress this fallback. FMP access and symbol coverage remain conditional;
         this does not verify raw-price quality or historical completeness.
+  - [x] Correct the comparison's blanket unadjusted-close claim. The API now
+        identifies selected provider closes and reports each asset's request-level
+        adjustment basis (Alpaca raw, FMP non-split-adjusted, or unspecified),
+        including unknown/unavailable paths in the browser. This does not verify
+        returned prices or resolve mixed-basis pairs.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw
@@ -485,24 +490,24 @@ intelligence promise, or claim that contradiction handling is solved.
         shared-date path: maximum observed drawdown with peak/trough dates and
         the latest gap from a 20-shared-close average. Missing observations are
         never filled, and fewer than 20 shared closes leave the average gap
-        unavailable. These unadjusted-close measures can be distorted by
+        unavailable. These provider-close measures can be distorted by
         corporate actions and are descriptive, not trading signals.
   - [x] Disclose dated split/dividend markers when the selected Yahoo chart
         response contains event metadata, filtered to the pair's observed
-        window and shown beside the unadjusted technical measures. A source with no
+        window and shown beside the provider-close technical measures. A source with no
         reported markers is not certified action-free; paths without event
         metadata remain unavailable. This does not adjust the price series.
   - [x] Report complete/partial/unavailable coverage of provider-supplied Yahoo
         adjusted closes on the exact pair-shared dates. This is retrospective
-        availability metadata only; raw paths, returns, and technical measures
+        availability metadata only; primary paths, returns, and technical measures
         remain unchanged, and a complete count does not verify adjustment
         correctness or historical vintage.
   - [x] Expose a separate descriptive adjusted-return and technical-observation
         contract for each asset only when Yahoo adjusted closes cover every
-        pair-shared date. Keep raw comparison results unchanged and partial
+        pair-shared date. Keep primary comparison results unchanged and partial
         adjusted series unavailable; this does not verify adjustment quality,
         source vintage, or all adapters' deeper provider identity.
-  - [x] Add a separate unadjusted own-date technical observation for each asset
+  - [x] Add a separate provider-close own-date technical observation for each asset
         inside the actual pair window. Report its observation count and dates
         beyond the pair overlap so crypto weekends no longer silently vanish
         from this descriptive view. The primary comparison remains shared-date;
@@ -511,12 +516,13 @@ intelligence promise, or claim that contradiction handling is solved.
         within the pair window. Calculate a separate adjusted own-date return,
         drawdown, and 20-close gap only when every own date is covered, including
         crypto weekends. Never shrink the window to available adjusted values;
-        keep primary unadjusted and pair-shared outputs unchanged. Provider
+        keep primary provider-close and pair-shared outputs unchanged. Provider
         adjustment correctness and session calendars remain unverified.
   - [ ] Add a split/dividend-adjusted and provider-provenance contract before
         treating technical measures as decision-grade cross-market signals;
         separate native per-asset sessions from pair-shared sampling when
-        users need standard daily indicators (notably crypto weekends).
+        users need standard daily indicators (notably crypto weekends). The
+        provider-close adjustment labels are only a request-level prerequisite.
 
 ## Current handoff boundary
 
