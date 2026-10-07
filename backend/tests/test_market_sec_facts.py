@@ -17,6 +17,7 @@ from backend.services.sec_filing_evidence import (
     CANDIDATE_DISPLAY_LIMIT, DISCLOSURES_PER_CANDIDATE_LIMIT, DISPLAY_LIMIT,
     disclosure_difference_candidates, filed_facts,
 )
+from backend.services.sec_submission_evidence import crosscheck_recent_submission, recent_submission_index
 
 
 def _row(accession: str, value: float = 100.0, **changes: object) -> dict:
@@ -187,3 +188,99 @@ def test_route_reports_provider_failure_without_leaking_upstream_url() -> None:
     assert response.status_code == 200
     assert response.json()["status"] == "provider_error"
     assert "secret-upstream-url" not in response.text
+
+
+def _submissions() -> dict:
+    return {"cik": 320193, "filings": {"recent": {
+        "accessionNumber": ["0000320193-25-000001", "0000320193-25-000002"],
+        "form": ["10-Q", "10-Q/A"], "filingDate": ["2025-05-02", "2025-08-01"],
+        "acceptanceDateTime": ["2025-05-02T15:30:00Z", "2025-08-01T17:00:00Z"],
+    }, "files": [{"name": "CIK0000320193-submissions-001.json"}]}}
+
+
+def test_recent_submission_index_marks_mismatch_absence_and_ambiguous_accession() -> None:
+    index = recent_submission_index(_submissions(), 320193)
+    matched = crosscheck_recent_submission(index, "0000320193-25-000001", "10-Q", date(2025, 5, 2))
+    assert matched["status"] == "matched"
+    assert matched["accepted_at"].isoformat() == "2025-05-02T15:30:00+00:00"
+    assert crosscheck_recent_submission(index, "0000320193-25-000002", "10-Q", date(2025, 8, 1))["status"] == "metadata_mismatch"
+    assert crosscheck_recent_submission(index, "0000320193-25-000003", "10-Q", date(2025, 8, 1))["status"] == "not_in_recent_index"
+    payload = _submissions()
+    payload["filings"]["recent"]["accessionNumber"].append("0000320193-25-000001")
+    payload["filings"]["recent"]["form"].append("10-K")
+    payload["filings"]["recent"]["filingDate"].append("2025-05-02")
+    payload["filings"]["recent"]["acceptanceDateTime"].append("2025-05-02T15:30:00Z")
+    index = recent_submission_index(payload, 320193)
+    assert crosscheck_recent_submission(index, "0000320193-25-000001", "10-Q", date(2025, 5, 2))["status"] == "ambiguous_in_recent_index"
+
+
+def test_recent_submission_index_rejects_wrong_cik_and_broken_columns() -> None:
+    try:
+        recent_submission_index(_submissions(), 42)
+        assert False, "expected CIK mismatch"
+    except ValueError:
+        pass
+    payload = _submissions()
+    payload["filings"]["recent"]["form"].pop()
+    try:
+        recent_submission_index(payload, 320193)
+        assert False, "expected broken column rejection"
+    except ValueError:
+        pass
+
+
+def test_submission_crosscheck_route_keeps_recent_index_misses_explicit_and_caches() -> None:
+    calls: list[str] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        assert request.headers["User-Agent"] == "test@example.com"
+        return httpx.Response(200, json=_submissions())
+
+    client = _app(SecEdgarClient(user_agent="test@example.com", transport=httpx.MockTransport(respond), pace_seconds=0))
+    body = {"cik": 320193, "claims": [
+        {"accession": "0000320193-25-000001", "form": "10-Q", "filed_date": "2025-05-02"},
+        {"accession": "0000320193-25-000001", "form": "10-Q", "filed_date": "2025-05-02"},
+        {"accession": "0000320193-25-000002", "form": "10-Q", "filed_date": "2025-08-01"},
+        {"accession": "0000320193-25-000003", "form": "10-Q", "filed_date": "2025-08-01"},
+    ]}
+    response = client.post("/api/market-context/sec-submission-crosscheck", json=body)
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["status"] == "available" and data["index_scope"] == "sec_current_recent_submissions_only"
+    assert (data["checked_count"], data["matched_count"]) == (3, 1)
+    assert [row["status"] for row in data["results"]] == ["matched", "metadata_mismatch", "not_in_recent_index"]
+    assert data["results"][0]["accepted_at"] == "2025-05-02T15:30:00Z"
+    assert client.post("/api/market-context/sec-submission-crosscheck", json=body).status_code == 200
+    assert calls == ["/submissions/CIK0000320193.json"]
+
+
+def test_submission_crosscheck_configuration_provider_failure_and_validation() -> None:
+    body = {"cik": 320193, "claims": [{"accession": "0000320193-25-000001", "form": "10-Q", "filed_date": "2025-05-02"}]}
+    assert _app(SecEdgarClient(user_agent="")).post("/api/market-context/sec-submission-crosscheck", json=body).json()["status"] == "configuration_required"
+    transport = httpx.MockTransport(lambda request: httpx.Response(503, text="secret-upstream-url"))
+    client = _app(SecEdgarClient(user_agent="test@example.com", transport=transport, pace_seconds=0))
+    response = client.post("/api/market-context/sec-submission-crosscheck", json=body)
+    assert response.json()["status"] == "provider_error"
+    assert "secret-upstream-url" not in response.text
+    assert client.post("/api/market-context/sec-submission-crosscheck", json={**body, "cik": 0}).status_code == 422
+    assert client.post("/api/market-context/sec-submission-crosscheck", json={**body, "claims": []}).status_code == 422
+
+
+def test_malformed_recent_index_is_not_cached_between_retries() -> None:
+    calls = 0
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(200, json={"cik": 320193, "filings": {"recent": {"form": []}}})
+        return httpx.Response(200, json=_submissions())
+
+    client = _app(SecEdgarClient(user_agent="test@example.com", transport=httpx.MockTransport(respond), pace_seconds=0))
+    body = {"cik": 320193, "claims": [{"accession": "0000320193-25-000001", "form": "10-Q", "filed_date": "2025-05-02"}]}
+    first = client.post("/api/market-context/sec-submission-crosscheck", json=body)
+    second = client.post("/api/market-context/sec-submission-crosscheck", json=body)
+    assert first.json()["status"] == "provider_error"
+    assert second.json()["status"] == "available"
+    assert calls == 2

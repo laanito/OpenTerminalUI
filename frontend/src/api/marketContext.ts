@@ -235,7 +235,7 @@ export interface SecFiledFact {
   taxonomy: "us-gaap";
   concept: string;
   unit: string;
-  form: string;
+  form: "10-K" | "10-Q" | "10-K/A" | "10-Q/A";
   period_start: string;
   period_end: string;
   value: number;
@@ -272,6 +272,30 @@ export interface SecFiledFactsResponse {
   candidate_display_limit?: number;
   disclosures_per_candidate_limit?: number;
   difference_candidates?: SecDisclosureDifferenceCandidate[];
+}
+
+export interface SecSubmissionClaim {
+  accession: string;
+  form: "10-K" | "10-Q" | "10-K/A" | "10-Q/A";
+  filed_date: string;
+}
+
+export interface SecSubmissionCrosscheckItem extends SecSubmissionClaim {
+  status: "matched" | "metadata_mismatch" | "not_in_recent_index" | "ambiguous_in_recent_index";
+  submission_form: string | null;
+  submission_filed_date: string | null;
+  accepted_at: string | null;
+}
+
+export interface SecSubmissionCrosscheckResponse {
+  contract_version: 1;
+  cik: number;
+  retrieved_at: string;
+  status: "available" | "configuration_required" | "provider_error";
+  index_scope: "sec_current_recent_submissions_only";
+  checked_count: number;
+  matched_count: number;
+  results: SecSubmissionCrosscheckItem[];
 }
 
 export interface FundamentalCaptureSummary {
@@ -359,6 +383,11 @@ export async function fetchMarketSecFiledFacts(symbol: string, filedStart: strin
   const response = await api.post<SecFiledFactsResponse>("/market-context/sec-filed-facts", {
     symbol, filed_start: filedStart, filed_end: filedEnd,
   });
+  return response.data;
+}
+
+export async function fetchSecSubmissionCrosscheck(cik: number, claims: SecSubmissionClaim[]): Promise<SecSubmissionCrosscheckResponse> {
+  const response = await api.post<SecSubmissionCrosscheckResponse>("/market-context/sec-submission-crosscheck", { cik, claims });
   return response.data;
 }
 

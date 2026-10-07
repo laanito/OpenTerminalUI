@@ -14209,6 +14209,200 @@
         "title": "SecFiledFactsResponse",
         "type": "object"
       },
+      "SecSubmissionClaim": {
+        "properties": {
+          "accession": {
+            "pattern": "^\\d{10}-\\d{2}-\\d{6}$",
+            "title": "Accession",
+            "type": "string"
+          },
+          "filed_date": {
+            "format": "date",
+            "title": "Filed Date",
+            "type": "string"
+          },
+          "form": {
+            "enum": [
+              "10-K",
+              "10-Q",
+              "10-K/A",
+              "10-Q/A"
+            ],
+            "title": "Form",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accession",
+          "form",
+          "filed_date"
+        ],
+        "title": "SecSubmissionClaim",
+        "type": "object"
+      },
+      "SecSubmissionCrosscheckItem": {
+        "properties": {
+          "accepted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          },
+          "accession": {
+            "pattern": "^\\d{10}-\\d{2}-\\d{6}$",
+            "title": "Accession",
+            "type": "string"
+          },
+          "filed_date": {
+            "format": "date",
+            "title": "Filed Date",
+            "type": "string"
+          },
+          "form": {
+            "enum": [
+              "10-K",
+              "10-Q",
+              "10-K/A",
+              "10-Q/A"
+            ],
+            "title": "Form",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "matched",
+              "metadata_mismatch",
+              "not_in_recent_index",
+              "ambiguous_in_recent_index"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submission_filed_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submission Filed Date"
+          },
+          "submission_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submission Form"
+          }
+        },
+        "required": [
+          "accession",
+          "form",
+          "filed_date",
+          "status",
+          "submission_form",
+          "submission_filed_date",
+          "accepted_at"
+        ],
+        "title": "SecSubmissionCrosscheckItem",
+        "type": "object"
+      },
+      "SecSubmissionCrosscheckRequest": {
+        "properties": {
+          "cik": {
+            "maximum": 9999999999.0,
+            "minimum": 1.0,
+            "title": "Cik",
+            "type": "integer"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/SecSubmissionClaim"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Claims",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cik",
+          "claims"
+        ],
+        "title": "SecSubmissionCrosscheckRequest",
+        "type": "object"
+      },
+      "SecSubmissionCrosscheckResponse": {
+        "properties": {
+          "checked_count": {
+            "default": 0,
+            "title": "Checked Count",
+            "type": "integer"
+          },
+          "cik": {
+            "title": "Cik",
+            "type": "integer"
+          },
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "index_scope": {
+            "const": "sec_current_recent_submissions_only",
+            "default": "sec_current_recent_submissions_only",
+            "title": "Index Scope",
+            "type": "string"
+          },
+          "matched_count": {
+            "default": 0,
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SecSubmissionCrosscheckItem"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "configuration_required",
+              "provider_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cik",
+          "retrieved_at",
+          "status"
+        ],
+        "title": "SecSubmissionCrosscheckResponse",
+        "type": "object"
+      },
       "SectorAllocationIndustryResponse": {
         "properties": {
           "industry": {
@@ -26733,6 +26927,60 @@
           }
         ],
         "summary": "Sec File Facts",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/sec-submission-crosscheck": {
+      "post": {
+        "description": "Check supplied accession/date/form claims against the current recent index.",
+        "operationId": "sec_submission_crosscheck_api_market_context_sec_submission_crosscheck_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecSubmissionCrosscheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecSubmissionCrosscheckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sec Submission Crosscheck",
         "tags": [
           "market-context"
         ],

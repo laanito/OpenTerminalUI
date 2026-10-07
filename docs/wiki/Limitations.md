@@ -149,6 +149,14 @@ never silently faked.
   values or amended form labels alone do not verify a correction or establish
   that one disclosure superseded another. Truncated groups cannot be read as
   complete filing histories. [SEC Company Facts documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces).
+  A separate opt-in `POST /api/market-context/sec-submission-crosscheck` and
+  browser action compare up to 100 displayed accession/form/filed-date claims
+  with the current SEC *recent* submissions index. They do not fetch older
+  continuation files. An absent accession is therefore **not** an invalid
+  filing verdict; a metadata mismatch is a prompt for inspection, not a proven
+  correction. If this check fails, the Company Facts result remains visible.
+  Any SEC-reported acceptance timestamp is metadata, not proof of when a
+  particular investor could have received the filing. [SEC submissions API](https://www.sec.gov/search-filings/edgar-application-programming-interfaces).
 - **Technical observations use shared provider closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average

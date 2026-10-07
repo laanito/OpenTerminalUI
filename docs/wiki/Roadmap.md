@@ -405,6 +405,7 @@ form, concept, unit, and value. This is not merged into the FMP panel or saved
 captures. The current SEC aggregation does not provide a retained historical
 vintage, complete market coverage, or an inferred revision sequence. Coverage
 and revision-aware interpretation remain open gates.
+
 The comparison screen can inspect this SEC evidence on demand for each symbol
 in the pair's observed date window, separately from current FMP candidates and
 saved terminal captures. It shows accession and units rather than reducing
@@ -417,6 +418,14 @@ flags conflicts even within one accession. These are value-difference candidates
 from the current SEC aggregate, not verified corrections, an as-of archive,
 or proof that a later filing superseded an earlier fact. Historical coverage
 and revision-aware interpretation remain open gates.
+
+Users can optionally cross-check displayed accession, form, and filed-date
+claims against the current SEC *recent* submissions index. This is a separate
+request so failure cannot erase Company Facts evidence. A match adds SEC
+reported submission metadata; a miss means only that the accession was not
+found in the bounded recent index. Older continuation files are not fetched,
+and an acceptance timestamp is not proof of market dissemination or a
+complete historical vintage. The wider revision-aware gate remains open.
 
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
