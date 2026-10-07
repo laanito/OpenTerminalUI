@@ -452,6 +452,11 @@ intelligence promise, or claim that contradiction handling is solved.
           Retain accession/date/form for each bounded disclosure, flag multiple
           values within one accession, and never label a group a verified
           amendment, revision, or historical market-knowledge sequence.
+    - [x] Add a separately triggered SEC recent-submissions cross-check for
+          displayed accession/form/filed-date claims. Match only the current
+          recent index, keep absent/ambiguous/mismatched claims distinct, and
+          leave filed facts visible if this additional provider request fails.
+          Older continuation files and historical dissemination remain unverified.
   - [x] First news-provenance prerequisite: live news parsing and background
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not

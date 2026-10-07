@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketSecFiledFacts, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -696,6 +696,63 @@ function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: Market
   );
 }
 
+function displayedSecClaims(data: SecFiledFactsResponse): { claims: SecSubmissionClaim[]; distinctCount: number } {
+  const seen = new Set<string>();
+  const claims: SecSubmissionClaim[] = [];
+  const displayed = [...data.facts, ...(data.difference_candidates ?? []).flatMap((candidate) => candidate.disclosures)];
+  for (const fact of displayed) {
+    const key = `${fact.accession}|${fact.form}|${fact.filed_date}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (claims.length < 100) claims.push({ accession: fact.accession, form: fact.form, filed_date: fact.filed_date });
+  }
+  return { claims, distinctCount: seen.size };
+}
+
+function SecSubmissionCrosscheckPanel({ symbol, data }: { symbol: string; data: SecFiledFactsResponse }) {
+  const [open, setOpen] = useState(false);
+  const { claims, distinctCount } = useMemo(() => displayedSecClaims(data), [data]);
+  const query = useQuery({
+    queryKey: ["market-sec-submission-crosscheck", data.cik, claims],
+    queryFn: () => fetchSecSubmissionCrosscheck(data.cik!, claims),
+    enabled: open && data.cik !== null && claims.length > 0,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-2">
+      <button type="button" className="text-terminal-accent underline" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        {open ? "Hide" : "Check"} recent SEC submission metadata for {symbol}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-1">
+          <p className="text-terminal-muted">
+            Checking {claims.length} of {distinctCount} distinct claims from the displayed facts and disclosures against the current recent-submissions index. Older filings may be in continuation files not checked here. A miss does not disprove a filing; a match does not establish when a market participant saw it.
+          </p>
+          {query.isPending ? <p role="status" className="text-terminal-muted">Checking recent SEC submissions for {symbol}…</p> : null}
+          {query.isError ? <p role="alert" className="text-terminal-neg">{extractApiErrorMessage(query.error, "Could not check recent SEC submissions.")} <button type="button" className="underline" onClick={() => void query.refetch()}>Retry submission check for {symbol}</button></p> : null}
+          {query.data?.status === "configuration_required" ? <p className="text-terminal-muted">SEC user agent is not configured; no submission check was made.</p> : null}
+          {query.data?.status === "provider_error" ? <p className="text-terminal-warn">SEC submissions check failed; the filed facts above remain available. <button type="button" className="underline" onClick={() => void query.refetch()}>Retry submission check for {symbol}</button></p> : null}
+          {query.data?.status === "available" ? (
+            <>
+              <p className="text-terminal-muted">{query.data.matched_count}/{query.data.checked_count} claims matched accession, form, and filed date in the recent index.</p>
+              <ul className="max-h-64 space-y-1 overflow-y-auto">
+                {query.data.results.map((item) => (
+                  <li key={`${item.accession}-${item.form}-${item.filed_date}`} className="rounded border border-terminal-border p-1 text-terminal-text">
+                    {item.accession} · {item.form} · {item.filed_date}: {item.status === "matched" ? "Recent-index match" : item.status === "metadata_mismatch" ? "SEC metadata differs" : item.status === "ambiguous_in_recent_index" ? "Conflicting recent-index rows" : "Not found in recent index"}.
+                    {item.status === "metadata_mismatch" ? ` SEC lists ${item.submission_form} on ${item.submission_filed_date}.` : null}
+                    {item.accepted_at ? ` SEC-reported acceptance ${item.accepted_at}.` : null}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function SecFiledFactsForSymbol({ symbol, startDate, endDate }: { symbol: string; startDate: string; endDate: string }) {
   const query = useQuery({
     queryKey: ["market-sec-filed-facts", symbol, startDate, endDate],
@@ -759,6 +816,7 @@ function SecFiledFactsForSymbol({ symbol, startDate, endDate }: { symbol: string
               ))}
             </div>
           ) : null}
+          {data.cik !== null ? <SecSubmissionCrosscheckPanel symbol={symbol} data={data} /> : null}
         </>
       ) : null}
     </div>

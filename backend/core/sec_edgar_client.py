@@ -1,4 +1,4 @@
-"""Opt-in, politely paced SEC EDGAR Company Facts reader."""
+"""Opt-in, politely paced SEC EDGAR data reader."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ import time
 from typing import Any
 
 import httpx
+
+from backend.services.sec_submission_evidence import recent_submission_index
 
 
 class SecEdgarClient:
@@ -20,6 +22,7 @@ class SecEdgarClient:
         self._last_request = 0.0
         self._ticker_cache: tuple[float, Any] | None = None
         self._facts_cache: dict[int, tuple[float, Any]] = {}
+        self._submissions_cache: dict[int, tuple[float, Any]] = {}
 
     @property
     def configured(self) -> bool:
@@ -58,9 +61,24 @@ class SecEdgarClient:
         if cached is not None and now - cached[0] <= 1800:
             return cached[1]
         payload = await self._get(f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json")
+        if payload.get("cik") != cik:
+            raise ValueError("SEC Company Facts CIK mismatch")
         if len(self._facts_cache) >= 4:
             self._facts_cache.pop(next(iter(self._facts_cache)))
         self._facts_cache[cik] = (now, payload)
+        return payload
+
+    async def recent_submissions(self, cik: int) -> dict[str, Any]:
+        now = time.monotonic()
+        cached = self._submissions_cache.get(cik)
+        if cached is not None and now - cached[0] <= 1800:
+            return cached[1]
+        payload = await self._get(f"https://data.sec.gov/submissions/CIK{cik:010d}.json")
+        # Reject malformed indexes before caching; retry must be able to refetch.
+        recent_submission_index(payload, cik)
+        if len(self._submissions_cache) >= 4:
+            self._submissions_cache.pop(next(iter(self._submissions_cache)))
+        self._submissions_cache[cik] = (now, payload)
         return payload
 
 

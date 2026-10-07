@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Optional SEC submission cross-check** — from the filed-facts panel, users
+  can separately check displayed accession/form/filed-date claims against the
+  current recent submissions index. Matched, mismatched, absent, and ambiguous
+  index rows remain distinct; provider failure does not discard Company Facts.
+  Older continuation files and historical dissemination are not verified.
 - **Same-period SEC disclosure differences** — the API and comparison panel
   group differing accession-tagged values only when concept, unit, and fiscal
   duration match exactly. Full eligible counts precede bounded display, and
