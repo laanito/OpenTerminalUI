@@ -208,6 +208,10 @@ never silently faked.
   The requested real-time date and retrieval time do not prove when an
   observation was published or which value was available to a trader then;
   values may have been revised. They are not attributed to either asset.
+  An optional FRED real-time request for the pair-end date shows differences
+  from the current view only where source units and frequency match. FRED's
+  daily historical view is not a saved terminal snapshot, intraday release
+  record, comprehensive availability audit, or proof of a market reaction.
 - **Fundamental release context is a candidate snapshot, not a historical
   vintage.** The comparison panel checks current provider records on demand
   and displays only source-reported filing/acceptance dates in the observed

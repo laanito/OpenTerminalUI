@@ -506,6 +506,11 @@ intelligence promise, or claim that contradiction handling is solved.
         values, and per-series failure states; never use legacy sample values.
         Reference dates are not release dates, and current revised values do
         not establish what was known during the price window.
+    - [x] Allow an explicitly requested FRED daily real-time view and an
+          on-demand comparison against the pair-end date. Show changed or
+          absent reference-date values only when both feeds return comparable
+          units/frequency, and keep provider failures distinct. This is not an
+          intraday release audit or proof that a market participant saw a value.
   - [x] Expose the exact shared-close trajectory behind each available pair,
         rebased to 100 at the first shared date, with an on-demand chart and
         inspectable observation table. No missing dates are filled in; the path

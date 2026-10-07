@@ -503,7 +503,7 @@ describe("MarketContextPage", () => {
         ],
       }],
     });
-    macroObservationsMock.mockResolvedValue({
+    macroObservationsMock.mockResolvedValueOnce({
       start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:01:00Z",
       realtime_date: "2026-09-11", source: "fred", status: "available", reason: null,
       series: [{
@@ -511,6 +511,26 @@ describe("MarketContextPage", () => {
         title: "Unemployment Rate", units: "Percent", frequency: "Monthly",
         matched_count: 1, withheld_conflict_count: 0,
         observations: [{ reference_date: "2026-09-02", value: 4.1 }],
+      }, {
+        series_id: "CPIAUCSL", label: "Consumer prices", status: "available",
+        title: "Consumer Price Index", units: "Index", frequency: "Monthly",
+        matched_count: 1, withheld_conflict_count: 0,
+        observations: [{ reference_date: "2026-09-02", value: 300 }],
+      }],
+    });
+    macroObservationsMock.mockResolvedValueOnce({
+      start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:02:00Z",
+      realtime_date: "2026-09-10", source: "fred", status: "available", reason: null,
+      series: [{
+        series_id: "UNRATE", label: "Unemployment rate", status: "available",
+        title: "Unemployment Rate", units: "Percent", frequency: "Monthly",
+        matched_count: 1, withheld_conflict_count: 0,
+        observations: [{ reference_date: "2026-09-02", value: 3.9 }],
+      }, {
+        series_id: "CPIAUCSL", label: "Consumer prices", status: "available",
+        title: "Consumer Price Index", units: "Percent", frequency: "Monthly",
+        matched_count: 1, withheld_conflict_count: 0,
+        observations: [{ reference_date: "2026-09-02", value: 2.5 }],
       }],
     });
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
@@ -522,6 +542,12 @@ describe("MarketContextPage", () => {
     expect(screen.getByRole("link", { name: "UNRATE" })).toHaveAttribute("href", "https://fred.stlouisfed.org/series/UNRATE");
     expect(screen.getByText(/A reference date is not a publication date/)).toBeInTheDocument();
     expect(screen.getByText(/Neither a saved vintage nor a release-time audit/)).toBeInTheDocument();
+    expect(macroObservationsMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Check FRED values as of 2026-09-10" }));
+    await waitFor(() => expect(macroObservationsMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10", "2026-09-10"));
+    expect(await screen.findByText(/2026-09-02: as-of 3.9 → current 4.1/)).toBeInTheDocument();
+    expect(screen.getByText(/Units or frequency changed between FRED views/)).toBeInTheDocument();
+    expect(screen.getByText(/not an intraday release audit/)).toBeInTheDocument();
   });
 
   it("loads only on-demand source-dated fundamental candidates for the pair window", async () => {

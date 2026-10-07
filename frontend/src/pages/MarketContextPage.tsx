@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -480,14 +480,41 @@ function DatedMacroEvents({ anchor, row }: { anchor: string; row: MarketComparis
   );
 }
 
+function MacroVintageDifference({ current, historical }: { current: MarketMacroObservationSeries | undefined; historical: MarketMacroObservationSeries }) {
+  if (!current || current.status === "feed_error" || historical.status === "feed_error") {
+    return <p className="text-terminal-warn">Cannot compare this series across both FRED requests.</p>;
+  }
+  if (current.units !== historical.units || current.frequency !== historical.frequency) {
+    return <p className="text-terminal-warn">Units or frequency changed between FRED views; no numeric comparison is shown.</p>;
+  }
+  const currentByDate = new Map(current.observations.map((item) => [item.reference_date, item.value]));
+  const historicalByDate = new Map(historical.observations.map((item) => [item.reference_date, item.value]));
+  const dates = [...new Set([...currentByDate.keys(), ...historicalByDate.keys()])].sort();
+  const differences = dates.filter((date) => currentByDate.get(date) !== historicalByDate.get(date));
+  return (
+    <>
+      <p className="text-terminal-muted">{differences.length} differing or absent reference dates · {dates.length - differences.length} unchanged on returned dates.</p>
+      {differences.length ? <ul className="mt-1 max-h-28 space-y-1 overflow-auto">{differences.map((date) => <li key={date}>{date}: as-of {historicalByDate.has(date) ? historicalByDate.get(date)?.toLocaleString() : "absent"} → current {currentByDate.has(date) ? currentByDate.get(date)?.toLocaleString() : "absent"}</li>)}</ul> : null}
+    </>
+  );
+}
+
 function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
   const [open, setOpen] = useState(false);
+  const [showAsOf, setShowAsOf] = useState(false);
   const startDate = row.start_date || "";
   const endDate = row.end_date || "";
   const query = useQuery({
     queryKey: ["market-context-macro-observations", startDate, endDate],
     queryFn: () => fetchMarketContextMacroObservations(startDate, endDate),
     enabled: open && !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const asOfQuery = useQuery({
+    queryKey: ["market-context-macro-observations-asof", startDate, endDate],
+    queryFn: () => fetchMarketContextMacroObservations(startDate, endDate, endDate),
+    enabled: open && showAsOf && !!startDate && !!endDate,
     staleTime: 5 * 60_000,
     retry: false,
   });
@@ -522,6 +549,29 @@ function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: Mar
                   </div>
                 ))}
               </div>
+              <button type="button" className="text-terminal-accent underline" onClick={() => setShowAsOf((value) => !value)} aria-expanded={showAsOf}>
+                {showAsOf ? "Hide" : "Check"} FRED values as of {endDate}
+              </button>
+              {showAsOf ? (
+                <div className="space-y-2 rounded border border-terminal-border p-2">
+                  <p className="text-terminal-muted">FRED daily real-time view requested as of {endDate}. This can reveal later revisions or newly returned values, but is not an intraday release audit, a complete availability guarantee, or evidence that either asset reacted.</p>
+                  {asOfQuery.isPending ? <p role="status" className="text-terminal-muted">Checking historical FRED view…</p> : null}
+                  {asOfQuery.isError ? <p role="alert" className="text-terminal-neg">{extractApiErrorMessage(asOfQuery.error, "Could not check historical FRED view.")} <button type="button" className="underline" onClick={() => void asOfQuery.refetch()}>Retry historical view</button></p> : null}
+                  {asOfQuery.data?.status === "unavailable" ? <p className="text-terminal-warn">Historical FRED view unavailable: {asOfQuery.data.reason === "missing_api_key" ? "FRED_API_KEY is not configured." : "provider request failed."}</p> : null}
+                  {asOfQuery.data && asOfQuery.data.realtime_date !== endDate ? <p className="text-terminal-warn">FRED returned a different real-time date; no vintage comparison is shown.</p> : null}
+                  {asOfQuery.data?.series.length && asOfQuery.data.realtime_date === endDate ? (
+                    <div className="grid gap-2 md:grid-cols-3">
+                      {asOfQuery.data.series.map((series) => (
+                        <div key={series.series_id} className="rounded border border-terminal-border p-2">
+                          <p className="font-medium">{series.label} · {series.series_id}</p>
+                          {series.status === "feed_error" ? <p className="text-terminal-warn">Historical provider view failed.</p> : <p className="text-terminal-muted">{series.units} · {series.frequency} · {series.matched_count} returned values{series.withheld_conflict_count ? ` · ${series.withheld_conflict_count} conflicting dates withheld` : ""}.</p>}
+                          <MacroVintageDifference current={query.data.series.find((item) => item.series_id === series.series_id)} historical={series} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : null}
         </div>

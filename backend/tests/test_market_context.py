@@ -599,10 +599,14 @@ def test_macro_context_preserves_unavailable_state_without_sample() -> None:
 
 def test_macro_observations_endpoint_preserves_window_and_reference_date_semantics() -> None:
     class FakeService:
-        async def get_market_context_macro_observations(self, start: date, end: date) -> dict[str, Any]:
+        async def get_market_context_macro_observations(
+            self, start: date, end: date, realtime_date: date | None = None,
+        ) -> dict[str, Any]:
             assert (start, end) == (date(2026, 9, 2), date(2026, 9, 10))
+            assert realtime_date is None or realtime_date == date(2026, 9, 10)
             return {
-                "retrieved_at": "2026-09-11T10:00:00Z", "realtime_date": "2026-09-11",
+                "retrieved_at": "2026-09-11T10:00:00Z",
+                "realtime_date": realtime_date or "2026-09-11",
                 "status": "available", "reason": None,
                 "series": [{
                     "series_id": "UNRATE", "label": "Unemployment rate", "status": "available",
@@ -621,7 +625,15 @@ def test_macro_observations_endpoint_preserves_window_and_reference_date_semanti
     assert response.status_code == 200
     assert response.json()["series"][0]["observations"] == [{"reference_date": "2026-09-02", "value": 4.1}]
     assert response.json()["source"] == "fred"
+    historical = client.post("/api/market-context/macro-observations", json={
+        "start_date": "2026-09-02", "end_date": "2026-09-10", "realtime_date": "2026-09-10",
+    })
+    assert historical.status_code == 200
+    assert historical.json()["realtime_date"] == "2026-09-10"
     assert client.post("/api/market-context/macro-observations", json={"start_date": "2026-01-01", "end_date": "2026-09-10"}).status_code == 422
+    assert client.post("/api/market-context/macro-observations", json={
+        "start_date": "2026-09-02", "end_date": "2026-09-10", "realtime_date": "9999-12-31",
+    }).status_code == 422
 
 
 def _fundamentals_client(data: dict[str, Any]) -> TestClient:
