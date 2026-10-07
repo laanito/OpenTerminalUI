@@ -350,6 +350,13 @@ cannot be silently dropped just because pair-shared weekdays are complete.
 The primary returns and shared-date measures remain unchanged. Adjustment
 quality, historical vintage, provider session calendars, and deeper provider
 provenance remain prerequisites for decision-grade technical evidence.
+The comparison now also classifies the two selected close feeds as matching,
+mixed, unknown, or unavailable *reported* adjustment bases. Complete Yahoo-
+adjusted series show the adjusted-minus-provider return difference for each
+asset on identical shared or own dates, and for the pair's return difference
+on shared dates. This quantifies a field difference without attributing it to
+splits or dividends or validating provider adjustments. The primary returns,
+window, and open technical-quality gate are unchanged.
 
 Dated news is the first candidate for that next layer. As a prerequisite, new
 live-feed and background-ingested articles without a parseable source publication

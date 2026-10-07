@@ -6936,6 +6936,14 @@
       },
       "MarketAdjustedAssetObservations": {
         "properties": {
+          "adjusted_minus_provider_return_pp": {
+            "title": "Adjusted Minus Provider Return Pp",
+            "type": "number"
+          },
+          "provider_return_pct": {
+            "title": "Provider Return Pct",
+            "type": "number"
+          },
           "return_pct": {
             "title": "Return Pct",
             "type": "number"
@@ -6946,6 +6954,8 @@
         },
         "required": [
           "return_pct",
+          "provider_return_pct",
+          "adjusted_minus_provider_return_pp",
           "technical_measures"
         ],
         "title": "MarketAdjustedAssetObservations",
@@ -7042,6 +7052,10 @@
       },
       "MarketAdjustedPairComparison": {
         "properties": {
+          "adjusted_minus_provider_relative_return_pp": {
+            "title": "Adjusted Minus Provider Relative Return Pp",
+            "type": "number"
+          },
           "anchor_return_pct": {
             "title": "Anchor Return Pct",
             "type": "number"
@@ -7071,6 +7085,10 @@
             "title": "Points",
             "type": "array"
           },
+          "provider_relative_return_pp": {
+            "title": "Provider Relative Return Pp",
+            "type": "number"
+          },
           "relative_return_pp": {
             "title": "Relative Return Pp",
             "type": "number"
@@ -7095,6 +7113,8 @@
           "anchor_return_pct",
           "comparison_return_pct",
           "relative_return_pp",
+          "provider_relative_return_pp",
+          "adjusted_minus_provider_relative_return_pp",
           "points"
         ],
         "title": "MarketAdjustedPairComparison",
@@ -7502,6 +7522,16 @@
             ],
             "title": "Observations"
           },
+          "pair_reported_basis_status": {
+            "enum": [
+              "matching_reported",
+              "mixed_reported",
+              "unverified",
+              "unavailable"
+            ],
+            "title": "Pair Reported Basis Status",
+            "type": "string"
+          },
           "points": {
             "items": {
               "$ref": "#/components/schemas/MarketComparisonPoint"
@@ -7574,6 +7604,7 @@
         "required": [
           "symbol",
           "status",
+          "pair_reported_basis_status",
           "anchor_close_date_conflicts",
           "comparison_close_date_conflicts"
         ],
@@ -8144,6 +8175,10 @@
             "title": "Additional Dates Vs Pair",
             "type": "integer"
           },
+          "adjusted_minus_provider_return_pp": {
+            "title": "Adjusted Minus Provider Return Pp",
+            "type": "number"
+          },
           "end_date": {
             "format": "date",
             "title": "End Date",
@@ -8152,6 +8187,10 @@
           "observations": {
             "title": "Observations",
             "type": "integer"
+          },
+          "provider_return_pct": {
+            "title": "Provider Return Pct",
+            "type": "number"
           },
           "return_pct": {
             "title": "Return Pct",
@@ -8168,6 +8207,8 @@
         },
         "required": [
           "return_pct",
+          "provider_return_pct",
+          "adjusted_minus_provider_return_pp",
           "technical_measures",
           "start_date",
           "end_date",

@@ -554,6 +554,11 @@ intelligence promise, or claim that contradiction handling is solved.
         separate native per-asset sessions from pair-shared sampling when
         users need standard daily indicators (notably crypto weekends). The
         provider-close adjustment labels are only a request-level prerequisite.
+    - [x] Label matching, mixed, unknown, and unavailable *reported* pair price
+          bases without claiming an audit. On complete Yahoo-adjusted dates,
+          quantify adjusted-minus-provider return differences for each asset
+          and the pair on exactly the same dates; keep the primary series and
+          broader technical-quality gate unchanged.
 
 ## Current handoff boundary
 

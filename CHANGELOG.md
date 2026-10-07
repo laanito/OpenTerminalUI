@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Price-basis diagnostics for comparisons** — paired feeds now disclose
+  matching, mixed, unknown, or unavailable request-level adjustment labels.
+  Where Yahoo-adjusted coverage is complete, same-date adjusted-minus-provider
+  return differences show the impact on each asset and pair without changing
+  the primary comparison or claiming verified corporate-action adjustments.
 - **Optional SEC submission cross-check** — from the filed-facts panel, users
   can separately check displayed accession/form/filed-date claims against the
   current recent submissions index. Matched, mismatched, absent, and ambiguous
