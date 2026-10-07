@@ -142,6 +142,13 @@ never silently faked.
   observed pair window, separately from FMP candidates and captures; it does
   not prove what was known on any historical trading date. Request pacing is
   process-local, not a shared deployment-wide SEC rate limiter.
+  A separate same-period difference view uses all eligible SEC facts before
+  display caps, then shows at most 20 candidate groups and eight most-recent
+  disclosures per group. It compares only exact concept, unit, fiscal start,
+  and fiscal end; it flags multiple values within one accession. Differing
+  values or amended form labels alone do not verify a correction or establish
+  that one disclosure superseded another. Truncated groups cannot be read as
+  complete filing histories. [SEC Company Facts documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces).
 - **Technical observations use shared provider closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average

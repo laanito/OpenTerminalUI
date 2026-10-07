@@ -13,7 +13,13 @@ from backend.api.routes.market_context import _symbol
 from backend.auth.deps import get_current_user
 from backend.core.sec_edgar_client import SecEdgarClient, get_sec_edgar_client
 from backend.models import User
-from backend.services.sec_filing_evidence import DISPLAY_LIMIT, filed_facts
+from backend.services.sec_filing_evidence import (
+    CANDIDATE_DISPLAY_LIMIT,
+    DISCLOSURES_PER_CANDIDATE_LIMIT,
+    DISPLAY_LIMIT,
+    disclosure_difference_candidates,
+    filed_facts,
+)
 
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
@@ -38,6 +44,19 @@ class SecFiledFact(BaseModel):
     value: float
 
 
+class SecDisclosureDifferenceCandidate(BaseModel):
+    concept: str
+    unit: str
+    period_start: date
+    period_end: date
+    latest_filed_date: date
+    disclosure_count: int
+    distinct_accession_count: int
+    distinct_value_count: int
+    within_accession_conflict: bool
+    disclosures: list[SecFiledFact]
+
+
 class SecFiledFactsResponse(BaseModel):
     contract_version: Literal[1] = 1
     symbol: str
@@ -51,6 +70,11 @@ class SecFiledFactsResponse(BaseModel):
     examined_count: int = 0
     display_limit: int = DISPLAY_LIMIT
     facts: list[SecFiledFact] = Field(default_factory=list)
+    difference_basis: Literal["same_concept_unit_exact_period_values_not_verified_revisions"] = "same_concept_unit_exact_period_values_not_verified_revisions"
+    candidate_group_count: int = 0
+    candidate_display_limit: int = CANDIDATE_DISPLAY_LIMIT
+    disclosures_per_candidate_limit: int = DISCLOSURES_PER_CANDIDATE_LIMIT
+    difference_candidates: list[SecDisclosureDifferenceCandidate] = Field(default_factory=list)
 
 
 @router.post("/sec-filed-facts", response_model=SecFiledFactsResponse)
@@ -81,10 +105,13 @@ async def sec_file_facts(
             if raw.get("cik") != ciks[0]:
                 raise ValueError("SEC CIK mismatch")
             facts, matched, examined = filed_facts(raw, payload.filed_start, payload.filed_end)
+            candidates, candidate_count = disclosure_difference_candidates(raw, payload.filed_start, payload.filed_end)
             result.update(status="available" if matched else "no_matching_facts", facts=facts,
-                          matched_count=matched, examined_count=examined)
+                          matched_count=matched, examined_count=examined,
+                          difference_candidates=candidates, candidate_group_count=candidate_count)
     except Exception as exc:
         # HTTP exceptions can include upstream URLs. Never expose those to clients or logs.
         logger.warning("SEC filed-facts fetch failed for %s (%s)", symbol, type(exc).__name__)
-        result.update(status="provider_error", cik=None, facts=[], matched_count=0, examined_count=0)
+        result.update(status="provider_error", cik=None, facts=[], matched_count=0, examined_count=0,
+                      difference_candidates=[], candidate_group_count=0)
     return result

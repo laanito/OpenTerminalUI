@@ -625,6 +625,14 @@ describe("MarketContextPage", () => {
       matched_count: 2, examined_count: 30, display_limit: 50,
       facts: [{ filed_date: "2026-09-05", accession: "0000320193-26-000001", taxonomy: "us-gaap",
         concept: "NetIncomeLoss", unit: "USD", form: "10-Q", period_start: "2026-04-01", period_end: "2026-06-30", value: 1234567 }],
+      difference_basis: "same_concept_unit_exact_period_values_not_verified_revisions",
+      candidate_group_count: 1, candidate_display_limit: 20, disclosures_per_candidate_limit: 8,
+      difference_candidates: [{ concept: "NetIncomeLoss", unit: "USD", period_start: "2026-04-01", period_end: "2026-06-30",
+        latest_filed_date: "2026-09-07", disclosure_count: 2, distinct_accession_count: 2, distinct_value_count: 2,
+        within_accession_conflict: false, disclosures: [
+          { filed_date: "2026-09-05", accession: "0000320193-26-000001", taxonomy: "us-gaap", concept: "NetIncomeLoss", unit: "USD", form: "10-Q", period_start: "2026-04-01", period_end: "2026-06-30", value: 1234567 },
+          { filed_date: "2026-09-07", accession: "0000320193-26-000002", taxonomy: "us-gaap", concept: "NetIncomeLoss", unit: "USD", form: "10-Q/A", period_start: "2026-04-01", period_end: "2026-06-30", value: 1234568 },
+        ] }],
     } : {
       contract_version: 1, symbol, filed_start: "2026-09-02", filed_end: "2026-09-10",
       retrieved_at: "2026-09-11T10:01:00Z", status: "not_covered",
@@ -640,9 +648,13 @@ describe("MarketContextPage", () => {
     await waitFor(() => expect(secFactsMock).toHaveBeenCalledWith("AAPL", "2026-09-02", "2026-09-10"));
     expect(secFactsMock).toHaveBeenCalledWith("SPY", "2026-09-02", "2026-09-10");
     expect(await screen.findByText(/2026-09-05 · NetIncomeLoss/)).toBeInTheDocument();
-    expect(screen.getByText(/accession 0000320193-26-000001/)).toBeInTheDocument();
+    expect(screen.getAllByText(/accession 0000320193-26-000001/)).toHaveLength(2);
     expect(screen.getByText(/No exact ticker match in the SEC ticker list/)).toBeInTheDocument();
     expect(screen.getByText(/not a complete historical archive, verified revision order/)).toBeInTheDocument();
+    expect(screen.getByText("Same-period value differences")).toBeInTheDocument();
+    expect(screen.getByText(/1 candidate group across exact concept, unit, and period identities/)).toBeInTheDocument();
+    expect(screen.getByText(/2026-09-07 · 10-Q\/A · accession 0000320193-26-000002/)).toBeInTheDocument();
+    expect(screen.getByText(/Different filed values are not verified revisions/)).toBeInTheDocument();
     expect(fundamentalsMock).not.toHaveBeenCalled();
   });
 

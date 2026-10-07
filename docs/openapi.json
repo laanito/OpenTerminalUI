@@ -13941,6 +13941,70 @@
         "title": "ScreenerV2RunRequest",
         "type": "object"
       },
+      "SecDisclosureDifferenceCandidate": {
+        "properties": {
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "disclosure_count": {
+            "title": "Disclosure Count",
+            "type": "integer"
+          },
+          "disclosures": {
+            "items": {
+              "$ref": "#/components/schemas/SecFiledFact"
+            },
+            "title": "Disclosures",
+            "type": "array"
+          },
+          "distinct_accession_count": {
+            "title": "Distinct Accession Count",
+            "type": "integer"
+          },
+          "distinct_value_count": {
+            "title": "Distinct Value Count",
+            "type": "integer"
+          },
+          "latest_filed_date": {
+            "format": "date",
+            "title": "Latest Filed Date",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "within_accession_conflict": {
+            "title": "Within Accession Conflict",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "concept",
+          "unit",
+          "period_start",
+          "period_end",
+          "latest_filed_date",
+          "disclosure_count",
+          "distinct_accession_count",
+          "distinct_value_count",
+          "within_accession_conflict",
+          "disclosures"
+        ],
+        "title": "SecDisclosureDifferenceCandidate",
+        "type": "object"
+      },
       "SecFiledFact": {
         "properties": {
           "accession": {
@@ -14030,6 +14094,16 @@
       },
       "SecFiledFactsResponse": {
         "properties": {
+          "candidate_display_limit": {
+            "default": 20,
+            "title": "Candidate Display Limit",
+            "type": "integer"
+          },
+          "candidate_group_count": {
+            "default": 0,
+            "title": "Candidate Group Count",
+            "type": "integer"
+          },
           "cik": {
             "anyOf": [
               {
@@ -14045,6 +14119,24 @@
             "const": 1,
             "default": 1,
             "title": "Contract Version",
+            "type": "integer"
+          },
+          "difference_basis": {
+            "const": "same_concept_unit_exact_period_values_not_verified_revisions",
+            "default": "same_concept_unit_exact_period_values_not_verified_revisions",
+            "title": "Difference Basis",
+            "type": "string"
+          },
+          "difference_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/SecDisclosureDifferenceCandidate"
+            },
+            "title": "Difference Candidates",
+            "type": "array"
+          },
+          "disclosures_per_candidate_limit": {
+            "default": 8,
+            "title": "Disclosures Per Candidate Limit",
             "type": "integer"
           },
           "display_limit": {

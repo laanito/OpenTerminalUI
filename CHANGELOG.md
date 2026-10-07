@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Same-period SEC disclosure differences** — the API and comparison panel
+  group differing accession-tagged values only when concept, unit, and fiscal
+  duration match exactly. Full eligible counts precede bounded display, and
+  within-accession conflicts are flagged. Groups are review candidates, not
+  verified revisions, corrections, or historical provider vintages.
 - **On-demand SEC filing-facts review** — the cross-market comparison screen
   can inspect each symbol's accession-tagged SEC facts within the observed
   pair window. It keeps this evidence separate from FMP candidates and saved

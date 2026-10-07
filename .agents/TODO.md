@@ -447,6 +447,11 @@ intelligence promise, or claim that contradiction handling is solved.
           the pair's observed window, independently of FMP candidates and
           captures. Show identifiers, units, bounded coverage, and distinct
           configuration, mapping, and provider-failure states.
+    - [x] Group differing SEC values only by exact standard concept, unit, and
+          fiscal start/end, across all eligible facts before display caps.
+          Retain accession/date/form for each bounded disclosure, flag multiple
+          values within one accession, and never label a group a verified
+          amendment, revision, or historical market-knowledge sequence.
   - [x] First news-provenance prerequisite: live news parsing and background
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not
