@@ -197,6 +197,29 @@ export interface MarketMacroEventsResponse {
   events: MarketMacroEvent[];
 }
 
+export interface MarketMacroObservationSeries {
+  series_id: "CPIAUCSL" | "UNRATE" | "FEDFUNDS";
+  label: string;
+  status: "available" | "no_observations" | "feed_error";
+  title: string | null;
+  units: string | null;
+  frequency: string | null;
+  matched_count: number;
+  withheld_conflict_count: number;
+  observations: { reference_date: string; value: number }[];
+}
+
+export interface MarketMacroObservationsResponse {
+  start_date: string;
+  end_date: string;
+  retrieved_at: string;
+  realtime_date: string;
+  source: "fred";
+  status: "available" | "unavailable";
+  reason: "missing_api_key" | "provider_error" | null;
+  series: MarketMacroObservationSeries[];
+}
+
 export interface MarketFundamentalRelease {
   release_date: string;
   fiscal_period_end: string;
@@ -367,6 +390,16 @@ export async function fetchMarketContextMacroEvents(
   endDate: string,
 ): Promise<MarketMacroEventsResponse> {
   const response = await api.post<MarketMacroEventsResponse>("/market-context/macro-events", {
+    start_date: startDate, end_date: endDate,
+  });
+  return response.data;
+}
+
+export async function fetchMarketContextMacroObservations(
+  startDate: string,
+  endDate: string,
+): Promise<MarketMacroObservationsResponse> {
+  const response = await api.post<MarketMacroObservationsResponse>("/market-context/macro-observations", {
     start_date: startDate, end_date: endDate,
   });
   return response.data;

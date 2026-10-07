@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -472,6 +472,56 @@ function DatedMacroEvents({ anchor, row }: { anchor: string; row: MarketComparis
                   </li>
                 ))}
               </ul>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const startDate = row.start_date || "";
+  const endDate = row.end_date || "";
+  const query = useQuery({
+    queryKey: ["market-context-macro-observations", startDate, endDate],
+    queryFn: () => fetchMarketContextMacroObservations(startDate, endDate),
+    enabled: open && !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} historical macro observations for ${anchor} vs ${row.symbol}`}>
+        {open ? "Hide" : "Show"} historical macro observations for {startDate} to {endDate}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2 text-xs">
+          <p className="text-terminal-muted">
+            US macro reference-period values from the current FRED vintage. A reference date is not a publication date; revised values were not necessarily known then. These are global context, not explanations for either price path.
+          </p>
+          {query.isPending ? <p role="status" className="text-terminal-muted">Checking FRED observations…</p> : null}
+          {query.isError ? <p role="alert" className="text-terminal-neg">{extractApiErrorMessage(query.error, "Could not check macro observations.")} <button type="button" className="underline" onClick={() => void query.refetch()}>Retry observations</button></p> : null}
+          {query.data?.status === "unavailable" ? <p className="text-terminal-warn">{query.data.reason === "missing_api_key" ? "FRED_API_KEY is not configured. No sample values are shown here." : "FRED did not return usable series. No sample values are shown here."}</p> : null}
+          {query.data?.series.length ? (
+            <>
+              <p className="text-terminal-muted">FRED · checked {new Date(query.data.retrieved_at).toLocaleString()} · requested real-time date {query.data.realtime_date}. Neither a saved vintage nor a release-time audit.</p>
+              <div className="grid gap-2 md:grid-cols-3">
+                {query.data.series.map((series) => (
+                  <div key={series.series_id} className="rounded border border-terminal-border p-2">
+                    <p className="font-medium">{series.label} · <a className="text-terminal-accent underline" href={`https://fred.stlouisfed.org/series/${series.series_id}`} target="_blank" rel="noopener noreferrer">{series.series_id}</a></p>
+                    {series.status === "feed_error" ? <p className="text-terminal-warn">Provider metadata or observations failed.</p> : (
+                      <>
+                        <p className="text-terminal-muted">{series.title} · {series.units} · {series.frequency}</p>
+                        {series.observations.length ? <ul className="mt-1 max-h-28 space-y-1 overflow-auto">{series.observations.map((observation) => <li key={observation.reference_date}>{observation.reference_date}: {observation.value.toLocaleString()}</li>)}</ul> : <p className="text-terminal-muted">No usable reference-period values in this window.</p>}
+                        {series.withheld_conflict_count > 0 ? <p className="text-terminal-warn">{series.withheld_conflict_count} conflicting reference dates withheld.</p> : null}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </>
           ) : null}
         </div>
@@ -1051,6 +1101,7 @@ export function MarketContextPage() {
                     <TechnicalObservations anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
+                    <HistoricalMacroObservations anchor={selection.anchor} row={row} />
                     <DatedFundamentalReleases anchor={selection.anchor} row={row} />
                     <DatedSecFiledFacts anchor={selection.anchor} row={row} />
                   </>

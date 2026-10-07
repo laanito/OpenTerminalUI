@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+import math
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -52,6 +53,14 @@ _COUNTRY_TO_REGION = {
     "CN": "china", "CHINA": "china",
 }
 
+# A deliberately small US-only candidate set. These are reference-period
+# observations, not dated releases or evidence available to traders then.
+MARKET_CONTEXT_FRED_SERIES = {
+    "CPIAUCSL": "Consumer prices",
+    "UNRATE": "Unemployment rate",
+    "FEDFUNDS": "Effective federal funds rate",
+}
+
 class EconomicDataService:
     def __init__(self):
         self.settings = get_settings()
@@ -61,6 +70,100 @@ class EconomicDataService:
         self.base_fred = "https://api.stlouisfed.org/fred"
         self.base_finnhub = "https://finnhub.io/api/v1"
         self.base_fmp = "https://financialmodelingprep.com/stable"
+
+    async def get_market_context_macro_observations(self, start: date, end: date) -> Dict[str, Any]:
+        """Get current FRED-vintage observations for bounded reference periods.
+
+        Never use the legacy macro dashboard's sample fallback here. The
+        observation date is a period label, not a publication timestamp.
+        """
+        retrieved_at = datetime.now(timezone.utc)
+        realtime_date = retrieved_at.date().isoformat()
+        if not self.fred_key:
+            return {
+                "retrieved_at": retrieved_at, "realtime_date": realtime_date,
+                "status": "unavailable", "reason": "missing_api_key", "series": [],
+            }
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            results = await asyncio.gather(*(
+                self._fetch_market_context_fred_series(client, series_id, label, start, end, realtime_date)
+                for series_id, label in MARKET_CONTEXT_FRED_SERIES.items()
+            ), return_exceptions=True)
+
+        groups = []
+        for (series_id, label), result in zip(MARKET_CONTEXT_FRED_SERIES.items(), results):
+            if isinstance(result, BaseException):
+                if not isinstance(result, Exception):
+                    raise result
+                # HTTP exceptions may contain a URL with the API key.
+                logger.warning("FRED macro context failed for %s (%s)", series_id, type(result).__name__)
+                groups.append({
+                    "series_id": series_id, "label": label, "status": "feed_error",
+                    "title": None, "units": None, "frequency": None,
+                    "observations": [], "matched_count": 0, "withheld_conflict_count": 0,
+                })
+            else:
+                groups.append(result)
+        return {
+            "retrieved_at": retrieved_at, "realtime_date": realtime_date,
+            "status": "available" if any(group["status"] != "feed_error" for group in groups) else "unavailable",
+            "reason": None if any(group["status"] != "feed_error" for group in groups) else "provider_error",
+            "series": groups,
+        }
+
+    async def _fetch_market_context_fred_series(
+        self, client: httpx.AsyncClient, series_id: str, label: str,
+        start: date, end: date, realtime_date: str,
+    ) -> Dict[str, Any]:
+        common = {"series_id": series_id, "api_key": self.fred_key, "file_type": "json",
+                  "realtime_start": realtime_date, "realtime_end": realtime_date}
+        metadata_response, observations_response = await asyncio.gather(
+            client.get(f"{self.base_fred}/series", params=common),
+            client.get(f"{self.base_fred}/series/observations", params={
+                **common, "observation_start": start.isoformat(),
+                "observation_end": end.isoformat(), "sort_order": "asc", "limit": 100,
+            }),
+        )
+        metadata_response.raise_for_status()
+        observations_response.raise_for_status()
+        metadata = metadata_response.json().get("seriess")
+        raw_observations = observations_response.json().get("observations")
+        if not isinstance(metadata, list) or len(metadata) != 1 or not isinstance(raw_observations, list):
+            raise ValueError("Unexpected FRED macro response")
+        info = metadata[0]
+        if not isinstance(info, dict) or info.get("id") != series_id:
+            raise ValueError("Unexpected FRED series identity")
+        title, units, frequency = (info.get(field) for field in ("title", "units", "frequency"))
+        if not all(isinstance(value, str) and value.strip() for value in (title, units, frequency)):
+            raise ValueError("Incomplete FRED series metadata")
+
+        values: dict[date, float] = {}
+        conflicts: set[date] = set()
+        for item in raw_observations:
+            if not isinstance(item, dict):
+                continue
+            try:
+                observed_on = date.fromisoformat(str(item["date"]))
+                value = float(item["value"])
+            except (KeyError, TypeError, ValueError, OverflowError):
+                continue
+            if not start <= observed_on <= end or not math.isfinite(value):
+                continue
+            if observed_on in values and values[observed_on] != value:
+                conflicts.add(observed_on)
+            else:
+                values[observed_on] = value
+        for observed_on in conflicts:
+            values.pop(observed_on, None)
+        observations = [{"reference_date": day, "value": value} for day, value in sorted(values.items())]
+        return {
+            "series_id": series_id, "label": label,
+            "status": "available" if observations else "no_observations",
+            "title": title.strip(), "units": units.strip(), "frequency": frequency.strip(),
+            "observations": observations, "matched_count": len(observations),
+            "withheld_conflict_count": len(conflicts),
+        }
 
     async def get_economic_calendar(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
         """Fetch and normalize economic calendar events."""

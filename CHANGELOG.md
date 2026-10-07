@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Historical macro observation candidates** — comparison pairs can separately
+  inspect current-vintage FRED CPI, unemployment, and policy-rate observations
+  inside their actual window. The panel distinguishes reference periods from
+  release timing, discloses metadata and provider failures, and never uses
+  sample values or attributes price moves to macro data.
 - **Price-basis diagnostics for comparisons** — paired feeds now disclose
   matching, mixed, unknown, or unavailable request-level adjustment labels.
   Where Yahoo-adjusted coverage is complete, same-date adjusted-minus-provider

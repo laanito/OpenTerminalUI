@@ -288,7 +288,7 @@ closes from that same selected chart, aligning adjusted values only to rows
 accepted by the adapter. Missing metadata remains unavailable, and a named
 feed does not verify data quality. Neither relative returns nor
 co-movement establish causation. Full fundamentals, historical macro
-observations, sentiment, and decision-grade technical evidence become separate later layers
+release/vintage evidence, sentiment, and decision-grade technical evidence become separate later layers
 only when they have honest coverage and provenance contracts.
 
 The Alpaca comparison path now explicitly requests raw stock bars even when
@@ -366,7 +366,7 @@ now places linked, source-dated headline candidates alongside each pair's actual
 shared-close window. It checks at most 50 current keyless-feed candidates per
 symbol, shows at most eight matches per symbol, and exposes partial feed failure.
 The result is neither a complete historical record nor evidence that a headline
-caused a price move. Full fundamentals, historical macro observations, and
+caused a price move. Full fundamentals, historical macro release/vintage evidence, and
 decision-grade technical context remain later evidence layers.
 
 As a prerequisite for fundamentals context, the existing point-in-time ingest
@@ -441,8 +441,15 @@ provider errors are explicit. It identifies the responding provider and caps the
 display at 30 returned events while reporting the match count. Coverage can be
 incomplete, event impact can be unknown, and a global calendar event is neither
 automatically relevant to either asset nor evidence that it caused a move.
-Historical macro *observations* and release vintages remain separate future
-work; this is a calendar, not an economic-series explanation.
+The calendar remains distinct from economic-series evidence. An additional
+on-demand FRED panel now checks three US macro series (consumer prices,
+unemployment, and the effective federal funds rate) for reference-period dates
+inside the pair window. It shows provider title, units, frequency, retrieval
+time, the requested current real-time date, and per-series failures. No sample
+fallback is used. These current-vintage values may have been revised, and an
+observation's reference date is not its public release date. Historical release
+timing, tested vintages, wider regional coverage, and asset relevance remain
+future prerequisites for macro explanations.
 
 ## Release plan
 

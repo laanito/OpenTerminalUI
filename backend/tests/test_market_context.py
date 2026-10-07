@@ -597,6 +597,33 @@ def test_macro_context_preserves_unavailable_state_without_sample() -> None:
     assert client.post("/api/market-context/macro-events", json={"start_date": "2026-01-01", "end_date": "2026-09-10"}).status_code == 422
 
 
+def test_macro_observations_endpoint_preserves_window_and_reference_date_semantics() -> None:
+    class FakeService:
+        async def get_market_context_macro_observations(self, start: date, end: date) -> dict[str, Any]:
+            assert (start, end) == (date(2026, 9, 2), date(2026, 9, 10))
+            return {
+                "retrieved_at": "2026-09-11T10:00:00Z", "realtime_date": "2026-09-11",
+                "status": "available", "reason": None,
+                "series": [{
+                    "series_id": "UNRATE", "label": "Unemployment rate", "status": "available",
+                    "title": "Unemployment Rate", "units": "Percent", "frequency": "Monthly",
+                    "matched_count": 1, "withheld_conflict_count": 0,
+                    "observations": [{"reference_date": "2026-09-02", "value": 4.1}],
+                }],
+            }
+
+    app = FastAPI()
+    app.include_router(market_context.router)
+    app.dependency_overrides[get_current_user] = lambda: object()
+    app.dependency_overrides[get_economic_data_service] = lambda: FakeService()
+    client = TestClient(app)
+    response = client.post("/api/market-context/macro-observations", json={"start_date": "2026-09-02", "end_date": "2026-09-10"})
+    assert response.status_code == 200
+    assert response.json()["series"][0]["observations"] == [{"reference_date": "2026-09-02", "value": 4.1}]
+    assert response.json()["source"] == "fred"
+    assert client.post("/api/market-context/macro-observations", json={"start_date": "2026-01-01", "end_date": "2026-09-10"}).status_code == 422
+
+
 def _fundamentals_client(data: dict[str, Any]) -> TestClient:
     class FakeFetcher:
         async def fetch_pit_fundamentals_records(self, symbol: str) -> list[dict[str, Any]]:

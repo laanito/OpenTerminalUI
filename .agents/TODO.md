@@ -500,6 +500,12 @@ intelligence promise, or claim that contradiction handling is solved.
         reports provider and missing-key/error states, never uses the legacy
         sample calendar, and treats events as global context rather than asset
         attribution or proof of causation.
+  - [x] Add a separate on-demand US macro-observation candidate panel for the
+        pair's actual window. Fetch three named FRED series with provider title,
+        units, frequency, requested current real-time date, reference-period
+        values, and per-series failure states; never use legacy sample values.
+        Reference dates are not release dates, and current revised values do
+        not establish what was known during the price window.
   - [x] Expose the exact shared-close trajectory behind each available pair,
         rebased to 100 at the first shared date, with an on-demand chart and
         inspectable observation table. No missing dates are filled in; the path

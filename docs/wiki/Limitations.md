@@ -201,6 +201,13 @@ never silently faked.
   shows at most 30 returned events with the match count. Historical provider
   coverage may be incomplete; these global events are not automatically tied
   to either asset, and event dates do not establish price causation.
+- **Macro observations are reference-period candidates, not historical news.**
+  A separate FRED-keyed comparison panel checks current-vintage CPI,
+  unemployment, and effective federal funds observations in the pair window.
+  It shows source metadata and partial failures, never legacy sample data.
+  The requested real-time date and retrieval time do not prove when an
+  observation was published or which value was available to a trader then;
+  values may have been revised. They are not attributed to either asset.
 - **Fundamental release context is a candidate snapshot, not a historical
   vintage.** The comparison panel checks current provider records on demand
   and displays only source-reported filing/acceptance dates in the observed
