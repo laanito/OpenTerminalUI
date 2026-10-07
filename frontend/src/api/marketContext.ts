@@ -229,6 +229,33 @@ export interface MarketFundamentalsResponse {
   groups: MarketFundamentalsGroup[];
 }
 
+export interface SecFiledFact {
+  filed_date: string;
+  accession: string;
+  taxonomy: "us-gaap";
+  concept: string;
+  unit: string;
+  form: string;
+  period_start: string;
+  period_end: string;
+  value: number;
+}
+
+export interface SecFiledFactsResponse {
+  contract_version: 1;
+  symbol: string;
+  filed_start: string;
+  filed_end: string;
+  retrieved_at: string;
+  status: "available" | "no_matching_facts" | "not_covered" | "ambiguous_ticker" | "configuration_required" | "provider_error";
+  evidence_scope: "sec_current_companyfacts_accession_tagged";
+  cik: number | null;
+  matched_count: number;
+  examined_count: number;
+  display_limit: number;
+  facts: SecFiledFact[];
+}
+
 export interface FundamentalCaptureSummary {
   id: string;
   symbol: string;
@@ -306,6 +333,13 @@ export async function fetchMarketContextFundamentalReleases(
 ): Promise<MarketFundamentalsResponse> {
   const response = await api.post<MarketFundamentalsResponse>("/market-context/fundamental-releases", {
     anchor, comparison, start_date: startDate, end_date: endDate,
+  });
+  return response.data;
+}
+
+export async function fetchMarketSecFiledFacts(symbol: string, filedStart: string, filedEnd: string): Promise<SecFiledFactsResponse> {
+  const response = await api.post<SecFiledFactsResponse>("/market-context/sec-filed-facts", {
+    symbol, filed_start: filedStart, filed_end: filedEnd,
   });
   return response.data;
 }

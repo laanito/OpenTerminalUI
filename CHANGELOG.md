@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **On-demand SEC filing-facts review** — the cross-market comparison screen
+  can inspect each symbol's accession-tagged SEC facts within the observed
+  pair window. It keeps this evidence separate from FMP candidates and saved
+  captures, and explains missing configuration, ticker coverage, and provider
+  failure without treating filed facts as a verified revision sequence.
 - **SEC accession-tagged filing facts** — an opt-in, authenticated API checks
   exact US ticker/CIK matches and returns bounded current Company Facts for
   selected US-GAAP income and diluted-EPS concepts. It retains accession,

@@ -443,6 +443,10 @@ intelligence promise, or claim that contradiction handling is solved.
           matches and accession-tagged US-GAAP filing facts. It preserves filed
           date, fiscal period, form, concept, unit, and value, but current SEC
           aggregation is not a complete archived vintage or revision sequence.
+    - [x] Expose SEC filed facts on demand in the browser for each symbol inside
+          the pair's observed window, independently of FMP candidates and
+          captures. Show identifiers, units, bounded coverage, and distinct
+          configuration, mapping, and provider-failure states.
   - [x] First news-provenance prerequisite: live news parsing and background
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not
