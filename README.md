@@ -461,6 +461,7 @@ The platform runs without API keys using fallback providers. Add keys to unlock 
 | Variable | Purpose |
 |----------|---------|
 | `FMP_API_KEY` | Financial Modeling Prep &mdash; US equities, fundamentals, earnings |
+| `SEC_USER_AGENT` | Optional SEC EDGAR filed-facts API; identify the application and contact email |
 | `FINNHUB_API_KEY` | Finnhub &mdash; US real-time WebSocket ticks |
 | `FRED_API_KEY` | FRED (St. Louis Fed) &mdash; macro indicators and yield-curve series (US/EU/China); returns degraded data if unset |
 | `COINGECKO_API_KEY` | CoinGecko demo key &mdash; raises the keyless crypto rate limit (optional) |

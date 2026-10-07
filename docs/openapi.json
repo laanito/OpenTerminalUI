@@ -13941,6 +13941,182 @@
         "title": "ScreenerV2RunRequest",
         "type": "object"
       },
+      "SecFiledFact": {
+        "properties": {
+          "accession": {
+            "title": "Accession",
+            "type": "string"
+          },
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "filed_date": {
+            "format": "date",
+            "title": "Filed Date",
+            "type": "string"
+          },
+          "form": {
+            "title": "Form",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "taxonomy": {
+            "const": "us-gaap",
+            "title": "Taxonomy",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "filed_date",
+          "accession",
+          "taxonomy",
+          "concept",
+          "unit",
+          "form",
+          "period_start",
+          "period_end",
+          "value"
+        ],
+        "title": "SecFiledFact",
+        "type": "object"
+      },
+      "SecFiledFactsRequest": {
+        "properties": {
+          "filed_end": {
+            "format": "date",
+            "title": "Filed End",
+            "type": "string"
+          },
+          "filed_start": {
+            "format": "date",
+            "title": "Filed Start",
+            "type": "string"
+          },
+          "symbol": {
+            "examples": [
+              "AAPL"
+            ],
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "filed_start",
+          "filed_end"
+        ],
+        "title": "SecFiledFactsRequest",
+        "type": "object"
+      },
+      "SecFiledFactsResponse": {
+        "properties": {
+          "cik": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cik"
+          },
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "display_limit": {
+            "default": 50,
+            "title": "Display Limit",
+            "type": "integer"
+          },
+          "evidence_scope": {
+            "const": "sec_current_companyfacts_accession_tagged",
+            "default": "sec_current_companyfacts_accession_tagged",
+            "title": "Evidence Scope",
+            "type": "string"
+          },
+          "examined_count": {
+            "default": 0,
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/SecFiledFact"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "filed_end": {
+            "format": "date",
+            "title": "Filed End",
+            "type": "string"
+          },
+          "filed_start": {
+            "format": "date",
+            "title": "Filed Start",
+            "type": "string"
+          },
+          "matched_count": {
+            "default": 0,
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_matching_facts",
+              "not_covered",
+              "ambiguous_ticker",
+              "configuration_required",
+              "provider_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "filed_start",
+          "filed_end",
+          "retrieved_at",
+          "status"
+        ],
+        "title": "SecFiledFactsResponse",
+        "type": "object"
+      },
       "SectorAllocationIndustryResponse": {
         "properties": {
           "industry": {
@@ -26411,6 +26587,60 @@
           }
         ],
         "summary": "Get Market Context Macro Events",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/sec-filed-facts": {
+      "post": {
+        "description": "Inspect current SEC Company Facts by accession, not an archived vintage.",
+        "operationId": "sec_file_facts_api_market_context_sec_filed_facts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecFiledFactsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecFiledFactsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sec File Facts",
         "tags": [
           "market-context"
         ],

@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **SEC accession-tagged filing facts** — an opt-in, authenticated API checks
+  exact US ticker/CIK matches and returns bounded current Company Facts for
+  selected US-GAAP income and diluted-EPS concepts. It retains accession,
+  filed date, fiscal period, form, concept, unit, and value without blending
+  this source into FMP captures or claiming an archived vintage or revision
+  sequence. Requires a host-configured SEC user agent.
 - **Conflicting close-date disclosure** — market comparisons now withhold a
   UTC date when the selected chart payload contains different provider or Yahoo-
   adjusted closes for that date, rather than taking the last row. Identical

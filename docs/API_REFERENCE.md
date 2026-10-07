@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **460 operations** across **410 paths** and **87 families**.
-- Authentication: **415 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **461 operations** across **411 paths** and **87 families**.
+- Authentication: **416 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 10 |
+| `market-context` | `experimental` | 11 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -684,6 +684,7 @@ State: **experimental**
 | `POST` | `/api/market-context/fundamental-releases` | Bearer token | Get Market Context Fundamental Releases |
 | `POST` | `/api/market-context/headlines` | Bearer token | Get Market Context Headlines |
 | `POST` | `/api/market-context/macro-events` | Bearer token | Get Market Context Macro Events |
+| `POST` | `/api/market-context/sec-filed-facts` | Bearer token | Sec File Facts |
 
 ### `model-lab`
 

@@ -398,6 +398,13 @@ inside a capture. Empty or failed observations are not comparable. A candidate
 appearing or disappearing between fetches does not prove a new disclosure or
 retraction. Tested historical coverage
 and a revision-aware explanation contract remain future work.
+An opt-in, authenticated SEC filed-facts API provides a separate US-equity
+evidence path. Exact ticker/CIK mapping precedes a current Company Facts fetch;
+bounded standard US-GAAP duration facts retain accession, filed date, period,
+form, concept, unit, and value. This is not merged into the FMP panel or saved
+captures. The current SEC aggregation does not provide a retained historical
+vintage, complete market coverage, or an inferred revision sequence. Coverage
+and revision-aware interpretation remain open gates.
 
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
