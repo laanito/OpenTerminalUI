@@ -66,6 +66,7 @@ describe("MarketContextPage", () => {
           anchor_close_date_conflicts: { provider_close_count: 1, provider_close_dates: ["2026-09-03"], adjusted_close_count: 0, adjusted_close_dates: [], display_limit: 20 },
           comparison_close_date_conflicts: { provider_close_count: 0, provider_close_dates: [], adjusted_close_count: 1, adjusted_close_dates: ["2026-09-04"], display_limit: 20 },
           anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "unspecified",
+          pair_reported_basis_status: "unverified",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
           technical_observations: {
@@ -130,6 +131,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/SPY: provider closes 0 \(none\); Yahoo adjusted closes 1 \(2026-09-04\)/)).toBeInTheDocument();
     expect(screen.getByText(/QQQ Alpaca → stock bars \(IEX feed, raw\)/)).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD adjustment basis not verified · SPY adjustment basis not verified/)).toBeInTheDocument();
+    expect(screen.getByText(/provider-close return difference is not confirmed like-for-like/)).toBeInTheDocument();
     expect(screen.getByText(/QQQ raw requested \(provider-reported\)/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
     expect(screen.getByText(/SAP.DE no usable history/)).toBeInTheDocument();
@@ -182,6 +184,7 @@ describe("MarketContextPage", () => {
           basis: "shared_utc_date_provider_adjusted_closes", source: "yahoo_adjclose",
           start_date: "2026-09-02", end_date: "2026-09-10", observations: 2,
           anchor_return_pct: 3, comparison_return_pct: 1.5, relative_return_pp: 1.5,
+          provider_relative_return_pp: 1, adjusted_minus_provider_relative_return_pp: 0.5,
           points: [
             { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
             { date: "2026-09-10", anchor_index: 103, comparison_index: 101.5 },
@@ -198,6 +201,7 @@ describe("MarketContextPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for AAPL vs SPY" }));
     expect(screen.getByText("Separate adjusted pair comparison")).toBeInTheDocument();
     expect(screen.getByText(/Adjusted return difference: \+1.50 pp/)).toBeInTheDocument();
+    expect(screen.getByText(/adjusted minus provider pair difference: \+0.50 pp/)).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact adjusted pair observations"));
     expect(screen.getByRole("columnheader", { name: "AAPL adjusted index" })).toBeInTheDocument();
     expect(screen.getByText("103.00")).toBeInTheDocument();
@@ -215,6 +219,7 @@ describe("MarketContextPage", () => {
         anchor_history_source: "yahoo", comparison_history_source: "fmp",
         comparison_history_feed: "fmp_historical_price_non_split_adjusted",
         anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "non_split_adjusted",
+        pair_reported_basis_status: "unverified",
         observations: 21, freshness: "current",
         anchor_return_pct: 5, comparison_return_pct: 2, relative_return_pp: 3,
         technical_observations: {
@@ -228,7 +233,7 @@ describe("MarketContextPage", () => {
         },
         adjusted_observations: {
           basis: "shared_utc_date_provider_adjusted_closes", source: "yahoo_adjclose", as_of_date: "2026-09-23",
-          anchor: { return_pct: 6.5, technical_measures: { max_drawdown_pct: 4.25, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 1.5 } },
+          anchor: { return_pct: 6.5, provider_return_pct: 5, adjusted_minus_provider_return_pp: 1.5, technical_measures: { max_drawdown_pct: 4.25, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 1.5 } },
           comparison: null,
         },
         native_adjusted_close_coverage: {
@@ -239,7 +244,7 @@ describe("MarketContextPage", () => {
           basis: "per_asset_utc_date_provider_adjusted_closes_within_pair_window", source: "yahoo_adjclose",
           anchor: {
             start_date: "2026-08-25", end_date: "2026-09-23", observations: 23, additional_dates_vs_pair: 2,
-            return_pct: 6.5, technical_measures: { max_drawdown_pct: 3.5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 2.2 },
+            return_pct: 6.5, provider_return_pct: 5, adjusted_minus_provider_return_pp: 1.5, technical_measures: { max_drawdown_pct: 3.5, max_drawdown_peak_date: "2026-09-01", max_drawdown_trough_date: "2026-09-05", sma20_gap_pct: 2.2 },
           },
           comparison: null,
         },
@@ -253,6 +258,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/SPY non-split-adjusted requested \(provider-reported\)/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show observed technical measures for AAPL vs SPY" }));
     expect(screen.getAllByText("Adjusted return: +6.50%")).toHaveLength(2);
+    expect(screen.getAllByText(/adjusted minus provider: \+1.50 pp/)).toHaveLength(2);
     expect(screen.getByText("Maximum observed drawdown: 4.25%")).toBeInTheDocument();
     expect(screen.getByText("Unavailable without complete Yahoo-adjusted coverage.")).toBeInTheDocument();
     expect(screen.getByText(/not verified trading signals/)).toBeInTheDocument();

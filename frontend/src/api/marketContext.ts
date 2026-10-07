@@ -60,6 +60,8 @@ export interface MarketAdjustedCloseCoverage {
 
 export interface MarketAdjustedAssetObservations {
   return_pct: number;
+  provider_return_pct?: number;
+  adjusted_minus_provider_return_pp?: number;
   technical_measures: MarketTechnicalMeasures;
 }
 
@@ -80,6 +82,8 @@ export interface MarketAdjustedPairComparison {
   anchor_return_pct: number;
   comparison_return_pct: number;
   relative_return_pp: number;
+  provider_relative_return_pp?: number;
+  adjusted_minus_provider_relative_return_pp?: number;
   points: MarketComparisonPoint[];
 }
 
@@ -118,6 +122,7 @@ export interface MarketComparisonRow {
   comparison_history_feed?: string | null;
   anchor_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
   comparison_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
+  pair_reported_basis_status?: "matching_reported" | "mixed_reported" | "unverified" | "unavailable";
   anchor_close_date_conflicts?: MarketCloseDateConflicts;
   comparison_close_date_conflicts?: MarketCloseDateConflicts;
   observations: number | null;

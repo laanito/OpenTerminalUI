@@ -163,11 +163,24 @@ def test_adjusted_close_parser_skips_missing_and_invalid_provider_values() -> No
 def test_adjusted_observations_require_complete_shared_dates() -> None:
     days = [date(2026, 9, 1) + timedelta(days=i) for i in range(3)]
     adjusted = {days[0]: 90.0, days[1]: 100.0, days[2]: 80.0}
-    result = adjusted_observations(adjusted, days)
+    provider = {days[0]: 100.0, days[1]: 100.0, days[2]: 90.0}
+    result = adjusted_observations(provider, adjusted, days)
     assert result is not None
     assert result["return_pct"] == -11.1111
+    assert result["provider_return_pct"] == -10.0
+    assert result["adjusted_minus_provider_return_pp"] == -1.1111
     assert result["technical_measures"]["max_drawdown_pct"] == 20.0
-    assert adjusted_observations({days[0]: 90.0, days[2]: 80.0}, days) is None
+    assert adjusted_observations(provider, {days[0]: 90.0, days[2]: 80.0}, days) is None
+    assert adjusted_observations({days[0]: 100.0}, adjusted, days) is None
+
+
+def test_pair_reported_basis_status_never_equates_unknown_with_matching() -> None:
+    check = market_context._pair_reported_basis_status
+    assert check("raw", "raw") == "matching_reported"
+    assert check("raw", "non_split_adjusted") == "mixed_reported"
+    assert check("raw", "unspecified") == "unverified"
+    assert check("unspecified", "unspecified") == "unverified"
+    assert check(None, "raw") == "unavailable"
 
 
 def _client(
@@ -223,6 +236,7 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["comparisons"][0]["anchor_history_feed"] is None
     assert payload["comparisons"][0]["anchor_reported_adjustment_basis"] == "unspecified"
     assert payload["comparisons"][0]["comparison_reported_adjustment_basis"] == "unspecified"
+    assert payload["comparisons"][0]["pair_reported_basis_status"] == "unverified"
     assert payload["comparisons"][0]["action_disclosure"]["anchor"]["source"] == "unavailable"
     assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_provider_closes"
     assert payload["comparisons"][0]["native_technical_observations"]["basis"] == "per_asset_utc_date_provider_closes_within_pair_window"
@@ -230,6 +244,7 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["comparisons"][1]["comparison_history_source"] is None
     assert payload["comparisons"][1]["comparison_history_feed"] is None
     assert payload["comparisons"][1]["comparison_reported_adjustment_basis"] is None
+    assert payload["comparisons"][1]["pair_reported_basis_status"] == "unavailable"
     assert payload["comparisons"][1]["technical_observations"] is None
     assert payload["comparisons"][1]["native_technical_observations"] is None
     assert payload["comparisons"][1]["points"] == []
@@ -275,6 +290,7 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
     assert row["comparison_history_feed"] == "alpaca_stocks_bars:iex:raw"
     assert row["anchor_reported_adjustment_basis"] == "unspecified"
     assert row["comparison_reported_adjustment_basis"] == "raw"
+    assert row["pair_reported_basis_status"] == "unverified"
     assert row["adjusted_close_coverage"]["anchor"]["status"] == "complete"
     assert row["adjusted_observations"]["anchor"]["return_pct"] != row["anchor_return_pct"]
     assert row["action_disclosure"]["anchor"]["actions"] == [{"date": "2026-09-05", "type": "split"}]
@@ -364,6 +380,8 @@ def test_route_reports_adjusted_close_coverage_without_changing_raw_returns() ->
     assert adjusted_row["basis"] == "shared_utc_date_provider_adjusted_closes"
     assert adjusted_row["source"] == "yahoo_adjclose"
     assert adjusted_row["anchor"]["return_pct"] == 32.967  # 91 -> 121, not raw 101 -> 131
+    assert adjusted_row["anchor"]["provider_return_pct"] == 29.703
+    assert adjusted_row["anchor"]["adjusted_minus_provider_return_pp"] == round((121 / 91 - 131 / 101) * 100, 4)
     assert adjusted_row["comparison"] is None  # fmp cannot borrow Yahoo-shaped adjclose fields
     assert adjusted_row["anchor"]["technical_measures"]["sma20_gap_pct"] is not None
     assert complete.json()["comparisons"][0]["adjusted_pair"] is None
@@ -384,6 +402,7 @@ def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> 
     assert row["adjusted_observations"]["as_of_date"] == row["end_date"]
     assert row["adjusted_observations"]["anchor"]["return_pct"] == 32.967
     assert row["adjusted_observations"]["comparison"]["return_pct"] == 15.7068
+    assert row["adjusted_observations"]["comparison"]["adjusted_minus_provider_return_pp"] == round((221 / 191 - 231 / 201) * 100, 4)
     pair = row["adjusted_pair"]
     assert pair["basis"] == "shared_utc_date_provider_adjusted_closes"
     assert pair["source"] == "yahoo_adjclose"
@@ -393,6 +412,10 @@ def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> 
     assert pair["anchor_return_pct"] == 32.967
     assert pair["comparison_return_pct"] == 15.7068
     assert pair["relative_return_pp"] == 17.2602
+    assert pair["provider_relative_return_pp"] == row["relative_return_pp"]
+    assert pair["adjusted_minus_provider_relative_return_pp"] == round(
+        ((121 / 91 - 1) - (221 / 191 - 1) - (131 / 101 - 1) + (231 / 201 - 1)) * 100, 4
+    )
     assert [point["date"] for point in pair["points"]] == [point["date"] for point in row["points"]]
     assert pair["points"][0]["anchor_index"] == 100.0
     assert pair["points"][-1]["anchor_index"] == 132.967
@@ -489,6 +512,7 @@ def test_native_adjusted_observations_require_complete_own_dates_including_crypt
     assert native["comparison"] is None
     assert native["anchor"]["observations"] == complete["native_adjusted_close_coverage"]["anchor"]["native_observations"]
     assert native["anchor"]["additional_dates_vs_pair"] > 0
+    assert native["anchor"]["adjusted_minus_provider_return_pp"] == round((121 / 91 - 131 / 101) * 100, 4)
     assert native["anchor"]["technical_measures"]["sma20_gap_pct"] != complete["adjusted_observations"]["anchor"]["technical_measures"]["sma20_gap_pct"]
     assert complete["anchor_return_pct"] == partial["anchor_return_pct"]
 

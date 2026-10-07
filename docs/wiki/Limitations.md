@@ -183,6 +183,11 @@ never silently faked.
   pair path and return difference use those same dates. Partial or one-sided
   coverage never changes the window or produces an adjusted pair. The result
   remains in native quote currencies, not FX-normalized.
+  A reported-basis assessment flags matching, mixed, or unknown close-feed
+  requests but does not audit returned prices. With complete adjusted coverage,
+  adjusted-minus-provider return differences use identical dates for each
+  asset and the pair; they quantify a numerical discrepancy, not its cause,
+  adjustment correctness, or a decision-grade signal.
   A separate provider-close own-date view uses each asset's available UTC closes
   within that same pair window and reports dates beyond pair overlap, including
   crypto weekends. It does not alter the paired comparison or certify that

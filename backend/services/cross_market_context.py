@@ -137,25 +137,39 @@ def _technical_measures(closes: dict[date, float], shared: list[date]) -> dict[s
     }
 
 
-def adjusted_observations(closes: dict[date, float], shared: list[date]) -> dict[str, Any] | None:
-    """Use one complete provider-adjusted series on the raw pair's exact dates."""
-    if len(shared) < 2 or any(day not in closes for day in shared):
+def adjusted_observations(
+    provider: dict[date, float], adjusted: dict[date, float], shared: list[date]
+) -> dict[str, Any] | None:
+    """Contrast complete adjusted and provider-close series on identical dates."""
+    if len(shared) < 2 or any(day not in provider or day not in adjusted for day in shared):
         return None
+    provider_return = (provider[shared[-1]] / provider[shared[0]] - 1.0) * 100.0
+    adjusted_return = (adjusted[shared[-1]] / adjusted[shared[0]] - 1.0) * 100.0
     return {
-        "return_pct": round((closes[shared[-1]] / closes[shared[0]] - 1.0) * 100.0, 4),
-        "technical_measures": _technical_measures(closes, shared),
+        "return_pct": round(adjusted_return, 4),
+        "provider_return_pct": round(provider_return, 4),
+        "adjusted_minus_provider_return_pp": round(adjusted_return - provider_return, 4),
+        "technical_measures": _technical_measures(adjusted, shared),
     }
 
 
 def adjusted_pair_comparison(
-    anchor: dict[date, float], comparison: dict[date, float], shared: list[date]
+    anchor: dict[date, float], comparison: dict[date, float], shared: list[date],
+    *, provider_anchor: dict[date, float], provider_comparison: dict[date, float],
 ) -> dict[str, Any] | None:
     """Compare two complete adjusted series on the primary pair's exact dates."""
-    if len(shared) < 2 or any(day not in anchor or day not in comparison for day in shared):
+    if len(shared) < 2 or any(
+        day not in anchor or day not in comparison or day not in provider_anchor or day not in provider_comparison
+        for day in shared
+    ):
         return None
     start, end = shared[0], shared[-1]
     anchor_return = (anchor[end] / anchor[start] - 1.0) * 100.0
     comparison_return = (comparison[end] / comparison[start] - 1.0) * 100.0
+    provider_anchor_return = (provider_anchor[end] / provider_anchor[start] - 1.0) * 100.0
+    provider_comparison_return = (provider_comparison[end] / provider_comparison[start] - 1.0) * 100.0
+    provider_relative = provider_anchor_return - provider_comparison_return
+    adjusted_relative = anchor_return - comparison_return
     return {
         "basis": "shared_utc_date_provider_adjusted_closes",
         "source": "yahoo_adjclose",
@@ -164,7 +178,9 @@ def adjusted_pair_comparison(
         "observations": len(shared),
         "anchor_return_pct": round(anchor_return, 4),
         "comparison_return_pct": round(comparison_return, 4),
-        "relative_return_pp": round(anchor_return - comparison_return, 4),
+        "relative_return_pp": round(adjusted_relative, 4),
+        "provider_relative_return_pp": round(provider_relative, 4),
+        "adjusted_minus_provider_relative_return_pp": round(adjusted_relative - provider_relative, 4),
         "points": [
             {
                 "date": day.isoformat(),

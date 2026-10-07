@@ -50,6 +50,14 @@ def _reported_adjustment_basis(feed: str | None, has_history: bool) -> str | Non
     return "unspecified"
 
 
+def _pair_reported_basis_status(anchor: str | None, comparison: str | None) -> str:
+    if anchor is None or comparison is None:
+        return "unavailable"
+    if anchor == "unspecified" or comparison == "unspecified":
+        return "unverified"
+    return "matching_reported" if anchor == comparison else "mixed_reported"
+
+
 class MarketComparisonRequest(BaseModel):
     anchor: str = Field(min_length=1, max_length=40, examples=["AAPL"])
     comparisons: list[str] = Field(min_length=1, max_length=6, examples=[["SPY", "BTC-USD"]])
@@ -129,6 +137,8 @@ class MarketPairAdjustedCloseCoverage(BaseModel):
 
 class MarketAdjustedAssetObservations(BaseModel):
     return_pct: float
+    provider_return_pct: float
+    adjusted_minus_provider_return_pp: float
     technical_measures: MarketTechnicalMeasures
 
 
@@ -149,6 +159,8 @@ class MarketAdjustedPairComparison(BaseModel):
     anchor_return_pct: float
     comparison_return_pct: float
     relative_return_pp: float
+    provider_relative_return_pp: float
+    adjusted_minus_provider_relative_return_pp: float
     points: list[MarketComparisonPoint]
 
 
@@ -192,6 +204,7 @@ class MarketComparisonRow(BaseModel):
     comparison_history_feed: str | None = None
     anchor_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
     comparison_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
+    pair_reported_basis_status: Literal["matching_reported", "mixed_reported", "unverified", "unavailable"]
     anchor_close_date_conflicts: MarketCloseDateConflicts
     comparison_close_date_conflicts: MarketCloseDateConflicts
     observations: int | None = None
@@ -448,8 +461,8 @@ async def compare_market_context(
                 "anchor": adjusted_coverage(anchor),
                 "comparison": adjusted_coverage(symbol),
             }
-            adjusted_anchor = adjusted_observations(adjusted_closes[anchor], shared_dates)
-            adjusted_comparison = adjusted_observations(adjusted_closes[symbol], shared_dates)
+            adjusted_anchor = adjusted_observations(histories[anchor], adjusted_closes[anchor], shared_dates)
+            adjusted_comparison = adjusted_observations(histories[symbol], adjusted_closes[symbol], shared_dates)
             if adjusted_anchor is not None or adjusted_comparison is not None:
                 result["adjusted_observations"] = {
                     "basis": "shared_utc_date_provider_adjusted_closes",
@@ -459,7 +472,8 @@ async def compare_market_context(
                     "comparison": adjusted_comparison,
                 }
             result["adjusted_pair"] = adjusted_pair_comparison(
-                adjusted_closes[anchor], adjusted_closes[symbol], shared_dates
+                adjusted_closes[anchor], adjusted_closes[symbol], shared_dates,
+                provider_anchor=histories[anchor], provider_comparison=histories[symbol],
             )
 
             native_adjusted: dict[str, dict[str, Any] | None] = {}
@@ -476,7 +490,7 @@ async def compare_market_context(
                     "available_observations": available,
                     "native_observations": len(native_dates),
                 }
-                measures = adjusted_observations(adjusted_closes[asset], native_dates)
+                measures = adjusted_observations(histories[asset], adjusted_closes[asset], native_dates)
                 native_adjusted[asset] = None if measures is None else {
                     **measures,
                     "start_date": native_dates[0],
@@ -495,6 +509,8 @@ async def compare_market_context(
                     "anchor": native_adjusted[anchor],
                     "comparison": native_adjusted[symbol],
                 }
+        anchor_basis = _reported_adjustment_basis(feeds[anchor], bool(histories[anchor]))
+        comparison_basis = _reported_adjustment_basis(feeds[symbol], bool(histories[symbol]))
         rows.append({
             "symbol": symbol,
             **result,
@@ -502,8 +518,9 @@ async def compare_market_context(
             "comparison_history_source": sources[symbol],
             "anchor_history_feed": feeds[anchor],
             "comparison_history_feed": feeds[symbol],
-            "anchor_reported_adjustment_basis": _reported_adjustment_basis(feeds[anchor], bool(histories[anchor])),
-            "comparison_reported_adjustment_basis": _reported_adjustment_basis(feeds[symbol], bool(histories[symbol])),
+            "anchor_reported_adjustment_basis": anchor_basis,
+            "comparison_reported_adjustment_basis": comparison_basis,
+            "pair_reported_basis_status": _pair_reported_basis_status(anchor_basis, comparison_basis),
             "anchor_close_date_conflicts": conflict_disclosure(anchor),
             "comparison_close_date_conflicts": conflict_disclosure(symbol),
         })

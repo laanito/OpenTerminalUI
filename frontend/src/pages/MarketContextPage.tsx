@@ -78,6 +78,13 @@ function adjustmentBasisLabel(basis: MarketComparisonRow["anchor_reported_adjust
   return "no usable history";
 }
 
+function pairBasisMessage(status: MarketComparisonRow["pair_reported_basis_status"]): string | null {
+  if (status === "matching_reported") return "Both feeds report the same requested price basis; returned-price quality and cross-provider comparability are still unverified.";
+  if (status === "mixed_reported") return "The feeds report different price bases. Treat the provider-close return difference as mixed-basis, not like-for-like.";
+  if (status === "unverified") return "At least one feed has an unverified price basis; the provider-close return difference is not confirmed like-for-like.";
+  return null;
+}
+
 function CloseDateConflicts({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
   const entries = [
     { symbol: anchor, disclosure: row.anchor_close_date_conflicts },
@@ -242,6 +249,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
                         {observations ? (
                           <>
                             <p className="mt-1">Adjusted return: {formatPercent(observations.return_pct)}</p>
+                            {observations.adjusted_minus_provider_return_pp != null ? <p className="text-terminal-muted">Same-date provider-close return: {formatPercent(observations.provider_return_pct ?? null)} · adjusted minus provider: {formatPoints(observations.adjusted_minus_provider_return_pp)}</p> : null}
                             <p>Maximum observed drawdown: {observations.technical_measures.max_drawdown_pct.toFixed(2)}%</p>
                             <p className="text-terminal-muted">
                               {observations.technical_measures.max_drawdown_peak_date && observations.technical_measures.max_drawdown_trough_date
@@ -263,6 +271,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
                     Yahoo adjusted closes on all {row.adjusted_pair.observations} primary shared dates, {row.adjusted_pair.start_date} to {row.adjusted_pair.end_date}. Returns remain in native quote currencies, not FX-normalized. This does not replace the provider-close comparison or verify adjustment quality or historical vintage.
                   </p>
                   <p className="mt-1">{anchor}: {formatPercent(row.adjusted_pair.anchor_return_pct)} · {row.symbol}: {formatPercent(row.adjusted_pair.comparison_return_pct)} · Adjusted return difference: {formatPoints(row.adjusted_pair.relative_return_pp)}</p>
+                  {row.adjusted_pair.adjusted_minus_provider_relative_return_pp != null ? <p className="mt-1 text-terminal-muted">Same-date provider-close return difference: {formatPoints(row.adjusted_pair.provider_relative_return_pp ?? null)} · adjusted minus provider pair difference: {formatPoints(row.adjusted_pair.adjusted_minus_provider_relative_return_pp)}. This measures a field difference, not its cause or correctness.</p> : null}
                   <details className="mt-2">
                     <summary className="cursor-pointer text-terminal-accent">View exact adjusted pair observations</summary>
                     <div className="mt-2 max-h-48 overflow-auto">
@@ -296,6 +305,7 @@ function TechnicalObservations({ anchor, row }: { anchor: string; row: MarketCom
                           <>
                             <p className="mt-1 text-terminal-muted">{observations.start_date} to {observations.end_date} · {observations.observations} closes · {observations.additional_dates_vs_pair} beyond pair overlap.</p>
                             <p className="mt-1">Adjusted return: {formatPercent(observations.return_pct)}</p>
+                            {observations.adjusted_minus_provider_return_pp != null ? <p className="text-terminal-muted">Same-date provider-close return: {formatPercent(observations.provider_return_pct ?? null)} · adjusted minus provider: {formatPoints(observations.adjusted_minus_provider_return_pp)}</p> : null}
                             <p>Maximum observed drawdown: {observations.technical_measures.max_drawdown_pct.toFixed(2)}%</p>
                             <p>20-own-close average gap: {observations.technical_measures.sma20_gap_pct == null ? "Unavailable (fewer than 20 own closes)" : formatPercent(observations.technical_measures.sma20_gap_pct)}</p>
                           </>
@@ -1036,6 +1046,7 @@ export function MarketContextPage() {
                     <p className="mt-1 text-xs text-terminal-muted">
                       Reported price basis: {selection.anchor} {adjustmentBasisLabel(row.anchor_reported_adjustment_basis)} · {row.symbol} {adjustmentBasisLabel(row.comparison_reported_adjustment_basis)}. These labels describe feed requests, not an audit of returned values.
                     </p>
+                    {pairBasisMessage(row.pair_reported_basis_status) ? <p className={`mt-1 text-xs ${row.pair_reported_basis_status === "matching_reported" ? "text-terminal-muted" : "text-terminal-warn"}`}>{pairBasisMessage(row.pair_reported_basis_status)}</p> : null}
                     <AlignedPaths anchor={selection.anchor} row={row} />
                     <TechnicalObservations anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
