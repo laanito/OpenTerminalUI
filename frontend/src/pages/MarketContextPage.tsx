@@ -733,6 +733,32 @@ function SecFiledFactsForSymbol({ symbol, startDate, endDate }: { symbol: string
               </li>
             ))}
           </ul>
+          {data.difference_basis ? (
+            <div className="mt-3 border-t border-terminal-border pt-2">
+              <h4 className="font-semibold text-terminal-text">Same-period value differences</h4>
+              <p className="mt-1 text-terminal-muted">
+                {(data.candidate_group_count ?? 0) === 0
+                  ? "No differing values detected among eligible facts for the same exact concept, unit, and period; this is not proof that no revision occurred."
+                  : `${data.candidate_group_count} candidate group${data.candidate_group_count === 1 ? "" : "s"} across exact concept, unit, and period identities; showing at most ${data.candidate_display_limit}. Different filed values are not verified revisions, corrections, or evidence of what was available at a past trading instant.`}
+              </p>
+              {(data.difference_candidates ?? []).map((candidate) => (
+                <div key={`${candidate.concept}-${candidate.unit}-${candidate.period_start}-${candidate.period_end}`} className="mt-2 rounded border border-terminal-border p-2">
+                  <p className="font-medium text-terminal-text">{candidate.concept} · {candidate.period_start} to {candidate.period_end} · {candidate.unit}</p>
+                  <p className="mt-1 text-terminal-muted">
+                    {candidate.disclosure_count} distinct disclosures · {candidate.distinct_accession_count} accessions · {candidate.distinct_value_count} values; showing up to {data.disclosures_per_candidate_limit} most recently filed.
+                  </p>
+                  {candidate.within_accession_conflict ? <p className="mt-1 text-terminal-warn">One accession has conflicting values; no order can be inferred within that filing.</p> : null}
+                  <ul className="mt-1 space-y-1">
+                    {candidate.disclosures.map((fact) => (
+                      <li key={`${fact.accession}-${fact.filed_date}-${fact.form}-${fact.value}`} className="text-terminal-text">
+                        {fact.filed_date} · {fact.form} · accession {fact.accession} · {new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(fact.value)} {fact.unit}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </>
       ) : null}
     </div>

@@ -241,6 +241,19 @@ export interface SecFiledFact {
   value: number;
 }
 
+export interface SecDisclosureDifferenceCandidate {
+  concept: string;
+  unit: string;
+  period_start: string;
+  period_end: string;
+  latest_filed_date: string;
+  disclosure_count: number;
+  distinct_accession_count: number;
+  distinct_value_count: number;
+  within_accession_conflict: boolean;
+  disclosures: SecFiledFact[];
+}
+
 export interface SecFiledFactsResponse {
   contract_version: 1;
   symbol: string;
@@ -254,6 +267,11 @@ export interface SecFiledFactsResponse {
   examined_count: number;
   display_limit: number;
   facts: SecFiledFact[];
+  difference_basis?: "same_concept_unit_exact_period_values_not_verified_revisions";
+  candidate_group_count?: number;
+  candidate_display_limit?: number;
+  disclosures_per_candidate_limit?: number;
+  difference_candidates?: SecDisclosureDifferenceCandidate[];
 }
 
 export interface FundamentalCaptureSummary {

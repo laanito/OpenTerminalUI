@@ -410,6 +410,13 @@ in the pair's observed date window, separately from current FMP candidates and
 saved terminal captures. It shows accession and units rather than reducing
 differing filed facts to one inferred revision. Missing configuration, exact
 ticker coverage, and provider failures remain distinct.
+An explicit same-period difference view now groups only exact SEC concept,
+unit, and fiscal-duration matches. It reports complete eligible group/disclosure
+counts before bounding the display, retains accession and filing date, and
+flags conflicts even within one accession. These are value-difference candidates
+from the current SEC aggregate, not verified corrections, an as-of archive,
+or proof that a later filing superseded an earlier fact. Historical coverage
+and revision-aware interpretation remain open gates.
 
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
