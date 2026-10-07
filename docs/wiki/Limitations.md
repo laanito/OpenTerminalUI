@@ -129,6 +129,18 @@ never silently faked.
   candidate sets, not verified provider revisions or retractions. Failed/empty
   captures have no comparable value set; records missing from a later fetch may
   reflect provider coverage rather than a real-world event.
+- **SEC filed facts are a separate, partial US-equity source.** The authenticated
+  `POST /api/market-context/sec-filed-facts` endpoint requires a host-configured
+  `SEC_USER_AGENT` and exact SEC ticker/CIK match. It returns at most 50 current
+  Company Facts rows for selected standard US-GAAP revenue, net-income, and
+  diluted-EPS concepts over a filed-date window of up to 730 days, with total
+  match/examined counts. Concept and unit are not merged; a missing ticker or
+  fact is not proof of absence. The SEC ticker list is not guaranteed complete.
+  Company Facts is fetched now, not reconstructed as a past provider vintage;
+  differing accessions are not automatically amendments or verified revisions.
+  This endpoint does not yet feed the comparison UI or prove what was known on
+  any historical trading date. Request pacing is process-local, not a shared
+  deployment-wide SEC rate limiter.
 - **Technical observations use shared provider closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average
@@ -231,6 +243,8 @@ provider secrets in the browser. In particular:
 
 - `FRED_API_KEY` unlocks live macro indicators and yield-curve series.
 - `FMP_API_KEY` unlocks commodities and broadens US fundamentals coverage.
+- `SEC_USER_AGENT` enables on-demand SEC filed facts; identify the application
+  and a contact email. Without it, no SEC request is made.
 - `FINNHUB_API_KEY` unlocks live US WebSocket ticks.
 - `KITE_API_KEY`, `KITE_API_SECRET`, and `KITE_ACCESS_TOKEN` unlock supported
   India NSE/BSE F&O and depth workflows.

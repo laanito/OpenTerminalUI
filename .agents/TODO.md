@@ -439,6 +439,10 @@ intelligence promise, or claim that contradiction handling is solved.
   - [ ] Establish a versioned/revision-aware fundamentals evidence contract
         and tested historical coverage before using these candidates to explain
         old price moves or asserting what was known at a past point in time.
+    - [x] Add a separate, opt-in SEC Company Facts API for exact US ticker/CIK
+          matches and accession-tagged US-GAAP filing facts. It preserves filed
+          date, fiscal period, form, concept, unit, and value, but current SEC
+          aggregation is not a complete archived vintage or revision sequence.
   - [x] First news-provenance prerequisite: live news parsing and background
         ingestion no longer invent a publication date when the source omits or
         corrupts one. Undated rows are skipped; previously stored rows are not
