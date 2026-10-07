@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketSecFiledFacts, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -696,6 +696,73 @@ function DatedFundamentalReleases({ anchor, row }: { anchor: string; row: Market
   );
 }
 
+function SecFiledFactsForSymbol({ symbol, startDate, endDate }: { symbol: string; startDate: string; endDate: string }) {
+  const query = useQuery({
+    queryKey: ["market-sec-filed-facts", symbol, startDate, endDate],
+    queryFn: () => fetchMarketSecFiledFacts(symbol, startDate, endDate),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const data = query.data;
+  return (
+    <div className="rounded border border-terminal-border p-2">
+      <h3 className="font-semibold text-terminal-text">{symbol}</h3>
+      {query.isPending ? <p role="status" className="mt-1 text-terminal-muted">Checking SEC filed facts for {symbol}…</p> : null}
+      {query.isError ? (
+        <p role="alert" className="mt-1 text-terminal-neg">
+          {extractApiErrorMessage(query.error, `Could not check SEC filed facts for ${symbol}.`)}
+          <button type="button" className="ml-2 underline" onClick={() => void query.refetch()}>Retry SEC facts for {symbol}</button>
+        </p>
+      ) : null}
+      {data?.status === "configuration_required" ? <p className="mt-1 text-terminal-muted">SEC filed facts are off. The host must set SEC_USER_AGENT; no SEC request was made.</p> : null}
+      {data?.status === "not_covered" ? <p className="mt-1 text-terminal-muted">No exact ticker match in the SEC ticker list. This does not prove the issuer has no filings.</p> : null}
+      {data?.status === "ambiguous_ticker" ? <p className="mt-1 text-terminal-warn">Multiple SEC company identifiers match this ticker; no filing facts were selected.</p> : null}
+      {data?.status === "provider_error" ? <p className="mt-1 text-terminal-warn">SEC provider check failed; coverage is unknown. <button type="button" className="underline" onClick={() => void query.refetch()}>Retry SEC facts for {symbol}</button></p> : null}
+      {data?.status === "no_matching_facts" ? <p className="mt-1 text-terminal-muted">No eligible SEC facts returned for this filed-date window. This does not mean no filing occurred.</p> : null}
+      {data?.status === "available" ? (
+        <>
+          <p className="mt-1 text-terminal-muted">
+            SEC CIK {data.cik} · {data.matched_count} matching facts among {data.examined_count} examined · showing at most {data.display_limit}; checked {new Date(data.retrieved_at).toLocaleString()}.
+          </p>
+          <ul className="mt-2 max-h-80 space-y-2 overflow-y-auto">
+            {data.facts.map((fact) => (
+              <li key={`${fact.accession}-${fact.concept}-${fact.period_start}-${fact.period_end}-${fact.value}`} className="rounded border border-terminal-border p-2 text-terminal-text">
+                <span className="font-medium">{fact.filed_date} · {fact.concept}</span>
+                <span className="ml-2">{new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(fact.value)} {fact.unit}</span>
+                <p className="text-terminal-muted">{fact.form} · fiscal period {fact.period_start} to {fact.period_end} · accession {fact.accession} · {fact.taxonomy}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function DatedSecFiledFacts({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const startDate = row.start_date;
+  const endDate = row.end_date;
+  if (!startDate || !endDate) return null;
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3 text-xs">
+      <button type="button" className="text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        {open ? "Hide" : "Show"} SEC filed facts for {anchor} vs {row.symbol}
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2">
+          <p className="text-terminal-muted">
+            Separate SEC Company Facts check for filings dated {startDate} to {endDate}. Standard US-GAAP concepts and units stay distinct. These are facts visible in the current SEC aggregation, not a complete historical archive, verified revision order, or evidence that a filing caused these price moves.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {[anchor, row.symbol].map((symbol) => <SecFiledFactsForSymbol key={symbol} symbol={symbol} startDate={startDate} endDate={endDate} />)}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function MarketContextPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const appliedAnchor = (searchParams.get("symbol") || "AAPL").trim().toUpperCase();
@@ -890,6 +957,7 @@ export function MarketContextPage() {
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
                     <DatedFundamentalReleases anchor={selection.anchor} row={row} />
+                    <DatedSecFiledFacts anchor={selection.anchor} row={row} />
                   </>
                 ) : (
                   <>

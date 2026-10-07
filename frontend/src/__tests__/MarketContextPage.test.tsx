@@ -3,17 +3,18 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketSecFiledFacts, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
 import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
-vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), compareMarketFundamentalCaptures: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
+vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), compareMarketFundamentalCaptures: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), fetchMarketSecFiledFacts: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
 vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
 const headlinesMock = vi.mocked(fetchMarketContextHeadlines);
 const macroMock = vi.mocked(fetchMarketContextMacroEvents);
 const fundamentalsMock = vi.mocked(fetchMarketContextFundamentalReleases);
+const secFactsMock = vi.mocked(fetchMarketSecFiledFacts);
 const captureMock = vi.mocked(captureMarketFundamentals);
 const compareCapturesMock = vi.mocked(compareMarketFundamentalCaptures);
 const listCapturesMock = vi.mocked(listMarketFundamentalCaptures);
@@ -37,6 +38,7 @@ describe("MarketContextPage", () => {
     headlinesMock.mockReset();
     macroMock.mockReset();
     fundamentalsMock.mockReset();
+    secFactsMock.mockReset();
     captureMock.mockReset();
     compareCapturesMock.mockReset();
     listCapturesMock.mockReset().mockResolvedValue([]);
@@ -600,5 +602,75 @@ describe("MarketContextPage", () => {
     expect(await screen.findByText(/value set different · earlier: 100 · later: 110/)).toBeInTheDocument();
     expect(screen.getByText(/not verified revisions/)).toBeInTheDocument();
     expect(captureMock).not.toHaveBeenCalled();
+  });
+
+  it("checks SEC filed facts separately and only on demand for the pair window", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+        points: [{ date: "2026-09-02", anchor_index: 100, comparison_index: 100 }, { date: "2026-09-10", anchor_index: 102, comparison_index: 101 }],
+      }],
+    });
+    secFactsMock.mockImplementation(async (symbol) => symbol === "AAPL" ? {
+      contract_version: 1, symbol, filed_start: "2026-09-02", filed_end: "2026-09-10",
+      retrieved_at: "2026-09-11T10:01:00Z", status: "available",
+      evidence_scope: "sec_current_companyfacts_accession_tagged", cik: 320193,
+      matched_count: 2, examined_count: 30, display_limit: 50,
+      facts: [{ filed_date: "2026-09-05", accession: "0000320193-26-000001", taxonomy: "us-gaap",
+        concept: "NetIncomeLoss", unit: "USD", form: "10-Q", period_start: "2026-04-01", period_end: "2026-06-30", value: 1234567 }],
+    } : {
+      contract_version: 1, symbol, filed_start: "2026-09-02", filed_end: "2026-09-10",
+      retrieved_at: "2026-09-11T10:01:00Z", status: "not_covered",
+      evidence_scope: "sec_current_companyfacts_accession_tagged", cik: null,
+      matched_count: 0, examined_count: 0, display_limit: 50, facts: [],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
+    expect(secFactsMock).not.toHaveBeenCalled();
+    expect(fundamentalsMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show SEC filed facts for AAPL vs SPY" }));
+    await waitFor(() => expect(secFactsMock).toHaveBeenCalledWith("AAPL", "2026-09-02", "2026-09-10"));
+    expect(secFactsMock).toHaveBeenCalledWith("SPY", "2026-09-02", "2026-09-10");
+    expect(await screen.findByText(/2026-09-05 · NetIncomeLoss/)).toBeInTheDocument();
+    expect(screen.getByText(/accession 0000320193-26-000001/)).toBeInTheDocument();
+    expect(screen.getByText(/No exact ticker match in the SEC ticker list/)).toBeInTheDocument();
+    expect(screen.getByText(/not a complete historical archive, verified revision order/)).toBeInTheDocument();
+    expect(fundamentalsMock).not.toHaveBeenCalled();
+  });
+
+  it("explains SEC configuration and provider failures without implying no filings", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+        points: [{ date: "2026-09-02", anchor_index: 100, comparison_index: 100 }, { date: "2026-09-10", anchor_index: 102, comparison_index: 101 }],
+      }],
+    });
+    secFactsMock.mockImplementation(async (symbol) => ({
+      contract_version: 1, symbol, filed_start: "2026-09-02", filed_end: "2026-09-10",
+      retrieved_at: "2026-09-11T10:01:00Z",
+      status: symbol === "AAPL" ? "configuration_required" : "provider_error",
+      evidence_scope: "sec_current_companyfacts_accession_tagged", cik: null,
+      matched_count: 0, examined_count: 0, display_limit: 50, facts: [],
+    }));
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    fireEvent.click(await screen.findByRole("button", { name: "Show SEC filed facts for AAPL vs SPY" }));
+    expect(await screen.findByText(/The host must set SEC_USER_AGENT/)).toBeInTheDocument();
+    expect(await screen.findByText(/SEC provider check failed; coverage is unknown/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry SEC facts for SPY" })).toBeInTheDocument();
   });
 });

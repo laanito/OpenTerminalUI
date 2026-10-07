@@ -138,9 +138,10 @@ never silently faked.
   fact is not proof of absence. The SEC ticker list is not guaranteed complete.
   Company Facts is fetched now, not reconstructed as a past provider vintage;
   differing accessions are not automatically amendments or verified revisions.
-  This endpoint does not yet feed the comparison UI or prove what was known on
-  any historical trading date. Request pacing is process-local, not a shared
-  deployment-wide SEC rate limiter.
+  The comparison UI can inspect these facts on demand for each symbol in the
+  observed pair window, separately from FMP candidates and captures; it does
+  not prove what was known on any historical trading date. Request pacing is
+  process-local, not a shared deployment-wide SEC rate limiter.
 - **Technical observations use shared provider closes.** Maximum observed
   drawdown and the gap from a 20-shared-close average are calculated only on
   the pair's actual common UTC dates; with fewer than 20 closes the average

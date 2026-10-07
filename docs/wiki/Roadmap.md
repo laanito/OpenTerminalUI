@@ -405,6 +405,11 @@ form, concept, unit, and value. This is not merged into the FMP panel or saved
 captures. The current SEC aggregation does not provide a retained historical
 vintage, complete market coverage, or an inferred revision sequence. Coverage
 and revision-aware interpretation remain open gates.
+The comparison screen can inspect this SEC evidence on demand for each symbol
+in the pair's observed date window, separately from current FMP candidates and
+saved terminal captures. It shows accession and units rather than reducing
+differing filed facts to one inferred revision. Missing configuration, exact
+ticker coverage, and provider failures remain distinct.
 
 A first macro-context candidate now uses the same pair window to request the
 configured Finnhub/FMP economic calendar on demand. Unlike the legacy calendar
