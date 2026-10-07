@@ -8169,6 +8169,183 @@
         "title": "MarketMacroEventsResponse",
         "type": "object"
       },
+      "MarketMacroObservation": {
+        "properties": {
+          "reference_date": {
+            "format": "date",
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "reference_date",
+          "value"
+        ],
+        "title": "MarketMacroObservation",
+        "type": "object"
+      },
+      "MarketMacroObservationSeries": {
+        "properties": {
+          "frequency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "matched_count": {
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/MarketMacroObservation"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "series_id": {
+            "enum": [
+              "CPIAUCSL",
+              "UNRATE",
+              "FEDFUNDS"
+            ],
+            "title": "Series Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_observations",
+              "feed_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units"
+          },
+          "withheld_conflict_count": {
+            "title": "Withheld Conflict Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "series_id",
+          "label",
+          "status",
+          "title",
+          "units",
+          "frequency",
+          "matched_count",
+          "withheld_conflict_count",
+          "observations"
+        ],
+        "title": "MarketMacroObservationSeries",
+        "type": "object"
+      },
+      "MarketMacroObservationsResponse": {
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "realtime_date": {
+            "format": "date",
+            "title": "Realtime Date",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "missing_api_key",
+                  "provider_error"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/MarketMacroObservationSeries"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "source": {
+            "const": "fred",
+            "title": "Source",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "retrieved_at",
+          "realtime_date",
+          "source",
+          "status",
+          "reason",
+          "series"
+        ],
+        "title": "MarketMacroObservationsResponse",
+        "type": "object"
+      },
       "MarketNativeAdjustedAssetObservations": {
         "properties": {
           "additional_dates_vs_pair": {
@@ -26914,6 +27091,60 @@
           }
         ],
         "summary": "Get Market Context Macro Events",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/macro-observations": {
+      "post": {
+        "description": "Return current-vintage FRED values dated by reference period, not release.",
+        "operationId": "get_market_context_macro_observations_api_market_context_macro_observations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketMacroEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketMacroObservationsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Market Context Macro Observations",
         "tags": [
           "market-context"
         ],

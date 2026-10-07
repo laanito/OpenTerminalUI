@@ -3,16 +3,17 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
 import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
-vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), compareMarketFundamentalCaptures: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), fetchMarketSecFiledFacts: vi.fn(), fetchSecSubmissionCrosscheck: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
+vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), compareMarketFundamentalCaptures: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), fetchMarketContextMacroObservations: vi.fn(), fetchMarketSecFiledFacts: vi.fn(), fetchSecSubmissionCrosscheck: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
 vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
 const headlinesMock = vi.mocked(fetchMarketContextHeadlines);
 const macroMock = vi.mocked(fetchMarketContextMacroEvents);
+const macroObservationsMock = vi.mocked(fetchMarketContextMacroObservations);
 const fundamentalsMock = vi.mocked(fetchMarketContextFundamentalReleases);
 const secFactsMock = vi.mocked(fetchMarketSecFiledFacts);
 const secSubmissionMock = vi.mocked(fetchSecSubmissionCrosscheck);
@@ -38,6 +39,7 @@ describe("MarketContextPage", () => {
     compareMock.mockReset();
     headlinesMock.mockReset();
     macroMock.mockReset();
+    macroObservationsMock.mockReset();
     fundamentalsMock.mockReset();
     secFactsMock.mockReset();
     secSubmissionMock.mockReset();
@@ -436,6 +438,11 @@ describe("MarketContextPage", () => {
       status: "unavailable", reason: "missing_api_key", source: null,
       matched_count: 0, display_limit: 30, events: [],
     });
+    macroObservationsMock.mockResolvedValueOnce({
+      start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:01:00Z",
+      realtime_date: "2026-09-11", source: "fred", status: "unavailable",
+      reason: "missing_api_key", series: [],
+    });
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
     expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
     expect(macroMock).not.toHaveBeenCalled();
@@ -444,6 +451,9 @@ describe("MarketContextPage", () => {
     await waitFor(() => expect(macroMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
     expect(await screen.findByText(/No sample events are shown here/)).toBeInTheDocument();
     expect(screen.getByText(/not events attributed to either asset/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show historical macro observations for AAPL vs SPY" }));
+    await waitFor(() => expect(macroObservationsMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
+    expect(await screen.findByText(/No sample values are shown here/)).toBeInTheDocument();
   });
 
   it("shows provider-attributed calendar events without claiming asset relevance", async () => {
@@ -474,6 +484,44 @@ describe("MarketContextPage", () => {
     expect(await screen.findByText(/Rate decision/)).toBeInTheDocument();
     expect(screen.getByText(/FMP · checked/)).toBeInTheDocument();
     expect(screen.getByText(/Impact: unknown/)).toBeInTheDocument();
+  });
+
+  it("loads current-vintage macro observations on demand without implying release timing", async () => {
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-11T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
+      method: "same_utc_date_daily_closes", comparisons: [{
+        symbol: "SPY", status: "available", reason: null,
+        start_date: "2026-09-02", end_date: "2026-09-10",
+        anchor_latest_date: "2026-09-10", comparison_latest_date: "2026-09-10",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        observations: 7, freshness: "current", anchor_return_pct: 2,
+        comparison_return_pct: 1, relative_return_pp: 1,
+        points: [
+          { date: "2026-09-02", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-10", anchor_index: 102, comparison_index: 101 },
+        ],
+      }],
+    });
+    macroObservationsMock.mockResolvedValue({
+      start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:01:00Z",
+      realtime_date: "2026-09-11", source: "fred", status: "available", reason: null,
+      series: [{
+        series_id: "UNRATE", label: "Unemployment rate", status: "available",
+        title: "Unemployment Rate", units: "Percent", frequency: "Monthly",
+        matched_count: 1, withheld_conflict_count: 0,
+        observations: [{ reference_date: "2026-09-02", value: 4.1 }],
+      }],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
+    expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
+    expect(macroObservationsMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Show historical macro observations for AAPL vs SPY" }));
+    await waitFor(() => expect(macroObservationsMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
+    expect(await screen.findByText("2026-09-02: 4.1")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "UNRATE" })).toHaveAttribute("href", "https://fred.stlouisfed.org/series/UNRATE");
+    expect(screen.getByText(/A reference date is not a publication date/)).toBeInTheDocument();
+    expect(screen.getByText(/Neither a saved vintage nor a release-time audit/)).toBeInTheDocument();
   });
 
   it("loads only on-demand source-dated fundamental candidates for the pair window", async () => {

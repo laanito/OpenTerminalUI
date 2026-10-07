@@ -291,6 +291,34 @@ class MarketMacroEventsResponse(BaseModel):
     events: list[MarketMacroEvent]
 
 
+class MarketMacroObservation(BaseModel):
+    reference_date: date
+    value: float
+
+
+class MarketMacroObservationSeries(BaseModel):
+    series_id: Literal["CPIAUCSL", "UNRATE", "FEDFUNDS"]
+    label: str
+    status: Literal["available", "no_observations", "feed_error"]
+    title: str | None
+    units: str | None
+    frequency: str | None
+    matched_count: int
+    withheld_conflict_count: int
+    observations: list[MarketMacroObservation]
+
+
+class MarketMacroObservationsResponse(BaseModel):
+    start_date: date
+    end_date: date
+    retrieved_at: datetime
+    realtime_date: date
+    source: Literal["fred"]
+    status: Literal["available", "unavailable"]
+    reason: Literal["missing_api_key", "provider_error"] | None
+    series: list[MarketMacroObservationSeries]
+
+
 class MarketFundamentalsRequest(BaseModel):
     anchor: str = Field(min_length=1, max_length=40)
     comparison: str = Field(min_length=1, max_length=40)
@@ -638,6 +666,18 @@ async def get_market_context_macro_events(
         "display_limit": _MACRO_DISPLAY_LIMIT,
         "events": events[:_MACRO_DISPLAY_LIMIT],
     }
+
+
+@router.post("/macro-observations", response_model=MarketMacroObservationsResponse)
+async def get_market_context_macro_observations(
+    payload: MarketMacroEventsRequest,
+    _: User = Depends(get_current_user),
+    service: EconomicDataService = Depends(get_economic_data_service),
+) -> dict[str, Any]:
+    """Return current-vintage FRED values dated by reference period, not release."""
+    _validate_context_window(payload.start_date, payload.end_date)
+    result = await service.get_market_context_macro_observations(payload.start_date, payload.end_date)
+    return {"start_date": payload.start_date, "end_date": payload.end_date, "source": "fred", **result}
 
 
 @router.post("/fundamental-releases", response_model=MarketFundamentalsResponse)
