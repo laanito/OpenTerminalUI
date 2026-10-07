@@ -59,6 +59,8 @@ describe("MarketContextPage", () => {
           anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-23",
           anchor_history_source: "crypto", comparison_history_source: "yahoo",
           anchor_history_feed: "yahoo_chart", comparison_history_feed: "yahoo_chart",
+          anchor_close_date_conflicts: { provider_close_count: 1, provider_close_dates: ["2026-09-03"], adjusted_close_count: 0, adjusted_close_dates: [], display_limit: 20 },
+          comparison_close_date_conflicts: { provider_close_count: 0, provider_close_dates: [], adjusted_close_count: 1, adjusted_close_dates: ["2026-09-04"], display_limit: 20 },
           anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "unspecified",
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
@@ -120,6 +122,8 @@ describe("MarketContextPage", () => {
     expect(screen.getByText("+3.15 pp")).toBeInTheDocument();
     expect(screen.getByText("Stale history")).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD Crypto adapter → Yahoo chart · SPY Yahoo Finance → Yahoo chart/)).toBeInTheDocument();
+    expect(screen.getByText(/BTC-USD: provider closes 1 \(2026-09-03\)/)).toBeInTheDocument();
+    expect(screen.getByText(/SPY: provider closes 0 \(none\); Yahoo adjusted closes 1 \(2026-09-04\)/)).toBeInTheDocument();
     expect(screen.getByText(/QQQ Alpaca → stock bars \(IEX feed, raw\)/)).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD adjustment basis not verified · SPY adjustment basis not verified/)).toBeInTheDocument();
     expect(screen.getByText(/QQQ raw requested \(provider-reported\)/)).toBeInTheDocument();

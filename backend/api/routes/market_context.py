@@ -18,12 +18,12 @@ from backend.auth.deps import get_current_user
 from backend.models import User
 from backend.services.cross_market_context import (
     FETCH_RANGES,
-    _daily_closes,
     adjusted_pair_comparison,
     adjusted_observations,
     compare_closes,
+    daily_closes_with_conflicts,
+    yahoo_adjusted_closes_with_conflicts,
     yahoo_action_metadata_present,
-    yahoo_adjusted_closes,
     yahoo_reported_actions,
 )
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
@@ -37,6 +37,7 @@ _NEWS_DISPLAY_LIMIT = 8
 _MACRO_DISPLAY_LIMIT = 30
 _FUNDAMENTAL_DISPLAY_LIMIT = 16
 _ACTION_DISPLAY_LIMIT = 20
+_CLOSE_CONFLICT_DISPLAY_LIMIT = 20
 
 
 def _reported_adjustment_basis(feed: str | None, has_history: bool) -> str | None:
@@ -104,6 +105,14 @@ class MarketActionDisclosure(BaseModel):
 class MarketPairActionDisclosure(BaseModel):
     anchor: MarketActionDisclosure
     comparison: MarketActionDisclosure
+
+
+class MarketCloseDateConflicts(BaseModel):
+    provider_close_count: int
+    provider_close_dates: list[date]
+    adjusted_close_count: int
+    adjusted_close_dates: list[date]
+    display_limit: int
 
 
 class MarketAdjustedCloseCoverage(BaseModel):
@@ -183,6 +192,8 @@ class MarketComparisonRow(BaseModel):
     comparison_history_feed: str | None = None
     anchor_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
     comparison_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
+    anchor_close_date_conflicts: MarketCloseDateConflicts
+    comparison_close_date_conflicts: MarketCloseDateConflicts
     observations: int | None = None
     freshness: Literal["current", "stale"] | None = None
     anchor_return_pct: float | None = None
@@ -343,6 +354,7 @@ async def compare_market_context(
     reported_actions: dict[str, list[dict[str, str]]] = {}
     action_metadata_available: set[str] = set()
     adjusted_closes: dict[str, dict[date, float]] = {}
+    close_conflicts: dict[str, tuple[set[date], set[date]]] = {}
     errors: set[str] = set()
     semaphore = asyncio.Semaphore(3)
 
@@ -362,13 +374,16 @@ async def compare_market_context(
                     raw = await fetcher.fetch_history(symbol, range_str=FETCH_RANGES[payload.period], interval="1d")
                     source = None
                     feed = None
-                histories[symbol] = _daily_closes(raw)
+                histories[symbol], provider_conflicts = daily_closes_with_conflicts(raw)
                 sources[symbol] = source if histories[symbol] else None
                 feeds[symbol] = feed if histories[symbol] else None
-                yahoo_evidence = feeds[symbol] == "yahoo_chart" or (
-                    feeds[symbol] is None and sources[symbol] == "yahoo"
+                yahoo_evidence = feed == "yahoo_chart" or (
+                    feed is None and source == "yahoo"
                 )
-                adjusted_closes[symbol] = yahoo_adjusted_closes(raw) if yahoo_evidence else {}
+                adjusted_closes[symbol], adjusted_conflicts = (
+                    yahoo_adjusted_closes_with_conflicts(raw) if yahoo_evidence else ({}, set())
+                )
+                close_conflicts[symbol] = provider_conflicts, adjusted_conflicts
                 if yahoo_evidence and yahoo_action_metadata_present(raw):
                     action_metadata_available.add(symbol)
                     reported_actions[symbol] = yahoo_reported_actions(raw)
@@ -383,10 +398,22 @@ async def compare_market_context(
                 feeds[symbol] = None
                 reported_actions[symbol] = []
                 adjusted_closes[symbol] = {}
+                close_conflicts[symbol] = set(), set()
 
     await asyncio.gather(*(load(symbol) for symbol in [anchor, *comparisons]))
 
     rows = []
+
+    def conflict_disclosure(asset: str) -> dict[str, Any]:
+        provider, adjusted = close_conflicts[asset]
+        return {
+            "provider_close_count": len(provider),
+            "provider_close_dates": sorted(provider, reverse=True)[:_CLOSE_CONFLICT_DISPLAY_LIMIT],
+            "adjusted_close_count": len(adjusted),
+            "adjusted_close_dates": sorted(adjusted, reverse=True)[:_CLOSE_CONFLICT_DISPLAY_LIMIT],
+            "display_limit": _CLOSE_CONFLICT_DISPLAY_LIMIT,
+        }
+
     for symbol in comparisons:
         result = compare_closes(histories[anchor], histories[symbol], period=payload.period)
         if result["status"] == "unavailable" and (anchor in errors or symbol in errors):
@@ -477,6 +504,8 @@ async def compare_market_context(
             "comparison_history_feed": feeds[symbol],
             "anchor_reported_adjustment_basis": _reported_adjustment_basis(feeds[anchor], bool(histories[anchor])),
             "comparison_reported_adjustment_basis": _reported_adjustment_basis(feeds[symbol], bool(histories[symbol])),
+            "anchor_close_date_conflicts": conflict_disclosure(anchor),
+            "comparison_close_date_conflicts": conflict_disclosure(symbol),
         })
 
     return {

@@ -97,6 +97,11 @@ never silently faked.
   from equity and crypto research and offers dated comparison, symbol
   suggestions, and an inspectable pairwise path rebased to 100 on the first
   shared close. The path plots only actual shared dates, with no interpolation.
+  Conflicting closes for the same UTC date within the selected chart payload
+  are withheld from the relevant provider or Yahoo-adjusted series, with counts
+  and up to 20 latest dates disclosed per asset. Identical duplicates remain
+  usable. Upstream adapters may already have filtered rows; these checks cannot
+  detect cross-fetch conflicts or establish provider accuracy.
   Suggested identifiers do not guarantee usable daily history, and this is not
   a multi-source market explanation. An optional on-demand panel checks
   current keyless news feeds for source-dated headlines within each pair's actual

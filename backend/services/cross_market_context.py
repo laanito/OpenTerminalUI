@@ -14,28 +14,41 @@ PERIOD_DAYS = {"1M": 30, "3M": 90, "6M": 180}
 FETCH_RANGES = {"1M": "3mo", "3M": "6mo", "6M": "1y"}
 
 
-def yahoo_adjusted_closes(raw: Any) -> dict[date, float]:
+def _record_daily_close(
+    closes: dict[date, float], conflicts: set[date], day: date, close: float
+) -> None:
+    if day in conflicts:
+        return
+    if day in closes and closes[day] != close:
+        conflicts.add(day)
+        del closes[day]
+    else:
+        closes[day] = close
+
+
+def yahoo_adjusted_closes_with_conflicts(raw: Any) -> tuple[dict[date, float], set[date]]:
     """Read provider-supplied adjusted closes without assuming their vintage."""
     if not isinstance(raw, dict):
-        return {}
+        return {}, set()
     chart = raw.get("chart")
     if not isinstance(chart, dict):
-        return {}
+        return {}, set()
     results = chart.get("result")
     if not isinstance(results, list) or not results or not isinstance(results[0], dict):
-        return {}
+        return {}, set()
     result = results[0]
     timestamps = result.get("timestamp")
     indicators = result.get("indicators")
     if not isinstance(timestamps, list) or not isinstance(indicators, dict):
-        return {}
+        return {}, set()
     adjusted = indicators.get("adjclose")
     if not isinstance(adjusted, list) or not adjusted or not isinstance(adjusted[0], dict):
-        return {}
+        return {}, set()
     values = adjusted[0].get("adjclose")
     if not isinstance(values, list):
-        return {}
+        return {}, set()
     closes: dict[date, float] = {}
+    conflicts: set[date] = set()
     for timestamp, value in zip(timestamps, values):
         try:
             day = datetime.fromtimestamp(int(timestamp), tz=timezone.utc).date()
@@ -43,8 +56,12 @@ def yahoo_adjusted_closes(raw: Any) -> dict[date, float]:
         except (OSError, OverflowError, TypeError, ValueError):
             continue
         if math.isfinite(close) and close > 0:
-            closes[day] = close
-    return closes
+            _record_daily_close(closes, conflicts, day, close)
+    return closes, conflicts
+
+
+def yahoo_adjusted_closes(raw: Any) -> dict[date, float]:
+    return yahoo_adjusted_closes_with_conflicts(raw)[0]
 
 
 def yahoo_action_metadata_present(raw: Any) -> bool:
@@ -174,11 +191,12 @@ def _native_technical_observations(
     }
 
 
-def _daily_closes(raw: Any) -> dict[date, float]:
+def daily_closes_with_conflicts(raw: Any) -> tuple[dict[date, float], set[date]]:
     frame = _parse_yahoo_chart(raw if isinstance(raw, dict) else {})
     if frame.empty or "Close" not in frame:
-        return {}
+        return {}, set()
     closes: dict[date, float] = {}
+    conflicts: set[date] = set()
     for timestamp, value in frame["Close"].items():
         try:
             close = float(value)
@@ -186,8 +204,12 @@ def _daily_closes(raw: Any) -> dict[date, float]:
         except (TypeError, ValueError, OverflowError):
             continue
         if math.isfinite(close) and close > 0:
-            closes[day] = close
-    return closes
+            _record_daily_close(closes, conflicts, day, close)
+    return closes, conflicts
+
+
+def _daily_closes(raw: Any) -> dict[date, float]:
+    return daily_closes_with_conflicts(raw)[0]
 
 
 def compare_closes(

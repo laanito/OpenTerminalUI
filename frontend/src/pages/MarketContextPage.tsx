@@ -78,6 +78,24 @@ function adjustmentBasisLabel(basis: MarketComparisonRow["anchor_reported_adjust
   return "no usable history";
 }
 
+function CloseDateConflicts({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const entries = [
+    { symbol: anchor, disclosure: row.anchor_close_date_conflicts },
+    { symbol: row.symbol, disclosure: row.comparison_close_date_conflicts },
+  ];
+  if (!entries.some(({ disclosure }) => disclosure && (disclosure.provider_close_count || disclosure.adjusted_close_count))) return null;
+  return (
+    <div className="mt-2 text-xs text-terminal-warn">
+      <p>Conflicting UTC-date closes were withheld from the selected chart payload; listed dates may fall outside this pair’s compared window. Upstream adapter filtering is not audited.</p>
+      {entries.map(({ symbol, disclosure }) => disclosure && (disclosure.provider_close_count || disclosure.adjusted_close_count) ? (
+        <p key={symbol} className="mt-1">
+          {symbol}: provider closes {disclosure.provider_close_count} ({disclosure.provider_close_dates.join(", ") || "none"}); Yahoo adjusted closes {disclosure.adjusted_close_count} ({disclosure.adjusted_close_dates.join(", ") || "none"}). Up to {disclosure.display_limit} latest dates per series shown.
+        </p>
+      ) : null)}
+    </div>
+  );
+}
+
 function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
@@ -849,6 +867,7 @@ export function MarketContextPage() {
                     {row.status === "unavailable" ? "Unavailable" : row.freshness === "stale" ? "Stale history" : "Current history"}
                   </span>
                 </div>
+                <CloseDateConflicts anchor={selection.anchor} row={row} />
                 {row.status === "available" ? (
                   <>
                     <div className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
