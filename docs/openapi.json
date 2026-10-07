@@ -7100,6 +7100,47 @@
         "title": "MarketAdjustedPairComparison",
         "type": "object"
       },
+      "MarketCloseDateConflicts": {
+        "properties": {
+          "adjusted_close_count": {
+            "title": "Adjusted Close Count",
+            "type": "integer"
+          },
+          "adjusted_close_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Adjusted Close Dates",
+            "type": "array"
+          },
+          "display_limit": {
+            "title": "Display Limit",
+            "type": "integer"
+          },
+          "provider_close_count": {
+            "title": "Provider Close Count",
+            "type": "integer"
+          },
+          "provider_close_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Provider Close Dates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "provider_close_count",
+          "provider_close_dates",
+          "adjusted_close_count",
+          "adjusted_close_dates",
+          "display_limit"
+        ],
+        "title": "MarketCloseDateConflicts",
+        "type": "object"
+      },
       "MarketComparisonPoint": {
         "properties": {
           "anchor_index": {
@@ -7265,6 +7306,9 @@
               }
             ]
           },
+          "anchor_close_date_conflicts": {
+            "$ref": "#/components/schemas/MarketCloseDateConflicts"
+          },
           "anchor_history_feed": {
             "anyOf": [
               {
@@ -7325,6 +7369,9 @@
               }
             ],
             "title": "Anchor Return Pct"
+          },
+          "comparison_close_date_conflicts": {
+            "$ref": "#/components/schemas/MarketCloseDateConflicts"
           },
           "comparison_history_feed": {
             "anyOf": [
@@ -7526,7 +7573,9 @@
         },
         "required": [
           "symbol",
-          "status"
+          "status",
+          "anchor_close_date_conflicts",
+          "comparison_close_date_conflicts"
         ],
         "title": "MarketComparisonRow",
         "type": "object"

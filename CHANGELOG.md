@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Conflicting close-date disclosure** — market comparisons now withhold a
+  UTC date when the selected chart payload contains different provider or Yahoo-
+  adjusted closes for that date, rather than taking the last row. Identical
+  duplicates remain usable. The API and browser report bounded conflict dates;
+  overlap and adjusted coverage reflect withheld observations. Upstream adapter
+  filtering is not audited.
 - **Separate adjusted pair comparison** — when both selected Yahoo histories
   have adjusted closes on every primary shared date, the API and browser show
   a separate indexed path and adjusted return difference. Partial or one-sided

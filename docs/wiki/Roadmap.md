@@ -310,6 +310,13 @@ and FMP non-split-adjusted request bases per asset; other selected paths remain
 unspecified. This is request provenance, not verification of returned price
 adjustments, and mixed-basis pairs cannot be treated as decision-grade signals.
 
+Within each selected chart payload, conflicting closes mapped to one UTC
+date are now withheld separately for provider and Yahoo-adjusted series;
+identical duplicates remain usable. The comparison reports counts and up to
+20 latest withheld dates per asset. Pair overlap and adjusted coverage reflect
+the remaining dates. Upstream adapter filtering is not audited; this does not
+detect cross-fetch disagreements or verify the provider's price history.
+
 The same aligned closes now support a first descriptive technical layer:
 maximum observed drawdown with its peak/trough dates, and the last close's
 percentage gap from the previous 20 shared closes. Fewer than 20 observations

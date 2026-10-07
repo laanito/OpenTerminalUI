@@ -513,6 +513,13 @@ intelligence promise, or claim that contradiction handling is solved.
         partial or one-sided coverage produces no pair result. The primary
         provider-close result remains unchanged, and retrospective adjusted
         values are not verified vintage or decision-grade evidence.
+  - [x] Withhold conflicting provider-close and Yahoo-adjusted observations
+        that resolve to the same UTC date instead of keeping the last value.
+        Retain identical duplicates, disclose withheld-date counts and a bounded
+        latest-date list per asset, and let coverage/overlap reflect the missing
+        dates. This only detects conflicts still present in the selected chart
+        payload; upstream adapter filtering, source accuracy, and historical
+        completeness are not audited.
   - [x] Add a separate provider-close own-date technical observation for each asset
         inside the actual pair window. Report its observation count and dates
         beyond the pair overlap so crypto weekends no longer silently vanish

@@ -43,6 +43,14 @@ export interface MarketActionDisclosure {
   actions: { date: string; type: "split" | "dividend" }[];
 }
 
+export interface MarketCloseDateConflicts {
+  provider_close_count: number;
+  provider_close_dates: string[];
+  adjusted_close_count: number;
+  adjusted_close_dates: string[];
+  display_limit: number;
+}
+
 export interface MarketAdjustedCloseCoverage {
   status: "complete" | "partial" | "unavailable";
   source: "yahoo_adjclose" | null;
@@ -110,6 +118,8 @@ export interface MarketComparisonRow {
   comparison_history_feed?: string | null;
   anchor_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
   comparison_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
+  anchor_close_date_conflicts?: MarketCloseDateConflicts;
+  comparison_close_date_conflicts?: MarketCloseDateConflicts;
   observations: number | null;
   freshness: "current" | "stale" | null;
   anchor_return_pct: number | null;

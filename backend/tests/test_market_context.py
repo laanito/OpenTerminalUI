@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.api.deps import get_unified_fetcher
 from backend.api.routes import market_context
 from backend.auth.deps import get_current_user
-from backend.services.cross_market_context import _daily_closes, adjusted_observations, compare_closes, yahoo_action_metadata_present, yahoo_adjusted_closes, yahoo_reported_actions
+from backend.services.cross_market_context import _daily_closes, adjusted_observations, compare_closes, daily_closes_with_conflicts, yahoo_action_metadata_present, yahoo_adjusted_closes, yahoo_adjusted_closes_with_conflicts, yahoo_reported_actions
 from backend.services.economic_data import get_economic_data_service
 
 
@@ -61,6 +61,25 @@ def test_short_or_disjoint_history_never_claims_full_period_return() -> None:
 def test_invalid_closes_are_ignored() -> None:
     closes = _daily_closes(_chart({date(2026, 9, 1): 100.0, date(2026, 9, 2): 0.0}))
     assert closes == {date(2026, 9, 1): 100.0}
+
+
+def test_conflicting_same_utc_date_closes_are_withheld_but_identical_duplicates_survive() -> None:
+    first, second = date(2026, 9, 1), date(2026, 9, 2)
+    raw = _chart({first: 100.0, second: 110.0})
+    result = raw["chart"]["result"][0]
+    result["timestamp"].extend([result["timestamp"][0] + 3600, result["timestamp"][1] + 3600, result["timestamp"][0] + 7200])
+    quote = result["indicators"]["quote"][0]
+    for key in ("open", "high", "low", "close"):
+        quote[key] = [100.0, 110.0, 101.0, 110.0, 100.0]
+    quote["volume"].extend([100, 100, 100])
+    result["indicators"]["adjclose"] = [{"adjclose": [90.0, 95.0, 90.0, 96.0, 90.0]}]
+
+    closes, conflicts = daily_closes_with_conflicts(raw)
+    assert closes == {second: 110.0}
+    assert conflicts == {first}
+    adjusted, adjusted_conflicts = yahoo_adjusted_closes_with_conflicts(raw)
+    assert adjusted == {first: 90.0}
+    assert adjusted_conflicts == {second}
 
 
 def test_technical_measures_use_only_shared_provider_closes() -> None:
@@ -378,6 +397,65 @@ def test_route_reports_adjusted_observations_per_asset_on_exact_pair_dates() -> 
     assert pair["points"][0]["anchor_index"] == 100.0
     assert pair["points"][-1]["anchor_index"] == 132.967
     assert row["anchor_return_pct"] == 29.703
+
+
+def test_route_discloses_withheld_close_dates_and_suppresses_incomplete_adjusted_pair() -> None:
+    start = date(2026, 8, 24)
+    days = [start + timedelta(days=i) for i in range(32)]
+    anchor_chart = _chart({day: 100.0 + i for i, day in enumerate(days)})
+    anchor_result = anchor_chart["chart"]["result"][0]
+    anchor_result["indicators"]["adjclose"] = [{"adjclose": [90.0 + i for i in range(32)]}]
+    anchor_quote = anchor_result["indicators"]["quote"][0]
+    for key in ("open", "high", "low", "close"):
+        anchor_quote[key] = list(anchor_quote[key])
+    for index, close, adjusted in ((5, 999.0, 95.0), (6, 106.0, 999.0)):
+        anchor_result["timestamp"].append(anchor_result["timestamp"][index] + 3600)
+        for key in ("open", "high", "low", "close"):
+            anchor_quote[key].append(close)
+        anchor_quote["volume"].append(100)
+        anchor_result["indicators"]["adjclose"][0]["adjclose"].append(adjusted)
+    comparison_chart = _chart({day: 200.0 + i for i, day in enumerate(days)})
+    comparison_chart["chart"]["result"][0]["indicators"]["adjclose"] = [{"adjclose": [190.0 + i for i in range(32)]}]
+    client = _client(
+        {"AAPL": anchor_chart, "SPY": comparison_chart},
+        sources={"AAPL": "yahoo", "SPY": "yahoo"},
+        feeds={"AAPL": "yahoo_chart", "SPY": "yahoo_chart"},
+    )
+    row = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
+    }).json()["comparisons"][0]
+    assert row["status"] == "available"
+    assert row["anchor_close_date_conflicts"] == {
+        "provider_close_count": 1, "provider_close_dates": [days[5].isoformat()],
+        "adjusted_close_count": 1, "adjusted_close_dates": [days[6].isoformat()],
+        "display_limit": 20,
+    }
+    assert row["comparison_close_date_conflicts"]["provider_close_count"] == 0
+    assert row["observations"] == 30
+    assert days[5].isoformat() not in [point["date"] for point in row["points"]]
+    assert row["adjusted_close_coverage"]["anchor"]["status"] == "partial"
+    assert row["adjusted_pair"] is None
+
+
+def test_route_discloses_conflict_even_when_no_usable_provider_close_remains() -> None:
+    day = date(2026, 9, 1)
+    anchor_chart = _chart({day: 100.0})
+    result = anchor_chart["chart"]["result"][0]
+    result["timestamp"].append(result["timestamp"][0] + 3600)
+    quote = result["indicators"]["quote"][0]
+    for key in ("open", "high", "low", "close"):
+        quote[key] = [100.0, 101.0]
+    quote["volume"].append(100)
+    client = _client({
+        "AAPL": anchor_chart,
+        "SPY": _chart({day: 200.0, day + timedelta(days=1): 201.0}),
+    })
+    row = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M",
+    }).json()["comparisons"][0]
+    assert row["status"] == "unavailable"
+    assert row["anchor_history_source"] is None
+    assert row["anchor_close_date_conflicts"]["provider_close_dates"] == [day.isoformat()]
 
 
 def test_native_adjusted_observations_require_complete_own_dates_including_crypto_weekends() -> None:
