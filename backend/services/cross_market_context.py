@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
@@ -12,6 +13,22 @@ from backend.api.routes.chart import _parse_yahoo_chart
 
 PERIOD_DAYS = {"1M": 30, "3M": 90, "6M": 180}
 FETCH_RANGES = {"1M": "3mo", "3M": "6mo", "6M": "1y"}
+
+
+def yahoo_reported_quote_unit(raw: Any) -> str | None:
+    """Keep the selected chart's quote unit without treating it as ISO FX."""
+    if not isinstance(raw, dict):
+        return None
+    chart = raw.get("chart")
+    results = chart.get("result") if isinstance(chart, dict) else None
+    if not isinstance(results, list) or not results or not isinstance(results[0], dict):
+        return None
+    meta = results[0].get("meta")
+    unit = meta.get("currency") if isinstance(meta, dict) else None
+    if not isinstance(unit, str):
+        return None
+    unit = unit.strip()
+    return unit if re.fullmatch(r"[A-Za-z0-9]{2,12}", unit) else None
 
 
 def _record_daily_close(

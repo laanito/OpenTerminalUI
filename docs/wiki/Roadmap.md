@@ -291,6 +291,14 @@ co-movement establish causation. Full fundamentals, historical macro
 release/vintage evidence, sentiment, and decision-grade technical evidence become separate later layers
 only when they have honest coverage and provenance contracts.
 
+The comparison also preserves the selected Yahoo chart's reported quote unit
+through adapter normalization and discloses it per asset. A unit may be a
+non-ISO denomination (for example a subunit), so it is not automatically an
+FX conversion code. FMP/Alpaca paths and absent metadata remain unknown.
+Different reported units are highlighted; no currency is guessed and the
+native-quote paths or returns are not FX-normalized. Verified denomination
+and historical FX coverage are prerequisites for a separate base-currency view.
+
 The Alpaca comparison path now explicitly requests raw stock bars even when
 other Alpaca workflows are configured for a different adjustment. It reports
 the selected Alpaca bar feed and raw adjustment with the winning adapter, so

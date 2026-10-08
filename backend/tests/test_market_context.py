@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.api.deps import get_unified_fetcher
 from backend.api.routes import market_context
 from backend.auth.deps import get_current_user
-from backend.services.cross_market_context import _daily_closes, adjusted_observations, compare_closes, daily_closes_with_conflicts, yahoo_action_metadata_present, yahoo_adjusted_closes, yahoo_adjusted_closes_with_conflicts, yahoo_reported_actions
+from backend.services.cross_market_context import _daily_closes, adjusted_observations, compare_closes, daily_closes_with_conflicts, yahoo_action_metadata_present, yahoo_adjusted_closes, yahoo_adjusted_closes_with_conflicts, yahoo_reported_actions, yahoo_reported_quote_unit
 from backend.services.economic_data import get_economic_data_service
 
 
@@ -152,6 +152,16 @@ def test_yahoo_action_parser_keeps_only_dated_split_and_dividend_markers() -> No
     assert yahoo_reported_actions({"chart": []}) == []
 
 
+def test_quote_unit_parser_keeps_reported_unit_without_iso_inference() -> None:
+    chart = _chart({date(2026, 9, 5): 100.0})
+    result = chart["chart"]["result"][0]
+    result["meta"] = {"currency": "GBp"}
+    assert yahoo_reported_quote_unit(chart) == "GBp"
+    result["meta"] = {"currency": "bad unit"}
+    assert yahoo_reported_quote_unit(chart) is None
+    assert yahoo_reported_quote_unit({"chart": []}) is None
+
+
 def test_adjusted_close_parser_skips_missing_and_invalid_provider_values() -> None:
     days = [date(2026, 9, 1) + timedelta(days=i) for i in range(3)]
     raw = _chart({day: 100.0 for day in days})
@@ -237,6 +247,7 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["comparisons"][0]["anchor_reported_adjustment_basis"] == "unspecified"
     assert payload["comparisons"][0]["comparison_reported_adjustment_basis"] == "unspecified"
     assert payload["comparisons"][0]["pair_reported_basis_status"] == "unverified"
+    assert payload["comparisons"][0]["anchor_quote_unit"] == {"unit": None, "source": "unavailable"}
     assert payload["comparisons"][0]["action_disclosure"]["anchor"]["source"] == "unavailable"
     assert payload["comparisons"][0]["technical_observations"]["basis"] == "shared_utc_date_provider_closes"
     assert payload["comparisons"][0]["native_technical_observations"]["basis"] == "per_asset_utc_date_provider_closes_within_pair_window"
@@ -245,6 +256,7 @@ def test_route_retains_partial_results_and_provider_failure() -> None:
     assert payload["comparisons"][1]["comparison_history_feed"] is None
     assert payload["comparisons"][1]["comparison_reported_adjustment_basis"] is None
     assert payload["comparisons"][1]["pair_reported_basis_status"] == "unavailable"
+    assert payload["comparisons"][1]["comparison_quote_unit"] == {"unit": None, "source": "unavailable"}
     assert payload["comparisons"][1]["technical_observations"] is None
     assert payload["comparisons"][1]["native_technical_observations"] is None
     assert payload["comparisons"][1]["points"] == []
@@ -275,6 +287,7 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
     }]
     split = int(datetime(2026, 9, 5, tzinfo=timezone.utc).timestamp())
     crypto_chart["chart"]["result"][0]["events"] = {"splits": {str(split): {"date": split}}}
+    crypto_chart["chart"]["result"][0]["meta"] = {"currency": "USD"}
     client = _client(
         {"BTC-USD": crypto_chart,
          "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)})},
@@ -291,6 +304,8 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
     assert row["anchor_reported_adjustment_basis"] == "unspecified"
     assert row["comparison_reported_adjustment_basis"] == "raw"
     assert row["pair_reported_basis_status"] == "unverified"
+    assert row["anchor_quote_unit"] == {"unit": "USD", "source": "yahoo_chart_meta"}
+    assert row["comparison_quote_unit"] == {"unit": None, "source": "unavailable"}
     assert row["adjusted_close_coverage"]["anchor"]["status"] == "complete"
     assert row["adjusted_observations"]["anchor"]["return_pct"] != row["anchor_return_pct"]
     assert row["action_disclosure"]["anchor"]["actions"] == [{"date": "2026-09-05", "type": "split"}]
@@ -300,9 +315,11 @@ def test_route_reports_selected_underlying_feed_without_inference() -> None:
 def test_route_reports_fmp_non_split_adjustment_without_inferring_other_feeds() -> None:
     start = date(2026, 8, 24)
     days = [start + timedelta(days=i) for i in range(32)]
+    non_yahoo_chart = _chart({day: 200.0 + i for i, day in enumerate(days)})
+    non_yahoo_chart["chart"]["result"][0]["meta"] = {"currency": "USD"}
     client = _client(
         {"AAPL": _chart({day: 100.0 + i for i, day in enumerate(days)}),
-         "SPY": _chart({day: 200.0 + i for i, day in enumerate(days)})},
+         "SPY": non_yahoo_chart},
         sources={"AAPL": "yahoo", "SPY": "fmp"},
         feeds={"AAPL": "yahoo_chart", "SPY": "fmp_historical_price_non_split_adjusted"},
     )
@@ -311,6 +328,7 @@ def test_route_reports_fmp_non_split_adjustment_without_inferring_other_feeds() 
     }).json()["comparisons"][0]
     assert row["anchor_reported_adjustment_basis"] == "unspecified"
     assert row["comparison_reported_adjustment_basis"] == "non_split_adjusted"
+    assert row["comparison_quote_unit"] == {"unit": None, "source": "unavailable"}
 
 
 def test_route_discloses_only_yahoo_reported_actions_in_observed_window() -> None:

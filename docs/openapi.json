@@ -7363,6 +7363,9 @@
             ],
             "title": "Anchor Latest Date"
           },
+          "anchor_quote_unit": {
+            "$ref": "#/components/schemas/MarketQuoteUnitDisclosure"
+          },
           "anchor_reported_adjustment_basis": {
             "anyOf": [
               {
@@ -7426,6 +7429,9 @@
               }
             ],
             "title": "Comparison Latest Date"
+          },
+          "comparison_quote_unit": {
+            "$ref": "#/components/schemas/MarketQuoteUnitDisclosure"
           },
           "comparison_reported_adjustment_basis": {
             "anyOf": [
@@ -7605,6 +7611,8 @@
           "symbol",
           "status",
           "pair_reported_basis_status",
+          "anchor_quote_unit",
+          "comparison_quote_unit",
           "anchor_close_date_conflicts",
           "comparison_close_date_conflicts"
         ],
@@ -8612,6 +8620,35 @@
           "comparison"
         ],
         "title": "MarketPairNativeAdjustedCloseCoverage",
+        "type": "object"
+      },
+      "MarketQuoteUnitDisclosure": {
+        "properties": {
+          "source": {
+            "enum": [
+              "yahoo_chart_meta",
+              "unavailable"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "unit",
+          "source"
+        ],
+        "title": "MarketQuoteUnitDisclosure",
         "type": "object"
       },
       "MarketTechnicalMeasures": {

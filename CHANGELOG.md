@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Selected-history quote-unit disclosure** — comparisons retain the quote
+  unit reported by the selected Yahoo chart, including non-ISO units, and show
+  when the two reported units differ. Other history paths remain unknown; no
+  currency is inferred and no FX conversion is performed.
 - **FRED pair-end real-time cross-check** — the macro panel can separately
   request FRED's view as of the pair's end date and show reference-period values
   that differ from, or are absent in, the current view. Changed metadata or

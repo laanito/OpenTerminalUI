@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type MarketQuoteUnitDisclosure, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -83,6 +83,12 @@ function pairBasisMessage(status: MarketComparisonRow["pair_reported_basis_statu
   if (status === "mixed_reported") return "The feeds report different price bases. Treat the provider-close return difference as mixed-basis, not like-for-like.";
   if (status === "unverified") return "At least one feed has an unverified price basis; the provider-close return difference is not confirmed like-for-like.";
   return null;
+}
+
+function quoteUnitLabel(disclosure: MarketQuoteUnitDisclosure | undefined): string {
+  return disclosure?.unit && disclosure.source === "yahoo_chart_meta"
+    ? `${disclosure.unit} (selected Yahoo chart metadata)`
+    : "unknown from selected history";
 }
 
 function CloseDateConflicts({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
@@ -1129,6 +1135,10 @@ export function MarketContextPage() {
                   </span>
                 </div>
                 <CloseDateConflicts anchor={selection.anchor} row={row} />
+                <p className="mt-1 text-xs text-terminal-muted">
+                  Quote units: {selection.anchor} {quoteUnitLabel(row.anchor_quote_unit)} · {row.symbol} {quoteUnitLabel(row.comparison_quote_unit)}. These are provider-reported units, not FX conversions or verified price denominations.
+                </p>
+                {row.anchor_quote_unit?.unit && row.comparison_quote_unit?.unit && row.anchor_quote_unit.unit !== row.comparison_quote_unit.unit ? <p className="mt-1 text-xs text-terminal-warn">Different reported quote units; native returns are not base-currency performance.</p> : null}
                 {row.status === "available" ? (
                   <>
                     <div className="mt-2 grid gap-2 text-sm sm:grid-cols-3">

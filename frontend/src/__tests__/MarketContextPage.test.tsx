@@ -69,6 +69,8 @@ describe("MarketContextPage", () => {
           comparison_close_date_conflicts: { provider_close_count: 0, provider_close_dates: [], adjusted_close_count: 1, adjusted_close_dates: ["2026-09-04"], display_limit: 20 },
           anchor_reported_adjustment_basis: "unspecified", comparison_reported_adjustment_basis: "unspecified",
           pair_reported_basis_status: "unverified",
+          anchor_quote_unit: { unit: "USD", source: "yahoo_chart_meta" },
+          comparison_quote_unit: { unit: null, source: "unavailable" },
           observations: 21, freshness: "current",
           anchor_return_pct: 5.25, comparison_return_pct: 2.1, relative_return_pp: 3.15,
           technical_observations: {
@@ -134,6 +136,7 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/QQQ Alpaca → stock bars \(IEX feed, raw\)/)).toBeInTheDocument();
     expect(screen.getByText(/BTC-USD adjustment basis not verified · SPY adjustment basis not verified/)).toBeInTheDocument();
     expect(screen.getByText(/provider-close return difference is not confirmed like-for-like/)).toBeInTheDocument();
+    expect(screen.getByText(/Quote units: BTC-USD USD \(selected Yahoo chart metadata\) · SPY unknown from selected history/)).toBeInTheDocument();
     expect(screen.getByText(/QQQ raw requested \(provider-reported\)/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
     expect(screen.getByText(/SAP.DE no usable history/)).toBeInTheDocument();

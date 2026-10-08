@@ -51,6 +51,11 @@ export interface MarketCloseDateConflicts {
   display_limit: number;
 }
 
+export interface MarketQuoteUnitDisclosure {
+  unit: string | null;
+  source: "yahoo_chart_meta" | "unavailable";
+}
+
 export interface MarketAdjustedCloseCoverage {
   status: "complete" | "partial" | "unavailable";
   source: "yahoo_adjclose" | null;
@@ -123,6 +128,8 @@ export interface MarketComparisonRow {
   anchor_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
   comparison_reported_adjustment_basis?: "raw" | "non_split_adjusted" | "unspecified" | null;
   pair_reported_basis_status?: "matching_reported" | "mixed_reported" | "unverified" | "unavailable";
+  anchor_quote_unit?: MarketQuoteUnitDisclosure;
+  comparison_quote_unit?: MarketQuoteUnitDisclosure;
   anchor_close_date_conflicts?: MarketCloseDateConflicts;
   comparison_close_date_conflicts?: MarketCloseDateConflicts;
   observations: number | null;

@@ -188,6 +188,10 @@ never silently faked.
   adjusted-minus-provider return differences use identical dates for each
   asset and the pair; they quantify a numerical discrepancy, not its cause,
   adjustment correctness, or a decision-grade signal.
+  The selected Yahoo chart's reported quote unit is displayed when present,
+  including non-ISO units. Other feeds or missing metadata remain unknown.
+  The label does not verify the price denomination or supply an FX rate; the
+  comparison still does not calculate base-currency performance.
   A separate provider-close own-date view uses each asset's available UTC closes
   within that same pair window and reports dates beyond pair overlap, including
   crypto weekends. It does not alter the paired comparison or certify that
