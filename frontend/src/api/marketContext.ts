@@ -398,9 +398,10 @@ export async function fetchMarketContextMacroEvents(
 export async function fetchMarketContextMacroObservations(
   startDate: string,
   endDate: string,
+  realtimeDate?: string,
 ): Promise<MarketMacroObservationsResponse> {
   const response = await api.post<MarketMacroObservationsResponse>("/market-context/macro-observations", {
-    start_date: startDate, end_date: endDate,
+    start_date: startDate, end_date: endDate, ...(realtimeDate ? { realtime_date: realtimeDate } : {}),
   });
   return response.data;
 }

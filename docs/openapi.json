@@ -8275,6 +8275,38 @@
         "title": "MarketMacroObservationSeries",
         "type": "object"
       },
+      "MarketMacroObservationsRequest": {
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "realtime_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realtime Date"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "title": "MarketMacroObservationsRequest",
+        "type": "object"
+      },
       "MarketMacroObservationsResponse": {
         "properties": {
           "end_date": {
@@ -27105,13 +27137,13 @@
     },
     "/api/market-context/macro-observations": {
       "post": {
-        "description": "Return current-vintage FRED values dated by reference period, not release.",
+        "description": "Return FRED daily real-time values dated by reference period, not release.",
         "operationId": "get_market_context_macro_observations_api_market_context_macro_observations_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MarketMacroEventsRequest"
+                "$ref": "#/components/schemas/MarketMacroObservationsRequest"
               }
             }
           },

@@ -272,6 +272,10 @@ class MarketMacroEventsRequest(BaseModel):
     end_date: date
 
 
+class MarketMacroObservationsRequest(MarketMacroEventsRequest):
+    realtime_date: date | None = None
+
+
 class MarketMacroEvent(BaseModel):
     date: date
     country: str | None = None
@@ -670,13 +674,17 @@ async def get_market_context_macro_events(
 
 @router.post("/macro-observations", response_model=MarketMacroObservationsResponse)
 async def get_market_context_macro_observations(
-    payload: MarketMacroEventsRequest,
+    payload: MarketMacroObservationsRequest,
     _: User = Depends(get_current_user),
     service: EconomicDataService = Depends(get_economic_data_service),
 ) -> dict[str, Any]:
-    """Return current-vintage FRED values dated by reference period, not release."""
+    """Return FRED daily real-time values dated by reference period, not release."""
     _validate_context_window(payload.start_date, payload.end_date)
-    result = await service.get_market_context_macro_observations(payload.start_date, payload.end_date)
+    if payload.realtime_date is not None and payload.realtime_date > datetime.now(timezone.utc).date():
+        raise HTTPException(status_code=422, detail="Real-time date cannot be in the future")
+    result = await service.get_market_context_macro_observations(
+        payload.start_date, payload.end_date, realtime_date=payload.realtime_date,
+    )
     return {"start_date": payload.start_date, "end_date": payload.end_date, "source": "fred", **result}
 
 

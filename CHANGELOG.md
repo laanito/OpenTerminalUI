@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **FRED pair-end real-time cross-check** — the macro panel can separately
+  request FRED's view as of the pair's end date and show reference-period values
+  that differ from, or are absent in, the current view. Changed metadata or
+  failed series are not compared; daily provider vintages are not intraday
+  release records or evidence of price causation.
 - **Historical macro observation candidates** — comparison pairs can separately
   inspect current-vintage FRED CPI, unemployment, and policy-rate observations
   inside their actual window. The panel distinguishes reference periods from

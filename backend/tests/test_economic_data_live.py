@@ -175,6 +175,12 @@ async def test_macro_context_preserves_reference_dates_metadata_and_partial_fail
     assert cpi["observations"] == [{"reference_date": date(2026, 9, 1), "value": 3.5}]
     assert result["series"][2]["status"] == "feed_error"
 
+    historical = await service.get_market_context_macro_observations(
+        date(2026, 9, 1), date(2026, 9, 30), realtime_date=date(2026, 9, 10),
+    )
+    assert historical["realtime_date"] == "2026-09-10"
+    assert all(params["realtime_start"] == params["realtime_end"] == "2026-09-10" for _, params in requests[6:])
+
 
 @pytest.mark.asyncio
 async def test_macro_context_reports_total_provider_failure(monkeypatch) -> None:

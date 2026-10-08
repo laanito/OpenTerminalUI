@@ -71,23 +71,25 @@ class EconomicDataService:
         self.base_finnhub = "https://finnhub.io/api/v1"
         self.base_fmp = "https://financialmodelingprep.com/stable"
 
-    async def get_market_context_macro_observations(self, start: date, end: date) -> Dict[str, Any]:
-        """Get current FRED-vintage observations for bounded reference periods.
+    async def get_market_context_macro_observations(
+        self, start: date, end: date, realtime_date: date | None = None,
+    ) -> Dict[str, Any]:
+        """Get FRED observations for a requested daily real-time view.
 
         Never use the legacy macro dashboard's sample fallback here. The
         observation date is a period label, not a publication timestamp.
         """
         retrieved_at = datetime.now(timezone.utc)
-        realtime_date = retrieved_at.date().isoformat()
+        requested_date = (realtime_date or retrieved_at.date()).isoformat()
         if not self.fred_key:
             return {
-                "retrieved_at": retrieved_at, "realtime_date": realtime_date,
+                "retrieved_at": retrieved_at, "realtime_date": requested_date,
                 "status": "unavailable", "reason": "missing_api_key", "series": [],
             }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             results = await asyncio.gather(*(
-                self._fetch_market_context_fred_series(client, series_id, label, start, end, realtime_date)
+                self._fetch_market_context_fred_series(client, series_id, label, start, end, requested_date)
                 for series_id, label in MARKET_CONTEXT_FRED_SERIES.items()
             ), return_exceptions=True)
 
@@ -106,7 +108,7 @@ class EconomicDataService:
             else:
                 groups.append(result)
         return {
-            "retrieved_at": retrieved_at, "realtime_date": realtime_date,
+            "retrieved_at": retrieved_at, "realtime_date": requested_date,
             "status": "available" if any(group["status"] != "feed_error" for group in groups) else "unavailable",
             "reason": None if any(group["status"] != "feed_error" for group in groups) else "provider_error",
             "series": groups,
