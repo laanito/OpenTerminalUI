@@ -258,6 +258,7 @@ def test_adapter_chart_metadata_aligns_to_selected_rows_without_changing_prices(
     ]
     original = {"chart": {"result": [{
         "timestamp": [1710000000, 1710086400, 1710172800],
+        "meta": {"currency": "USD", "unrelated": "do not copy"},
         "indicators": {"adjclose": [{"adjclose": [90.0, 95.0, 100.0]}]},
         "events": {"splits": {"1710086400": {"date": 1710086400}}},
     }]}}
@@ -273,6 +274,7 @@ def test_adapter_chart_metadata_aligns_to_selected_rows_without_changing_prices(
     assert result["indicators"]["quote"][0]["close"] == [100.5, 110.5]
     assert result["indicators"]["adjclose"][0]["adjclose"] == [90.0, 100.0]
     assert result["events"] == original["chart"]["result"][0]["events"]
+    assert result["meta"] == {"currency": "USD"}
 
 
 def test_crypto_and_yahoo_adapters_report_only_the_feed_used_for_history() -> None:

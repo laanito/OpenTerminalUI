@@ -102,6 +102,9 @@ def _chart_payload_from_rows(
     if provider_chart is not None:
         results = (provider_chart.get("chart") or {}).get("result") or []
         original = results[0] if isinstance(results, list) and results and isinstance(results[0], dict) else {}
+        original_meta = original.get("meta")
+        if isinstance(original_meta, dict) and isinstance(original_meta.get("currency"), str):
+            payload["chart"]["result"][0]["meta"] = {"currency": original_meta["currency"]}
         if isinstance(original.get("events"), dict):
             payload["chart"]["result"][0]["events"] = original["events"]
         timestamps = original.get("timestamp")

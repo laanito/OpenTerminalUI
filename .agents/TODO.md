@@ -489,6 +489,11 @@ intelligence promise, or claim that contradiction handling is solved.
         adjustment basis (Alpaca raw, FMP non-split-adjusted, or unspecified),
         including unknown/unavailable paths in the browser. This does not verify
         returned prices or resolve mixed-basis pairs.
+  - [x] Preserve only the selected Yahoo chart's reported quote unit across
+        adapter normalization and disclose it per comparison asset. Leave
+        FMP/Alpaca and missing chart metadata unknown rather than inferring
+        USD or ISO FX convertibility; the primary native-quote returns do not
+        change and historical FX normalization remains open.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw

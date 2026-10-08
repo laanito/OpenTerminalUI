@@ -25,6 +25,7 @@ from backend.services.cross_market_context import (
     yahoo_adjusted_closes_with_conflicts,
     yahoo_action_metadata_present,
     yahoo_reported_actions,
+    yahoo_reported_quote_unit,
 )
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
 from backend.services.fundamental_evidence import source_dated_candidates
@@ -123,6 +124,11 @@ class MarketCloseDateConflicts(BaseModel):
     display_limit: int
 
 
+class MarketQuoteUnitDisclosure(BaseModel):
+    unit: str | None
+    source: Literal["yahoo_chart_meta", "unavailable"]
+
+
 class MarketAdjustedCloseCoverage(BaseModel):
     status: Literal["complete", "partial", "unavailable"]
     source: Literal["yahoo_adjclose"] | None
@@ -205,6 +211,8 @@ class MarketComparisonRow(BaseModel):
     anchor_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
     comparison_reported_adjustment_basis: Literal["raw", "non_split_adjusted", "unspecified"] | None = None
     pair_reported_basis_status: Literal["matching_reported", "mixed_reported", "unverified", "unavailable"]
+    anchor_quote_unit: MarketQuoteUnitDisclosure
+    comparison_quote_unit: MarketQuoteUnitDisclosure
     anchor_close_date_conflicts: MarketCloseDateConflicts
     comparison_close_date_conflicts: MarketCloseDateConflicts
     observations: int | None = None
@@ -396,6 +404,7 @@ async def compare_market_context(
     histories: dict[str, dict[date, float]] = {}
     sources: dict[str, str | None] = {}
     feeds: dict[str, str | None] = {}
+    quote_units: dict[str, str | None] = {}
     reported_actions: dict[str, list[dict[str, str]]] = {}
     action_metadata_available: set[str] = set()
     adjusted_closes: dict[str, dict[date, float]] = {}
@@ -425,6 +434,7 @@ async def compare_market_context(
                 yahoo_evidence = feed == "yahoo_chart" or (
                     feed is None and source == "yahoo"
                 )
+                quote_units[symbol] = yahoo_reported_quote_unit(raw) if yahoo_evidence and histories[symbol] else None
                 adjusted_closes[symbol], adjusted_conflicts = (
                     yahoo_adjusted_closes_with_conflicts(raw) if yahoo_evidence else ({}, set())
                 )
@@ -441,6 +451,7 @@ async def compare_market_context(
                 histories[symbol] = {}
                 sources[symbol] = None
                 feeds[symbol] = None
+                quote_units[symbol] = None
                 reported_actions[symbol] = []
                 adjusted_closes[symbol] = {}
                 close_conflicts[symbol] = set(), set()
@@ -458,6 +469,10 @@ async def compare_market_context(
             "adjusted_close_dates": sorted(adjusted, reverse=True)[:_CLOSE_CONFLICT_DISPLAY_LIMIT],
             "display_limit": _CLOSE_CONFLICT_DISPLAY_LIMIT,
         }
+
+    def quote_unit_disclosure(asset: str) -> dict[str, Any]:
+        unit = quote_units[asset]
+        return {"unit": unit, "source": "yahoo_chart_meta" if unit else "unavailable"}
 
     for symbol in comparisons:
         result = compare_closes(histories[anchor], histories[symbol], period=payload.period)
@@ -553,6 +568,8 @@ async def compare_market_context(
             "anchor_reported_adjustment_basis": anchor_basis,
             "comparison_reported_adjustment_basis": comparison_basis,
             "pair_reported_basis_status": _pair_reported_basis_status(anchor_basis, comparison_basis),
+            "anchor_quote_unit": quote_unit_disclosure(anchor),
+            "comparison_quote_unit": quote_unit_disclosure(symbol),
             "anchor_close_date_conflicts": conflict_disclosure(anchor),
             "comparison_close_date_conflicts": conflict_disclosure(symbol),
         })
