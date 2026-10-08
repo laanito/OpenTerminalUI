@@ -494,6 +494,12 @@ intelligence promise, or claim that contradiction handling is solved.
         FMP/Alpaca and missing chart metadata unknown rather than inferring
         USD or ISO FX convertibility; the primary native-quote returns do not
         change and historical FX normalization remains open.
+  - [x] Add an opt-in reporting-currency endpoint-return view for pairs with
+        supported ISO quote units. Use the existing dated FX valuation service
+        on the exact shared start/end dates, disclose all four rate inputs and
+        degraded sources, and fail closed for unknown/subunit units or missing
+        rates. Native returns and paths remain unchanged; this is not a daily
+        FX-normalized path or a verified adjustment basis.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw

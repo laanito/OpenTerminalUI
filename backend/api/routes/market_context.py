@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import re
 from datetime import date, datetime, timezone
 from typing import Any, Literal
@@ -29,6 +30,7 @@ from backend.services.cross_market_context import (
 )
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
 from backend.services.fundamental_evidence import source_dated_candidates
+from backend.services.forex_service import SUPPORTED_CURRENCIES, service as forex_service
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
@@ -39,6 +41,7 @@ _MACRO_DISPLAY_LIMIT = 30
 _FUNDAMENTAL_DISPLAY_LIMIT = 16
 _ACTION_DISPLAY_LIMIT = 20
 _CLOSE_CONFLICT_DISPLAY_LIMIT = 20
+ReportingCurrency = Literal["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "INR"]
 
 
 def _reported_adjustment_basis(feed: str | None, has_history: bool) -> str | None:
@@ -63,6 +66,7 @@ class MarketComparisonRequest(BaseModel):
     anchor: str = Field(min_length=1, max_length=40, examples=["AAPL"])
     comparisons: list[str] = Field(min_length=1, max_length=6, examples=[["SPY", "BTC-USD"]])
     period: Literal["1M", "3M", "6M"] = "1M"
+    reporting_currency: ReportingCurrency | None = None
 
 
 class MarketComparisonPoint(BaseModel):
@@ -196,6 +200,34 @@ class MarketNativeAdjustedObservations(BaseModel):
     comparison: MarketNativeAdjustedAssetObservations | None
 
 
+class MarketFXRateEvidence(BaseModel):
+    rate: float
+    rate_at: datetime
+    requested_date: date
+    source: str
+    source_symbol: str
+    degraded: bool
+    degraded_reason: str | None
+
+
+class MarketFXEndpointComparison(BaseModel):
+    status: Literal["available", "unavailable"]
+    reason: Literal["price_unavailable", "quote_unit_unknown", "quote_unit_unsupported", "fx_unavailable"] | None
+    reporting_currency: ReportingCurrency
+    start_date: date | None = None
+    end_date: date | None = None
+    anchor_quote_unit: str | None = None
+    comparison_quote_unit: str | None = None
+    anchor_return_pct: float | None = None
+    comparison_return_pct: float | None = None
+    relative_return_pp: float | None = None
+    degraded: bool = False
+    anchor_start_fx: MarketFXRateEvidence | None = None
+    anchor_end_fx: MarketFXRateEvidence | None = None
+    comparison_start_fx: MarketFXRateEvidence | None = None
+    comparison_end_fx: MarketFXRateEvidence | None = None
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -228,6 +260,7 @@ class MarketComparisonRow(BaseModel):
     adjusted_pair: MarketAdjustedPairComparison | None = None
     native_adjusted_close_coverage: MarketPairNativeAdjustedCloseCoverage | None = None
     native_adjusted_observations: MarketNativeAdjustedObservations | None = None
+    fx_endpoint_comparison: MarketFXEndpointComparison | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
@@ -238,6 +271,7 @@ class MarketComparisonResponse(BaseModel):
     data_source: Literal["unified_history"]
     return_basis: Literal["native_quote_currency_provider_closes"]
     method: Literal["same_utc_date_daily_closes"]
+    reporting_currency: ReportingCurrency | None = None
     comparisons: list[MarketComparisonRow]
 
 
@@ -574,6 +608,76 @@ async def compare_market_context(
             "comparison_close_date_conflicts": conflict_disclosure(symbol),
         })
 
+    if payload.reporting_currency:
+        fx_tasks: dict[tuple[str, date, date], asyncio.Task[dict[str, dict[str, Any]]]] = {}
+        fx_semaphore = asyncio.Semaphore(3)
+
+        async def dated_rates(unit: str, start: date, end: date) -> dict[str, dict[str, Any]]:
+            key = (unit, start, end)
+            if key not in fx_tasks:
+                async def load_rates() -> dict[str, dict[str, Any]]:
+                    async with fx_semaphore:
+                        return await forex_service.get_historical_valuation_rates(unit, payload.reporting_currency, [start, end])
+
+                fx_tasks[key] = asyncio.create_task(load_rates())
+            return await fx_tasks[key]
+
+        async def add_fx_endpoint(row: dict[str, Any]) -> None:
+            target = payload.reporting_currency
+            start_raw, end_raw = row.get("start_date"), row.get("end_date")
+            units = (row["anchor_quote_unit"]["unit"], row["comparison_quote_unit"]["unit"])
+            outcome: dict[str, Any] = {
+                "status": "unavailable", "reporting_currency": target,
+                "start_date": start_raw, "end_date": end_raw,
+                "anchor_quote_unit": units[0], "comparison_quote_unit": units[1],
+            }
+            if row["status"] != "available" or not start_raw or not end_raw:
+                outcome["reason"] = "price_unavailable"
+            elif any(unit is None for unit in units):
+                outcome["reason"] = "quote_unit_unknown"
+            elif any(unit not in SUPPORTED_CURRENCIES for unit in units):
+                # Preserve provider casing: GBp is pence, not GBP.
+                outcome["reason"] = "quote_unit_unsupported"
+            else:
+                start, end = date.fromisoformat(start_raw), date.fromisoformat(end_raw)
+                try:
+                    rates = await asyncio.gather(*(dated_rates(unit, start, end) for unit in units))
+                    evidence = []
+                    for unit, records in zip(units, rates):
+                        for day in (start, end):
+                            item = records[day.isoformat()]
+                            if (item.get("base_currency") != unit or item.get("quote_currency") != target
+                                    or item.get("requested_date") != day
+                                    or not math.isfinite(float(item["rate"])) or float(item["rate"]) <= 0):
+                                raise ValueError("invalid FX endpoint evidence")
+                            evidence.append(item)
+                    anchor_start, anchor_end, comparison_start, comparison_end = evidence
+                    anchor_return = (
+                        histories[anchor][end] * anchor_end["rate"]
+                        / (histories[anchor][start] * anchor_start["rate"]) - 1
+                    ) * 100
+                    comparison_return = (
+                        histories[row["symbol"]][end] * comparison_end["rate"]
+                        / (histories[row["symbol"]][start] * comparison_start["rate"]) - 1
+                    ) * 100
+                    if not all(math.isfinite(value) for value in (anchor_return, comparison_return)):
+                        raise ValueError("invalid FX-adjusted return")
+                    outcome.update({
+                        "status": "available", "reason": None,
+                        "anchor_return_pct": round(anchor_return, 4),
+                        "comparison_return_pct": round(comparison_return, 4),
+                        "relative_return_pp": round(anchor_return - comparison_return, 4),
+                        "degraded": any(item["degraded"] for item in evidence),
+                        "anchor_start_fx": anchor_start, "anchor_end_fx": anchor_end,
+                        "comparison_start_fx": comparison_start, "comparison_end_fx": comparison_end,
+                    })
+                except Exception as exc:
+                    logger.warning("Market-context FX endpoints unavailable for %s: %s", row["symbol"], type(exc).__name__)
+                    outcome["reason"] = "fx_unavailable"
+            row["fx_endpoint_comparison"] = outcome
+
+        await asyncio.gather(*(add_fx_endpoint(row) for row in rows))
+
     return {
         "anchor": anchor,
         "period": payload.period,
@@ -581,6 +685,7 @@ async def compare_market_context(
         "data_source": "unified_history",
         "return_basis": "native_quote_currency_provider_closes",
         "method": "same_utc_date_daily_closes",
+        "reporting_currency": payload.reporting_currency,
         "comparisons": rows,
     }
 

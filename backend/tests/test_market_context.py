@@ -223,6 +223,79 @@ def _client(
     return TestClient(app)
 
 
+def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> None:
+    days = [date(2026, 8, 24) + timedelta(days=i) for i in range(32)]
+    charts = {
+        "AAPL": _chart({day: 100.0 for day in days}),
+        "SAP.DE": _chart({day: 200.0 for day in days}),
+    }
+    charts["AAPL"]["chart"]["result"][0]["meta"] = {"currency": "USD"}
+    charts["SAP.DE"]["chart"]["result"][0]["meta"] = {"currency": "EUR"}
+    calls = []
+
+    async def fake_rates(base, quote, requested_dates):
+        calls.append((base, quote, requested_dates))
+        first, last = requested_dates
+        values = [1.0, 1.0] if base == "USD" else [1.2, 1.1]
+        return {
+            day.isoformat(): {
+                "base_currency": base, "quote_currency": quote,
+                "requested_date": day, "rate": rate,
+                "rate_at": datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc),
+                "source": "test", "source_symbol": f"{base}{quote}",
+                "degraded": base == "EUR" and day == last,
+                "degraded_reason": "stale cache" if base == "EUR" and day == last else None,
+            }
+            for day, rate in zip((first, last), values)
+        }
+
+    monkeypatch.setattr(market_context.forex_service, "get_historical_valuation_rates", fake_rates)
+    client = _client(charts, feeds={"AAPL": "yahoo_chart", "SAP.DE": "yahoo_chart"})
+    base_request = {"anchor": "AAPL", "comparisons": ["SAP.DE"], "period": "1M"}
+    native = client.post("/api/market-context/compare", json=base_request).json()
+    assert calls == []
+    assert native["comparisons"][0]["fx_endpoint_comparison"] is None
+    result = client.post("/api/market-context/compare", json={**base_request, "reporting_currency": "USD"}).json()
+    assert result["reporting_currency"] == "USD"
+    row = result["comparisons"][0]
+    assert row["anchor_return_pct"] == native["comparisons"][0]["anchor_return_pct"] == 0
+    assert row["comparison_return_pct"] == native["comparisons"][0]["comparison_return_pct"] == 0
+    fx = row["fx_endpoint_comparison"]
+    assert fx["status"] == "available"
+    assert fx["anchor_return_pct"] == 0
+    assert fx["comparison_return_pct"] == -8.3333
+    assert fx["relative_return_pp"] == 8.3333
+    assert fx["comparison_start_fx"]["rate"] == 1.2
+    assert fx["comparison_end_fx"]["rate"] == 1.1
+    assert fx["degraded"] is True
+    assert fx["comparison_end_fx"]["degraded_reason"] == "stale cache"
+    assert all(days == [date.fromisoformat(row["start_date"]), date.fromisoformat(row["end_date"])] for _, _, days in calls)
+
+
+def test_reporting_currency_fails_closed_for_unknown_unsupported_and_missing_fx(monkeypatch) -> None:
+    days = [date(2026, 8, 24) + timedelta(days=i) for i in range(32)]
+    charts = {symbol: _chart({day: 100.0 for day in days}) for symbol in ("AAPL", "UNKNOWN", "PENCE", "EUR")}
+    for symbol, unit in (("AAPL", "USD"), ("PENCE", "GBp"), ("EUR", "EUR")):
+        charts[symbol]["chart"]["result"][0]["meta"] = {"currency": unit}
+    calls = []
+
+    async def missing_rates(base, quote, requested_dates):
+        calls.append(base)
+        raise RuntimeError("no rates")
+
+    monkeypatch.setattr(market_context.forex_service, "get_historical_valuation_rates", missing_rates)
+    client = _client(charts, feeds={symbol: "yahoo_chart" for symbol in charts})
+    rows = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["UNKNOWN", "PENCE", "EUR"],
+        "period": "1M", "reporting_currency": "USD",
+    }).json()["comparisons"]
+    assert [row["fx_endpoint_comparison"]["reason"] for row in rows] == [
+        "quote_unit_unknown", "quote_unit_unsupported", "fx_unavailable",
+    ]
+    assert len(calls) == 2  # Only the supported pair requests FX.
+    assert all(row["fx_endpoint_comparison"]["anchor_return_pct"] is None for row in rows)
+
+
 def test_route_retains_partial_results_and_provider_failure() -> None:
     start = date(2026, 8, 24)
     days = [start + timedelta(days=i) for i in range(32)]

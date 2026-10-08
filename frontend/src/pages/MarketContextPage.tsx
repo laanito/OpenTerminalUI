@@ -3,13 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type MarketQuoteUnitDisclosure, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type MarketQuoteUnitDisclosure, type MarketReportingCurrency, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 
 const SYMBOL_PATTERN = /^[A-Z0-9^._=-]{1,40}$/;
 const PERIODS: MarketContextPeriod[] = ["1M", "3M", "6M"];
+const REPORTING_CURRENCIES: MarketReportingCurrency[] = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "INR"];
 const PROXY_SUGGESTIONS = [
   { symbol: "SPY", label: "US broad market" },
   { symbol: "QQQ", label: "US tech" },
@@ -113,6 +114,32 @@ function unavailableReason(row: MarketComparisonRow): string {
   if (row.reason === "provider_error") return "History provider failed; no comparison was calculated.";
   if (row.reason === "insufficient_overlap") return "Not enough shared daily closes for this window.";
   return "No usable daily history for this comparison.";
+}
+
+function FXEndpointComparison({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const fx = row.fx_endpoint_comparison;
+  if (!fx) return null;
+  const reasons = {
+    price_unavailable: "The shared price endpoints are unavailable.",
+    quote_unit_unknown: "At least one selected history has no reported quote unit.",
+    quote_unit_unsupported: "At least one reported quote unit is not a supported currency code (for example GBp is not GBP).",
+    fx_unavailable: "A dated FX endpoint is unavailable; no dates were dropped or substituted.",
+  };
+  const evidence = [
+    [anchor, "start", fx.anchor_start_fx], [anchor, "end", fx.anchor_end_fx],
+    [row.symbol, "start", fx.comparison_start_fx], [row.symbol, "end", fx.comparison_end_fx],
+  ] as const;
+  return (
+    <div className="mt-3 rounded border border-terminal-border p-2 text-xs">
+      <h3 className="font-semibold text-terminal-text">Endpoint returns in {fx.reporting_currency}</h3>
+      {fx.status === "available" ? <>
+        <p className="mt-1 text-terminal-text">{anchor}: {formatPercent(fx.anchor_return_pct)} · {row.symbol}: {formatPercent(fx.comparison_return_pct)} · difference: {formatPoints(fx.relative_return_pp)}</p>
+        <p className="mt-1 text-terminal-muted">Same shared price endpoints ({fx.start_date} to {fx.end_date}); provider-reported quote units {fx.anchor_quote_unit} and {fx.comparison_quote_unit}. Each endpoint close is multiplied by its dated FX rate. This is not an FX-normalized daily path, adjusted return, or execution-grade valuation.</p>
+        <ul className="mt-1 text-terminal-muted">{evidence.map(([symbol, endpoint, rate]) => rate ? <li key={`${symbol}-${endpoint}`}>{symbol} {endpoint} {rate.requested_date}: {rate.rate} ({rate.source}, {rate.source_symbol}; rate dated {rate.rate_at.slice(0, 10)}){rate.degraded ? ` — degraded: ${rate.degraded_reason || "stale source"}` : ""}</li> : null)}</ul>
+        {fx.degraded ? <p className="mt-1 text-terminal-warn">At least one FX rate is degraded; interpret this comparison cautiously.</p> : null}
+      </> : <p className="mt-1 text-terminal-warn">Unavailable: {fx.reason ? reasons[fx.reason] : "No endpoint comparison was calculated."}</p>}
+    </div>
+  );
 }
 
 function AlignedPaths({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
@@ -971,9 +998,12 @@ export function MarketContextPage() {
   const appliedPeriod: MarketContextPeriod = PERIODS.includes(rawPeriod as MarketContextPeriod)
     ? (rawPeriod as MarketContextPeriod)
     : "1M";
+  const rawCurrency = searchParams.get("currency");
+  const appliedCurrency = REPORTING_CURRENCIES.includes(rawCurrency as MarketReportingCurrency) ? rawCurrency as MarketReportingCurrency : null;
   const [anchorInput, setAnchorInput] = useState(appliedAnchor);
   const [proxiesInput, setProxiesInput] = useState(appliedProxies);
   const [periodInput, setPeriodInput] = useState<MarketContextPeriod>(appliedPeriod);
+  const [currencyInput, setCurrencyInput] = useState<MarketReportingCurrency | "">(appliedCurrency || "");
   const [proxyLookup, setProxyLookup] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const selectedProxies = useMemo(
@@ -985,16 +1015,19 @@ export function MarketContextPage() {
     setAnchorInput(appliedAnchor);
     setProxiesInput(appliedProxies);
     setPeriodInput(appliedPeriod);
+    setCurrencyInput(appliedCurrency || "");
     setFormError(null);
-  }, [appliedAnchor, appliedProxies, appliedPeriod]);
+  }, [appliedAnchor, appliedProxies, appliedPeriod, appliedCurrency]);
 
   const selection = useMemo(
     () => parseSelection(appliedAnchor, appliedProxies),
     [appliedAnchor, appliedProxies],
   );
   const query = useQuery({
-    queryKey: ["market-context", selection.anchor, selection.comparisons, appliedPeriod],
-    queryFn: () => compareMarketContext(selection.anchor, selection.comparisons, appliedPeriod),
+    queryKey: ["market-context", selection.anchor, selection.comparisons, appliedPeriod, appliedCurrency],
+    queryFn: () => appliedCurrency
+      ? compareMarketContext(selection.anchor, selection.comparisons, appliedPeriod, appliedCurrency)
+      : compareMarketContext(selection.anchor, selection.comparisons, appliedPeriod),
     enabled: !selection.error,
     staleTime: 5 * 60_000,
     retry: false,
@@ -1008,7 +1041,7 @@ export function MarketContextPage() {
       return;
     }
     setFormError(null);
-    setSearchParams({ symbol: next.anchor, proxies: next.comparisons.join(","), period: periodInput });
+    setSearchParams({ symbol: next.anchor, proxies: next.comparisons.join(","), period: periodInput, ...(currencyInput ? { currency: currencyInput } : {}) });
   }
 
   function addProxy(symbol: string) {
@@ -1070,6 +1103,13 @@ export function MarketContextPage() {
               aria-label="Window"
             >
               {PERIODS.map((period) => <option key={period} value={period}>{period}</option>)}
+            </select>
+          </label>
+          <label className="text-xs text-terminal-muted">
+            Reporting currency (optional)
+            <select value={currencyInput} onChange={(event) => setCurrencyInput(event.target.value as MarketReportingCurrency | "")} className="mt-1 block rounded border border-terminal-border bg-terminal-bg px-2 py-2 text-sm text-terminal-text" aria-label="Reporting currency">
+              <option value="">Native only</option>
+              {REPORTING_CURRENCIES.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
             </select>
           </label>
           <button type="submit" className="rounded border border-terminal-accent bg-terminal-accent/10 px-3 py-2 text-sm text-terminal-accent">
@@ -1150,6 +1190,7 @@ export function MarketContextPage() {
                       Shared closes: {row.start_date} to {row.end_date} · {row.observations} observations.
                       Latest source dates: {selection.anchor} {row.anchor_latest_date}, {row.symbol} {row.comparison_latest_date}.
                     </p>
+                    <FXEndpointComparison anchor={selection.anchor} row={row} />
                     <p className="mt-1 text-xs text-terminal-muted">
                       Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.
                     </p>

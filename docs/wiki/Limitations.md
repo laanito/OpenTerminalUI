@@ -97,6 +97,11 @@ never silently faked.
   from equity and crypto research and offers dated comparison, symbol
   suggestions, and an inspectable pairwise path rebased to 100 on the first
   shared close. The path plots only actual shared dates, with no interpolation.
+  An optional reporting-currency result uses only the shared start/end closes
+  and historical FX rates when both selected Yahoo chart quote units are
+  supported currencies. It discloses four dated rates and withholds results for
+  unknown/subunit units or missing rates. This is not a converted daily path,
+  verified currency denomination, or adjusted/portfolio performance.
   Conflicting closes for the same UTC date within the selected chart payload
   are withheld from the relevant provider or Yahoo-adjusted series, with counts
   and up to 20 latest dates disclosed per asset. Identical duplicates remain

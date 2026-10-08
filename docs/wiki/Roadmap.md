@@ -296,8 +296,13 @@ through adapter normalization and discloses it per asset. A unit may be a
 non-ISO denomination (for example a subunit), so it is not automatically an
 FX conversion code. FMP/Alpaca paths and absent metadata remain unknown.
 Different reported units are highlighted; no currency is guessed and the
-native-quote paths or returns are not FX-normalized. Verified denomination
-and historical FX coverage are prerequisites for a separate base-currency view.
+native-quote paths or returns are not FX-normalized. An optional reporting-
+currency view now converts only the pair's exact shared start and end closes
+using dated rates from the existing FX valuation service. It discloses each
+rate's source, timestamp, and degraded status; unknown or unsupported quote
+units (including subunits) and missing rates withhold that view. This endpoint
+comparison is not a converted daily path, verified price denomination, or
+portfolio return, and it does not alter the primary native comparison.
 
 The Alpaca comparison path now explicitly requests raw stock bars even when
 other Alpaca workflows are configured for a different adjustment. It reports
