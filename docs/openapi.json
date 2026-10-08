@@ -7539,6 +7539,16 @@
               }
             ]
           },
+          "fx_shared_path": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXSharedPath"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "native_adjusted_close_coverage": {
             "anyOf": [
               {
@@ -7868,6 +7878,38 @@
         "title": "MarketFXEndpointComparison",
         "type": "object"
       },
+      "MarketFXPathPoint": {
+        "properties": {
+          "anchor_fx": {
+            "$ref": "#/components/schemas/MarketFXRateEvidence"
+          },
+          "anchor_index": {
+            "title": "Anchor Index",
+            "type": "number"
+          },
+          "comparison_fx": {
+            "$ref": "#/components/schemas/MarketFXRateEvidence"
+          },
+          "comparison_index": {
+            "title": "Comparison Index",
+            "type": "number"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "anchor_index",
+          "comparison_index",
+          "anchor_fx",
+          "comparison_fx"
+        ],
+        "title": "MarketFXPathPoint",
+        "type": "object"
+      },
       "MarketFXRateEvidence": {
         "properties": {
           "degraded": {
@@ -7918,6 +7960,73 @@
           "degraded_reason"
         ],
         "title": "MarketFXRateEvidence",
+        "type": "object"
+      },
+      "MarketFXSharedPath": {
+        "properties": {
+          "degraded": {
+            "default": false,
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "observations": {
+            "default": 0,
+            "title": "Observations",
+            "type": "integer"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/MarketFXPathPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "price_unavailable",
+                  "quote_unit_unknown",
+                  "quote_unit_unsupported",
+                  "fx_unavailable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reporting_currency": {
+            "enum": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY",
+              "CHF",
+              "AUD",
+              "CAD",
+              "INR"
+            ],
+            "title": "Reporting Currency",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reason",
+          "reporting_currency"
+        ],
+        "title": "MarketFXSharedPath",
         "type": "object"
       },
       "MarketFundamentalConflict": {

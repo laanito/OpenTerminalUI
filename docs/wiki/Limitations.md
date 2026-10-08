@@ -102,6 +102,10 @@ never silently faked.
   supported currencies. It discloses four dated rates and withholds results for
   unknown/subunit units or missing rates. This is not a converted daily path,
   verified currency denomination, or adjusted/portfolio performance.
+  A separate inspectable FX-converted indexed path is available only with
+  rates on every original shared date. Missing interior rates withhold the
+  full path without dropping dates, even if endpoint returns remain available;
+  provider-close adjustment and exchange-session accuracy remain unverified.
   Conflicting closes for the same UTC date within the selected chart payload
   are withheld from the relevant provider or Yahoo-adjusted series, with counts
   and up to 20 latest dates disclosed per asset. Identical duplicates remain

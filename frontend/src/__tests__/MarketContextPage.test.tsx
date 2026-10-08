@@ -67,7 +67,10 @@ describe("MarketContextPage", () => {
         anchor_quote_unit: { unit: "USD", source: "yahoo_chart_meta" },
         comparison_quote_unit: { unit: "EUR", source: "yahoo_chart_meta" },
         observations: 22, freshness: "current", anchor_return_pct: 0,
-        comparison_return_pct: 0, relative_return_pp: 0, points: [],
+        comparison_return_pct: 0, relative_return_pp: 0, points: [
+          { date: "2026-08-25", anchor_index: 100, comparison_index: 100 },
+          { date: "2026-09-24", anchor_index: 100, comparison_index: 100 },
+        ],
         fx_endpoint_comparison: {
           status: "available", reason: null, reporting_currency: "USD",
           start_date: "2026-08-25", end_date: "2026-09-24",
@@ -76,6 +79,13 @@ describe("MarketContextPage", () => {
           degraded: false,
           anchor_start_fx: rate("2026-08-25", 1), anchor_end_fx: rate("2026-09-24", 1),
           comparison_start_fx: rate("2026-08-25", 1.2), comparison_end_fx: rate("2026-09-24", 1.1),
+        },
+        fx_shared_path: {
+          status: "available", reason: null, reporting_currency: "USD", observations: 2, degraded: false,
+          points: [
+            { date: "2026-08-25", anchor_index: 100, comparison_index: 100, anchor_fx: rate("2026-08-25", 1), comparison_fx: rate("2026-08-25", 1.2) },
+            { date: "2026-09-24", anchor_index: 100, comparison_index: 91.6667, anchor_fx: rate("2026-09-24", 1), comparison_fx: rate("2026-09-24", 1.1) },
+          ],
         },
       }],
     });
@@ -86,6 +96,10 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/not an FX-normalized daily path/)).toBeInTheDocument();
     expect(screen.getByText(/SAP.DE start 2026-08-25: 1.2/)).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Reporting currency" })).toHaveValue("USD");
+    fireEvent.click(screen.getByRole("button", { name: "Show shared-date FX path for AAPL vs SAP.DE" }));
+    expect(screen.getByRole("img", { name: /FX-converted shared-date paths for AAPL and SAP.DE in USD/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByText("View exact FX-converted observations and rates"));
+    expect(screen.getByText("91.67")).toBeInTheDocument();
   });
 
   it("shows dated available, stale, and unavailable comparisons without inventing returns", async () => {

@@ -31,6 +31,21 @@ export interface MarketFXEndpointComparison {
   comparison_end_fx: MarketFXRateEvidence | null;
 }
 
+export interface MarketFXSharedPath {
+  status: "available" | "unavailable";
+  reason: MarketFXEndpointComparison["reason"];
+  reporting_currency: MarketReportingCurrency;
+  observations: number;
+  degraded: boolean;
+  points: {
+    date: string;
+    anchor_index: number;
+    comparison_index: number;
+    anchor_fx: MarketFXRateEvidence;
+    comparison_fx: MarketFXRateEvidence;
+  }[];
+}
+
 export interface MarketComparisonPoint {
   date: string;
   anchor_index: number;
@@ -175,6 +190,7 @@ export interface MarketComparisonRow {
   native_adjusted_close_coverage?: { anchor: MarketNativeAdjustedCloseCoverage; comparison: MarketNativeAdjustedCloseCoverage } | null;
   native_adjusted_observations?: MarketNativeAdjustedObservations | null;
   fx_endpoint_comparison?: MarketFXEndpointComparison | null;
+  fx_shared_path?: MarketFXSharedPath | null;
   points: MarketComparisonPoint[];
 }
 

@@ -123,7 +123,7 @@ function FXEndpointComparison({ anchor, row }: { anchor: string; row: MarketComp
     price_unavailable: "The shared price endpoints are unavailable.",
     quote_unit_unknown: "At least one selected history has no reported quote unit.",
     quote_unit_unsupported: "At least one reported quote unit is not a supported currency code (for example GBp is not GBP).",
-    fx_unavailable: "A dated FX endpoint is unavailable; no dates were dropped or substituted.",
+    fx_unavailable: "Dated FX evidence is unavailable; no dates were dropped or substituted.",
   };
   const evidence = [
     [anchor, "start", fx.anchor_start_fx], [anchor, "end", fx.anchor_end_fx],
@@ -134,10 +134,46 @@ function FXEndpointComparison({ anchor, row }: { anchor: string; row: MarketComp
       <h3 className="font-semibold text-terminal-text">Endpoint returns in {fx.reporting_currency}</h3>
       {fx.status === "available" ? <>
         <p className="mt-1 text-terminal-text">{anchor}: {formatPercent(fx.anchor_return_pct)} · {row.symbol}: {formatPercent(fx.comparison_return_pct)} · difference: {formatPoints(fx.relative_return_pp)}</p>
-        <p className="mt-1 text-terminal-muted">Same shared price endpoints ({fx.start_date} to {fx.end_date}); provider-reported quote units {fx.anchor_quote_unit} and {fx.comparison_quote_unit}. Each endpoint close is multiplied by its dated FX rate. This is not an FX-normalized daily path, adjusted return, or execution-grade valuation.</p>
+        <p className="mt-1 text-terminal-muted">Same shared price endpoints ({fx.start_date} to {fx.end_date}); provider-reported quote units {fx.anchor_quote_unit} and {fx.comparison_quote_unit}. Each endpoint close is multiplied by its dated FX rate. This endpoint result alone is not an FX-normalized daily path, adjusted return, or execution-grade valuation.</p>
         <ul className="mt-1 text-terminal-muted">{evidence.map(([symbol, endpoint, rate]) => rate ? <li key={`${symbol}-${endpoint}`}>{symbol} {endpoint} {rate.requested_date}: {rate.rate} ({rate.source}, {rate.source_symbol}; rate dated {rate.rate_at.slice(0, 10)}){rate.degraded ? ` — degraded: ${rate.degraded_reason || "stale source"}` : ""}</li> : null)}</ul>
         {fx.degraded ? <p className="mt-1 text-terminal-warn">At least one FX rate is degraded; interpret this comparison cautiously.</p> : null}
       </> : <p className="mt-1 text-terminal-warn">Unavailable: {fx.reason ? reasons[fx.reason] : "No endpoint comparison was calculated."}</p>}
+    </div>
+  );
+}
+
+function FXSharedPath({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const path = row.fx_shared_path;
+  if (!path || row.status !== "available") return null;
+  if (path.status === "unavailable") return <p className="mt-2 text-xs text-terminal-warn">Full shared-date FX path unavailable: {path.reason === "fx_unavailable" ? "at least one dated rate is missing or invalid; the endpoint result may still be available." : "price or quote-unit evidence is unavailable."} No dates were dropped.</p>;
+  return (
+    <div className="mt-3 border-t border-terminal-border pt-3">
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        {open ? "Hide" : "Show"} shared-date FX path for {anchor} vs {row.symbol}
+      </button>
+      {open ? <div className="mt-2 space-y-2 text-xs">
+        <p className="text-terminal-muted">Provider closes converted to {path.reporting_currency} at each of the {path.observations} original shared UTC dates and rebased to 100. Historical FX may use the latest prior rate within the valuation service’s accepted gap; each rate date is inspectable below. No missing dates are filled. This is a retrospective, provider-dependent path, not verified adjusted performance or a trading signal.</p>
+        {path.degraded ? <p className="text-terminal-warn">At least one dated FX input used a degraded source.</p> : null}
+        <div className="h-56 w-full" role="img" aria-label={`FX-converted shared-date paths for ${anchor} and ${row.symbol} in ${path.reporting_currency}`}>
+          <ResponsiveContainer width="100%" height="100%"><LineChart data={path.points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
+            <XAxis dataKey="date" tickFormatter={(value: string) => value.slice(5)} stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} minTickGap={25} />
+            <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} domain={["auto", "auto"]} />
+            <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }} formatter={(value) => typeof value === "number" ? value.toFixed(2) : value} />
+            <Line type="linear" dataKey="anchor_index" name={anchor} stroke="var(--ot-color-accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+            <Line type="linear" dataKey="comparison_index" name={row.symbol} stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+          </LineChart></ResponsiveContainer>
+        </div>
+        <details className="text-terminal-muted"><summary className="cursor-pointer text-terminal-accent">View exact FX-converted observations and rates</summary>
+          <div className="mt-2 max-h-56 overflow-auto"><table className="w-full text-left"><thead><tr><th>Date</th><th>{anchor} index</th><th>{anchor} FX rate / dated</th><th>{row.symbol} index</th><th>{row.symbol} FX rate / dated</th></tr></thead>
+            <tbody>{path.points.map((point) => <tr key={point.date}>
+              <td className="pr-2">{point.date}</td><td className="pr-2">{point.anchor_index.toFixed(2)}</td>
+              <td className="pr-2">{point.anchor_fx.rate} · {point.anchor_fx.rate_at.slice(0, 10)} · {point.anchor_fx.source} ({point.anchor_fx.source_symbol}){point.anchor_fx.degraded ? ` — ${point.anchor_fx.degraded_reason || "degraded"}` : ""}</td>
+              <td className="pr-2">{point.comparison_index.toFixed(2)}</td><td>{point.comparison_fx.rate} · {point.comparison_fx.rate_at.slice(0, 10)} · {point.comparison_fx.source} ({point.comparison_fx.source_symbol}){point.comparison_fx.degraded ? ` — ${point.comparison_fx.degraded_reason || "degraded"}` : ""}</td>
+            </tr>)}</tbody></table></div>
+        </details>
+      </div> : null}
     </div>
   );
 }
@@ -1191,6 +1227,7 @@ export function MarketContextPage() {
                       Latest source dates: {selection.anchor} {row.anchor_latest_date}, {row.symbol} {row.comparison_latest_date}.
                     </p>
                     <FXEndpointComparison anchor={selection.anchor} row={row} />
+                    <FXSharedPath anchor={selection.anchor} row={row} />
                     <p className="mt-1 text-xs text-terminal-muted">
                       Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.
                     </p>
