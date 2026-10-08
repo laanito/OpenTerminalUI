@@ -13,6 +13,20 @@ export interface MarketFXRateEvidence {
   degraded_reason: string | null;
 }
 
+export interface MarketFXReturnComponents {
+  price_return_pct: number;
+  currency_return_pct: number;
+  interaction_pct: number;
+  converted_return_pct: number;
+}
+
+export interface MarketFXRelativeComponents {
+  price_difference_pp: number;
+  currency_difference_pp: number;
+  interaction_difference_pp: number;
+  converted_difference_pp: number;
+}
+
 export interface MarketFXEndpointComparison {
   status: "available" | "unavailable";
   reason: "price_unavailable" | "quote_unit_unknown" | "quote_unit_unsupported" | "fx_unavailable" | null;
@@ -24,6 +38,9 @@ export interface MarketFXEndpointComparison {
   anchor_return_pct: number | null;
   comparison_return_pct: number | null;
   relative_return_pp: number | null;
+  anchor_components?: MarketFXReturnComponents | null;
+  comparison_components?: MarketFXReturnComponents | null;
+  relative_components?: MarketFXRelativeComponents | null;
   degraded: boolean;
   anchor_start_fx: MarketFXRateEvidence | null;
   anchor_end_fx: MarketFXRateEvidence | null;

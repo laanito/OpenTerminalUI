@@ -493,7 +493,7 @@ intelligence promise, or claim that contradiction handling is solved.
         adapter normalization and disclose it per comparison asset. Leave
         FMP/Alpaca and missing chart metadata unknown rather than inferring
         USD or ISO FX convertibility; the primary native-quote returns do not
-        change and historical FX normalization remains open.
+        change; later opt-in FX views require a supported reported unit.
   - [x] Add an opt-in reporting-currency endpoint-return view for pairs with
         supported ISO quote units. Use the existing dated FX valuation service
         on the exact shared start/end dates, disclose all four rate inputs and
@@ -506,6 +506,11 @@ intelligence promise, or claim that contradiction handling is solved.
         if an interior rate is unavailable, while preserving valid endpoint
         evidence and the primary native path. This is retrospective context,
         not verified adjusted performance or a trading indicator.
+  - [x] Break each eligible converted endpoint return into native price,
+        FX-rate, and multiplicative interaction components, with a matching
+        anchor-minus-comparison difference. Reuse portfolio attribution math
+        and the four existing dated rates; this is arithmetic, not a causal
+        explanation or verification of provider price adjustments.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw

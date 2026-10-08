@@ -136,6 +136,19 @@ function FXEndpointComparison({ anchor, row }: { anchor: string; row: MarketComp
         <p className="mt-1 text-terminal-text">{anchor}: {formatPercent(fx.anchor_return_pct)} · {row.symbol}: {formatPercent(fx.comparison_return_pct)} · difference: {formatPoints(fx.relative_return_pp)}</p>
         <p className="mt-1 text-terminal-muted">Same shared price endpoints ({fx.start_date} to {fx.end_date}); provider-reported quote units {fx.anchor_quote_unit} and {fx.comparison_quote_unit}. Each endpoint close is multiplied by its dated FX rate. This endpoint result alone is not an FX-normalized daily path, adjusted return, or execution-grade valuation.</p>
         <ul className="mt-1 text-terminal-muted">{evidence.map(([symbol, endpoint, rate]) => rate ? <li key={`${symbol}-${endpoint}`}>{symbol} {endpoint} {rate.requested_date}: {rate.rate} ({rate.source}, {rate.source_symbol}; rate dated {rate.rate_at.slice(0, 10)}){rate.degraded ? ` — degraded: ${rate.degraded_reason || "stale source"}` : ""}</li> : null)}</ul>
+        {fx.anchor_components && fx.comparison_components && fx.relative_components ? <details className="mt-2 text-terminal-muted">
+          <summary className="cursor-pointer text-terminal-accent">Break down price and FX returns</summary>
+          <p className="mt-1">Converted return = native price return + FX-rate return + their multiplicative interaction. The difference row subtracts the comparison’s components from the anchor’s, in percentage points. Display rounding can slightly change the visible sum. This is arithmetic attribution of observed endpoints, not an explanation of why prices or rates moved; provider price adjustment remains unverified.</p>
+          <div className="mt-2 overflow-x-auto"><table className="w-full text-left">
+            <thead><tr><th className="pr-3">Asset</th><th className="pr-3">Native price</th><th className="pr-3">FX rate</th><th className="pr-3">Interaction</th><th>Converted total</th></tr></thead>
+            <tbody>
+              {([[anchor, fx.anchor_components], [row.symbol, fx.comparison_components]] as const).map(([symbol, parts]) => <tr key={symbol} className="text-terminal-text">
+                <td className="pr-3">{symbol}</td><td className="pr-3">{formatPercent(parts.price_return_pct)}</td><td className="pr-3">{formatPercent(parts.currency_return_pct)}</td><td className="pr-3">{formatPercent(parts.interaction_pct)}</td><td>{formatPercent(parts.converted_return_pct)}</td>
+              </tr>)}
+              <tr className="border-t border-terminal-border text-terminal-text"><td className="pr-3">Difference</td><td className="pr-3">{formatPoints(fx.relative_components.price_difference_pp)}</td><td className="pr-3">{formatPoints(fx.relative_components.currency_difference_pp)}</td><td className="pr-3">{formatPoints(fx.relative_components.interaction_difference_pp)}</td><td>{formatPoints(fx.relative_components.converted_difference_pp)}</td></tr>
+            </tbody>
+          </table></div>
+        </details> : null}
         {fx.degraded ? <p className="mt-1 text-terminal-warn">At least one FX rate is degraded; interpret this comparison cautiously.</p> : null}
       </> : <p className="mt-1 text-terminal-warn">Unavailable: {fx.reason ? reasons[fx.reason] : "No endpoint comparison was calculated."}</p>}
     </div>

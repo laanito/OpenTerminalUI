@@ -31,6 +31,7 @@ from backend.services.cross_market_context import (
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
 from backend.services.fundamental_evidence import source_dated_candidates
 from backend.services.forex_service import SUPPORTED_CURRENCIES, service as forex_service
+from backend.services.return_decomposition import decompose_base_currency_return
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
@@ -210,6 +211,20 @@ class MarketFXRateEvidence(BaseModel):
     degraded_reason: str | None
 
 
+class MarketFXReturnComponents(BaseModel):
+    price_return_pct: float
+    currency_return_pct: float
+    interaction_pct: float
+    converted_return_pct: float
+
+
+class MarketFXRelativeComponents(BaseModel):
+    price_difference_pp: float
+    currency_difference_pp: float
+    interaction_difference_pp: float
+    converted_difference_pp: float
+
+
 class MarketFXEndpointComparison(BaseModel):
     status: Literal["available", "unavailable"]
     reason: Literal["price_unavailable", "quote_unit_unknown", "quote_unit_unsupported", "fx_unavailable"] | None
@@ -221,6 +236,9 @@ class MarketFXEndpointComparison(BaseModel):
     anchor_return_pct: float | None = None
     comparison_return_pct: float | None = None
     relative_return_pp: float | None = None
+    anchor_components: MarketFXReturnComponents | None = None
+    comparison_components: MarketFXReturnComponents | None = None
+    relative_components: MarketFXRelativeComponents | None = None
     degraded: bool = False
     anchor_start_fx: MarketFXRateEvidence | None = None
     anchor_end_fx: MarketFXRateEvidence | None = None
@@ -680,21 +698,40 @@ async def compare_market_context(
                         for day in (start, end):
                             evidence.append(checked_evidence(records, unit, day))
                     anchor_start, anchor_end, comparison_start, comparison_end = evidence
-                    anchor_return = (
-                        histories[anchor][end] * anchor_end["rate"]
-                        / (histories[anchor][start] * anchor_start["rate"]) - 1
-                    ) * 100
-                    comparison_return = (
-                        histories[row["symbol"]][end] * comparison_end["rate"]
-                        / (histories[row["symbol"]][start] * comparison_start["rate"]) - 1
-                    ) * 100
-                    if not all(math.isfinite(value) for value in (anchor_return, comparison_return)):
+                    anchor_parts = decompose_base_currency_return(
+                        histories[anchor][start], histories[anchor][end],
+                        anchor_start["rate"], anchor_end["rate"],
+                    )
+                    comparison_parts = decompose_base_currency_return(
+                        histories[row["symbol"]][start], histories[row["symbol"]][end],
+                        comparison_start["rate"], comparison_end["rate"],
+                    )
+                    if not all(math.isfinite(value) for parts in (anchor_parts, comparison_parts) for value in parts.values()):
                         raise ValueError("invalid FX-adjusted return")
+
+                    def display_parts(parts: dict[str, float]) -> dict[str, float]:
+                        return {
+                            "price_return_pct": round(parts["security"] * 100, 4),
+                            "currency_return_pct": round(parts["currency"] * 100, 4),
+                            "interaction_pct": round(parts["interaction"] * 100, 4),
+                            "converted_return_pct": round(parts["total"] * 100, 4),
+                        }
+
+                    anchor_return = anchor_parts["total"] * 100
+                    comparison_return = comparison_parts["total"] * 100
                     outcome.update({
                         "status": "available", "reason": None,
                         "anchor_return_pct": round(anchor_return, 4),
                         "comparison_return_pct": round(comparison_return, 4),
                         "relative_return_pp": round(anchor_return - comparison_return, 4),
+                        "anchor_components": display_parts(anchor_parts),
+                        "comparison_components": display_parts(comparison_parts),
+                        "relative_components": {
+                            "price_difference_pp": round((anchor_parts["security"] - comparison_parts["security"]) * 100, 4),
+                            "currency_difference_pp": round((anchor_parts["currency"] - comparison_parts["currency"]) * 100, 4),
+                            "interaction_difference_pp": round((anchor_parts["interaction"] - comparison_parts["interaction"]) * 100, 4),
+                            "converted_difference_pp": round(anchor_return - comparison_return, 4),
+                        },
                         "degraded": any(item["degraded"] for item in evidence),
                         "anchor_start_fx": anchor_start, "anchor_end_fx": anchor_end,
                         "comparison_start_fx": comparison_start, "comparison_end_fx": comparison_end,

@@ -227,7 +227,7 @@ def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> N
     days = [date(2026, 8, 24) + timedelta(days=i) for i in range(32)]
     charts = {
         "AAPL": _chart({day: 100.0 for day in days}),
-        "SAP.DE": _chart({day: 200.0 for day in days}),
+        "SAP.DE": _chart({day: 220.0 if day == days[-1] else 200.0 for day in days}),
     }
     charts["AAPL"]["chart"]["result"][0]["meta"] = {"currency": "USD"}
     charts["SAP.DE"]["chart"]["result"][0]["meta"] = {"currency": "EUR"}
@@ -259,12 +259,27 @@ def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> N
     assert result["reporting_currency"] == "USD"
     row = result["comparisons"][0]
     assert row["anchor_return_pct"] == native["comparisons"][0]["anchor_return_pct"] == 0
-    assert row["comparison_return_pct"] == native["comparisons"][0]["comparison_return_pct"] == 0
+    assert row["comparison_return_pct"] == native["comparisons"][0]["comparison_return_pct"] == 10
     fx = row["fx_endpoint_comparison"]
     assert fx["status"] == "available"
     assert fx["anchor_return_pct"] == 0
-    assert fx["comparison_return_pct"] == -8.3333
-    assert fx["relative_return_pp"] == 8.3333
+    assert fx["comparison_return_pct"] == 0.8333
+    assert fx["relative_return_pp"] == -0.8333
+    assert fx["comparison_components"] == {
+        "price_return_pct": 10.0,
+        "currency_return_pct": -8.3333,
+        "interaction_pct": -0.8333,
+        "converted_return_pct": 0.8333,
+    }
+    assert fx["relative_components"] == {
+        "price_difference_pp": -10.0,
+        "currency_difference_pp": 8.3333,
+        "interaction_difference_pp": 0.8333,
+        "converted_difference_pp": -0.8333,
+    }
+    assert fx["anchor_components"]["price_return_pct"] == row["anchor_return_pct"]
+    assert fx["comparison_components"]["price_return_pct"] == row["comparison_return_pct"]
+    assert fx["relative_components"]["price_difference_pp"] == row["relative_return_pp"]
     assert fx["comparison_start_fx"]["rate"] == 1.2
     assert fx["comparison_end_fx"]["rate"] == 1.1
     assert fx["degraded"] is True
@@ -274,7 +289,7 @@ def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> N
     assert path["observations"] == row["observations"] == len(path["points"])
     assert [point["date"] for point in path["points"]] == [point["date"] for point in row["points"]]
     assert path["points"][0]["anchor_index"] == path["points"][0]["comparison_index"] == 100
-    assert path["points"][-1]["comparison_index"] == 91.6667
+    assert path["points"][-1]["comparison_index"] == 100.8333
     assert path["points"][-1]["comparison_fx"]["degraded_reason"] == "stale cache"
     assert path["degraded"] is True
     assert sum(len(requested) == 2 for _, _, requested in calls) == 0
@@ -303,6 +318,7 @@ def test_reporting_currency_fails_closed_for_unknown_unsupported_and_missing_fx(
     ]
     assert len(calls) == 4  # Only the supported pair requests FX, then retries endpoints.
     assert all(row["fx_endpoint_comparison"]["anchor_return_pct"] is None for row in rows)
+    assert all(row["fx_endpoint_comparison"]["anchor_components"] is None for row in rows)
 
 
 def test_fx_path_withholds_all_points_when_one_interior_rate_is_missing(monkeypatch) -> None:

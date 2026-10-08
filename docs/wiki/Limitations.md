@@ -106,6 +106,9 @@ never silently faked.
   rates on every original shared date. Missing interior rates withhold the
   full path without dropping dates, even if endpoint returns remain available;
   provider-close adjustment and exchange-session accuracy remain unverified.
+  The optional endpoint breakdown separates native price, FX-rate, and their
+  multiplicative interaction using the same four observed rates. It does not
+  identify economic causes or make mixed provider price bases comparable.
   Conflicting closes for the same UTC date within the selected chart payload
   are withheld from the relevant provider or Yahoo-adjusted series, with counts
   and up to 20 latest dates disclosed per asset. Identical duplicates remain

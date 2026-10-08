@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Price-versus-FX endpoint attribution** — eligible reporting-currency
+  returns now disclose native price, FX-rate, and interaction components per
+  asset and for the pair difference, using the same dated endpoint evidence.
+  This is arithmetic attribution, not a causal market explanation.
 - **Full shared-date FX path** — optional reporting-currency comparisons now
   expose an indexed, inspectable converted path and dated FX evidence on every
   shared observation. Missing interior rates withhold the path without

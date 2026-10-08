@@ -76,6 +76,9 @@ describe("MarketContextPage", () => {
           start_date: "2026-08-25", end_date: "2026-09-24",
           anchor_quote_unit: "USD", comparison_quote_unit: "EUR",
           anchor_return_pct: 0, comparison_return_pct: -8.3333, relative_return_pp: 8.3333,
+          anchor_components: { price_return_pct: 0, currency_return_pct: 0, interaction_pct: 0, converted_return_pct: 0 },
+          comparison_components: { price_return_pct: 0, currency_return_pct: -8.3333, interaction_pct: 0, converted_return_pct: -8.3333 },
+          relative_components: { price_difference_pp: 0, currency_difference_pp: 8.3333, interaction_difference_pp: 0, converted_difference_pp: 8.3333 },
           degraded: false,
           anchor_start_fx: rate("2026-08-25", 1), anchor_end_fx: rate("2026-09-24", 1),
           comparison_start_fx: rate("2026-08-25", 1.2), comparison_end_fx: rate("2026-09-24", 1.1),
@@ -96,6 +99,9 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/not an FX-normalized daily path/)).toBeInTheDocument();
     expect(screen.getByText(/SAP.DE start 2026-08-25: 1.2/)).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Reporting currency" })).toHaveValue("USD");
+    fireEvent.click(screen.getByText("Break down price and FX returns"));
+    expect(screen.getByText(/multiplicative interaction/)).toBeInTheDocument();
+    expect(screen.getByText("FX rate")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show shared-date FX path for AAPL vs SAP.DE" }));
     expect(screen.getByRole("img", { name: /FX-converted shared-date paths for AAPL and SAP.DE in USD/ })).toBeInTheDocument();
     fireEvent.click(screen.getByText("View exact FX-converted observations and rates"));
