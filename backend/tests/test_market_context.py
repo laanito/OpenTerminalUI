@@ -235,18 +235,17 @@ def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> N
 
     async def fake_rates(base, quote, requested_dates):
         calls.append((base, quote, requested_dates))
-        first, last = requested_dates
-        values = [1.0, 1.0] if base == "USD" else [1.2, 1.1]
+        last = requested_dates[-1]
         return {
             day.isoformat(): {
                 "base_currency": base, "quote_currency": quote,
-                "requested_date": day, "rate": rate,
+                "requested_date": day, "rate": 1.0 if base == "USD" else (1.1 if day == last else 1.2),
                 "rate_at": datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc),
                 "source": "test", "source_symbol": f"{base}{quote}",
                 "degraded": base == "EUR" and day == last,
                 "degraded_reason": "stale cache" if base == "EUR" and day == last else None,
             }
-            for day, rate in zip((first, last), values)
+            for day in requested_dates
         }
 
     monkeypatch.setattr(market_context.forex_service, "get_historical_valuation_rates", fake_rates)
@@ -255,6 +254,7 @@ def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> N
     native = client.post("/api/market-context/compare", json=base_request).json()
     assert calls == []
     assert native["comparisons"][0]["fx_endpoint_comparison"] is None
+    assert native["comparisons"][0]["fx_shared_path"] is None
     result = client.post("/api/market-context/compare", json={**base_request, "reporting_currency": "USD"}).json()
     assert result["reporting_currency"] == "USD"
     row = result["comparisons"][0]
@@ -269,7 +269,16 @@ def test_optional_reporting_currency_uses_exact_pair_endpoints(monkeypatch) -> N
     assert fx["comparison_end_fx"]["rate"] == 1.1
     assert fx["degraded"] is True
     assert fx["comparison_end_fx"]["degraded_reason"] == "stale cache"
-    assert all(days == [date.fromisoformat(row["start_date"]), date.fromisoformat(row["end_date"])] for _, _, days in calls)
+    path = row["fx_shared_path"]
+    assert path["status"] == "available"
+    assert path["observations"] == row["observations"] == len(path["points"])
+    assert [point["date"] for point in path["points"]] == [point["date"] for point in row["points"]]
+    assert path["points"][0]["anchor_index"] == path["points"][0]["comparison_index"] == 100
+    assert path["points"][-1]["comparison_index"] == 91.6667
+    assert path["points"][-1]["comparison_fx"]["degraded_reason"] == "stale cache"
+    assert path["degraded"] is True
+    assert sum(len(requested) == 2 for _, _, requested in calls) == 0
+    assert sum(len(requested) == row["observations"] for _, _, requested in calls) == 2
 
 
 def test_reporting_currency_fails_closed_for_unknown_unsupported_and_missing_fx(monkeypatch) -> None:
@@ -292,8 +301,49 @@ def test_reporting_currency_fails_closed_for_unknown_unsupported_and_missing_fx(
     assert [row["fx_endpoint_comparison"]["reason"] for row in rows] == [
         "quote_unit_unknown", "quote_unit_unsupported", "fx_unavailable",
     ]
-    assert len(calls) == 2  # Only the supported pair requests FX.
+    assert len(calls) == 4  # Only the supported pair requests FX, then retries endpoints.
     assert all(row["fx_endpoint_comparison"]["anchor_return_pct"] is None for row in rows)
+
+
+def test_fx_path_withholds_all_points_when_one_interior_rate_is_missing(monkeypatch) -> None:
+    days = [date(2026, 8, 24) + timedelta(days=i) for i in range(32)]
+    charts = {symbol: _chart({day: 100.0 for day in days}) for symbol in ("AAPL", "SPY")}
+    for symbol in charts:
+        charts[symbol]["chart"]["result"][0]["meta"] = {"currency": "USD"}
+
+    async def incomplete_rates(base, quote, requested_dates):
+        return {
+            day.isoformat(): {
+                "base_currency": base, "quote_currency": quote, "requested_date": day,
+                "rate": 1.0, "rate_at": datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc),
+                "source": "identity", "source_symbol": "USDUSD", "degraded": False,
+                "degraded_reason": None,
+            }
+            for day in (requested_dates[0], requested_dates[-1])
+        }
+
+    monkeypatch.setattr(market_context.forex_service, "get_historical_valuation_rates", incomplete_rates)
+    client = _client(charts, feeds={symbol: "yahoo_chart" for symbol in charts})
+    row = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M", "reporting_currency": "USD",
+    }).json()["comparisons"][0]
+    assert row["fx_endpoint_comparison"]["status"] == "available"
+    assert row["fx_shared_path"]["status"] == "unavailable"
+    assert row["fx_shared_path"]["reason"] == "fx_unavailable"
+    assert row["fx_shared_path"]["points"] == []
+    assert row["observations"] > 2
+
+    async def gap_rates(base, quote, requested_dates):
+        if len(requested_dates) > 2:
+            raise RuntimeError("interior FX gap")
+        return await incomplete_rates(base, quote, requested_dates)
+
+    monkeypatch.setattr(market_context.forex_service, "get_historical_valuation_rates", gap_rates)
+    fallback = client.post("/api/market-context/compare", json={
+        "anchor": "AAPL", "comparisons": ["SPY"], "period": "1M", "reporting_currency": "USD",
+    }).json()["comparisons"][0]
+    assert fallback["fx_endpoint_comparison"]["status"] == "available"
+    assert fallback["fx_shared_path"]["reason"] == "fx_unavailable"
 
 
 def test_route_retains_partial_results_and_provider_failure() -> None:

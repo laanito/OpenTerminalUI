@@ -500,6 +500,12 @@ intelligence promise, or claim that contradiction handling is solved.
         degraded sources, and fail closed for unknown/subunit units or missing
         rates. Native returns and paths remain unchanged; this is not a daily
         FX-normalized path or a verified adjustment basis.
+  - [x] Add a separate opt-in reporting-currency path on every original
+        pair-shared date when dated FX covers the entire path. Inspect each
+        converted index and its FX rate/date/source; withhold the whole path
+        if an interior rate is unavailable, while preserving valid endpoint
+        evidence and the primary native path. This is retrospective context,
+        not verified adjusted performance or a trading indicator.
   - [x] Retain split/dividend events and adjusted-close values from the same
         selected Yahoo chart used by crypto/Yahoo adapters. Align adjusted
         values to rows the adapter actually accepted, without changing the raw

@@ -228,6 +228,23 @@ class MarketFXEndpointComparison(BaseModel):
     comparison_end_fx: MarketFXRateEvidence | None = None
 
 
+class MarketFXPathPoint(BaseModel):
+    date: date
+    anchor_index: float
+    comparison_index: float
+    anchor_fx: MarketFXRateEvidence
+    comparison_fx: MarketFXRateEvidence
+
+
+class MarketFXSharedPath(BaseModel):
+    status: Literal["available", "unavailable"]
+    reason: Literal["price_unavailable", "quote_unit_unknown", "quote_unit_unsupported", "fx_unavailable"] | None
+    reporting_currency: ReportingCurrency
+    observations: int = 0
+    degraded: bool = False
+    points: list[MarketFXPathPoint] = Field(default_factory=list)
+
+
 class MarketComparisonRow(BaseModel):
     symbol: str
     status: Literal["available", "unavailable"]
@@ -261,6 +278,7 @@ class MarketComparisonRow(BaseModel):
     native_adjusted_close_coverage: MarketPairNativeAdjustedCloseCoverage | None = None
     native_adjusted_observations: MarketNativeAdjustedObservations | None = None
     fx_endpoint_comparison: MarketFXEndpointComparison | None = None
+    fx_shared_path: MarketFXSharedPath | None = None
     points: list[MarketComparisonPoint] = Field(default_factory=list)
 
 
@@ -609,23 +627,32 @@ async def compare_market_context(
         })
 
     if payload.reporting_currency:
-        fx_tasks: dict[tuple[str, date, date], asyncio.Task[dict[str, dict[str, Any]]]] = {}
+        fx_tasks: dict[tuple[str, tuple[date, ...]], asyncio.Task[dict[str, dict[str, Any]]]] = {}
         fx_semaphore = asyncio.Semaphore(3)
 
-        async def dated_rates(unit: str, start: date, end: date) -> dict[str, dict[str, Any]]:
-            key = (unit, start, end)
+        async def dated_rates(unit: str, days: list[date]) -> dict[str, dict[str, Any]]:
+            key = (unit, tuple(days))
             if key not in fx_tasks:
                 async def load_rates() -> dict[str, dict[str, Any]]:
                     async with fx_semaphore:
-                        return await forex_service.get_historical_valuation_rates(unit, payload.reporting_currency, [start, end])
+                        return await forex_service.get_historical_valuation_rates(unit, payload.reporting_currency, days)
 
                 fx_tasks[key] = asyncio.create_task(load_rates())
             return await fx_tasks[key]
+
+        def checked_evidence(records: dict[str, dict[str, Any]], unit: str, day: date) -> dict[str, Any]:
+            item = records[day.isoformat()]
+            if (item.get("base_currency") != unit or item.get("quote_currency") != payload.reporting_currency
+                    or item.get("requested_date") != day
+                    or not math.isfinite(float(item["rate"])) or float(item["rate"]) <= 0):
+                raise ValueError("invalid FX evidence")
+            return item
 
         async def add_fx_endpoint(row: dict[str, Any]) -> None:
             target = payload.reporting_currency
             start_raw, end_raw = row.get("start_date"), row.get("end_date")
             units = (row["anchor_quote_unit"]["unit"], row["comparison_quote_unit"]["unit"])
+            full_rates: list[dict[str, dict[str, Any]]] | None = None
             outcome: dict[str, Any] = {
                 "status": "unavailable", "reporting_currency": target,
                 "start_date": start_raw, "end_date": end_raw,
@@ -641,16 +668,17 @@ async def compare_market_context(
             else:
                 start, end = date.fromisoformat(start_raw), date.fromisoformat(end_raw)
                 try:
-                    rates = await asyncio.gather(*(dated_rates(unit, start, end) for unit in units))
+                    shared_days = [date.fromisoformat(point["date"]) for point in row["points"]]
+                    try:
+                        full_rates = list(await asyncio.gather(*(dated_rates(unit, shared_days) for unit in units)))
+                    except Exception:
+                        # A missing interior rate must not erase valid endpoint-only evidence.
+                        full_rates = None
+                    rates = full_rates or await asyncio.gather(*(dated_rates(unit, [start, end]) for unit in units))
                     evidence = []
                     for unit, records in zip(units, rates):
                         for day in (start, end):
-                            item = records[day.isoformat()]
-                            if (item.get("base_currency") != unit or item.get("quote_currency") != target
-                                    or item.get("requested_date") != day
-                                    or not math.isfinite(float(item["rate"])) or float(item["rate"]) <= 0):
-                                raise ValueError("invalid FX endpoint evidence")
-                            evidence.append(item)
+                            evidence.append(checked_evidence(records, unit, day))
                     anchor_start, anchor_end, comparison_start, comparison_end = evidence
                     anchor_return = (
                         histories[anchor][end] * anchor_end["rate"]
@@ -675,6 +703,43 @@ async def compare_market_context(
                     logger.warning("Market-context FX endpoints unavailable for %s: %s", row["symbol"], type(exc).__name__)
                     outcome["reason"] = "fx_unavailable"
             row["fx_endpoint_comparison"] = outcome
+
+            path: dict[str, Any] = {
+                "status": "unavailable", "reason": outcome["reason"], "reporting_currency": target,
+            }
+            if outcome["status"] == "available":
+                try:
+                    if full_rates is None:
+                        raise ValueError("full-date FX evidence unavailable")
+                    path_rates = full_rates
+                    start_values = [
+                        histories[asset][shared_days[0]] * checked_evidence(records, unit, shared_days[0])["rate"]
+                        for asset, unit, records in zip((anchor, row["symbol"]), units, path_rates)
+                    ]
+                    if any(not math.isfinite(value) or value <= 0 for value in start_values):
+                        raise ValueError("invalid FX path base")
+                    path_points = []
+                    for day in shared_days:
+                        anchor_fx = checked_evidence(path_rates[0], units[0], day)
+                        comparison_fx = checked_evidence(path_rates[1], units[1], day)
+                        anchor_index = 100 * histories[anchor][day] * anchor_fx["rate"] / start_values[0]
+                        comparison_index = 100 * histories[row["symbol"]][day] * comparison_fx["rate"] / start_values[1]
+                        if not math.isfinite(anchor_index) or not math.isfinite(comparison_index):
+                            raise ValueError("invalid FX path point")
+                        path_points.append({
+                            "date": day, "anchor_index": round(anchor_index, 4),
+                            "comparison_index": round(comparison_index, 4),
+                            "anchor_fx": anchor_fx, "comparison_fx": comparison_fx,
+                        })
+                    path.update({
+                        "status": "available", "reason": None,
+                        "observations": len(path_points), "points": path_points,
+                        "degraded": any(point[key]["degraded"] for point in path_points for key in ("anchor_fx", "comparison_fx")),
+                    })
+                except Exception as exc:
+                    logger.warning("Market-context FX path unavailable for %s: %s", row["symbol"], type(exc).__name__)
+                    path["reason"] = "fx_unavailable"
+            row["fx_shared_path"] = path
 
         await asyncio.gather(*(add_fx_endpoint(row) for row in rows))
 

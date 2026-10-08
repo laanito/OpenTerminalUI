@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Full shared-date FX path** — optional reporting-currency comparisons now
+  expose an indexed, inspectable converted path and dated FX evidence on every
+  shared observation. Missing interior rates withhold the path without
+  changing valid endpoint results or the native comparison.
 - **Optional reporting-currency endpoint returns** — cross-market comparisons
   can show a separate pair return in a selected currency using the exact shared
   price endpoints and dated FX evidence. Unknown/subunit quote units or missing

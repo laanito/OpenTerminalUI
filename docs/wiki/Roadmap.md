@@ -303,6 +303,11 @@ rate's source, timestamp, and degraded status; unknown or unsupported quote
 units (including subunits) and missing rates withhold that view. This endpoint
 comparison is not a converted daily path, verified price denomination, or
 portfolio return, and it does not alter the primary native comparison.
+When rates cover every original shared date, a separate indexed path converts
+each provider close into the selected currency and exposes each dated FX input.
+An interior gap withholds the entire path without shrinking its date window;
+valid endpoint-only returns remain available. Neither converted path nor the
+native one is verified corporate-action-adjusted performance.
 
 The Alpaca comparison path now explicitly requests raw stock bars even when
 other Alpaca workflows are configured for a different adjustment. It reports
