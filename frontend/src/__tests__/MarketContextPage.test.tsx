@@ -50,6 +50,44 @@ describe("MarketContextPage", () => {
     searchMock.mockReset();
   });
 
+  it("requests optional reporting currency and keeps FX endpoint evidence separate from native returns", async () => {
+    const rate = (requested_date: string, value: number) => ({
+      rate: value, rate_at: `${requested_date}T00:00:00Z`, requested_date,
+      source: "test", source_symbol: "EURUSD", degraded: false, degraded_reason: null,
+    });
+    compareMock.mockResolvedValue({
+      anchor: "AAPL", period: "1M", retrieved_at: "2026-09-24T10:00:00Z",
+      data_source: "unified_history", return_basis: "native_quote_currency_provider_closes",
+      method: "same_utc_date_daily_closes", reporting_currency: "USD",
+      comparisons: [{
+        symbol: "SAP.DE", status: "available", reason: null,
+        start_date: "2026-08-25", end_date: "2026-09-24",
+        anchor_latest_date: "2026-09-24", comparison_latest_date: "2026-09-24",
+        anchor_history_source: "yahoo", comparison_history_source: "yahoo",
+        anchor_quote_unit: { unit: "USD", source: "yahoo_chart_meta" },
+        comparison_quote_unit: { unit: "EUR", source: "yahoo_chart_meta" },
+        observations: 22, freshness: "current", anchor_return_pct: 0,
+        comparison_return_pct: 0, relative_return_pp: 0, points: [],
+        fx_endpoint_comparison: {
+          status: "available", reason: null, reporting_currency: "USD",
+          start_date: "2026-08-25", end_date: "2026-09-24",
+          anchor_quote_unit: "USD", comparison_quote_unit: "EUR",
+          anchor_return_pct: 0, comparison_return_pct: -8.3333, relative_return_pp: 8.3333,
+          degraded: false,
+          anchor_start_fx: rate("2026-08-25", 1), anchor_end_fx: rate("2026-09-24", 1),
+          comparison_start_fx: rate("2026-08-25", 1.2), comparison_end_fx: rate("2026-09-24", 1.1),
+        },
+      }],
+    });
+    renderPage("/equity/market-context?symbol=AAPL&proxies=SAP.DE&currency=USD");
+    expect(await screen.findByText("Endpoint returns in USD")).toBeInTheDocument();
+    expect(compareMock).toHaveBeenCalledWith("AAPL", ["SAP.DE"], "1M", "USD");
+    expect(screen.getByText(/SAP.DE: -8.33%/)).toBeInTheDocument();
+    expect(screen.getByText(/not an FX-normalized daily path/)).toBeInTheDocument();
+    expect(screen.getByText(/SAP.DE start 2026-08-25: 1.2/)).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Reporting currency" })).toHaveValue("USD");
+  });
+
   it("shows dated available, stale, and unavailable comparisons without inventing returns", async () => {
     compareMock.mockResolvedValue({
       anchor: "BTC-USD",

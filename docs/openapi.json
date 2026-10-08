@@ -7220,6 +7220,27 @@
             ],
             "title": "Period",
             "type": "string"
+          },
+          "reporting_currency": {
+            "anyOf": [
+              {
+                "enum": [
+                  "USD",
+                  "EUR",
+                  "GBP",
+                  "JPY",
+                  "CHF",
+                  "AUD",
+                  "CAD",
+                  "INR"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporting Currency"
           }
         },
         "required": [
@@ -7260,6 +7281,27 @@
             ],
             "title": "Period",
             "type": "string"
+          },
+          "reporting_currency": {
+            "anyOf": [
+              {
+                "enum": [
+                  "USD",
+                  "EUR",
+                  "GBP",
+                  "JPY",
+                  "CHF",
+                  "AUD",
+                  "CAD",
+                  "INR"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporting Currency"
           },
           "retrieved_at": {
             "format": "date-time",
@@ -7487,6 +7529,16 @@
             ],
             "title": "Freshness"
           },
+          "fx_endpoint_comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXEndpointComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "native_adjusted_close_coverage": {
             "anyOf": [
               {
@@ -7640,6 +7692,232 @@
           "type"
         ],
         "title": "MarketCorporateAction",
+        "type": "object"
+      },
+      "MarketFXEndpointComparison": {
+        "properties": {
+          "anchor_end_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anchor_quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Quote Unit"
+          },
+          "anchor_return_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Return Pct"
+          },
+          "anchor_start_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comparison_end_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comparison_quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Quote Unit"
+          },
+          "comparison_return_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Return Pct"
+          },
+          "comparison_start_fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "degraded": {
+            "default": false,
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "price_unavailable",
+                  "quote_unit_unknown",
+                  "quote_unit_unsupported",
+                  "fx_unavailable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "relative_return_pp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Return Pp"
+          },
+          "reporting_currency": {
+            "enum": [
+              "USD",
+              "EUR",
+              "GBP",
+              "JPY",
+              "CHF",
+              "AUD",
+              "CAD",
+              "INR"
+            ],
+            "title": "Reporting Currency",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reason",
+          "reporting_currency"
+        ],
+        "title": "MarketFXEndpointComparison",
+        "type": "object"
+      },
+      "MarketFXRateEvidence": {
+        "properties": {
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "degraded_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degraded Reason"
+          },
+          "rate": {
+            "title": "Rate",
+            "type": "number"
+          },
+          "rate_at": {
+            "format": "date-time",
+            "title": "Rate At",
+            "type": "string"
+          },
+          "requested_date": {
+            "format": "date",
+            "title": "Requested Date",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_symbol": {
+            "title": "Source Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rate",
+          "rate_at",
+          "requested_date",
+          "source",
+          "source_symbol",
+          "degraded",
+          "degraded_reason"
+        ],
+        "title": "MarketFXRateEvidence",
         "type": "object"
       },
       "MarketFundamentalConflict": {

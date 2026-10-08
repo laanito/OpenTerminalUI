@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Optional reporting-currency endpoint returns** — cross-market comparisons
+  can show a separate pair return in a selected currency using the exact shared
+  price endpoints and dated FX evidence. Unknown/subunit quote units or missing
+  rates withhold the result; native returns remain unchanged.
 - **Selected-history quote-unit disclosure** — comparisons retain the quote
   unit reported by the selected Yahoo chart, including non-ISO units, and show
   when the two reported units differ. Other history paths remain unknown; no

@@ -1,6 +1,35 @@
 import { api } from "./base";
 
 export type MarketContextPeriod = "1M" | "3M" | "6M";
+export type MarketReportingCurrency = "USD" | "EUR" | "GBP" | "JPY" | "CHF" | "AUD" | "CAD" | "INR";
+
+export interface MarketFXRateEvidence {
+  rate: number;
+  rate_at: string;
+  requested_date: string;
+  source: string;
+  source_symbol: string;
+  degraded: boolean;
+  degraded_reason: string | null;
+}
+
+export interface MarketFXEndpointComparison {
+  status: "available" | "unavailable";
+  reason: "price_unavailable" | "quote_unit_unknown" | "quote_unit_unsupported" | "fx_unavailable" | null;
+  reporting_currency: MarketReportingCurrency;
+  start_date: string | null;
+  end_date: string | null;
+  anchor_quote_unit: string | null;
+  comparison_quote_unit: string | null;
+  anchor_return_pct: number | null;
+  comparison_return_pct: number | null;
+  relative_return_pp: number | null;
+  degraded: boolean;
+  anchor_start_fx: MarketFXRateEvidence | null;
+  anchor_end_fx: MarketFXRateEvidence | null;
+  comparison_start_fx: MarketFXRateEvidence | null;
+  comparison_end_fx: MarketFXRateEvidence | null;
+}
 
 export interface MarketComparisonPoint {
   date: string;
@@ -145,6 +174,7 @@ export interface MarketComparisonRow {
   adjusted_pair?: MarketAdjustedPairComparison | null;
   native_adjusted_close_coverage?: { anchor: MarketNativeAdjustedCloseCoverage; comparison: MarketNativeAdjustedCloseCoverage } | null;
   native_adjusted_observations?: MarketNativeAdjustedObservations | null;
+  fx_endpoint_comparison?: MarketFXEndpointComparison | null;
   points: MarketComparisonPoint[];
 }
 
@@ -155,6 +185,7 @@ export interface MarketComparisonResponse {
   data_source: "unified_history";
   return_basis: "native_quote_currency_provider_closes";
   method: "same_utc_date_daily_closes";
+  reporting_currency?: MarketReportingCurrency | null;
   comparisons: MarketComparisonRow[];
 }
 
@@ -375,8 +406,9 @@ export async function compareMarketContext(
   anchor: string,
   comparisons: string[],
   period: MarketContextPeriod,
+  reportingCurrency?: MarketReportingCurrency,
 ): Promise<MarketComparisonResponse> {
-  const response = await api.post<MarketComparisonResponse>("/market-context/compare", { anchor, comparisons, period });
+  const response = await api.post<MarketComparisonResponse>("/market-context/compare", { anchor, comparisons, period, ...(reportingCurrency ? { reporting_currency: reportingCurrency } : {}) });
   return response.data;
 }
 
