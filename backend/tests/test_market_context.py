@@ -793,6 +793,30 @@ def test_macro_observations_endpoint_preserves_window_and_reference_date_semanti
     }).status_code == 422
 
 
+def test_euro_area_macro_endpoint_has_explicit_region_and_no_asof_claim(monkeypatch) -> None:
+    async def fake_euro_area(start: date, end: date) -> dict[str, Any]:
+        assert (start, end) == (date(2026, 9, 2), date(2026, 9, 10))
+        return {"retrieved_at": "2026-09-11T10:00:00Z", "region": "EA21", "status": "available",
+                "reason": None, "series": [{"series_id": "prc_hicp_minr", "label": "Euro-area HICP",
+                "source": "eurostat", "units": "Percent", "frequency": "Monthly", "status": "available",
+                "observations": [{"reference_date": "2026-09-01", "value": 3.8, "flag": "e"}]}]}
+
+    monkeypatch.setattr(market_context, "get_euro_area_macro_observations", fake_euro_area)
+    client = _client({})
+    response = client.post("/api/market-context/macro-observations/euro-area", json={
+        "start_date": "2026-09-02", "end_date": "2026-09-10",
+    })
+    assert response.status_code == 200
+    assert response.json()["region"] == "EA21"
+    assert response.json()["series"][0]["observations"] == [
+        {"reference_date": "2026-09-01", "value": 3.8, "flag": "e"},
+    ]
+    assert "realtime_date" not in response.json()
+    assert client.post("/api/market-context/macro-observations/euro-area", json={
+        "start_date": "2026-01-01", "end_date": "2026-09-10",
+    }).status_code == 422
+
+
 def _fundamentals_client(data: dict[str, Any]) -> TestClient:
     class FakeFetcher:
         async def fetch_pit_fundamentals_records(self, symbol: str) -> list[dict[str, Any]]:

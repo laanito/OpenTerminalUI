@@ -3,17 +3,18 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchEuroAreaMacroObservations, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures } from "../api/marketContext";
 import { searchSymbols } from "../api/marketData";
 import { MarketContextPage } from "../pages/MarketContextPage";
 
-vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), compareMarketFundamentalCaptures: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), fetchMarketContextMacroObservations: vi.fn(), fetchMarketSecFiledFacts: vi.fn(), fetchSecSubmissionCrosscheck: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
+vi.mock("../api/marketContext", () => ({ captureMarketFundamentals: vi.fn(), compareMarketContext: vi.fn(), compareMarketFundamentalCaptures: vi.fn(), fetchEuroAreaMacroObservations: vi.fn(), fetchMarketContextFundamentalReleases: vi.fn(), fetchMarketContextHeadlines: vi.fn(), fetchMarketContextMacroEvents: vi.fn(), fetchMarketContextMacroObservations: vi.fn(), fetchMarketSecFiledFacts: vi.fn(), fetchSecSubmissionCrosscheck: vi.fn(), getMarketFundamentalCapture: vi.fn(), listMarketFundamentalCaptures: vi.fn() }));
 vi.mock("../api/marketData", () => ({ searchSymbols: vi.fn() }));
 
 const compareMock = vi.mocked(compareMarketContext);
 const headlinesMock = vi.mocked(fetchMarketContextHeadlines);
 const macroMock = vi.mocked(fetchMarketContextMacroEvents);
 const macroObservationsMock = vi.mocked(fetchMarketContextMacroObservations);
+const euroAreaMacroMock = vi.mocked(fetchEuroAreaMacroObservations);
 const fundamentalsMock = vi.mocked(fetchMarketContextFundamentalReleases);
 const secFactsMock = vi.mocked(fetchMarketSecFiledFacts);
 const secSubmissionMock = vi.mocked(fetchSecSubmissionCrosscheck);
@@ -40,6 +41,7 @@ describe("MarketContextPage", () => {
     headlinesMock.mockReset();
     macroMock.mockReset();
     macroObservationsMock.mockReset();
+    euroAreaMacroMock.mockReset();
     fundamentalsMock.mockReset();
     secFactsMock.mockReset();
     secSubmissionMock.mockReset();
@@ -616,6 +618,27 @@ describe("MarketContextPage", () => {
     expect(await screen.findByText(/2026-09-02: as-of 3.9 → current 4.1/)).toBeInTheDocument();
     expect(screen.getByText(/Units or frequency changed between FRED views/)).toBeInTheDocument();
     expect(screen.getByText(/not an intraday release audit/)).toBeInTheDocument();
+    euroAreaMacroMock.mockResolvedValueOnce({
+      start_date: "2026-09-02", end_date: "2026-09-10", retrieved_at: "2026-09-11T10:02:00Z",
+      region: "EA21", status: "available", reason: null,
+      series: [{
+        series_id: "prc_hicp_minr", label: "Euro-area HICP, annual change", source: "eurostat",
+        units: "Percent", frequency: "Monthly", status: "available",
+        observations: [{ reference_date: "2026-09-01", value: 3.8, flag: "e" }],
+      }, {
+        series_id: "une_rt_m", label: "Euro-area unemployment", source: "eurostat",
+        units: "Percent of labour force", frequency: "Monthly", status: "no_observations", observations: [],
+      }, {
+        series_id: "FM.D.U2.EUR.4F.KR.DFR.LEV", label: "ECB deposit facility rate", source: "ecb",
+        units: "Percent per annum", frequency: "Daily", status: "feed_error", observations: [],
+      }],
+    });
+    expect(euroAreaMacroMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Show euro-area macro context for 2026-09-02 to 2026-09-10" }));
+    await waitFor(() => expect(euroAreaMacroMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
+    expect(await screen.findByText(/2026-09: 3.8 \(provider flag: e\)/)).toBeInTheDocument();
+    expect(screen.getByText(/possibly revised or estimated—not release-time or ticker-specific evidence/)).toBeInTheDocument();
+    expect(screen.getByText(/Provider request or response failed/)).toBeInTheDocument();
   });
 
   it("loads only on-demand source-dated fundamental candidates for the pair window", async () => {

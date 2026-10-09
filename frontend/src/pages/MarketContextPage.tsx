@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type MarketQuoteUnitDisclosure, type MarketReportingCurrency, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
+import { captureMarketFundamentals, compareMarketContext, compareMarketFundamentalCaptures, fetchEuroAreaMacroObservations, fetchMarketContextFundamentalReleases, fetchMarketContextHeadlines, fetchMarketContextMacroEvents, fetchMarketContextMacroObservations, fetchMarketSecFiledFacts, fetchSecSubmissionCrosscheck, getMarketFundamentalCapture, listMarketFundamentalCaptures, type MarketContextPeriod, type MarketComparisonRow, type MarketMacroObservationSeries, type MarketQuoteUnitDisclosure, type MarketReportingCurrency, type SecFiledFactsResponse, type SecSubmissionClaim } from "../api/marketContext";
 import { extractApiErrorMessage } from "../api/base";
 import { SymbolSuggestions } from "../components/market/SymbolSuggestions";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
@@ -662,6 +662,36 @@ function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: Mar
   );
 }
 
+function EuroAreaMacroObservations({ row }: { row: MarketComparisonRow }) {
+  const [open, setOpen] = useState(false);
+  const startDate = row.start_date || "";
+  const endDate = row.end_date || "";
+  const query = useQuery({
+    queryKey: ["market-context-euro-area-macro", startDate, endDate],
+    queryFn: () => fetchEuroAreaMacroObservations(startDate, endDate),
+    enabled: open && !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  return <div className="mt-3 border-t border-terminal-border pt-3">
+    <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+      {open ? "Hide" : "Show"} euro-area macro context for {startDate} to {endDate}
+    </button>
+    {open ? <div className="mt-2 space-y-2 text-xs">
+      <p className="text-terminal-muted">Euro-area 21-country HICP and seasonally adjusted unemployment from Eurostat; ECB deposit facility rate for the euro area (changing composition). Monthly values are labelled by the first day of their reference month, which may precede the pair’s start date. These are current provider values, possibly revised or estimated—not release-time or ticker-specific evidence—and do not explain either price path.</p>
+      {query.isPending ? <p role="status" className="text-terminal-muted">Checking euro-area observations…</p> : null}
+      {query.isError ? <p role="alert" className="text-terminal-neg">{extractApiErrorMessage(query.error, "Could not check euro-area observations.")} <button type="button" className="underline" onClick={() => void query.refetch()}>Retry euro-area observations</button></p> : null}
+      {query.data?.status === "unavailable" ? <p className="text-terminal-warn">Eurostat and ECB feeds failed. No sample values are shown.</p> : null}
+      {query.data ? <p className="text-terminal-muted">Official public feeds · checked {new Date(query.data.retrieved_at).toLocaleString()} · current vintage only; no historical as-of view.</p> : null}
+      {query.data?.series.length ? <div className="grid gap-2 md:grid-cols-3">{query.data.series.map((series) => <div key={series.series_id} className="rounded border border-terminal-border p-2">
+        <p className="font-medium">{series.label} · <a className="text-terminal-accent underline" href={series.source === "ecb" ? `https://data.ecb.europa.eu/data/datasets/FM/${series.series_id}` : `https://ec.europa.eu/eurostat/databrowser/view/${series.series_id}/default/table?lang=en`} target="_blank" rel="noopener noreferrer">{series.series_id}</a></p>
+        <p className="text-terminal-muted">{series.source === "ecb" ? "ECB" : "Eurostat"} · {series.units} · {series.frequency}</p>
+        {series.status === "feed_error" ? <p className="text-terminal-warn">Provider request or response failed.</p> : series.observations.length ? <ul className="mt-1 max-h-28 space-y-1 overflow-auto">{series.observations.map((observation) => <li key={observation.reference_date}>{series.frequency === "Monthly" ? observation.reference_date.slice(0, 7) : observation.reference_date}: {observation.value.toLocaleString()}{observation.flag ? ` (provider flag: ${observation.flag})` : ""}</li>)}</ul> : <p className="text-terminal-muted">No values in this reference-period window.</p>}
+      </div>)}</div> : null}
+    </div> : null}
+  </div>;
+}
+
 const FUNDAMENTAL_LABELS: Record<string, string> = {
   revenue: "Revenue",
   net_income: "Net income",
@@ -1253,6 +1283,7 @@ export function MarketContextPage() {
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
                     <HistoricalMacroObservations anchor={selection.anchor} row={row} />
+                    <EuroAreaMacroObservations row={row} />
                     <DatedFundamentalReleases anchor={selection.anchor} row={row} />
                     <DatedSecFiledFacts anchor={selection.anchor} row={row} />
                   </>

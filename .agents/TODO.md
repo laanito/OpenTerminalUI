@@ -533,6 +533,15 @@ intelligence promise, or claim that contradiction handling is solved.
           absent reference-date values only when both feeds return comparable
           units/frequency, and keep provider failures distinct. This is not an
           intraday release audit or proof that a market participant saw a value.
+  - [x] Add a separate on-demand euro-area pilot from official public feeds:
+        Eurostat EA21 HICP annual change and seasonally adjusted unemployment,
+        plus the ECB deposit facility rate. Show reference period, units,
+        source, provider flags, retrieval time, and partial failures without
+        sample values or a false historical-vintage claim. Keep the US FRED
+        panel independent and do not infer relevance from a ticker.
+    - [ ] Validate release timestamps and historical vintages before using
+          these euro-area values for point-in-time macro explanations; extend
+          geography only with explicit series, coverage, and freshness checks.
   - [x] Expose the exact shared-close trajectory behind each available pair,
         rebased to 100 at the first shared date, with an on-demand chart and
         inspectable observation table. No missing dates are filled in; the path
