@@ -7706,6 +7706,16 @@
       },
       "MarketFXEndpointComparison": {
         "properties": {
+          "anchor_components": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXReturnComponents"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "anchor_end_fx": {
             "anyOf": [
               {
@@ -7742,6 +7752,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/MarketFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comparison_components": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXReturnComponents"
               },
               {
                 "type": "null"
@@ -7823,6 +7843,16 @@
               }
             ],
             "title": "Reason"
+          },
+          "relative_components": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketFXRelativeComponents"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "relative_return_pp": {
             "anyOf": [
@@ -7960,6 +7990,62 @@
           "degraded_reason"
         ],
         "title": "MarketFXRateEvidence",
+        "type": "object"
+      },
+      "MarketFXRelativeComponents": {
+        "properties": {
+          "converted_difference_pp": {
+            "title": "Converted Difference Pp",
+            "type": "number"
+          },
+          "currency_difference_pp": {
+            "title": "Currency Difference Pp",
+            "type": "number"
+          },
+          "interaction_difference_pp": {
+            "title": "Interaction Difference Pp",
+            "type": "number"
+          },
+          "price_difference_pp": {
+            "title": "Price Difference Pp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "price_difference_pp",
+          "currency_difference_pp",
+          "interaction_difference_pp",
+          "converted_difference_pp"
+        ],
+        "title": "MarketFXRelativeComponents",
+        "type": "object"
+      },
+      "MarketFXReturnComponents": {
+        "properties": {
+          "converted_return_pct": {
+            "title": "Converted Return Pct",
+            "type": "number"
+          },
+          "currency_return_pct": {
+            "title": "Currency Return Pct",
+            "type": "number"
+          },
+          "interaction_pct": {
+            "title": "Interaction Pct",
+            "type": "number"
+          },
+          "price_return_pct": {
+            "title": "Price Return Pct",
+            "type": "number"
+          }
+        },
+        "required": [
+          "price_return_pct",
+          "currency_return_pct",
+          "interaction_pct",
+          "converted_return_pct"
+        ],
+        "title": "MarketFXReturnComponents",
         "type": "object"
       },
       "MarketFXSharedPath": {

@@ -14,6 +14,7 @@ from backend.api.deps import fetch_stock_snapshot_coalesced, get_unified_fetcher
 from backend.db.models import PortfolioHoldingORM, PortfolioORM
 from backend.equity.services.corporate_actions import corporate_actions_service, extract_amount
 from backend.services.forex_service import service as forex_service
+from backend.services.return_decomposition import decompose_base_currency_return
 from backend.shared.db import init_db
 from backend.shared.market_classifier import is_crypto_symbol
 
@@ -67,27 +68,6 @@ def _series_return(close: pd.Series) -> float:
     if start <= 0:
         return 0.0
     return (end / start) - 1.0
-
-
-def decompose_base_currency_return(
-    start_price: float,
-    end_price: float,
-    start_fx: float,
-    end_fx: float,
-) -> dict[str, float]:
-    """Exactly separate a base-currency return into security, FX and interaction."""
-    if start_price <= 0 or start_fx <= 0:
-        raise ValueError("start price and FX rate must be positive")
-    security = (end_price / start_price) - 1.0
-    currency = (end_fx / start_fx) - 1.0
-    interaction = security * currency
-    total = ((end_price * end_fx) / (start_price * start_fx)) - 1.0
-    return {
-        "security": security,
-        "currency": currency,
-        "interaction": interaction,
-        "total": total,
-    }
 
 
 def compute_brinson_attribution(

@@ -308,6 +308,10 @@ each provider close into the selected currency and exposes each dated FX input.
 An interior gap withholds the entire path without shrinking its date window;
 valid endpoint-only returns remain available. Neither converted path nor the
 native one is verified corporate-action-adjusted performance.
+The endpoint result also separates each asset's native price, FX-rate, and
+multiplicative interaction contributions, plus their anchor-minus-comparison
+difference. This reuses the portfolio's return identity; it is descriptive
+arithmetic rather than evidence that FX caused either market to move.
 
 The Alpaca comparison path now explicitly requests raw stock bars even when
 other Alpaca workflows are configured for a different adjustment. It reports
