@@ -603,17 +603,17 @@ function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: Mar
 
   return (
     <div className="mt-3 border-t border-terminal-border pt-3">
-      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} historical macro observations for ${anchor} vs ${row.symbol}`}>
-        {open ? "Hide" : "Show"} historical macro observations for {startDate} to {endDate}
+      <button type="button" className="text-xs text-terminal-accent underline" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} US-wide macro context in ${anchor} vs ${row.symbol} date window`}>
+        {open ? "Hide" : "Show"} US macro context (FRED) for {startDate} to {endDate}
       </button>
       {open ? (
         <div className="mt-2 space-y-2 text-xs">
           <p className="text-terminal-muted">
-            US macro reference-period values from the current FRED vintage. A reference date is not a publication date; revised values were not necessarily known then. These are global context, not explanations for either price path.
+            US-wide CPI, unemployment, and policy-rate reference-period values from the current FRED vintage—not ticker-specific data. A reference date is not a publication date; revised values were not necessarily known then. These are global context, not explanations for either price path.
           </p>
           {query.isPending ? <p role="status" className="text-terminal-muted">Checking FRED observations…</p> : null}
           {query.isError ? <p role="alert" className="text-terminal-neg">{extractApiErrorMessage(query.error, "Could not check macro observations.")} <button type="button" className="underline" onClick={() => void query.refetch()}>Retry observations</button></p> : null}
-          {query.data?.status === "unavailable" ? <p className="text-terminal-warn">{query.data.reason === "missing_api_key" ? "FRED_API_KEY is not configured. No sample values are shown here." : "FRED did not return usable series. No sample values are shown here."}</p> : null}
+          {query.data?.status === "unavailable" ? <p className="text-terminal-warn">{query.data.reason === "missing_api_key" ? "The running backend has no FRED_API_KEY. Check its deployment environment; no sample values are shown here." : "FRED did not return usable US macro series. No sample values are shown here."}</p> : null}
           {query.data?.series.length ? (
             <>
               <p className="text-terminal-muted">FRED · checked {new Date(query.data.retrieved_at).toLocaleString()} · requested real-time date {query.data.realtime_date}. Neither a saved vintage nor a release-time audit.</p>
@@ -624,7 +624,7 @@ function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: Mar
                     {series.status === "feed_error" ? <p className="text-terminal-warn">Provider metadata or observations failed.</p> : (
                       <>
                         <p className="text-terminal-muted">{series.title} · {series.units} · {series.frequency}</p>
-                        {series.observations.length ? <ul className="mt-1 max-h-28 space-y-1 overflow-auto">{series.observations.map((observation) => <li key={observation.reference_date}>{observation.reference_date}: {observation.value.toLocaleString()}</li>)}</ul> : <p className="text-terminal-muted">No usable reference-period values in this window.</p>}
+                        {series.observations.length ? <ul className="mt-1 max-h-28 space-y-1 overflow-auto">{series.observations.map((observation) => <li key={observation.reference_date}>{observation.reference_date}: {observation.value.toLocaleString()}</li>)}</ul> : <p className="text-terminal-muted">No usable values for this US macro series in the selected date window; this is not ticker-specific.</p>}
                         {series.withheld_conflict_count > 0 ? <p className="text-terminal-warn">{series.withheld_conflict_count} conflicting reference dates withheld.</p> : null}
                       </>
                     )}
@@ -639,7 +639,7 @@ function HistoricalMacroObservations({ anchor, row }: { anchor: string; row: Mar
                   <p className="text-terminal-muted">FRED daily real-time view requested as of {endDate}. This can reveal later revisions or newly returned values, but is not an intraday release audit, a complete availability guarantee, or evidence that either asset reacted.</p>
                   {asOfQuery.isPending ? <p role="status" className="text-terminal-muted">Checking historical FRED view…</p> : null}
                   {asOfQuery.isError ? <p role="alert" className="text-terminal-neg">{extractApiErrorMessage(asOfQuery.error, "Could not check historical FRED view.")} <button type="button" className="underline" onClick={() => void asOfQuery.refetch()}>Retry historical view</button></p> : null}
-                  {asOfQuery.data?.status === "unavailable" ? <p className="text-terminal-warn">Historical FRED view unavailable: {asOfQuery.data.reason === "missing_api_key" ? "FRED_API_KEY is not configured." : "provider request failed."}</p> : null}
+                  {asOfQuery.data?.status === "unavailable" ? <p className="text-terminal-warn">Historical FRED view unavailable: {asOfQuery.data.reason === "missing_api_key" ? "the running backend has no FRED_API_KEY." : "provider request failed."}</p> : null}
                   {asOfQuery.data && asOfQuery.data.realtime_date !== endDate ? <p className="text-terminal-warn">FRED returned a different real-time date; no vintage comparison is shown.</p> : null}
                   {asOfQuery.data?.series.length && asOfQuery.data.realtime_date === endDate ? (
                     <div className="grid gap-2 md:grid-cols-3">

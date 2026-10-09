@@ -207,6 +207,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   retries token-limit truncation once at 6,144 rather than presenting a cut-off
   answer as successful.
 
+### Fixed
+- **FRED key in Docker Compose** — forward `FRED_API_KEY` from `.env` into the
+  backend container so on-demand US macro context can use a configured key.
+  The panel now labels its series as US-wide rather than
+  ticker-specific and distinguishes missing configuration from empty results.
+
 ## [1.7.0] - 2026-09-15
 
 The **"multi-currency portfolio accounting"** release completes v1 with one

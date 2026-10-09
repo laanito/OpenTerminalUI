@@ -512,9 +512,11 @@ describe("MarketContextPage", () => {
     await waitFor(() => expect(macroMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
     expect(await screen.findByText(/No sample events are shown here/)).toBeInTheDocument();
     expect(screen.getByText(/not events attributed to either asset/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Show historical macro observations for AAPL vs SPY" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show US-wide macro context in AAPL vs SPY date window" }));
     await waitFor(() => expect(macroObservationsMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
-    expect(await screen.findByText(/No sample values are shown here/)).toBeInTheDocument();
+    expect(await screen.findByText(/no sample values are shown here/i)).toBeInTheDocument();
+    expect(screen.getByText(/The running backend has no FRED_API_KEY/)).toBeInTheDocument();
+    expect(screen.getByText(/not ticker-specific data/)).toBeInTheDocument();
   });
 
   it("shows provider-attributed calendar events without claiming asset relevance", async () => {
@@ -577,6 +579,10 @@ describe("MarketContextPage", () => {
         title: "Consumer Price Index", units: "Index", frequency: "Monthly",
         matched_count: 1, withheld_conflict_count: 0,
         observations: [{ reference_date: "2026-09-02", value: 300 }],
+      }, {
+        series_id: "FEDFUNDS", label: "Policy rate", status: "no_observations",
+        title: "Federal Funds Effective Rate", units: "Percent", frequency: "Monthly",
+        matched_count: 0, withheld_conflict_count: 0, observations: [],
       }],
     });
     macroObservationsMock.mockResolvedValueOnce({
@@ -597,11 +603,12 @@ describe("MarketContextPage", () => {
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
     expect(await screen.findByText("AAPL vs SPY")).toBeInTheDocument();
     expect(macroObservationsMock).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Show historical macro observations for AAPL vs SPY" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show US-wide macro context in AAPL vs SPY date window" }));
     await waitFor(() => expect(macroObservationsMock).toHaveBeenCalledWith("2026-09-02", "2026-09-10"));
     expect(await screen.findByText("2026-09-02: 4.1")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "UNRATE" })).toHaveAttribute("href", "https://fred.stlouisfed.org/series/UNRATE");
     expect(screen.getByText(/A reference date is not a publication date/)).toBeInTheDocument();
+    expect(screen.getByText(/No usable values for this US macro series in the selected date window/)).toBeInTheDocument();
     expect(screen.getByText(/Neither a saved vintage nor a release-time audit/)).toBeInTheDocument();
     expect(macroObservationsMock).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: "Check FRED values as of 2026-09-10" }));

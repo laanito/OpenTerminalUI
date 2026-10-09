@@ -290,6 +290,9 @@ documents the principal gates, but intentionally does not accept or persist
 provider secrets in the browser. In particular:
 
 - `FRED_API_KEY` unlocks live macro indicators and yield-curve series.
+  In Docker Compose deployments, `.env` supplies substitution values; recreate
+  the backend service after adding or changing the key so its environment is
+  updated. The cross-market FRED panel shows US-wide series, not ticker facts.
 - `FMP_API_KEY` unlocks commodities and broadens US fundamentals coverage.
 - `SEC_USER_AGENT` enables on-demand SEC filed facts; identify the application
   and a contact email. Without it, no SEC request is made.

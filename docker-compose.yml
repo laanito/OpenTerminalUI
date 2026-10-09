@@ -9,6 +9,7 @@ services:
     environment:
       OPENTERMINALUI_ENV: "${OPENTERMINALUI_ENV:-development}"
       FMP_API_KEY: "${FMP_API_KEY:-}"
+      FRED_API_KEY: "${FRED_API_KEY:-}"
       SEC_USER_AGENT: "${SEC_USER_AGENT:-}"
       FINNHUB_API_KEY: "${FINNHUB_API_KEY:-}"
       COINGECKO_API_KEY: "${COINGECKO_API_KEY:-}"
