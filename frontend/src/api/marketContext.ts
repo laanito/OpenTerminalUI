@@ -291,6 +291,24 @@ export interface MarketMacroObservationsResponse {
   series: MarketMacroObservationSeries[];
 }
 
+export interface EuroAreaMacroResponse {
+  start_date: string;
+  end_date: string;
+  retrieved_at: string;
+  region: "EA21";
+  status: "available" | "unavailable";
+  reason: "provider_error" | null;
+  series: {
+    series_id: "prc_hicp_minr" | "une_rt_m" | "FM.D.U2.EUR.4F.KR.DFR.LEV";
+    label: string;
+    source: "eurostat" | "ecb";
+    units: string;
+    frequency: string;
+    status: "available" | "no_observations" | "feed_error";
+    observations: { reference_date: string; value: number; flag: string | null }[];
+  }[];
+}
+
 export interface MarketFundamentalRelease {
   release_date: string;
   fiscal_period_end: string;
@@ -474,6 +492,13 @@ export async function fetchMarketContextMacroObservations(
 ): Promise<MarketMacroObservationsResponse> {
   const response = await api.post<MarketMacroObservationsResponse>("/market-context/macro-observations", {
     start_date: startDate, end_date: endDate, ...(realtimeDate ? { realtime_date: realtimeDate } : {}),
+  });
+  return response.data;
+}
+
+export async function fetchEuroAreaMacroObservations(startDate: string, endDate: string): Promise<EuroAreaMacroResponse> {
+  const response = await api.post<EuroAreaMacroResponse>("/market-context/macro-observations/euro-area", {
+    start_date: startDate, end_date: endDate,
   });
   return response.data;
 }

@@ -228,6 +228,12 @@ never silently faked.
   from the current view only where source units and frequency match. FRED's
   daily historical view is not a saved terminal snapshot, intraday release
   record, comprehensive availability audit, or proof of a market reaction.
+  A separate keyless euro-area pilot uses Eurostat EA21 HICP annual change and
+  seasonally adjusted unemployment plus the ECB deposit facility rate. Its
+  monthly dates label reference months, not release dates; Eurostat exposes
+  current dataset versions rather than historical vintages. The ECB series
+  uses a changing euro-area composition. Provider flags and partial failures
+  are shown, but no series is inferred to be relevant to a ticker.
 - **Fundamental release context is a candidate snapshot, not a historical
   vintage.** The comparison panel checks current provider records on demand
   and displays only source-reported filing/acceptance dates in the observed

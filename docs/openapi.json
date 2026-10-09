@@ -4749,6 +4749,158 @@
         "title": "EquityPerformanceSnapshot",
         "type": "object"
       },
+      "EuroAreaMacroObservation": {
+        "properties": {
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "reference_date": {
+            "format": "date",
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "reference_date",
+          "value"
+        ],
+        "title": "EuroAreaMacroObservation",
+        "type": "object"
+      },
+      "EuroAreaMacroResponse": {
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "const": "provider_error",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "region": {
+            "const": "EA21",
+            "title": "Region",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/EuroAreaMacroSeries"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "retrieved_at",
+          "region",
+          "status",
+          "reason",
+          "series"
+        ],
+        "title": "EuroAreaMacroResponse",
+        "type": "object"
+      },
+      "EuroAreaMacroSeries": {
+        "properties": {
+          "frequency": {
+            "title": "Frequency",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/EuroAreaMacroObservation"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "series_id": {
+            "enum": [
+              "prc_hicp_minr",
+              "une_rt_m",
+              "FM.D.U2.EUR.4F.KR.DFR.LEV"
+            ],
+            "title": "Series Id",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "eurostat",
+              "ecb"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_observations",
+              "feed_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "units": {
+            "title": "Units",
+            "type": "string"
+          }
+        },
+        "required": [
+          "series_id",
+          "label",
+          "source",
+          "units",
+          "frequency",
+          "status",
+          "observations"
+        ],
+        "title": "EuroAreaMacroSeries",
+        "type": "object"
+      },
       "EventsSummary": {
         "properties": {
           "events": {
@@ -27687,6 +27839,60 @@
           }
         ],
         "summary": "Get Market Context Macro Observations",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/macro-observations/euro-area": {
+      "post": {
+        "description": "Current-vintage EA21 observations, not historical release-time evidence.",
+        "operationId": "get_market_context_euro_area_macro_observations_api_market_context_macro_observations_euro_area_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketMacroEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EuroAreaMacroResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Market Context Euro Area Macro Observations",
         "tags": [
           "market-context"
         ],

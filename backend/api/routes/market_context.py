@@ -29,6 +29,7 @@ from backend.services.cross_market_context import (
     yahoo_reported_quote_unit,
 )
 from backend.services.economic_data import EconomicDataService, get_economic_data_service
+from backend.services.euro_area_macro import get_euro_area_macro_observations
 from backend.services.fundamental_evidence import source_dated_candidates
 from backend.services.forex_service import SUPPORTED_CURRENCIES, service as forex_service
 from backend.services.return_decomposition import decompose_base_currency_return
@@ -399,6 +400,30 @@ class MarketMacroObservationsResponse(BaseModel):
     status: Literal["available", "unavailable"]
     reason: Literal["missing_api_key", "provider_error"] | None
     series: list[MarketMacroObservationSeries]
+
+
+class EuroAreaMacroObservation(MarketMacroObservation):
+    flag: str | None = None
+
+
+class EuroAreaMacroSeries(BaseModel):
+    series_id: Literal["prc_hicp_minr", "une_rt_m", "FM.D.U2.EUR.4F.KR.DFR.LEV"]
+    label: str
+    source: Literal["eurostat", "ecb"]
+    units: str
+    frequency: str
+    status: Literal["available", "no_observations", "feed_error"]
+    observations: list[EuroAreaMacroObservation]
+
+
+class EuroAreaMacroResponse(BaseModel):
+    start_date: date
+    end_date: date
+    retrieved_at: datetime
+    region: Literal["EA21"]
+    status: Literal["available", "unavailable"]
+    reason: Literal["provider_error"] | None
+    series: list[EuroAreaMacroSeries]
 
 
 class MarketFundamentalsRequest(BaseModel):
@@ -910,6 +935,17 @@ async def get_market_context_macro_observations(
         payload.start_date, payload.end_date, realtime_date=payload.realtime_date,
     )
     return {"start_date": payload.start_date, "end_date": payload.end_date, "source": "fred", **result}
+
+
+@router.post("/macro-observations/euro-area", response_model=EuroAreaMacroResponse)
+async def get_market_context_euro_area_macro_observations(
+    payload: MarketMacroEventsRequest,
+    _: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Current-vintage EA21 observations, not historical release-time evidence."""
+    _validate_context_window(payload.start_date, payload.end_date)
+    result = await get_euro_area_macro_observations(payload.start_date, payload.end_date)
+    return {"start_date": payload.start_date, "end_date": payload.end_date, **result}
 
 
 @router.post("/fundamental-releases", response_model=MarketFundamentalsResponse)

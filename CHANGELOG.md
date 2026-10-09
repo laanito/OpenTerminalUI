@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Euro-area macro context pilot** — an independent on-demand panel shows
+  official Eurostat HICP/unemployment and ECB deposit-rate observations in the
+  pair window, including source, reference period, provider flags, and partial
+  failures. It uses no API key or sample fallback and makes no historical
+  release-time or asset-causality claim.
 - **Price-versus-FX endpoint attribution** — eligible reporting-currency
   returns now disclose native price, FX-rate, and interaction components per
   asset and for the pair difference, using the same dated endpoint evidence.

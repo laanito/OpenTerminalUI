@@ -479,6 +479,15 @@ units/frequency remain distinct. This is a provider-returned daily historical
 view, not a locally preserved snapshot, exact intraday publication timeline,
 or guarantee of what any market participant saw. Wider release-time and
 coverage validation remain open.
+An independent euro-area pilot now checks the same pair window against
+Eurostat's EA21 HICP annual-change and seasonally adjusted unemployment
+series and the ECB's euro-area deposit facility rate. It is on demand, public,
+source-labelled, and never uses sample data. Monthly observations are labelled
+by reference month and may be revised; the ECB rate is an observed level, not
+a scheduled release event. Provider flags, retrieval time, and partial failures
+remain visible. This is not a FRED-style historical-vintage cross-check:
+release timestamps, point-in-time availability, geographical expansion, and
+asset relevance remain open gates.
 
 ## Release plan
 
