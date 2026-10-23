@@ -7,11 +7,26 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Opt-in context briefing APIs (v2.3)** — separate authenticated evidence,
+  synthesis and progress-streaming endpoints fetch selected dated headlines and
+  US/euro-area macro observations within each actual price window. Bounded
+  fan-out, deadlines, cancellation and isolated failures preserve useful price
+  evidence. Checked output separates observations, possible context, limitations
+  and unknowns; context statements link exact sources to pairs. Model failure
+  retains the full packet; oversized input fails explicitly. References are not
+  semantic fact-checks. Existing price-only APIs and browser remain unchanged;
+  opt-in browser controls follow in the next slice.
 - **Optional briefing context contract (v2.3 foundation)** — a pure server-side
   projection preserves selected dated headline and US/euro-area macro evidence
   alongside the original price packet, with local citations, source metadata,
   explicit coverage/failure states, bounded output and a complete fingerprint.
   No providers, synthesis, public API or browser behavior change in this slice.
+
+### Fixed
+- Explicitly close/join the underlying comparison-briefing lifecycle when either
+  stream wrapper closes, so in-flight source/model work does not await garbage
+  collection. Headline fetch logs expose exception types rather than raw errors
+  that could contain provider credentials.
 
 ### Documentation
 - Record the approved v2.3 **Context beyond price** scope and review sequence;

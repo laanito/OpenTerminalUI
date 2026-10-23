@@ -235,13 +235,29 @@ accepted the live workflow on 2026-10-21, and v2.2.0 was published that day.
 The configured model influences prose quality; reference checks
 do not compensate for weaker reasoning, and model tuning remains later work.
 
-### v2.3 optional context foundation in development
+### v2.3 optional context APIs in development
 
 The approved next step is explicitly selected news and US/euro-area macro
-observations in the comparison briefing. The first implementation is an internal
-deterministic projection, not a new endpoint or UI control. Existing v2.2
-briefings still receive price-only evidence; do not send new selection fields
-to the current APIs or assume visible optional panels inform their answer.
+observations in the comparison briefing. The browser still uses v2.2 price-only
+briefings; visible optional panels never implicitly inform their answer.
+Separate JWT-authenticated endpoints now accept explicit context selection:
+
+- `POST /api/market-context/briefing-context-evidence`: prepare evidence only.
+- `POST /api/market-context/briefing-context`: prepare and synthesize.
+- `POST /api/market-context/briefing-context/stream`: progress and a checked final
+  result, not unchecked model tokens. Disconnect cancels work; never replay
+  automatically after interruption.
+
+For example, use the following body with a browser-user bearer JWT (not an
+external-note API key):
+
+```json
+{"anchor":"AAPL","comparisons":["SPY"],"period":"1M","context":{"news":true,"macro_regions":["us","euro_area"]}}
+```
+
+Choose at least one source; omit unneeded sources/regions. Regions are explicit,
+not inferred from symbols. Existing `/briefing-evidence`, `/briefing` and
+`/briefing/stream` reject context fields and retain their price-only contracts.
 
 The new envelope retains the original price packet and separately selected
 per-pair context. A selected but unprepared source is unavailable, not an empty
@@ -255,8 +271,23 @@ Only current-at-retrieval macro views are supported by this initial contract.
 Section/group/item references are local to the complete fingerprinted envelope,
 not cross-request identifiers or fact-checks. News is untrusted source text and
 current feeds do not establish complete historical coverage. Macro is global
-context, not issuer-specific relevance or causal attribution. Collection,
-generation and opt-in browser controls follow in separate reviewable slices;
+context, not issuer-specific relevance or causal attribution. Synthesis separates
+price observations, possible context, limitations and unknowns. Possible context
+requires an available headline/series plus its linked pair; selected sections,
+missing inputs and material truncation/withholding/flags must be disclosed.
+These are structural checks, not semantic verification of the model's reasoning.
+
+Price preparation has 45 seconds, followed by up to 40 seconds for context with
+12-second source jobs and at most three concurrent jobs. Identical macro
+region/window queries share a fetch within the operation. Optional failures
+retain completed sources and prices. Model health, completion and one repair
+share the configured model deadline. The serialized evidence input cap is
+120,000 characters, with explicit `evidence_too_large` rather than silently
+discarded sources; the completion output cap is 4,800 tokens. Typed model
+failures return the entire packet and no prose. The stream's start event reports
+price/context/model budgets; `collecting_context` is a progress phase.
+
+Opt-in browser controls and live acceptance follow in the next reviewable slice;
 fundamentals, technicals, private research and saving remain excluded.
 
 ### Complete contract

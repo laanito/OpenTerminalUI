@@ -95,9 +95,18 @@ release-level interpretation and safety boundaries.
   selected regions are never inferred from tickers, headline text is untrusted,
   values/flags/counts survive bounded projection, and references are local to a
   separately fingerprinted envelope. Its nested v2.2 price packet keeps its
-  original price-only scope. No providers, model, route, UI, persistence or
-  indexing are added yet. Bounded server collection/synthesis and the opt-in
-  browser journey follow; v2.2 runtime behavior remains unchanged. Fundamentals,
+  original price-only scope. Separate JWT-only `/briefing-context-evidence`,
+  `/briefing-context` and `/briefing-context/stream` endpoints now collect selected
+  sources and synthesize observations/possible context/limitations/unknowns.
+  Context collection is bounded to 40s, 12s per source, three concurrent jobs;
+  identical macro region/window requests share one fetch within the operation.
+  Price preparation retains 45s and model health/completion/one repair share the
+  configured LLM deadline. Exact references, linked pairs and coverage are checked,
+  not prose truth. Evidence above 120,000 serialized characters is rejected for
+  synthesis without silent trimming; model failure retains the entire envelope.
+  Closing either briefing stream immediately cancels/joins its operation. The
+  opt-in browser journey is next; no UI, persistence or indexing is added yet,
+  and existing v2.2 request/result shapes stay price-only. Fundamentals,
   technicals, private notes, portfolio-wide context, discovery, saving and new
   provider acquisition are excluded. Calendar-provider reliability and historical
   vintage/release audits are not gates on this milestone.

@@ -6,11 +6,12 @@ import asyncio
 import json
 import logging
 from collections.abc import Callable
+from contextlib import aclosing
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from backend.api.deps import get_unified_fetcher
 from backend.api.routes.market_context import (
@@ -26,6 +27,12 @@ from backend.services.comparison_briefing import (
     BriefingPhase, ComparisonBriefingResult, generate_comparison_briefing, unavailable_briefing,
 )
 from backend.services.insight_lifecycle import stream_insight_lifecycle
+from backend.services.economic_data import EconomicDataService, get_economic_data_service
+from backend.services.comparison_context_briefing import (
+    ComparisonContextBriefingResult, generate_context_briefing, unavailable_context_briefing,
+)
+from backend.services.market_briefing_context_collection import CONTEXT_TIMEOUT_SECONDS, collect_context_evidence
+from backend.services.market_briefing_context_evidence import BriefingContextOptions, ComparisonContextEvidence
 from backend.services.market_briefing_evidence import (
     ComparisonBriefingEvidence,
     build_comparison_evidence,
@@ -152,15 +159,125 @@ async def stream_comparison_briefing(
         return result.model_dump(mode="json")
 
     async def events():
-        async for event in stream_insight_lifecycle(operation):
-            if event["type"] == "start":
-                event = {**event, "deadlines": {
-                    "evidence_seconds": EVIDENCE_TIMEOUT_SECONDS,
-                    "model_seconds": get_settings().llm_timeout_seconds,
-                }}
-            elif event["type"] == "progress":
-                event = {**event, "phase": phase}
-            yield json.dumps(event, separators=(",", ":")) + "\n"
+        async with aclosing(stream_insight_lifecycle(operation)) as lifecycle:
+            async for event in lifecycle:
+                if event["type"] == "start":
+                    event = {**event, "deadlines": {
+                        "evidence_seconds": EVIDENCE_TIMEOUT_SECONDS,
+                        "model_seconds": get_settings().llm_timeout_seconds,
+                    }}
+                elif event["type"] == "progress":
+                    event = {**event, "phase": phase}
+                yield json.dumps(event, separators=(",", ":")) + "\n"
+
+    return StreamingResponse(events(), media_type="application/x-ndjson", headers={
+        "Cache-Control": "no-store", "X-Accel-Buffering": "no",
+    })
+
+
+class ComparisonContextBriefingRequest(ComparisonBriefingEvidenceRequest):
+    context: BriefingContextOptions
+
+    @model_validator(mode="after")
+    def selected_context(self):
+        if not self.context.news and not self.context.macro_regions:
+            raise ValueError("Select news or a macro region; use /briefing for price-only synthesis")
+        return self
+
+
+@router.post(
+    "/briefing-context-evidence", response_model=ComparisonContextEvidence,
+    responses={504: {"description": "Price evidence timed out; no context packet was created."}},
+)
+async def prepare_context_briefing_evidence(
+    payload: ComparisonContextBriefingRequest,
+    user: User = Depends(get_current_user),
+    fetcher: Any = Depends(get_unified_fetcher),
+    economic_service: EconomicDataService = Depends(get_economic_data_service),
+) -> ComparisonContextEvidence:
+    """Fresh price plus explicitly selected news/regions; no model, save or index.
+
+    Price preparation has a 45s budget, selected context a further 40s with up
+    to three concurrent source jobs and 12s per job. Partial context survives
+    its deadline; all references resolve within this exact returned snapshot.
+    """
+    price_payload = _normalized_payload(payload)
+    price = await prepare_comparison_briefing_evidence(price_payload, user, fetcher)
+    return await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service)
+
+
+async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None):
+    if on_phase:
+        on_phase("preparing_evidence")
+    try:
+        price = await prepare_comparison_briefing_evidence(_normalized_payload(payload), user, fetcher)
+    except HTTPException as exc:
+        if exc.status_code != 504:
+            raise
+        return unavailable_context_briefing("evidence_timed_out")
+    if on_phase:
+        on_phase("collecting_context")
+    evidence = await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service)
+    return await generate_context_briefing(evidence, on_phase=on_phase)
+
+
+@router.post("/briefing-context", response_model=ComparisonContextBriefingResult)
+async def create_context_briefing(
+    payload: ComparisonContextBriefingRequest,
+    user: User = Depends(get_current_user),
+    fetcher: Any = Depends(get_unified_fetcher),
+    economic_service: EconomicDataService = Depends(get_economic_data_service),
+) -> ComparisonContextBriefingResult:
+    """Opt-in dated context synthesis. No causal verification or investment advice.
+
+    The complete price/context snapshot and fixed scope notice survive model
+    failure. Citation validation checks references and coverage, not prose truth.
+    Unselected v2.2 endpoints retain their price-only contract.
+    """
+    _normalized_payload(payload)
+    return await _run_context_briefing(payload, user, fetcher, economic_service)
+
+
+@router.post(
+    "/briefing-context/stream", response_class=StreamingResponse,
+    responses={200: {"content": {"application/x-ndjson": {"schema": {
+        "type": "string", "description": (
+            "NDJSON start with price/context/model budgets, progress phases including "
+            "collecting_context, and one checked ComparisonContextBriefingResult or error. "
+            "No raw model deltas; disconnect cancels collection and synthesis."
+        ),
+    }}}}},
+)
+async def stream_context_briefing(
+    payload: ComparisonContextBriefingRequest,
+    user: User = Depends(get_current_user),
+    fetcher: Any = Depends(get_unified_fetcher),
+    economic_service: EconomicDataService = Depends(get_economic_data_service),
+) -> StreamingResponse:
+    """Cancellable completion-based context synthesis, without automatic replay."""
+    _normalized_payload(payload)  # Reject malformed symbols before 200 headers.
+    phase: BriefingPhase = "preparing_evidence"
+
+    def set_phase(value: BriefingPhase):
+        nonlocal phase
+        phase = value
+
+    async def operation():
+        result = await _run_context_briefing(payload, user, fetcher, economic_service, set_phase)
+        return result.model_dump(mode="json")
+
+    async def events():
+        async with aclosing(stream_insight_lifecycle(operation)) as lifecycle:
+            async for event in lifecycle:
+                if event["type"] == "start":
+                    event = {**event, "deadlines": {
+                        "evidence_seconds": EVIDENCE_TIMEOUT_SECONDS,
+                        "context_seconds": CONTEXT_TIMEOUT_SECONDS,
+                        "model_seconds": get_settings().llm_timeout_seconds,
+                    }}
+                elif event["type"] == "progress":
+                    event = {**event, "phase": phase}
+                yield json.dumps(event, separators=(",", ":")) + "\n"
 
     return StreamingResponse(events(), media_type="application/x-ndjson", headers={
         "Cache-Control": "no-store", "X-Accel-Buffering": "no",

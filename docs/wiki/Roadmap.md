@@ -359,7 +359,12 @@ The review boundaries are:
    sources server-side, reuse existing providers, and extend generation to cite
    that exact envelope. Optional failure must preserve useful price evidence,
    not imply there was no news or relevant macro activity. Preserve deadlines,
-   cancellation, no automatic replay, and the unselected v2.2 behavior.
+   cancellation, no automatic replay, and the unselected v2.2 behavior. Implemented
+   in separate authenticated context evidence/synthesis/stream endpoints, with
+   exact source-to-pair references, explicit coverage checks and retained evidence
+   on model failure. Context gets a bounded 40s collection budget (12s/source,
+   three concurrent jobs) after price preparation; health/generation/one repair
+   share the configured model deadline. Browser opt-in remains the next slice.
 3. **Opt-in browser journey and acceptance.** Expose scope and explicit US/
    euro-area macro choices, source coverage and context citations; changing scope
    invalidates old work. Host acceptance should inspect a genuinely more useful

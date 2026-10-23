@@ -954,7 +954,7 @@ async def get_market_context_headlines(
         try:
             candidates = await _fetch_ticker_news(symbol, market=None, limit=_NEWS_FETCH_LIMIT)
         except Exception as exc:
-            logger.warning("Market-context headline fetch failed for %s: %s", symbol, exc)
+            logger.warning("Market-context headline fetch failed for %s (%s)", symbol, type(exc).__name__)
             return {"symbol": symbol, "status": "feed_error", "examined_count": 0, "matched_count": 0, "headlines": []}
 
         matched = []

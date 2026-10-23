@@ -1733,6 +1733,30 @@
         "title": "BriefingAssetEvidence",
         "type": "object"
       },
+      "BriefingContextOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "macro_regions": {
+            "items": {
+              "enum": [
+                "us",
+                "euro_area"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "title": "Macro Regions",
+            "type": "array"
+          },
+          "news": {
+            "default": false,
+            "title": "News",
+            "type": "boolean"
+          }
+        },
+        "title": "BriefingContextOptions",
+        "type": "object"
+      },
       "BriefingPairEvidence": {
         "properties": {
           "anchor": {
@@ -3239,6 +3263,253 @@
         "title": "ComparisonBriefingResult",
         "type": "object"
       },
+      "ComparisonContextBriefingRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "examples": [
+              "AAPL"
+            ],
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparisons": {
+            "examples": [
+              [
+                "SPY",
+                "BTC-USD"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Comparisons",
+            "type": "array"
+          },
+          "context": {
+            "$ref": "#/components/schemas/BriefingContextOptions"
+          },
+          "period": {
+            "default": "1M",
+            "enum": [
+              "1M",
+              "3M",
+              "6M"
+            ],
+            "title": "Period",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparisons",
+          "context"
+        ],
+        "title": "ComparisonContextBriefingRequest",
+        "type": "object"
+      },
+      "ComparisonContextBriefingResult": {
+        "properties": {
+          "citation_validation": {
+            "const": "references_only_not_fact_checked",
+            "default": "references_only_not_fact_checked",
+            "title": "Citation Validation",
+            "type": "string"
+          },
+          "engine": {
+            "enum": [
+              "llm",
+              "unavailable"
+            ],
+            "title": "Engine",
+            "type": "string"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComparisonContextEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextBriefingFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "$ref": "#/components/schemas/ContextStatement"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingStatement"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "possible_context": {
+            "items": {
+              "$ref": "#/components/schemas/ContextStatement"
+            },
+            "title": "Possible Context",
+            "type": "array"
+          },
+          "scope_citation_id": {
+            "const": "SCOPE",
+            "default": "SCOPE",
+            "title": "Scope Citation Id",
+            "type": "string"
+          },
+          "scope_notice": {
+            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+            "title": "Scope Notice",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unknowns": {
+            "items": {
+              "$ref": "#/components/schemas/ContextStatement"
+            },
+            "title": "Unknowns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status",
+          "engine",
+          "model",
+          "generated_at",
+          "evidence"
+        ],
+        "title": "ComparisonContextBriefingResult",
+        "type": "object"
+      },
+      "ComparisonContextEvidence": {
+        "properties": {
+          "always_excluded": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Always Excluded",
+            "type": "array"
+          },
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "citation_scope": {
+            "const": "packet_local",
+            "default": "packet_local",
+            "title": "Citation Scope",
+            "type": "string"
+          },
+          "evidence_kind": {
+            "const": "comparison_with_optional_context",
+            "default": "comparison_with_optional_context",
+            "title": "Evidence Kind",
+            "type": "string"
+          },
+          "macro_limit_per_series": {
+            "default": 24,
+            "title": "Macro Limit Per Series",
+            "type": "integer"
+          },
+          "news_limit_per_symbol": {
+            "default": 5,
+            "title": "News Limit Per Symbol",
+            "type": "integer"
+          },
+          "packet_id": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Packet Id",
+            "type": "string"
+          },
+          "prepared_at": {
+            "format": "date-time",
+            "title": "Prepared At",
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/ComparisonBriefingEvidence"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/BriefingContextOptions"
+          },
+          "schema_version": {
+            "const": "1",
+            "default": "1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/NewsContextSection"
+                },
+                {
+                  "$ref": "#/components/schemas/MacroContextSection"
+                }
+              ]
+            },
+            "maxItems": 18,
+            "title": "Sections",
+            "type": "array"
+          }
+        },
+        "required": [
+          "packet_id",
+          "prepared_at",
+          "requested",
+          "price",
+          "sections",
+          "caveats",
+          "always_excluded"
+        ],
+        "title": "ComparisonContextEvidence",
+        "type": "object"
+      },
       "CompileError": {
         "properties": {
           "col": {
@@ -3312,6 +3583,95 @@
           "success"
         ],
         "title": "CompileResult",
+        "type": "object"
+      },
+      "ContextBriefingFailure": {
+        "properties": {
+          "code": {
+            "enum": [
+              "no_evidence",
+              "disabled",
+              "provider_unavailable",
+              "provider_error",
+              "invalid_response",
+              "timeout",
+              "evidence_timed_out",
+              "evidence_too_large"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "retryable"
+        ],
+        "title": "ContextBriefingFailure",
+        "type": "object"
+      },
+      "ContextObservation": {
+        "properties": {
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "reference_date": {
+            "format": "date",
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "reference_date",
+          "value"
+        ],
+        "title": "ContextObservation",
+        "type": "object"
+      },
+      "ContextStatement": {
+        "additionalProperties": false,
+        "properties": {
+          "citation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 160,
+            "minItems": 1,
+            "title": "Citation Ids",
+            "type": "array"
+          },
+          "text": {
+            "maxLength": 600,
+            "minLength": 10,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "citation_ids"
+        ],
+        "title": "ContextStatement",
         "type": "object"
       },
       "ConvictionIngestRequest": {
@@ -7860,6 +8220,254 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "MacroContextSection": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "kind": {
+            "const": "macro",
+            "default": "macro",
+            "title": "Kind",
+            "type": "string"
+          },
+          "pair_citation_id": {
+            "title": "Pair Citation Id",
+            "type": "string"
+          },
+          "realtime_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realtime Date"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "region": {
+            "enum": [
+              "us",
+              "euro_area"
+            ],
+            "title": "Region",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/MacroContextSeries"
+            },
+            "maxItems": 3,
+            "title": "Series",
+            "type": "array"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "empty",
+              "unavailable",
+              "no_price_window"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "vintage_basis": {
+            "const": "current_at_retrieval",
+            "default": "current_at_retrieval",
+            "title": "Vintage Basis",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "pair_citation_id",
+          "start_date",
+          "end_date",
+          "status",
+          "region"
+        ],
+        "title": "MacroContextSection",
+        "type": "object"
+      },
+      "MacroContextSeries": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "frequency": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/ContextObservation"
+            },
+            "maxItems": 24,
+            "title": "Observations",
+            "type": "array"
+          },
+          "returned_observation_count": {
+            "minimum": 0.0,
+            "title": "Returned Observation Count",
+            "type": "integer"
+          },
+          "series_id": {
+            "title": "Series Id",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "fred",
+              "eurostat",
+              "ecb"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_observations",
+              "feed_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 600,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "units": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units"
+          },
+          "upstream_matched_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Matched Count"
+          },
+          "withheld_conflict_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withheld Conflict Count"
+          }
+        },
+        "required": [
+          "citation_id",
+          "series_id",
+          "label",
+          "source",
+          "source_url",
+          "title",
+          "units",
+          "frequency",
+          "status",
+          "returned_observation_count",
+          "observations"
+        ],
+        "title": "MacroContextSeries",
+        "type": "object"
+      },
       "MarketActionDisclosure": {
         "properties": {
           "actions": {
@@ -10567,6 +11175,233 @@
           }
         },
         "title": "MonteCarloPayload",
+        "type": "object"
+      },
+      "NewsContextGroup": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "examined_count": {
+            "minimum": 0.0,
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "headlines": {
+            "items": {
+              "$ref": "#/components/schemas/NewsContextItem"
+            },
+            "maxItems": 5,
+            "title": "Headlines",
+            "type": "array"
+          },
+          "matched_count": {
+            "minimum": 0.0,
+            "title": "Matched Count",
+            "type": "integer"
+          },
+          "returned_headline_count": {
+            "minimum": 0.0,
+            "title": "Returned Headline Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_matches",
+              "feed_error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "upstream_display_limit": {
+            "minimum": 1.0,
+            "title": "Upstream Display Limit",
+            "type": "integer"
+          },
+          "withheld_duplicate_count": {
+            "minimum": 0.0,
+            "title": "Withheld Duplicate Count",
+            "type": "integer"
+          },
+          "withheld_invalid_count": {
+            "minimum": 0.0,
+            "title": "Withheld Invalid Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "citation_id",
+          "symbol",
+          "status",
+          "examined_count",
+          "matched_count",
+          "upstream_display_limit",
+          "returned_headline_count",
+          "withheld_invalid_count",
+          "withheld_duplicate_count",
+          "headlines"
+        ],
+        "title": "NewsContextGroup",
+        "type": "object"
+      },
+      "NewsContextItem": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "source": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 600,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "title_truncated": {
+            "title": "Title Truncated",
+            "type": "boolean"
+          },
+          "url": {
+            "maxLength": 2048,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "title",
+          "title_truncated",
+          "url",
+          "source",
+          "published_at"
+        ],
+        "title": "NewsContextItem",
+        "type": "object"
+      },
+      "NewsContextSection": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "fetch_limit_per_symbol": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetch Limit Per Symbol"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/NewsContextGroup"
+            },
+            "maxItems": 2,
+            "title": "Groups",
+            "type": "array"
+          },
+          "kind": {
+            "const": "headlines",
+            "default": "headlines",
+            "title": "Kind",
+            "type": "string"
+          },
+          "pair_citation_id": {
+            "title": "Pair Citation Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          },
+          "source": {
+            "const": "current_keyless_feeds",
+            "default": "current_keyless_feeds",
+            "title": "Source",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "empty",
+              "unavailable",
+              "no_price_window"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "pair_citation_id",
+          "start_date",
+          "end_date",
+          "status"
+        ],
+        "title": "NewsContextSection",
         "type": "object"
       },
       "NewsSummary": {
@@ -28641,6 +29476,172 @@
           }
         ],
         "summary": "Create Comparison Briefing",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-context": {
+      "post": {
+        "description": "Opt-in dated context synthesis. No causal verification or investment advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.",
+        "operationId": "create_context_briefing_api_market_context_briefing_context_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparisonContextBriefingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonContextBriefingResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Context Briefing",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-context-evidence": {
+      "post": {
+        "description": "Fresh price plus explicitly selected news/regions; no model, save or index.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; all references resolve within this exact returned snapshot.",
+        "operationId": "prepare_context_briefing_evidence_api_market_context_briefing_context_evidence_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparisonContextBriefingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonContextEvidence"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "504": {
+            "description": "Price evidence timed out; no context packet was created."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Prepare Context Briefing Evidence",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-context/stream": {
+      "post": {
+        "description": "Cancellable completion-based context synthesis, without automatic replay.",
+        "operationId": "stream_context_briefing_api_market_context_briefing_context_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparisonContextBriefingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "NDJSON start with price/context/model budgets, progress phases including collecting_context, and one checked ComparisonContextBriefingResult or error. No raw model deltas; disconnect cancels collection and synthesis.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Context Briefing",
         "tags": [
           "market-context"
         ],

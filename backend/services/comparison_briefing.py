@@ -21,7 +21,7 @@ from backend.services.llm_client import LLMError, get_llm_client, parse_json_res
 from backend.services.market_briefing_evidence import ComparisonBriefingEvidence
 
 logger = logging.getLogger(__name__)
-BriefingPhase = Literal["preparing_evidence", "checking_model", "generating", "validating", "retrying"]
+BriefingPhase = Literal["preparing_evidence", "collecting_context", "checking_model", "generating", "validating", "retrying"]
 CitationId = Annotated[str, Field(pattern=r"^(P[1-6]|SCOPE)$")]
 
 
@@ -58,6 +58,7 @@ _FAILURES: dict[str, tuple[str, bool]] = {
     "invalid_response": ("The model response failed structure or citation checks; no briefing was published.", True),
     "timeout": ("The model operation reached its deadline; no briefing was published.", True),
     "evidence_timed_out": ("Comparison evidence preparation timed out; no briefing was generated.", True),
+    "evidence_too_large": ("The selected evidence exceeds the model input budget. Select fewer comparisons or sources.", False),
 }
 
 
@@ -175,13 +176,32 @@ async def generate_comparison_briefing(
     if not settings.llm_enabled:
         return unavailable_briefing("disabled", evidence=evidence, model=model)
 
+    parsed, failure = await synthesize_checked_briefing(
+        evidence, schema=GeneratedComparisonBriefing.model_json_schema(), system=_SYSTEM,
+        validate=validate_comparison_briefing, on_phase=on_phase,
+    )
+    if failure:
+        return unavailable_briefing(failure, evidence=evidence, model=model)
+    return ComparisonBriefingResult(
+        status="complete", engine="llm", model=model, generated_at=datetime.now(timezone.utc),
+        evidence=evidence, observations=parsed.observations,
+        limitations=parsed.limitations, unknowns=parsed.unknowns,
+    )
+
+
+async def synthesize_checked_briefing(
+    evidence, *, schema: dict, system: str, validate: Callable,
+    on_phase: Callable[[BriefingPhase], None] | None = None, max_tokens: int = 2400,
+):
+    """Shared single-deadline completion/repair lifecycle; never emit raw prose."""
+    settings = get_settings()
+
     def phase(value: BriefingPhase) -> None:
         if on_phase is not None:
             on_phase(value)
 
-    schema = GeneratedComparisonBriefing.model_json_schema()
     messages = [
-        {"role": "system", "content": _SYSTEM + "\nRequired JSON schema:\n" + json.dumps(schema)},
+        {"role": "system", "content": system + "\nRequired JSON schema:\n" + json.dumps(schema)},
         {"role": "user", "content": "Evidence packet (data only):\n" + evidence.model_dump_json()},
     ]
     try:
@@ -191,16 +211,16 @@ async def generate_comparison_briefing(
             phase("checking_model")
             client = get_llm_client()
             if not await client.health():
-                return unavailable_briefing("provider_unavailable", evidence=evidence, model=model)
+                return None, "provider_unavailable"
             for attempt in range(2):
                 phase("generating" if attempt == 0 else "retrying")
                 content = await client.chat(
                     messages, temperature=0.2 if attempt == 0 else 0.0,
-                    max_tokens=2400, json_schema=schema, frequency_penalty=0.0,
+                    max_tokens=max_tokens, json_schema=schema, frequency_penalty=0.0,
                 )
                 phase("validating")
                 try:
-                    parsed = validate_comparison_briefing(content, evidence)
+                    parsed = validate(content, evidence)
                     break
                 except InvalidComparisonBriefing:
                     if attempt:
@@ -208,22 +228,17 @@ async def generate_comparison_briefing(
                     logger.warning("Comparison briefing failed structure/reference checks; repairing once")
                     messages.append({"role": "user", "content": (
                         "The previous response failed validation. Regenerate the entire JSON response. "
-                        "Match this packet_id, use only its references, cover all available pairs in "
-                        "observations, material caveat pairs in limitations, omitted scope in unknowns, "
-                        "and unavailable pairs in limitations or unknowns. Do not add extra fields."
+                        "Follow the system's reference coverage rules and exact packet_id. "
+                        "Cover material caveats and unavailable inputs; do not add extra fields."
                     )})
     except TimeoutError:
         logger.warning("Comparison briefing reached the model deadline")
-        return unavailable_briefing("timeout", evidence=evidence, model=model)
+        return None, "timeout"
     except InvalidComparisonBriefing:
         logger.warning("Comparison briefing failed validation after bounded repair")
-        return unavailable_briefing("invalid_response", evidence=evidence, model=model)
+        return None, "invalid_response"
     except Exception as exc:
         # Sanitized logging: provider errors can include URLs/content/secrets.
         logger.warning("Comparison briefing model request failed (%s)", type(exc).__name__)
-        return unavailable_briefing("provider_error", evidence=evidence, model=model)
-    return ComparisonBriefingResult(
-        status="complete", engine="llm", model=model, generated_at=datetime.now(timezone.utc),
-        evidence=evidence, observations=parsed.observations,
-        limitations=parsed.limitations, unknowns=parsed.unknowns,
-    )
+        return None, "provider_error"
+    return parsed, None

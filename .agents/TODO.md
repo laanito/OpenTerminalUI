@@ -556,16 +556,28 @@ for every interpretation and honest degradation when optional sources fail.
       failed, not-prepared and missing-price-window states stay distinct.
       Context sections, groups, headlines and series have local references.
       First slice is pure projection/tests only: no API or generation change.
-- [ ] Collect selected context server-side with bounded fan-out/deadlines and
+- [x] Collect selected context server-side with bounded fan-out/deadlines and
       cancellation, skipping unselected sources and pairs without valid windows.
       Reuse existing current keyless headlines and US FRED/euro-area observations;
       expose explicit region choices rather than inferring ticker relevance.
       Provider exceptions must not leak keys or become successful empty searches.
-- [ ] Extend bounded generation/reference checks to the exact context envelope.
+      Separate JWT-only `/briefing-context-evidence`, `/briefing-context` and
+      `/briefing-context/stream` routes leave old price-only requests unchanged.
+      Price preparation has 45s, context 40s total/12s per source with three
+      concurrent jobs; identical macro region/window requests share one fetch
+      within the operation. Completed sources survive optional deadlines.
+- [x] Extend bounded generation/reference checks to the exact context envelope.
       Treat provider text as untrusted evidence, preserve mandatory source
       caveats, distinguish possible context from observation/unknowns, and retain
       useful price-only interpretation when selected optional context is absent.
       Preserve the unselected v2.2 contract and no automatic replay behavior.
+      Observations use price references; possible context requires an available
+      headline/series and its linked pair. Selected sections, missing inputs and
+      material coverage/flags must be disclosed. Health, completion and one repair
+      share the configured model deadline; no unchecked deltas are emitted.
+      Evidence above 120,000 serialized characters fails explicitly without
+      dropping sources. Completion output allows 4,800 tokens. Both stream
+      wrappers now close/join their lifecycle immediately on cancellation.
 - [ ] Add opt-in browser controls, scope/coverage inspection and context citation
       navigation. Scope changes cancel/invalidate prior work; an open optional
       page panel is never implicit consent to include it in model evidence.
