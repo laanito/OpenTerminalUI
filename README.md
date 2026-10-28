@@ -59,8 +59,11 @@ No saving/indexing, new provider setting or migration is introduced. Existing
 `FRED_API_KEY` and LLM settings apply; missing keys/providers degrade explicitly.
 The maintainer confirmed combined-context completion after repair. The fast
 model's reasoning quality remains limited; Fast/Deep profiles are approved for
-v2.4, not implemented here. The full local release gate and eight Chrome smoke
+v2.4 and are not part of published v2.3. The full local release gate and eight Chrome smoke
 journeys passed. Publication is complete; deployment is managed separately.
+
+Release reflection: [Why more context is not enough](https://blog.praderas.org/blog/en/openterminalui-more-context-is-not-enough)
+([Español](https://blog.praderas.org/blog/openterminalui-mas-contexto-no-basta)).
 
 Previous release:
 
@@ -94,7 +97,7 @@ v2.0 introduced the bounded cross-market context journey alongside time-aware
 Second Brain and Brain Log foundations. v1 completed fork consolidation and
 base-currency portfolio accounting. See the [changelog](CHANGELOG.md) for release
 history and the [roadmap](docs/wiki/Roadmap.md) for bounded v2.3 scope and the
-approved, not-started v2.4 model-profile milestone.
+in-progress v2.4 model-profile milestone.
 
 ## Quick Start
 
@@ -316,6 +319,30 @@ can use the same settings.
 
 PostgreSQL uses pgvector when available; SQLite uses in-process cosine search.
 Model/provider failure is labelled, not a licence to fabricate an answer.
+
+#### v2.4 development — model-profile foundation
+
+The task registry and optional Deep configuration are implemented, but existing
+application workflows still use the legacy `LLM_*` model. Setting Deep does not
+yet switch Brain, briefings or insight cards; call-site/deadline/UI integration
+follows in reviewable slices. Embedding configuration and indexing are unchanged.
+
+| Variable | Meaning |
+|---|---|
+| `LLM_DEEP_MODEL` | Optional served Deep model; required if any other Deep override is set |
+| `LLM_DEEP_BASE_URL` | Optional independent HTTP(S) endpoint; omitted means use `LLM_BASE_URL` |
+| `LLM_DEEP_API_KEY` | Independent credential; only an omitted Deep URL may inherit `LLM_API_KEY` |
+| `LLM_DEEP_TIMEOUT_SECONDS` | Positive finite deadline; omitted inherits `LLM_TIMEOUT_SECONDS` |
+| `LLM_DEEP_STRUCTURED_OUTPUT` | `auto`, `json_schema`, `json` or `none`; configured Deep defaults to `auto` |
+
+An explicit Deep URL never inherits Fast credentials, even when both URLs name
+the same endpoint. Set the Deep key explicitly when needed. Empty Deep settings
+keep single-model behavior; partial configurations are rejected instead of
+silently ignored. The settings loader also accepts `OPENTERMINALUI_LLM_DEEP_*`
+aliases and equivalent `app.llm_deep_*` YAML keys. Compose forwards the plain
+environment variables. See [Architecture](docs/wiki/Architecture.md#model-profiles-and-task-routing-v24-foundation)
+for the audited task map and remaining integration work. No stronger model is
+downloaded, selected or deployed by these settings.
 Shared AI insight jobs support bounded retries, cancellation and streaming;
 Brain synthesis has its own streaming and fallback contract.
 

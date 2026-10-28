@@ -10,6 +10,12 @@ app:
   llm_enabled: true
   llm_timeout_seconds: 240.0
   llm_structured_output: "auto"  # auto | json_schema | json | none
+  # v2.4 foundation (application call sites opt in in later slices).
+  # llm_deep_model: "your-deep-model"
+  # llm_deep_base_url: "http://localhost:1234/v1"  # explicit URL never inherits Fast key
+  # llm_deep_api_key: ""  # configure host credentials via environment, not this file
+  # llm_deep_timeout_seconds: 600
+  # llm_deep_structured_output: "auto"
 
 data_sources:
   market_data:

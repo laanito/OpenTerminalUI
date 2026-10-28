@@ -11,8 +11,10 @@ GitHub release were published on 2026-10-28. The full local gate, eight Chrome
 smoke journeys and Compose configuration passed on 2026-10-27; see the ledger
 in `docs/wiki/Releasing.md`. README/wiki now describe the published workflow.
 The changelog publication date is reconciled without moving the release tag.
-No v2.3 release gate remains open. v2.4 Fast/Deep model-profile scope is approved,
-not started; broader v2.x items remain backlog rather than automatic follow-ups.
+No v2.3 release gate remains open. The bilingual chapter-19 article is published
+in `praderasblog` (PR #116), reflecting the context/repair/quality distinction.
+v2.4 Fast/Deep model-profile work started on 2026-10-28; broader v2.x items remain
+backlog rather than automatic follow-ups.
 
 ## Read order and sources of truth
 
@@ -129,7 +131,7 @@ release-level interpretation and safety boundaries.
   technicals, private notes, portfolio-wide context, discovery, saving and new
   provider acquisition are excluded. Calendar-provider reliability and historical
   vintage/release audits are not gates on this milestone.
-- **v2.4 scope approved, not started — Task-appropriate models.** After v2.3
+- **v2.4 in development — Task-appropriate models.** After v2.3
   closure, add named Fast/Deep generation profiles with explicit task routing,
   independent model/endpoint/credentials/timeout, legacy `LLM_*` compatibility,
   consistent deadlines and visible resolved identity. Deep failure must not
@@ -137,7 +139,13 @@ release-level interpretation and safety boundaries.
   Embeddings remain independent. Evaluate representative tasks for usefulness,
   fidelity and latency, not only structure. No model deployment, autonomous
   escalation, new evidence providers or broader validation features. See the
-  Roadmap and TODO before starting; no model-profile implementation has started.
+  Roadmap and TODO before continuing. First slice adds validated optional Deep
+  settings, task map/resolver and `get_llm_client(task=...)`; no application
+  call site is opted in yet. Legacy no-argument calls and embeddings are unchanged.
+  Deep settings alone do not reroute workflows. Explicit Deep URLs never inherit
+  Fast keys; when the Deep URL is omitted, the existing endpoint/key may be
+  inherited. See the architecture task map. Next: migrate callers together with deadlines, model
+  identity and cache behavior, then browser identity and representative evaluation.
 - **v2.2.0 released — Grounded Comparison Briefing.** The agreed outcome is
   on-demand cited synthesis of a selected comparison, with observations, possible
   context, conflicts and unknowns kept distinct. No causal explanations, trade

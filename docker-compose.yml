@@ -42,6 +42,13 @@ services:
       LLM_API_KEY: "${LLM_API_KEY:-}"
       LLM_ENABLED: "${LLM_ENABLED:-true}"
       LLM_TIMEOUT_SECONDS: "${LLM_TIMEOUT_SECONDS:-240}"
+      LLM_STRUCTURED_OUTPUT: "${LLM_STRUCTURED_OUTPUT:-}"
+      # v2.4 profile foundation. Workflows are wired in subsequent slices.
+      LLM_DEEP_MODEL: "${LLM_DEEP_MODEL:-}"
+      LLM_DEEP_BASE_URL: "${LLM_DEEP_BASE_URL:-}"
+      LLM_DEEP_API_KEY: "${LLM_DEEP_API_KEY:-}"
+      LLM_DEEP_TIMEOUT_SECONDS: "${LLM_DEEP_TIMEOUT_SECONDS:-}"
+      LLM_DEEP_STRUCTURED_OUTPUT: "${LLM_DEEP_STRUCTURED_OUTPUT:-}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

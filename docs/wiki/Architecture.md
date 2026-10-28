@@ -114,6 +114,60 @@ time. The Second Brain carries effective, recorded, and updated timestamps into
 retrieval and citations so later conflicting evidence can be treated as the
 current view without erasing the older view from history.
 
+### Model profiles and task routing (v2.4 foundation)
+
+`llm_profiles.py` defines an immutable explicit task map and pure profile
+resolution. `get_llm_client(task=...)` can build a client from that resolution;
+no-argument construction remains the legacy path, including embeddings. There
+is no automatic model router, inference during resolution or model escalation.
+Global `LLM_ENABLED` applies to both generation profiles. Resolution reports the
+requested and effective profiles, resolved model and deadline; callers must use
+that one resolution for health, gating, generation, repair and displayed identity.
+
+This is a configuration/factory foundation, not a completed workflow migration.
+All audited application call sites below still call the no-argument factory;
+setting `LLM_DEEP_MODEL` alone does not reroute them. Subsequent integration must
+update model metadata, caches, progress deadlines and browser budgets alongside
+the client call, not switch the model in isolation.
+
+| Generation task | Intended profile | Current caller |
+|---|---|---|
+| `news_sentiment` | Fast | `services/llm_sentiment.py` |
+| `stock_emotion` | Fast | `services/stock_emotion.py` |
+| `query_intent` | Fast | `services/ai_service.py` intent/filter extraction |
+| `filing_analysis` | Deep | `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
+| `brain_answer` | Deep | `services/brain/brain_service.py` completion/stream/fallback |
+| `comparison_briefing` | Deep | `comparison_briefing.py` shared price/context runner |
+| `stock_briefing` | Deep | `llm_insights.py` via asset-aware briefing routes |
+| `interrogate` | Deep | `llm_insights.py` via adversarial research routes |
+| `market_outlook` | Deep | `llm_insights.py` via collection/current-market facts |
+| `portfolio_risk` | Deep | `llm_insights.py` via risk routes |
+| `backtest_explanation` | Deep | `llm_insights.py` via backtest routes |
+| `collection_briefing` | Deep | `llm_insights.py` via collection routes |
+
+Fast/default retains existing `LLM_*` and legacy LM Studio settings. If Deep is
+unset, a requested Deep task resolves honestly to Fast rather than claiming a
+stronger model answered. A configured Deep model never falls back to Fast after
+failure. `LLM_DEEP_MODEL` is required when other Deep overrides are provided.
+Deep timeout inherits the legacy timeout unless explicit; resolved deadlines
+must be positive and finite. Configured Deep structured-output mode defaults
+to `auto` unless overridden.
+
+If the Deep URL is omitted, its endpoint and (unless explicitly overridden) key
+are inherited from Fast. Any explicitly configured Deep URL has independent
+credentials, even if identical to Fast's URL; no key and no Authorization header
+is valid for a local server. Deep URLs reject embedded credentials, queries,
+fragments, malformed ports and non-HTTP(S) schemes. Resolved profile repr and
+public identity omit endpoint/keys; settings errors hide input values and the
+new Deep key is excluded from settings repr/serialization. Host secrets must
+remain outside public Settings APIs and logs.
+
+The embedding service remains on the legacy endpoint/model/key and is not a
+generation task. No reindex, dimension change or embedding-model migration is
+introduced. Tests cover legacy and opt-in resolution, task choices, model
+failure isolation, credential boundaries, environment/YAML precedence and
+unchanged embedding requests. Live model-quality evaluation is still pending.
+
 Explicitly saved answers use the separate `brain_memos` store behind
 `/api/brain/memos`. A memo is an immutable snapshot of the question, answer,
 evidence scope, dated citations/content identities, generation time, and model
@@ -161,6 +215,29 @@ reference identities, bounds fetch/reader stalls using announced stage budgets,
 and never automatically replays a failed stream. Selection changes remount and
 abort the panel; generation guards ignore late completions. Configured host
 acceptance and v2.2.0 publication are complete.
+
+### Selected comparison context (v2.3)
+
+Separate `/briefing-context-evidence`, `/briefing-context` and
+`/briefing-context/stream` endpoints preserve the price-only contract while
+collecting explicitly selected current-feed news and US/euro-area macro data.
+`market_briefing_context_evidence.py` projects a separately fingerprinted envelope
+around the original price packet. `market_briefing_context_collection.py` bounds
+collection to 40 seconds, 12 per source job and three concurrent jobs, skipping
+missing price windows and sharing only identical macro region/window requests
+within the operation. Failed or malformed sources do not discard usable prices.
+
+`comparison_context_briefing.py` separates observations, possible context,
+limitations and unknowns; source/pair links, required coverage and material
+caveats are checked, not prose truth. Validator-derived requirements and safe
+failure feedback inform the single bounded repair. The entire envelope remains
+available on model failure. `ComparisonBriefingPanel.tsx` defaults to price-only,
+offers independent news/US/euro-area choices and clears work on scope changes.
+`comparisonContextBriefing.ts` validates the selected scope and source references
+and adds the context stage budget to the shared NDJSON reader deadline.
+`BriefingContextEvidence.tsx` renders exact section/group/headline/series targets,
+safe source links, coverage counts and macro flags. Current vintages do not
+establish past knowledge; there is no implicit private indexing or persistence.
 
 ## Frontend structure
 

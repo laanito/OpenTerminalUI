@@ -402,12 +402,23 @@ market-knowledge audits, model upgrades, trade advice and execution. These do no
 become compulsory sub-releases. v3 remains thesis-oriented multi-dimensional
 validation; v2.3 improves contextual understanding, not an investment verdict.
 
-## v2.4 — Task-appropriate models (approved scope, not started)
+## v2.4 — Task-appropriate models (in development)
 
 Agreed on 2026-10-27, after the v2.3 host test: keep quick AI tasks responsive
 without asking the same small model to perform every deep synthesis. Configure
 two named generation profiles, **Fast** and **Deep**, and route tasks explicitly.
 This milestone follows v2.3 closure; it is not another v2.3 release gate.
+
+Started on 2026-10-28 after v2.3 publication and its post-release article. The
+first slice audits the call sites and adds validated optional Deep settings,
+immutable task/profile resolution and an explicit client-factory opt-in.
+Existing application callers and embeddings still use the legacy factory:
+configuration alone does not yet reroute them. See the
+[architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
+Follow-up slices integrate comparison/insight calls with their deadlines,
+identity and caches, then Brain/remaining callers and browser identity, followed
+by representative live evaluation. Do not treat configuration support as a
+completed task migration or a proven improvement in reasoning quality.
 
 - **Fast:** sentiment scoring, classification and short summaries. **Deep:**
   Second Brain answers, comparison/context briefings, Interrogate and portfolio

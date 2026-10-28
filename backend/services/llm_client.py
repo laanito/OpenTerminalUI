@@ -21,6 +21,7 @@ from typing import Any
 import httpx
 
 from backend.config.settings import get_settings
+from backend.services.llm_profiles import GenerationTask, ResolvedLLMProfile, resolve_llm_profile
 
 _JSON_OBJ_RE = re.compile(r"\{.*\}", re.DOTALL)
 
@@ -50,6 +51,7 @@ class LLMClient:
         structured_output: str | None = None,
     ) -> None:
         settings = get_settings()
+        self.resolved_profile: ResolvedLLMProfile | None = None
         self.base_url = (base_url or settings.llm_base_url).rstrip("/")
         self.model = model or settings.llm_model
         self.embed_model = settings.llm_embed_model
@@ -328,6 +330,21 @@ def parse_json_response(content: str) -> dict[str, Any]:
     raise LLMError("Could not parse JSON from LLM response")
 
 
-def get_llm_client() -> LLMClient:
-    """Return an LLM client built from current settings."""
-    return LLMClient()
+def get_llm_client(task: GenerationTask | None = None) -> LLMClient:
+    """Legacy by default; explicit tasks opt into deterministic profile selection.
+
+    This creates no request and retries no other model. Callers must gate on
+    resolved_profile.enabled and use its timeout/model for the whole operation.
+    Existing no-argument callers (including embeddings) remain unchanged.
+    """
+    if task is None:
+        return LLMClient()
+    profile = resolve_llm_profile(get_settings(), task)
+    client = LLMClient(
+        base_url=profile.base_url, model=profile.model, timeout=profile.timeout_seconds,
+        # Empty string deliberately suppresses the constructor's legacy-key
+        # fallback when a separate Deep endpoint has no configured credential.
+        api_key=profile.api_key or "", structured_output=profile.structured_output,
+    )
+    client.resolved_profile = profile
+    return client

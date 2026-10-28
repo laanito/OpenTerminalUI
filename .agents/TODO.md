@@ -6,8 +6,9 @@ then merged. Following explicit maintainer authorization, the annotated tag and
 GitHub release were published on 2026-10-28. Backend/frontend/API metadata are
 aligned to 2.3.0; no v2.3 release gate remains. Host completion, bounded repair
 and the fast-model quality limitation are recorded below. v2.4 Fast/Deep profile
-scope is approved, not started; broader v2.x evidence work remains for discussion,
-not automatic execution.
+work started on 2026-10-28 after the bilingual chapter-19 blog article was published
+(blog PR #116); broader v2.x evidence work remains for discussion, not automatic
+execution.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -622,7 +623,8 @@ for every interpretation and honest degradation when optional sources fail.
       2026-10-28. No deployment rebuild or teardown was performed.
 - [x] Reconcile preparation notices and release handoff in post-release docs.
       The changelog now records October 28 publication rather than October 27
-      preparation; the tag remains on the reviewed merge. v2.4 is not started.
+      preparation; the tag remains on the reviewed merge. The chapter-19 release
+      article is published in ES/EN; v2.4 starts below without reopening v2.3.
 
 Excluded: fundamentals/SEC, technical measures, private notes, portfolio-wide
 context, automatic proxy discovery, saving/Brain indexing, trade recommendations,
@@ -630,23 +632,34 @@ execution and new providers. Initial macro scope is existing US/euro-area
 reference-period observations, not economic-calendar feeds or historical market-
 knowledge reconstruction. Model upgrades are not an implementation gate.
 
-### v2.4 — Task-appropriate models (approved, not started)
+### v2.4 — Task-appropriate models (in development)
 
 Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
 `docs/wiki/Roadmap.md`, not a new v2.3 acceptance gate.
 
-- [ ] Audit generation call sites and define explicit Fast/Deep task routing.
+- [x] Audit generation call sites and define explicit Fast/Deep task routing.
       Fast covers sentiment/classification/short summaries; Deep covers Brain,
       comparison briefings, Interrogate and portfolio risk synthesis.
-- [ ] Support independent profile model/endpoint/credentials/timeout, preserving
+      `llm_profiles.py` defines the closed map; Architecture records each caller
+      and its intended profile. None of these callers is migrated yet.
+- [x] Support independent profile model/endpoint/credentials/timeout, preserving
       existing `LLM_*` behavior when Deep is unset. Never accidentally forward
       credentials across endpoints. Embeddings stay independent and unchanged.
+      Optional `LLM_DEEP_*`, aliases/YAML and Compose forwarding are implemented.
+      Partial/invalid configuration is rejected safely; an explicit Deep URL
+      never inherits Fast credentials, even for the same endpoint. Resolver and
+      opt-in client factory are implemented; setting Deep alone does not switch
+      existing application workflows. Structured-output mode is profile-specific.
 - [ ] Resolve health checks, model requests, repair/stream/browser deadlines and
       displayed profile/model identity consistently. Configured Deep failures
       must remain explicit, not silently fall back to Fast or trigger escalation.
 - [ ] Test backward compatibility, task routing, failure isolation, secret handling
       and cancellation/deadlines; assess usefulness/source fidelity/latency on a
       small representative simple/deep task set with configured models.
+      Foundation tests cover configuration, task choices, secret handling,
+      explicit endpoint isolation and unchanged legacy embedding requests. Shared
+      operation/browser deadlines and visible profile identity still need caller
+      integration; live evaluation has not been run.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.

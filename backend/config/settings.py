@@ -3,10 +3,11 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+from urllib.parse import urlsplit
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from backend.config.env import load_local_env
 
@@ -14,6 +15,7 @@ load_local_env()
 
 
 class AppSettings(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
     app_name: str = "OpenTerminalUI API"
     app_version: str = "2.3.0"
     cors_origins: list[str] = Field(
@@ -53,8 +55,55 @@ class AppSettings(BaseModel):
     llm_timeout_seconds: float = 240.0
     llm_api_key: str | None = None
     llm_structured_output: str = "auto"  # auto | json_schema | json | none
+    # v2.4 foundation. Existing workflows opt in task-by-task in later slices;
+    # setting these alone does not yet reroute application generation calls.
+    llm_deep_model: str | None = Field(default=None, max_length=256)
+    llm_deep_base_url: str | None = Field(default=None, max_length=2048, repr=False)
+    llm_deep_api_key: str | None = Field(default=None, repr=False, exclude=True)
+    llm_deep_timeout_seconds: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    llm_deep_structured_output: Literal["auto", "json_schema", "json", "none"] | None = None
     price_cache_ttl_seconds: int = 60
     fundamentals_cache_ttl_seconds: int = 1800
+
+    @field_validator("llm_deep_model", "llm_deep_base_url", "llm_deep_api_key", "llm_deep_timeout_seconds", "llm_deep_structured_output", mode="before")
+    @classmethod
+    def normalize_deep_override(cls, value):
+        return (value.strip() or None) if isinstance(value, str) else value
+
+    @field_validator("llm_deep_base_url")
+    @classmethod
+    def validate_deep_endpoint(cls, value):
+        if value is None:
+            return None
+        try:
+            parsed = urlsplit(value)
+            valid = (parsed.scheme in {"http", "https"} and parsed.hostname
+                     and parsed.username is None and parsed.password is None
+                     and "?" not in value and "#" not in value
+                     and not any(char.isspace() for char in value))
+            parsed.port  # Reject malformed ports without echoing the URL.
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ValueError("Deep endpoint must be an absolute HTTP(S) URL without credentials, query or fragment")
+        return value.rstrip("/")
+
+    @field_validator("llm_deep_api_key")
+    @classmethod
+    def validate_deep_credential(cls, value):
+        # Prevent HTTP header errors from reflecting an invalid bearer value.
+        if value is not None and any(ord(char) < 33 or ord(char) > 126 for char in value):
+            raise ValueError("Deep credential must be a printable ASCII token without whitespace")
+        return value
+
+    @model_validator(mode="after")
+    def complete_deep_profile(self):
+        if self.llm_deep_model is None and any(value is not None for value in (
+            self.llm_deep_base_url, self.llm_deep_api_key,
+            self.llm_deep_timeout_seconds, self.llm_deep_structured_output,
+        )):
+            raise ValueError("LLM_DEEP_MODEL is required when Deep overrides are configured")
+        return self
 
     # Back-compat aliases for the former lm_studio_* settings.
     @property
@@ -304,6 +353,26 @@ def get_settings() -> AppSettings:
             _env("OPENTERMINALUI_LLM_STRUCTURED_OUTPUT")
             or _env("LLM_STRUCTURED_OUTPUT")
             or app_cfg.get("llm_structured_output", "auto")
+        ),
+        llm_deep_model=(
+            _env("OPENTERMINALUI_LLM_DEEP_MODEL") or _env("LLM_DEEP_MODEL")
+            or app_cfg.get("llm_deep_model")
+        ),
+        llm_deep_base_url=(
+            _env("OPENTERMINALUI_LLM_DEEP_BASE_URL") or _env("LLM_DEEP_BASE_URL")
+            or app_cfg.get("llm_deep_base_url")
+        ),
+        llm_deep_api_key=(
+            _env("OPENTERMINALUI_LLM_DEEP_API_KEY") or _env("LLM_DEEP_API_KEY")
+            or app_cfg.get("llm_deep_api_key")
+        ),
+        llm_deep_timeout_seconds=(
+            _env("OPENTERMINALUI_LLM_DEEP_TIMEOUT_SECONDS") or _env("LLM_DEEP_TIMEOUT_SECONDS")
+            or app_cfg.get("llm_deep_timeout_seconds")
+        ),
+        llm_deep_structured_output=(
+            _env("OPENTERMINALUI_LLM_DEEP_STRUCTURED_OUTPUT") or _env("LLM_DEEP_STRUCTURED_OUTPUT")
+            or app_cfg.get("llm_deep_structured_output")
         ),
         price_cache_ttl_seconds=int(
             _env("OPENTERMINALUI_PRICE_CACHE_TTL_SECONDS")

@@ -6,6 +6,19 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Fast/Deep generation profile foundation (v2.4)** — validated optional Deep
+  model/endpoint/key/deadline/structured-output settings, explicit immutable task
+  routing and an opt-in client factory. Legacy calls and embedding configuration
+  remain unchanged; no application workflow is migrated in this slice. An explicit
+  Deep endpoint never inherits Fast credentials, and configured Deep failures do
+  not silently select Fast. Call-site deadlines, identity/cache integration,
+  browser labels and model-quality evaluation follow in later slices.
+
+### Documentation
+- Reconcile the published v2.3 article/handoff, update the architecture for
+  selected comparison context, and record the audited v2.4 task map and rollout.
+
 ## [2.3.0] - 2026-10-28
 
 Context beyond price extends the on-demand comparison briefing with explicitly
