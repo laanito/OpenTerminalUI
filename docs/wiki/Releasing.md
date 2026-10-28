@@ -252,7 +252,7 @@ authorization the annotated tag and
 [GitHub release v2.2.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.2.0)
 were published on 2026-10-21. No further release gate remains open for v2.2.
 
-### v2.3.0 verification ledger (release preparation)
+### v2.3.0 verification ledger (released)
 
 Context beyond price extends the selected comparison briefing with explicitly
 included dated news and US/euro-area macro reference-period observations.
@@ -287,10 +287,14 @@ desktop/narrow default and context journeys) and `docker compose config --quiet`
 also passed. Local Python was 3.12; CI uses 3.11. Generated OpenAPI differs only
 in its version, now 2.3.0; frontend/lock metadata agree.
 
-CI `build-and-test`, `clean-install` and `postgres-contract`, release-prep
-review/merge and explicit maintainer tag/GitHub
-publication authorization remain pending. Do not rebuild or tear down the host
-deployment for local verification. Confirm the dated changelog if tagging later.
+Release-prep PR #229 passed CI `build-and-test`, `clean-install` and
+`postgres-contract`, then merged at `3fb7de3`. Following explicit maintainer
+authorization on 2026-10-28, the annotated tag and
+[GitHub release v2.3.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0)
+were published from that merge. The tagged changelog retains the October 27
+preparation date; release notes state the October 28 publication date, reconciled
+in the post-release changelog without moving the tag. No v2.3 release gate
+remains open. Verification did not rebuild or tear down the running deployment.
 
 ## Cutting the release
 

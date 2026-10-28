@@ -44,7 +44,9 @@ the [surface inventory](docs/wiki/Surface-Inventory.md) and
 
 ## Current release
 
-**v2.3.0 — Context beyond price is in release preparation, not yet published.**
+[v2.3.0 — Context beyond price](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0)
+was published on **2026-10-28** from `3fb7de3` after release PR #229 passed all
+three CI jobs and the maintainer authorized publication.
 In Cross-market context, the comparison briefing still defaults to price-only.
 Explicitly opt into dated news, US macro (FRED) and/or euro-area macro
 (Eurostat/ECB) for possible context alongside observed movement, limitations and
@@ -58,10 +60,9 @@ No saving/indexing, new provider setting or migration is introduced. Existing
 The maintainer confirmed combined-context completion after repair. The fast
 model's reasoning quality remains limited; Fast/Deep profiles are approved for
 v2.4, not implemented here. The full local release gate and eight Chrome smoke
-journeys passed. Release-prep CI/merge and explicit publication
-authorization remain pending.
+journeys passed. Publication is complete; deployment is managed separately.
 
-Latest published release:
+Previous release:
 
 [v2.2.0 — Grounded Comparison Briefing](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.2.0)
 was published on **2026-10-21**. On

@@ -1,17 +1,13 @@
 # Current project state and backlog
 
-Last post-release audit: **2026-10-21**, against **v2.2.0** at `039c395`.
-The bounded comparison-briefing APIs/browser, configured host acceptance, local
-checks and all release-prep CI jobs are complete. PR #222 merged and the
-maintainer authorized tag/GitHub publication. No v2.2 release gate remains.
-On 2026-10-22 the maintainer approved v2.3 **Context beyond price**. Its bounded
-sequence below is active; the broader v2.x evidence backlog remains for
-discussion, not automatic execution.
-
-v2.3.0 release preparation is now active. Default backend/frontend metadata and
-API docs are aligned to 2.3.0; latest published release remains v2.2.0. Host
-completion and limitations are recorded below; CI/review/merge and explicit
-publication approval remain pending. v2.4 scope is approved, not started.
+Last post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
+Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
+then merged. Following explicit maintainer authorization, the annotated tag and
+GitHub release were published on 2026-10-28. Backend/frontend/API metadata are
+aligned to 2.3.0; no v2.3 release gate remains. Host completion, bounded repair
+and the fast-model quality limitation are recorded below. v2.4 Fast/Deep profile
+scope is approved, not started; broader v2.x evidence work remains for discussion,
+not automatic execution.
 
 This is a handoff, not an immutable roadmap. Before taking an item, verify it
 against recent Git history, code, and tests. Move shipped work to the completed
@@ -546,7 +542,7 @@ streams. PR #221 merged and passed maintainer testing. This does not change
 Binance's existing USDT-to-USD-symbol mapping;
 denomination fidelity remains a separate gap, not solved by this hotfix.
 
-### v2.3 — Context beyond price (release preparation)
+### v2.3.0 released — Context beyond price
 
 Approved goal: the selected comparison briefing connects price observations with
 explicitly included, dated news and macro evidence. Keep observed movement,
@@ -619,12 +615,14 @@ for every interpretation and honest degradation when optional sources fail.
       `make gate`, eight Chrome smoke journeys and Compose configuration passed
       on 2026-10-27. Full backend: 1,280 passed/one skipped, 76.05% coverage;
       frontend: 504 tests across 112 files. Deployment was not rebuilt.
-- [ ] Merge release preparation after CI/review, including clean-install and
-      disposable PostgreSQL contract jobs. Do not monitor CI unless requested.
-- [ ] After explicit maintainer authorization, tag and publish v2.3.0 from the
-      reviewed merge. Reconfirm the changelog date if publication is later.
-- [ ] After publication, reconcile preparation notices and release handoff before
-      starting the approved v2.4 model-profile work.
+- [x] Merge release preparation after CI/review: PR #229 passed build-and-test,
+      clean-install and disposable PostgreSQL contracts, then merged at `3fb7de3`.
+- [x] After explicit maintainer authorization, tag and publish v2.3.0 from the
+      reviewed merge: annotated tag and stable GitHub release published on
+      2026-10-28. No deployment rebuild or teardown was performed.
+- [x] Reconcile preparation notices and release handoff in post-release docs.
+      The changelog now records October 28 publication rather than October 27
+      preparation; the tag remains on the reviewed merge. v2.4 is not started.
 
 Excluded: fundamentals/SEC, technical measures, private notes, portfolio-wide
 context, automatic proxy discovery, saving/Brain indexing, trade recommendations,

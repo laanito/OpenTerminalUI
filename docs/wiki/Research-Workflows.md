@@ -235,7 +235,7 @@ accepted the live workflow on 2026-10-21, and v2.2.0 was published that day.
 The configured model influences prose quality; reference checks
 do not compensate for weaker reasoning, and model tuning remains later work.
 
-### v2.3 optional context briefing (release preparation)
+### v2.3 optional context briefing
 
 The comparison briefing now offers a **Briefing evidence scope** fieldset.
 Keep all options off for the original price-only briefing, or independently
@@ -319,7 +319,8 @@ the first attempt logged a source/pair reference violation. The fast model's
 shallow synthesis remains a quality limitation, not another v2.3 feature gate;
 Fast/Deep task routing is approved for v2.4. Successful completion is not semantic
 verification or a claim that every degraded host case was manually tested.
-v2.3 release-prep CI/review and explicit publication approval remain pending.
+Release PR #229 passed all three CI jobs and merged; after explicit maintainer
+authorization, v2.3.0 was published from `3fb7de3` on 2026-10-28.
 Fundamentals, technicals, private research and saving remain excluded.
 
 ### Complete contract
