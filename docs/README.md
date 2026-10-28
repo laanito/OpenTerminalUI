@@ -13,6 +13,7 @@ contract.
 | Fresh Docker installation | [`INSTALLATION.md`](INSTALLATION.md) |
 | Contributor setup and checks | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
 | Architecture | [`wiki/Architecture.md`](wiki/Architecture.md) |
+| v2.4 model-profile configuration, audited task map and rollout status | [`wiki/Architecture.md#model-profiles-and-task-routing-v24-foundation`](wiki/Architecture.md#model-profiles-and-task-routing-v24-foundation) |
 | Configuration and provider limits | [`wiki/Limitations.md`](wiki/Limitations.md), [`.env.example`](../.env.example) |
 | Product roadmap and releases | [`wiki/Roadmap.md`](wiki/Roadmap.md), [`wiki/Releasing.md`](wiki/Releasing.md) |
 | Private Second Brain retrieval evaluation | [`wiki/Brain-Retrieval-Evaluation.md`](wiki/Brain-Retrieval-Evaluation.md) |
