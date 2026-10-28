@@ -338,7 +338,7 @@ briefings into Brain Log or adding them to private retrieval is not implicit.
 Multi-dimensional opportunity validation remains the v3 promise. Other unchecked
 items below remain later candidates, not automatically authorized follow-ups.
 
-## v2.3 — Context beyond price (release preparation)
+## v2.3.0 — Context beyond price (released 2026-10-28)
 
 Approved on 2026-10-22: generate a briefing that connects a selected comparison
 with explicitly included dated news and macro evidence. The user should
@@ -382,12 +382,12 @@ or that this diagnoses the earlier uninstrumented failure. The maintainer found
 the fast model's information extraction/reasoning shallow and agreed to address
 task-appropriate model routing in v2.4, not expand v2.3. Successful completion is
 not a claim that all prose is fact-checked or that every host failure case was
-manually tested. v2.3 release preparation/publication still require the usual
-maintainer review/authorization. Backend/frontend metadata, dated changelog and
-public docs are aligned for v2.3.0 release preparation. Local verification is
-recorded in [Releasing](Releasing.md); release-prep CI/review/merge and explicit
-tag/GitHub publication approval remain pending. No migration, new provider
-setting or Fast/Deep routing is introduced in v2.3.
+manually tested. Backend/frontend metadata and API version are aligned to 2.3.0.
+Local verification is recorded in [Releasing](Releasing.md). Release PR #229
+passed build-and-test, clean-install and postgres-contract, then merged. After
+explicit maintainer authorization, the annotated tag and GitHub release were
+published from `3fb7de3` on 2026-10-28. No v2.3 release gate remains open. No
+migration, new provider setting or Fast/Deep routing is introduced in v2.3.
 
 News means bounded dated headlines from current feeds, not article-body research
 or a complete historical archive. Treat headline text as untrusted provider data,

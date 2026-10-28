@@ -4,20 +4,15 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Last post-release audit: **2026-10-21**, against published **v2.2.0** at
-`039c395` (release preparation PR #222). Implementation, maintainer host
-acceptance, all release-prep CI jobs, tag and GitHub publication are complete.
-README and maintained wiki describe the shipped workflows. The maintainer
-approved **v2.2 Grounded Comparison Briefing** on 2026-10-19 and accepted it on
-2026-10-21. Its completed bounded scope is in `TODO.md` and the Roadmap. On
-2026-10-22 the maintainer approved **v2.3 Context beyond price**: selected dated
-news and macro context in the comparison briefing. Broader v2.x items remain backlog.
-
-v2.3.0 release preparation is active: backend/frontend and API version defaults
-are aligned to 2.3.0, while latest published release remains v2.2.0. The full local
-gate, eight Chrome smoke journeys and Compose configuration passed on 2026-10-27
-and are recorded in `docs/wiki/Releasing.md`; release-prep CI/review/merge and explicit
-tag/publication approval remain pending. v2.4 scope is approved, not started.
+Last post-release audit: **2026-10-28**, against published **v2.3.0** at
+`3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
+merged; following explicit maintainer authorization, the annotated tag and
+GitHub release were published on 2026-10-28. The full local gate, eight Chrome
+smoke journeys and Compose configuration passed on 2026-10-27; see the ledger
+in `docs/wiki/Releasing.md`. README/wiki now describe the published workflow.
+The changelog publication date is reconciled without moving the release tag.
+No v2.3 release gate remains open. v2.4 Fast/Deep model-profile scope is approved,
+not started; broader v2.x items remain backlog rather than automatic follow-ups.
 
 ## Read order and sources of truth
 
@@ -93,7 +88,7 @@ release-level interpretation and safety boundaries.
 
 ## Current release and development state
 
-- **v2.3 release preparation — Context beyond price.** Extend the selected comparison
+- **v2.3.0 released — Context beyond price.** Extend the selected comparison
   briefing with explicitly included dated headlines and existing US/euro-area
   macro observations, preserving scope, source links, actual pair windows,
   current-vintage/reference-period semantics and failures. First slice is a pure
@@ -118,8 +113,8 @@ release-level interpretation and safety boundaries.
   headline/series citations, safe source links, exact values/counts/flags and
   separate outer/price snapshot IDs. Browser shape/reference checks do not
   fact-check prose. Desktop/narrow Chrome journeys and deterministic frontend
-  tests cover the richer and degraded paths. Maintainer release-readiness review
-  remains pending; model-profile work is not a new release gate. Host feedback on
+  tests cover the richer and degraded paths. Release PR #229 passed all three
+  CI jobs and merged; publication is complete. Host feedback on
   2026-10-27 confirmed price-only works but news+macro hit validation failure
   after repair; the old logs did not capture which check failed. Context prompts
   now include validator-derived reference obligations, and the single repair
@@ -129,7 +124,7 @@ release-level interpretation and safety boundaries.
   logged `context_source_pair`. This does not diagnose the older uninstrumented
   failure or certify prose quality. Shallow extraction/reasoning on the fast
   model remains a limitation; Fast/Deep task routing is approved for v2.4, not
-  a new v2.3 gate. Do not relax validation or infer publication approval. No persistence
+  a new v2.3 gate. Do not relax validation. No persistence
   or indexing is added; v2.2 request/result shapes stay price-only. Fundamentals,
   technicals, private notes, portfolio-wide context, discovery, saving and new
   provider acquisition are excluded. Calendar-provider reliability and historical
@@ -163,8 +158,8 @@ release-level interpretation and safety boundaries.
   tests and six Chrome smoke tests. PR #222 passed build-and-test, clean-install
   and PostgreSQL-contract CI and merged. With explicit maintainer authorization,
   the annotated tag and GitHub release were published from `039c395` on 2026-10-21.
-- Latest published release: **v2.2.0**, tagged and published from `039c395` on
-  2026-10-21 after maintainer host acceptance and green release-prep CI.
+- Latest published release: **v2.3.0**, tagged and published from `3fb7de3` on
+  2026-10-28 after green release-prep CI and explicit maintainer authorization.
   Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
   releasing.
 - **v2.0 shipped the bounded cross-market context feature**, alongside the
