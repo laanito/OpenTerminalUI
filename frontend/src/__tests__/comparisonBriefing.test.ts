@@ -150,6 +150,18 @@ describe("comparison briefing transport", () => {
 });
 
 describe("briefing response validation", () => {
+  it.each([
+    (r: any) => { delete r.hypotheses; },
+    (r: any) => { r.hypotheses = []; },
+    (r: any) => { delete r.hypotheses[0].alternative; },
+    (r: any) => { r.hypotheses[0].what_would_help = ""; },
+    (r: any) => { r.hypotheses[0].citation_ids = ["SCOPE"]; },
+    (r: any) => { r.hypotheses[0].citation_ids = ["P2"]; },
+    (r: any) => { r.hypotheses[0].citation_ids = ["P1", "P1"]; },
+  ])("rejects incomplete or unanchored hypotheses", (mutate) => {
+    const value = makeBriefing(); mutate(value);
+    expect(() => validateBriefingResult(value, briefingSelection)).toThrow();
+  });
   it("accepts additive profile identity and rejects a mismatched model or unknown profile", () => {
     const value = makeBriefing();
     value.model_profile = { requested_profile: "deep", resolved_profile: "deep", model: value.model! };
@@ -164,7 +176,7 @@ describe("briefing response validation", () => {
     expect(validateBriefingResult(makeBriefing(), briefingSelection).status).toBe("complete");
     const value = makeBriefing();
     value.status = "unavailable"; value.engine = "unavailable";
-    value.observations = []; value.limitations = []; value.unknowns = [];
+    value.observations = []; value.hypotheses = []; value.limitations = []; value.unknowns = [];
     value.failure = { code: "disabled", message: "Model synthesis is disabled.", retryable: false };
     expect(validateBriefingResult(value, briefingSelection).evidence).toEqual(value.evidence);
   });

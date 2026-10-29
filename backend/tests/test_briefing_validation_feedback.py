@@ -139,4 +139,4 @@ async def test_price_only_contract_still_uses_same_deadline_and_one_specific_rep
     assert feedback(client.calls[1][0])["code"] == "snapshot_mismatch"
     assert "mode=price attempt=1" in caplog.text
     assert "Server-derived reference requirements" not in client.calls[0][0][0]["content"]
-    assert client.calls[0][1]["max_tokens"] == client.calls[1][1]["max_tokens"] == 2400
+    assert client.calls[0][1]["max_tokens"] == client.calls[1][1]["max_tokens"] == 3200

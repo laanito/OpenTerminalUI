@@ -23,6 +23,25 @@ const clickGenerate = () => fireEvent.click(screen.getByRole("button", { name: "
 describe("ComparisonBriefingPanel", () => {
   beforeEach(() => { generate.mockReset(); generateContext.mockReset(); });
 
+  it("separates hypotheses, mechanisms, alternatives and missing evidence with inspectable anchors", async () => {
+    const value = makeBriefing();
+    value.hypotheses[0].alternative = "<script>untrusted source text</script> could be an alternative.";
+    generate.mockResolvedValue(value);
+    const { container } = render(<ComparisonBriefingPanel selection={briefingSelection} />);
+    clickGenerate();
+    const section = await screen.findByRole("region", { name: "Interpretations to investigate" });
+    expect(section).toHaveTextContent("Citations identify observed inputs; they do not prove a proposed mechanism");
+    for (const key of ["interpretation", "mechanism", "alternative", "what_would_help"] as const) {
+      expect(section).toHaveTextContent(value.hypotheses[0][key]);
+    }
+    expect(container.querySelector("script")).toBeNull();
+    fireEvent.click(within(section).getByRole("button", { name: "Inspect P1 for hypothesis 1" }));
+    expect(screen.getByRole("region", { name: "P1 evidence" })).toHaveFocus();
+    const sameInput = screen.getByRole("button", { name: "Inspect P1 for observed movement 1" });
+    sameInput.focus(); fireEvent.click(sameInput);
+    expect(screen.getByRole("region", { name: "P1 evidence" })).toHaveFocus();
+  });
+
   it.each(["deep", "fast"] as const)("shows the resolved %s profile without claiming model quality", async (resolved) => {
     const value = makeBriefing();
     value.model_profile = { requested_profile: "deep", resolved_profile: resolved, model: value.model! };
@@ -78,7 +97,7 @@ describe("ComparisonBriefingPanel", () => {
 
   it("clears the previous answer before a retry and retains only the failed run's evidence", async () => {
     const failed = makeBriefing(); failed.status = "unavailable"; failed.engine = "unavailable";
-    failed.observations = []; failed.limitations = []; failed.unknowns = [];
+    failed.observations = []; failed.hypotheses = []; failed.limitations = []; failed.unknowns = [];
     failed.failure = { code: "provider_unavailable", message: "The model is unavailable.", retryable: true };
     failed.evidence!.packet_id = "b".repeat(64);
     const next = pending(); generate.mockResolvedValueOnce(makeBriefing()).mockReturnValueOnce(next.promise);
@@ -130,7 +149,7 @@ describe("ComparisonBriefingPanel", () => {
 
   it("handles evidence preparation failure without assuming a snapshot exists", async () => {
     const value = makeBriefing(); value.status = "unavailable"; value.engine = "unavailable";
-    value.evidence = null; value.observations = []; value.limitations = []; value.unknowns = [];
+    value.evidence = null; value.observations = []; value.hypotheses = []; value.limitations = []; value.unknowns = [];
     value.failure = { code: "evidence_timed_out", message: "Evidence preparation timed out.", retryable: true };
     generate.mockResolvedValue(value);
     render(<ComparisonBriefingPanel selection={briefingSelection} />); clickGenerate();
@@ -245,7 +264,7 @@ describe("ComparisonBriefingPanel", () => {
   it("model failure retains selected context but clears old interpretation", async () => {
     const value = makeContextBriefing({ news: true, macro_regions: [] });
     value.status = "unavailable"; value.engine = "unavailable";
-    value.observations = []; value.possible_context = []; value.limitations = []; value.unknowns = [];
+    value.observations = []; value.hypotheses = []; value.possible_context = []; value.limitations = []; value.unknowns = [];
     value.failure = { code: "invalid_response", message: "The response failed validation.", retryable: true };
     generateContext.mockResolvedValue(value);
     render(<ComparisonBriefingPanel selection={briefingSelection} />);

@@ -151,6 +151,14 @@ release-level interpretation and safety boundaries.
   lifecycle/deadlines, model identity and caches, then Brain/remaining callers
   and representative evaluation. The older shared insight stream/replay path
   needs its own complete integration, not a client-only model swap.
+  On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
+  too descriptive. Approved quality follow-up: structured `hypotheses` now
+  separate interpretations, conditional mechanisms, competing explanations and
+  distinguishing evidence. Citations anchor observed inputs, not mechanisms;
+  established causal attribution/recommendations remain excluded. Both validators
+  and UI implement this contract; initial price/context budgets are 3,200/6,400 tokens
+  under the same profile deadline. Host usefulness acceptance is still pending;
+  see `docs/wiki/Briefing-Evaluation.md`. Do not claim tests certify reasoning.
 - **v2.2.0 released — Grounded Comparison Briefing.** The agreed outcome is
   on-demand cited synthesis of a selected comparison, with observations, possible
   context, conflicts and unknowns kept distinct. No causal explanations, trade
