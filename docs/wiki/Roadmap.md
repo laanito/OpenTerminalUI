@@ -412,11 +412,14 @@ This milestone follows v2.3 closure; it is not another v2.3 release gate.
 Started on 2026-10-28 after v2.3 publication and its post-release article. The
 first slice audits the call sites and adds validated optional Deep settings,
 immutable task/profile resolution and an explicit client-factory opt-in.
-Existing application callers and embeddings still use the legacy factory:
-configuration alone does not yet reroute them. See the
+The comparison briefing integration now routes price-only and selected-context
+synthesis through Deep, sharing one profile across health, repair, server/browser
+deadlines and visible model identity. Deep unset retains the default model;
+configured Deep failure never substitutes Fast. Other application callers and
+embeddings still use the legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
-Follow-up slices integrate comparison/insight calls with their deadlines,
-identity and caches, then Brain/remaining callers and browser identity, followed
+Follow-up slices integrate shared insight calls with their lifecycle/deadlines,
+identity and caches, then Brain/remaining callers and their browser identity, followed
 by representative live evaluation. Do not treat configuration support as a
 completed task migration or a proven improvement in reasoning quality.
 

@@ -23,6 +23,15 @@ const clickGenerate = () => fireEvent.click(screen.getByRole("button", { name: "
 describe("ComparisonBriefingPanel", () => {
   beforeEach(() => { generate.mockReset(); generateContext.mockReset(); });
 
+  it.each(["deep", "fast"] as const)("shows the resolved %s profile without claiming model quality", async (resolved) => {
+    const value = makeBriefing();
+    value.model_profile = { requested_profile: "deep", resolved_profile: resolved, model: value.model! };
+    generate.mockResolvedValue(value);
+    render(<ComparisonBriefingPanel selection={briefingSelection} />);
+    clickGenerate();
+    expect(await screen.findByText(resolved === "deep" ? /Deep profile/ : /Default profile \(Deep not configured\)/)).toBeVisible();
+  });
+
   it("is opt-in and keeps scope and mandatory evidence warnings beside plain-text prose", async () => {
     const value = makeBriefing();
     value.observations[0].text = '<img src=x onerror=alert(1)> [untrusted](https://example.com)';

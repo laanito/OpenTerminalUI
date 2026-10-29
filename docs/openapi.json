@@ -3219,6 +3219,16 @@
             ],
             "title": "Model"
           },
+          "model_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMProfileIdentity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "observations": {
             "items": {
               "$ref": "#/components/schemas/BriefingStatement"
@@ -3370,6 +3380,16 @@
               }
             ],
             "title": "Model"
+          },
+          "model_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMProfileIdentity"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "observations": {
             "items": {
@@ -8165,6 +8185,39 @@
           "request_token"
         ],
         "title": "KiteSessionRequest",
+        "type": "object"
+      },
+      "LLMProfileIdentity": {
+        "additionalProperties": false,
+        "description": "Public identity of the selected model, never its connection settings.",
+        "properties": {
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "requested_profile": {
+            "enum": [
+              "fast",
+              "deep"
+            ],
+            "title": "Requested Profile",
+            "type": "string"
+          },
+          "resolved_profile": {
+            "enum": [
+              "fast",
+              "deep"
+            ],
+            "title": "Resolved Profile",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_profile",
+          "resolved_profile",
+          "model"
+        ],
+        "title": "LLMProfileIdentity",
         "type": "object"
       },
       "LaunchpadLayoutsPayload": {

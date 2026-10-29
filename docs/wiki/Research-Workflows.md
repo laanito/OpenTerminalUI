@@ -200,9 +200,20 @@ arrays and a typed failure; available evidence is retained, not erased. A
 preparation timeout has no packet to retain. The generation endpoints return
 expected unavailable states as HTTP 200 results, unlike the preparation-only
 endpoint's HTTP 504 on its own deadline. Health, completion and one repair share
-`LLM_TIMEOUT_SECONDS` (default 240 seconds), after up to 45 seconds of evidence
-preparation. Clients must allow both stages; heartbeats do not extend the server
+the resolved profile's deadline: `LLM_DEEP_TIMEOUT_SECONDS` when configured,
+otherwise `LLM_TIMEOUT_SECONDS` (default 240 seconds), after up to 45 seconds of
+evidence preparation. Clients must allow both stages; heartbeats do not extend
+the server budget. Selected context adds its separately announced collection
 budget. No rejected/partial answer is published as a completed briefing.
+
+In v2.4 development, comparison synthesis uses Deep when configured. With Deep
+unset it uses the existing model and shows **Default profile (Deep not configured)**;
+otherwise the result shows **Deep profile** and the selected model. A Deep failure
+never retries Fast. The additive `model_profile` response metadata identifies
+the selected configuration, even when evidence preparation failed or inference
+was skipped; it does not certify that the model ran or that its reasoning is
+better. Brain and shared insight cards remain on their legacy model until their
+separate integration lands.
 
 ### Browser comparison briefing
 

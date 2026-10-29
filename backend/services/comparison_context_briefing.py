@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from backend.config.settings import get_settings
+from backend.services.llm_profiles import LLMProfileIdentity, ResolvedLLMProfile, resolve_llm_profile
 from backend.services.comparison_briefing import (
     BriefingStatement, ComparisonBriefingFailure, FailureCode, InvalidComparisonBriefing,
     _FAILURES, material_price_references, synthesize_checked_briefing, validate_comparison_briefing,
@@ -48,6 +49,7 @@ class ComparisonContextBriefingResult(BaseModel):
     status: Literal["complete", "unavailable"]
     engine: Literal["llm", "unavailable"]
     model: str | None
+    model_profile: LLMProfileIdentity | None = None
     generated_at: datetime
     evidence: ComparisonContextEvidence | None
     scope_citation_id: Literal["SCOPE"] = "SCOPE"
@@ -67,10 +69,11 @@ class ComparisonContextBriefingResult(BaseModel):
     failure: ContextBriefingFailure | None = None
 
 
-def unavailable_context_briefing(code, *, evidence=None, model=None):
+def unavailable_context_briefing(code, *, evidence=None, model=None, profile=None):
     message, retryable = _FAILURES[code]
     return ComparisonContextBriefingResult(
-        status="unavailable", engine="unavailable", model=model,
+        status="unavailable", engine="unavailable", model=profile.model if profile else model,
+        model_profile=LLMProfileIdentity(**profile.public_identity()) if profile else None,
         generated_at=datetime.now(timezone.utc), evidence=evidence,
         failure=ContextBriefingFailure(code=code, message=message, retryable=retryable),
     )
@@ -204,24 +207,27 @@ No extra fields, uncited summary, links, commands or markdown. Reference checkin
 semantic fact-checking. Describe uncertainty and do not imply sources prove causation."""
 
 
-async def generate_context_briefing(evidence: ComparisonContextEvidence, *, on_phase=None):
-    settings = get_settings()
-    model = settings.llm_model
+async def generate_context_briefing(
+    evidence: ComparisonContextEvidence, *, on_phase=None, profile: ResolvedLLMProfile | None = None,
+):
+    profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if not any(pair.status == "available" for pair in evidence.price.comparisons):
-        return unavailable_context_briefing("no_evidence", evidence=evidence)
-    if not settings.llm_enabled:
-        return unavailable_context_briefing("disabled", evidence=evidence, model=model)
+        return unavailable_context_briefing("no_evidence", evidence=evidence, profile=profile)
+    if not profile.enabled:
+        return unavailable_context_briefing("disabled", evidence=evidence, profile=profile)
     if len(evidence.model_dump_json()) > MAX_CONTEXT_INPUT_CHARS:
-        return unavailable_context_briefing("evidence_too_large", evidence=evidence, model=model)
+        return unavailable_context_briefing("evidence_too_large", evidence=evidence, profile=profile)
     parsed, failure = await synthesize_checked_briefing(
         evidence, schema=GeneratedContextBriefing.model_json_schema(), system=_SYSTEM,
         validate=validate_context_briefing, on_phase=on_phase, max_tokens=4800,
         reference_requirements=context_reference_requirements(evidence),
+        profile=profile,
     )
     if failure:
-        return unavailable_context_briefing(failure, evidence=evidence, model=model)
+        return unavailable_context_briefing(failure, evidence=evidence, profile=profile)
     return ComparisonContextBriefingResult(
-        status="complete", engine="llm", model=model, generated_at=datetime.now(timezone.utc),
+        status="complete", engine="llm", model=profile.model, generated_at=datetime.now(timezone.utc),
+        model_profile=LLMProfileIdentity(**profile.public_identity()),
         evidence=evidence, observations=parsed.observations, possible_context=parsed.possible_context,
         limitations=parsed.limitations, unknowns=parsed.unknowns,
     )

@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Literal
 
+from pydantic import BaseModel, ConfigDict
+
 from backend.config.settings import AppSettings
 
 ProfileName = Literal["fast", "deep"]
@@ -24,6 +26,14 @@ TASK_PROFILES = MappingProxyType({
     "stock_briefing": "deep", "interrogate": "deep", "market_outlook": "deep",
     "portfolio_risk": "deep", "backtest_explanation": "deep", "collection_briefing": "deep",
 })
+
+
+class LLMProfileIdentity(BaseModel):
+    """Public identity of the selected model, never its connection settings."""
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    requested_profile: ProfileName
+    resolved_profile: ProfileName
+    model: str
 
 
 @dataclass(frozen=True)
