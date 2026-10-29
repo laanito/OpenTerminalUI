@@ -45,8 +45,12 @@ export interface BriefingEvidence {
   not_included: (keyof typeof BRIEFING_EXCLUSIONS)[]; comparisons: BriefingPair[];
 }
 export type BriefingStatement = { text: string; citation_ids: string[] };
+export type BriefingModelProfile = {
+  requested_profile: "fast" | "deep"; resolved_profile: "fast" | "deep"; model: string;
+};
 export interface ComparisonBriefingResult {
   status: "complete" | "unavailable"; engine: "llm" | "unavailable"; model: string | null;
+  model_profile?: BriefingModelProfile | null;
   generated_at: string; evidence: BriefingEvidence | null; scope_citation_id: "SCOPE";
   citation_validation: "references_only_not_fact_checked"; scope_notice: string;
   observations: BriefingStatement[]; limitations: BriefingStatement[]; unknowns: BriefingStatement[];
@@ -115,6 +119,10 @@ export function validateBriefingResult(value: unknown, selection: BriefingSelect
     || !timestamp(value.generated_at) || value.scope_citation_id !== "SCOPE"
     || value.citation_validation !== "references_only_not_fact_checked" || !text(value.scope_notice) || value.scope_notice.length > 1200
     || (value.evidence !== null && !validEvidence(value.evidence, selection))) throw invalid();
+  if (value.model_profile != null && (!record(value.model_profile)
+    || value.model_profile.requested_profile !== "deep"
+    || !choice(value.model_profile.resolved_profile, ["fast", "deep"])
+    || !text(value.model_profile.model) || value.model_profile.model !== value.model)) throw invalid();
   const packet = value.evidence as BriefingEvidence | null;
   const known = new Set(["SCOPE", ...(packet?.comparisons.map((pair) => pair.citation_id) ?? [])]);
   for (const name of ["observations", "limitations", "unknowns"]) {

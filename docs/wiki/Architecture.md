@@ -124,11 +124,25 @@ Global `LLM_ENABLED` applies to both generation profiles. Resolution reports the
 requested and effective profiles, resolved model and deadline; callers must use
 that one resolution for health, gating, generation, repair and displayed identity.
 
-This is a configuration/factory foundation, not a completed workflow migration.
-All audited application call sites below still call the no-argument factory;
-setting `LLM_DEEP_MODEL` alone does not reroute them. Subsequent integration must
-update model metadata, caches, progress deadlines and browser budgets alongside
-the client call, not switch the model in isolation.
+Workflow migration is incremental. Comparison briefings are integrated; other
+audited application call sites below still use the legacy factory. Subsequent
+integration must update model metadata, caches, progress deadlines and browser
+budgets alongside the client call, not switch the model in isolation.
+
+Price-only and selected-context comparison briefings resolve once before evidence
+collection. The same immutable profile supplies health, client transport, model,
+structured-output mode, whole health/generation/repair deadline and stream start
+budget. `get_llm_client(profile=...)` accepts this snapshot without resolving the
+task again. The browser already derives its deadline from the announced budget.
+Results include additive nullable `model_profile` identity (requested/effective
+profile and model), including unavailable results: this identifies the selected
+configuration, not proof that inference ran. The UI distinguishes configured
+Deep from the default single-model path. Endpoints and keys are never in this
+metadata. Comparisons have no prose cache; every request collects fresh evidence.
+Citation validation, one bounded repair and cancellation remain unchanged, with
+no Fast retry after configured Deep failure. Shared insight lifecycle/cache
+integration follows separately; its older stream/fallback path must be updated
+together with model selection.
 
 | Generation task | Intended profile | Current caller |
 |---|---|---|
@@ -137,7 +151,7 @@ the client call, not switch the model in isolation.
 | `query_intent` | Fast | `services/ai_service.py` intent/filter extraction |
 | `filing_analysis` | Deep | `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
 | `brain_answer` | Deep | `services/brain/brain_service.py` completion/stream/fallback |
-| `comparison_briefing` | Deep | `comparison_briefing.py` shared price/context runner |
+| `comparison_briefing` | Deep | **Integrated:** `comparison_briefing.py` shared price/context runner |
 | `stock_briefing` | Deep | `llm_insights.py` via asset-aware briefing routes |
 | `interrogate` | Deep | `llm_insights.py` via adversarial research routes |
 | `market_outlook` | Deep | `llm_insights.py` via collection/current-market facts |

@@ -175,7 +175,12 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
       {status === "cancelled" ? <p role="status" className="text-terminal-muted">Briefing cancelled. No partial answer was kept.</p> : null}
       {error ? <p role="alert" className="text-terminal-warn">{error}</p> : null}
       {result ? <div className="space-y-3">
-        <p className="text-xs text-terminal-muted">{result.status === "complete" ? "Generated interpretation" : "Briefing unavailable"} · {new Date(result.generated_at).toLocaleString()}{result.model ? ` · model ${result.model}` : ""}</p>
+        <p className="text-xs text-terminal-muted">
+          {result.status === "complete" ? "Generated interpretation" : "Briefing unavailable"} · {new Date(result.generated_at).toLocaleString()}
+          {result.model ? ` · model ${result.model}` : ""}
+          {result.model_profile ? result.model_profile.resolved_profile === "deep"
+            ? " · Deep profile" : " · Default profile (Deep not configured)" : ""}
+        </p>
         <p className="text-xs text-terminal-warn">{result.scope_notice}</p>
         {contextPacket ? <ContextCoverage evidence={contextPacket} inspect={inspect} /> : null}
         {result.failure ? <p role="alert" className="text-terminal-warn">{result.failure.message} ({result.failure.code})</p> : null}

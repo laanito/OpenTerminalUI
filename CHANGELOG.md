@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Deep comparison briefings (v2.4)** — price-only and selected news/macro
+  briefings now use one resolved profile for health, generation, bounded repair,
+  server/browser deadlines and reported model. The UI distinguishes configured
+  Deep from the default single-model setup; configured Deep failures never retry
+  Fast. Additive `model_profile` metadata exposes no connection settings. Shared
+  insights and Brain routing remain follow-up work; no model-quality claim is made.
 - **Fast/Deep generation profile foundation (v2.4)** — validated optional Deep
   model/endpoint/key/deadline/structured-output settings, explicit immutable task
   routing and an opt-in client factory. Legacy calls and embedding configuration

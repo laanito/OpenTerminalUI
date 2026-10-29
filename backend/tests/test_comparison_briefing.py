@@ -5,11 +5,12 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-from types import SimpleNamespace
 
 import pytest
 
 from backend.services import comparison_briefing as service
+from backend.config.settings import AppSettings
+from backend.api.routes import market_briefing as routes
 from backend.services.market_briefing_evidence import build_comparison_evidence
 from backend.tests.test_market_briefing_evidence import _comparison, _row
 
@@ -58,11 +59,13 @@ class _Client:
 
 
 def _configure(monkeypatch, client=None, *, enabled=True, timeout=1):
-    monkeypatch.setattr(service, "get_settings", lambda: SimpleNamespace(
+    settings = AppSettings(
         llm_enabled=enabled, llm_model="test-local-model", llm_timeout_seconds=timeout,
-    ))
+    )
+    monkeypatch.setattr(service, "get_settings", lambda: settings)
+    monkeypatch.setattr(routes, "get_settings", lambda: settings)
     if client is not None:
-        monkeypatch.setattr(service, "get_llm_client", lambda: client)
+        monkeypatch.setattr(service, "get_llm_client", lambda **kwargs: client)
 
 
 def test_validator_accepts_complete_reference_coverage_and_code_fences():
@@ -189,7 +192,8 @@ async def test_disabled_and_all_unavailable_packets_do_not_touch_provider(monkey
     result = await service.generate_comparison_briefing(empty)
     assert result.failure.code == "no_evidence"
     assert result.evidence == empty
-    assert result.model is None
+    assert result.model == "test-local-model"  # Selected identity; no inference occurred.
+    assert result.model_profile.resolved_profile == "fast"
 
 
 @pytest.mark.asyncio

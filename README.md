@@ -322,10 +322,14 @@ Model/provider failure is labelled, not a licence to fabricate an answer.
 
 #### v2.4 development — model-profile foundation
 
-The task registry and optional Deep configuration are implemented, but existing
-application workflows still use the legacy `LLM_*` model. Setting Deep does not
-yet switch Brain, briefings or insight cards; call-site/deadline/UI integration
-follows in reviewable slices. Embedding configuration and indexing are unchanged.
+Comparison briefings, both price-only and with selected news/macro context, now
+use the Deep profile for health, generation and bounded repair. Their browser
+deadline follows the selected model's timeout, and the result shows the model
+and resolved profile. With Deep unset, they retain the existing `LLM_*` model
+and show “Default profile (Deep not configured)”. A configured Deep failure is
+explicit; it never retries Fast. Brain and shared insight cards still use the
+legacy model pending their integration. Embedding configuration and indexing
+are unchanged.
 
 | Variable | Meaning |
 |---|---|

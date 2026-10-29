@@ -18,6 +18,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from backend.config.settings import get_settings
+from backend.services.llm_profiles import LLMProfileIdentity, ResolvedLLMProfile, resolve_llm_profile
 from backend.services.llm_client import LLMError, get_llm_client, parse_json_response
 from backend.services.market_briefing_evidence import ComparisonBriefingEvidence
 
@@ -73,6 +74,7 @@ class ComparisonBriefingResult(BaseModel):
     status: Literal["complete", "unavailable"]
     engine: Literal["llm", "unavailable"]
     model: str | None
+    model_profile: LLMProfileIdentity | None = None
     generated_at: datetime
     evidence: ComparisonBriefingEvidence | None
     # SCOPE refers to this response's evidence.not_included/method/basis, not a
@@ -142,10 +144,12 @@ class InvalidComparisonBriefing(LLMError):
 def unavailable_briefing(
     code: FailureCode, *, evidence: ComparisonBriefingEvidence | None = None,
     model: str | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> ComparisonBriefingResult:
     message, retryable = _FAILURES[code]
     return ComparisonBriefingResult(
-        status="unavailable", engine="unavailable", model=model,
+        status="unavailable", engine="unavailable", model=profile.model if profile else model,
+        model_profile=LLMProfileIdentity(**profile.public_identity()) if profile else None,
         generated_at=datetime.now(timezone.utc), evidence=evidence,
         failure=ComparisonBriefingFailure(code=code, message=message, retryable=retryable),
     )
@@ -219,22 +223,23 @@ sentences. Reference validation is not a semantic fact check; do not imply other
 async def generate_comparison_briefing(
     evidence: ComparisonBriefingEvidence,
     *, on_phase: Callable[[BriefingPhase], None] | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> ComparisonBriefingResult:
-    settings = get_settings()
-    model = settings.llm_model
+    profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if not any(pair.status == "available" for pair in evidence.comparisons):
-        return unavailable_briefing("no_evidence", evidence=evidence)
-    if not settings.llm_enabled:
-        return unavailable_briefing("disabled", evidence=evidence, model=model)
+        return unavailable_briefing("no_evidence", evidence=evidence, profile=profile)
+    if not profile.enabled:
+        return unavailable_briefing("disabled", evidence=evidence, profile=profile)
 
     parsed, failure = await synthesize_checked_briefing(
         evidence, schema=GeneratedComparisonBriefing.model_json_schema(), system=_SYSTEM,
-        validate=validate_comparison_briefing, on_phase=on_phase,
+        validate=validate_comparison_briefing, on_phase=on_phase, profile=profile,
     )
     if failure:
-        return unavailable_briefing(failure, evidence=evidence, model=model)
+        return unavailable_briefing(failure, evidence=evidence, profile=profile)
     return ComparisonBriefingResult(
-        status="complete", engine="llm", model=model, generated_at=datetime.now(timezone.utc),
+        status="complete", engine="llm", model=profile.model, generated_at=datetime.now(timezone.utc),
+        model_profile=LLMProfileIdentity(**profile.public_identity()),
         evidence=evidence, observations=parsed.observations,
         limitations=parsed.limitations, unknowns=parsed.unknowns,
     )
@@ -244,9 +249,9 @@ async def synthesize_checked_briefing(
     evidence, *, schema: dict, system: str, validate: Callable,
     on_phase: Callable[[BriefingPhase], None] | None = None, max_tokens: int = 2400,
     reference_requirements: dict | None = None,
+    profile: ResolvedLLMProfile,
 ):
     """Shared single-deadline completion/repair lifecycle; never emit raw prose."""
-    settings = get_settings()
 
     def phase(value: BriefingPhase) -> None:
         if on_phase is not None:
@@ -261,9 +266,9 @@ async def synthesize_checked_briefing(
     try:
         # Health, provider structured-output fallback and one repair share one
         # budget. Cancellation propagates; no inference task survives its caller.
-        async with asyncio.timeout(settings.llm_timeout_seconds):
+        async with asyncio.timeout(profile.timeout_seconds):
             phase("checking_model")
-            client = get_llm_client()
+            client = get_llm_client(profile=profile)
             if not await client.health():
                 return None, "provider_unavailable"
             for attempt in range(2):

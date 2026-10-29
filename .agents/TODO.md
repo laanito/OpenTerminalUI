@@ -641,25 +641,33 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Fast covers sentiment/classification/short summaries; Deep covers Brain,
       comparison briefings, Interrogate and portfolio risk synthesis.
       `llm_profiles.py` defines the closed map; Architecture records each caller
-      and its intended profile. None of these callers is migrated yet.
+      and its intended profile. Comparison briefings are now migrated; other
+      application callers remain on the legacy factory.
 - [x] Support independent profile model/endpoint/credentials/timeout, preserving
       existing `LLM_*` behavior when Deep is unset. Never accidentally forward
       credentials across endpoints. Embeddings stay independent and unchanged.
       Optional `LLM_DEEP_*`, aliases/YAML and Compose forwarding are implemented.
       Partial/invalid configuration is rejected safely; an explicit Deep URL
       never inherits Fast credentials, even for the same endpoint. Resolver and
-      opt-in client factory are implemented; setting Deep alone does not switch
-      existing application workflows. Structured-output mode is profile-specific.
+      opt-in client factory are implemented. Structured-output mode is profile-specific.
 - [ ] Resolve health checks, model requests, repair/stream/browser deadlines and
       displayed profile/model identity consistently. Configured Deep failures
       must remain explicit, not silently fall back to Fast or trigger escalation.
+      Price-only/context comparison briefings now share one profile snapshot for
+      transport, health, bounded repair, model identity and announced browser
+      deadlines. No comparison prose cache exists. Remaining: shared insight
+      lifecycle/cache integration, Brain and other callers with their browser UI.
 - [ ] Test backward compatibility, task routing, failure isolation, secret handling
       and cancellation/deadlines; assess usefulness/source fidelity/latency on a
       small representative simple/deep task set with configured models.
       Foundation tests cover configuration, task choices, secret handling,
-      explicit endpoint isolation and unchanged legacy embedding requests. Shared
-      operation/browser deadlines and visible profile identity still need caller
-      integration; live evaluation has not been run.
+      explicit endpoint isolation and unchanged legacy embedding requests. The
+      comparison operation/browser deadlines and visible identity are covered,
+      including configured Deep isolation and default-model compatibility.
+      Remaining callers and representative live evaluation are still pending.
+      Comparison integration checks (2026-10-29): 206 focused backend tests,
+      106 frontend tests, production build, eight installed-Chrome smoke journeys
+      and API/surface/mock guards passed. No live model-quality evaluation ran.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.

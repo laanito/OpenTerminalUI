@@ -22,6 +22,7 @@ from backend.api.routes.market_context import (
 )
 from backend.auth.deps import get_current_user
 from backend.config.settings import get_settings
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.models import User
 from backend.services.comparison_briefing import (
     BriefingPhase, ComparisonBriefingResult, generate_comparison_briefing, unavailable_briefing,
@@ -94,7 +95,9 @@ async def prepare_comparison_briefing_evidence(
 async def _run_briefing(
     payload: ComparisonBriefingEvidenceRequest, user: User, fetcher: Any,
     on_phase: Callable[[BriefingPhase], None] | None = None,
+    *, profile: ResolvedLLMProfile | None = None,
 ) -> ComparisonBriefingResult:
+    profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if on_phase is not None:
         on_phase("preparing_evidence")
     try:
@@ -103,11 +106,11 @@ async def _run_briefing(
         if exc.status_code != 504:
             raise
         logger.warning("Comparison briefing evidence preparation reached its deadline")
-        return unavailable_briefing("evidence_timed_out")
+        return unavailable_briefing("evidence_timed_out", profile=profile)
     except Exception as exc:
         logger.warning("Comparison briefing evidence preparation failed (%s)", type(exc).__name__)
         raise
-    return await generate_comparison_briefing(evidence, on_phase=on_phase)
+    return await generate_comparison_briefing(evidence, on_phase=on_phase, profile=profile)
 
 
 @router.post("/briefing", response_model=ComparisonBriefingResult)
@@ -148,6 +151,7 @@ async def stream_comparison_briefing(
     See the synchronous briefing endpoint for the final result schema.
     """
     normalized = _normalized_payload(payload)  # Reject invalid symbols before 200 headers.
+    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
     phase: BriefingPhase = "preparing_evidence"
 
     def set_phase(value: BriefingPhase) -> None:
@@ -155,7 +159,7 @@ async def stream_comparison_briefing(
         phase = value
 
     async def operation() -> dict[str, Any]:
-        result = await _run_briefing(normalized, user, fetcher, set_phase)
+        result = await _run_briefing(normalized, user, fetcher, set_phase, profile=profile)
         return result.model_dump(mode="json")
 
     async def events():
@@ -164,7 +168,7 @@ async def stream_comparison_briefing(
                 if event["type"] == "start":
                     event = {**event, "deadlines": {
                         "evidence_seconds": EVIDENCE_TIMEOUT_SECONDS,
-                        "model_seconds": get_settings().llm_timeout_seconds,
+                        "model_seconds": profile.timeout_seconds,
                     }}
                 elif event["type"] == "progress":
                     event = {**event, "phase": phase}
@@ -206,7 +210,8 @@ async def prepare_context_briefing_evidence(
     return await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service)
 
 
-async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None):
+async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None, *, profile=None):
+    profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if on_phase:
         on_phase("preparing_evidence")
     try:
@@ -214,11 +219,11 @@ async def _run_context_briefing(payload, user, fetcher, economic_service, on_pha
     except HTTPException as exc:
         if exc.status_code != 504:
             raise
-        return unavailable_context_briefing("evidence_timed_out")
+        return unavailable_context_briefing("evidence_timed_out", profile=profile)
     if on_phase:
         on_phase("collecting_context")
     evidence = await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service)
-    return await generate_context_briefing(evidence, on_phase=on_phase)
+    return await generate_context_briefing(evidence, on_phase=on_phase, profile=profile)
 
 
 @router.post("/briefing-context", response_model=ComparisonContextBriefingResult)
@@ -256,6 +261,7 @@ async def stream_context_briefing(
 ) -> StreamingResponse:
     """Cancellable completion-based context synthesis, without automatic replay."""
     _normalized_payload(payload)  # Reject malformed symbols before 200 headers.
+    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
     phase: BriefingPhase = "preparing_evidence"
 
     def set_phase(value: BriefingPhase):
@@ -263,7 +269,7 @@ async def stream_context_briefing(
         phase = value
 
     async def operation():
-        result = await _run_context_briefing(payload, user, fetcher, economic_service, set_phase)
+        result = await _run_context_briefing(payload, user, fetcher, economic_service, set_phase, profile=profile)
         return result.model_dump(mode="json")
 
     async def events():
@@ -273,7 +279,7 @@ async def stream_context_briefing(
                     event = {**event, "deadlines": {
                         "evidence_seconds": EVIDENCE_TIMEOUT_SECONDS,
                         "context_seconds": CONTEXT_TIMEOUT_SECONDS,
-                        "model_seconds": get_settings().llm_timeout_seconds,
+                        "model_seconds": profile.timeout_seconds,
                     }}
                 elif event["type"] == "progress":
                     event = {**event, "phase": phase}

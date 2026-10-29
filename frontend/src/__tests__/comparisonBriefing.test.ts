@@ -150,6 +150,16 @@ describe("comparison briefing transport", () => {
 });
 
 describe("briefing response validation", () => {
+  it("accepts additive profile identity and rejects a mismatched model or unknown profile", () => {
+    const value = makeBriefing();
+    value.model_profile = { requested_profile: "deep", resolved_profile: "deep", model: value.model! };
+    expect(validateBriefingResult(value, briefingSelection).model_profile).toEqual(value.model_profile);
+    value.model_profile.model = "different-model";
+    expect(() => validateBriefingResult(value, briefingSelection)).toThrow();
+    value.model_profile.model = value.model!;
+    Object.assign(value.model_profile, { resolved_profile: "automatic" });
+    expect(() => validateBriefingResult(value, briefingSelection)).toThrow();
+  });
   it("accepts a complete result and a typed unavailable result retaining evidence", () => {
     expect(validateBriefingResult(makeBriefing(), briefingSelection).status).toBe("complete");
     const value = makeBriefing();

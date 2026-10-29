@@ -140,12 +140,17 @@ release-level interpretation and safety boundaries.
   fidelity and latency, not only structure. No model deployment, autonomous
   escalation, new evidence providers or broader validation features. See the
   Roadmap and TODO before continuing. First slice adds validated optional Deep
-  settings, task map/resolver and `get_llm_client(task=...)`; no application
-  call site is opted in yet. Legacy no-argument calls and embeddings are unchanged.
-  Deep settings alone do not reroute workflows. Explicit Deep URLs never inherit
+  settings, task map/resolver and `get_llm_client(task=...)`. Comparison briefings
+  (price-only and selected context) now resolve Deep once and share that snapshot
+  across transport, health, bounded repair, deadline announcements and visible
+  model identity. Default single-model operation stays explicit when Deep is
+  unset; configured Deep failures never retry Fast. Other callers and embeddings
+  remain on the legacy factory. Explicit Deep URLs never inherit
   Fast keys; when the Deep URL is omitted, the existing endpoint/key may be
-  inherited. See the architecture task map. Next: migrate callers together with deadlines, model
-  identity and cache behavior, then browser identity and representative evaluation.
+  inherited. See the architecture task map. Next: integrate shared insight
+  lifecycle/deadlines, model identity and caches, then Brain/remaining callers
+  and representative evaluation. The older shared insight stream/replay path
+  needs its own complete integration, not a client-only model swap.
 - **v2.2.0 released — Grounded Comparison Briefing.** The agreed outcome is
   on-demand cited synthesis of a selected comparison, with observations, possible
   context, conflicts and unknowns kept distinct. No causal explanations, trade

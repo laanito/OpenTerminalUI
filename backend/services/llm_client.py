@@ -330,16 +330,23 @@ def parse_json_response(content: str) -> dict[str, Any]:
     raise LLMError("Could not parse JSON from LLM response")
 
 
-def get_llm_client(task: GenerationTask | None = None) -> LLMClient:
+def get_llm_client(
+    task: GenerationTask | None = None, *, profile: ResolvedLLMProfile | None = None,
+) -> LLMClient:
     """Legacy by default; explicit tasks opt into deterministic profile selection.
 
     This creates no request and retries no other model. Callers must gate on
     resolved_profile.enabled and use its timeout/model for the whole operation.
+    Pass profile= to preserve a resolution already used for operation metadata
+    and budgets, rather than resolving the task again after collecting evidence.
     Existing no-argument callers (including embeddings) remain unchanged.
     """
-    if task is None:
+    if task is not None and profile is not None:
+        raise ValueError("Provide a generation task or a resolved profile, not both")
+    if task is None and profile is None:
         return LLMClient()
-    profile = resolve_llm_profile(get_settings(), task)
+    if profile is None:
+        profile = resolve_llm_profile(get_settings(), task)
     client = LLMClient(
         base_url=profile.base_url, model=profile.model, timeout=profile.timeout_seconds,
         # Empty string deliberately suppresses the constructor's legacy-key
