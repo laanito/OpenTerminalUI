@@ -144,21 +144,28 @@ release-level interpretation and safety boundaries.
   (price-only and selected context) now resolve Deep once and share that snapshot
   across transport, health, bounded repair, deadline announcements and visible
   model identity. Default single-model operation stays explicit when Deep is
-  unset; configured Deep failures never retry Fast. Other callers and embeddings
-  remain on the legacy factory. Explicit Deep URLs never inherit
+  unset; configured Deep failures never retry Fast. Shared stock/Interrogate,
+  market/collection outlooks, risk and backtest insights now also use Deep with
+  one profile across health, requests, repair, identity and deadlines. Their
+  browser cards share a cancellable lifecycle, including research GET-compatible
+  surfaces; total operation budget is model timeout plus 60 seconds preparation
+  allowance, with 15 seconds browser margin. Interrupted runs never replay;
+  manual retry is explicit. Research caches hash profile configuration and retain
+  owner/note-version isolation; failed insights are not cached. Remaining callers
+  and embeddings stay on the legacy factory. Explicit Deep URLs never inherit
   Fast keys; when the Deep URL is omitted, the existing endpoint/key may be
-  inherited. See the architecture task map. Next: integrate shared insight
-  lifecycle/deadlines, model identity and caches, then Brain/remaining callers
-  and representative evaluation. The older shared insight stream/replay path
-  needs its own complete integration, not a client-only model swap.
+  inherited. See the architecture task map. Next: Brain/filing and remaining Fast
+  caller integration with browser identity, then representative evaluation.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and
   distinguishing evidence. Citations anchor observed inputs, not mechanisms;
   established causal attribution/recommendations remain excluded. Both validators
   and UI implement this contract; initial price/context budgets are 3,200/6,400 tokens
-  under the same profile deadline. Host usefulness acceptance is still pending;
-  see `docs/wiki/Briefing-Evaluation.md`. Do not claim tests certify reasoning.
+  under the same profile deadline. After merging #233 the maintainer confirmed
+  the briefing works better, accepting the initial improvement. The scenario
+  guide remains in `docs/wiki/Briefing-Evaluation.md`; do not claim an exhaustive
+  audit or that tests certify reasoning quality.
 - **v2.2.0 released — Grounded Comparison Briefing.** The agreed outcome is
   on-demand cited synthesis of a selected comparison, with observations, possible
   context, conflicts and unknowns kept distinct. No causal explanations, trade

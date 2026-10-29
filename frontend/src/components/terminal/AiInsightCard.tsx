@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { terminalColors } from "../../theme/terminal";
-import type { InsightData, InsightSection } from "../../api/types";
+import type { InsightData, InsightSection, InsightModelProfile } from "../../api/types";
 import type { InsightPhase, InsightRequestOptions } from "../../api/insightLifecycle";
 
 export type { InsightData, InsightSection } from "../../api/types";
@@ -37,12 +37,13 @@ function unavailableMessage(data: InsightData): string {
 }
 
 /**
- * On-demand AI analysis card backed by the local LLM. Kept lazy because
- * local LLM inference is slow — nothing runs until the user asks for it.
+ * On-demand analysis backed by the configured model. Nothing runs until the
+ * user asks; only a validated final result is displayed.
  */
 export function AiInsightCard({ title, description, disabled = false, disabledMessage, fetcher }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error" | "cancelled">("idle");
   const [data, setData] = useState<InsightData | null>(null);
+  const [modelProfile, setModelProfile] = useState<InsightModelProfile | null>(null);
   const [progress, setProgress] = useState<{
     phase: InsightPhase;
     elapsed: number;
@@ -66,12 +67,16 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
     controllerRef.current = controller;
     setStatus("loading");
     setData(null);
+    setModelProfile(null);
     setProgress({ phase: "queued", elapsed: 0, receivedCharacters: 0 });
     try {
       // A button labelled Regenerate must not simply return the same cached AI
       // payload. Fetchers that do not cache may safely ignore this argument.
       const result = await fetcher(status !== "idle", {
         signal: controller.signal,
+        onModelProfile: (profile) => {
+          if (mountedRef.current && controllerRef.current === controller) setModelProfile(profile);
+        },
         onProgress: (phase, elapsed) => {
           if (mountedRef.current && controllerRef.current === controller) {
             setProgress((current) => ({
@@ -141,18 +146,25 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
         </div>
       </div>
 
+      {(data?.model_profile ?? modelProfile) && (
+        <p className="mt-2 text-[11px] text-terminal-muted">
+          {(data?.model_profile ?? modelProfile)?.resolved_profile === "deep" ? "Deep profile" : "Default profile (Deep not configured)"}
+          {" · "}{(data?.model_profile ?? modelProfile)?.model}
+        </p>
+      )}
+
       {status === "idle" && (
         <div className="mt-2 text-[11px] text-terminal-muted">
           {disabled
             ? disabledMessage ?? "Required terminal data is not available yet."
-            : "Runs locally via your LLM endpoint (Ollama by default) — analysis can take a minute."}
+            : "Uses your configured LLM endpoint — analysis can take a minute."}
         </div>
       )}
 
       {status === "loading" && (
         <div className="mt-3 space-y-2">
           <div className="text-[11px] text-terminal-muted" aria-live="polite">
-            {progress?.phase === "queued" ? "Preparing analysis…" : "Generating analysis with the local LLM…"}
+            {progress?.phase === "queued" ? "Preparing analysis…" : "Generating analysis with the configured model…"}
             {progress?.elapsed ? ` ${Math.round(progress.elapsed)}s` : ""}
             {progress?.receivedCharacters
               ? ` · receiving response (${progress.receivedCharacters.toLocaleString()} chars)`
@@ -170,7 +182,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
 
       {status === "error" && (
         <div className="mt-3 rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">
-          Could not generate AI analysis. Check that your LLM endpoint is running, then retry.
+          Could not generate AI analysis. No completed result was kept. Check the provider and retry manually.
         </div>
       )}
 

@@ -9,14 +9,8 @@ import type {
 } from "./types";
 import { streamInsight, type InsightRequestOptions } from "./insightLifecycle";
 
-// LLM generation regularly runs far past the api client's default 30s timeout —
-// a local/cloud model producing a sectioned briefing can take a minute or more,
-// and reasoning models longer still. Without a roomier per-call timeout the
-// browser aborts mid-generation and the card shows "unavailable" for anything but
-// the fastest model. Same treatment brain.ts already gives its LLM calls.
-// Keep the browser deadline beyond the backend's default 240-second model
-// timeout so a slow local inference can degrade cleanly server-side instead of
-// being aborted by Axios first.
+// Batched sentiment remains on the legacy Fast path. Shared insight cards use
+// the lifecycle stream and its server-announced operation deadline below.
 const AI_TIMEOUT = { timeout: 300_000 } as const;
 
 export async function fetchNewsSentiment(ticker: string, days = 7, market?: string): Promise<NewsSentimentSummary> {
@@ -57,12 +51,7 @@ export async function fetchStockBriefing(
   refresh = false,
   options: InsightRequestOptions = {},
 ): Promise<InsightData> {
-  const { data } = await api.get<InsightData>(`/ai/briefing/${encodeURIComponent(ticker)}`, {
-    params: { market, refresh },
-    signal: options.signal,
-    ...AI_TIMEOUT,
-  });
-  return data;
+  return streamInsight("briefing", { ticker, market, refresh }, options);
 }
 
 // v1.2 "research interrogates": an adversarial read that pressure-tests the bull
@@ -75,12 +64,7 @@ export async function fetchStockInterrogation(
   refresh = false,
   options: InsightRequestOptions = {},
 ): Promise<InsightData> {
-  const { data } = await api.get<InsightData>(`/ai/interrogate/${encodeURIComponent(ticker)}`, {
-    params: { market, refresh },
-    signal: options.signal,
-    ...AI_TIMEOUT,
-  });
-  return data;
+  return streamInsight("interrogate", { ticker, market, refresh }, options);
 }
 
 export type ArticleSentiment = {
@@ -117,13 +101,6 @@ export async function fetchAiRiskInsights(
   return streamInsight(
     "risk",
     payload,
-    async () => {
-      const { data } = await api.post<InsightData>("/ai/risk-insights", payload, {
-        ...AI_TIMEOUT,
-        signal: options.signal,
-      });
-      return data;
-    },
     options,
   );
 }
@@ -146,13 +123,6 @@ export async function fetchCollectionBriefing(
   return streamInsight(
     "collection",
     payload,
-    async () => {
-      const { data } = await api.post<InsightData>("/ai/collection-briefing", payload, {
-        ...AI_TIMEOUT,
-        signal: options.signal,
-      });
-      return data;
-    },
     options,
   );
 }

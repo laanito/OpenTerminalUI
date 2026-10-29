@@ -124,7 +124,7 @@ Global `LLM_ENABLED` applies to both generation profiles. Resolution reports the
 requested and effective profiles, resolved model and deadline; callers must use
 that one resolution for health, gating, generation, repair and displayed identity.
 
-Workflow migration is incremental. Comparison briefings are integrated; other
+Workflow migration is incremental. Comparison briefings and shared insights are integrated; other
 audited application call sites below still use the legacy factory. Subsequent
 integration must update model metadata, caches, progress deadlines and browser
 budgets alongside the client call, not switch the model in isolation.
@@ -140,9 +140,30 @@ configuration, not proof that inference ran. The UI distinguishes configured
 Deep from the default single-model path. Endpoints and keys are never in this
 metadata. Comparisons have no prose cache; every request collects fresh evidence.
 Citation validation, one bounded repair and cancellation remain unchanged, with
-no Fast retry after configured Deep failure. Shared insight lifecycle/cache
-integration follows separately; its older stream/fallback path must be updated
-together with model selection.
+no Fast retry after configured Deep failure.
+
+Shared insights (stock briefing, Interrogate, market/collection outlooks, risk
+and backtest explanation) now resolve a single profile per operation. Health,
+structured streams, same-model completion fallback and bounded repair share the
+profile's model deadline. The lifecycle stream supports all these families;
+research inputs are validated before streaming and Interrogate's owner comes
+from authentication. Native GET/POST endpoints remain compatibility entry points.
+The stream announces selected identity and a total operation budget equal to the
+model timeout plus a 60-second preparation allowance; the total bound covers
+preparation and model work together, rather than adding a separate 60-second
+timer to each stage. Research GET endpoints use the same overall bound. The
+browser adds 15 seconds of transport margin, bounds absent headers at five
+minutes, cancels readers on exit and never replays inference after interruption.
+Only validated final summaries/sections are displayed; deltas provide counts.
+
+Stock/Interrogate cache keys add an opaque SHA-256 profile fingerprint covering
+requested/effective profile, model, endpoint, credential, structured-output mode,
+timeout and enabled state. No raw endpoint/key is placed in the cache key or
+public identity. Interrogate retains owner ID and note/index version in its
+namespace. Regenerate bypasses cached prose; unavailable results are not cached.
+This prevents old Fast answers being reused after Deep is configured. Brain and
+filing-analysis generation, explicit Fast caller integration and representative
+cross-task quality evaluation remain pending. Embeddings keep the legacy client.
 
 The 2026-10-29 interpretation-quality follow-up adds required structured
 `hypotheses` to generated briefings, exposed as an array on results (empty on
@@ -165,12 +186,12 @@ profile deadline. See
 | `filing_analysis` | Deep | `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
 | `brain_answer` | Deep | `services/brain/brain_service.py` completion/stream/fallback |
 | `comparison_briefing` | Deep | **Integrated:** `comparison_briefing.py` shared price/context runner |
-| `stock_briefing` | Deep | `llm_insights.py` via asset-aware briefing routes |
-| `interrogate` | Deep | `llm_insights.py` via adversarial research routes |
-| `market_outlook` | Deep | `llm_insights.py` via collection/current-market facts |
-| `portfolio_risk` | Deep | `llm_insights.py` via risk routes |
-| `backtest_explanation` | Deep | `llm_insights.py` via backtest routes |
-| `collection_briefing` | Deep | `llm_insights.py` via collection routes |
+| `stock_briefing` | Deep | **Integrated:** `llm_insights.py` via asset-aware briefing routes |
+| `interrogate` | Deep | **Integrated:** `llm_insights.py` via adversarial research routes |
+| `market_outlook` | Deep | **Integrated:** `llm_insights.py` via collection/current-market facts (`scope: global markets`) |
+| `portfolio_risk` | Deep | **Integrated:** `llm_insights.py` via risk routes |
+| `backtest_explanation` | Deep | **Integrated:** `llm_insights.py` via backtest routes |
+| `collection_briefing` | Deep | **Integrated:** `llm_insights.py` via collection routes |
 
 Fast/default retains existing `LLM_*` and legacy LM Studio settings. If Deep is
 unset, a requested Deep task resolves honestly to Fast rather than claiming a

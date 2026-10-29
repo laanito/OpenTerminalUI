@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("@smoke crypto stock detail keeps chart and snapshot on the crypto feed", async ({ page }) => {
+test("@smoke crypto stock detail keeps crypto feeds and a single Deep briefing lifecycle", async ({ page }) => {
   const subscribed: string[] = [];
   const snapshotMarkets: string[] = [];
+  let insights = 0;
   await page.addInitScript(() => {
     localStorage.setItem("stock-state", JSON.stringify({
       state: { ticker: "BTC-USD", interval: "1d", range: "1y" }, version: 0,
@@ -25,6 +26,22 @@ test("@smoke crypto stock detail keeps chart and snapshot on the crypto feed", a
   });
   await page.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/ai/insights/stream")) {
+      insights += 1;
+      // Research preserves the selected market hint; the backend classifies
+      // BTC-USD as crypto regardless of that default hint.
+      expect(route.request().postDataJSON()).toEqual({ kind: "briefing", payload: { ticker: "BTC-USD", market: "NASDAQ", refresh: insights > 1 } });
+      const model_profile = { requested_profile: "deep", resolved_profile: "deep", model: "deep-test-model" };
+      const start = JSON.stringify({ type: "start", phase: "queued", deadlines: { operation_seconds: 660 }, model_profile });
+      const result = { engine: "llm", model: "deep-test-model", model_profile, summary: "A completed crypto briefing.", sections: [
+        { title: "Evidence", tone: "neutral", points: ["Supplied observations only"] },
+        { title: "Limits", tone: "negative", points: ["Incomplete evidence"] },
+      ] };
+      // The second request closes before its result: the UI must offer manual
+      // retry rather than silently run another inference through the GET API.
+      await route.fulfill({ contentType: "application/x-ndjson", body: start + "\n" + (insights === 1 ? JSON.stringify({ type: "result", result }) + "\n" : "") });
+      return;
+    }
     let data: unknown = { items: [] };
     if (url.pathname.endsWith("/quotes") && url.searchParams.get("symbols")?.includes("BTC-USD")) {
       snapshotMarkets.push(url.searchParams.get("market")!);
@@ -47,4 +64,12 @@ test("@smoke crypto stock detail keeps chart and snapshot on the crypto feed", a
   expect(snapshotMarkets).not.toContain("NASDAQ");
   expect(subscribed).toContain("CRYPTO:BTC-USD");
   expect(subscribed).not.toContain("NASDAQ:BTC-USD");
+  const briefing = page.getByText("AI Investment Briefing", { exact: true }).locator("xpath=ancestor::section[1]");
+  await briefing.getByRole("button", { name: "Generate", exact: true }).click();
+  await expect(briefing).toContainText("Deep profile · deep-test-model");
+  await expect(briefing).toContainText("A completed crypto briefing.");
+  await briefing.getByRole("button", { name: "Regenerate", exact: true }).click();
+  await expect(briefing).toContainText("retry manually");
+  await expect(briefing).not.toContainText("A completed crypto briefing.");
+  expect(insights).toBe(2);
 });

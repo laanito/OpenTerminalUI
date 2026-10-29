@@ -415,11 +415,12 @@ immutable task/profile resolution and an explicit client-factory opt-in.
 The comparison briefing integration now routes price-only and selected-context
 synthesis through Deep, sharing one profile across health, repair, server/browser
 deadlines and visible model identity. Deep unset retains the default model;
-configured Deep failure never substitutes Fast. Other application callers and
-embeddings still use the legacy factory. See the
+configured Deep failure never substitutes Fast. Shared stock/Interrogate,
+market/collection, risk and backtest insights now also use Deep, with aligned
+identity/deadlines and profile-aware research caches. Brain, filing analysis,
+remaining Fast callers and embeddings still use the legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
-Follow-up slices integrate shared insight calls with their lifecycle/deadlines,
-identity and caches, then Brain/remaining callers and their browser identity, followed
+Follow-up slices integrate Brain/remaining callers and their browser identity, followed
 by representative live evaluation. Do not treat configuration support as a
 completed task migration or a proven improvement in reasoning quality.
 
@@ -431,9 +432,11 @@ evidence. Keep factual observations separate and citations anchored to their
 observed inputs; they do not prove mechanisms. This deliberately extends the
 initial descriptive briefing contract without adding providers, predictions,
 recommendations or established causal attribution. The structured output/UI and
-reference checks are implemented; representative host acceptance remains
-pending in the [briefing evaluation guide](Briefing-Evaluation.md). Routing alone
-is not proof that the answers now help the user interpret the situation.
+reference checks are implemented. After merging #233 the maintainer confirmed
+the briefing works better, accepting the initial interpretation improvement.
+The [briefing evaluation guide](Briefing-Evaluation.md) retains representative
+cases for further assessment; no exhaustive scenario audit or cross-model quality
+benchmark is claimed.
 
 - **Fast:** sentiment scoring, classification and short summaries. **Deep:**
   Second Brain answers, comparison/context briefings, Interrogate and portfolio

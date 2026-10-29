@@ -4,7 +4,9 @@ This is the v2.4 human acceptance guide for briefing usefulness. The maintainer
 confirmed on 2026-10-29 that comparison routing selected the configured Deep
 model, but found its summary too descriptive. The approved follow-up introduces
 explicit hypotheses rather than treating a larger model or valid citations as
-proof of useful reasoning. Host acceptance of this follow-up is **pending**.
+proof of useful reasoning. After merging #233, the maintainer reported “this
+works better”, accepting the initial interpretation improvement. This is host
+feedback, not an exhaustive run of the scenarios below or a cross-model benchmark.
 
 ## What a useful answer contains
 
@@ -59,6 +61,6 @@ and more limited than one with relevant selected context.
 
 Deterministic backend/browser tests cover the output structure, citation anchors,
 bounded repair, failure isolation and inspectable UI. They do not certify
-semantic fidelity or usefulness. Record host findings here before marking the
-interpretation-quality acceptance complete; model routing for shared insight
-cards and Brain remains a separate unfinished v2.4 work item.
+semantic fidelity or usefulness. Record further host findings here; shared
+insight cards are now profile-integrated, while Brain routing and broader v2.4
+representative model evaluation remain unfinished work.

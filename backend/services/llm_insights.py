@@ -1,9 +1,9 @@
-"""Shared LLM insight helper backed by a local LLM.
+"""Shared insight helper backed by a resolved generation profile.
 
 Several read-heavy screens (stock briefing, backtest explainer, risk insights)
 need the same thing: hand the model some structured data, get back a concise,
 sectioned analysis. This module centralises that so every feature uses one
-LLM client, one schema, and one graceful-fallback path.
+profile-resolved LLM client, one schema, and an explicit unavailable path.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from backend.config.settings import get_settings
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.services.llm_client import (
     LLMError,
     get_llm_client,
@@ -57,10 +58,6 @@ INSIGHT_SCHEMA: dict[str, Any] = {
     },
     "required": ["summary", "sections"],
 }
-
-
-def current_model() -> str:
-    return get_settings().llm_model
 
 
 def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
@@ -115,18 +112,20 @@ async def run_insight(
     max_tokens: int = 900,
     unavailable_summary: str = "AI analysis is unavailable — start your local LLM (e.g. Ollama) to enable it.",
     on_token: Callable[[str], None] | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> dict[str, Any]:
     """Produce a `{summary, sections}` insight, falling back gracefully.
 
     Returns ``engine: "llm"`` when the model answered, ``"unavailable"``
     when LLM is off/unreachable or the response could not be used.
     """
-    settings = get_settings()
-    model = settings.llm_model
+    profile = profile or resolve_llm_profile(get_settings(), "stock_briefing")
+    model = profile.model
     generated_at = datetime.now(timezone.utc).isoformat()
     base = {
         "engine": "unavailable",
         "model": model,
+        "model_profile": profile.public_identity(),
         "summary": unavailable_summary,
         "sections": [],
         "generated_at": generated_at,
@@ -142,16 +141,9 @@ async def run_insight(
             },
         }
 
-    client = get_llm_client()
-    if not settings.llm_enabled:
+    if not profile.enabled:
         return unavailable("disabled", retryable=False)
-    try:
-        healthy = await client.health()
-    except Exception as exc:
-        logger.warning("LLM health check failed: %s", exc)
-        healthy = False
-    if not healthy:
-        return unavailable("provider_unavailable", retryable=True)
+    client = get_llm_client(profile=profile)
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -186,9 +178,17 @@ async def run_insight(
         # The client may make more than one provider request while stepping down
         # its structured-output ladder. Bound the whole operation, including one
         # retry for providers that intermittently return malformed JSON despite
-        # accepting response_format, so the server always resolves before the
-        # browser's five-minute deadline.
-        async with asyncio.timeout(settings.llm_timeout_seconds):
+        # accepting response_format. Health shares the selected profile budget.
+        async with asyncio.timeout(profile.timeout_seconds):
+            try:
+                healthy = await client.health()
+            except asyncio.TimeoutError:
+                raise
+            except Exception as exc:
+                logger.warning("LLM health check failed (%s)", type(exc).__name__)
+                healthy = False
+            if not healthy:
+                return unavailable("provider_unavailable", retryable=True)
             if on_token is None:
                 summary, sections = await complete_and_validate()
             else:
@@ -212,22 +212,23 @@ async def run_insight(
                     # only the final validated result is published as an insight.
                     logger.warning(
                         "LLM structured stream unavailable; using bounded completion: %s",
-                        exc,
+                        type(exc).__name__,
                     )
                     summary, sections = await complete_and_validate()
     except asyncio.TimeoutError as exc:
-        logger.warning("LLM insight unavailable after bounded generation: %s", exc)
+        logger.warning("LLM insight unavailable after bounded generation (%s)", type(exc).__name__)
         return unavailable("timeout", retryable=True)
     except InvalidInsightResponse as exc:
-        logger.warning("LLM insight invalid after bounded repair: %s", exc)
+        logger.warning("LLM insight invalid after bounded repair (%s)", type(exc).__name__)
         return unavailable("invalid_response", retryable=True)
     except LLMError as exc:
-        logger.warning("LLM insight unavailable after bounded generation: %s", exc)
+        logger.warning("LLM insight unavailable after bounded generation (%s)", type(exc).__name__)
         return unavailable("provider_error", retryable=True)
 
     return {
         "engine": "llm",
         "model": model,
+        "model_profile": profile.public_identity(),
         "summary": summary,
         "sections": sections,
         "generated_at": generated_at,

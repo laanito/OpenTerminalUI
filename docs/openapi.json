@@ -7648,13 +7648,16 @@
             "enum": [
               "backtest",
               "collection",
-              "risk"
+              "risk",
+              "briefing",
+              "interrogate"
             ],
             "title": "Kind",
             "type": "string"
           },
           "payload": {
             "additionalProperties": true,
+            "description": "Kind-specific input. briefing/interrogate require ticker (1-40 letters, digits, ^._=-), with optional market (up to 40 characters) and refresh (boolean); no other keys. Interrogate ownership comes from authentication, never the payload. backtest accepts strategy/metrics; risk accepts scope/metrics; collection accepts symbols/scope/facts.",
             "title": "Payload",
             "type": "object"
           }
@@ -19588,7 +19591,7 @@
     },
     "/api/ai/insights/stream": {
       "post": {
-        "description": "Stream a cancellable lifecycle for the shared POST-based insight families.",
+        "description": "Stream one cancellable, profile-resolved shared insight operation.\n\nStart announces model_profile and the total operation deadline (model budget\nplus a 60-second preparation allowance). Delta text is unvalidated; clients\npublish only the final structured result. Interrupted runs are not replayed.\nInterrogate uses the authenticated owner's notes and cache namespace.",
         "operationId": "insight_stream_api_ai_insights_stream_post",
         "requestBody": {
           "content": {
@@ -19640,7 +19643,7 @@
     },
     "/api/ai/interrogate/{ticker}": {
       "get": {
-        "description": "Adversarially interrogate an asset, grounded in the user's own notes.\n\nThe differentiator of v1.2: instead of another bullish briefing, this turns\nthe local model on the *bull case* \u2014 and specifically on the user's recorded\nthesis for the ticker \u2014 to pressure-test it rather than flatter it. The prompt\nis specialised for equities, crypto assets, or indices. Authed and per-user:\nit reads this user's `security`/symbol notes.",
+        "description": "Adversarial, owner-scoped interrogation grounded in the user's notes.",
         "operationId": "interrogate_stock_api_ai_interrogate__ticker__get",
         "parameters": [
           {

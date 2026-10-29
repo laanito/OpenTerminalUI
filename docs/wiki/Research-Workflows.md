@@ -212,8 +212,19 @@ otherwise the result shows **Deep profile** and the selected model. A Deep failu
 never retries Fast. The additive `model_profile` response metadata identifies
 the selected configuration, even when evidence preparation failed or inference
 was skipped; it does not certify that the model ran or that its reasoning is
-better. Brain and shared insight cards remain on their legacy model until their
-separate integration lands.
+better. Shared insight cards also use Deep; Brain's separate integration remains
+pending.
+
+Stock briefings and Interrogate now use `POST /api/ai/insights/stream` from their
+browser cards, alongside risk, backtest and collection/market outlooks. The
+native GET/POST APIs remain available. The stream announces the model/profile
+and an overall model-timeout-plus-60-second preparation budget; clients add 15
+seconds of transport margin. Heartbeats do not extend it. Only the final
+validated summary/sections are displayed; token progress is provisional.
+Interrupted streams require manual retry and never automatically replay a GET
+or POST inference. Research cache keys distinguish model/provider configuration;
+Interrogate remains owner/note-version scoped and Regenerate bypasses cached
+prose. Model failures remain explicit on the selected profile.
 
 ### Interpretations to investigate (v2.4 development)
 

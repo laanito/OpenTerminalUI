@@ -1038,12 +1038,14 @@ export type InsightSection = {
   points: string[];
 };
 
+export type InsightModelProfile = { requested_profile: "deep"; resolved_profile: "fast" | "deep"; model: string };
 export type InsightData = {
   engine: string;
   model: string;
   summary: string;
   sections: InsightSection[];
   generated_at?: string;
+  model_profile?: InsightModelProfile;
   /** Interrogation only: how many of the user's own notes on the ticker fed the analysis. */
   note_count?: number;
   /** Interrogation only: related notes on other tickers/themes folded in semantically. */
