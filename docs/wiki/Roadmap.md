@@ -423,6 +423,18 @@ identity and caches, then Brain/remaining callers and their browser identity, fo
 by representative live evaluation. Do not treat configuration support as a
 completed task migration or a proven improvement in reasoning quality.
 
+**Interpretation-quality follow-up agreed 2026-10-29:** the maintainer confirmed
+that comparison generation used the configured Deep model, but found the prose
+too descriptive. Within this milestone's usefulness assessment, allow explicit
+hypotheses, possible mechanisms, competing explanations and specific missing
+evidence. Keep factual observations separate and citations anchored to their
+observed inputs; they do not prove mechanisms. This deliberately extends the
+initial descriptive briefing contract without adding providers, predictions,
+recommendations or established causal attribution. The structured output/UI and
+reference checks are implemented; representative host acceptance remains
+pending in the [briefing evaluation guide](Briefing-Evaluation.md). Routing alone
+is not proof that the answers now help the user interpret the situation.
+
 - **Fast:** sentiment scoring, classification and short summaries. **Deep:**
   Second Brain answers, comparison/context briefings, Interrogate and portfolio
   risk synthesis. Start implementation by auditing actual call sites and their

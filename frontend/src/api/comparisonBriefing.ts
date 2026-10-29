@@ -45,6 +45,9 @@ export interface BriefingEvidence {
   not_included: (keyof typeof BRIEFING_EXCLUSIONS)[]; comparisons: BriefingPair[];
 }
 export type BriefingStatement = { text: string; citation_ids: string[] };
+export type BriefingHypothesis = {
+  interpretation: string; mechanism: string; alternative: string; what_would_help: string; citation_ids: string[];
+};
 export type BriefingModelProfile = {
   requested_profile: "fast" | "deep"; resolved_profile: "fast" | "deep"; model: string;
 };
@@ -54,6 +57,7 @@ export interface ComparisonBriefingResult {
   generated_at: string; evidence: BriefingEvidence | null; scope_citation_id: "SCOPE";
   citation_validation: "references_only_not_fact_checked"; scope_notice: string;
   observations: BriefingStatement[]; limitations: BriefingStatement[]; unknowns: BriefingStatement[];
+  hypotheses: BriefingHypothesis[];
   failure: null | { code: string; message: string; retryable: boolean };
 }
 export type BriefingPhase = "queued" | "preparing_evidence" | "collecting_context" | "checking_model" | "generating" | "validating" | "retrying";
@@ -113,6 +117,18 @@ function validEvidence(value: unknown, selection: BriefingSelection): value is B
   return value.status === (available === 0 ? "unavailable" : available === value.comparisons.length ? "available" : "partial");
 }
 
+export function validateHypotheses(value: unknown, complete: boolean, available: Set<string>, usable = new Map<string, string>()): asserts value is BriefingHypothesis[] {
+  if (!Array.isArray(value) || value.length > 3 || (complete ? !value.length : value.length !== 0)) throw invalid();
+  for (const item of value) {
+    if (!record(item) || Object.keys(item).some((key) => !["interpretation", "mechanism", "alternative", "what_would_help", "citation_ids"].includes(key))
+      || [item.interpretation, item.mechanism, item.alternative, item.what_would_help].some((field) => !text(field) || field.trim().length < 10 || field.length > 600)
+      || !strings(item.citation_ids) || !item.citation_ids.length || item.citation_ids.length > 24 || !unique(item.citation_ids)) throw invalid();
+    const refs = item.citation_ids;
+    if (!refs.some((ref) => available.has(ref))
+      || refs.some((ref) => !available.has(ref) && (!usable.has(ref) || !refs.includes(usable.get(ref)!)))) throw invalid();
+  }
+}
+
 /** Validate the transport envelope/identity/references, not the truth of model prose. */
 export function validateBriefingResult(value: unknown, selection: BriefingSelection): ComparisonBriefingResult {
   if (!record(value) || !choice(value.status, ["complete", "unavailable"]) || !nullableText(value.model)
@@ -124,6 +140,7 @@ export function validateBriefingResult(value: unknown, selection: BriefingSelect
     || !choice(value.model_profile.resolved_profile, ["fast", "deep"])
     || !text(value.model_profile.model) || value.model_profile.model !== value.model)) throw invalid();
   const packet = value.evidence as BriefingEvidence | null;
+  validateHypotheses(value.hypotheses, value.status === "complete", new Set(packet?.comparisons.filter((pair) => pair.status === "available").map((pair) => pair.citation_id)));
   const known = new Set(["SCOPE", ...(packet?.comparisons.map((pair) => pair.citation_id) ?? [])]);
   for (const name of ["observations", "limitations", "unknowns"]) {
     const points = value[name];

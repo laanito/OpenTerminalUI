@@ -331,6 +331,12 @@ explicit; it never retries Fast. Brain and shared insight cards still use the
 legacy model pending their integration. Embedding configuration and indexing
 are unchanged.
 
+Comparison results also separate factual observations from **Interpretations to
+investigate**: possible mechanisms, competing explanations and evidence that
+would help distinguish them. Citations identify observed inputs, not proof of
+the hypotheses. This v2.4 quality follow-up awaits host evaluation; see the
+[briefing evaluation guide](docs/wiki/Briefing-Evaluation.md).
+
 | Variable | Meaning |
 |---|---|
 | `LLM_DEEP_MODEL` | Optional served Deep model; required if any other Deep override is set |

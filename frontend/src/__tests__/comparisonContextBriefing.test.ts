@@ -16,12 +16,22 @@ function response(events: unknown[], close = true) {
 }
 
 describe("context briefing validation", () => {
+  it("accepts context-anchored hypotheses and rejects missing pair links or section-only references", () => {
+    const result = makeContextBriefing(context);
+    const refs = result.possible_context[0].citation_ids;
+    result.hypotheses[0].citation_ids = refs;
+    expect(validateContextBriefingResult(result, briefingSelection, context)).toBe(result);
+    result.hypotheses[0].citation_ids = refs.filter((ref) => ref !== "P1");
+    expect(() => validateContextBriefingResult(result, briefingSelection, context)).toThrow();
+    result.hypotheses[0].citation_ids = ["P1", "C1"];
+    expect(() => validateContextBriefingResult(result, briefingSelection, context)).toThrow();
+  });
   it("accepts exact source scopes and available/failed model snapshots", () => {
     for (const options of [context, { news: true, macro_regions: [] }, { news: false, macro_regions: ["euro_area"] }] as BriefingContextOptions[]) {
       const result = makeContextBriefing(options);
       expect(validateContextBriefingResult(result, briefingSelection, options)).toBe(result);
       result.status = "unavailable"; result.engine = "unavailable";
-      result.observations = []; result.possible_context = []; result.limitations = []; result.unknowns = [];
+      result.observations = []; result.hypotheses = []; result.possible_context = []; result.limitations = []; result.unknowns = [];
       result.failure = { code: "disabled", message: "Synthesis disabled.", retryable: false };
       expect(validateContextBriefingResult(result, briefingSelection, options).evidence).toBe(result.evidence);
     }
@@ -112,7 +122,7 @@ describe("context briefing validation", () => {
     section.start_date = null; section.end_date = null; section.retrieved_at = null;
     if (section.kind === "macro") { section.series = []; section.realtime_date = null; }
     result.status = "unavailable"; result.engine = "unavailable";
-    result.observations = []; result.possible_context = []; result.limitations = []; result.unknowns = [];
+    result.observations = []; result.hypotheses = []; result.possible_context = []; result.limitations = []; result.unknowns = [];
     result.failure = { code: "no_evidence", message: "No usable price comparison.", retryable: false };
     expect(validateContextBriefingResult(result, briefingSelection, options).evidence).toBe(result.evidence);
   });

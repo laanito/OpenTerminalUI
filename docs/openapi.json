@@ -1757,6 +1757,54 @@
         "title": "BriefingContextOptions",
         "type": "object"
       },
+      "BriefingHypothesis": {
+        "additionalProperties": false,
+        "description": "Model reasoning anchored to observations; citations do not prove a mechanism.",
+        "properties": {
+          "alternative": {
+            "maxLength": 600,
+            "minLength": 10,
+            "title": "Alternative",
+            "type": "string"
+          },
+          "citation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "title": "Citation Ids",
+            "type": "array"
+          },
+          "interpretation": {
+            "maxLength": 600,
+            "minLength": 10,
+            "title": "Interpretation",
+            "type": "string"
+          },
+          "mechanism": {
+            "maxLength": 600,
+            "minLength": 10,
+            "title": "Mechanism",
+            "type": "string"
+          },
+          "what_would_help": {
+            "maxLength": 600,
+            "minLength": 10,
+            "title": "What Would Help",
+            "type": "string"
+          }
+        },
+        "required": [
+          "interpretation",
+          "mechanism",
+          "alternative",
+          "what_would_help",
+          "citation_ids"
+        ],
+        "title": "BriefingHypothesis",
+        "type": "object"
+      },
       "BriefingPairEvidence": {
         "properties": {
           "anchor": {
@@ -3201,6 +3249,13 @@
             "title": "Generated At",
             "type": "string"
           },
+          "hypotheses": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingHypothesis"
+            },
+            "title": "Hypotheses",
+            "type": "array"
+          },
           "limitations": {
             "items": {
               "$ref": "#/components/schemas/BriefingStatement"
@@ -3243,7 +3298,7 @@
             "type": "string"
           },
           "scope_notice": {
-            "default": "AI-generated interpretation of shared-UTC native provider-close returns only. Optional panels and private research were not included. Citation references are checked, not the truth of the prose. This is not a causal explanation or investment advice; inspect the exact evidence, dates and caveats.",
+            "default": "AI-generated interpretation of shared-UTC native provider-close returns only. Optional panels and private research were not included. Citation references are checked, not the truth of the prose. Interpretations are hypotheses; citations anchor observations, not proof of the proposed mechanisms. This is not investment advice; inspect the exact evidence, dates and caveats.",
             "title": "Scope Notice",
             "type": "string"
           },
@@ -3363,6 +3418,13 @@
             "title": "Generated At",
             "type": "string"
           },
+          "hypotheses": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingHypothesis"
+            },
+            "title": "Hypotheses",
+            "type": "array"
+          },
           "limitations": {
             "items": {
               "$ref": "#/components/schemas/ContextStatement"
@@ -3412,7 +3474,7 @@
             "type": "string"
           },
           "scope_notice": {
-            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
             "title": "Scope Notice",
             "type": "string"
           },

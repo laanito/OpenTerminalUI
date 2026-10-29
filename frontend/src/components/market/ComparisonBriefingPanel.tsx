@@ -62,7 +62,7 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const [citation, setCitation] = useState<string | null>(null);
+  const [citation, setCitation] = useState<{ reference: string } | null>(null);
 
   useEffect(() => () => {
     request.current.generation += 1;
@@ -76,7 +76,7 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
   }, [status]);
   useEffect(() => {
     if (expanded && citation) {
-      const target = document.getElementById(`${id}-${citation}`);
+      const target = document.getElementById(`${id}-${citation.reference}`);
       target?.focus();
       target?.scrollIntoView?.({ block: "nearest" });
     }
@@ -117,7 +117,8 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
     setStatus("cancelled"); setResult(null); setError(null); setExpanded(false); setCitation(null);
   }
   function inspect(reference: string) {
-    setCitation(reference); setExpanded(true);
+    // Each click is a new focus request, including repeated references.
+    setCitation({ reference }); setExpanded(true);
   }
   function changeContext(next: BriefingContextOptions) {
     request.current.generation += 1;
@@ -193,6 +194,19 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
           {statements("Observed movement", result.observations)}
           {"possible_context" in result ? (result.possible_context.length ? statements("Possible context", result.possible_context)
             : <p className="text-terminal-muted">No possible context was generated from the selected sources. Inspect coverage; this does not establish absence of relevant events.</p>) : null}
+          <section aria-label="Interpretations to investigate" className="space-y-3">
+            <h3 className="font-semibold">Interpretations to investigate</h3>
+            <p className="text-xs text-terminal-warn">Model hypotheses, not established causes. Citations identify observed inputs; they do not prove a proposed mechanism.</p>
+            {result.hypotheses.map((item, index) => <article key={index} className="space-y-2 rounded border border-terminal-border p-3">
+              <h4 className="font-semibold whitespace-pre-wrap">{item.interpretation}</h4>
+              <p className="whitespace-pre-wrap"><strong>Possible mechanism: </strong>{item.mechanism}</p>
+              <p className="whitespace-pre-wrap"><strong>Competing explanation: </strong>{item.alternative}</p>
+              <p className="whitespace-pre-wrap"><strong>What would help: </strong>{item.what_would_help}</p>
+              <div className="text-xs">Observed inputs: {item.citation_ids.map((reference) => <button key={reference} type="button"
+                className="mr-2 text-terminal-accent underline" aria-controls={`${id}-${reference}`}
+                aria-label={`Inspect ${reference} for hypothesis ${index + 1}`} onClick={() => inspect(reference)}>[{reference}]</button>)}</div>
+            </article>)}
+          </section>
           {statements("Evidence limitations", result.limitations)}
           {statements("Unknowns", result.unknowns)}
         </> : null}

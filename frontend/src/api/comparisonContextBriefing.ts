@@ -1,5 +1,5 @@
 import {
-  briefingValidation as v, streamBriefing, validateBriefingResult,
+  briefingValidation as v, streamBriefing, validateBriefingResult, validateHypotheses,
   type BriefingEvidence, type BriefingSelection, type BriefingStatement, type ComparisonBriefingResult, type BriefingPhase,
 } from "./comparisonBriefing";
 
@@ -190,6 +190,8 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
         || !v.unique(point.citation_ids) || point.citation_ids.some((ref) => !known.has(ref)))) throw v.invalid();
   }
   const result = value as unknown as ContextBriefingResult;
+  const available = new Set(packet?.price.comparisons.filter((pair) => pair.status === "available").map((pair) => pair.citation_id));
+  validateHypotheses(result.hypotheses, result.status === "complete", available, usable);
   if (result.status === "complete") {
     const limited = new Set(result.limitations.flatMap((item) => item.citation_ids));
     const disclosed = new Set([...limited, ...result.unknowns.flatMap((item) => item.citation_ids)]);
@@ -206,6 +208,7 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
     return refs.length ? [{ text: "Reference coverage projection only.", citation_ids: refs }] : [];
   };
   validateBriefingResult({ ...result, evidence: packet?.price ?? null,
+    hypotheses: result.hypotheses.map((item) => ({ ...item, citation_ids: item.citation_ids.filter((ref) => available.has(ref)) })),
     limitations: project(result.limitations), unknowns: project(result.unknowns),
   }, selection);
   return result;

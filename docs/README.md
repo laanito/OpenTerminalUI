@@ -17,6 +17,7 @@ contract.
 | Configuration and provider limits | [`wiki/Limitations.md`](wiki/Limitations.md), [`.env.example`](../.env.example) |
 | Product roadmap and releases | [`wiki/Roadmap.md`](wiki/Roadmap.md), [`wiki/Releasing.md`](wiki/Releasing.md) |
 | Private Second Brain retrieval evaluation | [`wiki/Brain-Retrieval-Evaluation.md`](wiki/Brain-Retrieval-Evaluation.md) |
+| Comparison briefing interpretation and usefulness evaluation | [`wiki/Briefing-Evaluation.md`](wiki/Briefing-Evaluation.md) |
 | Complete API contract | [`API_REFERENCE.md`](API_REFERENCE.md), [`openapi.json`](openapi.json) |
 | Supported/hidden surface classification | [`wiki/Surface-Inventory.md`](wiki/Surface-Inventory.md), [`surface-inventory.json`](surface-inventory.json) |
 | External-agent handoff | [`.agents/README.md`](../.agents/README.md), [`.agents/TODO.md`](../.agents/TODO.md) |

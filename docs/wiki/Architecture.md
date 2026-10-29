@@ -144,6 +144,19 @@ no Fast retry after configured Deep failure. Shared insight lifecycle/cache
 integration follows separately; its older stream/fallback path must be updated
 together with model selection.
 
+The 2026-10-29 interpretation-quality follow-up adds required structured
+`hypotheses` to generated briefings, exposed as an array on results (empty on
+failure). Shared instructions permit explicitly conditional economic reasoning
+while forbidding invented observed facts and established causal attribution.
+Each item separates interpretation, mechanism, alternative and distinguishing
+evidence; citations anchor available pairs and optional usable context sources.
+Both server/browser validators check these anchors and structure, not semantic
+truth. Initial output budgets are 3,200 tokens for price-only and 6,400 for
+selected context. Existing transport truncation fallback (6,144 tokens when the
+initial budget is lower), one repair and all other requests share the same
+profile deadline. See
+[Briefing evaluation](Briefing-Evaluation.md) for representative human review.
+
 | Generation task | Intended profile | Current caller |
 |---|---|---|
 | `news_sentiment` | Fast | `services/llm_sentiment.py` |

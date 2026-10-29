@@ -215,6 +215,27 @@ was skipped; it does not certify that the model ran or that its reasoning is
 better. Brain and shared insight cards remain on their legacy model until their
 separate integration lands.
 
+### Interpretations to investigate (v2.4 development)
+
+Following host feedback on 2026-10-29, both briefing modes add a separate
+`hypotheses` section. Each item explains what an observed pattern could mean,
+a possible mechanism, a competing explanation and specific evidence that would
+help distinguish them. Observations remain factual; conditional economic
+reasoning belongs in hypotheses. The model may use general reasoning to explain
+a channel, but may not turn missing company facts, expectations, flows or events
+into observations. Prices alone do not establish business exposures, and single
+macro levels do not establish changes, surprises or a market regime.
+
+The UI labels these interpretations as model hypotheses. Citation buttons open
+the observed inputs, not proof of the proposed mechanism. Every hypothesis
+requires an available price pair; context citations must identify an actual
+usable headline/series together with its linked pair. Sections, failed sources,
+SCOPE and unavailable pairs cannot serve as hypothesis evidence. Completed
+generation requires 1–3 hypotheses with all four parts; expected failure states
+return none. Structural/reference checks still cannot judge causal truth or
+whether the interpretation is useful. See the
+[briefing evaluation guide](Briefing-Evaluation.md) for human acceptance cases.
+
 ### Browser comparison briefing
 
 On **Cross-market context**, apply the anchor, proxies and window with
@@ -298,7 +319,7 @@ Section/group/item references are local to the complete fingerprinted envelope,
 not cross-request identifiers or fact-checks. News is untrusted source text and
 current feeds do not establish complete historical coverage. Macro is global
 context, not issuer-specific relevance or causal attribution. Synthesis separates
-price observations, possible context, limitations and unknowns. Possible context
+price observations, possible context, hypotheses, limitations and unknowns. Possible context
 requires an available headline/series plus its linked pair; selected sections,
 missing inputs and material truncation/withholding/flags must be disclosed.
 These are structural checks, not semantic verification of the model's reasoning.
@@ -309,7 +330,10 @@ region/window queries share a fetch within the operation. Optional failures
 retain completed sources and prices. Model health, completion and one repair
 share the configured model deadline. The serialized evidence input cap is
 120,000 characters, with explicit `evidence_too_large` rather than silently
-discarded sources; the completion output cap is 4,800 tokens. Typed model
+discarded sources; the initial completion budget is 6,400 tokens (3,200 for price-only)
+to accommodate the interpretation section. The existing client can retry a
+truncated response at 6,144 tokens when the initial budget is lower. All requests,
+including repair, share the selected profile's whole-operation deadline. Typed model
 failures return the entire packet and no prose. The stream's start event reports
 price/context/model budgets; `collecting_context` is a progress phase.
 

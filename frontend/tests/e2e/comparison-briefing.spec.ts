@@ -12,7 +12,7 @@ for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844
         const result = makeBriefing();
         if (requests > 1) {
           result.status = "unavailable"; result.engine = "unavailable";
-          result.observations = []; result.limitations = []; result.unknowns = [];
+          result.observations = []; result.hypotheses = []; result.limitations = []; result.unknowns = [];
           result.failure = { code: "provider_unavailable", message: "The model could not be reached.", retryable: true };
           result.evidence!.packet_id = "b".repeat(64);
         }
@@ -33,6 +33,9 @@ for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844
     await generate.click();
     const observation = page.getByText(makeBriefing().observations[0].text, { exact: true });
     await expect(observation).toBeVisible();
+    await expect(page.getByRole("region", { name: "Interpretations to investigate" })).toContainText("Competing explanation:");
+    await page.getByRole("button", { name: "Inspect P1 for hypothesis 1" }).click();
+    await expect(page.getByRole("region", { name: "P1 evidence", exact: true })).toBeFocused();
     await expect(page.getByLabel("Mandatory evidence caveats")).toBeVisible();
     await page.getByRole("button", { name: "Inspect P1 for observed movement 1" }).click();
     const pair = page.getByRole("region", { name: "P1 evidence", exact: true });

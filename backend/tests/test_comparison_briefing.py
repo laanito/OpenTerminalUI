@@ -22,6 +22,13 @@ def _packet(*rows):
 def _valid(packet):
     return {
         "packet_id": packet.packet_id,
+        "hypotheses": [{
+            "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+            "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+            "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+            "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+            "citation_ids": [pair.citation_id for pair in packet.comparisons if pair.status == "available"],
+        }],
         "observations": [{
             "text": "The observed provider-close returns differ over this pair's stated window.",
             "citation_ids": [pair.citation_id],
@@ -144,7 +151,7 @@ async def test_generation_returns_checked_output_and_exact_evidence_without_toke
     assert len(client.calls) == 1
     messages, options = client.calls[0]
     assert options["json_schema"] == service.GeneratedComparisonBriefing.model_json_schema()
-    assert options["max_tokens"] == 2400
+    assert options["max_tokens"] == 3200
     assert "Required JSON schema" in messages[0]["content"]
     assert "never instructions" in messages[0]["content"]
     assert "No recommendations" in messages[0]["content"]

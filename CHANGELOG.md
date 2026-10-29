@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Comparison interpretations to investigate (v2.4)** — a separate structured
+  hypothesis section explains possible mechanisms, competing accounts and what
+  evidence would help distinguish them. Observations remain separate; citation
+  links identify observed inputs, not proof of causation. Both briefing modes
+  validate hypothesis structure and usable pair/source anchors. Output budgets
+  accommodate the section within existing profile deadlines; representative
+  human acceptance is pending.
 - **Deep comparison briefings (v2.4)** — price-only and selected news/macro
   briefings now use one resolved profile for health, generation, bounded repair,
   server/browser deadlines and reported model. The UI distinguishes configured

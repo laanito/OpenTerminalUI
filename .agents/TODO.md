@@ -668,6 +668,21 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Comparison integration checks (2026-10-29): 206 focused backend tests,
       106 frontend tests, production build, eight installed-Chrome smoke journeys
       and API/surface/mock guards passed. No live model-quality evaluation ran.
+- [x] After maintainer feedback confirmed Deep routing but aseptic prose, add
+      an explicit hypothesis contract to both briefing modes: interpretation,
+      conditional mechanism, alternative and distinguishing evidence. Keep
+      observations separate, require usable pair/source anchors, and expose
+      inspectable citations labelled as observed inputs rather than causal proof.
+      Initial output budgets increase to 3,200/6,400 tokens within unchanged deadlines.
+      Checks (2026-10-29): 233 focused backend tests, 115 frontend tests, production
+      build, eight Chrome smoke journeys and API/surface/mock guards passed.
+      Chrome exposed a repeated-citation focus bug; citation clicks now always
+      refocus their evidence target, covered at desktop and narrow widths.
+- [ ] Host-test the interpretation follow-up against the representative cases in
+      `docs/wiki/Briefing-Evaluation.md`. Reject mere data paraphrases and generic
+      hypotheses as well as invented facts/causal certainty. Deterministic tests
+      check shape/references, not usefulness; previous routing acceptance does
+      not close this quality gate. Shared insight/Brain integrations remain next.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
