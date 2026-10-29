@@ -17,6 +17,18 @@ const firstResult: InsightData = {
 };
 
 describe("AiInsightCard", () => {
+  it.each(["deep", "fast"] as const)("shows the resolved %s model during generation and on completion", async (resolved) => {
+    const profile = { requested_profile: "deep", resolved_profile: resolved, model: "selected-model" } as const;
+    let finish!: (data: InsightData) => void;
+    const fetcher = vi.fn((_refresh, options) => new Promise<InsightData>((resolve) => {
+      finish = resolve; options?.onModelProfile?.(profile);
+    }));
+    render(<AiInsightCard title="Insight" fetcher={fetcher} />);
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+    expect(await screen.findByText(resolved === "deep" ? /Deep profile/ : /Default profile \(Deep not configured\)/)).toHaveTextContent("selected-model");
+    await act(async () => finish({ ...firstResult, model: profile.model, model_profile: profile }));
+    expect(screen.getByText(resolved === "deep" ? /Deep profile/ : /Default profile \(Deep not configured\)/)).toBeVisible();
+  });
   it("does not generate an assessment without its required facts", () => {
     const fetcher = vi.fn();
     render(

@@ -8,7 +8,7 @@ sectioned narrative via a local LLM:
   grounded in the user's own notes (v1.2 "research interrogates")
 * ``POST /api/ai/backtest-explain``      - plain-English assessment of a backtest
 * ``POST /api/ai/risk-insights``         - narrative interpretation of portfolio risk
-* ``POST /api/ai/insights/stream``       - cancellable lifecycle for POST insights
+* ``POST /api/ai/insights/stream``       - cancellable lifecycle for shared insights
 
 All share one structured-output schema (``llm_insights.INSIGHT_SCHEMA``) and
 degrade gracefully when LLM is unavailable.
@@ -18,16 +18,21 @@ from __future__ import annotations
 
 import json
 import math
+import asyncio
+from contextlib import aclosing
+from datetime import datetime, timezone
 from collections.abc import Callable
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.api.deps import cache_instance, fetch_stock_snapshot_coalesced, get_db
+from backend.config.settings import get_settings
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.api.routes.news import _fetch_news_fallback, _ticker_fallback_terms
 from backend.auth.deps import get_current_user
 from backend.core.ttl_policy import market_open_now, ttl_seconds
@@ -45,12 +50,44 @@ from backend.shared.market_classifier import is_crypto_symbol
 router = APIRouter()
 
 AssetType = Literal["equity", "crypto", "index"]
-InsightKind = Literal["backtest", "collection", "risk"]
+InsightKind = Literal["backtest", "collection", "risk", "briefing", "interrogate"]
+INSIGHT_PREPARATION_SECONDS = 60
+
+
+class ResearchInsightPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    ticker: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9^._=-]+$")
+    market: str | None = Field(default=None, max_length=40)
+    refresh: bool = False
 
 
 class InsightStreamRequest(BaseModel):
     kind: InsightKind
-    payload: dict[str, Any] = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict, description=(
+        "Kind-specific input. briefing/interrogate require ticker (1-40 letters, digits, ^._=-), "
+        "with optional market (up to 40 characters) and refresh (boolean); no other keys. "
+        "Interrogate ownership comes from authentication, never the payload. "
+        "backtest accepts strategy/metrics; risk accepts scope/metrics; collection accepts symbols/scope/facts."
+    ))
+
+    @model_validator(mode="after")
+    def validate_research_target(self):
+        if self.kind in {"briefing", "interrogate"}:
+            self.payload = ResearchInsightPayload.model_validate(self.payload).model_dump()
+        return self
+
+
+async def _bounded_insight(operation, profile):
+    # Covers preparation as well as the separately bounded model operation.
+    try:
+        async with asyncio.timeout(INSIGHT_PREPARATION_SECONDS + profile.timeout_seconds):
+            return await operation()
+    except asyncio.TimeoutError:
+        message = "The insight operation reached its deadline. Retry manually."
+        return {"engine": "unavailable", "model": profile.model,
+                "model_profile": profile.public_identity(), "summary": message, "sections": [],
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "failure": {"code": "timeout", "message": message, "retryable": True}}
 
 
 def _fmt(value: Any, suffix: str = "") -> str:
@@ -297,11 +334,19 @@ async def stock_briefing(
     refresh: bool = Query(default=False, description="Bypass a cached AI result"),
 ) -> dict[str, Any]:
     """Return an asset-aware AI briefing synthesizing relevant facts and news."""
+    profile = resolve_llm_profile(get_settings(), "stock_briefing")
+    return await _bounded_insight(lambda: _stock_briefing(ticker, market, refresh, profile=profile), profile)
+
+
+async def _stock_briefing(ticker, market, refresh, *, profile, on_token=None):
+    if not profile.enabled:
+        return await run_insight("", "", profile=profile)
     symbol = ticker.strip().upper()
     market_code = (market or "").strip().upper() or None
     asset_type = _asset_type(symbol, market_code)
     cache_key = cache_instance.build_key(
-        "ai_insight", f"briefing:{symbol}", {"market": market_code or "", "asset": asset_type}
+        "ai_insight", f"briefing:{symbol}", {"market": market_code or "", "asset": asset_type,
+                                             "profile": profile.cache_fingerprint()}
     )
     if not refresh:
         cached = await cache_instance.get(cache_key)
@@ -326,13 +371,15 @@ async def stock_briefing(
         system_prompt,
         user_content,
         max_tokens=900,
+        profile=profile, on_token=on_token,
         unavailable_summary=(
             f"AI briefing for {symbol} is unavailable - start your local LLM (Ollama) "
             "model to enable it."
         ),
     )
     payload = {"ticker": symbol, "company_name": name, **result}
-    await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
+    if result["engine"] == "llm":
+        await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
     return payload
 
 
@@ -344,6 +391,14 @@ async def interrogate_stock(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
+    """Adversarial, owner-scoped interrogation grounded in the user's notes."""
+    profile = resolve_llm_profile(get_settings(), "interrogate")
+    return await _bounded_insight(lambda: _interrogate_stock(
+        ticker, market, refresh, db, current_user, profile=profile,
+    ), profile)
+
+
+async def _interrogate_stock(ticker, market, refresh, db, current_user, *, profile, on_token=None):
     """Adversarially interrogate an asset, grounded in the user's own notes.
 
     The differentiator of v1.2: instead of another bullish briefing, this turns
@@ -352,6 +407,8 @@ async def interrogate_stock(
     is specialised for equities, crypto assets, or indices. Authed and per-user:
     it reads this user's `security`/symbol notes.
     """
+    if not profile.enabled:
+        return await run_insight("", "", profile=profile)
     symbol = ticker.strip().upper()
     market_code = (market or "").strip().upper() or None
     asset_type = _asset_type(symbol, market_code)
@@ -366,7 +423,8 @@ async def interrogate_stock(
     cache_key = cache_instance.build_key(
         "ai_insight",
         f"interrogate:{symbol}:{current_user.id}",
-        {"market": market_code or "", "asset": asset_type, "notes": note_version},
+        {"market": market_code or "", "asset": asset_type, "notes": note_version,
+         "profile": profile.cache_fingerprint()},
     )
     if not refresh:
         cached = await cache_instance.get(cache_key)
@@ -429,6 +487,7 @@ async def interrogate_stock(
         system_prompt,
         user_content,
         max_tokens=1000,
+        profile=profile, on_token=on_token,
         unavailable_summary=(
             f"AI interrogation for {symbol} is unavailable - start your local LLM (e.g. Ollama) "
             "to pressure-test your thesis."
@@ -440,7 +499,8 @@ async def interrogate_stock(
         "related_count": len(related_texts),
         **result,
     }
-    await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
+    if result["engine"] == "llm":
+        await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
     return payload
 
 
@@ -468,7 +528,9 @@ async def _backtest_explain(
     payload: dict[str, Any],
     *,
     on_token: Callable[[str], None] | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> dict[str, Any]:
+    profile = profile or resolve_llm_profile(get_settings(), "backtest_explanation")
     metrics = payload.get("metrics") if isinstance(payload, dict) else None
     metrics = metrics if isinstance(metrics, dict) else {}
     strategy = str((payload or {}).get("strategy") or "the strategy").strip() or "the strategy"
@@ -490,6 +552,7 @@ async def _backtest_explain(
         user_content,
         max_tokens=900,
         unavailable_summary="AI backtest analysis is unavailable - start your local LLM (e.g. Ollama).",
+        profile=profile,
         on_token=on_token,
     )
 
@@ -504,7 +567,10 @@ async def _collection_briefing(
     payload: dict[str, Any],
     *,
     on_token: Callable[[str], None] | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> dict[str, Any]:
+    task = "market_outlook" if payload.get("scope") == "global markets" else "collection_briefing"
+    profile = profile or resolve_llm_profile(get_settings(), task)
     symbols = payload.get("symbols") or []
     if not isinstance(symbols, list):
         symbols = []
@@ -535,6 +601,7 @@ async def _collection_briefing(
             "engine": "unavailable",
             "summary": "No symbols provided for AI analysis.",
             "sections": [],
+            "model": profile.model, "model_profile": profile.public_identity(),
         }
 
     system_prompt = (
@@ -557,6 +624,7 @@ async def _collection_briefing(
         user_content,
         max_tokens=900,
         unavailable_summary=f"AI {scope} analysis is unavailable - start your local LLM (e.g. Ollama).",
+        profile=profile,
         on_token=on_token,
     )
 
@@ -571,7 +639,9 @@ async def _risk_insights(
     payload: dict[str, Any],
     *,
     on_token: Callable[[str], None] | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> dict[str, Any]:
+    profile = profile or resolve_llm_profile(get_settings(), "portfolio_risk")
     metrics = payload.get("metrics") if isinstance(payload, dict) else None
     metrics = metrics if isinstance(metrics, dict) else {}
     scope = str((payload or {}).get("scope") or "the portfolio").strip() or "the portfolio"
@@ -594,37 +664,57 @@ async def _risk_insights(
         user_content,
         max_tokens=900,
         unavailable_summary="AI risk analysis is unavailable - start your local LLM (e.g. Ollama).",
+        profile=profile,
         on_token=on_token,
     )
 
 
 @router.post("/ai/insights/stream")
-async def insight_stream(payload: InsightStreamRequest) -> StreamingResponse:
-    """Stream a cancellable lifecycle for the shared POST-based insight families."""
+async def insight_stream(
+    payload: InsightStreamRequest, db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StreamingResponse:
+    """Stream one cancellable, profile-resolved shared insight operation.
 
-    async def run() -> dict[str, Any]:
-        if payload.kind == "backtest":
-            return await backtest_explain(payload.payload)
-        if payload.kind == "collection":
-            return await collection_briefing(payload.payload)
-        return await risk_insights(payload.payload)
+    Start announces model_profile and the total operation deadline (model budget
+    plus a 60-second preparation allowance). Delta text is unvalidated; clients
+    publish only the final structured result. Interrupted runs are not replayed.
+    Interrogate uses the authenticated owner's notes and cache namespace.
+    """
+
+    task = {"backtest": "backtest_explanation", "risk": "portfolio_risk",
+            "briefing": "stock_briefing", "interrogate": "interrogate",
+            "collection": "market_outlook" if payload.payload.get("scope") == "global markets" else "collection_briefing"}[payload.kind]
+    profile = resolve_llm_profile(get_settings(), task)
 
     async def run_stream(on_token: Callable[[str], None]) -> dict[str, Any]:
         if payload.kind == "backtest":
-            return await _backtest_explain(payload.payload, on_token=on_token)
+            return await _backtest_explain(payload.payload, on_token=on_token, profile=profile)
         if payload.kind == "collection":
-            return await _collection_briefing(payload.payload, on_token=on_token)
-        return await _risk_insights(payload.payload, on_token=on_token)
+            return await _collection_briefing(payload.payload, on_token=on_token, profile=profile)
+        if payload.kind in {"briefing", "interrogate"}:
+            p = payload.payload
+            if payload.kind == "briefing":
+                return await _stock_briefing(p["ticker"], p["market"], p["refresh"], profile=profile, on_token=on_token)
+            return await _interrogate_stock(p["ticker"], p["market"], p["refresh"], db, current_user, profile=profile, on_token=on_token)
+        return await _risk_insights(payload.payload, on_token=on_token, profile=profile)
+
+    async def run_with_tokens(on_token):
+        return await _bounded_insight(lambda: run_stream(on_token), profile)
 
     async def events():
-        async for event in stream_insight_lifecycle(
-            run,
-            streaming_operation=run_stream,
-        ):
-            yield json.dumps(event, separators=(",", ":")) + "\n"
+        async with aclosing(stream_insight_lifecycle(
+            lambda: _bounded_insight(lambda: run_stream(lambda _: None), profile),
+            streaming_operation=run_with_tokens,
+        )) as lifecycle:
+            async for event in lifecycle:
+                if event["type"] == "start":
+                    event = {**event, "deadlines": {"operation_seconds": INSIGHT_PREPARATION_SECONDS + profile.timeout_seconds},
+                             "model_profile": profile.public_identity()}
+                yield json.dumps(event, separators=(",", ":")) + "\n"
 
     return StreamingResponse(
         events(),
         media_type="application/x-ndjson",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
     )

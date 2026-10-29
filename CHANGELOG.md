@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Deep shared insights (v2.4)** — stock briefings, Interrogate, market/collection
+  outlooks, risk and backtest explanation share profile-resolved transport,
+  health/repair deadlines and visible identity. Research cache namespaces include
+  configuration fingerprints while retaining owner/note-version isolation.
+  Browser cards use one cancellable lifecycle with announced operation budgets
+  and manual retry after interruption; native GET/POST APIs remain available.
+  Failed insights are not cached. Brain and filing routing remain pending.
 - **Comparison interpretations to investigate (v2.4)** — a separate structured
   hypothesis section explains possible mechanisms, competing accounts and what
   evidence would help distinguish them. Observations remain separate; citation

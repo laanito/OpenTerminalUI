@@ -6,6 +6,8 @@ must opt in explicitly and use the same resolution for identity and deadlines.
 from __future__ import annotations
 
 import math
+import hashlib
+import json
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Literal
@@ -55,6 +57,14 @@ class ResolvedLLMProfile:
         # No endpoint or credentials. Requested Deep may resolve to legacy Fast
         # only when Deep is unconfigured, never after a configured model fails.
         return {"requested_profile": self.requested_profile, "resolved_profile": self.name, "model": self.model}
+
+    def cache_fingerprint(self) -> str:
+        """Opaque server-side namespace; no raw credentials or URLs in cache keys."""
+        return hashlib.sha256(json.dumps([
+            "llm-profile-v1", self.requested_profile, self.name, self.model,
+            self.base_url, self.api_key, self.timeout_seconds,
+            self.structured_output, self.enabled,
+        ], separators=(",", ":")).encode()).hexdigest()
 
 
 def resolve_llm_profile(settings: AppSettings, task: GenerationTask) -> ResolvedLLMProfile:

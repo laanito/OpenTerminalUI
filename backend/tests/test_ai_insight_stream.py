@@ -11,7 +11,7 @@ from backend.api.routes import ai_insights
 async def test_insight_stream_dispatches_kind_and_emits_ndjson(monkeypatch) -> None:
     captured = {}
 
-    async def fake_risk(payload, *, on_token):
+    async def fake_risk(payload, *, on_token, profile):
         captured.update(payload)
         on_token('{"summary":"done"}')
         return {"engine": "llm", "model": "test", "summary": "done", "sections": []}

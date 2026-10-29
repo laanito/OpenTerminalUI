@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from types import SimpleNamespace
+from backend.config.settings import AppSettings
 
 from backend.services import llm_insights
 
 
-def _settings(enabled: bool = True, timeout: float = 240.0) -> SimpleNamespace:
-    return SimpleNamespace(
+def _settings(enabled: bool = True, timeout: float = 240.0) -> AppSettings:
+    return AppSettings(
         llm_enabled=enabled,
         llm_model="google/gemma-4-26b-a4b",
         llm_timeout_seconds=timeout,
@@ -44,7 +44,7 @@ def test_run_insight_parses_model_output(monkeypatch) -> None:
         '{"title":"Bear Case","tone":"negative","points":["Stretched valuation"]}]}'
     )
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient(content))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: _FakeClient(content))
     result = asyncio.run(llm_insights.run_insight("system", "user"))
     assert result["engine"] == "llm"
     assert result["summary"] == "Solid fundamentals with rising revenue."
@@ -74,7 +74,7 @@ def test_run_insight_streams_tokens_but_publishes_only_validated_result(monkeypa
 
     received: list[str] = []
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _StreamingClient())
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: _StreamingClient())
 
     result = asyncio.run(
         llm_insights.run_insight("system", "user", on_token=received.append)
@@ -109,7 +109,7 @@ def test_run_insight_falls_back_when_structured_stream_is_invalid(monkeypatch) -
     client = _InvalidStreamClient()
     received: list[str] = []
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: client)
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: client)
 
     result = asyncio.run(
         llm_insights.run_insight("system", "user", on_token=received.append)
@@ -143,7 +143,7 @@ def test_run_insight_falls_back_when_provider_stream_is_interrupted(monkeypatch)
     monkeypatch.setattr(
         llm_insights,
         "get_llm_client",
-        lambda: _InterruptedStreamClient(),
+        lambda **kwargs: _InterruptedStreamClient(),
     )
 
     result = asyncio.run(
@@ -170,7 +170,7 @@ def test_run_insight_bounds_streaming_provider_operation(monkeypatch) -> None:
     monkeypatch.setattr(
         llm_insights,
         "get_llm_client",
-        lambda: _SlowStreamingClient(),
+        lambda **kwargs: _SlowStreamingClient(),
     )
 
     result = asyncio.run(
@@ -183,7 +183,7 @@ def test_run_insight_bounds_streaming_provider_operation(monkeypatch) -> None:
 
 def test_run_insight_falls_back_on_unparseable_output(monkeypatch) -> None:
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient("not json at all"))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: _FakeClient("not json at all"))
     result = asyncio.run(llm_insights.run_insight("system", "user"))
     assert result["engine"] == "unavailable"
     assert result["failure"]["code"] == "invalid_response"
@@ -211,7 +211,7 @@ def test_run_insight_retries_malformed_structured_output_once(monkeypatch) -> No
 
     client = _FlakyStructuredClient()
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: client)
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: client)
 
     result = asyncio.run(llm_insights.run_insight("system", "user"))
 
@@ -227,7 +227,7 @@ def test_run_insight_bounds_the_whole_provider_operation(monkeypatch) -> None:
             return self._content
 
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True, timeout=0.001))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _SlowClient("{}"))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: _SlowClient("{}"))
 
     result = asyncio.run(llm_insights.run_insight("system", "user"))
 
@@ -239,7 +239,7 @@ def test_run_insight_rejects_schema_incomplete_sections_after_one_repair(monkeyp
     content = '{"summary":"Too little evidence","sections":[{"title":"Only","tone":"neutral","points":["One"]}]}'
     client = _FakeClient(content)
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: client)
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: client)
 
     result = asyncio.run(llm_insights.run_insight("system", "user"))
 
@@ -254,7 +254,7 @@ def test_run_insight_rejects_values_outside_the_published_schema(monkeypatch) ->
         '{"title":"Risk","tone":"negative","points":["Two"]}]}'
     )
     monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings(True))
-    monkeypatch.setattr(llm_insights, "get_llm_client", lambda: _FakeClient(content))
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: _FakeClient(content))
 
     result = asyncio.run(llm_insights.run_insight("system", "user"))
 

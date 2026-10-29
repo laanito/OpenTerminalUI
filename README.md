@@ -327,14 +327,17 @@ use the Deep profile for health, generation and bounded repair. Their browser
 deadline follows the selected model's timeout, and the result shows the model
 and resolved profile. With Deep unset, they retain the existing `LLM_*` model
 and show “Default profile (Deep not configured)”. A configured Deep failure is
-explicit; it never retries Fast. Brain and shared insight cards still use the
-legacy model pending their integration. Embedding configuration and indexing
-are unchanged.
+explicit; it never retries Fast. Stock briefings, Interrogate, market/collection
+outlooks, risk insights and backtest explanations also use Deep. Their cards
+show the selected identity and follow server-announced deadlines, with manual
+retry after interruption. Research caches separate model/provider configurations
+and preserve owner/note-version isolation. Brain and filing analysis still use
+the legacy model pending their integration; embeddings and indexing are unchanged.
 
 Comparison results also separate factual observations from **Interpretations to
 investigate**: possible mechanisms, competing explanations and evidence that
 would help distinguish them. Citations identify observed inputs, not proof of
-the hypotheses. This v2.4 quality follow-up awaits host evaluation; see the
+the hypotheses. The maintainer confirmed the improvement after merging #233; see the
 [briefing evaluation guide](docs/wiki/Briefing-Evaluation.md).
 
 | Variable | Meaning |
