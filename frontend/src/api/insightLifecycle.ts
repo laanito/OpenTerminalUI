@@ -34,6 +34,13 @@ function result(value: unknown, selected: InsightModelProfile): InsightData {
 
 /** One cancellable request with server-announced deadlines; never replay inference. */
 export async function streamInsight(kind: InsightKind, payload: Record<string, unknown>, options: InsightRequestOptions = {}): Promise<InsightData> {
+  return streamModelOperation("/ai/insights/stream", { kind, payload }, result, options);
+}
+
+export async function streamModelOperation<T extends object>(
+  path: string, body: Record<string, unknown>, validate: (value: unknown, profile: InsightModelProfile) => T,
+  options: InsightRequestOptions = {},
+): Promise<T> {
   if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
   const controller = new AbortController();
   const started = Date.now();
@@ -48,11 +55,11 @@ export async function streamInsight(kind: InsightKind, payload: Record<string, u
   const expire = () => { timedOut = true; controller.abort(); };
   let timer = setTimeout(expire, 300_000);
   let selected: InsightModelProfile | undefined;
-  let final: InsightData | undefined;
+  let final: T | undefined;
   try {
-    const response = await Promise.race([fetchApi("/ai/insights/stream", {
+    const response = await Promise.race([fetchApi(path, {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-      body: JSON.stringify({ kind, payload }), signal: controller.signal,
+      body: JSON.stringify(body), signal: controller.signal,
     }), aborted]);
     if (!response.ok) throw new Error(`Could not start insight (HTTP ${response.status}). Retry manually.`);
     if (!response.body || !response.headers.get("content-type")?.includes("application/x-ndjson")) throw invalid();
@@ -79,7 +86,7 @@ export async function streamInsight(kind: InsightKind, payload: Record<string, u
       } else if (event.type === "delta") {
         if (typeof event.text !== "string" || !finite(event.received_chars)) throw invalid();
         options.onTokenProgress?.(event.received_chars); // Never publish unvalidated model text.
-      } else if (event.type === "result") final = result(event.result, selected);
+      } else if (event.type === "result") final = validate(event.result, selected);
       else if (event.type === "error") throw new Error("The insight failed before completion. Retry manually.");
       else throw invalid();
     };

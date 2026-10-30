@@ -124,7 +124,7 @@ Global `LLM_ENABLED` applies to both generation profiles. Resolution reports the
 requested and effective profiles, resolved model and deadline; callers must use
 that one resolution for health, gating, generation, repair and displayed identity.
 
-Workflow migration is incremental. Comparison briefings, shared insights and Brain are integrated; other
+Workflow migration is incremental. Comparison briefings, shared insights, Brain and filing analysis are integrated; other
 audited application call sites below still use the legacy factory. Subsequent
 integration must update model metadata, caches, progress deadlines and browser
 budgets alongside the client call, not switch the model in isolation.
@@ -161,8 +161,8 @@ requested/effective profile, model, endpoint, credential, structured-output mode
 timeout and enabled state. No raw endpoint/key is placed in the cache key or
 public identity. Interrogate retains owner ID and note/index version in its
 namespace. Regenerate bypasses cached prose; unavailable results are not cached.
-This prevents old Fast answers being reused after Deep is configured. Filing
-analysis, explicit Fast caller integration and representative cross-task quality
+This prevents old Fast answers being reused after Deep is configured. Explicit
+Fast caller integration and representative cross-task quality
 evaluation remain pending. Embeddings keep the legacy client.
 
 Brain resolves one `brain_answer` profile before owner-scoped retrieval. Generation
@@ -187,6 +187,35 @@ URL or key. There is no generated Brain-answer cache to invalidate. Retrieval,
 recency weighting, source scope, embeddings and saved historical memos are unchanged;
 no database migration or automatic reindex is introduced.
 
+Experimental filing extraction resolves `filing_analysis` before source collection
+and uses its client/structured mode/model deadline. The former fixed 20-second
+model caller cap is removed. Explicit non-LLM mode, global disable and no usable
+documents skip the model. Provider/timeout/invalid-response paths return labelled
+lexical extraction with a reason; they never try Fast after configured Deep fails.
+Output schema validation checks types/bounds, not the truth of extracted claims.
+The existing eight-document/4,000-character text bounds and scoring formula remain.
+
+Reports are persisted state, not an inference cache. `stock_conviction_provenance`
+is an additive, lazily created SQLAlchemy Core companion table keyed by symbol,
+market and record date. It stores only public model identity and fallback reason
+as text JSON, committed with the report upsert. The existing report table and
+list-shaped `catalysts_json` are unchanged. A left join returns unknown provenance
+for old rows, never a guess from current configuration. Re-ingesting the same
+record updates both values atomically, including clearing old model identity in
+explicit lexical mode. No endpoint/key is persisted in provenance. SQLite writes
+and PostgreSQL DDL compilation are tested; no live PostgreSQL rollout is claimed.
+
+Native GET/POST endpoints remain. `POST /stock-picking/conviction/ingest/stream`
+adds one cancellable lifecycle with the selected model timeout plus a 45-second
+source/persistence allowance; source collection itself is bounded to 30 seconds.
+The browser ingestion helper follows that announced budget with the shared reader
+and 15-second transport margin, with no automatic replay. The panel reads saved
+engine/model/failure metadata and distinguishes model, lexical and legacy output;
+it hides a zero-source heuristic from the measured-score display. This remains
+an installation-wide experimental report, not private Brain evidence or the SEC
+source-filing verification surface. It adds no provider, primary navigation or
+automatic regeneration on model change.
+
 The 2026-10-29 interpretation-quality follow-up adds required structured
 `hypotheses` to generated briefings, exposed as an array on results (empty on
 failure). Shared instructions permit explicitly conditional economic reasoning
@@ -205,7 +234,7 @@ profile deadline. See
 | `news_sentiment` | Fast | `services/llm_sentiment.py` |
 | `stock_emotion` | Fast | `services/stock_emotion.py` |
 | `query_intent` | Fast | `services/ai_service.py` intent/filter extraction |
-| `filing_analysis` | Deep | `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
+| `filing_analysis` | Deep | **Integrated:** `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
 | `brain_answer` | Deep | **Integrated:** `services/brain/brain_service.py` completion/stream/fallback |
 | `comparison_briefing` | Deep | **Integrated:** `comparison_briefing.py` shared price/context runner |
 | `stock_briefing` | Deep | **Integrated:** `llm_insights.py` via asset-aware briefing routes |

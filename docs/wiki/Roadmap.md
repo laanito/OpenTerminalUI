@@ -419,10 +419,13 @@ configured Deep failure never substitutes Fast. Shared stock/Interrogate,
 market/collection, risk and backtest insights now also use Deep, with aligned
 identity/deadlines and profile-aware research caches. Brain synthesis is also
 integrated with an early deadline/identity announcement, bounded same-model
-stream fallback, cancellation and preserved saved-model provenance. Filing analysis,
-remaining Fast callers and embeddings still use the legacy factory. See the
+stream fallback, cancellation and preserved saved-model provenance. Experimental
+filing analysis now uses Deep with a profile deadline, labelled lexical fallback
+and durable provenance in an additive companion table; existing report columns
+and historical engine values remain intact. Remaining Fast callers and embeddings
+still use the legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
-Follow-up slices integrate filing analysis and remaining Fast callers, followed
+Follow-up slices integrate remaining Fast callers, followed
 by representative live evaluation. Do not treat configuration support as a
 completed task migration or a proven improvement in reasoning quality.
 

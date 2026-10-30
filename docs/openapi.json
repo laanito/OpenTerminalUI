@@ -42526,6 +42526,7 @@
     },
     "/api/stock-picking/conviction/ingest": {
       "post": {
+        "description": "Analyze and save a report using the resolved filing-analysis profile.\n\nProvider work shares its configured deadline; lexical fallback includes an\nexplicit reason and saved model provenance. Legacy rows have unknown provenance.",
         "operationId": "post_ingest_conviction_api_stock_picking_conviction_ingest_post",
         "requestBody": {
           "content": {
@@ -42567,6 +42568,58 @@
           }
         ],
         "summary": "Post Ingest Conviction",
+        "tags": [
+          "stock-conviction"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "stock-conviction": "experimental"
+        }
+      }
+    },
+    "/api/stock-picking/conviction/ingest/stream": {
+      "post": {
+        "description": "One cancellable ingestion lifecycle; start announces identity/operation budget.\n\nThe operation allowance is the selected model timeout plus 45 seconds for\nsource collection/persistence. Provider failures return a labelled lexical\nreport; interruption is not replayed. This remains an experimental saved,\ninstallation-wide report, not a private Brain source or a source-filing check.",
+        "operationId": "stream_ingest_conviction_api_stock_picking_conviction_ingest_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvictionIngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Ingest Conviction",
         "tags": [
           "stock-conviction"
         ],

@@ -50,7 +50,7 @@ export function CatalystConvictionPanel({
       active = false;
     };
   }, [symbol]);
-  const bullish = asPct(data?.bullish_score ?? data?.conviction_score);
+  const bullish = data?.source_count === 0 ? null : asPct(data?.bullish_score ?? data?.conviction_score);
   const bearish = asPct(data?.bearish_score);
   const label =
     data?.label ||
@@ -74,6 +74,13 @@ export function CatalystConvictionPanel({
           {label}
         </span>
       </div>
+
+      {data && !failed ? <div className="mb-3 space-y-1 text-xs text-terminal-muted">
+        <p>{data.engine === "llm" ? "Model extraction" : data.engine === "lexical" ? "Lexical extraction" : "Legacy report · model provenance unknown"}
+          {data.model_profile ? ` · ${data.model_profile.resolved_profile === "deep" ? "Deep profile" : "Default profile (Deep not configured)"} · ${data.model_profile.model}` : ""}</p>
+        {data.engine === "lexical" && data.model_profile ? <p>The selected model did not generate this report.</p> : null}
+        {data.failure ? <p role="status">{data.failure.message} ({data.failure.code})</p> : null}
+      </div> : null}
 
       {failed ? (
         <GuidedEmptyState

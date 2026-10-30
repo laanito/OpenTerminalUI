@@ -110,6 +110,20 @@ For schema or persistence changes:
   SQLAlchemy inspection; `backend/services/materialized_store.py` contains a
   post-v1.1 regression fix for this exact mistake.
 
+## v2.4 filing provenance
+
+The experimental filing service now creates `stock_conviction_provenance` lazily
+alongside its existing report table. New DDL uses SQLAlchemy Core
+`CreateTable(..., if_not_exists=True)` with a composite text primary key and a
+text JSON metadata column. It does not ALTER `stock_conviction_records`, change
+its primary key, rewrite old engine labels or change list-shaped catalyst JSON.
+Report/provenance upserts use one transaction and portable `ON CONFLICT` syntax.
+Legacy rows without provenance are left-joined and remain unknown; no backfill
+from current model configuration is performed. Tests exercise SQLite writes,
+legacy columns/rows, rollback on metadata failure and PostgreSQL DDL compilation.
+No live production database is used by those tests. No Alembic revision is added:
+this legacy service retains its existing create-on-use lifecycle.
+
 ## Verifying
 
 ```bash

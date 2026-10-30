@@ -7,6 +7,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Deep experimental filing extraction (v2.4)** — profile-resolved model requests
+  replace the fixed 20-second caller budget. Disabled, failed or malformed model
+  extraction returns explicit lexical output with a reason and selected identity.
+  An additive, lazily created companion table retains provenance without altering
+  existing report columns/catalyst JSON or guessing provenance for older rows.
+  Report/provenance writes are atomic. A cancellable ingestion lifecycle follows
+  the announced deadline without client replay; the saved-report panel distinguishes
+  Deep, lexical and legacy states and hides zero-source heuristic scores.
 - **Deep Brain synthesis (v2.4)** — Brain resolves its generation profile once
   before retrieval, announces identity/deadline metadata and bounds stream plus
   same-model completion fallback in one producer task. Cancel/disconnect joins

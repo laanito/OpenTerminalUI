@@ -334,7 +334,10 @@ retry after interruption. Research caches separate model/provider configurations
 and preserve owner/note-version isolation. Brain synthesis now also uses Deep,
 with visible identity, bounded streaming/fallback and Cancel. Interrupted Brain
 requests require manual retry; saved Brain Log answers retain the resolved model.
-Filing analysis remains on the legacy model pending its separate integration.
+Experimental filing analysis also uses Deep, with explicit lexical fallback
+and saved model provenance. A portable companion table stores that provenance;
+the existing report table/catalyst format stays intact and older rows remain
+provenance-unknown. Saved reports are regenerated only by explicit ingestion.
 Embeddings, retrieval ranking and indexing configuration are unchanged.
 
 Comparison results also separate factual observations from **Interpretations to
