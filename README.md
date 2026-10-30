@@ -331,8 +331,11 @@ explicit; it never retries Fast. Stock briefings, Interrogate, market/collection
 outlooks, risk insights and backtest explanations also use Deep. Their cards
 show the selected identity and follow server-announced deadlines, with manual
 retry after interruption. Research caches separate model/provider configurations
-and preserve owner/note-version isolation. Brain and filing analysis still use
-the legacy model pending their integration; embeddings and indexing are unchanged.
+and preserve owner/note-version isolation. Brain synthesis now also uses Deep,
+with visible identity, bounded streaming/fallback and Cancel. Interrupted Brain
+requests require manual retry; saved Brain Log answers retain the resolved model.
+Filing analysis remains on the legacy model pending its separate integration.
+Embeddings, retrieval ranking and indexing configuration are unchanged.
 
 Comparison results also separate factual observations from **Interpretations to
 investigate**: possible mechanisms, competing explanations and evidence that

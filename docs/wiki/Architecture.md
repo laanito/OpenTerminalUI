@@ -124,7 +124,7 @@ Global `LLM_ENABLED` applies to both generation profiles. Resolution reports the
 requested and effective profiles, resolved model and deadline; callers must use
 that one resolution for health, gating, generation, repair and displayed identity.
 
-Workflow migration is incremental. Comparison briefings and shared insights are integrated; other
+Workflow migration is incremental. Comparison briefings, shared insights and Brain are integrated; other
 audited application call sites below still use the legacy factory. Subsequent
 integration must update model metadata, caches, progress deadlines and browser
 budgets alongside the client call, not switch the model in isolation.
@@ -161,9 +161,31 @@ requested/effective profile, model, endpoint, credential, structured-output mode
 timeout and enabled state. No raw endpoint/key is placed in the cache key or
 public identity. Interrogate retains owner ID and note/index version in its
 namespace. Regenerate bypasses cached prose; unavailable results are not cached.
-This prevents old Fast answers being reused after Deep is configured. Brain and
-filing-analysis generation, explicit Fast caller integration and representative
-cross-task quality evaluation remain pending. Embeddings keep the legacy client.
+This prevents old Fast answers being reused after Deep is configured. Filing
+analysis, explicit Fast caller integration and representative cross-task quality
+evaluation remain pending. Embeddings keep the legacy client.
+
+Brain resolves one `brain_answer` profile before owner-scoped retrieval. Generation
+uses it for completion, streaming, same-model fallback and identity; no preliminary
+model-list health request is added. A model deadline bounds the entire synthesis
+attempt, including truncation fallback. An overall deadline adds 120 seconds of
+preparation allowance for retrieval/first-use indexing. `queued` announces this
+budget and selected identity before retrieval, followed by `start` with citations,
+provisional deltas and `done`, or a complete replacement `result`. The owned
+producer task holds these deadlines; they must not span yields in the heartbeat
+adapter's successive `anext` tasks. Disconnect/Cancel cancels and joins the producer.
+
+The Brain reader adds 15 seconds of transport margin, bounds absent headers at
+five minutes, checks scope/identity and stream completion, and never replays a
+failed request through the stable API. Partial text is discarded on transport
+failure or user cancellation; a provider timeout/failure retains retrieved
+citations as an unavailable result. Such results remain unsaveable. Explicit
+Brain Log saves retain the actual resolved `llm_model` and provider class through
+existing columns; live `model_profile` metadata is additive and is not a new
+persisted field. Provider identity is `local`/`openai-compatible`, not a hostname,
+URL or key. There is no generated Brain-answer cache to invalidate. Retrieval,
+recency weighting, source scope, embeddings and saved historical memos are unchanged;
+no database migration or automatic reindex is introduced.
 
 The 2026-10-29 interpretation-quality follow-up adds required structured
 `hypotheses` to generated briefings, exposed as an array on results (empty on
@@ -184,7 +206,7 @@ profile deadline. See
 | `stock_emotion` | Fast | `services/stock_emotion.py` |
 | `query_intent` | Fast | `services/ai_service.py` intent/filter extraction |
 | `filing_analysis` | Deep | `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
-| `brain_answer` | Deep | `services/brain/brain_service.py` completion/stream/fallback |
+| `brain_answer` | Deep | **Integrated:** `services/brain/brain_service.py` completion/stream/fallback |
 | `comparison_briefing` | Deep | **Integrated:** `comparison_briefing.py` shared price/context runner |
 | `stock_briefing` | Deep | **Integrated:** `llm_insights.py` via asset-aware briefing routes |
 | `interrogate` | Deep | **Integrated:** `llm_insights.py` via adversarial research routes |

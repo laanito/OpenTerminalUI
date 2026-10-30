@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Brain, RefreshCw, Save, Send, Sparkles } from "lucide-react";
@@ -12,6 +12,7 @@ import {
 } from "../../api/brain";
 import { extractApiErrorMessage } from "../../api/base";
 import { createBrainMemo } from "../../api/brainMemos";
+import type { InsightModelProfile } from "../../api/types";
 import { CitationCard, scopeLabel } from "./BrainEvidence";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
@@ -28,6 +29,7 @@ interface Exchange {
   generated_at?: string | null;
   llm_provider?: string | null;
   llm_model?: string | null;
+  model_profile?: InsightModelProfile | null;
   savedMemoId?: string;
 }
 
@@ -67,6 +69,10 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
       <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
         Evidence scope · {scopeLabel(exchange.sources)}
       </p>
+      {exchange.model_profile ? <p className="break-words text-[11px] text-terminal-muted">
+        {exchange.model_profile.resolved_profile === "deep" ? "Deep profile" : "Default profile (Deep not configured)"}
+        {" · "}{exchange.llm_model}
+      </p> : null}
       {exchange.error ? (
         <p className="text-[10px] uppercase tracking-wide text-terminal-neg">
           degraded: {exchange.error}
@@ -105,6 +111,8 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
 export function SecondBrainPanel() {
   const queryClient = useQueryClient();
   const nextExchangeId = useRef(0);
+  const askController = useRef<AbortController | null>(null);
+  useEffect(() => () => askController.current?.abort(), []);
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<Exchange[]>([]);
   const [streamingExchange, setStreamingExchange] = useState<Exchange | null>(null);
@@ -115,8 +123,11 @@ export function SecondBrainPanel() {
   const statusQuery = useQuery({ queryKey: ["brain", "status"], queryFn: fetchBrainStatus });
 
   const askMutation = useMutation({
-    mutationFn: ({ question: q, sources }: { question: string; sources: BrainSource[] }) =>
-      askBrainStream(q, 6, sources, (response) =>
+    mutationFn: ({ question: q, sources }: { question: string; sources: BrainSource[] }) => {
+      const controller = new AbortController();
+      askController.current = controller;
+      return askBrainStream(q, 6, sources, (response) => {
+        if (controller.signal.aborted) return;
         setStreamingExchange({
           id: -1,
           question: q,
@@ -125,8 +136,13 @@ export function SecondBrainPanel() {
           sources: response.sources.length ? response.sources : sources,
           llm: response.llm,
           error: response.error,
-        }),
-      ),
+          generated_at: response.generated_at,
+          llm_provider: response.llm_provider,
+          llm_model: response.llm_model,
+          model_profile: response.model_profile,
+        });
+      }, { signal: controller.signal });
+    },
     onSuccess: (data, variables) => {
       setHistory((prev) => [
         {
@@ -140,6 +156,7 @@ export function SecondBrainPanel() {
           generated_at: data.generated_at,
           llm_provider: data.llm_provider,
           llm_model: data.llm_model,
+          model_profile: data.model_profile,
         },
         ...prev,
       ]);
@@ -149,8 +166,11 @@ export function SecondBrainPanel() {
     },
     onError: (err) => {
       setStreamingExchange(null);
-      setError(extractApiErrorMessage(err, "Failed to ask your second brain."));
+      setError(err instanceof DOMException && err.name === "AbortError"
+        ? "Brain request cancelled. No answer was kept."
+        : extractApiErrorMessage(err, "The Brain request failed. No answer was kept; retry manually."));
     },
+    onSettled: () => { askController.current = null; },
   });
 
   const saveMutation = useMutation({
@@ -269,6 +289,9 @@ export function SecondBrainPanel() {
           >
             Ask
           </TerminalButton>
+          {askMutation.isPending ? <TerminalButton type="button" onClick={() => askController.current?.abort()}>
+            Cancel
+          </TerminalButton> : null}
         </form>
 
         <div className="space-y-1.5 rounded-sm border border-terminal-border/70 bg-terminal-bg/30 p-2.5">

@@ -78,6 +78,24 @@ types if needed and ask a question. Incremental indexing is queued after note
 writes; a successful save does not mean the text is already embedded. Manual
 reindexing exposes progress and final chunk counts.
 
+In v2.4 development, Brain answers use the configured Deep generation model;
+with Deep unset they use the existing model and show **Default profile (Deep not
+configured)**. The selected profile/model appears during retrieval and on the
+answer. Brain Log saves retain the actual model through the existing provenance
+fields; older saved entries remain unchanged. Generation settings do not change
+embeddings, retrieval ranking or trigger a reindex.
+
+The stream announces its operation deadline before retrieval: the selected model
+timeout plus a 120-second preparation allowance. Synthesis, including same-model
+non-streaming fallback, also has its own model-timeout bound. The browser adds 15
+seconds of margin; heartbeats do not extend it. **Cancel** discards provisional
+text and stops provider work. Closing the page also cancels the browser request.
+An interrupted stream requires manual retry rather than a second automatic
+inference. Model failure retains retrieved sources and shows a degraded result;
+partial, failed and retrieval-only answers cannot be saved as model syntheses.
+`POST /api/brain/ask` remains available for non-streaming API consumers; both
+browser ask helpers use the cancellable stream contract.
+
 Retrieval considers semantic relevance before applying a bounded recency signal.
 Dated citations distinguish current views from previous theses. Chronology helps
 synthesis handle conflicts, but does not prove a newer note is correct or
@@ -212,8 +230,8 @@ otherwise the result shows **Deep profile** and the selected model. A Deep failu
 never retries Fast. The additive `model_profile` response metadata identifies
 the selected configuration, even when evidence preparation failed or inference
 was skipped; it does not certify that the model ran or that its reasoning is
-better. Shared insight cards also use Deep; Brain's separate integration remains
-pending.
+better. Shared insight cards and Brain synthesis also use Deep. Filing-analysis
+routing remains a separate follow-up.
 
 Stock briefings and Interrogate now use `POST /api/ai/insights/stream` from their
 browser cards, alongside risk, backtest and collection/market outlooks. The

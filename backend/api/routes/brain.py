@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncIterator
-from contextlib import suppress
+from contextlib import aclosing, suppress
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
@@ -23,6 +23,7 @@ from backend.auth.deps import get_current_user
 from backend.models.user import User
 from backend.services.brain import brain_service
 from backend.services.brain.indexer import reindex_user
+from backend.services.llm_profiles import LLMProfileIdentity
 
 router = APIRouter(prefix="/brain", tags=["brain"])
 
@@ -93,6 +94,7 @@ class AskResponse(BaseModel):
     generated_at: str | None = None
     llm_provider: str | None = None
     llm_model: str | None = None
+    model_profile: LLMProfileIdentity | None = None
 
 
 class ReindexResponse(BaseModel):
@@ -133,7 +135,12 @@ async def brain_ask_stream(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> StreamingResponse:
-    """Stream newline-delimited JSON while preserving complete fallback events."""
+    """Stream one Brain operation with queued identity/deadline metadata before retrieval.
+
+    The operation budget is the selected model timeout plus 120 seconds for
+    preparation; browser clients add transport margin. Deltas are provisional
+    until done or a replacement result. Interruption requires manual retry.
+    """
 
     async def events():
         source = brain_service.ask_stream(
@@ -143,13 +150,14 @@ async def brain_ask_stream(
             k=payload.k,
             sources=payload.sources,
         )
-        async for event in _with_heartbeats(source):
-            yield json.dumps(event, separators=(",", ":")) + "\n"
+        async with aclosing(_with_heartbeats(source)) as lifecycle:
+            async for event in lifecycle:
+                yield json.dumps(event, separators=(",", ":")) + "\n"
 
     return StreamingResponse(
         events(),
         media_type="application/x-ndjson",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
     )
 
 

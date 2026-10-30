@@ -7,6 +7,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Deep Brain synthesis (v2.4)** — Brain resolves its generation profile once
+  before retrieval, announces identity/deadline metadata and bounds stream plus
+  same-model completion fallback in one producer task. Cancel/disconnect joins
+  provider work; interrupted browser streams require manual retry. Failed or
+  partial answers cannot be saved; completed Brain Log saves retain the resolved
+  model through existing provenance fields. Provider labels expose no endpoint.
+  Embeddings, retrieval/recency behavior and database schemas are unchanged.
+  Filing-analysis routing remains a separate follow-up.
 - **Deep shared insights (v2.4)** — stock briefings, Interrogate, market/collection
   outlooks, risk and backtest explanation share profile-resolved transport,
   health/repair deadlines and visible identity. Research cache namespaces include

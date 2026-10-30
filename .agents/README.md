@@ -154,8 +154,18 @@ release-level interpretation and safety boundaries.
   owner/note-version isolation; failed insights are not cached. Remaining callers
   and embeddings stay on the legacy factory. Explicit Deep URLs never inherit
   Fast keys; when the Deep URL is omitted, the existing endpoint/key may be
-  inherited. See the architecture task map. Next: Brain/filing and remaining Fast
-  caller integration with browser identity, then representative evaluation.
+  inherited. Shared insight host testing after #234 confirmed it works as intended.
+  Brain synthesis is now integrated: one selected profile spans retrieval gating,
+  completion, streaming/fallback, identity and deadlines. `queued` announces an
+  overall model-timeout-plus-120-second preparation allowance before retrieval;
+  the producer owns model/operation deadlines across heartbeat reads. The browser
+  adds 15 seconds of margin, supports Cancel and never replays interrupted runs.
+  Completed Brain Log saves retain the actual model through existing fields;
+  provider labels are generic classes, not hostnames. There is no Brain answer
+  cache, database migration or embedding/indexing change. Brain host acceptance
+  remains pending. Next: filing analysis and remaining explicit Fast callers,
+  then representative evaluation. Filing stays separate because its legacy
+  persistence and fixed 20-second caller budget need their own review.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and

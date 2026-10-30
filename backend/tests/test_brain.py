@@ -425,7 +425,7 @@ async def test_ask_grounds_answer_and_cites(monkeypatch):
 
     monkeypatch.setattr(brain_service, "make_vector_store", lambda engine, dim: FakeStore())
     monkeypatch.setattr(brain_service, "get_embedding_service", lambda: FakeEmbedder())
-    monkeypatch.setattr(brain_service, "get_llm_client", lambda: FakeClient())
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda **kwargs: FakeClient())
 
     out = await brain_service.ask(
         None,
@@ -497,12 +497,12 @@ async def test_ask_stream_yields_metadata_deltas_and_done(monkeypatch):
         return None, request
 
     monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
-    monkeypatch.setattr(brain_service, "get_llm_client", lambda: StreamingClient())
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda **kwargs: StreamingClient())
 
     events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
 
-    assert [event["type"] for event in events] == ["start", "delta", "delta", "done"]
-    assert events[0]["sources"] == ["journal"]
+    assert [event["type"] for event in events] == ["queued", "start", "delta", "delta", "done"]
+    assert events[1]["sources"] == ["journal"]
     assert datetime.fromisoformat(events[0]["generated_at"]).tzinfo is not None
     assert events[0]["llm_provider"]
     assert events[0]["llm_model"]
@@ -529,11 +529,11 @@ async def test_ask_stream_replaces_interrupted_output_with_non_streaming_answer(
         return None, request
 
     monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
-    monkeypatch.setattr(brain_service, "get_llm_client", lambda: BrokenStreamingClient())
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda **kwargs: BrokenStreamingClient())
 
     events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
 
-    assert [event["type"] for event in events] == ["start", "delta", "result"]
+    assert [event["type"] for event in events] == ["queued", "start", "delta", "result"]
     fallback = events[-1]["result"]
     assert fallback["answer"] == "Recovered complete answer [1]."
     assert fallback["citations"] == request.citations
@@ -561,11 +561,11 @@ async def test_ask_stream_retries_empty_provider_stream_as_completion(monkeypatc
         return None, request
 
     monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
-    monkeypatch.setattr(brain_service, "get_llm_client", lambda: NonStreamingClient())
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda **kwargs: NonStreamingClient())
 
     events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
 
-    assert [event["type"] for event in events] == ["start", "result"]
+    assert [event["type"] for event in events] == ["queued", "start", "result"]
     assert events[-1]["result"]["answer"] == "Provider supports ordinary completion [1]."
     assert events[-1]["result"]["llm"] is True
 
@@ -590,11 +590,11 @@ async def test_ask_stream_degrades_only_when_stream_and_completion_fail(monkeypa
         return None, request
 
     monkeypatch.setattr(brain_service, "_prepare_ask", prepare)
-    monkeypatch.setattr(brain_service, "get_llm_client", lambda: UnavailableClient())
+    monkeypatch.setattr(brain_service, "get_llm_client", lambda **kwargs: UnavailableClient())
 
     events = [event async for event in brain_service.ask_stream(None, "user1", "why?")]
 
-    assert [event["type"] for event in events] == ["start", "result"]
+    assert [event["type"] for event in events] == ["queued", "start", "result"]
     assert events[-1]["result"]["error"] == "llm_unavailable"
 
 
@@ -616,7 +616,7 @@ async def test_stream_route_emits_ndjson_without_buffering_headers(monkeypatch):
     body = "".join([chunk async for chunk in response.body_iterator])
 
     assert response.media_type == "application/x-ndjson"
-    assert response.headers["cache-control"] == "no-cache"
+    assert response.headers["cache-control"] == "no-store"
     assert response.headers["x-accel-buffering"] == "no"
     assert body.splitlines() == [
         '{"type":"delta","text":"hello"}',
