@@ -15,21 +15,30 @@ const text = (value: unknown, max: number): value is string => typeof value === 
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
 const invalid = () => new Error("The insight response was incomplete or invalid. Retry manually.");
 function identity(value: unknown): InsightModelProfile {
-  if (!record(value) || value.requested_profile !== "deep" || !["fast", "deep"].includes(String(value.resolved_profile)) || !text(value.model, 256)) throw invalid();
+  if (!record(value) || !["fast", "deep"].includes(String(value.requested_profile)) || !["fast", "deep"].includes(String(value.resolved_profile))
+    || (value.requested_profile === "fast" && value.resolved_profile !== "fast") || !text(value.model, 256)) throw invalid();
   return value as InsightModelProfile;
 }
 function result(value: unknown, selected: InsightModelProfile): InsightData {
+  if (selected.requested_profile !== "deep") throw invalid();
   if (!record(value) || !["llm", "unavailable"].includes(String(value.engine)) || !text(value.model, 256)
     || !text(value.summary, 600) || !Array.isArray(value.sections) || value.sections.length > 4
     || (value.engine === "llm" ? value.sections.length < 2 : value.sections.length !== 0)) throw invalid();
   const profile = identity(value.model_profile);
-  if (profile.model !== value.model || profile.model !== selected.model || profile.resolved_profile !== selected.resolved_profile) throw invalid();
+  if (profile.requested_profile !== "deep" || profile.model !== value.model || profile.model !== selected.model || profile.resolved_profile !== selected.resolved_profile) throw invalid();
   for (const section of value.sections) {
     if (!record(section) || !text(section.title, 48) || !["positive", "neutral", "negative"].includes(String(section.tone))
       || !Array.isArray(section.points) || !section.points.length || section.points.length > 5
       || section.points.some((point) => !text(point, 220))) throw invalid();
   }
   return value as InsightData;
+}
+
+export function validateFastResult<T extends object>(value: unknown, selected: InsightModelProfile): T {
+  if (!record(value) || selected.requested_profile !== "fast" || selected.resolved_profile !== "fast") throw invalid();
+  const profile = identity(value.model_profile);
+  if (profile.requested_profile !== "fast" || profile.resolved_profile !== "fast" || profile.model !== selected.model || value.model !== profile.model) throw invalid();
+  return value as T;
 }
 
 /** One cancellable request with server-announced deadlines; never replay inference. */

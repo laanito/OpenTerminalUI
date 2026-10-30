@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **474 operations** across **424 paths** and **87 families**.
-- Authentication: **429 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **477 operations** across **427 paths** and **87 families**.
+- Authentication: **432 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -33,8 +33,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | Family | State | Operations |
 |---|---|---:|
 | `admin` | `supported` | 4 |
-| `ai` | `configuration-gated` | 1 |
-| `ai-insights` | `configuration-gated` | 7 |
+| `ai` | `configuration-gated` | 2 |
+| `ai-insights` | `configuration-gated` | 8 |
 | `alerts` | `supported` | 8 |
 | `analytics` | `supported` | 2 |
 | `api-keys` | `supported` | 3 |
@@ -58,7 +58,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `dividends` | `supported` | 4 |
 | `earnings` | `supported` | 5 |
 | `economics` | `configuration-gated` | 2 |
-| `emotion` | `supported` | 1 |
+| `emotion` | `supported` | 2 |
 | `etf` | `supported` | 4 |
 | `events` | `supported` | 4 |
 | `experiments` | `experimental` | 5 |
@@ -140,6 +140,7 @@ State: **configuration-gated**
 | Method | Path | Authentication | Summary |
 |---|---|---|---|
 | `POST` | `/api/ai/query` | Bearer token | Ai Query |
+| `POST` | `/api/ai/query/stream` | Bearer token | Ai Query Stream |
 
 ### `ai-insights`
 
@@ -153,6 +154,7 @@ State: **configuration-gated**
 | `POST` | `/api/ai/insights/stream` | Bearer token | Insight Stream |
 | `GET` | `/api/ai/interrogate/{ticker}` | Bearer token | Interrogate Stock |
 | `POST` | `/api/ai/news-sentiment` | Bearer token | News Sentiment |
+| `POST` | `/api/ai/news-sentiment/stream` | Bearer token | News Sentiment Stream |
 | `POST` | `/api/ai/risk-insights` | Bearer token | Risk Insights |
 
 ### `alerts`
@@ -427,6 +429,7 @@ State: **supported**
 
 | Method | Path | Authentication | Summary |
 |---|---|---|---|
+| `POST` | `/api/sentiment/emotion/stream` | Bearer token | Stream Stock Emotion |
 | `GET` | `/api/sentiment/emotion/{ticker}` | Bearer token | Get Stock Emotion |
 
 ### `etf`

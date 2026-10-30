@@ -642,7 +642,7 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       comparison briefings, Interrogate and portfolio risk synthesis.
       `llm_profiles.py` defines the closed map; Architecture records each caller
       and its intended profile. Comparison briefings, shared insights, Brain
-      and filing analysis are migrated; explicit Fast callers remain to integrate.
+      and filing analysis plus all three Fast tasks are migrated.
 - [x] Support independent profile model/endpoint/credentials/timeout, preserving
       existing `LLM_*` behavior when Deep is unset. Never accidentally forward
       credentials across endpoints. Embeddings stay independent and unchanged.
@@ -650,13 +650,14 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Partial/invalid configuration is rejected safely; an explicit Deep URL
       never inherits Fast credentials, even for the same endpoint. Resolver and
       opt-in client factory are implemented. Structured-output mode is profile-specific.
-- [ ] Resolve health checks, model requests, repair/stream/browser deadlines and
+- [x] Resolve health checks, model requests, repair/stream/browser deadlines and
       displayed profile/model identity consistently. Configured Deep failures
       must remain explicit, not silently fall back to Fast or trigger escalation.
       Price-only/context comparison briefings now share one profile snapshot for
       transport, health, bounded repair, model identity and announced browser
       deadlines. No comparison prose cache exists. Shared insight integration is
-      completed below. Remaining: explicit Fast callers and representative evaluation.
+      completed below. All generation callers are integrated; representative evaluation
+      remains a separate open gate.
 - [ ] Test backward compatibility, task routing, failure isolation, secret handling
       and cancellation/deadlines; assess usefulness/source fidelity/latency on a
       small representative simple/deep task set with configured models.
@@ -664,7 +665,7 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       explicit endpoint isolation and unchanged legacy embedding requests. The
       comparison operation/browser deadlines and visible identity are covered,
       including configured Deep isolation and default-model compatibility.
-      Remaining callers and representative live evaluation are still pending.
+      All callers are integrated; representative live evaluation remains pending.
       Comparison integration checks (2026-10-29): 206 focused backend tests,
       106 frontend tests, production build, eight installed-Chrome smoke journeys
       and API/surface/mock guards passed. No live model-quality evaluation ran.
@@ -721,11 +722,23 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       atomic rollback, old-row compatibility and PostgreSQL DDL compilation), all
       551 frontend tests, production build, twelve installed-Chrome smoke journeys
       and API/surface/mock guards passed. No live PostgreSQL rollout/model-quality
-      benchmark is claimed; host acceptance remains pending.
-- [ ] Host-test filing extraction/provenance and explicit lexical fallback. It
-      remains an experimental global saved report with limited existing sources,
-      not a new SEC source-verification path or private Brain evidence. Remaining
-      explicit Fast callers and representative task evaluation are subsequent work.
+      benchmark is claimed. After #236 the maintainer confirmed it works as expected.
+- [x] Filing host acceptance after #236: maintainer reported it works as expected.
+      This is operational acceptance, not a claim that every fallback was tested.
+      Reports remain experimental/global, not private Brain evidence or SEC checks.
+- [x] Integrate explicit Fast routing for news sentiment, stock emotion and query
+      intent. Freeze one profile across health/generation, bound model calls, expose
+      identity and operation budgets through optional browser lifecycles, and retain
+      native APIs. Sentiment/emotion caches include Fast configuration fingerprints;
+      failed model fallbacks are not cached. Query rate limits use the authenticated
+      owner. No automatic Deep escalation or browser replay. Emotion keeps its
+      existing five-minute refresh, with automatic failure/focus retries disabled.
+      Checks (2026-10-30): 111 focused backend tests, all 553 frontend tests and
+      production build, fourteen installed-Chrome smoke journeys and API/surface/
+      mock guards passed (477 operations across 87 API families). Browser checks
+      cover visible Fast identity for sentiment, emotion and query at both widths.
+- [ ] Host-test Fast surfaces, then assess representative simple/deep task
+      usefulness, source fidelity and latency before milestone exit/release checks.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.

@@ -124,10 +124,9 @@ Global `LLM_ENABLED` applies to both generation profiles. Resolution reports the
 requested and effective profiles, resolved model and deadline; callers must use
 that one resolution for health, gating, generation, repair and displayed identity.
 
-Workflow migration is incremental. Comparison briefings, shared insights, Brain and filing analysis are integrated; other
-audited application call sites below still use the legacy factory. Subsequent
-integration must update model metadata, caches, progress deadlines and browser
-budgets alongside the client call, not switch the model in isolation.
+All twelve audited generation tasks below are integrated. Each operation resolves
+one immutable profile for client construction, health/generation deadlines and
+public identity. Embeddings retain no-argument legacy construction.
 
 Price-only and selected-context comparison briefings resolve once before evidence
 collection. The same immutable profile supplies health, client transport, model,
@@ -161,9 +160,9 @@ requested/effective profile, model, endpoint, credential, structured-output mode
 timeout and enabled state. No raw endpoint/key is placed in the cache key or
 public identity. Interrogate retains owner ID and note/index version in its
 namespace. Regenerate bypasses cached prose; unavailable results are not cached.
-This prevents old Fast answers being reused after Deep is configured. Explicit
-Fast caller integration and representative cross-task quality
-evaluation remain pending. Embeddings keep the legacy client.
+This prevents old Fast answers being reused after Deep is configured.
+Representative cross-task quality evaluation remains pending. Embeddings keep
+the legacy client.
 
 Brain resolves one `brain_answer` profile before owner-scoped retrieval. Generation
 uses it for completion, streaming, same-model fallback and identity; no preliminary
@@ -229,11 +228,19 @@ initial budget is lower), one repair and all other requests share the same
 profile deadline. See
 [Briefing evaluation](Briefing-Evaluation.md) for representative human review.
 
+Fast sentiment, emotion and query intent use one profile snapshot across health
+and generation, bounded by its model timeout. Their optional NDJSON lifecycles
+announce model identity and an overall timeout plus 60 seconds for preparation/
+read-only actions; the browser adds 15 seconds and never replays interruptions.
+Sentiment/emotion caches include opaque Fast configuration fingerprints; changing
+Deep alone leaves them valid. Transient model fallbacks are not cached. Query
+rate limits use the authenticated owner. Native APIs remain compatible.
+
 | Generation task | Intended profile | Current caller |
 |---|---|---|
-| `news_sentiment` | Fast | `services/llm_sentiment.py` |
-| `stock_emotion` | Fast | `services/stock_emotion.py` |
-| `query_intent` | Fast | `services/ai_service.py` intent/filter extraction |
+| `news_sentiment` | Fast | **Integrated:** `services/llm_sentiment.py` |
+| `stock_emotion` | Fast | **Integrated:** `services/stock_emotion.py` |
+| `query_intent` | Fast | **Integrated:** `services/ai_service.py` intent/filter extraction |
 | `filing_analysis` | Deep | **Integrated:** `nlp/filing_parser.py`, bounded multi-document catalyst/summary extraction |
 | `brain_answer` | Deep | **Integrated:** `services/brain/brain_service.py` completion/stream/fallback |
 | `comparison_briefing` | Deep | **Integrated:** `comparison_briefing.py` shared price/context runner |

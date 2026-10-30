@@ -630,6 +630,7 @@ export type StockEmotion = {
   engine?: string;
   model?: string;
   articles_analyzed?: number;
+  model_profile?: InsightModelProfile;
   period_days?: number;
   emotion_index?: number;
   emotion_index_label?: string;
@@ -1038,7 +1039,7 @@ export type InsightSection = {
   points: string[];
 };
 
-export type InsightModelProfile = { requested_profile: "deep"; resolved_profile: "fast" | "deep"; model: string };
+export type InsightModelProfile = { requested_profile: "fast" | "deep"; resolved_profile: "fast" | "deep"; model: string };
 export type InsightData = {
   engine: string;
   model: string;

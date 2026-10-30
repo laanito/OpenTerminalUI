@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from backend.config.settings import get_settings
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.services.llm_client import (
     LLMClient,
     LLMError,
@@ -344,26 +345,28 @@ async def analyze_stock_emotion(
     *,
     period_days: int = 7,
     limit: int = 6,
+    profile: ResolvedLLMProfile | None = None,
 ) -> dict[str, Any]:
     """Analyze recent news for a ticker and return an aggregated emotion profile."""
     symbol = ticker.strip().upper()
-    settings = get_settings()
-    model = settings.llm_model
+    profile = profile or resolve_llm_profile(get_settings(), "stock_emotion")
+    model = profile.model
 
     selected = [a for a in (articles or []) if str(a.get("title") or "").strip()][:limit]
     if not selected:
-        return _aggregate(symbol, period_days, "fallback", model, [])
+        return {**_aggregate(symbol, period_days, "fallback", model, []), "model_profile": profile.public_identity()}
 
     engine = "fallback"
     analyzed: list[dict[str, Any]] = []
-    client = get_llm_client()
 
     raw_analyses: list[Any] = []
-    use_llm = settings.llm_enabled and await client.health()
-    if use_llm:
+    if profile.enabled:
         try:
-            raw_analyses = await _analyze_batch(client, symbol, selected)
-            engine = "llm"
+            async with asyncio.timeout(profile.timeout_seconds):
+                client = get_llm_client(profile=profile)
+                if await client.health():
+                    raw_analyses = await _analyze_batch(client, symbol, selected)
+                    engine = "llm"
         except (LLMError, asyncio.TimeoutError):
             raw_analyses = []
             engine = "fallback"
@@ -387,6 +390,7 @@ async def analyze_stock_emotion(
             engine = "fallback"
 
     payload = _aggregate(symbol, period_days, engine, model, analyzed)
+    payload["model_profile"] = profile.public_identity()
 
     payload["articles"] = [
         {

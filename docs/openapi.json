@@ -1,6 +1,26 @@
 {
   "components": {
     "schemas": {
+      "AIQueryPayload": {
+        "properties": {
+          "context": {
+            "additionalProperties": true,
+            "title": "Context",
+            "type": "object"
+          },
+          "query": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "AIQueryPayload",
+        "type": "object"
+      },
       "APIKeyCreate": {
         "properties": {
           "name": {
@@ -5700,6 +5720,48 @@
           "exchange"
         ],
         "title": "ETFScreenerResponse",
+        "type": "object"
+      },
+      "EmotionRequest": {
+        "properties": {
+          "days": {
+            "default": 7,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 6,
+            "maximum": 30.0,
+            "minimum": 3.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market"
+          },
+          "ticker": {
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9^._=-]+$",
+            "title": "Ticker",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker"
+        ],
+        "title": "EmotionRequest",
         "type": "object"
       },
       "EquityPerformanceSnapshot": {
@@ -19796,6 +19858,60 @@
         }
       }
     },
+    "/api/ai/news-sentiment/stream": {
+      "post": {
+        "description": "One Fast sentiment batch with announced identity/deadline and no client replay.",
+        "operationId": "news_sentiment_stream_api_ai_news_sentiment_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "News Sentiment Stream",
+        "tags": [
+          "ai-insights"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "ai-insights": "configuration-gated"
+        }
+      }
+    },
     "/api/ai/query": {
       "post": {
         "description": "Process a natural language query using AI.",
@@ -19842,6 +19958,58 @@
           }
         ],
         "summary": "Ai Query",
+        "tags": [
+          "ai"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "ai": "configuration-gated"
+        }
+      }
+    },
+    "/api/ai/query/stream": {
+      "post": {
+        "description": "Classify with Fast, then run existing read-only query actions within one lifecycle.\n\nStart announces selected identity and the model timeout plus a 60-second\npreparation/action allowance. Rate limits use the authenticated owner.\nNo automatic model escalation or browser replay is performed.",
+        "operationId": "ai_query_stream_api_ai_query_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIQueryPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ai Query Stream",
         "tags": [
           "ai"
         ],
@@ -41727,6 +41895,58 @@
         },
         "x-openterminalui-feature-state": {
           "scripting": "experimental"
+        }
+      }
+    },
+    "/api/sentiment/emotion/stream": {
+      "post": {
+        "description": "Fast emotion classification with a single announced operation budget.",
+        "operationId": "stream_stock_emotion_api_sentiment_emotion_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmotionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Stock Emotion",
+        "tags": [
+          "emotion"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "emotion": "supported"
         }
       }
     },
