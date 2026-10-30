@@ -7,11 +7,8 @@ import type {
   StockEmotion,
   InsightData,
 } from "./types";
-import { streamInsight, type InsightRequestOptions } from "./insightLifecycle";
-
-// Batched sentiment remains on the legacy Fast path. Shared insight cards use
-// the lifecycle stream and its server-announced operation deadline below.
-const AI_TIMEOUT = { timeout: 300_000 } as const;
+import { streamInsight, streamModelOperation, validateFastResult, type InsightRequestOptions } from "./insightLifecycle";
+import type { InsightModelProfile } from "./types";
 
 export async function fetchNewsSentiment(ticker: string, days = 7, market?: string): Promise<NewsSentimentSummary> {
   const { data } = await api.get<NewsSentimentSummary>(`/news/sentiment/${encodeURIComponent(ticker)}`, {
@@ -38,11 +35,14 @@ export async function fetchStockEmotion(
   ticker: string,
   days = 7,
   market?: string,
+  options: InsightRequestOptions = {},
 ): Promise<StockEmotion> {
-  const { data } = await api.get<StockEmotion>(`/sentiment/emotion/${encodeURIComponent(ticker)}`, {
-    params: { days, market },
-  });
-  return data;
+  return streamModelOperation("/sentiment/emotion/stream", { ticker, days, market }, (value, profile) => {
+    const result = validateFastResult<StockEmotion>(value, profile);
+    if (result.ticker !== ticker.trim().toUpperCase() || !["llm", "fallback"].includes(result.engine ?? "")
+      || !Number.isFinite(result.emotion_index)) throw new Error("Invalid emotion result. Retry manually.");
+    return result;
+  }, options);
 }
 
 export async function fetchStockBriefing(
@@ -80,6 +80,7 @@ export type NewsSentimentBatch = {
   engine: "llm" | "lexical" | "mixed" | "unavailable";
   model?: string;
   items: ArticleSentiment[];
+  model_profile?: InsightModelProfile;
 };
 
 // v1.2: score a page of headlines with the local LLM (trader's-eye bull/bear read),
@@ -87,9 +88,13 @@ export type NewsSentimentBatch = {
 // the lexical scorer when the model is off — each item is tagged with its engine.
 export async function scoreNewsArticles(
   items: { id: string; title: string; summary?: string }[],
+  options: InsightRequestOptions = {},
 ): Promise<NewsSentimentBatch> {
-  const { data } = await api.post<NewsSentimentBatch>("/ai/news-sentiment", { items }, AI_TIMEOUT);
-  return data;
+  return streamModelOperation("/ai/news-sentiment/stream", { items }, (value, profile) => {
+    const result = validateFastResult<NewsSentimentBatch>(value, profile);
+    if (!["llm", "lexical", "mixed", "unavailable"].includes(result.engine) || !Array.isArray(result.items)) throw new Error("Invalid sentiment batch. Retry manually.");
+    return result;
+  }, options);
 }
 
 export async function fetchAiRiskInsights(

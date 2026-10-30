@@ -31,6 +31,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.api.deps import cache_instance, fetch_stock_snapshot_coalesced, get_db
+from backend.api.model_lifecycle import model_operation_response
 from backend.config.settings import get_settings
 from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.api.routes.news import _fetch_news_fallback, _ticker_fallback_terms
@@ -516,6 +517,14 @@ async def news_sentiment(payload: dict[str, Any]) -> dict[str, Any]:
     """
     items = payload.get("items") if isinstance(payload, dict) else None
     return await score_articles(items if isinstance(items, list) else [])
+
+
+@router.post("/ai/news-sentiment/stream")
+async def news_sentiment_stream(payload: dict[str, Any]) -> StreamingResponse:
+    """One Fast sentiment batch with announced identity/deadline and no client replay."""
+    profile = resolve_llm_profile(get_settings(), "news_sentiment")
+    items = payload.get("items")
+    return model_operation_response(lambda: score_articles(items if isinstance(items, list) else [], profile=profile), profile)
 
 
 @router.post("/ai/backtest-explain")

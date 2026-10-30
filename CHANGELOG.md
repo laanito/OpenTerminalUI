@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Explicit Fast tasks (v2.4)** — news sentiment, stock emotion and query intent
+  resolve one Fast profile for health, generation, identity and bounded deadlines.
+  Optional browser lifecycle endpoints announce budgets without automatic replay;
+  existing APIs remain available. Sentiment/emotion caches separate Fast model
+  configurations without reacting to Deep-only changes. Lexical fallbacks stay
+  labelled, and query rate limits now use the authenticated owner. All twelve
+  generation tasks are integrated; representative model evaluation remains open.
 - **Deep experimental filing extraction (v2.4)** — profile-resolved model requests
   replace the fixed 20-second caller budget. Disabled, failed or malformed model
   extraction returns explicit lexical output with a reason and selected identity.
@@ -22,27 +29,26 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   partial answers cannot be saved; completed Brain Log saves retain the resolved
   model through existing provenance fields. Provider labels expose no endpoint.
   Embeddings, retrieval/recency behavior and database schemas are unchanged.
-  Filing-analysis routing remains a separate follow-up.
 - **Deep shared insights (v2.4)** — stock briefings, Interrogate, market/collection
   outlooks, risk and backtest explanation share profile-resolved transport,
   health/repair deadlines and visible identity. Research cache namespaces include
   configuration fingerprints while retaining owner/note-version isolation.
   Browser cards use one cancellable lifecycle with announced operation budgets
   and manual retry after interruption; native GET/POST APIs remain available.
-  Failed insights are not cached. Brain and filing routing remain pending.
+  Failed insights are not cached.
 - **Comparison interpretations to investigate (v2.4)** — a separate structured
   hypothesis section explains possible mechanisms, competing accounts and what
   evidence would help distinguish them. Observations remain separate; citation
   links identify observed inputs, not proof of causation. Both briefing modes
   validate hypothesis structure and usable pair/source anchors. Output budgets
-  accommodate the section within existing profile deadlines; representative
-  human acceptance is pending.
+  accommodate the section within existing profile deadlines; initial maintainer
+  feedback confirmed improved interpretation, with broader evaluation still open.
 - **Deep comparison briefings (v2.4)** — price-only and selected news/macro
   briefings now use one resolved profile for health, generation, bounded repair,
   server/browser deadlines and reported model. The UI distinguishes configured
   Deep from the default single-model setup; configured Deep failures never retry
-  Fast. Additive `model_profile` metadata exposes no connection settings. Shared
-  insights and Brain routing remain follow-up work; no model-quality claim is made.
+  Fast. Additive `model_profile` metadata exposes no connection settings;
+  no model-quality claim is made.
 - **Fast/Deep generation profile foundation (v2.4)** — validated optional Deep
   model/endpoint/key/deadline/structured-output settings, explicit immutable task
   routing and an opt-in client factory. Legacy calls and embedding configuration

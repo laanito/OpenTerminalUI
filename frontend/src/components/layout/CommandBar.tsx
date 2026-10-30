@@ -857,6 +857,7 @@ export function CommandBar({ onExecute }: Props) {
                 <div className="text-sm leading-relaxed text-terminal-text">
                   {aiResult.explanation}
                 </div>
+                {aiResult.model_profile ? <p className="break-words text-xs text-terminal-muted">Fast profile · {aiResult.model}</p> : null}
 
                 {aiResult.type === 'data_table' && aiResult.data && (
                   <div className="mt-2 overflow-x-auto rounded border border-terminal-border">

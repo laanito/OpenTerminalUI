@@ -338,7 +338,11 @@ Experimental filing analysis also uses Deep, with explicit lexical fallback
 and saved model provenance. A portable companion table stores that provenance;
 the existing report table/catalyst format stays intact and older rows remain
 provenance-unknown. Saved reports are regenerated only by explicit ingestion.
-Embeddings, retrieval ranking and indexing configuration are unchanged.
+News sentiment, stock emotion and query intent explicitly use the Fast profile
+(existing `LLM_*` settings), with visible model identity and bounded requests.
+Their browser calls follow announced operation deadlines without automatic replay;
+sentiment/emotion caches separate Fast model configurations. Lexical fallbacks
+remain labelled. Embeddings, retrieval ranking and indexing are unchanged.
 
 Comparison results also separate factual observations from **Interpretations to
 investigate**: possible mechanisms, competing explanations and evidence that

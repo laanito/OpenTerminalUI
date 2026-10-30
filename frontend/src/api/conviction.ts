@@ -39,6 +39,7 @@ export async function fetchSecurityConviction(symbol: string): Promise<Convictio
 
 export async function ingestSecurityConviction(payload: Record<string, unknown>, options: InsightRequestOptions = {}): Promise<ConvictionResponse> {
   return streamModelOperation("/stock-picking/conviction/ingest/stream", payload, (value, profile) => {
+    if (profile.requested_profile !== "deep") throw new Error("Filing model identity did not match. Retry manually.");
     if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid filing report. Retry manually.");
     const result = value as ConvictionResponse;
     if (typeof result.symbol !== "string" || result.symbol !== String(payload.symbol ?? "").trim().toUpperCase()

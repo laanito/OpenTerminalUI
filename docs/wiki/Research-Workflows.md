@@ -5,6 +5,24 @@ inspect selected SEC evidence, ask questions of private notes, and save an
 answer without turning generated prose into an unquestioned source. It does
 not describe automatic trading or a complete historical archive.
 
+## Fast tasks in v2.4 development
+
+Headline sentiment, ticker emotion and natural-language query classification use
+Fast (`LLM_*`), even when Deep is configured. Successful model results show
+**Fast profile** and the selected model; lexical sentiment/emotion fallbacks
+remain labelled separately. Changing Fast configuration invalidates their model
+caches; changing only Deep does not. Failed model fallbacks are not cached.
+
+The browser uses `POST /api/ai/news-sentiment/stream`,
+`POST /api/sentiment/emotion/stream` and `POST /api/ai/query/stream`. These report
+progress and publish a final result, rather than streaming raw classification
+JSON. Start announces identity and the model timeout plus 60 seconds preparation/
+action allowance; the browser adds 15 seconds and requires manual retry after an
+interruption. Existing non-streaming APIs remain available. Emotion retains its
+five-minute refresh; automatic failure retries and focus refresh are disabled.
+Query classification uses the authenticated user's existing rate limit and
+read-only chart/screener/quote actions. It does not escalate to Deep.
+
 ## Cross-market context
 
 Open **Market context** from equity research, the Security Hub or crypto detail.
@@ -422,7 +440,7 @@ scope, source inspection and degraded paths. On 2026-10-27 the maintainer confir
 price-only works and combined news/macro completed after its bounded repair;
 the first attempt logged a source/pair reference violation. The fast model's
 shallow synthesis remains a quality limitation, not another v2.3 feature gate;
-Fast/Deep task routing is approved for v2.4. Successful completion is not semantic
+Fast/Deep task routing is implemented in v2.4 development. Successful completion is not semantic
 verification or a claim that every degraded host case was manually tested.
 Release PR #229 passed all three CI jobs and merged; after explicit maintainer
 authorization, v2.3.0 was published from `3fb7de3` on 2026-10-28.

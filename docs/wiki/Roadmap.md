@@ -422,11 +422,15 @@ integrated with an early deadline/identity announcement, bounded same-model
 stream fallback, cancellation and preserved saved-model provenance. Experimental
 filing analysis now uses Deep with a profile deadline, labelled lexical fallback
 and durable provenance in an additive companion table; existing report columns
-and historical engine values remain intact. Remaining Fast callers and embeddings
-still use the legacy factory. See the
+and historical engine values remain intact. News sentiment, stock emotion and
+query intent now explicitly resolve Fast, share health/generation deadlines and
+announce browser budgets/identity. Sentiment/emotion caches separate Fast
+configurations; Deep-only changes do not invalidate them. Embeddings retain the
+legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
-Follow-up slices integrate remaining Fast callers, followed
-by representative live evaluation. Do not treat configuration support as a
+All twelve generation tasks are integrated. Remaining work is host acceptance of
+the Fast surfaces, representative usefulness/source-fidelity/latency evaluation
+and milestone exit checks. Do not treat configuration support as a
 completed task migration or a proven improvement in reasoning quality.
 
 **Interpretation-quality follow-up agreed 2026-10-29:** the maintainer confirmed

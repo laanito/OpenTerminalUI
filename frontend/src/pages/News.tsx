@@ -303,10 +303,12 @@ export function NewsPage() {
   });
   const emotionQuery = useQuery({
     queryKey: ["stock-emotion", currentTicker, periodDays, String(selectedStock?.exchange || "")],
-    queryFn: () => fetchStockEmotion(currentTicker, periodDays, String(selectedStock?.exchange || "")),
+    queryFn: ({ signal }) => fetchStockEmotion(currentTicker, periodDays, String(selectedStock?.exchange || ""), { signal }),
     enabled: isTickerScope && Boolean(currentTicker),
     staleTime: 120_000,
     refetchInterval: 300_000,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   const normalizedItems = useMemo(() => {

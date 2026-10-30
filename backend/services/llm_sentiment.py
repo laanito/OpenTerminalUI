@@ -30,6 +30,7 @@ from backend.api.deps import cache_instance
 from backend.config.settings import get_settings
 from backend.core.ttl_policy import market_open_now, ttl_seconds
 from backend.services.llm_client import LLMError, get_llm_client, parse_json_response
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.services.sentiment_engine import score_article_sentiment
 
 logger = logging.getLogger(__name__)
@@ -126,29 +127,34 @@ def _sentiment_prompt(articles: list[dict[str, Any]]) -> tuple[str, str]:
     return system, user
 
 
-async def _score_batch_llm(articles: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+async def _score_batch_llm(articles: list[dict[str, Any]], *, profile: ResolvedLLMProfile) -> dict[str, dict[str, Any]]:
     """One structured LLM call for a batch. Returns {article_id: verdict}; empty
     dict if the model is unreachable or the response can't be parsed."""
-    settings = get_settings()
-    client = get_llm_client()
-    if not settings.llm_enabled or not await client.health():
+    if not profile.enabled:
         return {}
 
     system, user = _sentiment_prompt(articles)
     try:
-        content = await client.chat(
-            [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            temperature=0.1,
-            max_tokens=min(2000, 90 * len(articles) + 200),
-            json_schema=NEWS_SENTIMENT_SCHEMA,
-        )
-        parsed = parse_json_response(content)
+        async with asyncio.timeout(profile.timeout_seconds):
+            client = get_llm_client(profile=profile)
+            if not await client.health():
+                return {}
+            content = await client.chat(
+                [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                temperature=0.1,
+                max_tokens=min(2000, 90 * len(articles) + 200),
+                json_schema=NEWS_SENTIMENT_SCHEMA,
+            )
+            parsed = parse_json_response(content)
     except (LLMError, asyncio.TimeoutError) as exc:
-        logger.info("LLM article sentiment unavailable: %s", exc)
+        logger.info("LLM article sentiment unavailable (%s)", type(exc).__name__)
         return {}
 
     out: dict[str, dict[str, Any]] = {}
-    for node in parsed.get("articles") or []:
+    nodes = parsed.get("articles")
+    if not isinstance(nodes, list):
+        return out
+    for node in nodes:
         if not isinstance(node, dict):
             continue
         idx = node.get("index")
@@ -178,7 +184,7 @@ def _lexical_item(article: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def score_articles(articles: Any, *, max_items: int = _MAX_BATCH) -> dict[str, Any]:
+async def score_articles(articles: Any, *, max_items: int = _MAX_BATCH, profile: ResolvedLLMProfile | None = None) -> dict[str, Any]:
     """Score a batch of articles, preferring the LLM and caching per article.
 
     Returns ``{engine, model, items:[{id,label,score,confidence,rationale,engine}]}``
@@ -186,26 +192,26 @@ async def score_articles(articles: Any, *, max_items: int = _MAX_BATCH) -> dict[
     ``mixed``. Items keep the exact order of the input.
     """
     normalized = _normalize_articles(articles)[:max_items]
-    settings = get_settings()
+    profile = profile or resolve_llm_profile(get_settings(), "news_sentiment")
     if not normalized:
-        return {"engine": "unavailable", "model": settings.llm_model, "items": []}
+        return {"engine": "unavailable", "model": profile.model, "model_profile": profile.public_identity(), "items": []}
 
     verdicts: dict[str, dict[str, Any]] = {}
     to_score: list[dict[str, Any]] = []
     for art in normalized:
-        cached = await cache_instance.get(cache_instance.build_key("ai_sentiment", art["hash"]))
+        cached = await cache_instance.get(cache_instance.build_key("ai_sentiment", art["hash"], {"profile": profile.cache_fingerprint()})) if profile.enabled else None
         if cached:
             verdicts[art["id"]] = cached
         else:
             to_score.append(art)
 
     if to_score:
-        llm_scored = await _score_batch_llm(to_score)
+        llm_scored = await _score_batch_llm(to_score, profile=profile)
         ttl = ttl_seconds("news_latest", market_open_now())
         for art in to_score:
             item = llm_scored.get(art["id"])
             if item is not None:
-                await cache_instance.set(cache_instance.build_key("ai_sentiment", art["hash"]), item, ttl=ttl)
+                await cache_instance.set(cache_instance.build_key("ai_sentiment", art["hash"], {"profile": profile.cache_fingerprint()}), item, ttl=ttl)
             else:
                 item = _lexical_item(art)  # LLM off/unreachable/skipped this one
             verdicts[art["id"]] = item
@@ -213,4 +219,4 @@ async def score_articles(articles: Any, *, max_items: int = _MAX_BATCH) -> dict[
     items = [{"id": art["id"], **verdicts[art["id"]]} for art in normalized]
     engines = {it.get("engine", "lexical") for it in items}
     engine = "llm" if engines == {"llm"} else ("lexical" if "llm" not in engines else "mixed")
-    return {"engine": engine, "model": settings.llm_model, "items": items}
+    return {"engine": engine, "model": profile.model, "model_profile": profile.public_identity(), "items": items}

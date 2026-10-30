@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from types import SimpleNamespace
+from backend.config.settings import AppSettings
 
 import pytest
 
@@ -11,8 +11,8 @@ from backend.services import stock_emotion
 from backend.services.llm_client import LLMError, parse_json_response
 
 
-def _fake_settings(enabled: bool = False) -> SimpleNamespace:
-    return SimpleNamespace(llm_enabled=enabled, llm_model="google/gemma-4-26b-a4b")
+def _fake_settings(enabled: bool = False) -> AppSettings:
+    return AppSettings(llm_enabled=enabled, llm_model="google/gemma-4-26b-a4b")
 
 
 def _stub_sentiment(text: str) -> dict:
@@ -86,7 +86,7 @@ def test_analyze_stock_emotion_empty(monkeypatch) -> None:
 
 def test_analyze_stock_emotion_lmstudio(monkeypatch) -> None:
     monkeypatch.setattr(stock_emotion, "get_settings", lambda: _fake_settings(enabled=True))
-    monkeypatch.setattr(stock_emotion, "get_llm_client", _FakeClient)
+    monkeypatch.setattr(stock_emotion, "get_llm_client", lambda **kwargs: _FakeClient())
     monkeypatch.setattr(stock_emotion, "score_article_sentiment", _stub_sentiment)
     articles = [
         {"title": "Upbeat outlook lifts shares", "summary": "", "source": "Wire",

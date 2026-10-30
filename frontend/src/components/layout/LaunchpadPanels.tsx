@@ -52,7 +52,7 @@ export function LaunchpadTemplatePlaceholderPanel({ panel }: PanelProps) {
 
 export function LaunchpadAIResearchPanel({ panel }: PanelProps) {
   const [query, setQuery] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', text: string }>>([
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', text: string, model?: string }>>([
     { role: 'assistant', text: "Hello! I'm your AI Research Copilot. Ask me about market data, comparisons, or to find specific stocks." }
   ]);
   const [loading, setLoading] = useState(false);
@@ -74,7 +74,7 @@ export function LaunchpadAIResearchPanel({ panel }: PanelProps) {
         active_symbol: panel.symbol,
         history: messages.slice(-5).map(m => m.text)
       });
-      setMessages(prev => [...prev, { role: 'assistant', text: result.explanation }]);
+      setMessages(prev => [...prev, { role: 'assistant', text: result.explanation, model: result.model_profile ? result.model : undefined }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', text: "Error: Failed to connect to AI service." }]);
     } finally {
@@ -98,6 +98,7 @@ export function LaunchpadAIResearchPanel({ panel }: PanelProps) {
                 : 'bg-terminal-panel border border-terminal-border text-terminal-text'
             }`}>
               {m.text}
+              {m.model ? <p className="mt-1 break-words text-[10px] text-terminal-muted">Fast profile · {m.model}</p> : null}
             </div>
             {m.role === 'user' && (
               <div className="h-6 w-6 shrink-0 rounded-full bg-terminal-muted/20 flex items-center justify-center text-terminal-muted">

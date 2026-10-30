@@ -151,8 +151,8 @@ release-level interpretation and safety boundaries.
   surfaces; total operation budget is model timeout plus 60 seconds preparation
   allowance, with 15 seconds browser margin. Interrupted runs never replay;
   manual retry is explicit. Research caches hash profile configuration and retain
-  owner/note-version isolation; failed insights are not cached. Remaining callers
-  and embeddings stay on the legacy factory. Explicit Deep URLs never inherit
+  owner/note-version isolation; failed insights are not cached. Embeddings stay
+  on the legacy factory. Explicit Deep URLs never inherit
   Fast keys; when the Deep URL is omitted, the existing endpoint/key may be
   inherited. Shared insight host testing after #234 confirmed it works as intended.
   Brain synthesis is now integrated: one selected profile spans retrieval gating,
@@ -174,8 +174,13 @@ release-level interpretation and safety boundaries.
   ingestion UI or provider is added. This remains an experimental global report,
   not private Brain evidence or SEC fact verification. SQLite persistence and
   PostgreSQL DDL compilation are checked; no live PostgreSQL rollout is claimed.
-  Filing host acceptance remains pending. Next: remaining explicit Fast caller
-  integration, then representative evaluation.
+  After #236 the maintainer confirmed filing integration works as expected.
+  News sentiment, stock emotion and query intent now explicitly resolve Fast;
+  health/generation share one model deadline and browser lifecycles announce
+  identity/budgets without automatic replay. Sentiment/emotion caches hash Fast
+  configuration; Deep-only changes do not invalidate them. Query rate limits use
+  the authenticated owner. All twelve generation tasks are integrated; next:
+  host acceptance of Fast surfaces, representative evaluation and exit checks.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and

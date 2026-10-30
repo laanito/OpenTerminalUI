@@ -1,5 +1,5 @@
 import type { CountryCode, MarketCode } from "./markets";
-import type { PortfolioAccountingSummary } from "../api/types";
+import type { PortfolioAccountingSummary, InsightModelProfile } from "../api/types";
 
 export type ChartPoint = {
   t: number;
@@ -579,6 +579,9 @@ export type AIQueryResult = {
   type: 'screener_results' | 'data_table' | 'chart_command' | 'text_answer';
   data: any;
   explanation: string;
+  model?: string;
+  model_profile?: InsightModelProfile;
+  error?: string;
 };
 
 export type PriceRange = {

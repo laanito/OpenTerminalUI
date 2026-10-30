@@ -3,10 +3,12 @@ from __future__ import annotations
 import json
 import logging
 import time
+import asyncio
 from typing import Any, Dict, List, Optional
 
 from backend.config.settings import get_settings
 from backend.api.deps import get_unified_fetcher
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.services.llm_client import (
     LLMError,
     get_llm_client,
@@ -46,22 +48,37 @@ For 'screener_results': params has "filters" - a list of {"field","op","value"} 
 
 class AIQueryService:
     def __init__(self):
-        self.settings = get_settings()
         self.history = []
         self.rate_limits = {} # simple user_id -> [timestamps]
 
-    async def query(self, user_id: str, query_text: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def query(self, user_id: str, query_text: str, context: Dict[str, Any], *, profile: ResolvedLLMProfile | None = None) -> Dict[str, Any]:
+        profile = profile or resolve_llm_profile(get_settings(), "query_intent")
+        try:
+            async with asyncio.timeout(profile.timeout_seconds + 60):
+                result = await self._query(user_id, query_text, context, profile)
+        except asyncio.TimeoutError:
+            result = {"type": "text_answer", "data": "The query operation reached its deadline. Retry manually.",
+                      "explanation": "Query unavailable", "error": "timeout"}
+        return {**result, "model": profile.model, "model_profile": profile.public_identity()}
+
+    async def _query(self, user_id: str, query_text: str, context: Dict[str, Any], profile: ResolvedLLMProfile) -> Dict[str, Any]:
         """Process a natural language query."""
         if not self._check_rate_limit(user_id):
             return {"type": "text_answer", "data": "Rate limit exceeded. Max 20 queries per hour.", "explanation": "Rate limit"}
 
         # 1. Classify Intent using LLM
         try:
-            llm_response = await self._call_llm(query_text)
+            llm_response = await self._call_llm(query_text, profile=profile)
             intent_data = parse_json_response(llm_response)
+            if (intent_data.get("intent") not in {"screener_results", "data_table", "chart_command", "text_answer"}
+                or not isinstance(intent_data.get("params", {}), dict)
+                or not isinstance(intent_data.get("explanation", ""), str)):
+                raise ValueError("Invalid query intent structure")
         except Exception as e:
-            logger.error(f"AI classification error: {e}")
-            return {"type": "text_answer", "data": f"Error processing query: {str(e)}", "explanation": "Error"}
+            logger.warning("AI classification unavailable (%s)", type(e).__name__)
+            code = "disabled" if not profile.enabled else "timeout" if isinstance(e, asyncio.TimeoutError) else "classification_unavailable"
+            return {"type": "text_answer", "data": "Fast query classification is unavailable. Retry manually.",
+                    "explanation": "Classification unavailable", "error": code}
 
         intent = intent_data.get("intent")
         params = intent_data.get("params", {})
@@ -113,22 +130,20 @@ class AIQueryService:
             "explanation": explanation
         }
 
-    async def _call_llm(self, query: str) -> str:
+    async def _call_llm(self, query: str, *, profile: ResolvedLLMProfile | None = None) -> str:
         # Single OpenAI-compatible path — works with Ollama (default), LM Studio,
         # OpenAI, OpenRouter, etc. depending on the configured llm_base_url/api_key.
-        if not self.settings.llm_enabled:
+        profile = profile or resolve_llm_profile(get_settings(), "query_intent")
+        if not profile.enabled:
             raise LLMError("LLM is disabled (set llm_enabled / LLM_ENABLED)")
-        client = get_llm_client()
-        if not await client.health():
-            raise LLMError(f"LLM endpoint not reachable at {client.base_url}")
-        return await client.chat(
-            [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": query},
-            ],
-            temperature=0.1,
-            max_tokens=400,
-        )
+        async with asyncio.timeout(profile.timeout_seconds):
+            client = get_llm_client(profile=profile)
+            if not await client.health():
+                raise LLMError("Configured Fast endpoint is unavailable")
+            return await client.chat(
+                [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": query}],
+                temperature=0.1, max_tokens=400,
+            )
 
     async def _run_screener(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Execute the real multi-market screener from LLM-extracted filters."""

@@ -56,7 +56,7 @@ async def test_score_articles_empty_input() -> None:
 @pytest.mark.asyncio
 async def test_score_articles_falls_back_to_lexical_when_llm_off(monkeypatch) -> None:
     # Force the batch LLM path to yield nothing (model off / unreachable).
-    async def _no_llm(articles):  # noqa: ANN001, ANN202
+    async def _no_llm(articles, **kwargs):  # noqa: ANN001, ANN202
         return {}
 
     async def _cache_miss(key):  # noqa: ANN001, ANN202
@@ -90,7 +90,7 @@ async def test_score_articles_uses_llm_verdicts_and_caches(monkeypatch) -> None:
     async def _cache_set(key, value, ttl):  # noqa: ANN001, ANN202
         cache[key] = value
 
-    async def _fake_llm(articles):  # noqa: ANN001, ANN202
+    async def _fake_llm(articles, **kwargs):  # noqa: ANN001, ANN202
         # Return an LLM verdict for the first article only; the second must fall
         # back to lexical -> overall engine "mixed".
         return {
