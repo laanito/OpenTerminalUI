@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import logging
 import math
+import asyncio
+from contextlib import suppress
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -24,6 +26,7 @@ from backend.services.brain.indexer import reindex_user
 from backend.services.brain.vector_store import VectorMatch, VectorStore, make_vector_store
 from backend.services.embeddings import EmbeddingError, get_embedding_service
 from backend.services.llm_client import LLMError, get_llm_client
+from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.shared.db import engine
 
 logger = logging.getLogger(__name__)
@@ -36,6 +39,7 @@ _TEMPORAL_RELEVANCE_WINDOW = 0.18
 _TEMPORAL_RECENCY_WEIGHT = 0.12
 _TEMPORAL_HALF_LIFE_DAYS = 120.0
 _SYNTHESIS_MAX_TOKENS = 2048
+_PREPARATION_SECONDS = 120
 
 SYSTEM_PROMPT = """You are the user's private "second brain" — a research partner \
 that helps them invest without being fooled by markets, by hype, or by themselves.
@@ -179,20 +183,20 @@ def _with_scope(payload: dict[str, Any], sources: list[str]) -> dict[str, Any]:
     return {**payload, "sources": sources}
 
 
-def _generation_metadata() -> dict[str, str]:
+def _generation_metadata(profile: ResolvedLLMProfile) -> dict[str, Any]:
     """Return non-secret provenance for a completed synthesis attempt."""
-    settings = get_settings()
-    hostname = (urlparse(settings.llm_base_url).hostname or "openai-compatible").lower()
-    provider = "local" if hostname in {"localhost", "127.0.0.1", "::1"} else hostname
+    hostname = (urlparse(profile.base_url).hostname or "").lower()
+    provider = "local" if hostname in {"localhost", "127.0.0.1", "::1"} else "openai-compatible"
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "llm_provider": provider,
-        "llm_model": settings.llm_model,
+        "llm_model": profile.model,
+        "model_profile": profile.public_identity(),
     }
 
 
-def _with_generation(payload: dict[str, Any]) -> dict[str, Any]:
-    return {**payload, **_generation_metadata()}
+def _with_generation(payload: dict[str, Any], profile: ResolvedLLMProfile) -> dict[str, Any]:
+    return {**payload, **_generation_metadata(profile)}
 
 
 @dataclass(frozen=True)
@@ -310,6 +314,7 @@ async def _prepare_ask(
     *,
     k: int = 6,
     sources: list[str] | None = None,
+    profile: ResolvedLLMProfile | None = None,
 ) -> tuple[dict[str, Any] | None, _SynthesisRequest | None]:
     active_sources = _normalize_sources(sources)
     question = (question or "").strip()
@@ -322,7 +327,7 @@ async def _prepare_ask(
             None,
         )
 
-    settings = get_settings()
+    profile = profile or resolve_llm_profile(get_settings(), "brain_answer")
     embedder = get_embedding_service()
     store = make_vector_store(engine, embedder.dim)
 
@@ -382,7 +387,7 @@ async def _prepare_ask(
         )
 
     citations = _citations(matches)
-    if not settings.llm_enabled:
+    if not profile.enabled:
         # Retrieval still works without a chat model — return the sources directly.
         return (
             _with_scope(
@@ -414,7 +419,7 @@ async def _prepare_ask(
     )
 
 
-def _llm_unavailable(request: _SynthesisRequest) -> dict[str, Any]:
+def _llm_unavailable(request: _SynthesisRequest, error: str = "llm_unavailable") -> dict[str, Any]:
     return _with_scope(
         {
             "answer": (
@@ -422,134 +427,123 @@ def _llm_unavailable(request: _SynthesisRequest) -> dict[str, Any]:
                 "synthesize an answer. Here are the sources."
             ),
             "citations": request.citations,
-            "error": "llm_unavailable",
+            "error": error,
         },
         request.sources,
     )
 
 
 async def ask(
-    db: Session,
-    user_id: str,
-    question: str,
-    *,
-    k: int = 6,
-    sources: list[str] | None = None,
+    db: Session, user_id: str, question: str, *, k: int = 6, sources: list[str] | None = None,
 ) -> dict[str, Any]:
-    immediate, request = await _prepare_ask(
-        db,
-        user_id,
-        question,
-        k=k,
-        sources=sources,
-    )
-    if immediate is not None:
-        return _with_generation(immediate)
-    assert request is not None
-
+    profile = resolve_llm_profile(get_settings(), "brain_answer")
+    request = None
     try:
-        client = get_llm_client()
-        answer = await client.chat(
-            request.messages,
-            temperature=0.2,
-            max_tokens=_SYNTHESIS_MAX_TOKENS,
-            retry_on_truncation=True,
-        )
-        if not answer.strip():
-            raise LLMError("LLM completion returned no answer text")
+        async with asyncio.timeout(profile.timeout_seconds + _PREPARATION_SECONDS):
+            immediate, request = await _prepare_ask(db, user_id, question, k=k, sources=sources, profile=profile)
+            if immediate is not None:
+                return _with_generation(immediate, profile)
+            assert request is not None
+            async with asyncio.timeout(profile.timeout_seconds):
+                client = get_llm_client(profile=profile)
+                answer = await client.chat(request.messages, temperature=0.2,
+                                           max_tokens=_SYNTHESIS_MAX_TOKENS, retry_on_truncation=True)
+                if not answer.strip():
+                    raise LLMError("LLM completion returned no answer text")
+    except asyncio.TimeoutError:
+        return _with_generation(_timed_out(request, sources), profile)
     except LLMError as exc:
-        logger.warning("Brain synthesis failed: %s", exc)
-        return _with_generation(_llm_unavailable(request))
+        logger.warning("Brain synthesis failed (%s)", type(exc).__name__)
+        if request is None:
+            raise
+        return _with_generation(_llm_unavailable(request), profile)
+    return _with_generation(_with_scope(
+        {"answer": answer.strip(), "citations": request.citations, "llm": True}, request.sources,
+    ), profile)
 
-    return _with_generation(
-        _with_scope(
-            {"answer": answer.strip(), "citations": request.citations, "llm": True},
-            request.sources,
-        )
-    )
+
+def _timed_out(request, sources):
+    if request is not None:
+        return _llm_unavailable(request, "timeout")
+    return _with_scope({
+        "answer": "Searching your private sources reached its deadline. Retry manually.",
+        "citations": [], "llm": False, "error": "preparation_timeout",
+    }, _normalize_sources(sources))
+
+
+async def _stream_synthesis(request, profile, generation, emit):
+    """The producer owns the model deadline across all stream/completion requests."""
+    client = get_llm_client(profile=profile)
+    try:
+        async with asyncio.timeout(profile.timeout_seconds):
+            try:
+                emitted = False
+                async for text in client.chat_stream(
+                    request.messages, temperature=0.2, max_tokens=_SYNTHESIS_MAX_TOKENS,
+                ):
+                    emitted = True
+                    emit({"type": "delta", "text": text})
+                if not emitted:
+                    raise LLMError("LLM stream returned no answer text")
+            except LLMError as exc:
+                logger.warning("Brain stream unavailable; using same-profile completion (%s)", type(exc).__name__)
+                answer = await client.chat(request.messages, temperature=0.2,
+                                           max_tokens=_SYNTHESIS_MAX_TOKENS, retry_on_truncation=True)
+                if not answer.strip():
+                    raise LLMError("LLM completion returned no answer text")
+                emit({"type": "result", "result": {
+                    **_with_scope({"answer": answer.strip(), "citations": request.citations, "llm": True}, request.sources),
+                    **generation,
+                }})
+                return
+    except asyncio.TimeoutError:
+        emit({"type": "result", "result": {**_llm_unavailable(request, "timeout"), **generation}})
+        return
+    except LLMError as exc:
+        logger.warning("Brain synthesis unavailable (%s)", type(exc).__name__)
+        emit({"type": "result", "result": {**_llm_unavailable(request), **generation}})
+        return
+    emit({"type": "done"})
 
 
 async def ask_stream(
-    db: Session,
-    user_id: str,
-    question: str,
-    *,
-    k: int = 6,
-    sources: list[str] | None = None,
+    db: Session, user_id: str, question: str, *, k: int = 6, sources: list[str] | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
-    """Yield metadata and answer deltas, or one complete fallback result."""
-    immediate, request = await _prepare_ask(
-        db,
-        user_id,
-        question,
-        k=k,
-        sources=sources,
-    )
-    if immediate is not None:
-        yield {"type": "result", "result": _with_generation(immediate)}
-        return
-    assert request is not None
+    """Announce budgets before retrieval, then stream within one owned producer."""
+    profile = resolve_llm_profile(get_settings(), "brain_answer")
+    active_sources = _normalize_sources(sources)
+    generation = _generation_metadata(profile)
+    yield {"type": "queued", "sources": active_sources, **generation,
+           "deadlines": {"operation_seconds": profile.timeout_seconds + _PREPARATION_SECONDS}}
+    queue: asyncio.Queue = asyncio.Queue()
 
-    generation = _generation_metadata()
-    yield {
-        "type": "start",
-        "sources": request.sources,
-        "citations": request.citations,
-        "llm": True,
-        **generation,
-    }
-    emitted = False
-    client = get_llm_client()
-    try:
-        async for text in client.chat_stream(
-            request.messages,
-            temperature=0.2,
-            max_tokens=_SYNTHESIS_MAX_TOKENS,
-        ):
-            emitted = True
-            yield {"type": "delta", "text": text}
-        if not emitted:
-            raise LLMError("LLM stream returned no answer text")
-    except LLMError as stream_exc:
-        # OpenAI-compatible providers vary in their streaming support and chunk
-        # shapes. A failed/empty stream does not mean ordinary chat completion is
-        # unavailable, so replace any partial output with one complete result.
-        logger.warning(
-            "Brain streaming synthesis unavailable; retrying without streaming: %s",
-            stream_exc,
-        )
+    async def produce():
+        request = None
         try:
-            answer = await client.chat(
-                request.messages,
-                temperature=0.2,
-                max_tokens=_SYNTHESIS_MAX_TOKENS,
-                retry_on_truncation=True,
-            )
-            if not answer.strip():
-                raise LLMError("LLM completion returned no answer text")
-        except LLMError as completion_exc:
-            logger.warning(
-                "Brain non-streaming synthesis fallback failed: %s",
-                completion_exc,
-            )
-            yield {
-                "type": "result",
-                "result": {**_llm_unavailable(request), **generation},
-            }
-            return
-        yield {
-            "type": "result",
-            "result": {
-                **_with_scope(
-                    {
-                        "answer": answer.strip(),
-                        "citations": request.citations,
-                        "llm": True,
-                    },
-                    request.sources,
-                ),
-                **generation,
-            },
-        }
-        return
-    yield {"type": "done"}
+            async with asyncio.timeout(profile.timeout_seconds + _PREPARATION_SECONDS):
+                immediate, request = await _prepare_ask(db, user_id, question, k=k, sources=sources, profile=profile)
+                if immediate is not None:
+                    queue.put_nowait({"type": "result", "result": {**immediate, **generation}})
+                    return
+                assert request is not None
+                queue.put_nowait({"type": "start", "sources": request.sources,
+                                 "citations": request.citations, "llm": True, **generation})
+                await _stream_synthesis(request, profile, generation, queue.put_nowait)
+        except asyncio.TimeoutError:
+            queue.put_nowait({"type": "result", "result": {**_timed_out(request, sources), **generation}})
+        finally:
+            queue.put_nowait(None)
+
+    producer = asyncio.create_task(produce(), name="brain-synthesis")
+    try:
+        while True:
+            event = await queue.get()
+            if event is None:
+                await producer  # Propagate unexpected preparation errors.
+                return
+            yield event
+    finally:
+        if not producer.done():
+            producer.cancel()
+        with suppress(asyncio.CancelledError):
+            await producer

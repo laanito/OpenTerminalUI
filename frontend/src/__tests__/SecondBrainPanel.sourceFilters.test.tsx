@@ -34,6 +34,22 @@ function renderPanel() {
 }
 
 describe("SecondBrainPanel source filters", () => {
+  it("shows Deep identity for provisional output and cancels without keeping or saving it", async () => {
+    askBrainStreamMock.mockImplementation((_q, _k, sources, update, options) => new Promise((_resolve, reject) => {
+      update({ answer: "Provisional private answer", citations: [], sources, llm: true, llm_model: "deep-model",
+        model_profile: { requested_profile: "deep", resolved_profile: "deep", model: "deep-model" } });
+      options.signal.addEventListener("abort", () => reject(new DOMException("Cancelled", "AbortError")));
+    }));
+    renderPanel();
+    fireEvent.change(screen.getByPlaceholderText(/Ask your second brain/), { target: { value: "What changed?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask" }));
+    expect(await screen.findByText(/Deep profile/)).toHaveTextContent("deep-model");
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(await screen.findByText("Brain request cancelled. No answer was kept.")).toBeVisible();
+    expect(screen.queryByText("Provisional private answer")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save answer" })).not.toBeInTheDocument();
+    expect(askBrainStreamMock).toHaveBeenCalledOnce();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     fetchBrainStatusMock.mockResolvedValue({
@@ -89,6 +105,7 @@ describe("SecondBrainPanel source filters", () => {
         6,
         ["note", "portfolio", "holding", "transaction"],
         expect.any(Function),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       ),
     );
     expect(await screen.findByText("Scoped answer")).toBeInTheDocument();

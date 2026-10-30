@@ -417,10 +417,12 @@ synthesis through Deep, sharing one profile across health, repair, server/browse
 deadlines and visible model identity. Deep unset retains the default model;
 configured Deep failure never substitutes Fast. Shared stock/Interrogate,
 market/collection, risk and backtest insights now also use Deep, with aligned
-identity/deadlines and profile-aware research caches. Brain, filing analysis,
+identity/deadlines and profile-aware research caches. Brain synthesis is also
+integrated with an early deadline/identity announcement, bounded same-model
+stream fallback, cancellation and preserved saved-model provenance. Filing analysis,
 remaining Fast callers and embeddings still use the legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
-Follow-up slices integrate Brain/remaining callers and their browser identity, followed
+Follow-up slices integrate filing analysis and remaining Fast callers, followed
 by representative live evaluation. Do not treat configuration support as a
 completed task migration or a proven improvement in reasoning quality.
 

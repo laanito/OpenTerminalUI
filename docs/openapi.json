@@ -629,6 +629,16 @@
             ],
             "title": "Llm Provider"
           },
+          "model_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMProfileIdentity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sources": {
             "items": {
               "enum": [
@@ -21357,7 +21367,7 @@
     },
     "/api/brain/ask/stream": {
       "post": {
-        "description": "Stream newline-delimited JSON while preserving complete fallback events.",
+        "description": "Stream one Brain operation with queued identity/deadline metadata before retrieval.\n\nThe operation budget is the selected model timeout plus 120 seconds for\npreparation; browser clients add transport margin. Deltas are provisional\nuntil done or a replacement result. Interruption requires manual retry.",
         "operationId": "brain_ask_stream_api_brain_ask_stream_post",
         "requestBody": {
           "content": {

@@ -641,8 +641,8 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Fast covers sentiment/classification/short summaries; Deep covers Brain,
       comparison briefings, Interrogate and portfolio risk synthesis.
       `llm_profiles.py` defines the closed map; Architecture records each caller
-      and its intended profile. Comparison briefings and shared insights are migrated; other
-      application callers remain on the legacy factory.
+      and its intended profile. Comparison briefings, shared insights and Brain
+      are migrated; filing analysis and explicit Fast callers remain to integrate.
 - [x] Support independent profile model/endpoint/credentials/timeout, preserving
       existing `LLM_*` behavior when Deep is unset. Never accidentally forward
       credentials across endpoints. Embeddings stay independent and unchanged.
@@ -656,7 +656,7 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Price-only/context comparison briefings now share one profile snapshot for
       transport, health, bounded repair, model identity and announced browser
       deadlines. No comparison prose cache exists. Shared insight integration is
-      completed below. Remaining: Brain/filing and Fast callers with their browser UI.
+      completed below. Remaining: filing analysis and explicit Fast callers.
 - [ ] Test backward compatibility, task routing, failure isolation, secret handling
       and cancellation/deadlines; assess usefulness/source fidelity/latency on a
       small representative simple/deep task set with configured models.
@@ -692,8 +692,25 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Checks (2026-10-29): 133 focused backend tests, all 530 frontend tests,
       production build, eight installed-Chrome smoke journeys and API/surface/mock
       guards passed. Chrome covers visible Deep identity, regeneration and an
-      interrupted research stream requiring manual retry. Shared insight host
-      acceptance remains to be confirmed; comparison improvement is accepted.
+      interrupted research stream requiring manual retry. After #234 merged,
+      maintainer testing confirmed shared insights work as intended.
+- [x] Integrate Brain synthesis with one Deep/default profile before retrieval,
+      preserved model provenance and no answer cache or embedding/schema change.
+      A queued identity/budget event precedes retrieval; an owned producer bounds
+      streaming plus same-model fallback and joins cancellation. Overall operation
+      allowance is model timeout plus 120 seconds preparation; browser margin is
+      15 seconds. Interrupted browser streams require manual retry; Cancel and
+      page unmount stop the request. Partial/degraded answers remain unsaveable.
+      Brain Log retains the actual model via existing provenance columns; live
+      profile metadata is additive. Provider labels reveal no endpoint/hostname.
+      Checks completed on 2026-10-30: 127 focused backend tests, all 545 frontend
+      tests, production build, ten installed-Chrome smoke journeys and API/surface/
+      mock guards passed. New browser journeys cover both widths, model provenance
+      in Brain Log saves and interrupted streams without replay or partial saving.
+- [ ] Host-test Brain Deep/default operation, cancellation, timeout/source retention
+      and saved model provenance. Filing analysis and remaining Fast callers are
+      subsequent slices; the filing parser has a legacy persisted engine label
+      and a fixed 20-second caller deadline to reconcile separately.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
