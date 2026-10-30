@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **473 operations** across **423 paths** and **87 families**.
-- Authentication: **428 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **474 operations** across **424 paths** and **87 families**.
+- Authentication: **429 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -111,7 +111,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `scripting` | `experimental` | 8 |
 | `shareholding` | `supported` | 2 |
 | `statlab` | `supported` | 9 |
-| `stock-conviction` | `experimental` | 2 |
+| `stock-conviction` | `experimental` | 3 |
 | `stock-picking` | `experimental` | 3 |
 | `stocks` | `supported` | 9 |
 | `tape` | `hidden` | 2 |
@@ -1116,6 +1116,7 @@ State: **experimental**
 | Method | Path | Authentication | Summary |
 |---|---|---|---|
 | `POST` | `/api/stock-picking/conviction/ingest` | Bearer token | Post Ingest Conviction |
+| `POST` | `/api/stock-picking/conviction/ingest/stream` | Bearer token | Stream Ingest Conviction |
 | `GET` | `/api/stock-picking/conviction/{symbol}` | Bearer token | Get Symbol Conviction |
 
 ### `stock-picking`

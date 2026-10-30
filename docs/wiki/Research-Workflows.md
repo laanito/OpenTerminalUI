@@ -155,6 +155,47 @@ treating arrival time as publication time. Successful writes schedule normal
 incremental indexing. This is deliberate ingestion, not an automatic crawler
 or general MCP interface.
 
+## Experimental filing extraction
+
+The Security Hub catalyst panel reads saved, installation-wide reports from
+`GET /api/stock-picking/conviction/{symbol}`. This legacy experimental surface
+uses supplied document text or its existing public-filing adapters. Those
+adapters can supply only index metadata; a record is not proof that a full
+filing was read. This is separate from **Check a selected SEC fact**, private
+Brain retrieval and investment recommendations. The score is a legacy heuristic,
+not a calibrated probability; the panel suppresses it when there are no sources.
+
+In v2.4, `POST /api/stock-picking/conviction/ingest` resolves the Deep/default
+filing-analysis profile once. Model requests and structured-output fallback
+share its configured deadline rather than the old fixed 20 seconds. Input keeps
+the existing first-eight-document/4,000-character text bounds; `source_count`
+records supplied/fetched documents, not proof that every document was analyzed.
+Type/bounds validation is not semantic or source verification.
+
+The result exposes `engine` (`llm` or `lexical` for new records), saved
+`model_profile` identity and an optional `failure` reason. Explicit `use_llm:
+false` skips generation and has no model identity/failure. Global disable, no
+documents, provider errors, malformed responses and timeouts return lexical
+output with an explicit reason; configured Deep never retries Fast. The panel
+distinguishes that fallback from model-generated analysis. Older rows retain
+their historical engine label and unknown model provenance.
+
+Provenance is stored in an additive companion table without changing the legacy
+report columns or catalyst JSON. It is written with the report, including when
+re-ingestion replaces a same-date model result with lexical output. Reading an
+old report never assigns the current model to it, and changing model settings
+does not automatically regenerate reports. Endpoint credentials are not stored
+in provenance.
+
+`POST /api/stock-picking/conviction/ingest/stream` exposes a cancellable NDJSON
+lifecycle. Its start announces selected identity and the model-timeout-plus-45-
+second operation allowance; source collection has a 30-second bound. The browser
+ingestion helper follows that budget plus 15 seconds of transport margin and
+never automatically replays a failed or interrupted write. Native POST remains
+available for callers that manage their own request timeout. Both forms keep the
+existing JWT boundary; external-note API keys do not grant ingestion access.
+No new ingestion UI, provider acquisition or Brain indexing is introduced.
+
 ## Keep execution records and interpretation separate
 
 Portfolio transactions are the ledger for quantities, cash, fees and currencies.
@@ -230,8 +271,8 @@ otherwise the result shows **Deep profile** and the selected model. A Deep failu
 never retries Fast. The additive `model_profile` response metadata identifies
 the selected configuration, even when evidence preparation failed or inference
 was skipped; it does not certify that the model ran or that its reasoning is
-better. Shared insight cards and Brain synthesis also use Deep. Filing-analysis
-routing remains a separate follow-up.
+better. Shared insight cards, Brain synthesis and experimental filing extraction
+also use Deep.
 
 Stock briefings and Interrogate now use `POST /api/ai/insights/stream` from their
 browser cards, alongside risk, backtest and collection/market outlooks. The

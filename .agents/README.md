@@ -162,10 +162,20 @@ release-level interpretation and safety boundaries.
   adds 15 seconds of margin, supports Cancel and never replays interrupted runs.
   Completed Brain Log saves retain the actual model through existing fields;
   provider labels are generic classes, not hostnames. There is no Brain answer
-  cache, database migration or embedding/indexing change. Brain host acceptance
-  remains pending. Next: filing analysis and remaining explicit Fast callers,
-  then representative evaluation. Filing stays separate because its legacy
-  persistence and fixed 20-second caller budget need their own review.
+  cache, database migration or embedding/indexing change. After #235 the maintainer
+  confirmed Brain works as intended. Filing analysis is now integrated separately:
+  one profile/deadline, typed output checks and explicit lexical fallback reasons.
+  A portable, lazily created `stock_conviction_provenance` companion table stores
+  model/failure metadata atomically with the existing report. No old columns,
+  catalyst JSON, engine labels or historical model provenance are rewritten.
+  New model output uses engine `llm`; old `lmstudio` rows remain unknown-provenance.
+  A cancellable ingest lifecycle/browser helper honors announced budgets without
+  replay. The saved-report panel labels model/lexical/legacy states; no new
+  ingestion UI or provider is added. This remains an experimental global report,
+  not private Brain evidence or SEC fact verification. SQLite persistence and
+  PostgreSQL DDL compilation are checked; no live PostgreSQL rollout is claimed.
+  Filing host acceptance remains pending. Next: remaining explicit Fast caller
+  integration, then representative evaluation.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and

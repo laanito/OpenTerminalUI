@@ -641,8 +641,8 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Fast covers sentiment/classification/short summaries; Deep covers Brain,
       comparison briefings, Interrogate and portfolio risk synthesis.
       `llm_profiles.py` defines the closed map; Architecture records each caller
-      and its intended profile. Comparison briefings, shared insights and Brain
-      are migrated; filing analysis and explicit Fast callers remain to integrate.
+      and its intended profile. Comparison briefings, shared insights, Brain
+      and filing analysis are migrated; explicit Fast callers remain to integrate.
 - [x] Support independent profile model/endpoint/credentials/timeout, preserving
       existing `LLM_*` behavior when Deep is unset. Never accidentally forward
       credentials across endpoints. Embeddings stay independent and unchanged.
@@ -656,7 +656,7 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Price-only/context comparison briefings now share one profile snapshot for
       transport, health, bounded repair, model identity and announced browser
       deadlines. No comparison prose cache exists. Shared insight integration is
-      completed below. Remaining: filing analysis and explicit Fast callers.
+      completed below. Remaining: explicit Fast callers and representative evaluation.
 - [ ] Test backward compatibility, task routing, failure isolation, secret handling
       and cancellation/deadlines; assess usefulness/source fidelity/latency on a
       small representative simple/deep task set with configured models.
@@ -707,10 +707,25 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       tests, production build, ten installed-Chrome smoke journeys and API/surface/
       mock guards passed. New browser journeys cover both widths, model provenance
       in Brain Log saves and interrupted streams without replay or partial saving.
-- [ ] Host-test Brain Deep/default operation, cancellation, timeout/source retention
-      and saved model provenance. Filing analysis and remaining Fast callers are
-      subsequent slices; the filing parser has a legacy persisted engine label
-      and a fixed 20-second caller deadline to reconcile separately.
+- [x] Brain host acceptance: after #235 merged, the maintainer confirmed it works
+      as intended. This records operational feedback, not an exhaustive scenario audit.
+- [x] Integrate filing analysis with the selected Deep/default profile, replacing
+      the fixed 20-second caller cap. Respect global disable and explicit lexical
+      mode; return labelled fallback/reason on failed or invalid model extraction,
+      with no Fast substitution. Persist public model/failure metadata atomically
+      in a portable companion table while leaving old report columns/catalyst JSON
+      intact and historical model provenance unknown. Add an optional ingestion
+      lifecycle and shared bounded browser reader without replay; label saved
+      model/lexical/legacy states and suppress zero-source heuristic display.
+      Checks (2026-10-30): 96 focused backend tests (including SQLite persistence,
+      atomic rollback, old-row compatibility and PostgreSQL DDL compilation), all
+      551 frontend tests, production build, twelve installed-Chrome smoke journeys
+      and API/surface/mock guards passed. No live PostgreSQL rollout/model-quality
+      benchmark is claimed; host acceptance remains pending.
+- [ ] Host-test filing extraction/provenance and explicit lexical fallback. It
+      remains an experimental global saved report with limited existing sources,
+      not a new SEC source-verification path or private Brain evidence. Remaining
+      explicit Fast callers and representative task evaluation are subsequent work.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
