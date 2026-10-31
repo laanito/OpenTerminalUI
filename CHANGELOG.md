@@ -22,8 +22,9 @@ and response times were tested and accepted during the individual PRs.
 
 No manual database migration is required. Experimental filing reports lazily add
 a portable provenance companion table without rewriting old report columns or
-guessing historical model identities. Release preparation is pending CI/merge;
-no tag or GitHub release has been published yet.
+guessing historical model identities. Release PR #239 passed build-and-test,
+clean-install and postgres-contract, then merged at `e8aaddb`. Following explicit
+maintainer authorization, the tag and GitHub release were published on 2026-10-31.
 
 ### Added
 - **Explicit Fast tasks (v2.4)** — news sentiment, stock emotion and query intent

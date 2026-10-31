@@ -1,12 +1,13 @@
 # Current project state and backlog
 
-Current work **2026-10-31:** prepare v2.4.0. Individual-PR host testing is accepted
+Current state **2026-10-31:** v2.4.0 is released from `e8aaddb`. Individual-PR testing is accepted
 for functionality, quality/source accuracy and response times. Full local exit
-checks passed; release metadata is aligned. Remaining: release-prep CI/merge,
-explicit publication authorization, then post-release docs/wiki/blog upkeep.
-No v2.4 tag or release is published yet; broader v2.x work needs its own scope.
+checks passed; release metadata is aligned. Release PR #239 passed all three
+CI jobs and merged; the maintainer authorized publication and the tag/GitHub
+release are published. Post-release docs/wiki/blog upkeep follows; broader v2.x
+work needs its own scope. No v2.4 release gate remains.
 
-Last post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
+Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
 then merged. Following explicit maintainer authorization, the annotated tag and
 GitHub release were published on 2026-10-28. Backend/frontend/API metadata are
@@ -638,7 +639,7 @@ execution and new providers. Initial macro scope is existing US/euro-area
 reference-period observations, not economic-calendar feeds or historical market-
 knowledge reconstruction. Model upgrades are not an implementation gate.
 
-### v2.4.0 — Task-appropriate models (release preparation)
+### v2.4.0 — Task-appropriate models (released 2026-10-31)
 
 Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
 `docs/wiki/Roadmap.md`, not a new v2.3 acceptance gate.
@@ -763,10 +764,14 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       embedding or additional schema changes are part of release preparation.
       Post-bump checks: 99 focused backend tests, four frontend identity tests,
       production build, API/surface/mock guards and version consistency passed.
-- [ ] Merge the release-prep PR after CI passes, then obtain explicit publication
-      authorization before creating the v2.4.0 tag/GitHub release.
-- [ ] After publication, reconcile README/wiki/agent handoff with the actual
-      release commit/date and write the release blog article in `../praderasblog`.
+- [x] Release-prep PR #239 passed build-and-test, clean-install and postgres-contract
+      and merged at `e8aaddb`. After explicit maintainer authorization, the
+      annotated v2.4.0 tag and GitHub release were published on 2026-10-31.
+- [x] Reconcile README/wiki/agent handoff with the actual release commit/date.
+- [ ] Merge/publish bilingual chapter 20 in `../praderasblog` PR #117;
+      the ES/EN article and dedicated hero are prepared. Frontmatter audit,
+      pair/order/link checks and temporary JSON snapshots passed. Deployment stays with
+      the host agent after merge.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.

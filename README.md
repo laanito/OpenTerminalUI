@@ -44,7 +44,8 @@ the [surface inventory](docs/wiki/Surface-Inventory.md) and
 
 ## Current release
 
-**v2.4.0 — Task-appropriate models is in release preparation.** Fast handles
+[v2.4.0 — Task-appropriate models](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0)
+was published on **2026-10-31** from `e8aaddb`. Fast handles
 headline sentiment, stock emotion and query intent; Deep handles research
 synthesis, including Brain, comparison briefings, Interrogate, risk and filing
 analysis. Existing `LLM_*` settings remain Fast/default. Optional
@@ -62,10 +63,11 @@ companion table; no manual database migration is required.
 
 The maintainer accepted functionality, answer quality, source accuracy and
 response times through individual-PR testing. The consolidated local gate and
-fourteen Chrome smoke journeys passed. Release-prep CI and merge remain pending;
-no v2.4 tag or GitHub release has been published yet.
+fourteen Chrome smoke journeys passed. Release PR #239 passed build-and-test,
+clean-install and postgres-contract before merge; the maintainer authorized
+publication. Deployment is managed separately.
 
-Latest published release:
+Previous release:
 
 [v2.3.0 — Context beyond price](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0)
 was published on **2026-10-28** from `3fb7de3` after release PR #229 passed all
@@ -119,7 +121,7 @@ complete historical information set or infer which disclosure supersedes another
 v2.0 introduced the bounded cross-market context journey alongside time-aware
 Second Brain and Brain Log foundations. v1 completed fork consolidation and
 base-currency portfolio accounting. See the [changelog](CHANGELOG.md) for release
-history and the [roadmap](docs/wiki/Roadmap.md) for v2.4 release preparation and
+history and the [roadmap](docs/wiki/Roadmap.md) for v2.4 completion and
 the broader backlog.
 
 ## Quick Start

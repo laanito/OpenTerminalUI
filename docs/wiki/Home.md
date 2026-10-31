@@ -2,12 +2,13 @@
 
 OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
 with intentional provider-gated NSE/BSE F&O support. **v2.4.0 — Task-appropriate
-models** is in release preparation: explicit Fast/Deep routing, consistent
+models** was published on 2026-10-31: explicit Fast/Deep routing, consistent
 model identity/deadlines and conditional comparison interpretations. Existing
 single-model configuration remains supported; Deep is optional, embeddings
 are unchanged and no manual database migration is required. Host evaluation
-and consolidated local checks passed; release-prep CI/merge and publication
-remain pending. The latest published release is
+and consolidated local checks passed, as did all three release-prep CI jobs.
+See [v2.4.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0).
+The previous release was
 [v2.3.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0), from
 2026-10-28, adding opt-in dated news and US/euro-area macro briefing context.
 Reference checks do not certify model reasoning. See [Roadmap](Roadmap.md)

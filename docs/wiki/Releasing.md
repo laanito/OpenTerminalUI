@@ -296,7 +296,7 @@ preparation date; release notes state the October 28 publication date, reconcile
 in the post-release changelog without moving the tag. No v2.3 release gate
 remains open. Verification did not rebuild or tear down the running deployment.
 
-### v2.4.0 verification ledger (release preparation)
+### v2.4.0 verification ledger (released)
 
 The bounded milestone is explicit Fast/Deep task routing, consistent transport/
 identity/deadlines and representative usefulness evaluation. All twelve generation
@@ -317,19 +317,24 @@ or controlled benchmark are claimed.
 | Fast transport/deadlines, no Deep escalation, cache isolation and authenticated query limits | `backend/tests/test_fast_profiles.py`, `frontend/src/__tests__/fastModelApis.test.ts`, `frontend/tests/e2e/fast-model.spec.ts` |
 
 Backend/frontend/lock metadata, generated API version and public version labels
-are aligned to **2.4.0** for release preparation. No v2.4 tag or publication is
-implied by this ledger. On 2026-10-31, consolidated `make gate`
+are aligned to **2.4.0**. On 2026-10-31, consolidated `make gate`
 passed compilation, API/surface/mock guards, 1,461 backend tests (one skipped;
 76.33% coverage), the production build and all 553 frontend tests. All fourteen
 installed-Chrome smoke journeys also passed with deterministic provider fixtures.
-Host quality/latency review is accepted. Release-prep CI jobs, merge and explicit
-publication authorization remain open. The full gate preceded the metadata-only
+Host quality/latency review is accepted. The full gate preceded the metadata-only
 release bump; preparation checks verify the versioned build/API artifacts.
 After the bump, 99 focused backend profile/client/health/settings tests, four
 frontend identity tests, the production build, API/surface/mock guards and
 backend/frontend/lock/OpenAPI version consistency passed. No dependencies changed.
 Clean-install and disposable PostgreSQL contract checks run in CI; local SQLite
 tests and compiled PostgreSQL DDL do not establish a live PostgreSQL rollout.
+
+Release-prep PR #239 passed `build-and-test`, `clean-install` and
+`postgres-contract` and merged at `e8aaddb`. Following explicit maintainer
+authorization, the annotated tag and
+[GitHub release v2.4.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0)
+were published from that merge on 2026-10-31. No v2.4 release gate remains.
+The live deployment was not rebuilt; deployment stays with the host agent.
 
 ## Cutting the release
 
