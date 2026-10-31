@@ -480,6 +480,76 @@ automatic model judges or multi-model voting, autonomous retries/escalation,
 new evidence providers, broader thesis-validation features and execution. This
 is bounded routing/configuration plus evaluation, not a general LLM framework.
 
+## v2.5 — Technical context for comparison briefings (planned)
+
+Agreed on 2026-10-31 after v2.4 publication and its chapter-20 article. Make a
+small set of technical observations inspectable and optionally usable alongside
+prices, selected news and macro context in the existing comparison briefing.
+The outcome is a better-grounded research question, not an entry/exit signal or
+a multi-dimensional investment verdict; that broader validation remains v3.
+
+Existing comparison panels already expose drawdown, a 20-close moving-average
+gap, and separate provider-close/adjusted and shared-date/own-date views. Reuse
+those foundations. Their current labels do not establish verified adjustment
+quality, exchange sessions or historical vintages. A panel being open does not
+authorize its contents as model evidence.
+
+### Bounded delivery
+
+1. **Price and sampling contract.** Audit the current comparison paths and
+   choose a bounded supported path for technical evidence. Carry actual provider,
+   price basis, adjustment meaning, observation dates/count, calculation window,
+   freshness and missing/conflicting-data reasons. Distinguish provider-reported
+   adjustments from what has actually been checked. Keep each asset's own
+   accepted observations for its technical calculations, including crypto
+   weekends; never substitute the pair's shared-date sample. Do not claim
+   verified exchange sessions when only calendar dates are known. Withhold
+   technical evidence that cannot satisfy the selected contract, leaving the
+   price comparison usable. Do not audit every adapter or acquire new providers.
+2. **Small deterministic observation set.** Start with a 20-close moving-average
+   gap (trend), a 20-period close-to-close return (momentum), and unannualized
+   dispersion of 20 close-to-close returns (volatility). Existing drawdown can
+   remain as supporting context. Specify formulas, required warm-up, exact as-of
+   dates, units and sampling; the return measures need at least 21 accepted
+   closes. Never silently shorten a period, interpolate gaps, mix raw/adjusted
+   values or let the model calculate the measures. Do not imply that 20 equity
+   observations and 20 crypto observations span identical calendar periods.
+   Insufficient or unreliable input yields an unavailable observation.
+3. **Opt-in briefing evidence and browser inspection.** Add an explicit technical
+   context selection, default off. Build bounded server-derived evidence with
+   stable packet-local references, exact observation identities and caveats.
+   The Deep briefing may cite supplied measures in observations or conditional
+   hypotheses, but cannot invent indicator values, thresholds, trading signals
+   or causal certainty. Coverage/failure states remain visible. Cancellation,
+   model identity, bounded repair/deadlines and exact citation navigation retain
+   the v2.4 contract; optional technical failures do not invalidate prices.
+4. **Acceptance and release closure.** Test calculations and evidence fidelity
+   with deterministic normal/flat, split/dividend, missing/conflicting-date and
+   insufficient-history fixtures. Include equity versus crypto sampling and
+   an unavailable leg. Browser checks cover selection, inspection, cancellation
+   and degradation at desktop/narrow widths. Maintainer feedback on individual
+   PRs records usefulness, source fidelity and acceptable response time as work
+   lands; carry that evidence into release acceptance. Run consolidated release
+   checks and align README/wiki/changelog before publishing.
+
+**Exit condition:** a user can explicitly include the bounded technical set in
+a comparison briefing, inspect the exact values/basis/dates behind its citations,
+and receive useful conditional interpretation alongside existing news/macro
+context. Ineligible evidence stays visibly unavailable; the original price-only
+path and its sampling remain unchanged.
+
+**Outside v2.5:** general indicator libraries, decision-grade trading signals,
+recommendations, strategies/backtests, automatic proxy discovery, portfolio-wide
+or private-note synthesis, Brain indexing, saving comparison briefings, new
+calendar/data providers, complete split/dividend or exchange-calendar audits,
+historical knowledge/vintage reconstruction, broker integration and execution.
+The open technical-quality ledger below is narrowed only by the supported path
+delivered here; it is not permission for an unbounded prerequisite sequence.
+
+Start with the price/sampling audit and supported evidence contract. Split PRs
+where review benefits: contract/calculations, briefing integration, browser
+journey and release closure are review boundaries, not a fixed PR quota.
+
 ## v2 opening principle — time-aware memory
 
 > **Intelligence begins with time-aware memory.** Before markets can explain one

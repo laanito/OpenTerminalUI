@@ -4,8 +4,10 @@ Current state **2026-10-31:** v2.4.0 is released from `e8aaddb`. Individual-PR t
 for functionality, quality/source accuracy and response times. Full local exit
 checks passed; release metadata is aligned. Release PR #239 passed all three
 CI jobs and merged; the maintainer authorized publication and the tag/GitHub
-release are published. Post-release docs/wiki/blog upkeep follows; broader v2.x
-work needs its own scope. No v2.4 release gate remains.
+release are published. Post-release docs and chapter 20 are merged/published.
+Next agreed milestone: v2.5 technical context for comparison briefings, starting
+with the bounded price/sampling contract. Implementation has not started;
+broader v2.x work needs its own scope. No v2.4 release gate remains.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
@@ -768,16 +770,50 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       and merged at `e8aaddb`. After explicit maintainer authorization, the
       annotated v2.4.0 tag and GitHub release were published on 2026-10-31.
 - [x] Reconcile README/wiki/agent handoff with the actual release commit/date.
-- [ ] Merge/publish bilingual chapter 20 in `../praderasblog` PR #117;
-      the ES/EN article and dedicated hero are prepared. Frontmatter audit,
-      pair/order/link checks and temporary JSON snapshots passed. Deployment stays with
-      the host agent after merge.
+- [x] Bilingual chapter 20 in `../praderasblog` PR #117 merged and published;
+      maintainer confirmed completion. The ES/EN article, dedicated hero and
+      content/JSON checks are complete; deployment belongs to the host agent.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
 
+### v2.5 — Technical context for comparison briefings (planned)
+
+Agreed on 2026-10-31. Canonical scope/exit criteria are in
+`docs/wiki/Roadmap.md`; v2.4 is released and its article is published.
+
+- [ ] Audit current comparison price/sampling paths and define one bounded
+      supported technical-evidence contract: provider, price/adjustment basis,
+      dates/counts, window, freshness and missing/conflicting input. Keep own
+      observations (including crypto weekends) separate from pair-shared dates;
+      reject ineligible evidence without blocking the price comparison.
+- [ ] Add/reuse deterministic 20-close moving-average gap, 20-period return and
+      unannualized 20-return volatility with explicit formulas, warm-up,
+      units/conventions and unavailable states. Preserve existing drawdown;
+      no silent period shortening, mixed raw/adjusted inputs, gap interpolation
+      or model-computed indicators.
+- [ ] Extend server-owned briefing evidence and validation with explicitly
+      selected technical context, bounded local references, coverage and caveats.
+      Deep may interpret supplied measures conditionally; citation checks do not
+      certify mechanisms or authorize trading signals.
+- [ ] Add default-off browser selection and exact technical evidence inspection;
+      preserve profile/deadline/cancellation/repair behavior and the price-only
+      path. Optional technical failure leaves available price/news/macro usable.
+- [ ] Verify calculations and fidelity across normal/flat, split/dividend,
+      missing/conflicting/short history and equity/crypto sampling fixtures, plus
+      desktop/narrow browser journeys. Record host usefulness/fidelity/latency
+      feedback during the individual PRs and carry it into release acceptance.
+- [ ] Run consolidated exit checks, align release documentation/metadata and
+      obtain publication authorization after the release-prep PR merges.
+
+First work is the price/sampling audit and bounded evidence contract. Reuse
+existing descriptive technical panels; do not turn their broad historical
+quality caveats into an open-ended adapter/provider audit. No recommendations,
+new providers, private-research/portfolio-wide synthesis or broker execution.
+Broader multi-dimensional thesis validation remains v3.
+
 Unchecked evidence-ledger entries below remain later candidates unless the
-bounded v2.3/v2.4 sequence explicitly includes them.
+bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 
