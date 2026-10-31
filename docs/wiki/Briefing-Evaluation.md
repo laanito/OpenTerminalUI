@@ -16,9 +16,13 @@ or a controlled comparison of answer quality.
 | Filing Deep extraction/provenance, #236 | “works as expected” | Experimental filing integration accepted operationally. |
 | Fast sentiment, emotion and query intent, #237 | “worked as intended” | Final Fast integration accepted operationally. |
 
-No new feature or model deployment is needed to finish this evaluation. The
-remaining assessment uses the operator's configured models and existing data;
-the automated release gate remains a separate check.
+On 2026-10-31, the maintainer clarified that answer quality, source accuracy and
+response times had already been tested during the individual PRs and accepted
+them for release. This closes the representative evaluation gate without
+requiring duplicate runs. Exact timings/model identifiers and a controlled
+benchmark were not supplied; no numerical performance claim is made.
+The cases below remain useful for future regressions. Release-prep CI and
+publication remain separate from this acceptance.
 
 ## Representative Fast/Deep review
 
@@ -44,8 +48,8 @@ Keep private corpus text, credentials and endpoint details out of public records
 
 Completion requires representative host feedback on usefulness, source fidelity
 and acceptable waiting time, with any material defect fixed or explicitly
-deferred by the maintainer. Current feedback accepts functionality and the initial
-comparison improvement; broader quality/latency findings are still pending.
+deferred by the maintainer. On 2026-10-31 the maintainer confirmed this assessment
+was already covered by individual-PR testing and accepted it for release.
 
 ## Comparison interpretation background
 
@@ -112,5 +116,6 @@ Deterministic backend/browser tests cover the output structure, citation anchors
 bounded repair, failure isolation and inspectable UI. They do not certify
 semantic fidelity or usefulness. Record further host findings here; shared
 insight cards, Brain, filing analysis and Fast tasks are now profile-integrated.
-The representative quality/latency review above remains open; deterministic
-checks and accepted host functionality do not substitute for it.
+The representative quality/latency review was accepted through maintainer
+feedback, separately from deterministic checks. No exhaustive benchmark or
+automatic certification of model reasoning is claimed.

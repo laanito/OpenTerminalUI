@@ -296,14 +296,16 @@ preparation date; release notes state the October 28 publication date, reconcile
 in the post-release changelog without moving the tag. No v2.3 release gate
 remains open. Verification did not rebuild or tear down the running deployment.
 
-### v2.4 verification ledger (in development)
+### v2.4.0 verification ledger (release preparation)
 
 The bounded milestone is explicit Fast/Deep task routing, consistent transport/
 identity/deadlines and representative usefulness evaluation. All twelve generation
 tasks are integrated. Host feedback accepts comparison routing/interpretation,
 shared insights, Brain, filing analysis and the Fast slice through #237. See the
 [evaluation record](Briefing-Evaluation.md) for the distinction between operational
-acceptance and the remaining quality/latency assessment.
+acceptance and the quality/latency assessment, which the maintainer confirmed
+was completed during individual-PR testing on 2026-10-31. No numerical timings
+or controlled benchmark are claimed.
 
 | Contract | Evidence |
 |---|---|
@@ -314,13 +316,18 @@ acceptance and the remaining quality/latency assessment.
 | Filing model/lexical/legacy provenance and atomic additive storage | `backend/tests/test_filing_profiles.py`, `frontend/src/__tests__/convictionIngest.test.ts`, `frontend/tests/e2e/filing-profile.spec.ts` |
 | Fast transport/deadlines, no Deep escalation, cache isolation and authenticated query limits | `backend/tests/test_fast_profiles.py`, `frontend/src/__tests__/fastModelApis.test.ts`, `frontend/tests/e2e/fast-model.spec.ts` |
 
-The installed version remains **2.3.0** until release preparation. No v2.4 tag or
-publication is implied by this ledger. On 2026-10-31, consolidated `make gate`
+Backend/frontend/lock metadata, generated API version and public version labels
+are aligned to **2.4.0** for release preparation. No v2.4 tag or publication is
+implied by this ledger. On 2026-10-31, consolidated `make gate`
 passed compilation, API/surface/mock guards, 1,461 backend tests (one skipped;
 76.33% coverage), the production build and all 553 frontend tests. All fourteen
 installed-Chrome smoke journeys also passed with deterministic provider fixtures.
-Representative
-host quality/latency review and eventual release-prep CI jobs remain open.
+Host quality/latency review is accepted. Release-prep CI jobs, merge and explicit
+publication authorization remain open. The full gate preceded the metadata-only
+release bump; preparation checks verify the versioned build/API artifacts.
+After the bump, 99 focused backend profile/client/health/settings tests, four
+frontend identity tests, the production build, API/surface/mock guards and
+backend/frontend/lock/OpenAPI version consistency passed. No dependencies changed.
 Clean-install and disposable PostgreSQL contract checks run in CI; local SQLite
 tests and compiled PostgreSQL DDL do not establish a live PostgreSQL rollout.
 

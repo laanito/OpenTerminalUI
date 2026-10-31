@@ -5,7 +5,7 @@ inspect selected SEC evidence, ask questions of private notes, and save an
 answer without turning generated prose into an unquestioned source. It does
 not describe automatic trading or a complete historical archive.
 
-## Fast tasks in v2.4 development
+## Fast tasks (v2.4)
 
 Headline sentiment, ticker emotion and natural-language query classification use
 Fast (`LLM_*`), even when Deep is configured. Successful model results show

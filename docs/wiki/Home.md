@@ -1,12 +1,17 @@
 # OpenTerminalUI Wiki
 
 OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
-with intentional provider-gated NSE/BSE F&O support. The current release is
-[v2.2.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.2.0), published
-2026-10-21: on-demand, citation-linked comparison briefings with inspectable
-evidence, plus the host-tested crypto quote-routing fix. Reference checks are
-not semantic fact-checking. No database migration or new provider setting is
-required; see [Roadmap](Roadmap.md) and [Releasing](Releasing.md).
+with intentional provider-gated NSE/BSE F&O support. **v2.4.0 — Task-appropriate
+models** is in release preparation: explicit Fast/Deep routing, consistent
+model identity/deadlines and conditional comparison interpretations. Existing
+single-model configuration remains supported; Deep is optional, embeddings
+are unchanged and no manual database migration is required. Host evaluation
+and consolidated local checks passed; release-prep CI/merge and publication
+remain pending. The latest published release is
+[v2.3.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0), from
+2026-10-28, adding opt-in dated news and US/euro-area macro briefing context.
+Reference checks do not certify model reasoning. See [Roadmap](Roadmap.md)
+and [Releasing](Releasing.md).
 
 > **North star.** An open, private terminal that helps an individual invest *without being fooled* — by markets, by hype, or by themselves — through AI-native research you can grow privately. Bloomberg parity is pursued only "just enough to be credible"; the differentiation is being AI-native, private, open, and multi-asset. See the [Roadmap](Roadmap) for the full direction.
 
@@ -20,7 +25,8 @@ required; see [Roadmap](Roadmap.md) and [Releasing](Releasing.md).
 - Chart workstation with crosshair sync, overlays, and volume profile
 - Portfolio manager + multi-market screener + alerts/news sentiment
 - Crypto fundamentals: tokenomics, on-chain TVL & fees, valuation ratios (CoinGecko + DefiLlama)
-- Local, provider-agnostic LLM (Ollama default) for AI insights, news sentiment & emotion
+- Provider-agnostic Fast/Deep model profiles (Ollama default) for research synthesis,
+  news sentiment, emotion and query classification
 - User-selected cross-market comparisons with dated source, currency and coverage disclosures
 - On-demand SEC source-filing checks for exact selected US facts
 - Explicit comparison briefings with snapshot inspection, cancellation and
