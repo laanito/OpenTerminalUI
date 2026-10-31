@@ -4,14 +4,16 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current work **2026-10-31:** v2.4.0 release preparation. All twelve generation
+Current state **2026-10-31:** v2.4.0 is released from `e8aaddb`. All twelve generation
 tasks are integrated; the maintainer confirmed individual-PR testing covered
 functionality, answer quality, source accuracy and response times. The full local
 gate and fourteen Chrome smoke journeys passed. Release metadata is 2.4.0;
-release-prep CI, merge and explicit publication authorization remain. No v2.4 tag
-or release has been published. Preserve the historical v2.3 audit below.
+release PR #239 passed all three CI jobs and merged, then the maintainer
+authorized tag/GitHub publication. No v2.4 release gate remains. Chapter 20's
+bilingual article and dedicated hero are in `praderasblog` PR #117 for review;
+host deployment follows merge. Broader v2.x work needs a new scope decision.
 
-Last post-release audit: **2026-10-28**, against published **v2.3.0** at
+Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
 merged; following explicit maintainer authorization, the annotated tag and
 GitHub release were published on 2026-10-28. The full local gate, eight Chrome
@@ -138,7 +140,7 @@ release-level interpretation and safety boundaries.
   technicals, private notes, portfolio-wide context, discovery, saving and new
   provider acquisition are excluded. Calendar-provider reliability and historical
   vintage/release audits are not gates on this milestone.
-- **v2.4.0 release preparation — Task-appropriate models.** After v2.3
+- **v2.4.0 released — Task-appropriate models.** After v2.3
   closure, add named Fast/Deep generation profiles with explicit task routing,
   independent model/endpoint/credentials/timeout, legacy `LLM_*` compatibility,
   consistent deadlines and visible resolved identity. Deep failure must not
@@ -192,7 +194,8 @@ release-level interpretation and safety boundaries.
   source accuracy and response times were tested in the individual PRs, closing
   the evaluation gate without duplicate runs. `Briefing-Evaluation.md` records
   this acceptance; no measured benchmark is claimed. Local exit checks passed;
-  next: release-prep CI/merge and explicit authorization to publish.
+  release PR #239 passed all CI jobs and merged at `e8aaddb`, then authorized
+  tag/GitHub publication completed on 2026-10-31. No v2.4 gate remains.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and
@@ -223,8 +226,8 @@ release-level interpretation and safety boundaries.
   tests and six Chrome smoke tests. PR #222 passed build-and-test, clean-install
   and PostgreSQL-contract CI and merged. With explicit maintainer authorization,
   the annotated tag and GitHub release were published from `039c395` on 2026-10-21.
-- Latest published release: **v2.3.0**, tagged and published from `3fb7de3` on
-  2026-10-28 after green release-prep CI and explicit maintainer authorization.
+- Latest published release: **v2.4.0**, tagged and published from `e8aaddb` on
+  2026-10-31 after green release-prep CI and explicit maintainer authorization.
   Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
   releasing.
 - **v2.0 shipped the bounded cross-market context feature**, alongside the

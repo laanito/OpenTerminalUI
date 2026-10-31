@@ -402,7 +402,7 @@ market-knowledge audits, model upgrades, trade advice and execution. These do no
 become compulsory sub-releases. v3 remains thesis-oriented multi-dimensional
 validation; v2.3 improves contextual understanding, not an investment verdict.
 
-## v2.4.0 — Task-appropriate models (release preparation)
+## v2.4.0 — Task-appropriate models (released 2026-10-31)
 
 Agreed on 2026-10-27, after the v2.3 host test: keep quick AI tasks responsive
 without asking the same small model to perform every deep synthesis. Configure
@@ -434,8 +434,10 @@ quality, source accuracy and acceptable response times were already tested in
 the individual PRs, closing representative evaluation. The
 [evaluation record](Briefing-Evaluation.md) records this acceptance without
 inventing numerical timings or a controlled benchmark. Consolidated local exit
-checks passed; release metadata is aligned to 2.4.0. Remaining: release-prep CI,
-merge and explicit publication authorization. No tag/release is published yet.
+checks passed; release metadata is aligned to 2.4.0. Release PR #239 passed all
+three CI jobs and merged at `e8aaddb`. After explicit maintainer authorization,
+the tag and GitHub release were published on 2026-10-31. No v2.4 release gate
+remains; broader v2.x candidates require their own scope decision.
 
 **Interpretation-quality follow-up agreed 2026-10-29:** the maintainer confirmed
 that comparison generation used the configured Deep model, but found the prose
