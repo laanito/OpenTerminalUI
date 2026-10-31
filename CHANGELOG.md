@@ -6,6 +6,25 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-31
+
+Task-appropriate models gives quick classification and deeper research separate,
+explicit generation profiles. Existing `LLM_*` settings remain Fast/default;
+optional `LLM_DEEP_MODEL` selects Deep and can inherit the existing endpoint/key
+when no Deep URL is set. An explicit Deep URL requires its own credentials.
+Without Deep configuration, single-model operation remains supported and labelled.
+Configured Deep failures never silently retry Fast. All twelve tasks share
+resolved model identity and bounded request lifecycles; embeddings are unchanged.
+Comparison briefings now distinguish observations from conditional interpretations,
+competing explanations and evidence to investigate. Citations support observed
+inputs, not proof of mechanisms. The maintainer confirmed quality, source accuracy
+and response times were tested and accepted during the individual PRs.
+
+No manual database migration is required. Experimental filing reports lazily add
+a portable provenance companion table without rewriting old report columns or
+guessing historical model identities. Release preparation is pending CI/merge;
+no tag or GitHub release has been published yet.
+
 ### Added
 - **Explicit Fast tasks (v2.4)** — news sentiment, stock emotion and query intent
   resolve one Fast profile for health, generation, identity and bounded deadlines.
@@ -13,7 +32,7 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   existing APIs remain available. Sentiment/emotion caches separate Fast model
   configurations without reacting to Deep-only changes. Lexical fallbacks stay
   labelled, and query rate limits now use the authenticated owner. All twelve
-  generation tasks are integrated; representative model evaluation remains open.
+  generation tasks are integrated and host-accepted.
 - **Deep experimental filing extraction (v2.4)** — profile-resolved model requests
   replace the fixed 20-second caller budget. Disabled, failed or malformed model
   extraction returns explicit lexical output with a reason and selected identity.
@@ -42,7 +61,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   links identify observed inputs, not proof of causation. Both briefing modes
   validate hypothesis structure and usable pair/source anchors. Output budgets
   accommodate the section within existing profile deadlines; initial maintainer
-  feedback confirmed improved interpretation, with broader evaluation still open.
+  feedback confirmed improved interpretation; the maintainer accepted the
+  individual-PR quality/source-fidelity/latency evaluation.
 - **Deep comparison briefings (v2.4)** — price-only and selected news/macro
   briefings now use one resolved profile for health, generation, bounded repair,
   server/browser deadlines and reported model. The UI distinguishes configured
@@ -51,15 +71,17 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   no model-quality claim is made.
 - **Fast/Deep generation profile foundation (v2.4)** — validated optional Deep
   model/endpoint/key/deadline/structured-output settings, explicit immutable task
-  routing and an opt-in client factory. Legacy calls and embedding configuration
-  remain unchanged; no application workflow is migrated in this slice. An explicit
+  routing and a profile-aware client factory. Legacy configuration and embeddings
+  remain compatible across all migrated generation workflows. An explicit
   Deep endpoint never inherits Fast credentials, and configured Deep failures do
-  not silently select Fast. Call-site deadlines, identity/cache integration,
-  browser labels and model-quality evaluation follow in later slices.
+  not silently select Fast. Call-site deadlines, identity/cache integration and
+  browser labels use the same resolved profile.
 
 ### Documentation
 - Reconcile the published v2.3 article/handoff, update the architecture for
   selected comparison context, and record the audited v2.4 task map and rollout.
+- Record individual-PR host acceptance and consolidated local verification;
+  align release metadata, README, wiki and static site for v2.4.0 preparation.
 
 ## [2.3.0] - 2026-10-28
 

@@ -17,7 +17,7 @@ load_local_env()
 class AppSettings(BaseModel):
     model_config = ConfigDict(hide_input_in_errors=True)
     app_name: str = "OpenTerminalUI API"
-    app_version: str = "2.3.0"
+    app_version: str = "2.4.0"
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:5173",
@@ -55,8 +55,8 @@ class AppSettings(BaseModel):
     llm_timeout_seconds: float = 240.0
     llm_api_key: str | None = None
     llm_structured_output: str = "auto"  # auto | json_schema | json | none
-    # v2.4 foundation. Existing workflows opt in task-by-task in later slices;
-    # setting these alone does not yet reroute application generation calls.
+    # Deep generation tasks resolve these optional overrides; Fast generation
+    # and embeddings retain the existing LLM_* configuration above.
     llm_deep_model: str | None = Field(default=None, max_length=256)
     llm_deep_base_url: str | None = Field(default=None, max_length=2048, repr=False)
     llm_deep_api_key: str | None = Field(default=None, repr=False, exclude=True)
@@ -230,7 +230,7 @@ def get_settings() -> AppSettings:
         app_version=(
             _env("OPENTERMINALUI_APP_VERSION")
             or _env("OPENSCREENS_APP_VERSION", "TRADE_SCREENS_APP_VERSION")
-            or app_cfg.get("version", "2.3.0")
+            or app_cfg.get("version", "2.4.0")
         ),
         cors_origins=env_cors or app_cfg.get("cors_origins", _default_cors_origins()),
         sqlite_url=_normalize_sqlite_url(

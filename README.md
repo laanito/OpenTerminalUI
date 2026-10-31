@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.3.0-0f172a" alt="Version 2.3.0" />
+  <img src="https://img.shields.io/badge/version-2.4.0-0f172a" alt="Version 2.4.0" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -43,6 +43,29 @@ the [surface inventory](docs/wiki/Surface-Inventory.md) and
 [limitations](docs/wiki/Limitations.md) define the retained contracts.
 
 ## Current release
+
+**v2.4.0 — Task-appropriate models is in release preparation.** Fast handles
+headline sentiment, stock emotion and query intent; Deep handles research
+synthesis, including Brain, comparison briefings, Interrogate, risk and filing
+analysis. Existing `LLM_*` settings remain Fast/default. Optional
+`LLM_DEEP_MODEL` can select a different model on the same server; independent
+endpoint/key/timeout overrides are also supported. Deep unset retains labelled
+single-model behavior; configured Deep failures never silently switch to Fast.
+
+AI workflows share selected model identity, bounded deadlines and explicit
+failure states. Profile-aware caches avoid reusing prose after model changes;
+embeddings and indexing stay unchanged. Comparison briefings separate factual
+observations from conditional interpretations, competing explanations and
+follow-up evidence. Citations anchor inputs rather than proving mechanisms.
+Experimental filing reports retain model/lexical provenance in an additive
+companion table; no manual database migration is required.
+
+The maintainer accepted functionality, answer quality, source accuracy and
+response times through individual-PR testing. The consolidated local gate and
+fourteen Chrome smoke journeys passed. Release-prep CI and merge remain pending;
+no v2.4 tag or GitHub release has been published yet.
+
+Latest published release:
 
 [v2.3.0 — Context beyond price](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0)
 was published on **2026-10-28** from `3fb7de3` after release PR #229 passed all
@@ -96,8 +119,8 @@ complete historical information set or infer which disclosure supersedes another
 v2.0 introduced the bounded cross-market context journey alongside time-aware
 Second Brain and Brain Log foundations. v1 completed fork consolidation and
 base-currency portfolio accounting. See the [changelog](CHANGELOG.md) for release
-history and the [roadmap](docs/wiki/Roadmap.md) for bounded v2.3 scope and the
-in-progress v2.4 model-profile milestone.
+history and the [roadmap](docs/wiki/Roadmap.md) for v2.4 release preparation and
+the broader backlog.
 
 ## Quick Start
 
@@ -320,7 +343,7 @@ can use the same settings.
 PostgreSQL uses pgvector when available; SQLite uses in-process cosine search.
 Model/provider failure is labelled, not a licence to fabricate an answer.
 
-#### v2.4 development — model-profile foundation
+#### Fast and Deep model profiles (v2.4)
 
 Comparison briefings, both price-only and with selected news/macro context, now
 use the Deep profile for health, generation and bounded repair. Their browser

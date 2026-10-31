@@ -161,7 +161,8 @@ timeout and enabled state. No raw endpoint/key is placed in the cache key or
 public identity. Interrogate retains owner ID and note/index version in its
 namespace. Regenerate bypasses cached prose; unavailable results are not cached.
 This prevents old Fast answers being reused after Deep is configured.
-Representative cross-task quality evaluation remains pending. Embeddings keep
+Representative quality/latency review was accepted through individual-PR host
+testing; see [the evaluation record](Briefing-Evaluation.md). Embeddings keep
 the legacy client.
 
 Brain resolves one `brain_answer` profile before owner-scoped retrieval. Generation
@@ -272,7 +273,9 @@ The embedding service remains on the legacy endpoint/model/key and is not a
 generation task. No reindex, dimension change or embedding-model migration is
 introduced. Tests cover legacy and opt-in resolution, task choices, model
 failure isolation, credential boundaries, environment/YAML precedence and
-unchanged embedding requests. Live model-quality evaluation is still pending.
+unchanged embedding requests. The maintainer accepted quality/source fidelity
+and response times through individual-PR host testing on 2026-10-31; no measured
+cross-model benchmark is claimed.
 
 Explicitly saved answers use the separate `brain_memos` store behind
 `/api/brain/memos`. A memo is an immutable snapshot of the question, answer,

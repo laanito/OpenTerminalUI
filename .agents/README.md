@@ -4,6 +4,13 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
+Current work **2026-10-31:** v2.4.0 release preparation. All twelve generation
+tasks are integrated; the maintainer confirmed individual-PR testing covered
+functionality, answer quality, source accuracy and response times. The full local
+gate and fourteen Chrome smoke journeys passed. Release metadata is 2.4.0;
+release-prep CI, merge and explicit publication authorization remain. No v2.4 tag
+or release has been published. Preserve the historical v2.3 audit below.
+
 Last post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
 merged; following explicit maintainer authorization, the annotated tag and
@@ -131,7 +138,7 @@ release-level interpretation and safety boundaries.
   technicals, private notes, portfolio-wide context, discovery, saving and new
   provider acquisition are excluded. Calendar-provider reliability and historical
   vintage/release audits are not gates on this milestone.
-- **v2.4 in development — Task-appropriate models.** After v2.3
+- **v2.4.0 release preparation — Task-appropriate models.** After v2.3
   closure, add named Fast/Deep generation profiles with explicit task routing,
   independent model/endpoint/credentials/timeout, legacy `LLM_*` compatibility,
   consistent deadlines and visible resolved identity. Deep failure must not
@@ -181,9 +188,11 @@ release-level interpretation and safety boundaries.
   configuration; Deep-only changes do not invalidate them. Query rate limits use
   the authenticated owner. After #237 the maintainer confirmed the Fast slice
   worked as intended (2026-10-31). All twelve generation tasks are integrated
-  and operationally accepted. Next: representative quality/latency evaluation
-  and exit checks. `Briefing-Evaluation.md` records host acceptance separately
-  from the remaining cross-task review; no measured timings are available yet.
+  and operationally accepted. The maintainer then clarified that quality,
+  source accuracy and response times were tested in the individual PRs, closing
+  the evaluation gate without duplicate runs. `Briefing-Evaluation.md` records
+  this acceptance; no measured benchmark is claimed. Local exit checks passed;
+  next: release-prep CI/merge and explicit authorization to publish.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and

@@ -402,7 +402,7 @@ market-knowledge audits, model upgrades, trade advice and execution. These do no
 become compulsory sub-releases. v3 remains thesis-oriented multi-dimensional
 validation; v2.3 improves contextual understanding, not an investment verdict.
 
-## v2.4 — Task-appropriate models (in development)
+## v2.4.0 — Task-appropriate models (release preparation)
 
 Agreed on 2026-10-27, after the v2.3 host test: keep quick AI tasks responsive
 without asking the same small model to perform every deep synthesis. Configure
@@ -429,10 +429,13 @@ configurations; Deep-only changes do not invalidate them. Embeddings retain the
 legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
 All twelve generation tasks are integrated and operationally host-accepted,
-including Fast after #237 on 2026-10-31. Remaining work is representative
-usefulness/source-fidelity/latency evaluation and milestone exit checks. The
-[evaluation record](Briefing-Evaluation.md) distinguishes accepted functionality
-from unmeasured quality/latency; routing alone does not prove improved reasoning.
+including Fast after #237 on 2026-10-31. The maintainer confirmed that answer
+quality, source accuracy and acceptable response times were already tested in
+the individual PRs, closing representative evaluation. The
+[evaluation record](Briefing-Evaluation.md) records this acceptance without
+inventing numerical timings or a controlled benchmark. Consolidated local exit
+checks passed; release metadata is aligned to 2.4.0. Remaining: release-prep CI,
+merge and explicit publication authorization. No tag/release is published yet.
 
 **Interpretation-quality follow-up agreed 2026-10-29:** the maintainer confirmed
 that comparison generation used the configured Deep model, but found the prose

@@ -1,5 +1,11 @@
 # Current project state and backlog
 
+Current work **2026-10-31:** prepare v2.4.0. Individual-PR host testing is accepted
+for functionality, quality/source accuracy and response times. Full local exit
+checks passed; release metadata is aligned. Remaining: release-prep CI/merge,
+explicit publication authorization, then post-release docs/wiki/blog upkeep.
+No v2.4 tag or release is published yet; broader v2.x work needs its own scope.
+
 Last post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
 then merged. Following explicit maintainer authorization, the annotated tag and
@@ -632,7 +638,7 @@ execution and new providers. Initial macro scope is existing US/euro-area
 reference-period observations, not economic-calendar feeds or historical market-
 knowledge reconstruction. Model upgrades are not an implementation gate.
 
-### v2.4 — Task-appropriate models (in development)
+### v2.4.0 — Task-appropriate models (release preparation)
 
 Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
 `docs/wiki/Roadmap.md`, not a new v2.3 acceptance gate.
@@ -656,16 +662,17 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       Price-only/context comparison briefings now share one profile snapshot for
       transport, health, bounded repair, model identity and announced browser
       deadlines. No comparison prose cache exists. Shared insight integration is
-      completed below. All generation callers are integrated; representative evaluation
-      remains a separate open gate.
-- [ ] Test backward compatibility, task routing, failure isolation, secret handling
+      completed below. All generation callers are integrated; representative
+      evaluation was accepted through individual-PR host testing.
+- [x] Test backward compatibility, task routing, failure isolation, secret handling
       and cancellation/deadlines; assess usefulness/source fidelity/latency on a
       small representative simple/deep task set with configured models.
       Foundation tests cover configuration, task choices, secret handling,
       explicit endpoint isolation and unchanged legacy embedding requests. The
       comparison operation/browser deadlines and visible identity are covered,
       including configured Deep isolation and default-model compatibility.
-      All callers are integrated; representative live evaluation remains pending.
+      All callers are integrated; on 2026-10-31 the maintainer confirmed quality,
+      source accuracy and response times were tested in the individual PRs.
       Comparison integration checks (2026-10-29): 206 focused backend tests,
       106 frontend tests, production build, eight installed-Chrome smoke journeys
       and API/surface/mock guards passed. No live model-quality evaluation ran.
@@ -740,16 +747,26 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
 - [x] Fast host acceptance after #237: on 2026-10-31 the maintainer reported
       it merged and worked as intended. All generation integrations now have
       operational host acceptance; no exhaustive model benchmark is claimed.
-- [ ] Assess representative simple/deep task usefulness, source fidelity and
+- [x] Assess representative simple/deep task usefulness, source fidelity and
       latency before milestone exit/release checks. The cross-task review and
-      recorded host findings are in `docs/wiki/Briefing-Evaluation.md`; timings
-      and broader quality findings remain unknown until observed/reported.
+      recorded host findings are in `docs/wiki/Briefing-Evaluation.md`. On
+      2026-10-31 the maintainer clarified this was already tested in individual
+      PRs and accepted it for release. No numerical timings/benchmark are claimed.
 - [x] Consolidated local exit gate on 2026-10-31: `make gate` passed compilation,
       API/surface/mock guards, 1,461 backend tests (one skipped; 76.33% coverage),
       production frontend build and all 553 frontend tests. This is the local
       SQLite gate; clean-install/PostgreSQL checks remain CI responsibilities.
       All fourteen installed-Chrome smoke journeys also passed at desktop/narrow
       widths. These use deterministic provider fixtures, not live model scoring.
+- [x] Prepare 2.4.0 backend/frontend/lock and generated API metadata, dated
+      changelog, README/wiki and static-site version labels. No dependency,
+      embedding or additional schema changes are part of release preparation.
+      Post-bump checks: 99 focused backend tests, four frontend identity tests,
+      production build, API/surface/mock guards and version consistency passed.
+- [ ] Merge the release-prep PR after CI passes, then obtain explicit publication
+      authorization before creating the v2.4.0 tag/GitHub release.
+- [ ] After publication, reconcile README/wiki/agent handoff with the actual
+      release commit/date and write the release blog article in `../praderasblog`.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.

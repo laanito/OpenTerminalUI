@@ -87,9 +87,10 @@ never silently faked.
   economic calendars are excluded. Inspect values and caveats. Citation/structure
   validation does not prove the model's arithmetic, reasoning or compliance with
   no-advice/no-causation prompt rules. A weaker model can still produce weaker
-  prose. v2.4 development now routes comparison synthesis through configured
+  prose. v2.4 routes comparison synthesis through configured
   Deep (or the default model when unset); profile choice does not certify
-  reasoning quality. Other AI workflows still await profile integration. Failures
+  reasoning quality. All twelve generation tasks now use explicit profiles; host
+  acceptance is not an exhaustive model benchmark. Failures
   retain evidence when available, never partial prose or an older answer. No automatic Brain Log
   saving or retrieval indexing is introduced.
 - **Cross-market comparison is experimental and descriptive.** The read-only
