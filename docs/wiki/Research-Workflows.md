@@ -21,7 +21,10 @@ action allowance; the browser adds 15 seconds and requires manual retry after an
 interruption. Existing non-streaming APIs remain available. Emotion retains its
 five-minute refresh; automatic failure retries and focus refresh are disabled.
 Query classification uses the authenticated user's existing rate limit and
-read-only chart/screener/quote actions. It does not escalate to Deep.
+read-only chart/screener/quote actions. It does not escalate to Deep. Host testing
+after #237 confirmed the Fast integration works as intended. The
+[evaluation record](Briefing-Evaluation.md) tracks representative quality and
+latency separately from functional acceptance.
 
 ## Cross-market context
 
