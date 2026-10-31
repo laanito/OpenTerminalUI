@@ -480,7 +480,7 @@ automatic model judges or multi-model voting, autonomous retries/escalation,
 new evidence providers, broader thesis-validation features and execution. This
 is bounded routing/configuration plus evaluation, not a general LLM framework.
 
-## v2.5 — Technical context for comparison briefings (planned)
+## v2.5 — Technical context for comparison briefings (in development)
 
 Agreed on 2026-10-31 after v2.4 publication and its chapter-20 article. Make a
 small set of technical observations inspectable and optionally usable alongside
@@ -546,7 +546,14 @@ historical knowledge/vintage reconstruction, broker integration and execution.
 The open technical-quality ledger below is narrowed only by the supported path
 delivered here; it is not permission for an unbounded prerequisite sequence.
 
-Start with the price/sampling audit and supported evidence contract. Split PRs
+The first input-contract slice is implemented, pending review. It adds bounded
+per-asset source-consistency assessment without changing primary prices, making
+new provider calls or including technical inputs in model evidence. Original
+Yahoo fields survive adapter normalization, so dropped rows and duplicate source
+dates cannot disappear from this assessment. Adjustment quality, sessions and
+bar completion remain explicitly unverified. See the
+[technical contract and source audit](Technical-Context.md). Next: deterministic
+indicators, followed by opt-in briefing evidence and browser inspection. Split PRs
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 

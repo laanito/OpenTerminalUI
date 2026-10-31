@@ -6,6 +6,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Technical input contract (v2.5 foundation)** — comparison responses expose
+  independently assessed own-date Yahoo adjusted inputs, exact provenance/window
+  and stable identities. A bounded source copy preserves defects and metadata
+  before adapter normalization; incomplete, conflicting or unsupported inputs
+  are withheld without blocking prices or fetching another provider. Adjustment,
+  session and bar-completion verification remain explicitly unclaimed. No new
+  indicators, browser controls or technical model evidence are introduced yet.
+
 ## [2.4.0] - 2026-10-31
 
 Task-appropriate models gives quick classification and deeper research separate,

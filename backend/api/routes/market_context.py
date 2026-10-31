@@ -40,6 +40,7 @@ from backend.services.euro_area_macro import (
 from backend.services.fundamental_evidence import source_dated_candidates
 from backend.services.forex_service import SUPPORTED_CURRENCIES, service as forex_service
 from backend.services.return_decomposition import decompose_base_currency_return
+from backend.services.technical_inputs import TechnicalPairInputs, technical_asset_input
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
@@ -339,6 +340,7 @@ class MarketComparisonRow(BaseModel):
     relative_return_pp: float | None = None
     technical_observations: MarketTechnicalObservations | None = None
     native_technical_observations: MarketNativeTechnicalObservations | None = None
+    technical_inputs: TechnicalPairInputs | None = None
     action_disclosure: MarketPairActionDisclosure | None = None
     adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
     adjusted_observations: MarketAdjustedObservations | None = None
@@ -586,6 +588,7 @@ async def compare_market_context(
         raise HTTPException(status_code=422, detail="At least one comparison symbol is required")
 
     histories: dict[str, dict[date, float]] = {}
+    technical_charts: dict[str, Any] = {}
     sources: dict[str, str | None] = {}
     feeds: dict[str, str | None] = {}
     quote_units: dict[str, str | None] = {}
@@ -615,6 +618,7 @@ async def compare_market_context(
                     raw = await fetcher.fetch_history(symbol, range_str=FETCH_RANGES[payload.period], interval="1d")
                     source = None
                     feed = None
+                technical_charts[symbol] = raw
                 histories[symbol], provider_conflicts = daily_closes_with_conflicts(raw)
                 sources[symbol] = source if histories[symbol] else None
                 feeds[symbol] = feed if histories[symbol] else None
@@ -648,6 +652,7 @@ async def compare_market_context(
                 logger.warning("Market-context history failed for %s: %s", symbol, exc)
                 errors.add(symbol)
                 histories[symbol] = {}
+                technical_charts[symbol] = None
                 sources[symbol] = None
                 feeds[symbol] = None
                 quote_units[symbol] = None
@@ -774,6 +779,13 @@ async def compare_market_context(
         rows.append({
             "symbol": symbol,
             **result,
+            "technical_inputs": {
+                role: technical_asset_input(
+                    technical_charts[asset], symbol=asset, source=sources[asset], feed=feeds[asset],
+                    accepted_closes=histories[asset],
+                    shared_dates=[date.fromisoformat(point["date"]) for point in result.get("points", [])],
+                ) for role, asset in (("anchor", anchor), ("comparison", symbol))
+            },
             "anchor_history_source": sources[anchor],
             "comparison_history_source": sources[symbol],
             "anchor_history_feed": feeds[anchor],

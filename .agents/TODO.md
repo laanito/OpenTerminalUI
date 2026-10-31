@@ -5,8 +5,8 @@ for functionality, quality/source accuracy and response times. Full local exit
 checks passed; release metadata is aligned. Release PR #239 passed all three
 CI jobs and merged; the maintainer authorized publication and the tag/GitHub
 release are published. Post-release docs and chapter 20 are merged/published.
-Next agreed milestone: v2.5 technical context for comparison briefings, starting
-with the bounded price/sampling contract. Implementation has not started;
+Current milestone: v2.5 technical context for comparison briefings. The first
+bounded price/sampling contract slice is implemented, pending review;
 broader v2.x work needs its own scope. No v2.4 release gate remains.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
@@ -777,16 +777,30 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
 
-### v2.5 — Technical context for comparison briefings (planned)
+### v2.5 — Technical context for comparison briefings (in development)
 
 Agreed on 2026-10-31. Canonical scope/exit criteria are in
 `docs/wiki/Roadmap.md`; v2.4 is released and its article is published.
 
-- [ ] Audit current comparison price/sampling paths and define one bounded
+- [x] Audit current comparison price/sampling paths and define one bounded
       supported technical-evidence contract: provider, price/adjustment basis,
       dates/counts, window, freshness and missing/conflicting input. Keep own
       observations (including crypto weekends) separate from pair-shared dates;
       reject ineligible evidence without blocking the price comparison.
+      Implemented as additive per-asset `technical_inputs` in comparison responses.
+      Explicit Yahoo provenance, daily/source/quote/timezone metadata and complete
+      positive adjusted values must match selected rows. A bounded private source
+      copy survives normalization so duplicate/missing/dropped data cannot be
+      silently repaired by that layer. Crypto requires contiguous own dates.
+      Stable input IDs and freshness/date-shift counts accompany available inputs;
+      unavailable legs expose reasons without partial values. This checks observed
+      source consistency, not adjustment methodology, sessions or bar completion.
+      No new provider call, indicators, UI controls or technical LLM evidence yet.
+      See `docs/wiki/Technical-Context.md` for the contract and audit findings.
+      Checks: 180 focused backend tests passed, including existing comparison,
+      adapter, briefing evidence/context and route behavior. Generated API,
+      surface inventory (477 operations/87 families), mock and whitespace guards
+      passed. No live-provider quality audit or model inference was performed.
 - [ ] Add/reuse deterministic 20-close moving-average gap, 20-period return and
       unannualized 20-return volatility with explicit formulas, warm-up,
       units/conventions and unavailable states. Preserve existing drawdown;
@@ -806,7 +820,8 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
 - [ ] Run consolidated exit checks, align release documentation/metadata and
       obtain publication authorization after the release-prep PR merges.
 
-First work is the price/sampling audit and bounded evidence contract. Reuse
+Next work is deterministic indicators on the bounded contract, followed by
+briefing evidence/validation and browser inspection. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.

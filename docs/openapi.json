@@ -9447,6 +9447,16 @@
             "title": "Symbol",
             "type": "string"
           },
+          "technical_inputs": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TechnicalPairInputs"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "technical_observations": {
             "anyOf": [
               {
@@ -18355,6 +18365,285 @@
           "realized_slippage"
         ],
         "title": "TCATradeStat",
+        "type": "object"
+      },
+      "TechnicalAssetInput": {
+        "properties": {
+          "additional_dates_vs_pair": {
+            "default": 0,
+            "title": "Additional Dates Vs Pair",
+            "type": "integer"
+          },
+          "adjustment_verification": {
+            "const": "not_independently_verified",
+            "title": "Adjustment Verification",
+            "type": "string"
+          },
+          "bar_completion": {
+            "const": "not_verified",
+            "title": "Bar Completion",
+            "type": "string"
+          },
+          "contract": {
+            "const": "yahoo-adjusted-own-dates-v1",
+            "title": "Contract",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "exchange_timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange Timezone"
+          },
+          "feed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feed"
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "enum": [
+                  "current",
+                  "stale"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freshness"
+          },
+          "input_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Id"
+          },
+          "instrument_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Type"
+          },
+          "observations": {
+            "default": 0,
+            "title": "Observations",
+            "type": "integer"
+          },
+          "pair_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pair End Date"
+          },
+          "pair_start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pair Start Date"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalInputPoint"
+            },
+            "maxItems": 181,
+            "title": "Points",
+            "type": "array"
+          },
+          "price_basis": {
+            "const": "yahoo_reported_adjclose",
+            "title": "Price Basis",
+            "type": "string"
+          },
+          "quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Unit"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "sampling": {
+            "const": "own_utc_dates_within_pair_window",
+            "title": "Sampling",
+            "type": "string"
+          },
+          "session_verification": {
+            "const": "not_performed",
+            "title": "Session Verification",
+            "type": "string"
+          },
+          "shifted_local_dates": {
+            "default": 0,
+            "title": "Shifted Local Dates",
+            "type": "integer"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "source_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Symbol"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contract",
+          "symbol",
+          "status",
+          "reason",
+          "source",
+          "feed",
+          "price_basis",
+          "sampling",
+          "adjustment_verification",
+          "session_verification",
+          "bar_completion",
+          "pair_start_date",
+          "pair_end_date"
+        ],
+        "title": "TechnicalAssetInput",
+        "type": "object"
+      },
+      "TechnicalInputPoint": {
+        "properties": {
+          "adjusted_close": {
+            "exclusiveMinimum": 0.0,
+            "title": "Adjusted Close",
+            "type": "number"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "provider_close": {
+            "exclusiveMinimum": 0.0,
+            "title": "Provider Close",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "provider_close",
+          "adjusted_close"
+        ],
+        "title": "TechnicalInputPoint",
+        "type": "object"
+      },
+      "TechnicalPairInputs": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/TechnicalAssetInput"
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/TechnicalAssetInput"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparison"
+        ],
+        "title": "TechnicalPairInputs",
         "type": "object"
       },
       "TokenPairResponse": {
