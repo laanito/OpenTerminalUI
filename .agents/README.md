@@ -12,7 +12,11 @@ release PR #239 passed all three CI jobs and merged, then the maintainer
 authorized tag/GitHub publication. No v2.4 release gate remains. Chapter 20's
 bilingual article and dedicated hero in `praderasblog` PR #117 are merged and
 published, confirmed by the maintainer. v2.5 scope is agreed: bounded technical
-context for comparison briefings, starting with the price/sampling contract.
+context for comparison briefings. Its first additive technical input contract
+is implemented, pending review: original Yahoo source consistency, per-asset
+own dates, stable input IDs and explicit unknown quality dimensions. It does
+not add technical evidence to model prompts. Next: deterministic indicators,
+then explicit briefing/browser integration; see `Technical-Context.md`.
 See Roadmap/TODO before implementation; broader v2.x work needs its own scope.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at

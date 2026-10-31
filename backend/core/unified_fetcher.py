@@ -17,6 +17,7 @@ from backend.shared.nse_access import nse_public_enabled
 from backend.core.yahoo_client import YahooClient
 from backend.shared.market_classifier import FOREIGN_SUFFIXES, market_classifier
 from backend.shared.market_defaults import DEFAULT_EQUITY_MARKET
+from backend.services.technical_inputs import capture_yahoo_technical_chart
 from backend.api.schemas.market_data import MarketDepth, DepthLevel
 from backend.shared.degraded import (
     REASON_NO_LIVE_SOURCE,
@@ -100,6 +101,9 @@ def _chart_payload_from_rows(
         }
     }
     if provider_chart is not None:
+        # Keep only the bounded technical source fields before row conversion
+        # drops metadata, invalid rows or duplicate adjusted observations.
+        payload["_technical_input_chart"] = capture_yahoo_technical_chart(provider_chart)
         results = (provider_chart.get("chart") or {}).get("result") or []
         original = results[0] if isinstance(results, list) and results and isinstance(results[0], dict) else {}
         original_meta = original.get("meta")
