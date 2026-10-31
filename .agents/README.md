@@ -10,8 +10,10 @@ functionality, answer quality, source accuracy and response times. The full loca
 gate and fourteen Chrome smoke journeys passed. Release metadata is 2.4.0;
 release PR #239 passed all three CI jobs and merged, then the maintainer
 authorized tag/GitHub publication. No v2.4 release gate remains. Chapter 20's
-bilingual article and dedicated hero are in `praderasblog` PR #117 for review;
-host deployment follows merge. Broader v2.x work needs a new scope decision.
+bilingual article and dedicated hero in `praderasblog` PR #117 are merged and
+published, confirmed by the maintainer. v2.5 scope is agreed: bounded technical
+context for comparison briefings, starting with the price/sampling contract.
+See Roadmap/TODO before implementation; broader v2.x work needs its own scope.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
