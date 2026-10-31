@@ -296,6 +296,34 @@ preparation date; release notes state the October 28 publication date, reconcile
 in the post-release changelog without moving the tag. No v2.3 release gate
 remains open. Verification did not rebuild or tear down the running deployment.
 
+### v2.4 verification ledger (in development)
+
+The bounded milestone is explicit Fast/Deep task routing, consistent transport/
+identity/deadlines and representative usefulness evaluation. All twelve generation
+tasks are integrated. Host feedback accepts comparison routing/interpretation,
+shared insights, Brain, filing analysis and the Fast slice through #237. See the
+[evaluation record](Briefing-Evaluation.md) for the distinction between operational
+acceptance and the remaining quality/latency assessment.
+
+| Contract | Evidence |
+|---|---|
+| Legacy single-model compatibility, independent Deep settings/credentials, immutable task map and unchanged embeddings | `backend/tests/test_llm_profiles.py`, `backend/tests/test_llm_client.py` |
+| Comparison identity, health/generation/repair deadlines and failure isolation | `backend/tests/test_comparison_model_profiles.py`, `backend/tests/test_comparison_briefing_routes.py` |
+| Shared Deep insight lifecycles and profile-aware private research caches | `backend/tests/test_shared_insight_profiles.py`, `frontend/src/__tests__/insightLifecycle.test.ts` |
+| Brain model identity, cancellation and saved-answer provenance | `backend/tests/test_brain_profiles.py`, `backend/tests/test_brain_memos.py`, `frontend/tests/e2e/brain-profile.spec.ts` |
+| Filing model/lexical/legacy provenance and atomic additive storage | `backend/tests/test_filing_profiles.py`, `frontend/src/__tests__/convictionIngest.test.ts`, `frontend/tests/e2e/filing-profile.spec.ts` |
+| Fast transport/deadlines, no Deep escalation, cache isolation and authenticated query limits | `backend/tests/test_fast_profiles.py`, `frontend/src/__tests__/fastModelApis.test.ts`, `frontend/tests/e2e/fast-model.spec.ts` |
+
+The installed version remains **2.3.0** until release preparation. No v2.4 tag or
+publication is implied by this ledger. On 2026-10-31, consolidated `make gate`
+passed compilation, API/surface/mock guards, 1,461 backend tests (one skipped;
+76.33% coverage), the production build and all 553 frontend tests. All fourteen
+installed-Chrome smoke journeys also passed with deterministic provider fixtures.
+Representative
+host quality/latency review and eventual release-prep CI jobs remain open.
+Clean-install and disposable PostgreSQL contract checks run in CI; local SQLite
+tests and compiled PostgreSQL DDL do not establish a live PostgreSQL rollout.
+
 ## Cutting the release
 
 ```bash

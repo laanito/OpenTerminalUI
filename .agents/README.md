@@ -179,8 +179,11 @@ release-level interpretation and safety boundaries.
   health/generation share one model deadline and browser lifecycles announce
   identity/budgets without automatic replay. Sentiment/emotion caches hash Fast
   configuration; Deep-only changes do not invalidate them. Query rate limits use
-  the authenticated owner. All twelve generation tasks are integrated; next:
-  host acceptance of Fast surfaces, representative evaluation and exit checks.
+  the authenticated owner. After #237 the maintainer confirmed the Fast slice
+  worked as intended (2026-10-31). All twelve generation tasks are integrated
+  and operationally accepted. Next: representative quality/latency evaluation
+  and exit checks. `Briefing-Evaluation.md` records host acceptance separately
+  from the remaining cross-task review; no measured timings are available yet.
   On 2026-10-29 the maintainer confirmed Deep routing works, but found briefings
   too descriptive. Approved quality follow-up: structured `hypotheses` now
   separate interpretations, conditional mechanisms, competing explanations and

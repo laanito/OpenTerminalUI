@@ -428,10 +428,11 @@ announce browser budgets/identity. Sentiment/emotion caches separate Fast
 configurations; Deep-only changes do not invalidate them. Embeddings retain the
 legacy factory. See the
 [architecture task map](Architecture.md#model-profiles-and-task-routing-v24-foundation).
-All twelve generation tasks are integrated. Remaining work is host acceptance of
-the Fast surfaces, representative usefulness/source-fidelity/latency evaluation
-and milestone exit checks. Do not treat configuration support as a
-completed task migration or a proven improvement in reasoning quality.
+All twelve generation tasks are integrated and operationally host-accepted,
+including Fast after #237 on 2026-10-31. Remaining work is representative
+usefulness/source-fidelity/latency evaluation and milestone exit checks. The
+[evaluation record](Briefing-Evaluation.md) distinguishes accepted functionality
+from unmeasured quality/latency; routing alone does not prove improved reasoning.
 
 **Interpretation-quality follow-up agreed 2026-10-29:** the maintainer confirmed
 that comparison generation used the configured Deep model, but found the prose

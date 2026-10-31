@@ -737,8 +737,19 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
       production build, fourteen installed-Chrome smoke journeys and API/surface/
       mock guards passed (477 operations across 87 API families). Browser checks
       cover visible Fast identity for sentiment, emotion and query at both widths.
-- [ ] Host-test Fast surfaces, then assess representative simple/deep task
-      usefulness, source fidelity and latency before milestone exit/release checks.
+- [x] Fast host acceptance after #237: on 2026-10-31 the maintainer reported
+      it merged and worked as intended. All generation integrations now have
+      operational host acceptance; no exhaustive model benchmark is claimed.
+- [ ] Assess representative simple/deep task usefulness, source fidelity and
+      latency before milestone exit/release checks. The cross-task review and
+      recorded host findings are in `docs/wiki/Briefing-Evaluation.md`; timings
+      and broader quality findings remain unknown until observed/reported.
+- [x] Consolidated local exit gate on 2026-10-31: `make gate` passed compilation,
+      API/surface/mock guards, 1,461 backend tests (one skipped; 76.33% coverage),
+      production frontend build and all 553 frontend tests. This is the local
+      SQLite gate; clean-install/PostgreSQL checks remain CI responsibilities.
+      All fourteen installed-Chrome smoke journeys also passed at desktop/narrow
+      widths. These use deterministic provider fixtures, not live model scoring.
 
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
