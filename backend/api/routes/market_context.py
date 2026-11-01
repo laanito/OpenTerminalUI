@@ -40,7 +40,8 @@ from backend.services.euro_area_macro import (
 from backend.services.fundamental_evidence import source_dated_candidates
 from backend.services.forex_service import SUPPORTED_CURRENCIES, service as forex_service
 from backend.services.return_decomposition import decompose_base_currency_return
-from backend.services.technical_inputs import TechnicalPairInputs, technical_asset_input
+from backend.services.technical_inputs import TechnicalAssetInput, TechnicalPairInputs, technical_asset_input
+from backend.services.technical_indicators import TechnicalPairIndicators, calculate_technical_indicators
 
 router = APIRouter(prefix="/api/market-context", tags=["market-context"])
 _SYMBOL = re.compile(r"^[A-Z0-9^._=-]{1,40}$")
@@ -341,6 +342,7 @@ class MarketComparisonRow(BaseModel):
     technical_observations: MarketTechnicalObservations | None = None
     native_technical_observations: MarketNativeTechnicalObservations | None = None
     technical_inputs: TechnicalPairInputs | None = None
+    technical_indicators: TechnicalPairIndicators | None = None
     action_disclosure: MarketPairActionDisclosure | None = None
     adjusted_close_coverage: MarketPairAdjustedCloseCoverage | None = None
     adjusted_observations: MarketAdjustedObservations | None = None
@@ -776,15 +778,20 @@ async def compare_market_context(
         if local_adjusted is not None:
             local_pair["adjusted_coverage"] = local_adjusted["coverage"]
             local_pair["adjusted_pair"] = local_adjusted["adjusted_pair"]
+        technical_inputs = {
+            role: technical_asset_input(
+                technical_charts[asset], symbol=asset, source=sources[asset], feed=feeds[asset],
+                accepted_closes=histories[asset],
+                shared_dates=[date.fromisoformat(point["date"]) for point in result.get("points", [])],
+            ) for role, asset in (("anchor", anchor), ("comparison", symbol))
+        }
         rows.append({
             "symbol": symbol,
             **result,
-            "technical_inputs": {
-                role: technical_asset_input(
-                    technical_charts[asset], symbol=asset, source=sources[asset], feed=feeds[asset],
-                    accepted_closes=histories[asset],
-                    shared_dates=[date.fromisoformat(point["date"]) for point in result.get("points", [])],
-                ) for role, asset in (("anchor", anchor), ("comparison", symbol))
+            "technical_inputs": technical_inputs,
+            "technical_indicators": {
+                role: calculate_technical_indicators(TechnicalAssetInput.model_validate(value)).model_dump(mode="json")
+                for role, value in technical_inputs.items()
             },
             "anchor_history_source": sources[anchor],
             "comparison_history_source": sources[symbol],

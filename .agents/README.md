@@ -4,7 +4,7 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current state **2026-10-31:** v2.4.0 is released from `e8aaddb`. All twelve generation
+Current state **2026-11-01:** v2.4.0 is released from `e8aaddb`. All twelve generation
 tasks are integrated; the maintainer confirmed individual-PR testing covered
 functionality, answer quality, source accuracy and response times. The full local
 gate and fourteen Chrome smoke journeys passed. Release metadata is 2.4.0;
@@ -13,10 +13,13 @@ authorized tag/GitHub publication. No v2.4 release gate remains. Chapter 20's
 bilingual article and dedicated hero in `praderasblog` PR #117 are merged and
 published, confirmed by the maintainer. v2.5 scope is agreed: bounded technical
 context for comparison briefings. Its first additive technical input contract
-is implemented, pending review: original Yahoo source consistency, per-asset
+merged as #242: original Yahoo source consistency, per-asset
 own dates, stable input IDs and explicit unknown quality dimensions. It does
-not add technical evidence to model prompts. Next: deterministic indicators,
-then explicit briefing/browser integration; see `Technical-Context.md`.
+not add technical evidence to model prompts. Deterministic 20-close mean gap,
+20-period return and unannualized sample 20-return volatility are now implemented,
+pending review, with per-metric history/status/dates and source-bound identities.
+Next: explicit briefing evidence/validation, then browser integration; see
+`Technical-Context.md`.
 See Roadmap/TODO before implementation; broader v2.x work needs its own scope.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
