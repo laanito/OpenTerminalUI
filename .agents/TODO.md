@@ -1,12 +1,13 @@
 # Current project state and backlog
 
-Current state **2026-10-31:** v2.4.0 is released from `e8aaddb`. Individual-PR testing is accepted
+Current state **2026-11-01:** v2.4.0 is released from `e8aaddb`. Individual-PR testing is accepted
 for functionality, quality/source accuracy and response times. Full local exit
 checks passed; release metadata is aligned. Release PR #239 passed all three
 CI jobs and merged; the maintainer authorized publication and the tag/GitHub
 release are published. Post-release docs and chapter 20 are merged/published.
 Current milestone: v2.5 technical context for comparison briefings. The first
-bounded price/sampling contract slice is implemented, pending review;
+bounded price/sampling contract merged as #242. Deterministic indicators are
+implemented, pending review; briefing/browser integration follows;
 broader v2.x work needs its own scope. No v2.4 release gate remains.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
@@ -801,11 +802,23 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
       adapter, briefing evidence/context and route behavior. Generated API,
       surface inventory (477 operations/87 families), mock and whitespace guards
       passed. No live-provider quality audit or model inference was performed.
-- [ ] Add/reuse deterministic 20-close moving-average gap, 20-period return and
+- [x] Add/reuse deterministic 20-close moving-average gap, 20-period return and
       unannualized 20-return volatility with explicit formulas, warm-up,
       units/conventions and unavailable states. Preserve existing drawdown;
       no silent period shortening, mixed raw/adjusted inputs, gap interpolation
       or model-computed indicators.
+      Additive `technical_indicators` expose fixed-formula values, exact dates,
+      counts, source identity and per-metric status. Return/volatility require
+      21 closes; exactly 20 yields a partial set with only the mean gap. Volatility
+      is sample standard deviation (ddof=1), in percentage points, not annualized.
+      Source quality flags/freshness survive calculation; non-finite arithmetic
+      and inconsistent input metadata are withheld. Original technical/drawdown
+      fields and briefing evidence projection remain unchanged.
+      Checks (2026-11-01): 193 focused backend tests passed, including known
+      numeric series, exact warm-up thresholds, raw/adjusted differences,
+      own-date equity/crypto windows, finite arithmetic and briefing exclusion.
+      Generated API, surface inventory (477 operations/87 families), mock and
+      whitespace guards passed. No UI/model/provider inference run is claimed.
 - [ ] Extend server-owned briefing evidence and validation with explicitly
       selected technical context, bounded local references, coverage and caveats.
       Deep may interpret supplied measures conditionally; citation checks do not
@@ -820,8 +833,7 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
 - [ ] Run consolidated exit checks, align release documentation/metadata and
       obtain publication authorization after the release-prep PR merges.
 
-Next work is deterministic indicators on the bounded contract, followed by
-briefing evidence/validation and browser inspection. Reuse
+Next work is explicit briefing evidence/validation, followed by browser inspection. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.

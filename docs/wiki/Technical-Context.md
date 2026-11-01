@@ -1,8 +1,8 @@
 # Technical context for comparison briefings
 
-v2.5 is planned as a bounded technical-evidence addition to the existing
-comparison briefing. The first implementation slice exposes **inputs only**;
-new indicators, technical briefing selection and browser inspection follow.
+v2.5 is in development as a bounded technical-evidence addition to the existing
+comparison briefing. Inputs and deterministic indicators are now exposed through
+the comparison API; technical briefing selection and browser inspection follow.
 Existing comparison returns and descriptive technical panels keep their behavior.
 
 ## Source audit and supported input contract
@@ -50,11 +50,46 @@ Unavailable inputs have a reason code, no points and no identity. Examples are
 reports `pair_unavailable`. Source defects can withhold one technical leg while
 the original price comparison remains available.
 
+## Deterministic observations
+
+Each pair also exposes `technical_indicators.anchor` and `.comparison`, using
+calculation version `technical-indicators-v1`. Calculations consume only the
+validated technical input's Yahoo-reported adjusted closes, in ascending own-date
+order, inside the existing pair window. They do not fetch earlier warm-up history,
+shorten a lookback, interpolate, substitute raw prices or discard crypto weekends.
+
+| Metric | Formula/convention | Required history |
+|---|---|---|
+| `sma20_gap_pct` | `100 * (latest adjusted close / arithmetic mean of last 20 adjusted closes - 1)`, percent | 20 closes |
+| `return20_pct` | `100 * (latest adjusted close / adjusted close 20 observations earlier - 1)`, percent | 21 closes |
+| `volatility20_pp` | Sample standard deviation of the last 20 simple returns `p[i]/p[i-1]-1`, multiplied by 100; divisor 19 (`ddof=1`), percentage points | 21 closes |
+
+Volatility is **unannualized**; no equity/crypto annualization factors are mixed.
+Twenty equity observations may span a different calendar interval from twenty
+crypto observations. These are observed-close measures, not verified trading-day
+indicators or claims about future performance. The existing drawdown and older
+provider-close/shared-date technical panels are not replaced or redefined.
+
+Every metric supplies its formula, unit, lookback, required/used close counts,
+exact observation dates and window, finite value rounded to eight decimal places,
+and a stable `observation_id` bound to the input identity, calculation version and
+result. The parent repeats source/feed, price basis, sampling, freshness and the
+unverified adjustment/session/bar-completion dimensions. Changing input history
+changes observation identity even if the most recent calculated value stays equal.
+
+Metric status is independently available/unavailable. Insufficient history yields
+`insufficient_history`, with no value, used dates or observation identity. Thus
+20 closes produce a partial set with a valid mean gap but unavailable return and
+volatility; fewer than 20 produce an unavailable set. An unavailable source yields
+`input_unavailable` for every metric while retaining its source reason on the
+parent. Inconsistent internal input metadata and non-finite arithmetic are also
+withheld. Valid zero values remain available. The asset set is available only
+when all three metrics are available, partial for one/two, otherwise unavailable.
+
 ## Delivery boundary
 
-No technical inputs enter comparison model prompts in this slice. The existing
-briefing projection still explicitly excludes technical measures; changing the
-new inputs does not change its evidence packet. The server/API contract is the
-foundation for deterministic indicators and a later explicit, default-off
-technical selection with inspectable citations. No database or embedding change
-is introduced. See [Roadmap](Roadmap.md) for the bounded v2.5 exit criteria.
+The existing briefing projection still explicitly excludes technical measures;
+changing the new inputs or indicators does not change its evidence packet. The
+server/API contract is the foundation for a later explicit, default-off technical
+selection with inspectable citations. No database or embedding change is
+introduced. See [Roadmap](Roadmap.md) for the bounded v2.5 exit criteria.

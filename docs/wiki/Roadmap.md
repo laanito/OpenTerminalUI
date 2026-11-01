@@ -546,14 +546,17 @@ historical knowledge/vintage reconstruction, broker integration and execution.
 The open technical-quality ledger below is narrowed only by the supported path
 delivered here; it is not permission for an unbounded prerequisite sequence.
 
-The first input-contract slice is implemented, pending review. It adds bounded
+The first input-contract slice merged as #242. It adds bounded
 per-asset source-consistency assessment without changing primary prices, making
 new provider calls or including technical inputs in model evidence. Original
 Yahoo fields survive adapter normalization, so dropped rows and duplicate source
 dates cannot disappear from this assessment. Adjustment quality, sessions and
 bar completion remain explicitly unverified. See the
-[technical contract and source audit](Technical-Context.md). Next: deterministic
-indicators, followed by opt-in briefing evidence and browser inspection. Split PRs
+[technical contract and source audit](Technical-Context.md). Deterministic
+mean-gap, return and unannualized sample-volatility observations are implemented,
+pending review, with exact windows, warm-up requirements, per-metric unavailable
+states and source-bound identities. Existing price/drawdown results remain intact.
+Next: opt-in briefing evidence/validation, followed by browser inspection. Split PRs
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 

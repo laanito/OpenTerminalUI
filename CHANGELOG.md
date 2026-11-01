@@ -7,13 +7,19 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Deterministic technical observations (v2.5)** — comparison responses add a
+  20-close mean gap, 20-period return and unannualized sample volatility of 20
+  returns, computed from the bounded adjusted-input contract. Per-metric dates,
+  formulas, units, history requirements and stable observation identities make
+  calculations inspectable; insufficient/invalid inputs stay unavailable rather
+  than becoming zero or shorter periods. Existing price/drawdown outputs remain
+  unchanged. Technical model evidence and browser controls follow separately.
 - **Technical input contract (v2.5 foundation)** — comparison responses expose
   independently assessed own-date Yahoo adjusted inputs, exact provenance/window
   and stable identities. A bounded source copy preserves defects and metadata
   before adapter normalization; incomplete, conflicting or unsupported inputs
   are withheld without blocking prices or fetching another provider. Adjustment,
-  session and bar-completion verification remain explicitly unclaimed. No new
-  indicators, browser controls or technical model evidence are introduced yet.
+  session and bar-completion verification remain explicitly unclaimed.
 
 ## [2.4.0] - 2026-10-31
 
