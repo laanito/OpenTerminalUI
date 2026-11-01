@@ -22,6 +22,7 @@ MAX_CONCURRENT_SOURCES = 3
 async def collect_context_evidence(
     price: ComparisonBriefingEvidence, options: BriefingContextOptions, *, user,
     economic_service: EconomicDataService,
+    technical_snapshot: sources.MarketComparisonResponse | None = None,
 ) -> ComparisonContextEvidence:
     # At most 18 jobs. Macro requests are shared only for identical region/window
     # keys within this operation, never between users or generations.
@@ -92,4 +93,5 @@ async def collect_context_evidence(
                 news[pair_id] = results[key]
             else:
                 macro[pair_id, key[0]] = results[key]
-    return build_context_evidence(price, options, prepared_at=datetime.now(timezone.utc), news=news, macro=macro)
+    return build_context_evidence(price, options, prepared_at=datetime.now(timezone.utc), news=news, macro=macro,
+                                  technical_snapshot=technical_snapshot)

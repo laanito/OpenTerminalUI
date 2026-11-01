@@ -2,7 +2,8 @@
 
 v2.5 is in development as a bounded technical-evidence addition to the existing
 comparison briefing. Inputs and deterministic indicators are now exposed through
-the comparison API; technical briefing selection and browser inspection follow.
+the comparison API. Explicit technical selection and reference validation now
+also work through the context-briefing API; browser controls/inspection follow.
 Existing comparison returns and descriptive technical panels keep their behavior.
 
 ## Source audit and supported input contract
@@ -88,8 +89,64 @@ when all three metrics are available, partial for one/two, otherwise unavailable
 
 ## Delivery boundary
 
-The existing briefing projection still explicitly excludes technical measures;
-changing the new inputs or indicators does not change its evidence packet. The
-server/API contract is the foundation for a later explicit, default-off technical
-selection with inspectable citations. No database or embedding change is
-introduced. See [Roadmap](Roadmap.md) for the bounded v2.5 exit criteria.
+The **price-only** briefing projection still excludes technical measures;
+changing inputs/indicators does not change that nested packet. Technical context
+is included only when explicitly selected on the context endpoints below. No
+database or embedding change is introduced. See [Roadmap](Roadmap.md) for the
+bounded v2.5 exit criteria.
+
+## Opt-in technical briefing evidence
+
+`POST /api/market-context/briefing-context-evidence` accepts, for example:
+
+```json
+{
+  "anchor": "AAPL",
+  "comparisons": ["BTC-USD"],
+  "period": "1M",
+  "context": {"news": false, "macro_regions": [], "technical": true}
+}
+```
+
+The same selection is accepted by `/api/market-context/briefing-context` and
+`/api/market-context/briefing-context/stream` for Deep synthesis. `technical`
+defaults to false; technical-only context is valid, as is combination with news
+and US/euro-area macro. No browser-supplied values or snapshots are accepted.
+
+Price and technical facts come from **one fresh comparison snapshot**, within
+the existing 45-second price preparation budget. Technical projection adds no
+history fetch or external provider job. Selected news/macro retain their own
+bounded collection; failure there does not discard valid technical evidence.
+
+Each selected pair gets a `kind: technical` section, with two asset groups and
+their three metrics. Section IDs remain packet-local `C#`; asset IDs are `C#A1`
+or `C#A2`, and metric IDs are `C#A#T1`–`T3`. The returned asset contains source
+identity, calculation version, exact values/units/formulas/dates, quality flags,
+reported instrument type/timezone and local-date shift count, history/status/reasons,
+and at most 21 supporting adjusted-close points. Source
+symbols, windows and provider identities must agree with the price snapshot;
+metrics are recomputed and compared before projection. Mismatches yield an
+unavailable technical section without replacing price evidence. The outer packet
+fingerprint covers selection, technical facts, coverage, caveats and failures.
+
+Only available metric IDs are usable interpretation anchors; valid zero values
+qualify. Every such citation must include its linked `P#`. Sections, asset
+groups, unavailable metrics, unrelated pairs and invented IDs cannot stand in
+for a usable metric. Each asset with usable technical data must contribute at
+least one metric citation in possible context or a hypothesis. Limitations must
+cite selected sections and asset groups; unavailable metrics remain known for
+limitations/unknowns, never usable as observations. Price observations retain
+their existing price-only reference rules.
+
+The model is instructed to interpret supplied values conditionally, preserve
+own-date/freshness/adjustment/session/bar-completion limitations and distinguish
+adjusted technical lookbacks from native shared-date returns. It must not invent
+indicators, thresholds, trading signals or causal certainty. Structural/reference
+checks and one bounded repair do not certify numeric prose or reasoning quality.
+
+The existing Deep profile, operation budgets, no-replay streaming, cancellation
+cleanup and 120,000-character context input cap remain. All four selected context
+types can produce up to 24 sections across six pairs; oversized evidence returns
+the existing typed failure rather than silently dropping inputs. Frontend
+selection, strict technical-envelope validation and citation inspection are the
+next slice; the current browser cannot yet request this new technical scope.

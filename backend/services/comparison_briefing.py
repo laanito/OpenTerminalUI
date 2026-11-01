@@ -119,17 +119,18 @@ _VALIDATION_ISSUES = {
     "response_structure": ("Invalid response structure", "Correct the listed schema fields; obey required fields, types, array/text bounds and no extra fields."),
     "snapshot_mismatch": ("Wrong evidence snapshot", "Use the exact outer packet_id from the evidence, not the nested price packet_id."),
     "unknown_reference": ("Unknown reference", "Use only references present in this exact evidence packet; do not invent or copy references from another source."),
-    "hypothesis_references": ("Hypothesis needs usable observation anchors", "Each hypothesis must cite at least one available P# pair. Other references may only be usable headline/macro items AND their linked available P#. Do not cite SCOPE, sections/groups, failed sources or unavailable pairs."),
+    "hypothesis_references": ("Hypothesis needs usable observation anchors", "Each hypothesis must cite at least one available P# pair. Other references may only be usable headline/macro/technical items AND their linked available P#. Do not cite SCOPE, sections/groups, failed sources or unavailable pairs."),
     "observation_coverage": ("Observations must reference every available pair and only available pairs", "Observations must collectively cite all available P# pairs and no other references."),
     "unknowns_scope": ("Unknowns must disclose omitted scope and not invent available-pair observations", "Unknowns must cite SCOPE and may not cite available P# pairs."),
     "unavailable_comparisons": ("Unavailable comparisons were omitted", "Disclose the listed unavailable pairs in unknowns or limitations."),
     "price_limitations": ("Material evidence limitations were omitted", "Cite the listed material price-caveat pairs in limitations."),
     "context_limitations": ("Context coverage or material limitations omitted", "Cite the listed selected sections and material coverage/flag references in limitations, even if possible_context is empty."),
     "context_missing_inputs": ("Missing context inputs were omitted", "Disclose the listed failed, empty or missing-window section/group/series references in limitations or unknowns."),
-    "context_source_pair": ("Possible context requires exact source and linked pair references", "Each possible_context item must cite an available headline or macro series AND its linked P# from possible_context_source_pairs; no section/group/SCOPE or unrelated pair references."),
+    "context_source_pair": ("Possible context requires exact source and linked pair references", "Each possible_context item must cite an available headline, macro series or technical metric AND its linked P# from possible_context_source_pairs; no section/group/SCOPE or unrelated pair references."),
+    "technical_coverage": ("Selected technical evidence was ignored", "For each technical_required_source_groups entry, cite at least one of its listed available metrics AND its pair in possible_context or hypotheses. Preserve technical source/quality limitations."),
 }
 _SCHEMA_FIELDS = frozenset({"packet_id", "observations", "possible_context", "hypotheses", "interpretation", "mechanism", "alternative", "what_would_help", "limitations", "unknowns", "text", "citation_ids"})
-_SAFE_REFERENCE = re.compile(r"^(SCOPE|P[1-6]|C(?:[1-9]|1[0-8])(?:G[12](?:H[1-5])?|S[1-3])?)$")
+_SAFE_REFERENCE = re.compile(r"^(SCOPE|P[1-6]|C(?:[1-9]|1[0-9]|2[0-4])(?:G[12](?:H[1-5])?|S[1-3]|A[12](?:T[1-3])?)?)$")
 
 
 class InvalidComparisonBriefing(LLMError):

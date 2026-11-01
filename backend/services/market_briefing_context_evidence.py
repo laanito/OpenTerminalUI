@@ -15,10 +15,11 @@ from urllib.parse import urlencode, urlsplit
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 from backend.api.routes.market_context import (
-    EuroAreaMacroResponse, MarketHeadlinesResponse, MarketMacroObservationsResponse,
+    EuroAreaMacroResponse, MarketHeadlinesResponse, MarketMacroObservationsResponse, MarketComparisonResponse,
 )
 from backend.services.euro_area_macro import ECB_URL, EUROSTAT_URL, SERIES
-from backend.services.market_briefing_evidence import ComparisonBriefingEvidence
+from backend.services.market_briefing_evidence import ComparisonBriefingEvidence, build_comparison_evidence
+from backend.services.technical_indicators import TechnicalAssetIndicators, TechnicalMetric, calculate_technical_indicators
 
 NEWS_LIMIT = 5
 MACRO_LIMIT = 24
@@ -29,6 +30,7 @@ class BriefingContextOptions(BaseModel):
     model_config = ConfigDict(extra="forbid")
     news: StrictBool = False
     macro_regions: list[Region] = Field(default_factory=list, max_length=2)
+    technical: StrictBool = False
 
     @field_validator("macro_regions")
     @classmethod
@@ -114,6 +116,29 @@ class MacroContextSection(ContextSection):
     series: list[MacroContextSeries] = Field(default_factory=list, max_length=3)
 
 
+class TechnicalContextMetric(TechnicalMetric):
+    citation_id: str
+
+
+class TechnicalSupportingPoint(BaseModel):
+    date: date
+    adjusted_close: float = Field(gt=0, allow_inf_nan=False)
+
+
+class TechnicalContextAsset(TechnicalAssetIndicators):
+    citation_id: str
+    instrument_type: str | None
+    exchange_timezone: str | None
+    shifted_local_dates: int = Field(ge=0)
+    metrics: list[TechnicalContextMetric] = Field(min_length=3, max_length=3)
+    supporting_points: list[TechnicalSupportingPoint] = Field(default_factory=list, max_length=21)
+
+
+class TechnicalContextSection(ContextSection):
+    kind: Literal["technical"] = "technical"
+    assets: list[TechnicalContextAsset] = Field(default_factory=list, max_length=2)
+
+
 class ComparisonContextEvidence(BaseModel):
     schema_version: Literal["1"] = "1"
     evidence_kind: Literal["comparison_with_optional_context"] = "comparison_with_optional_context"
@@ -122,7 +147,7 @@ class ComparisonContextEvidence(BaseModel):
     prepared_at: AwareDatetime
     requested: BriefingContextOptions
     price: ComparisonBriefingEvidence
-    sections: list[NewsContextSection | MacroContextSection] = Field(max_length=18)
+    sections: list[NewsContextSection | MacroContextSection | TechnicalContextSection] = Field(max_length=24)
     news_limit_per_symbol: int = NEWS_LIMIT
     macro_limit_per_series: int = MACRO_LIMIT
     caveats: list[str]
@@ -254,10 +279,50 @@ def _macro(response, pair, region: Region, section_id: str) -> MacroContextSecti
     )
 
 
+def _technical(snapshot: MarketComparisonResponse, row, pair, section_id: str) -> TechnicalContextSection:
+    fields = dict(citation_id=section_id, pair_citation_id=pair.citation_id,
+                  start_date=pair.returns.start_date, end_date=pair.returns.end_date,
+                  retrieved_at=snapshot.retrieved_at)
+    if row.technical_inputs is None or row.technical_indicators is None:
+        return TechnicalContextSection(**fields, status="unavailable", reason="not_prepared")
+    assets = []
+    try:
+        for index, role in enumerate(("anchor", "comparison"), 1):
+            inputs = getattr(row.technical_inputs, role)
+            calculated = calculate_technical_indicators(inputs)
+            reported = getattr(row.technical_indicators, role)
+            expected_symbol = pair.anchor.symbol if role == "anchor" else pair.comparison.symbol
+            if (inputs.symbol != expected_symbol or reported != calculated
+                or inputs.pair_start_date != pair.returns.start_date or inputs.pair_end_date != pair.returns.end_date
+                or inputs.source != getattr(row, f"{role}_history_source")
+                or inputs.feed != getattr(row, f"{role}_history_feed")
+                or (inputs.status == "available" and inputs.quote_unit != getattr(pair, role).quote_unit)):
+                raise ValueError("Technical source identity mismatch")
+            group_id = f"{section_id}A{index}"
+            metrics = [TechnicalContextMetric(**metric.model_dump(), citation_id=f"{group_id}T{number}")
+                       for number, metric in enumerate(calculated.metrics, 1)]
+            dates = {day for metric in metrics if metric.status == "available" for day in metric.observation_dates}
+            points = [TechnicalSupportingPoint(date=point.date, adjusted_close=point.adjusted_close)
+                      for point in inputs.points if point.date in dates]
+            assets.append(TechnicalContextAsset(
+                **calculated.model_dump(exclude={"metrics"}), citation_id=group_id,
+                instrument_type=inputs.instrument_type, exchange_timezone=inputs.exchange_timezone,
+                shifted_local_dates=inputs.shifted_local_dates, metrics=metrics, supporting_points=points,
+            ))
+    except (ValueError, TypeError, AttributeError):
+        return TechnicalContextSection(**fields, status="unavailable", reason="invalid_response")
+    available = sum(asset.status == "available" for asset in assets)
+    usable = any(metric.status == "available" for asset in assets for metric in asset.metrics)
+    return TechnicalContextSection(**fields, assets=assets,
+                                   status="available" if available == 2 else "partial" if usable else "unavailable",
+                                   reason=None if usable else "technical_inputs_unavailable")
+
+
 def build_context_evidence(
     price: ComparisonBriefingEvidence, options: BriefingContextOptions, *, prepared_at: datetime,
     news: dict[str, MarketHeadlinesResponse | ContextFetchFailure] | None = None,
     macro: dict[tuple[str, Region], MarketMacroObservationsResponse | EuroAreaMacroResponse | ContextFetchFailure] | None = None,
+    technical_snapshot: MarketComparisonResponse | None = None,
 ) -> ComparisonContextEvidence:
     """Project server responses only; never fetch, synthesize, save or index.
 
@@ -270,11 +335,31 @@ def build_context_evidence(
         raise ValueError("Unrequested news or unknown pair")
     if any(pair not in pairs or region not in options.macro_regions for pair, region in macro):
         raise ValueError("Unrequested macro region or unknown pair")
+    if technical_snapshot is not None and not options.technical:
+        raise ValueError("Unrequested technical evidence")
+    try:
+        technical_matches = (technical_snapshot is not None
+                             and build_comparison_evidence(technical_snapshot) == price)
+    except (ValueError, TypeError, AttributeError):
+        technical_matches = False
     sections = []
     for pair in price.comparisons:
-        selected = (["headlines"] if options.news else []) + options.macro_regions
+        selected = (["headlines"] if options.news else []) + options.macro_regions + (["technical"] if options.technical else [])
         for kind in selected:
             section_id = f"C{len(sections) + 1}"
+            if kind == "technical":
+                if pair.returns is None or not technical_matches:
+                    sections.append(TechnicalContextSection(
+                        citation_id=section_id, pair_citation_id=pair.citation_id,
+                        start_date=pair.returns.start_date if pair.returns else None,
+                        end_date=pair.returns.end_date if pair.returns else None,
+                        status="no_price_window" if pair.returns is None else "unavailable",
+                        reason="no_price_window" if pair.returns is None else "invalid_response" if technical_snapshot else "not_prepared",
+                    ))
+                else:
+                    row = next(row for row in technical_snapshot.comparisons if row.symbol == pair.comparison.symbol)
+                    sections.append(_technical(technical_snapshot, row, pair, section_id))
+                continue
             response = news.get(pair.citation_id) if kind == "headlines" else macro.get((pair.citation_id, kind))
             if pair.returns is None or response is None or isinstance(response, ContextFetchFailure):
                 if pair.returns is None and response is not None:
@@ -301,8 +386,12 @@ def build_context_evidence(
                  "current_feeds_are_not_a_complete_historical_archive", "macro_is_global_not_ticker_attribution",
                  "reference_dates_are_not_publication_dates", "current_vintages_do_not_establish_past_knowledge",
                  "missing_or_excluded_context_is_not_evidence_of_absence",
-                 "price_packet_exclusions_apply_to_price_subpacket_only"],
-        always_excluded=["fundamentals", "sec_filing_checks", "technical_measures", "fx_views",
+                 "price_packet_exclusions_apply_to_price_subpacket_only"] + ([
+                     "technical_is_observed_adjusted_input_not_a_trading_signal",
+                     "technical_adjustments_sessions_and_bar_completion_are_unverified",
+                     "technical_lookbacks_are_own_observations_not_identical_calendar_spans",
+                 ] if options.technical else []),
+        always_excluded=["fundamentals", "sec_filing_checks", *([] if options.technical else ["technical_measures"]), "fx_views",
                          "adjusted_views", "exchange_local_views", "private_research", "economic_calendar"],
     )
     canonical = json.dumps(packet.model_dump(mode="json", exclude={"packet_id"}),
