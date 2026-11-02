@@ -1,0 +1,2386 @@
+{
+  "selection": {
+    "anchor": "AAPL",
+    "comparisons": [
+      "BTC-USD"
+    ],
+    "period": "1M"
+  },
+  "complete": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-11-01T12:00:00Z",
+    "evidence": {
+      "schema_version": "1",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "7c975859718d8de2ccc036014d3481363d635f8bbfbd0aa159941b446eac68a3",
+      "prepared_at": "2026-11-01T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "954c75aaaf04a67642615d3e2a7a3476ddc888da91090dc1e9c09c2feb687af2",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-11-01T12:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "BTC-USD",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-08-25",
+              "end_date": "2026-09-24",
+              "observations": 23,
+              "anchor_return_pct": 21.7822,
+              "comparison_return_pct": 29.703,
+              "relative_return_pp": -7.9208,
+              "freshness": "stale"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unverified_price_basis",
+              "stale_history"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-08-25",
+          "end_date": "2026-09-24",
+          "retrieved_at": "2026-11-01T12:00:00Z",
+          "status": "available",
+          "reason": null,
+          "kind": "technical",
+          "assets": [
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "AAPL",
+              "status": "available",
+              "input_status": "available",
+              "input_reason": null,
+              "input_id": "ti_9ae4d48693310057774e5555",
+              "source": "yahoo",
+              "feed": "yahoo_chart",
+              "quote_unit": "USD",
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 23,
+              "as_of_date": "2026-09-24",
+              "freshness": "stale",
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 9.17874396,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 20,
+                  "observation_dates": [
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-28",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_c2c23ef9d535dfc8aa5b7f50",
+                  "citation_id": "C1A1T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 21.50537634,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-27",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_b83d93bbde6fc56c126e140e",
+                  "citation_id": "C1A1T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "available",
+                  "reason": null,
+                  "value": 0.05670359,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-27",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_252da3b0a6fa84b05fc6cb17",
+                  "citation_id": "C1A1T3"
+                }
+              ],
+              "citation_id": "C1A1",
+              "instrument_type": "EQUITY",
+              "exchange_timezone": "UTC",
+              "shifted_local_dates": 0,
+              "supporting_points": [
+                {
+                  "date": "2026-08-27",
+                  "adjusted_close": 93.0
+                },
+                {
+                  "date": "2026-08-28",
+                  "adjusted_close": 94.0
+                },
+                {
+                  "date": "2026-08-31",
+                  "adjusted_close": 95.0
+                },
+                {
+                  "date": "2026-09-01",
+                  "adjusted_close": 96.0
+                },
+                {
+                  "date": "2026-09-02",
+                  "adjusted_close": 97.0
+                },
+                {
+                  "date": "2026-09-03",
+                  "adjusted_close": 98.0
+                },
+                {
+                  "date": "2026-09-04",
+                  "adjusted_close": 99.0
+                },
+                {
+                  "date": "2026-09-07",
+                  "adjusted_close": 100.0
+                },
+                {
+                  "date": "2026-09-08",
+                  "adjusted_close": 101.0
+                },
+                {
+                  "date": "2026-09-09",
+                  "adjusted_close": 102.0
+                },
+                {
+                  "date": "2026-09-10",
+                  "adjusted_close": 103.0
+                },
+                {
+                  "date": "2026-09-11",
+                  "adjusted_close": 104.0
+                },
+                {
+                  "date": "2026-09-14",
+                  "adjusted_close": 105.0
+                },
+                {
+                  "date": "2026-09-15",
+                  "adjusted_close": 106.0
+                },
+                {
+                  "date": "2026-09-16",
+                  "adjusted_close": 107.0
+                },
+                {
+                  "date": "2026-09-17",
+                  "adjusted_close": 108.0
+                },
+                {
+                  "date": "2026-09-18",
+                  "adjusted_close": 109.0
+                },
+                {
+                  "date": "2026-09-21",
+                  "adjusted_close": 110.0
+                },
+                {
+                  "date": "2026-09-22",
+                  "adjusted_close": 111.0
+                },
+                {
+                  "date": "2026-09-23",
+                  "adjusted_close": 112.0
+                },
+                {
+                  "date": "2026-09-24",
+                  "adjusted_close": 113.0
+                }
+              ]
+            },
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "BTC-USD",
+              "status": "available",
+              "input_status": "available",
+              "input_reason": null,
+              "input_id": "ti_ebc5df75bc967198f224f9be",
+              "source": "yahoo",
+              "feed": "yahoo_chart",
+              "quote_unit": "USD",
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 31,
+              "as_of_date": "2026-09-24",
+              "freshness": "stale",
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 8.52017937,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 20,
+                  "observation_dates": [
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-05",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_4948deda5483ba78d570dd66",
+                  "citation_id": "C1A2T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 19.8019802,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-09-04",
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-04",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_d45f47e91c6ec73bcece907c",
+                  "citation_id": "C1A2T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "available",
+                  "reason": null,
+                  "value": 0.04874276,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-09-04",
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-04",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_937e3729e3bcc7287e4caea4",
+                  "citation_id": "C1A2T3"
+                }
+              ],
+              "citation_id": "C1A2",
+              "instrument_type": "CRYPTOCURRENCY",
+              "exchange_timezone": "UTC",
+              "shifted_local_dates": 0,
+              "supporting_points": [
+                {
+                  "date": "2026-09-04",
+                  "adjusted_close": 101.0
+                },
+                {
+                  "date": "2026-09-05",
+                  "adjusted_close": 102.0
+                },
+                {
+                  "date": "2026-09-06",
+                  "adjusted_close": 103.0
+                },
+                {
+                  "date": "2026-09-07",
+                  "adjusted_close": 104.0
+                },
+                {
+                  "date": "2026-09-08",
+                  "adjusted_close": 105.0
+                },
+                {
+                  "date": "2026-09-09",
+                  "adjusted_close": 106.0
+                },
+                {
+                  "date": "2026-09-10",
+                  "adjusted_close": 107.0
+                },
+                {
+                  "date": "2026-09-11",
+                  "adjusted_close": 108.0
+                },
+                {
+                  "date": "2026-09-12",
+                  "adjusted_close": 109.0
+                },
+                {
+                  "date": "2026-09-13",
+                  "adjusted_close": 110.0
+                },
+                {
+                  "date": "2026-09-14",
+                  "adjusted_close": 111.0
+                },
+                {
+                  "date": "2026-09-15",
+                  "adjusted_close": 112.0
+                },
+                {
+                  "date": "2026-09-16",
+                  "adjusted_close": 113.0
+                },
+                {
+                  "date": "2026-09-17",
+                  "adjusted_close": 114.0
+                },
+                {
+                  "date": "2026-09-18",
+                  "adjusted_close": 115.0
+                },
+                {
+                  "date": "2026-09-19",
+                  "adjusted_close": 116.0
+                },
+                {
+                  "date": "2026-09-20",
+                  "adjusted_close": 117.0
+                },
+                {
+                  "date": "2026-09-21",
+                  "adjusted_close": 118.0
+                },
+                {
+                  "date": "2026-09-22",
+                  "adjusted_close": 119.0
+                },
+                {
+                  "date": "2026-09-23",
+                  "adjusted_close": 120.0
+                },
+                {
+                  "date": "2026-09-24",
+                  "adjusted_close": 121.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "technical_is_observed_adjusted_input_not_a_trading_signal",
+        "technical_adjustments_sessions_and_bar_completion_are_unverified",
+        "technical_lookbacks_are_own_observations_not_identical_calendar_spans"
+      ],
+      "always_excluded": [
+        "fundamentals",
+        "sec_filing_checks",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1A1T1"
+        ]
+      },
+      {
+        "text": "The supplied own-date technical observations may inform a conditional interpretation.",
+        "citation_ids": [
+          "P1",
+          "C1A1T1",
+          "C1A2T1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "Optional macro, news, fundamentals and private research were not included in this evidence packet.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "partial": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-11-01T12:00:00Z",
+    "evidence": {
+      "schema_version": "1",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "7e84fd5e2095490ba1a2359074c8ec05c20bb91e61b5665efd98fe312e3d65ee",
+      "prepared_at": "2026-11-01T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "94dad6f9219c5e312ce788ab3976f7bc70f1997f80c1fd2932d0146ab3cfda48",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-11-01T12:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "BTC-USD",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-08-25",
+              "end_date": "2026-09-24",
+              "observations": 20,
+              "anchor_return_pct": 19.0,
+              "comparison_return_pct": 29.703,
+              "relative_return_pp": -10.703,
+              "freshness": "stale"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unverified_price_basis",
+              "stale_history"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-08-25",
+          "end_date": "2026-09-24",
+          "retrieved_at": "2026-11-01T12:00:00Z",
+          "status": "partial",
+          "reason": null,
+          "kind": "technical",
+          "assets": [
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "AAPL",
+              "status": "partial",
+              "input_status": "available",
+              "input_reason": null,
+              "input_id": "ti_596e6b5e0d74da7ed7090199",
+              "source": "yahoo",
+              "feed": "yahoo_chart",
+              "quote_unit": "USD",
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 20,
+              "as_of_date": "2026-09-24",
+              "freshness": "stale",
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 9.54773869,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 20,
+                  "observation_dates": [
+                    "2026-08-25",
+                    "2026-08-26",
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-25",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_a432e5300765719ff46d09e0",
+                  "citation_id": "C1A1T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "unavailable",
+                  "reason": "insufficient_history",
+                  "value": null,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A1T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "unavailable",
+                  "reason": "insufficient_history",
+                  "value": null,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A1T3"
+                }
+              ],
+              "citation_id": "C1A1",
+              "instrument_type": "EQUITY",
+              "exchange_timezone": "UTC",
+              "shifted_local_dates": 0,
+              "supporting_points": [
+                {
+                  "date": "2026-08-25",
+                  "adjusted_close": 90.0
+                },
+                {
+                  "date": "2026-08-26",
+                  "adjusted_close": 91.0
+                },
+                {
+                  "date": "2026-08-27",
+                  "adjusted_close": 92.0
+                },
+                {
+                  "date": "2026-08-28",
+                  "adjusted_close": 93.0
+                },
+                {
+                  "date": "2026-08-31",
+                  "adjusted_close": 94.0
+                },
+                {
+                  "date": "2026-09-01",
+                  "adjusted_close": 95.0
+                },
+                {
+                  "date": "2026-09-02",
+                  "adjusted_close": 96.0
+                },
+                {
+                  "date": "2026-09-03",
+                  "adjusted_close": 97.0
+                },
+                {
+                  "date": "2026-09-04",
+                  "adjusted_close": 98.0
+                },
+                {
+                  "date": "2026-09-07",
+                  "adjusted_close": 99.0
+                },
+                {
+                  "date": "2026-09-08",
+                  "adjusted_close": 100.0
+                },
+                {
+                  "date": "2026-09-09",
+                  "adjusted_close": 101.0
+                },
+                {
+                  "date": "2026-09-10",
+                  "adjusted_close": 102.0
+                },
+                {
+                  "date": "2026-09-11",
+                  "adjusted_close": 103.0
+                },
+                {
+                  "date": "2026-09-14",
+                  "adjusted_close": 104.0
+                },
+                {
+                  "date": "2026-09-15",
+                  "adjusted_close": 105.0
+                },
+                {
+                  "date": "2026-09-16",
+                  "adjusted_close": 106.0
+                },
+                {
+                  "date": "2026-09-17",
+                  "adjusted_close": 107.0
+                },
+                {
+                  "date": "2026-09-18",
+                  "adjusted_close": 108.0
+                },
+                {
+                  "date": "2026-09-24",
+                  "adjusted_close": 109.0
+                }
+              ]
+            },
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "BTC-USD",
+              "status": "available",
+              "input_status": "available",
+              "input_reason": null,
+              "input_id": "ti_ebc5df75bc967198f224f9be",
+              "source": "yahoo",
+              "feed": "yahoo_chart",
+              "quote_unit": "USD",
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 31,
+              "as_of_date": "2026-09-24",
+              "freshness": "stale",
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 8.52017937,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 20,
+                  "observation_dates": [
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-05",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_4948deda5483ba78d570dd66",
+                  "citation_id": "C1A2T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 19.8019802,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-09-04",
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-04",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_d45f47e91c6ec73bcece907c",
+                  "citation_id": "C1A2T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "available",
+                  "reason": null,
+                  "value": 0.04874276,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-09-04",
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-04",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_937e3729e3bcc7287e4caea4",
+                  "citation_id": "C1A2T3"
+                }
+              ],
+              "citation_id": "C1A2",
+              "instrument_type": "CRYPTOCURRENCY",
+              "exchange_timezone": "UTC",
+              "shifted_local_dates": 0,
+              "supporting_points": [
+                {
+                  "date": "2026-09-04",
+                  "adjusted_close": 101.0
+                },
+                {
+                  "date": "2026-09-05",
+                  "adjusted_close": 102.0
+                },
+                {
+                  "date": "2026-09-06",
+                  "adjusted_close": 103.0
+                },
+                {
+                  "date": "2026-09-07",
+                  "adjusted_close": 104.0
+                },
+                {
+                  "date": "2026-09-08",
+                  "adjusted_close": 105.0
+                },
+                {
+                  "date": "2026-09-09",
+                  "adjusted_close": 106.0
+                },
+                {
+                  "date": "2026-09-10",
+                  "adjusted_close": 107.0
+                },
+                {
+                  "date": "2026-09-11",
+                  "adjusted_close": 108.0
+                },
+                {
+                  "date": "2026-09-12",
+                  "adjusted_close": 109.0
+                },
+                {
+                  "date": "2026-09-13",
+                  "adjusted_close": 110.0
+                },
+                {
+                  "date": "2026-09-14",
+                  "adjusted_close": 111.0
+                },
+                {
+                  "date": "2026-09-15",
+                  "adjusted_close": 112.0
+                },
+                {
+                  "date": "2026-09-16",
+                  "adjusted_close": 113.0
+                },
+                {
+                  "date": "2026-09-17",
+                  "adjusted_close": 114.0
+                },
+                {
+                  "date": "2026-09-18",
+                  "adjusted_close": 115.0
+                },
+                {
+                  "date": "2026-09-19",
+                  "adjusted_close": 116.0
+                },
+                {
+                  "date": "2026-09-20",
+                  "adjusted_close": 117.0
+                },
+                {
+                  "date": "2026-09-21",
+                  "adjusted_close": 118.0
+                },
+                {
+                  "date": "2026-09-22",
+                  "adjusted_close": 119.0
+                },
+                {
+                  "date": "2026-09-23",
+                  "adjusted_close": 120.0
+                },
+                {
+                  "date": "2026-09-24",
+                  "adjusted_close": 121.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "technical_is_observed_adjusted_input_not_a_trading_signal",
+        "technical_adjustments_sessions_and_bar_completion_are_unverified",
+        "technical_lookbacks_are_own_observations_not_identical_calendar_spans"
+      ],
+      "always_excluded": [
+        "fundamentals",
+        "sec_filing_checks",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1A1T1"
+        ]
+      },
+      {
+        "text": "The supplied own-date technical observations may inform a conditional interpretation.",
+        "citation_ids": [
+          "P1",
+          "C1A1T1",
+          "C1A2T1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A1T2",
+          "C1A1T3",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "Optional macro, news, fundamentals and private research were not included in this evidence packet.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "unavailable": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-11-01T12:00:00Z",
+    "evidence": {
+      "schema_version": "1",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "01a548d0dd2ead3fb1d6c4a03ff3a3cd0ee7e391f4bb2136226a60444dfa3e51",
+      "prepared_at": "2026-11-01T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "2ecf24736daa28e779c234e3d361a911e5c72adc97c31dade807608b61ea5290",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-11-01T12:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": null,
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "BTC-USD",
+              "history_adapter": "yahoo",
+              "history_feed": null,
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-08-25",
+              "end_date": "2026-09-24",
+              "observations": 23,
+              "anchor_return_pct": 21.7822,
+              "comparison_return_pct": 29.703,
+              "relative_return_pp": -7.9208,
+              "freshness": "stale"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unverified_price_basis",
+              "stale_history"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-08-25",
+          "end_date": "2026-09-24",
+          "retrieved_at": "2026-11-01T12:00:00Z",
+          "status": "unavailable",
+          "reason": "technical_inputs_unavailable",
+          "kind": "technical",
+          "assets": [
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "AAPL",
+              "status": "unavailable",
+              "input_status": "unavailable",
+              "input_reason": "unsupported_or_unknown_feed",
+              "input_id": null,
+              "source": "yahoo",
+              "feed": null,
+              "quote_unit": null,
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 0,
+              "as_of_date": null,
+              "freshness": null,
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "unavailable",
+                  "reason": "input_unavailable",
+                  "value": null,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A1T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "unavailable",
+                  "reason": "input_unavailable",
+                  "value": null,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A1T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "unavailable",
+                  "reason": "input_unavailable",
+                  "value": null,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A1T3"
+                }
+              ],
+              "citation_id": "C1A1",
+              "instrument_type": null,
+              "exchange_timezone": null,
+              "shifted_local_dates": 0,
+              "supporting_points": []
+            },
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "BTC-USD",
+              "status": "unavailable",
+              "input_status": "unavailable",
+              "input_reason": "unsupported_or_unknown_feed",
+              "input_id": null,
+              "source": "yahoo",
+              "feed": null,
+              "quote_unit": null,
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 0,
+              "as_of_date": null,
+              "freshness": null,
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "unavailable",
+                  "reason": "input_unavailable",
+                  "value": null,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A2T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "unavailable",
+                  "reason": "input_unavailable",
+                  "value": null,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A2T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "unavailable",
+                  "reason": "input_unavailable",
+                  "value": null,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 0,
+                  "observation_dates": [],
+                  "start_date": null,
+                  "end_date": null,
+                  "observation_id": null,
+                  "citation_id": "C1A2T3"
+                }
+              ],
+              "citation_id": "C1A2",
+              "instrument_type": null,
+              "exchange_timezone": null,
+              "shifted_local_dates": 0,
+              "supporting_points": []
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "technical_is_observed_adjusted_input_not_a_trading_signal",
+        "technical_adjustments_sessions_and_bar_completion_are_unverified",
+        "technical_lookbacks_are_own_observations_not_identical_calendar_spans"
+      ],
+      "always_excluded": [
+        "fundamentals",
+        "sec_filing_checks",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A1T1",
+          "C1A1T2",
+          "C1A1T3",
+          "C1A2",
+          "C1A2T1",
+          "C1A2T2",
+          "C1A2T3",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "Optional macro, news, fundamentals and private research were not included in this evidence packet.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "mixed": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-11-01T12:00:00Z",
+    "evidence": {
+      "schema_version": "1",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "fa83377337c2d2b121b818a0179d2757022da5bd9ad4e24c257fe541fc167199",
+      "prepared_at": "2026-11-01T12:00:00Z",
+      "requested": {
+        "news": true,
+        "macro_regions": [
+          "us"
+        ],
+        "technical": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "954c75aaaf04a67642615d3e2a7a3476ddc888da91090dc1e9c09c2feb687af2",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-11-01T12:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "BTC-USD",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-24",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-08-25",
+              "end_date": "2026-09-24",
+              "observations": 23,
+              "anchor_return_pct": 21.7822,
+              "comparison_return_pct": 29.703,
+              "relative_return_pp": -7.9208,
+              "freshness": "stale"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unverified_price_basis",
+              "stale_history"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-08-25",
+          "end_date": "2026-09-24",
+          "retrieved_at": "2026-10-22T12:00:00Z",
+          "status": "available",
+          "reason": null,
+          "kind": "headlines",
+          "source": "current_keyless_feeds",
+          "fetch_limit_per_symbol": 50,
+          "groups": [
+            {
+              "citation_id": "C1G1",
+              "symbol": "AAPL",
+              "status": "available",
+              "examined_count": 10,
+              "matched_count": 1,
+              "upstream_display_limit": 10,
+              "returned_headline_count": 1,
+              "withheld_invalid_count": 0,
+              "withheld_duplicate_count": 0,
+              "headlines": [
+                {
+                  "citation_id": "C1G1H1",
+                  "title": "A dated report for AAPL",
+                  "title_truncated": false,
+                  "url": "https://example.com/AAPL",
+                  "source": "Test source",
+                  "published_at": "2026-08-26T00:00:00Z"
+                }
+              ]
+            },
+            {
+              "citation_id": "C1G2",
+              "symbol": "BTC-USD",
+              "status": "available",
+              "examined_count": 10,
+              "matched_count": 1,
+              "upstream_display_limit": 10,
+              "returned_headline_count": 1,
+              "withheld_invalid_count": 0,
+              "withheld_duplicate_count": 0,
+              "headlines": [
+                {
+                  "citation_id": "C1G2H1",
+                  "title": "A dated report for SPY",
+                  "title_truncated": false,
+                  "url": "https://example.com/SPY",
+                  "source": "Test source",
+                  "published_at": "2026-08-26T00:00:00Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "citation_id": "C2",
+          "pair_citation_id": "P1",
+          "start_date": "2026-08-25",
+          "end_date": "2026-09-24",
+          "retrieved_at": "2026-10-22T12:00:00Z",
+          "status": "available",
+          "reason": null,
+          "kind": "macro",
+          "region": "us",
+          "vintage_basis": "current_at_retrieval",
+          "realtime_date": "2026-10-22",
+          "series": [
+            {
+              "citation_id": "C2S1",
+              "series_id": "CPIAUCSL",
+              "label": "CPIAUCSL",
+              "source": "fred",
+              "source_url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+              "title": "Official CPIAUCSL",
+              "units": "Percent",
+              "frequency": "Monthly",
+              "status": "available",
+              "returned_observation_count": 1,
+              "upstream_matched_count": 1,
+              "withheld_conflict_count": 2,
+              "observations": [
+                {
+                  "reference_date": "2026-09-01",
+                  "value": 3.123456789,
+                  "flag": null
+                }
+              ]
+            },
+            {
+              "citation_id": "C2S2",
+              "series_id": "UNRATE",
+              "label": "UNRATE",
+              "source": "fred",
+              "source_url": "https://fred.stlouisfed.org/series/UNRATE",
+              "title": "Official UNRATE",
+              "units": "Percent",
+              "frequency": "Monthly",
+              "status": "available",
+              "returned_observation_count": 1,
+              "upstream_matched_count": 1,
+              "withheld_conflict_count": 2,
+              "observations": [
+                {
+                  "reference_date": "2026-09-01",
+                  "value": 3.123456789,
+                  "flag": null
+                }
+              ]
+            },
+            {
+              "citation_id": "C2S3",
+              "series_id": "FEDFUNDS",
+              "label": "FEDFUNDS",
+              "source": "fred",
+              "source_url": "https://fred.stlouisfed.org/series/FEDFUNDS",
+              "title": "Official FEDFUNDS",
+              "units": "Percent",
+              "frequency": "Monthly",
+              "status": "available",
+              "returned_observation_count": 1,
+              "upstream_matched_count": 1,
+              "withheld_conflict_count": 2,
+              "observations": [
+                {
+                  "reference_date": "2026-09-01",
+                  "value": 3.123456789,
+                  "flag": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "citation_id": "C3",
+          "pair_citation_id": "P1",
+          "start_date": "2026-08-25",
+          "end_date": "2026-09-24",
+          "retrieved_at": "2026-11-01T12:00:00Z",
+          "status": "available",
+          "reason": null,
+          "kind": "technical",
+          "assets": [
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "AAPL",
+              "status": "available",
+              "input_status": "available",
+              "input_reason": null,
+              "input_id": "ti_9ae4d48693310057774e5555",
+              "source": "yahoo",
+              "feed": "yahoo_chart",
+              "quote_unit": "USD",
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 23,
+              "as_of_date": "2026-09-24",
+              "freshness": "stale",
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 9.17874396,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 20,
+                  "observation_dates": [
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-28",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_c2c23ef9d535dfc8aa5b7f50",
+                  "citation_id": "C3A1T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 21.50537634,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-27",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_b83d93bbde6fc56c126e140e",
+                  "citation_id": "C3A1T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "available",
+                  "reason": null,
+                  "value": 0.05670359,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-08-31",
+                    "2026-09-01",
+                    "2026-09-02",
+                    "2026-09-03",
+                    "2026-09-04",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-08-27",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_252da3b0a6fa84b05fc6cb17",
+                  "citation_id": "C3A1T3"
+                }
+              ],
+              "citation_id": "C3A1",
+              "instrument_type": "EQUITY",
+              "exchange_timezone": "UTC",
+              "shifted_local_dates": 0,
+              "supporting_points": [
+                {
+                  "date": "2026-08-27",
+                  "adjusted_close": 93.0
+                },
+                {
+                  "date": "2026-08-28",
+                  "adjusted_close": 94.0
+                },
+                {
+                  "date": "2026-08-31",
+                  "adjusted_close": 95.0
+                },
+                {
+                  "date": "2026-09-01",
+                  "adjusted_close": 96.0
+                },
+                {
+                  "date": "2026-09-02",
+                  "adjusted_close": 97.0
+                },
+                {
+                  "date": "2026-09-03",
+                  "adjusted_close": 98.0
+                },
+                {
+                  "date": "2026-09-04",
+                  "adjusted_close": 99.0
+                },
+                {
+                  "date": "2026-09-07",
+                  "adjusted_close": 100.0
+                },
+                {
+                  "date": "2026-09-08",
+                  "adjusted_close": 101.0
+                },
+                {
+                  "date": "2026-09-09",
+                  "adjusted_close": 102.0
+                },
+                {
+                  "date": "2026-09-10",
+                  "adjusted_close": 103.0
+                },
+                {
+                  "date": "2026-09-11",
+                  "adjusted_close": 104.0
+                },
+                {
+                  "date": "2026-09-14",
+                  "adjusted_close": 105.0
+                },
+                {
+                  "date": "2026-09-15",
+                  "adjusted_close": 106.0
+                },
+                {
+                  "date": "2026-09-16",
+                  "adjusted_close": 107.0
+                },
+                {
+                  "date": "2026-09-17",
+                  "adjusted_close": 108.0
+                },
+                {
+                  "date": "2026-09-18",
+                  "adjusted_close": 109.0
+                },
+                {
+                  "date": "2026-09-21",
+                  "adjusted_close": 110.0
+                },
+                {
+                  "date": "2026-09-22",
+                  "adjusted_close": 111.0
+                },
+                {
+                  "date": "2026-09-23",
+                  "adjusted_close": 112.0
+                },
+                {
+                  "date": "2026-09-24",
+                  "adjusted_close": 113.0
+                }
+              ]
+            },
+            {
+              "calculation_version": "technical-indicators-v1",
+              "symbol": "BTC-USD",
+              "status": "available",
+              "input_status": "available",
+              "input_reason": null,
+              "input_id": "ti_ebc5df75bc967198f224f9be",
+              "source": "yahoo",
+              "feed": "yahoo_chart",
+              "quote_unit": "USD",
+              "price_basis": "yahoo_reported_adjclose",
+              "sampling": "own_utc_dates_within_pair_window",
+              "adjustment_verification": "not_independently_verified",
+              "session_verification": "not_performed",
+              "bar_completion": "not_verified",
+              "annualized": false,
+              "value_decimal_places": 8,
+              "available_closes": 31,
+              "as_of_date": "2026-09-24",
+              "freshness": "stale",
+              "metrics": [
+                {
+                  "name": "sma20_gap_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 8.52017937,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / mean(last_20_adjusted_closes) - 1)",
+                  "lookback": 20,
+                  "required_closes": 20,
+                  "used_closes": 20,
+                  "observation_dates": [
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-05",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_4948deda5483ba78d570dd66",
+                  "citation_id": "C3A2T1"
+                },
+                {
+                  "name": "return20_pct",
+                  "status": "available",
+                  "reason": null,
+                  "value": 19.8019802,
+                  "unit": "percent",
+                  "formula": "100 * (last_adjusted_close / adjusted_close_20_observations_earlier - 1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-09-04",
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-04",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_d45f47e91c6ec73bcece907c",
+                  "citation_id": "C3A2T2"
+                },
+                {
+                  "name": "volatility20_pp",
+                  "status": "available",
+                  "reason": null,
+                  "value": 0.04874276,
+                  "unit": "percentage_points",
+                  "formula": "100 * sample_stddev(last_20_simple_close_to_close_returns, ddof=1)",
+                  "lookback": 20,
+                  "required_closes": 21,
+                  "used_closes": 21,
+                  "observation_dates": [
+                    "2026-09-04",
+                    "2026-09-05",
+                    "2026-09-06",
+                    "2026-09-07",
+                    "2026-09-08",
+                    "2026-09-09",
+                    "2026-09-10",
+                    "2026-09-11",
+                    "2026-09-12",
+                    "2026-09-13",
+                    "2026-09-14",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-17",
+                    "2026-09-18",
+                    "2026-09-19",
+                    "2026-09-20",
+                    "2026-09-21",
+                    "2026-09-22",
+                    "2026-09-23",
+                    "2026-09-24"
+                  ],
+                  "start_date": "2026-09-04",
+                  "end_date": "2026-09-24",
+                  "observation_id": "to_937e3729e3bcc7287e4caea4",
+                  "citation_id": "C3A2T3"
+                }
+              ],
+              "citation_id": "C3A2",
+              "instrument_type": "CRYPTOCURRENCY",
+              "exchange_timezone": "UTC",
+              "shifted_local_dates": 0,
+              "supporting_points": [
+                {
+                  "date": "2026-09-04",
+                  "adjusted_close": 101.0
+                },
+                {
+                  "date": "2026-09-05",
+                  "adjusted_close": 102.0
+                },
+                {
+                  "date": "2026-09-06",
+                  "adjusted_close": 103.0
+                },
+                {
+                  "date": "2026-09-07",
+                  "adjusted_close": 104.0
+                },
+                {
+                  "date": "2026-09-08",
+                  "adjusted_close": 105.0
+                },
+                {
+                  "date": "2026-09-09",
+                  "adjusted_close": 106.0
+                },
+                {
+                  "date": "2026-09-10",
+                  "adjusted_close": 107.0
+                },
+                {
+                  "date": "2026-09-11",
+                  "adjusted_close": 108.0
+                },
+                {
+                  "date": "2026-09-12",
+                  "adjusted_close": 109.0
+                },
+                {
+                  "date": "2026-09-13",
+                  "adjusted_close": 110.0
+                },
+                {
+                  "date": "2026-09-14",
+                  "adjusted_close": 111.0
+                },
+                {
+                  "date": "2026-09-15",
+                  "adjusted_close": 112.0
+                },
+                {
+                  "date": "2026-09-16",
+                  "adjusted_close": 113.0
+                },
+                {
+                  "date": "2026-09-17",
+                  "adjusted_close": 114.0
+                },
+                {
+                  "date": "2026-09-18",
+                  "adjusted_close": 115.0
+                },
+                {
+                  "date": "2026-09-19",
+                  "adjusted_close": 116.0
+                },
+                {
+                  "date": "2026-09-20",
+                  "adjusted_close": 117.0
+                },
+                {
+                  "date": "2026-09-21",
+                  "adjusted_close": 118.0
+                },
+                {
+                  "date": "2026-09-22",
+                  "adjusted_close": 119.0
+                },
+                {
+                  "date": "2026-09-23",
+                  "adjusted_close": 120.0
+                },
+                {
+                  "date": "2026-09-24",
+                  "adjusted_close": 121.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "technical_is_observed_adjusted_input_not_a_trading_signal",
+        "technical_adjustments_sessions_and_bar_completion_are_unverified",
+        "technical_lookbacks_are_own_observations_not_identical_calendar_spans"
+      ],
+      "always_excluded": [
+        "fundamentals",
+        "sec_filing_checks",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1G1H1"
+        ]
+      },
+      {
+        "text": "The supplied own-date technical observations may inform a conditional interpretation.",
+        "citation_ids": [
+          "P1",
+          "C3A1T1",
+          "C3A2T1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C2",
+          "C2S1",
+          "C2S2",
+          "C2S3",
+          "C3",
+          "C3A1",
+          "C3A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "Optional macro, news, fundamentals and private research were not included in this evidence packet.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  }
+}

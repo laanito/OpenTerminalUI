@@ -1,14 +1,14 @@
 # Current project state and backlog
 
-Current state **2026-11-01:** v2.4.0 is released from `e8aaddb`. Individual-PR testing is accepted
+Current state **2026-11-02:** v2.4.0 is released from `e8aaddb`. Individual-PR testing is accepted
 for functionality, quality/source accuracy and response times. Full local exit
 checks passed; release metadata is aligned. Release PR #239 passed all three
 CI jobs and merged; the maintainer authorized publication and the tag/GitHub
 release are published. Post-release docs and chapter 20 are merged/published.
 Current milestone: v2.5 technical context for comparison briefings. The first
 bounded price/sampling contract merged as #242 and indicators as #243.
-Opt-in technical briefing evidence/validation is implemented, pending review;
-browser selection/inspection is next;
+Opt-in technical briefing evidence/validation merged as #244. Browser selection/
+inspection is implemented, pending review/host feedback; exit/release checks follow;
 broader v2.x work needs its own scope. No v2.4 release gate remains.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
@@ -837,9 +837,22 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
       repair, all 24 sections, one history fetch per symbol and cancellation/
       timeout cleanup. Generated API/surface/mock and whitespace guards passed.
       No live-provider/model-quality run or technical browser UI is claimed.
-- [ ] Add default-off browser selection and exact technical evidence inspection;
+- [x] Add default-off browser selection and exact technical evidence inspection;
       preserve profile/deadline/cancellation/repair behavior and the price-only
       path. Optional technical failure leaves available price/news/macro usable.
+      The Technical observations checkbox sits beside existing context choices.
+      Metric citations focus exact values, dates, formulas and source/quality
+      caveats; supporting adjusted closes are expandable. Partial/unavailable
+      values stay explicit. Client validation covers scope, identity, conventions,
+      windows/history, supporting points and reference/coverage rules using
+      backend-generated fixtures. No client-side indicator calculation or
+      automated semantic/source-quality verification is claimed.
+      Checks (2026-11-02): all 600 frontend tests, production build, sixteen
+      installed-Chrome smoke journeys and API/surface/mock/whitespace guards
+      passed. New checks use backend-generated complete/partial/unavailable/mixed
+      fixtures and exercise scope, metadata/date/reference rejection, citation
+      refocus, supporting tables and degradation at desktop/narrow widths.
+      Host evaluation on real configured providers/models remains pending.
 - [ ] Verify calculations and fidelity across normal/flat, split/dividend,
       missing/conflicting/short history and equity/crypto sampling fixtures, plus
       desktop/narrow browser journeys. Record host usefulness/fidelity/latency
@@ -847,8 +860,7 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
 - [ ] Run consolidated exit checks, align release documentation/metadata and
       obtain publication authorization after the release-prep PR merges.
 
-Next work is default-off browser selection, strict technical-envelope validation
-and exact citation inspection. Reuse
+Next work is host acceptance and consolidated v2.5 exit/release preparation. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.

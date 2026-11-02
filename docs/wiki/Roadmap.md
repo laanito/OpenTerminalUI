@@ -556,10 +556,13 @@ bar completion remain explicitly unverified. See the
 mean-gap, return and unannualized sample-volatility observations merged as #243,
 with exact windows, warm-up requirements, per-metric unavailable
 states and source-bound identities. Existing price/drawdown results remain intact.
-Opt-in technical briefing evidence/validation is implemented, pending review.
+Opt-in technical briefing evidence/validation merged as #244.
 It projects the same fresh comparison, binds references to exact metrics/pairs,
 requires coverage of each usable asset and preserves technical-quality caveats.
-Default-off browser selection and citation inspection are next. Split PRs
+Default-off browser selection and exact metric/source/date inspection are
+implemented, pending review/host acceptance, with strict technical-envelope and
+reference checks. Scope changes cancel and clear old work. Next: host feedback
+and consolidated exit/release checks. Split PRs
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 

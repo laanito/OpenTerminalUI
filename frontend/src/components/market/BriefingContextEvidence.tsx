@@ -2,10 +2,11 @@ import {
   CONTEXT_REASONS, CONTEXT_STATUS, safeContextUrl,
   type ContextEvidence, type ContextSection,
 } from "../../api/comparisonContextBriefing";
+import { TechnicalBriefingEvidence } from "./TechnicalBriefingEvidence";
 
 const dateTime = (value: string) => new Date(value).toLocaleString();
 const number = (value: number) => new Intl.NumberFormat(undefined, { maximumSignificantDigits: 21 }).format(value);
-export const contextName = (section: ContextSection) => section.kind === "headlines" ? "Dated headlines" : section.region === "us" ? "US macro (FRED)" : "Euro-area macro (Eurostat/ECB)";
+export const contextName = (section: ContextSection) => section.kind === "headlines" ? "Dated headlines" : section.kind === "technical" ? "Technical observations" : section.region === "us" ? "US macro (FRED)" : "Euro-area macro (Eurostat/ECB)";
 function SourceLink({ url, children }: { url: string; children: React.ReactNode }) {
   const safe = safeContextUrl(url);
   return safe ? <a className="break-words text-terminal-accent underline" href={safe} target="_blank" rel="noopener noreferrer">{children}</a> : <span>Source link unavailable</span>;
@@ -20,7 +21,8 @@ function SectionStatus({ section }: { section: ContextSection }) {
 export function ContextCoverage({ evidence, inspect }: { evidence: ContextEvidence; inspect: (ref: string) => void }) {
   return <section aria-label="Selected context coverage" className="space-y-2 rounded border border-terminal-border p-2 text-xs">
     <h3 className="font-semibold">Selected context coverage</h3>
-    <p>Missing, empty or failed feeds do not establish that no news or relevant macro activity occurred.</p>
+    <p>{evidence.requested.technical ? "Unavailable sources provide no values; they do not imply zero observations or absence of relevant events."
+      : "Missing, empty or failed feeds do not establish that no news or relevant macro activity occurred."}</p>
     {evidence.sections.map((section) => <p key={section.citation_id} className={section.status === "available" ? "text-terminal-muted" : "text-terminal-warn"}>
       <button type="button" className="text-terminal-accent underline" onClick={() => inspect(section.citation_id)}
         aria-label={`Inspect ${section.citation_id} coverage`}>[{section.citation_id}] {section.pair_citation_id} · {contextName(section)}</button>
@@ -45,7 +47,7 @@ export function ContextEvidenceSections({ evidence, id }: { evidence: ContextEvi
           <SourceLink url={headline.url}>Open source headline</SourceLink>
         </section>)}
       </section>)}
-    </> : <>
+    </> : section.kind === "technical" ? <TechnicalBriefingEvidence section={section} target={target} /> : <>
       <p>Explicitly selected {section.region === "us" ? "US" : "euro-area"} global context, not ticker attribution. Current-at-retrieval vintage{section.realtime_date ? ` · FRED real-time view ${section.realtime_date}` : ""}. Reference periods are not publication dates and do not establish past knowledge.</p>
       {section.series.map((series) => <section key={series.citation_id} {...target(series.citation_id)}>
         <h4 className="font-semibold">{series.citation_id}: {series.label} · {series.status.replace(/_/g, " ")}</h4>

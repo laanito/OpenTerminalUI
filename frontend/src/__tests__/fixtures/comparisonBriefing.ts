@@ -1,5 +1,5 @@
 import type { BriefingAsset, ComparisonBriefingResult } from "../../api/comparisonBriefing";
-import type { BriefingContextOptions, ContextBriefingResult, ContextSection } from "../../api/comparisonContextBriefing";
+import type { BriefingContextOptions, ContextBriefingResult, ContextNewsSection, ContextMacroSection } from "../../api/comparisonContextBriefing";
 
 const asset = (symbol: string): BriefingAsset => ({
   symbol, history_adapter: "yahoo", history_feed: "yahoo_chart", latest_date: "2026-10-20",
@@ -45,7 +45,7 @@ export const briefingSelection = { anchor: "AAPL", comparisons: ["SPY"], period:
 export function makeContextBriefing(context: BriefingContextOptions = { news: true, macro_regions: ["us", "euro_area"] }): ContextBriefingResult {
   const base = makeBriefing();
   const price = base.evidence!;
-  const sections: ContextSection[] = [];
+  const sections: (ContextNewsSection | ContextMacroSection)[] = [];
   const common = () => ({ citation_id: `C${sections.length + 1}`, pair_citation_id: "P1", start_date: "2026-09-20", end_date: "2026-10-20",
     retrieved_at: price.retrieved_at, status: "available" as const, reason: null });
   if (context.news) {

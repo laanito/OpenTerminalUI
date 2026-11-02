@@ -2,8 +2,8 @@
 
 v2.5 is in development as a bounded technical-evidence addition to the existing
 comparison briefing. Inputs and deterministic indicators are now exposed through
-the comparison API. Explicit technical selection and reference validation now
-also work through the context-briefing API; browser controls/inspection follow.
+the comparison API. Explicit technical selection, reference validation and
+browser evidence inspection are implemented, pending review/host acceptance.
 Existing comparison returns and descriptive technical panels keep their behavior.
 
 ## Source audit and supported input contract
@@ -147,6 +147,35 @@ checks and one bounded repair do not certify numeric prose or reasoning quality.
 The existing Deep profile, operation budgets, no-replay streaming, cancellation
 cleanup and 120,000-character context input cap remain. All four selected context
 types can produce up to 24 sections across six pairs; oversized evidence returns
-the existing typed failure rather than silently dropping inputs. Frontend
-selection, strict technical-envelope validation and citation inspection are the
-next slice; the current browser cannot yet request this new technical scope.
+the existing typed failure rather than silently dropping inputs.
+
+## Browser workflow (v2.5 development)
+
+1. Open **Cross-market context**, apply an anchor/proxies/window, then find
+   **Comparison briefing → Briefing evidence scope**.
+2. Check **Technical observations** (off by default), alone or with dated news
+   and macro. Selecting a checkbox does not call the model. Choose **Generate
+   briefing** to fetch a fresh, explicitly scoped snapshot and request synthesis.
+3. Choose a technical citation in the answer or a coverage link. The evidence
+   disclosure opens and focuses that exact section, asset or metric. Inspect
+   value/unit, formula, history requirements, own-date window, source/freshness,
+   quality limitations and stable input/observation IDs. Expand the exact dates
+   and supporting adjusted-close table when needed.
+
+Partial history remains visible: 20 closes allow the mean gap but not the
+21-close return/volatility calculations. Unsupported or missing source inputs
+can leave prices available while technical observations remain unavailable;
+there is no replacement provider fetch or invented zero. The initial technical
+source contract is Yahoo-specific, even when other feeds supply valid prices.
+
+Changing any scope checkbox clears the old answer and cancels running work.
+Selection changes/unmount and the existing Cancel action retain that behavior;
+generation and retries are explicit. Repeated citation clicks refocus the target.
+The same evidence layout supports desktop and narrow screens.
+
+Before display, the client validates selected scope, source/pair identities,
+calculation version/conventions, finite values, metric history/dates and exact
+supporting rows, unavailable states and reference/coverage obligations. It
+does not recalculate indicators or establish adjustment quality, bar completion,
+source truth, semantic fidelity or causal mechanisms. Model prose remains plain
+text and reference validation retains the v2.4 limits.
