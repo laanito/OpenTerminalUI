@@ -1,17 +1,21 @@
 # Current project state and backlog
 
-Current state **2026-11-02:** v2.4.0 is released from `e8aaddb`. Individual-PR testing is accepted
-for functionality, quality/source accuracy and response times. Full local exit
-checks passed; release metadata is aligned. Release PR #239 passed all three
-CI jobs and merged; the maintainer authorized publication and the tag/GitHub
-release are published. Post-release docs and chapter 20 are merged/published.
-Current milestone: v2.5 technical context for comparison briefings. The first
-bounded price/sampling contract merged as #242 and indicators as #243.
-Opt-in technical briefing evidence/validation merged as #244. Browser selection/
-inspection merged as #245 and the maintainer confirmed it works as intended on
-2026-11-02. Consolidated local exit checks passed; metadata is aligned to 2.5.0.
-Release-prep CI/merge and publication authorization remain;
-broader v2.x work needs its own scope. No v2.4 release gate remains.
+Current state **2026-11-02:** **v2.5.0 — Technical context** is released from
+`fad1c95`. Implementation PRs #242–#245 deliver eligible own-date Yahoo adjusted
+inputs, three deterministic observations, explicit technical briefing scope and
+exact browser metric/date/source inspection. The maintainer tested the completed
+workflow and confirmed it works as intended. Consolidated local checks passed
+1,517 backend tests (one skipped; 76.81% coverage), 600 frontend tests, production
+build, API/surface/mock guards and sixteen Chrome smoke journeys. Metadata is
+2.5.0; post-bump focused tests/build/guards/version consistency also passed.
+Release-prep PR #246 passed build-and-test, clean-install and postgres-contract,
+then merged. Following explicit maintainer authorization, the annotated tag and
+GitHub release were published on 2026-11-02. No v2.5 release gate remains; no new
+dependency, database migration or embedding change. Deployment stays with the
+host agent. Chapter 21's bilingual article and dedicated cover are ready in
+`praderasblog` PR #118; do not mark them published before maintainer confirmation.
+The previous release is v2.4.0 at `e8aaddb`; its chapter-20 article is published.
+Broader v2.x work needs its own agreed scope; v3 remains thesis validation.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
@@ -781,7 +785,7 @@ Agreed on 2026-10-27; implement only after v2.3 closure. Canonical scope is in
 No model acquisition/deployment, training, voting/model judges, autonomous
 escalation, new evidence or broader thesis-validation features are included.
 
-### v2.5 — Technical context for comparison briefings (in development)
+### v2.5.0 — Technical context for comparison briefings (released 2026-11-02)
 
 Agreed on 2026-10-31. Canonical scope/exit criteria are in
 `docs/wiki/Roadmap.md`; v2.4 is released and its article is published.
@@ -869,12 +873,14 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
       is 2.5.0; after the bump, 59 focused backend tests, four frontend identity
       tests, build/guards and version consistency passed. No dependencies or
       schema changed. Local tests use SQLite; PostgreSQL/clean-install run in CI.
-- [ ] Merge the release-prep PR after CI, then obtain explicit publication
-      authorization before the tag/GitHub release. Deployment stays with the host.
+- [x] Release-prep PR #246 passed all three CI jobs and merged at `fad1c95`.
+      Following explicit maintainer authorization, the annotated v2.5.0 tag and
+      GitHub release were published on 2026-11-02. Deployment stays with the host.
+- [ ] Merge/publish chapter 21 in `praderasblog` PR #118, then record confirmation.
 
-Next work is release-prep CI/merge and publication authorization. Local exit
-checks and host acceptance are complete; retain them through release closure
-without requesting duplicate tests. Reuse
+No v2.5 release gate remains. Next work is the chapter-21 blog article and
+post-release handoff; later v2.x scope needs discussion. Local exit checks and
+host acceptance are complete; retain them without requesting duplicate tests. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.

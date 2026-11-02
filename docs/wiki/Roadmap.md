@@ -480,7 +480,7 @@ automatic model judges or multi-model voting, autonomous retries/escalation,
 new evidence providers, broader thesis-validation features and execution. This
 is bounded routing/configuration plus evaluation, not a general LLM framework.
 
-## v2.5 — Technical context for comparison briefings (release preparation)
+## v2.5.0 — Technical context for comparison briefings (released 2026-11-02)
 
 Agreed on 2026-10-31 after v2.4 publication and its chapter-20 article. Make a
 small set of technical observations inspectable and optionally usable alongside
@@ -565,7 +565,9 @@ cancel and clear old work. The maintainer tested and accepted the completed
 workflow on 2026-11-02. Implementation and host acceptance are complete;
 consolidated local exit checks passed (1,517 backend tests, 600 frontend tests
 and sixteen Chrome smoke journeys). Metadata is aligned to 2.5.0. Release-prep
-CI, merge and explicit publication authorization remain. Split PRs
+PR #246 passed build-and-test, clean-install and postgres-contract and merged at
+`fad1c95`. Following explicit maintainer authorization, the annotated tag and
+GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split PRs
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 

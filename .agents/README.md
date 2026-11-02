@@ -4,33 +4,22 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current state **2026-11-02:** v2.4.0 is released from `e8aaddb`. All twelve generation
-tasks are integrated; the maintainer confirmed individual-PR testing covered
-functionality, answer quality, source accuracy and response times. The full local
-gate and fourteen Chrome smoke journeys passed. v2.4 release metadata was 2.4.0;
-release PR #239 passed all three CI jobs and merged, then the maintainer
-authorized tag/GitHub publication. No v2.4 release gate remains. Chapter 20's
-bilingual article and dedicated hero in `praderasblog` PR #117 are merged and
-published, confirmed by the maintainer. v2.5 scope is agreed: bounded technical
-context for comparison briefings. Its first additive technical input contract
-merged as #242: original Yahoo source consistency, per-asset
-own dates, stable input IDs and explicit unknown quality dimensions. It does
-not add technical evidence to model prompts by default. Deterministic 20-close
-mean gap, 20-period return and unannualized sample 20-return volatility merged
-as #243; explicit `context.technical` API selection/evidence/validation merged
-as #244. The browser's default-off Technical observations selector and exact
-metric/source/date inspection merged as #245 and were host-tested successfully
-on 2026-11-02.
-The client validates backend-generated technical envelopes and reference rules;
-scope changes abort and clear old work. Existing price-only/news/macro requests
-keep their scope. Consolidated local v2.5 checks passed: 1,517 backend tests
-(one skipped; 76.81% coverage), 600 frontend tests, production build, API/surface/
-mock guards and sixteen Chrome smoke journeys. Metadata is aligned to 2.5.0;
-59 focused backend and four frontend identity tests, build/guards/version checks
-passed after the bump. Next: release-prep CI/merge and maintainer publication
-authorization. No new dependencies, database migration or embedding change. See
-`Technical-Context.md`.
-See Roadmap/TODO before implementation; broader v2.x work needs its own scope.
+Current state **2026-11-02:** **v2.5.0 — Technical context** is released from
+`fad1c95`. Implementation PRs #242–#245 deliver eligible own-date Yahoo adjusted
+inputs, three deterministic observations, explicit technical briefing scope and
+exact browser metric/date/source inspection. The maintainer tested the completed
+workflow and confirmed it works as intended. Consolidated local checks passed
+1,517 backend tests (one skipped; 76.81% coverage), 600 frontend tests, production
+build, API/surface/mock guards and sixteen Chrome smoke journeys. Metadata is
+2.5.0; post-bump focused tests/build/guards/version consistency also passed.
+Release-prep PR #246 passed build-and-test, clean-install and postgres-contract,
+then merged. Following explicit maintainer authorization, the annotated tag and
+GitHub release were published on 2026-11-02. No v2.5 release gate remains; no new
+dependency, database migration or embedding change. Deployment stays with the
+host agent. Chapter 21's bilingual article and dedicated cover are ready in
+`praderasblog` PR #118; do not mark them published before maintainer confirmation.
+The previous release is v2.4.0 at `e8aaddb`; its chapter-20 article is published.
+Broader v2.x work needs its own agreed scope; v3 remains thesis validation.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
@@ -245,8 +234,8 @@ release-level interpretation and safety boundaries.
   tests and six Chrome smoke tests. PR #222 passed build-and-test, clean-install
   and PostgreSQL-contract CI and merged. With explicit maintainer authorization,
   the annotated tag and GitHub release were published from `039c395` on 2026-10-21.
-- Latest published release: **v2.4.0**, tagged and published from `e8aaddb` on
-  2026-10-31 after green release-prep CI and explicit maintainer authorization.
+- Latest published release: **v2.5.0**, tagged and published from `fad1c95` on
+  2026-11-02 after green release-prep CI and explicit maintainer authorization.
   Keep `backend/config/settings.py` and `frontend/package.json` in lockstep when
   releasing.
 - **v2.0 shipped the bounded cross-market context feature**, alongside the

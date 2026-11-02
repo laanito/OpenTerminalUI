@@ -336,7 +336,7 @@ authorization, the annotated tag and
 were published from that merge on 2026-10-31. No v2.4 release gate remains.
 The live deployment was not rebuilt; deployment stays with the host agent.
 
-### v2.5.0 verification ledger (release preparation)
+### v2.5.0 verification ledger (released)
 
 The bounded milestone is opt-in technical context for comparison briefings.
 Implementation PRs #242–#245 are merged. On 2026-11-02 the maintainer confirmed
@@ -365,12 +365,14 @@ schema changed; no manual migration is required. The consolidated gate preceded
 the metadata-only bump; post-bump verification passed 59 focused backend tests,
 four frontend identity
 tests, the production build, API/surface/mock guards and version consistency.
-The latest published release remains v2.4.0 until publication.
+v2.5.0 is the latest published release.
 
-Remaining: the release-prep PR's CI (including disposable clean-install and
-PostgreSQL contracts), merge, and explicit maintainer authorization before tagging
-or creating the GitHub release. Local SQLite coverage does not establish a live
-PostgreSQL rollout. Deployment belongs to the host agent.
+Release-prep PR #246 passed build-and-test, clean-install and postgres-contract
+and merged at `fad1c95`. Following explicit maintainer authorization, the annotated
+tag and [GitHub release v2.5.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0)
+were published from that merge on 2026-11-02. No v2.5 release gate remains.
+Local SQLite coverage does not establish a live PostgreSQL rollout; disposable
+PostgreSQL/clean-install checks passed in CI. Deployment belongs to the host agent.
 
 ## Cutting the release
 
