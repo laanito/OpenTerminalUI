@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
+from contextlib import aclosing
 from datetime import datetime, timezone
 from typing import Any
 
@@ -25,6 +26,20 @@ from backend.services.llm_client import (
 _VALID_TONES = {"positive", "negative", "neutral"}
 logger = logging.getLogger(__name__)
 
+# Safety ceilings, independent of the card's preferred writing style. A slightly
+# longer explanation must not invalidate otherwise useful, structured analysis.
+_MAX_SUMMARY_CHARS = 2_000
+_MAX_TITLE_CHARS = 160
+_MAX_POINT_CHARS = 2_000
+_MAX_INSIGHT_CHARS = 16_000
+_MAX_RESPONSE_CHARS = 64_000
+_STYLE_GUIDANCE = (
+    "Keep the insight readable and concise, with short section titles. Prefer a summary "
+    "within 600 characters and focused bullet points around 220 characters. These are "
+    "writing preferences, not hard limits: use more space when necessary to preserve "
+    "meaning, evidence and uncertainty."
+)
+
 
 class InvalidInsightResponse(LLMError):
     """The provider answered, but the insight did not satisfy our contract."""
@@ -35,7 +50,7 @@ class InvalidInsightResponse(LLMError):
 INSIGHT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
-        "summary": {"type": "string", "maxLength": 600},
+        "summary": {"type": "string", "maxLength": _MAX_SUMMARY_CHARS},
         "sections": {
             "type": "array",
             "minItems": 2,
@@ -43,13 +58,13 @@ INSIGHT_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string", "maxLength": 48},
+                    "title": {"type": "string", "maxLength": _MAX_TITLE_CHARS},
                     "tone": {"type": "string", "enum": ["positive", "negative", "neutral"]},
                     "points": {
                         "type": "array",
                         "minItems": 1,
                         "maxItems": 5,
-                        "items": {"type": "string", "maxLength": 220},
+                        "items": {"type": "string", "maxLength": _MAX_POINT_CHARS},
                     },
                 },
                 "required": ["title", "tone", "points"],
@@ -76,7 +91,7 @@ def _insight_text(raw: Any, field: str, limit: int) -> str:
 def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
     if not isinstance(raw, dict):
         raise InvalidInsightResponse("Insight response is not an object")
-    summary = _insight_text(raw.get("summary"), "summary", 600)
+    summary = _insight_text(raw.get("summary"), "summary", _MAX_SUMMARY_CHARS)
     raw_sections = raw.get("sections")
     if (
         not isinstance(raw_sections, list)
@@ -84,11 +99,12 @@ def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
     ):
         raise InvalidInsightResponse("sections must be an array containing 2–4 sections")
     sections: list[dict[str, Any]] = []
+    total_chars = len(summary)
     for section_index, node in enumerate(raw_sections):
         path = f"sections[{section_index}]"
         if not isinstance(node, dict):
             raise InvalidInsightResponse(f"{path} must be an object")
-        title = _insight_text(node.get("title"), f"{path}.title", 48)
+        title = _insight_text(node.get("title"), f"{path}.title", _MAX_TITLE_CHARS)
         tone = node.get("tone")
         points = node.get("points")
         if not isinstance(tone, str) or tone not in _VALID_TONES:
@@ -97,12 +113,23 @@ def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
             raise InvalidInsightResponse(f"{path}.points must be an array containing 1–5 strings")
         clean_points: list[str] = []
         for point_index, point in enumerate(points):
-            clean_points.append(_insight_text(point, f"{path}.points[{point_index}]", 220))
+            clean_points.append(_insight_text(point, f"{path}.points[{point_index}]", _MAX_POINT_CHARS))
+        total_chars += len(title) + sum(map(len, clean_points))
+        if total_chars > _MAX_INSIGHT_CHARS:
+            raise InvalidInsightResponse(
+                f"insight text must contain at most {_MAX_INSIGHT_CHARS} characters total "
+                f"(received at least {total_chars})"
+            )
         sections.append({"title": title, "tone": tone, "points": clean_points})
     return summary, sections
 
 
 def _parse_insight(content: str) -> tuple[str, list[dict[str, Any]]]:
+    if len(content) > _MAX_RESPONSE_CHARS:
+        raise InvalidInsightResponse(
+            f"JSON response must contain at most {_MAX_RESPONSE_CHARS} characters "
+            f"(received {len(content)})"
+        )
     try:
         parsed = parse_json_response(content)
     except LLMError as exc:
@@ -151,7 +178,7 @@ async def run_insight(
     client = get_llm_client(profile=profile)
 
     messages = [
-        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": f"{system_prompt}\n\n{_STYLE_GUIDANCE}"},
         {"role": "user", "content": user_content},
     ]
 
@@ -161,9 +188,12 @@ async def run_insight(
             "content": (
                 f"The previous response failed validation: {error}. "
                 "Regenerate the complete insight as one JSON object using only the original evidence. "
-                "Use a nonempty summary of at most 600 characters, 2–4 sections, titles of at most "
-                "48 characters, tone positive/negative/neutral, and 1–5 nonempty string points per "
-                "section, each at most 220 characters. Shorten wording where necessary while "
+                f"Use a nonempty summary of at most {_MAX_SUMMARY_CHARS} characters, 2–4 sections, "
+                f"titles of at most {_MAX_TITLE_CHARS} characters, tone positive/negative/neutral, "
+                f"and 1–5 nonempty string points per section, each at most {_MAX_POINT_CHARS} "
+                f"characters. Keep all insight text within {_MAX_INSIGHT_CHARS} characters total "
+                f"and the JSON response within {_MAX_RESPONSE_CHARS} characters. "
+                "These are safety ceilings, not writing targets. Shorten wording where necessary while "
                 "preserving meaning and uncertainty. Do not include this feedback or invent facts."
             ),
         }]
@@ -213,16 +243,24 @@ async def run_insight(
                 summary, sections = await complete_and_validate()
             else:
                 chunks: list[str] = []
+                stream_chars = 0
                 try:
-                    async for chunk in client.chat_stream(
+                    async with aclosing(client.chat_stream(
                         messages,
                         temperature=0.3,
                         max_tokens=max_tokens,
                         json_schema=INSIGHT_SCHEMA,
                         frequency_penalty=0.3,
-                    ):
-                        chunks.append(chunk)
-                        on_token(chunk)
+                    )) as stream:
+                        async for chunk in stream:
+                            stream_chars += len(chunk)
+                            if stream_chars > _MAX_RESPONSE_CHARS:
+                                raise InvalidInsightResponse(
+                                    f"JSON response must contain at most {_MAX_RESPONSE_CHARS} characters "
+                                    f"(received at least {stream_chars})"
+                                )
+                            chunks.append(chunk)
+                            on_token(chunk)
                     if not chunks:
                         raise LLMError("LLM stream returned no response text")
                     summary, sections = _parse_insight("".join(chunks))

@@ -904,10 +904,16 @@ Do not label this blanket model/stream incompatibility.
 
 - [x] Give stream fallback and the existing one completion retry safe validation
       feedback (field path/type/length), keeping original evidence/model/deadline
-      and all existing limits. Log the final failing field without raw model or
-      private source text. Reject malformed tone objects/lists gracefully.
-      Checks: 76 focused helper/client/profile/Interrogate/stream tests passed;
-      no schema, provider setting, dependency or database change.
+      and strict structure/count validation. Log the final failing field without
+      raw model or private source text. Reject malformed tone objects/lists
+      gracefully. Maintainer questioned the legacy 220-character point limit:
+      it is now a writing preference, not a hard rejection rule. Safety ceilings
+      are 2,000 chars per summary/point, 160 per title, 16,000 total text and
+      64,000 raw JSON; oversized streams close before bounded fallback.
+      Checks: 85 focused helper/client/profile/Interrogate/stream tests passed,
+      plus API/surface/mock/whitespace guards. The internal generation schema
+      reflects the new ceilings; public API, provider settings, dependencies
+      and database schema are unchanged.
 - [ ] Merge the focused fix and confirm the originally failing host workflow;
       if still invalid, use the precise safe diagnostic to investigate further.
 
