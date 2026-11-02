@@ -894,6 +894,23 @@ quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.
 Broader multi-dimensional thesis validation remains v3.
 
+### Current maintenance — shared structured insight repair
+
+Maintainer reported repeated `InvalidInsightResponse` / invalid section-point
+failures using `gpt-6-luna` at a local OpenAI-compatible gateway (2026-11-02).
+The gateway is reachable and one synthetic briefing passed the existing schema;
+the original point's type/length cannot be recovered from the old generic log.
+Do not label this blanket model/stream incompatibility.
+
+- [x] Give stream fallback and the existing one completion retry safe validation
+      feedback (field path/type/length), keeping original evidence/model/deadline
+      and all existing limits. Log the final failing field without raw model or
+      private source text. Reject malformed tone objects/lists gracefully.
+      Checks: 76 focused helper/client/profile/Interrogate/stream tests passed;
+      no schema, provider setting, dependency or database change.
+- [ ] Merge the focused fix and confirm the originally failing host workflow;
+      if still invalid, use the precise safe diagnostic to investigate further.
+
 ### v2.6 — Technical context across AI research (scope agreed)
 
 Agreed on 2026-11-02; canonical scope/acceptance in `docs/wiki/Roadmap.md`.

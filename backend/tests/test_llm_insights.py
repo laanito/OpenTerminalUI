@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import json
+
+import pytest
 from backend.config.settings import AppSettings
 
 from backend.services import llm_insights
@@ -260,3 +263,98 @@ def test_run_insight_rejects_values_outside_the_published_schema(monkeypatch) ->
 
     assert result["engine"] == "unavailable"
     assert result["failure"]["code"] == "invalid_response"
+
+
+def _insight_object():
+    return {"summary": "Observed facts are limited.", "sections": [
+        {"title": "Evidence", "tone": "neutral", "points": ["Observed"]},
+        {"title": "Risk", "tone": "negative", "points": ["Limited"]},
+    ]}
+
+
+@pytest.mark.parametrize("point,diagnostic", [
+    ("private-model-text-" + "x" * 221, "received 240"),
+    ("   ", "received 0"),
+    ({"private-model-text": "hidden"}, "received dict"),
+    (12, "received int"),
+])
+def test_repair_gets_safe_exact_point_feedback(monkeypatch, caplog, point, diagnostic):
+    invalid = _insight_object()
+    invalid["sections"][0]["points"] = [point]
+
+    class Client(_FakeClient):
+        calls = []
+
+        async def chat(self, messages, **kwargs):
+            self.calls.append(messages)
+            return json.dumps(invalid if len(self.calls) == 1 else _insight_object())
+
+    client = Client("")
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings())
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: client)
+    result = asyncio.run(llm_insights.run_insight("system", "original private evidence"))
+
+    assert result["engine"] == "llm"
+    assert len(client.calls) == 2
+    assert client.calls[1][:2] == client.calls[0]
+    feedback = client.calls[1][-1]
+    assert feedback["role"] == "system"
+    assert "sections[0].points[0]" in feedback["content"]
+    assert diagnostic in feedback["content"]
+    assert "220 characters" in feedback["content"]
+    assert "private-model-text" not in feedback["content"] + caplog.text
+    assert "original private evidence" not in caplog.text
+
+
+def test_invalid_stream_feedback_reaches_first_completion(monkeypatch):
+    invalid = _insight_object()
+    invalid["sections"][1]["points"] = ["x" * 221]
+
+    class Client(_FakeClient):
+        calls = []
+
+        async def chat_stream(self, messages, **kwargs):
+            yield json.dumps(invalid)
+
+        async def chat(self, messages, **kwargs):
+            self.calls.append(messages)
+            assert "sections[1].points[0]" in messages[-1]["content"]
+            assert "received 221" in messages[-1]["content"]
+            return json.dumps(_insight_object())
+
+    client = Client("")
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings())
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: client)
+    result = asyncio.run(llm_insights.run_insight("system", "facts", on_token=lambda _: None))
+    assert result["engine"] == "llm"
+    assert len(client.calls) == 1
+
+
+@pytest.mark.parametrize("tone", [{"value": "neutral"}, ["neutral"]])
+def test_malformed_tone_remains_bounded_and_logs_final_field(monkeypatch, caplog, tone):
+    invalid = _insight_object()
+    invalid["sections"][0]["tone"] = tone
+
+    class Client(_FakeClient):
+        calls = 0
+
+        async def chat(self, messages, **kwargs):
+            self.calls += 1
+            return self._content
+
+    client = Client(json.dumps(invalid))
+    monkeypatch.setattr(llm_insights, "get_settings", lambda: _settings())
+    monkeypatch.setattr(llm_insights, "get_llm_client", lambda **kwargs: client)
+    result = asyncio.run(llm_insights.run_insight("system", "facts"))
+    assert client.calls == 2
+    assert result["failure"]["code"] == "invalid_response"
+    assert "invalid after bounded repair: sections[0].tone" in caplog.text
+
+
+def test_point_character_limit_is_preserved_without_silent_truncation():
+    raw = _insight_object()
+    raw["sections"][0]["points"] = ["x" * 220]
+    assert llm_insights._validate_insight(raw)[1][0]["points"] == ["x" * 220]
+    raw["sections"][0]["points"] = ["x" * 221]
+    with pytest.raises(llm_insights.InvalidInsightResponse, match="received 221"):
+        llm_insights._validate_insight(raw)

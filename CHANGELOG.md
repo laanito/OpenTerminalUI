@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Fixed
+- **Actionable structured insight repair** — validation failures now identify
+  the field and safe type/length metadata without logging provider text or
+  private evidence. Streaming fallback and the existing single completion retry
+  receive the validation correction instead of repeating the same prompt.
+  String/count limits, selected model, shared deadline and final-result checks
+  remain intact; malformed object/list tone values degrade rather than crash.
+
 ## [2.5.0] - 2026-11-02
 
 Technical context brings a small, deterministic observation set into comparison

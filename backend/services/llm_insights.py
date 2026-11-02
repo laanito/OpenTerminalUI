@@ -60,40 +60,45 @@ INSIGHT_SCHEMA: dict[str, Any] = {
 }
 
 
+def _insight_text(raw: Any, field: str, limit: int) -> str:
+    # Diagnostics must never echo provider text or private research into logs
+    # or the repair instruction. Paths and type/length metadata are sufficient.
+    if not isinstance(raw, str):
+        raise InvalidInsightResponse(f"{field} must be a string (received {type(raw).__name__})")
+    text = raw.strip()
+    if not text or len(text) > limit:
+        raise InvalidInsightResponse(
+            f"{field} must contain 1–{limit} characters after trimming (received {len(text)})"
+        )
+    return text
+
+
 def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
     if not isinstance(raw, dict):
         raise InvalidInsightResponse("Insight response is not an object")
-    raw_summary = raw.get("summary")
-    if not isinstance(raw_summary, str):
-        raise InvalidInsightResponse("Insight summary is not a string")
-    summary = raw_summary.strip()
+    summary = _insight_text(raw.get("summary"), "summary", 600)
     raw_sections = raw.get("sections")
     if (
-        not summary
-        or len(summary) > 600
-        or not isinstance(raw_sections, list)
+        not isinstance(raw_sections, list)
         or not 2 <= len(raw_sections) <= 4
     ):
-        raise InvalidInsightResponse("Insight response does not satisfy the required schema")
+        raise InvalidInsightResponse("sections must be an array containing 2–4 sections")
     sections: list[dict[str, Any]] = []
-    for node in raw_sections:
+    for section_index, node in enumerate(raw_sections):
+        path = f"sections[{section_index}]"
         if not isinstance(node, dict):
-            raise InvalidInsightResponse("Insight section is not an object")
-        title = node.get("title")
+            raise InvalidInsightResponse(f"{path} must be an object")
+        title = _insight_text(node.get("title"), f"{path}.title", 48)
         tone = node.get("tone")
         points = node.get("points")
-        if not isinstance(title, str) or not title.strip() or len(title.strip()) > 48:
-            raise InvalidInsightResponse("Insight section title is invalid")
-        if tone not in _VALID_TONES:
-            raise InvalidInsightResponse("Insight section tone is invalid")
+        if not isinstance(tone, str) or tone not in _VALID_TONES:
+            raise InvalidInsightResponse(f"{path}.tone must be positive, negative or neutral")
         if not isinstance(points, list) or not 1 <= len(points) <= 5:
-            raise InvalidInsightResponse("Insight section points are invalid")
+            raise InvalidInsightResponse(f"{path}.points must be an array containing 1–5 strings")
         clean_points: list[str] = []
-        for point in points:
-            if not isinstance(point, str) or not point.strip() or len(point.strip()) > 220:
-                raise InvalidInsightResponse("Insight section point is invalid")
-            clean_points.append(point.strip())
-        sections.append({"title": title.strip(), "tone": tone, "points": clean_points})
+        for point_index, point in enumerate(points):
+            clean_points.append(_insight_text(point, f"{path}.points[{point_index}]", 220))
+        sections.append({"title": title, "tone": tone, "points": clean_points})
     return summary, sections
 
 
@@ -150,9 +155,24 @@ async def run_insight(
         {"role": "user", "content": user_content},
     ]
 
-    async def complete_and_validate() -> tuple[str, list[dict[str, Any]]]:
+    def repair_messages(error: InvalidInsightResponse) -> list[dict[str, str]]:
+        return [*messages, {
+            "role": "system",
+            "content": (
+                f"The previous response failed validation: {error}. "
+                "Regenerate the complete insight as one JSON object using only the original evidence. "
+                "Use a nonempty summary of at most 600 characters, 2–4 sections, titles of at most "
+                "48 characters, tone positive/negative/neutral, and 1–5 nonempty string points per "
+                "section, each at most 220 characters. Shorten wording where necessary while "
+                "preserving meaning and uncertainty. Do not include this feedback or invent facts."
+            ),
+        }]
+
+    async def complete_and_validate(
+        stream_error: InvalidInsightResponse | None = None,
+    ) -> tuple[str, list[dict[str, Any]]]:
         content = await client.chat(
-            messages,
+            repair_messages(stream_error) if stream_error else messages,
             temperature=0.3,
             max_tokens=max_tokens,
             json_schema=INSIGHT_SCHEMA,
@@ -166,7 +186,7 @@ async def run_insight(
                 exc,
             )
             content = await client.chat(
-                messages,
+                repair_messages(exc),
                 temperature=0.0,
                 max_tokens=max_tokens,
                 json_schema=INSIGHT_SCHEMA,
@@ -212,14 +232,16 @@ async def run_insight(
                     # only the final validated result is published as an insight.
                     logger.warning(
                         "LLM structured stream unavailable; using bounded completion: %s",
-                        type(exc).__name__,
+                        str(exc) if isinstance(exc, InvalidInsightResponse) else type(exc).__name__,
                     )
-                    summary, sections = await complete_and_validate()
+                    summary, sections = await complete_and_validate(
+                        exc if isinstance(exc, InvalidInsightResponse) else None
+                    )
     except asyncio.TimeoutError as exc:
         logger.warning("LLM insight unavailable after bounded generation (%s)", type(exc).__name__)
         return unavailable("timeout", retryable=True)
     except InvalidInsightResponse as exc:
-        logger.warning("LLM insight invalid after bounded repair (%s)", type(exc).__name__)
+        logger.warning("LLM insight invalid after bounded repair: %s", exc)
         return unavailable("invalid_response", retryable=True)
     except LLMError as exc:
         logger.warning("LLM insight unavailable after bounded generation (%s)", type(exc).__name__)
