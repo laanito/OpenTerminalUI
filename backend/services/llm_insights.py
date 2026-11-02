@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
+from contextlib import aclosing
 from datetime import datetime, timezone
 from typing import Any
 
@@ -25,6 +26,20 @@ from backend.services.llm_client import (
 _VALID_TONES = {"positive", "negative", "neutral"}
 logger = logging.getLogger(__name__)
 
+# Safety ceilings, independent of the card's preferred writing style. A slightly
+# longer explanation must not invalidate otherwise useful, structured analysis.
+_MAX_SUMMARY_CHARS = 2_000
+_MAX_TITLE_CHARS = 160
+_MAX_POINT_CHARS = 2_000
+_MAX_INSIGHT_CHARS = 16_000
+_MAX_RESPONSE_CHARS = 64_000
+_STYLE_GUIDANCE = (
+    "Keep the insight readable and concise, with short section titles. Prefer a summary "
+    "within 600 characters and focused bullet points around 220 characters. These are "
+    "writing preferences, not hard limits: use more space when necessary to preserve "
+    "meaning, evidence and uncertainty."
+)
+
 
 class InvalidInsightResponse(LLMError):
     """The provider answered, but the insight did not satisfy our contract."""
@@ -35,7 +50,7 @@ class InvalidInsightResponse(LLMError):
 INSIGHT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
-        "summary": {"type": "string", "maxLength": 600},
+        "summary": {"type": "string", "maxLength": _MAX_SUMMARY_CHARS},
         "sections": {
             "type": "array",
             "minItems": 2,
@@ -43,13 +58,13 @@ INSIGHT_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string", "maxLength": 48},
+                    "title": {"type": "string", "maxLength": _MAX_TITLE_CHARS},
                     "tone": {"type": "string", "enum": ["positive", "negative", "neutral"]},
                     "points": {
                         "type": "array",
                         "minItems": 1,
                         "maxItems": 5,
-                        "items": {"type": "string", "maxLength": 220},
+                        "items": {"type": "string", "maxLength": _MAX_POINT_CHARS},
                     },
                 },
                 "required": ["title", "tone", "points"],
@@ -60,44 +75,61 @@ INSIGHT_SCHEMA: dict[str, Any] = {
 }
 
 
+def _insight_text(raw: Any, field: str, limit: int) -> str:
+    # Diagnostics must never echo provider text or private research into logs
+    # or the repair instruction. Paths and type/length metadata are sufficient.
+    if not isinstance(raw, str):
+        raise InvalidInsightResponse(f"{field} must be a string (received {type(raw).__name__})")
+    text = raw.strip()
+    if not text or len(text) > limit:
+        raise InvalidInsightResponse(
+            f"{field} must contain 1–{limit} characters after trimming (received {len(text)})"
+        )
+    return text
+
+
 def _validate_insight(raw: Any) -> tuple[str, list[dict[str, Any]]]:
     if not isinstance(raw, dict):
         raise InvalidInsightResponse("Insight response is not an object")
-    raw_summary = raw.get("summary")
-    if not isinstance(raw_summary, str):
-        raise InvalidInsightResponse("Insight summary is not a string")
-    summary = raw_summary.strip()
+    summary = _insight_text(raw.get("summary"), "summary", _MAX_SUMMARY_CHARS)
     raw_sections = raw.get("sections")
     if (
-        not summary
-        or len(summary) > 600
-        or not isinstance(raw_sections, list)
+        not isinstance(raw_sections, list)
         or not 2 <= len(raw_sections) <= 4
     ):
-        raise InvalidInsightResponse("Insight response does not satisfy the required schema")
+        raise InvalidInsightResponse("sections must be an array containing 2–4 sections")
     sections: list[dict[str, Any]] = []
-    for node in raw_sections:
+    total_chars = len(summary)
+    for section_index, node in enumerate(raw_sections):
+        path = f"sections[{section_index}]"
         if not isinstance(node, dict):
-            raise InvalidInsightResponse("Insight section is not an object")
-        title = node.get("title")
+            raise InvalidInsightResponse(f"{path} must be an object")
+        title = _insight_text(node.get("title"), f"{path}.title", _MAX_TITLE_CHARS)
         tone = node.get("tone")
         points = node.get("points")
-        if not isinstance(title, str) or not title.strip() or len(title.strip()) > 48:
-            raise InvalidInsightResponse("Insight section title is invalid")
-        if tone not in _VALID_TONES:
-            raise InvalidInsightResponse("Insight section tone is invalid")
+        if not isinstance(tone, str) or tone not in _VALID_TONES:
+            raise InvalidInsightResponse(f"{path}.tone must be positive, negative or neutral")
         if not isinstance(points, list) or not 1 <= len(points) <= 5:
-            raise InvalidInsightResponse("Insight section points are invalid")
+            raise InvalidInsightResponse(f"{path}.points must be an array containing 1–5 strings")
         clean_points: list[str] = []
-        for point in points:
-            if not isinstance(point, str) or not point.strip() or len(point.strip()) > 220:
-                raise InvalidInsightResponse("Insight section point is invalid")
-            clean_points.append(point.strip())
-        sections.append({"title": title.strip(), "tone": tone, "points": clean_points})
+        for point_index, point in enumerate(points):
+            clean_points.append(_insight_text(point, f"{path}.points[{point_index}]", _MAX_POINT_CHARS))
+        total_chars += len(title) + sum(map(len, clean_points))
+        if total_chars > _MAX_INSIGHT_CHARS:
+            raise InvalidInsightResponse(
+                f"insight text must contain at most {_MAX_INSIGHT_CHARS} characters total "
+                f"(received at least {total_chars})"
+            )
+        sections.append({"title": title, "tone": tone, "points": clean_points})
     return summary, sections
 
 
 def _parse_insight(content: str) -> tuple[str, list[dict[str, Any]]]:
+    if len(content) > _MAX_RESPONSE_CHARS:
+        raise InvalidInsightResponse(
+            f"JSON response must contain at most {_MAX_RESPONSE_CHARS} characters "
+            f"(received {len(content)})"
+        )
     try:
         parsed = parse_json_response(content)
     except LLMError as exc:
@@ -146,13 +178,31 @@ async def run_insight(
     client = get_llm_client(profile=profile)
 
     messages = [
-        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": f"{system_prompt}\n\n{_STYLE_GUIDANCE}"},
         {"role": "user", "content": user_content},
     ]
 
-    async def complete_and_validate() -> tuple[str, list[dict[str, Any]]]:
+    def repair_messages(error: InvalidInsightResponse) -> list[dict[str, str]]:
+        return [*messages, {
+            "role": "system",
+            "content": (
+                f"The previous response failed validation: {error}. "
+                "Regenerate the complete insight as one JSON object using only the original evidence. "
+                f"Use a nonempty summary of at most {_MAX_SUMMARY_CHARS} characters, 2–4 sections, "
+                f"titles of at most {_MAX_TITLE_CHARS} characters, tone positive/negative/neutral, "
+                f"and 1–5 nonempty string points per section, each at most {_MAX_POINT_CHARS} "
+                f"characters. Keep all insight text within {_MAX_INSIGHT_CHARS} characters total "
+                f"and the JSON response within {_MAX_RESPONSE_CHARS} characters. "
+                "These are safety ceilings, not writing targets. Shorten wording where necessary while "
+                "preserving meaning and uncertainty. Do not include this feedback or invent facts."
+            ),
+        }]
+
+    async def complete_and_validate(
+        stream_error: InvalidInsightResponse | None = None,
+    ) -> tuple[str, list[dict[str, Any]]]:
         content = await client.chat(
-            messages,
+            repair_messages(stream_error) if stream_error else messages,
             temperature=0.3,
             max_tokens=max_tokens,
             json_schema=INSIGHT_SCHEMA,
@@ -166,7 +216,7 @@ async def run_insight(
                 exc,
             )
             content = await client.chat(
-                messages,
+                repair_messages(exc),
                 temperature=0.0,
                 max_tokens=max_tokens,
                 json_schema=INSIGHT_SCHEMA,
@@ -193,16 +243,24 @@ async def run_insight(
                 summary, sections = await complete_and_validate()
             else:
                 chunks: list[str] = []
+                stream_chars = 0
                 try:
-                    async for chunk in client.chat_stream(
+                    async with aclosing(client.chat_stream(
                         messages,
                         temperature=0.3,
                         max_tokens=max_tokens,
                         json_schema=INSIGHT_SCHEMA,
                         frequency_penalty=0.3,
-                    ):
-                        chunks.append(chunk)
-                        on_token(chunk)
+                    )) as stream:
+                        async for chunk in stream:
+                            stream_chars += len(chunk)
+                            if stream_chars > _MAX_RESPONSE_CHARS:
+                                raise InvalidInsightResponse(
+                                    f"JSON response must contain at most {_MAX_RESPONSE_CHARS} characters "
+                                    f"(received at least {stream_chars})"
+                                )
+                            chunks.append(chunk)
+                            on_token(chunk)
                     if not chunks:
                         raise LLMError("LLM stream returned no response text")
                     summary, sections = _parse_insight("".join(chunks))
@@ -212,14 +270,16 @@ async def run_insight(
                     # only the final validated result is published as an insight.
                     logger.warning(
                         "LLM structured stream unavailable; using bounded completion: %s",
-                        type(exc).__name__,
+                        str(exc) if isinstance(exc, InvalidInsightResponse) else type(exc).__name__,
                     )
-                    summary, sections = await complete_and_validate()
+                    summary, sections = await complete_and_validate(
+                        exc if isinstance(exc, InvalidInsightResponse) else None
+                    )
     except asyncio.TimeoutError as exc:
         logger.warning("LLM insight unavailable after bounded generation (%s)", type(exc).__name__)
         return unavailable("timeout", retryable=True)
     except InvalidInsightResponse as exc:
-        logger.warning("LLM insight invalid after bounded repair (%s)", type(exc).__name__)
+        logger.warning("LLM insight invalid after bounded repair: %s", exc)
         return unavailable("invalid_response", retryable=True)
     except LLMError as exc:
         logger.warning("LLM insight unavailable after bounded generation (%s)", type(exc).__name__)

@@ -6,6 +6,19 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Fixed
+- **Actionable structured insight repair** — validation failures now identify
+  the field and safe type/length metadata without logging provider text or
+  private evidence. Streaming fallback and the existing single completion retry
+  receive the validation correction instead of repeating the same prompt.
+  The inherited 220-character bullet limit is now a writing preference rather
+  than a rejection rule. Generous safety ceilings allow 2,000-character summaries
+  and points, 160-character titles, 16,000 total text characters and 64,000 raw
+  JSON characters; oversized streams close before bounded fallback. Structure/
+  count checks, selected model, shared deadline and final validation remain;
+  malformed object/list tone values degrade rather than crash. Text is never
+  silently truncated.
+
 ## [2.5.0] - 2026-11-02
 
 Technical context brings a small, deterministic observation set into comparison
