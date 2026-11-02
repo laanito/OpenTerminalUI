@@ -602,6 +602,25 @@ This is recorded future work, not an implementation start or an assigned v2.6
 scope. Sequence and release boundaries remain to be agreed. It does not reopen
 v2.5 or expand into new providers, trading signals or broker execution.
 
+## Planned follow-up — inherited interface layout debt (unscheduled)
+
+Reported by the maintainer on 2026-11-02: some modules overflow their containers
+or do not stack well as the available width changes. This is legacy layout debt
+inherited from the fork, not a regression attributed to recent feature changes.
+
+Review the interface across modules at wide desktop, intermediate and narrow
+widths, including realistic long content and populated data. Identify the
+affected screens and shared layout causes before choosing fixes. Improve grid/
+flex sizing, wrapping, stacking order and spacing so controls and content remain
+usable. Keep intentional scrolling contained within dense tables or charts
+rather than hiding clipped content or causing accidental page-wide overflow.
+Verify the affected user journeys at representative widths and capture focused
+regressions where useful.
+
+This is a future usability audit, with no release assignment or implementation
+started. Prioritise concrete layout problems rather than assuming a full visual
+redesign is required.
+
 ## v2 opening principle — time-aware memory
 
 > **Intelligence begins with time-aware memory.** Before markets can explain one

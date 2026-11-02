@@ -1231,6 +1231,15 @@ These are the clearest remaining items from the current roadmap and code state.
 They are demand-pulled or later-generation inputs, not a substitute for the
 ordered v1.7 milestone above.
 
+- [ ] **Inherited interface layout audit.** Maintainer report (2026-11-02):
+      some modules overflow or stack poorly. This predates recent changes and
+      is legacy fork debt. Inventory affected screens and shared layout causes
+      at wide/intermediate/narrow widths with realistic long/populated content.
+      Fix container sizing, wrapping, grid/flex stacking and spacing; keep
+      intentional table/chart scrolling contained, without hiding content or
+      accidental page-wide overflow. Verify affected user journeys and add
+      focused regression checks where useful. Future work, no release assigned;
+      see the matching follow-up in `docs/wiki/Roadmap.md`.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.
