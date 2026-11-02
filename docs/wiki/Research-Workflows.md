@@ -306,7 +306,7 @@ or POST inference. Research cache keys distinguish model/provider configuration;
 Interrogate remains owner/note-version scoped and Regenerate bypasses cached
 prose. Model failures remain explicit on the selected profile.
 
-### Interpretations to investigate (v2.4 development)
+### Interpretations to investigate (v2.4)
 
 Following host feedback on 2026-10-29, both briefing modes add a separate
 `hypotheses` section. Each item explains what an observed pattern could mean,
@@ -320,7 +320,8 @@ macro levels do not establish changes, surprises or a market regime.
 The UI labels these interpretations as model hypotheses. Citation buttons open
 the observed inputs, not proof of the proposed mechanism. Every hypothesis
 requires an available price pair; context citations must identify an actual
-usable headline/series together with its linked pair. Sections, failed sources,
+usable headline/series (or an explicitly selected technical metric in v2.5
+development) together with its linked pair. Sections, failed sources,
 SCOPE and unavailable pairs cannot serve as hypothesis evidence. Completed
 generation requires 1–3 hypotheses with all four parts; expected failure states
 return none. Structural/reference checks still cannot judge causal truth or
@@ -329,11 +330,21 @@ whether the interpretation is useful. See the
 
 ### Browser comparison briefing
 
+In v2.5 development, **Briefing evidence scope → Technical observations** adds
+an explicit, default-off technical selection. It can be used alone or with
+news/macro. Citation inspection shows individual values, units/formulas, own
+observation dates, source/freshness/quality limitations and supporting adjusted
+closes. Twenty closes can yield a mean gap while return/volatility remain
+unavailable until 21 closes exist; missing is not zero. Prices can still be
+available when technical data is ineligible. See the
+[technical browser workflow](Technical-Context.md#browser-workflow-v25-development)
+for the Yahoo-only source contract and client-validation boundary.
+
 On **Cross-market context**, apply the anchor, proxies and window with
 **Compare dated moves**, then choose **Generate briefing**. It is always opt-in;
 opening the page, focusing the window or reconnecting does not run the model.
-The request fetches its own fresh native-quote/shared-UTC snapshot. Optional
-panels and reporting-currency views are not included, even when visible.
+The request fetches its own fresh native-quote/shared-UTC snapshot. Opening
+other panels or reporting-currency views never includes them automatically.
 
 Progress reports the preparation, generation and reference-checking stages, not
 raw model tokens. **Cancel briefing** discards the run. The browser allows the

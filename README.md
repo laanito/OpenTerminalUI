@@ -188,6 +188,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup and checks.
 
 ### Cross-market context and source checks
 
+**v2.5 development:** the comparison briefing now has a default-off
+**Technical observations** selector alongside news/macro. It includes bounded
+trend, momentum and unannualized volatility from eligible Yahoo adjusted history.
+Click citations to inspect exact values, formulas, dates and supporting closes;
+partial or unavailable inputs stay explicit. See the
+[technical workflow](docs/wiki/Technical-Context.md). v2.4.0 remains the latest
+published release until v2.5 release preparation completes.
+
 Open **Market context** from equity research, the Security Hub or crypto detail.
 Choose an anchor, add market proxies using symbol suggestions and inspect a
 one-, three- or six-month comparison.
