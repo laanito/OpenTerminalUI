@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Fixed
+- **Browser insight length parity** — the shared insight reader now accepts the
+  server's expanded summary/title/point and total-text safety ceilings, instead
+  of rejecting valid longer analysis with a generic request error. Unicode
+  counts match Python code points; insight-specific NDJSON framing accommodates
+  escaped Unicode without enlarging other model-operation frame limits. A
+  backend/frontend contract check prevents the limits drifting apart again.
 - **Actionable structured insight repair** — validation failures now identify
   the field and safe type/length metadata without logging provider text or
   private evidence. Streaming fallback and the existing single completion retry

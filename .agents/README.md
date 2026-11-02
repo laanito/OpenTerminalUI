@@ -4,7 +4,7 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current state **2026-11-02:** **v2.5.0 — Technical context** is released from
+Current state **2026-11-03:** **v2.5.0 — Technical context** is released from
 `fad1c95`. Implementation PRs #242–#245 deliver eligible own-date Yahoo adjusted
 inputs, three deterministic observations, explicit technical briefing scope and
 exact browser metric/date/source inspection. The maintainer tested the completed
@@ -26,6 +26,12 @@ Briefing, Interrogate this coin, Second Brain and Portfolio AI Risk Assessment.
 No additional indicators or portfolio risk engine are required. Implementation
 has not started; see Roadmap/TODO for sequence and acceptance. The inherited
 layout audit stays unscheduled and separate. v3 remains thesis validation.
+
+Current maintenance before v2.6: #249's backend insight repair/length revision
+is merged. Host feedback exposed the missed browser 600/48/220 limits; a focused
+frontend parity fix is prepared, with all 609 frontend tests, 58 focused backend
+tests and eighteen Chrome smoke journeys passing. See TODO; host retest follows
+merge. Technical-context feature implementation has not started.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
