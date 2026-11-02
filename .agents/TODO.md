@@ -8,7 +8,9 @@ release are published. Post-release docs and chapter 20 are merged/published.
 Current milestone: v2.5 technical context for comparison briefings. The first
 bounded price/sampling contract merged as #242 and indicators as #243.
 Opt-in technical briefing evidence/validation merged as #244. Browser selection/
-inspection is implemented, pending review/host feedback; exit/release checks follow;
+inspection merged as #245 and the maintainer confirmed it works as intended on
+2026-11-02. Consolidated local exit checks passed; metadata is aligned to 2.5.0.
+Release-prep CI/merge and publication authorization remain;
 broader v2.x work needs its own scope. No v2.4 release gate remains.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
@@ -852,15 +854,27 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
       passed. New checks use backend-generated complete/partial/unavailable/mixed
       fixtures and exercise scope, metadata/date/reference rejection, citation
       refocus, supporting tables and degradation at desktop/narrow widths.
-      Host evaluation on real configured providers/models remains pending.
-- [ ] Verify calculations and fidelity across normal/flat, split/dividend,
+      Maintainer host testing accepted the workflow as working as intended on
+      2026-11-02 after #245; no numerical latency benchmark is claimed.
+- [x] Verify calculations and fidelity across normal/flat, split/dividend,
       missing/conflicting/short history and equity/crypto sampling fixtures, plus
       desktop/narrow browser journeys. Record host usefulness/fidelity/latency
       feedback during the individual PRs and carry it into release acceptance.
-- [ ] Run consolidated exit checks, align release documentation/metadata and
-      obtain publication authorization after the release-prep PR merges.
+      Covered by technical input/indicator/evidence fixtures and sixteen Chrome
+      smoke journeys; maintainer accepted the completed workflow after #245.
+- [x] Run consolidated local exit checks and align release documentation/metadata.
+      On 2026-11-02, `make gate` passed 1,517 backend tests (one skipped; 76.81%
+      coverage), 600 frontend tests, compilation, production build and API/surface/
+      mock guards. All sixteen installed-Chrome smoke journeys passed. Metadata
+      is 2.5.0; after the bump, 59 focused backend tests, four frontend identity
+      tests, build/guards and version consistency passed. No dependencies or
+      schema changed. Local tests use SQLite; PostgreSQL/clean-install run in CI.
+- [ ] Merge the release-prep PR after CI, then obtain explicit publication
+      authorization before the tag/GitHub release. Deployment stays with the host.
 
-Next work is host acceptance and consolidated v2.5 exit/release preparation. Reuse
+Next work is release-prep CI/merge and publication authorization. Local exit
+checks and host acceptance are complete; retain them through release closure
+without requesting duplicate tests. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.

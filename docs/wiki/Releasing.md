@@ -336,6 +336,42 @@ authorization, the annotated tag and
 were published from that merge on 2026-10-31. No v2.4 release gate remains.
 The live deployment was not rebuilt; deployment stays with the host agent.
 
+### v2.5.0 verification ledger (release preparation)
+
+The bounded milestone is opt-in technical context for comparison briefings.
+Implementation PRs #242–#245 are merged. On 2026-11-02 the maintainer confirmed
+that the completed workflow works as intended; this host acceptance is retained
+without requesting a duplicate evaluation. No numerical latency benchmark or
+independent source/model-quality certification is claimed.
+
+| Contract | Evidence |
+|---|---|
+| Eligible Yahoo adjusted inputs, source identity, own UTC dates, crypto continuity and explicit rejected-input reasons | `backend/tests/test_technical_inputs.py` |
+| Exact formulas/units, 20/21-close warm-up, true zeros, flat/rising series, split/dividend-like raw gaps and equity/crypto sampling | `backend/tests/test_technical_indicators.py` |
+| Same-snapshot technical evidence, exact pair/metric references, per-asset coverage, bounded Deep repair and unavailable-input isolation | `backend/tests/test_technical_briefing_evidence.py` |
+| Strict client envelopes, technical-only/mixed scope, malformed dates/identities/references and no request replay | `frontend/src/__tests__/technicalContextBriefing.test.ts` |
+| Default-off selection, exact/repeated citation focus, supporting closes, partial/unavailable data and cancellation | `frontend/src/__tests__/TechnicalBriefingPanel.test.tsx`, `frontend/tests/e2e/technical-briefing.spec.ts` |
+
+On 2026-11-02, consolidated `make gate` passed backend compilation,
+API/surface/mock guards, **1,517 backend tests** (one skipped; 76.81% coverage),
+the production build and **600 frontend tests**. All **sixteen
+installed-Chrome smoke journeys** passed, including desktop/narrow technical
+selection, inspection and degradation. Browser/provider/model responses in
+these automated checks are deterministic fixtures, not live inference.
+
+Release metadata is aligned to **2.5.0** in backend/frontend/lock, generated API
+artifacts and public version labels. No dependencies, embeddings or database
+schema changed; no manual migration is required. The consolidated gate preceded
+the metadata-only bump; post-bump verification passed 59 focused backend tests,
+four frontend identity
+tests, the production build, API/surface/mock guards and version consistency.
+The latest published release remains v2.4.0 until publication.
+
+Remaining: the release-prep PR's CI (including disposable clean-install and
+PostgreSQL contracts), merge, and explicit maintainer authorization before tagging
+or creating the GitHub release. Local SQLite coverage does not establish a live
+PostgreSQL rollout. Deployment belongs to the host agent.
+
 ## Cutting the release
 
 ```bash

@@ -20422,7 +20422,7 @@
   },
   "info": {
     "title": "OpenTerminalUI API",
-    "version": "2.4.0"
+    "version": "2.5.0"
   },
   "openapi": "3.1.0",
   "paths": {

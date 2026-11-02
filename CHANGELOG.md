@@ -6,6 +6,21 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-11-02
+
+Technical context brings a small, deterministic observation set into comparison
+briefings through an explicit, default-off selection. Trend, momentum and
+unannualized volatility use each asset's own eligible Yahoo adjusted observations.
+Exact formulas, dates, source identities and supporting closes are inspectable;
+short or unsupported history remains unavailable while prices stay usable.
+Deep may offer conditional interpretations from supplied evidence. Reference
+checks do not certify reasoning, source adjustments, sessions or bar completion.
+
+Implementation PRs #242–#245 are merged. The maintainer confirmed the completed
+workflow works as intended on 2026-11-02. No new provider, dependency, embedding
+or database migration is introduced. This dated entry accompanies release
+preparation; the tag/GitHub release awaits CI, merge and publication authorization.
+
 ### Added
 - **Technical briefing browser workflow (v2.5)** — a default-off Technical
   observations selector sits beside news/macro, including technical-only requests.

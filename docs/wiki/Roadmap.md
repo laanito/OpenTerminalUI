@@ -480,7 +480,7 @@ automatic model judges or multi-model voting, autonomous retries/escalation,
 new evidence providers, broader thesis-validation features and execution. This
 is bounded routing/configuration plus evaluation, not a general LLM framework.
 
-## v2.5 — Technical context for comparison briefings (in development)
+## v2.5 — Technical context for comparison briefings (release preparation)
 
 Agreed on 2026-10-31 after v2.4 publication and its chapter-20 article. Make a
 small set of technical observations inspectable and optionally usable alongside
@@ -559,10 +559,13 @@ states and source-bound identities. Existing price/drawdown results remain intac
 Opt-in technical briefing evidence/validation merged as #244.
 It projects the same fresh comparison, binds references to exact metrics/pairs,
 requires coverage of each usable asset and preserves technical-quality caveats.
-Default-off browser selection and exact metric/source/date inspection are
-implemented, pending review/host acceptance, with strict technical-envelope and
-reference checks. Scope changes cancel and clear old work. Next: host feedback
-and consolidated exit/release checks. Split PRs
+Default-off browser selection and exact metric/source/date inspection merged
+as #245, with strict technical-envelope and reference checks. Scope changes
+cancel and clear old work. The maintainer tested and accepted the completed
+workflow on 2026-11-02. Implementation and host acceptance are complete;
+consolidated local exit checks passed (1,517 backend tests, 600 frontend tests
+and sixteen Chrome smoke journeys). Metadata is aligned to 2.5.0. Release-prep
+CI, merge and explicit publication authorization remain. Split PRs
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
