@@ -12,10 +12,16 @@ Release-prep PR #246 passed build-and-test, clean-install and postgres-contract,
 then merged. Following explicit maintainer authorization, the annotated tag and
 GitHub release were published on 2026-11-02. No v2.5 release gate remains; no new
 dependency, database migration or embedding change. Deployment stays with the
-host agent. Chapter 21's bilingual article and dedicated cover are ready in
-`praderasblog` PR #118; do not mark them published before maintainer confirmation.
+host agent. Post-release docs #247 and chapter 21's bilingual article/cover in
+`praderasblog` PR #118 are merged, confirmed by the maintainer. Blog deployment
+remains with the host; no live-site publication check is claimed here.
 The previous release is v2.4.0 at `e8aaddb`; its chapter-20 article is published.
-Broader v2.x work needs its own agreed scope; v3 remains thesis validation.
+v2.6 scope is agreed: generalise the pair-bound technical contract into standalone
+instrument snapshots, then integrate the same three measures into AI Investment
+Briefing, Interrogate this coin, Second Brain and Portfolio AI Risk Assessment.
+No additional indicators or portfolio risk engine are required. Implementation
+has not started; see Roadmap/TODO for sequence and acceptance. The inherited
+layout audit stays unscheduled and separate. v3 remains thesis validation.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
@@ -876,15 +882,56 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
 - [x] Release-prep PR #246 passed all three CI jobs and merged at `fad1c95`.
       Following explicit maintainer authorization, the annotated v2.5.0 tag and
       GitHub release were published on 2026-11-02. Deployment stays with the host.
-- [ ] Merge/publish chapter 21 in `praderasblog` PR #118, then record confirmation.
+- [x] Post-release docs #247 and chapter 21 in `praderasblog` PR #118 merged;
+      maintainer confirmed. Blog deployment belongs to the host; no live-site
+      publication check is claimed here.
 
-No v2.5 release gate remains. Next work is the chapter-21 blog article and
-post-release handoff; later v2.x scope needs discussion. Local exit checks and
+No v2.5 release gate remains. Post-release docs and the article are merged;
+v2.6 scope and sequence are agreed below. Local exit checks and
 host acceptance are complete; retain them without requesting duplicate tests. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.
 Broader multi-dimensional thesis validation remains v3.
+
+### v2.6 — Technical context across AI research (scope agreed)
+
+Agreed on 2026-11-02; canonical scope/acceptance in `docs/wiki/Roadmap.md`.
+Reuse the three v2.5 measures; no additional indicators are required.
+Implementation has not started. Sequence: standalone evidence → instrument
+briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
+
+- [ ] Generalise the pair-bound technical input/calculation contract into a
+      standalone instrument snapshot with explicit lookback/as-of dates and
+      sufficient 20/21-close warm-up. Preserve v2.5 comparison compatibility,
+      formulas, own dates, provenance, freshness and quality caveats.
+
+- [ ] Give **AI Investment Briefing** relevant instrument-level technical evidence.
+- [ ] Give **Interrogate this coin** supported, dated crypto technical evidence
+      for adversarial thesis review.
+- [ ] Give **Portfolio AI Risk Assessment** holdings-level technical context with
+      explicit coverage/relevance. Do not equate single-asset volatility with
+      portfolio risk or invent aggregation without the necessary joint history.
+- [ ] Give **Second Brain** bounded relevant-symbol selection and current
+      technical observations alongside retrieved research. Preserve temporal/source citations; distinguish current snapshots
+      from dated notes and historically available evidence. Decide transient
+      evidence versus persistence explicitly; do not silently index model prose
+      or transient observations as durable research facts.
+
+Audit current inputs per workflow and reuse v2.5's bounded source/calculation
+contract where applicable. Keep exact values/units/dates, freshness/provenance,
+unavailable states and quality caveats inspectable; preserve existing usable
+inputs, Deep routing, owner scope, deadlines/cancellation and failure handling.
+- [ ] Verify shared contract and all four workflows: missing/short/stale history,
+      relevant symbol/holding bounds, cache freshness, inspection/citations and
+      cancellation. Record configured-model usefulness/fidelity and host feedback
+      in individual PRs; carry it into consolidated release checks.
+- [ ] Complete release checks/documentation/metadata and publication workflow.
+
+No extra indicators, longer-horizon trend expansion, volume/liquidity feeds,
+portfolio correlation/risk engine, new provider, historical reconstruction,
+trading signal or broker execution is included. PR boundaries follow reviewable
+changes, not a fixed count. Layout cleanup remains a separate maintenance track.
 
 Unchecked evidence-ledger entries below remain later candidates unless the
 bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
@@ -1199,6 +1246,15 @@ These are the clearest remaining items from the current roadmap and code state.
 They are demand-pulled or later-generation inputs, not a substitute for the
 ordered v1.7 milestone above.
 
+- [ ] **Inherited interface layout audit.** Maintainer report (2026-11-02):
+      some modules overflow or stack poorly. This predates recent changes and
+      is legacy fork debt. Inventory affected screens and shared layout causes
+      at wide/intermediate/narrow widths with realistic long/populated content.
+      Fix container sizing, wrapping, grid/flex stacking and spacing; keep
+      intentional table/chart scrolling contained, without hiding content or
+      accidental page-wide overflow. Verify affected user journeys and add
+      focused regression checks where useful. Future work, no release assigned;
+      see the matching follow-up in `docs/wiki/Roadmap.md`.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.

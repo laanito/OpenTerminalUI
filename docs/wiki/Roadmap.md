@@ -571,6 +571,92 @@ GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
+## v2.6 — Technical context across AI research (scope agreed)
+
+Agreed on 2026-11-02 after v2.5 publication. Reuse the existing 20-close mean
+gap, 20-period return and unannualized sample volatility of 20 returns in four
+AI experiences. These are a useful initial technical layer, not comprehensive
+technical analysis. No additional indicators are required for this milestone.
+
+- **AI Investment Briefing:** provide relevant instrument-level technical
+  observations alongside the existing research inputs.
+- **Interrogate this coin:** let the adversarial review question a crypto thesis
+  using supported technical observations, including its own calendar dates.
+- **Portfolio AI Risk Assessment:** expose relevant holdings-level technical
+  context, with explicit coverage and position relevance. Individual volatility
+  measures must not be presented as portfolio volatility or risk without a
+  justified aggregation method and the required joint history.
+- **Second Brain:** make relevant technical observations available alongside
+  retrieved research, preserving the Brain's time-aware source/citation behavior.
+  Distinguish a current technical snapshot from a dated note and from evidence
+  that was actually available at a past time. Do not silently index transient
+  observations or generated interpretations as durable research facts.
+
+Audit each workflow's current inputs before designing its integration. Reuse
+the supported source/calculation contract where applicable, with exact values,
+units, dates, freshness, provenance and quality caveats. Keep unavailable or
+short history explicit and preserve usable existing evidence. Evidence inclusion
+and coverage should be clear to the user; model interpretation must remain
+distinct from deterministic observations. Retain Deep routing, owner scope,
+bounded deadlines/cancellation and honest failure handling.
+
+### Delivery sequence and acceptance
+
+1. **Standalone instrument evidence.** Generalise the comparison-pair-bound
+   input/calculation contract into a reusable instrument snapshot, with explicit
+   lookback/as-of dates and sufficient warm-up (20 closes for the mean gap;
+   21 for return/volatility). Preserve formulas, own-date sampling, provenance,
+   freshness, stable identities and unverified quality dimensions. Keep existing
+   v2.5 comparison semantics compatible; do not manufacture a comparison pair
+   merely to collect single-instrument evidence.
+2. **Instrument research consumers.** Integrate AI Investment Briefing and
+   Interrogate this coin with inspectable technical evidence and clear coverage.
+   Technical observations can support or challenge the narrative, without being
+   treated as valuation, liquidity, positioning or entry-timing evidence.
+3. **Second Brain.** Add bounded relevant-symbol selection and current technical
+   snapshots alongside retrieved research. Preserve temporal/source citations
+   and make snapshot timing distinct from the effective dates of research notes.
+   Current observations cannot reconstruct historical investor knowledge.
+4. **Portfolio risk consumer.** Add bounded holdings coverage and position
+   relevance. Separate per-holding behaviour from portfolio-wide risk; no new
+   covariance/correlation or portfolio-volatility calculation is required.
+5. **Evaluation and release closure.** Verify source/calculation compatibility,
+   short/unavailable/stale inputs, scope, relevant symbol/holding limits, cache
+   freshness, cancellation and citation/evidence inspection. Evaluate whether
+   the added context improves each workflow's answers on configured models;
+   retain individual-PR host feedback through consolidated release acceptance.
+
+**Exit condition:** all four workflows can use relevant, dated, inspectable
+technical evidence while preserving their existing useful inputs and clearly
+stating missing coverage. No model-computed indicators or fabricated values.
+Implementation has not started. Split PRs around reviewable shared-contract and
+consumer changes; no fixed PR count is agreed.
+
+**Outside v2.6:** additional indicators (including RSI/MACD), longer-horizon trend
+expansion, volume/liquidity or derivatives-positioning feeds, new providers,
+portfolio correlation/risk engines, historical technical reconstruction, trading
+signals and broker execution. These remain later candidates. The inherited
+layout audit below is a separate maintenance track, not an added release gate.
+
+## Planned follow-up — inherited interface layout debt (unscheduled)
+
+Reported by the maintainer on 2026-11-02: some modules overflow their containers
+or do not stack well as the available width changes. This is legacy layout debt
+inherited from the fork, not a regression attributed to recent feature changes.
+
+Review the interface across modules at wide desktop, intermediate and narrow
+widths, including realistic long content and populated data. Identify the
+affected screens and shared layout causes before choosing fixes. Improve grid/
+flex sizing, wrapping, stacking order and spacing so controls and content remain
+usable. Keep intentional scrolling contained within dense tables or charts
+rather than hiding clipped content or causing accidental page-wide overflow.
+Verify the affected user journeys at representative widths and capture focused
+regressions where useful.
+
+This is a future usability audit, with no release assignment or implementation
+started. Prioritise concrete layout problems rather than assuming a full visual
+redesign is required.
+
 ## v2 opening principle — time-aware memory
 
 > **Intelligence begins with time-aware memory.** Before markets can explain one
