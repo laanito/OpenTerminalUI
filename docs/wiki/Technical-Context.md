@@ -1,12 +1,12 @@
 # Technical context for comparison briefings
 
-v2.5 is in release preparation as a bounded technical-evidence addition to the existing
-comparison briefing. Inputs and deterministic indicators are now exposed through
-the comparison API. Explicit technical selection, reference validation and
-browser evidence inspection merged as #245. The maintainer confirmed the
-workflow works as intended on 2026-11-02. Consolidated local release checks
-passed; CI, merge and publication authorization remain.
-Existing comparison returns and descriptive technical panels keep their behavior.
+v2.5.0 was published on 2026-11-02 from `fad1c95` after implementation PRs
+#242–#245, release-prep PR #246 and explicit maintainer authorization.
+The bounded technical-evidence addition includes eligible inputs, deterministic
+indicators, explicit briefing selection, reference validation and browser
+inspection. Maintainer host acceptance, consolidated local checks and all three
+release-prep CI jobs passed. Existing comparison returns and descriptive
+technical panels keep their behavior.
 
 ## Source audit and supported input contract
 

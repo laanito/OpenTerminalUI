@@ -44,6 +44,24 @@ the [surface inventory](docs/wiki/Surface-Inventory.md) and
 
 ## Current release
 
+[v2.5.0 — Technical context](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0)
+was published on **2026-11-02** from `fad1c95`. Comparison briefings now offer a
+separate, default-off **Technical observations** selection alongside news/macro:
+20-close mean gap, 20-period return and unannualized sample volatility from
+eligible Yahoo adjusted history. Citations expose exact values, formulas, own
+dates, source identities and supporting closes. Short or unsupported history
+stays unavailable without discarding usable prices.
+
+Technical evidence is descriptive; adjustments, exchange sessions and bar
+completion remain unverified. Reference checks do not prove interpretations or
+causes. The maintainer accepted the completed workflow; consolidated checks
+passed 1,517 backend tests, 600 frontend tests and sixteen Chrome smoke journeys.
+Release PR #246 passed build-and-test, clean-install and postgres-contract before
+merge and authorized publication. No dependency, database migration or embedding
+change is required. Deployment stays with the host agent.
+
+Previous release:
+
 [v2.4.0 — Task-appropriate models](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0)
 was published on **2026-10-31** from `e8aaddb`. Fast handles
 headline sentiment, stock emotion and query intent; Deep handles research
@@ -188,14 +206,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup and checks.
 
 ### Cross-market context and source checks
 
-**v2.5 release preparation:** the comparison briefing now has a default-off
+**v2.5:** the comparison briefing now has a default-off
 **Technical observations** selector alongside news/macro. It includes bounded
 trend, momentum and unannualized volatility from eligible Yahoo adjusted history.
 Click citations to inspect exact values, formulas, dates and supporting closes;
 partial or unavailable inputs stay explicit. See the
-[technical workflow](docs/wiki/Technical-Context.md). v2.4.0 remains the latest
-published release pending the 2.5.0 tag. The completed Technical workflow was
-host-tested and accepted on 2026-11-02; publication is a separate final step.
+[technical workflow](docs/wiki/Technical-Context.md). The completed Technical workflow was
+host-tested and accepted on 2026-11-02.
 
 Open **Market context** from equity research, the Security Hub or crypto detail.
 Choose an anchor, add market proxies using symbol suggestions and inspect a

@@ -1,23 +1,18 @@
 # OpenTerminalUI Wiki
 
 OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
-with intentional provider-gated NSE/BSE F&O support. **v2.4.0 — Task-appropriate
-models** was published on 2026-10-31: explicit Fast/Deep routing, consistent
-model identity/deadlines and conditional comparison interpretations. Existing
-single-model configuration remains supported; Deep is optional, embeddings
-are unchanged and no manual database migration is required. Host evaluation
-and consolidated local checks passed, as did all three release-prep CI jobs.
-See [v2.4.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0).
-The previous release was
-[v2.3.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.3.0), from
-2026-10-28, adding opt-in dated news and US/euro-area macro briefing context.
-Reference checks do not certify model reasoning. See [Roadmap](Roadmap.md)
-and [Releasing](Releasing.md).
+with intentional provider-gated NSE/BSE F&O support. **v2.5.0 — Technical context**
+was published on 2026-11-02 from `fad1c95`. Comparison briefings can explicitly
+include bounded trend, momentum and volatility observations with inspectable
+formulas, own dates and supporting adjusted closes. Unavailable inputs stay
+explicit and do not block price comparisons. See the [technical workflow](Technical-Context.md).
 
-**v2.5 release preparation:** opt-in [Technical observations](Technical-Context.md)
-now bring exact trend, momentum and volatility evidence into comparison briefings.
-Implementation and maintainer host acceptance are complete; release verification
-and publication remain separate. v2.4.0 remains the latest published release.
+Host acceptance, consolidated local checks and all three release-prep CI jobs
+passed. No new dependency, database migration or embedding change is required.
+See [v2.5.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0),
+[Roadmap](Roadmap.md) and [Releasing](Releasing.md). The previous release,
+[v2.4.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0), added
+optional Fast/Deep model roles; that contract remains unchanged.
 
 > **North star.** An open, private terminal that helps an individual invest *without being fooled* — by markets, by hype, or by themselves — through AI-native research you can grow privately. Bloomberg parity is pursued only "just enough to be credible"; the differentiation is being AI-native, private, open, and multi-asset. See the [Roadmap](Roadmap) for the full direction.
 

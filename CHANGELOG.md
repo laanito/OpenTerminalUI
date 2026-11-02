@@ -18,8 +18,9 @@ checks do not certify reasoning, source adjustments, sessions or bar completion.
 
 Implementation PRs #242–#245 are merged. The maintainer confirmed the completed
 workflow works as intended on 2026-11-02. No new provider, dependency, embedding
-or database migration is introduced. This dated entry accompanies release
-preparation; the tag/GitHub release awaits CI, merge and publication authorization.
+or database migration is introduced. Release PR #246 passed build-and-test, clean-install and postgres-contract and
+merged at `fad1c95`. Following explicit maintainer authorization, the annotated
+tag and GitHub release were published on 2026-11-02.
 
 ### Added
 - **Technical briefing browser workflow (v2.5)** — a default-off Technical
