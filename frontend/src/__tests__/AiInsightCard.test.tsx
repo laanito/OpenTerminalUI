@@ -1,5 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { streamInsight } from "../api/insightLifecycle";
+
+const fetchApiMock = vi.hoisted(() => vi.fn());
+vi.mock("../api/base", () => ({ fetchApi: fetchApiMock }));
 
 import {
   AiInsightCard,
@@ -17,6 +21,26 @@ const firstResult: InsightData = {
 };
 
 describe("AiInsightCard", () => {
+  it("renders longer validated streamed analysis without the generic request error", async () => {
+    const profile = { requested_profile: "deep", resolved_profile: "deep", model: "deep-model" } as const;
+    const summary = "A balanced interpretation needs enough room to preserve the evidence and its uncertainty. ".repeat(10).trim();
+    const point = "The supplied observations support a conditional explanation, while important evidence remains unavailable. ".repeat(8).trim();
+    const result = { ...firstResult, model: profile.model, model_profile: profile, summary, sections: [
+      { title: "Observed evidence and the limits of its possible interpretation", tone: "neutral", points: [point] },
+      { title: "Risks", tone: "negative", points: ["Missing evidence remains a limitation."] },
+    ] };
+    const body = [
+      { type: "start", model_profile: profile, deadlines: { operation_seconds: 300 } },
+      { type: "result", result },
+    ].map((event) => JSON.stringify(event)).join("\n") + "\n";
+    fetchApiMock.mockResolvedValueOnce(new Response(body, { headers: { "content-type": "application/x-ndjson" } }));
+    render(<AiInsightCard title="AI Investment Briefing" fetcher={(_refresh, options) => streamInsight("briefing", {}, options)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+    expect(await screen.findByText(summary)).toBeVisible();
+    expect(screen.getByText(point)).toBeVisible();
+    expect(screen.queryByText(/Could not generate AI analysis/)).not.toBeInTheDocument();
+    expect(fetchApiMock).toHaveBeenCalledOnce();
+  });
   it.each(["deep", "fast"] as const)("shows the resolved %s model during generation and on completion", async (resolved) => {
     const profile = { requested_profile: "deep", resolved_profile: resolved, model: "selected-model" } as const;
     let finish!: (data: InsightData) => void;

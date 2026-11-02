@@ -1,5 +1,6 @@
 import { fetchApi } from "./base";
 import type { InsightData, InsightModelProfile } from "./types";
+import insightLimits from "./insightLimits.json";
 
 export type InsightKind = "backtest" | "collection" | "risk" | "briefing" | "interrogate";
 export type InsightPhase = "queued" | "generating";
@@ -11,7 +12,9 @@ export type InsightRequestOptions = {
 };
 
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
-const text = (value: unknown, max: number): value is string => typeof value === "string" && value.trim().length > 0 && value.length <= max;
+// Python/schema character limits count Unicode code points, not UTF-16 units.
+const characters = (value: string) => Array.from(value).length;
+const text = (value: unknown, max: number): value is string => typeof value === "string" && value.trim().length > 0 && characters(value.trim()) <= max;
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
 const invalid = () => new Error("The insight response was incomplete or invalid. Retry manually.");
 function identity(value: unknown): InsightModelProfile {
@@ -22,14 +25,20 @@ function identity(value: unknown): InsightModelProfile {
 function result(value: unknown, selected: InsightModelProfile): InsightData {
   if (selected.requested_profile !== "deep") throw invalid();
   if (!record(value) || !["llm", "unavailable"].includes(String(value.engine)) || !text(value.model, 256)
-    || !text(value.summary, 600) || !Array.isArray(value.sections) || value.sections.length > 4
+    || !text(value.summary, insightLimits.summary) || !Array.isArray(value.sections) || value.sections.length > 4
     || (value.engine === "llm" ? value.sections.length < 2 : value.sections.length !== 0)) throw invalid();
   const profile = identity(value.model_profile);
   if (profile.requested_profile !== "deep" || profile.model !== value.model || profile.model !== selected.model || profile.resolved_profile !== selected.resolved_profile) throw invalid();
+  let totalCharacters = characters(value.summary.trim());
   for (const section of value.sections) {
-    if (!record(section) || !text(section.title, 48) || !["positive", "neutral", "negative"].includes(String(section.tone))
-      || !Array.isArray(section.points) || !section.points.length || section.points.length > 5
-      || section.points.some((point) => !text(point, 220))) throw invalid();
+    if (!record(section) || !text(section.title, insightLimits.title) || typeof section.tone !== "string" || !["positive", "neutral", "negative"].includes(section.tone)
+      || !Array.isArray(section.points) || !section.points.length || section.points.length > 5) throw invalid();
+    totalCharacters += characters(section.title.trim());
+    for (const point of section.points) {
+      if (!text(point, insightLimits.point)) throw invalid();
+      totalCharacters += characters(point.trim());
+    }
+    if (totalCharacters > insightLimits.totalText) throw invalid();
   }
   return value as InsightData;
 }
@@ -43,12 +52,15 @@ export function validateFastResult<T extends object>(value: unknown, selected: I
 
 /** One cancellable request with server-announced deadlines; never replay inference. */
 export async function streamInsight(kind: InsightKind, payload: Record<string, unknown>, options: InsightRequestOptions = {}): Promise<InsightData> {
-  return streamModelOperation("/ai/insights/stream", { kind, payload }, result, options);
+  // Python NDJSON escapes non-ASCII characters (up to 12 ASCII chars for one
+  // astral code point). Leave framing/metadata headroom above the raw limit.
+  return streamModelOperation("/ai/insights/stream", { kind, payload }, result, options, insightLimits.rawResponse * 16);
 }
 
 export async function streamModelOperation<T extends object>(
   path: string, body: Record<string, unknown>, validate: (value: unknown, profile: InsightModelProfile) => T,
   options: InsightRequestOptions = {},
+  maxRecordCharacters = 64_000,
 ): Promise<T> {
   if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
   const controller = new AbortController();
@@ -77,7 +89,7 @@ export async function streamModelOperation<T extends object>(
     let buffer = "";
     const apply = (line: string) => {
       if (!line.trim()) return;
-      if (line.length > 64_000 || final) throw invalid();
+      if (line.length > maxRecordCharacters || final) throw invalid();
       const event: unknown = JSON.parse(line);
       if (!record(event)) throw invalid();
       if (event.type === "start") {
@@ -104,7 +116,7 @@ export async function streamModelOperation<T extends object>(
       buffer += decoder.decode(value, { stream: !done });
       const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
       for (const line of lines) apply(line);
-      if (buffer.length > 64_000) throw invalid();
+      if (buffer.length > maxRecordCharacters) throw invalid();
       if (done && buffer.trim()) { apply(buffer); buffer = ""; }
       if (final) { if (buffer.trim()) throw invalid(); return final; }
       if (done) throw invalid();

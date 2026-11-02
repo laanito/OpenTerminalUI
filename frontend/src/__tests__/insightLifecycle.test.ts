@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { streamInsight } from "../api/insightLifecycle";
+import { streamInsight, streamModelOperation } from "../api/insightLifecycle";
+import limits from "../api/insightLimits.json";
 import type { InsightData } from "../api/types";
 
 const fetchApiMock = vi.hoisted(() => vi.fn());
@@ -10,7 +11,7 @@ const insight: InsightData = {
   sections: [{ title: "Evidence", tone: "positive", points: ["Observed"] }, { title: "Risk", tone: "negative", points: ["Limited"] }],
 };
 const start = (seconds = 660) => JSON.stringify({ type: "start", phase: "queued", model_profile: profile, deadlines: { operation_seconds: seconds } }) + "\n";
-const final = () => JSON.stringify({ type: "result", result: insight }) + "\n";
+const final = (result: InsightData = insight) => JSON.stringify({ type: "result", result }) + "\n";
 const encoder = new TextEncoder();
 function stream(chunks: (string | Uint8Array)[], close = true) {
   const cancel = vi.fn();
@@ -58,7 +59,7 @@ describe("streamInsight", () => {
     ["wrong model", start() + JSON.stringify({ type: "result", result: { ...insight, model: "other" } }) + "\n"],
     ["incomplete sections", start() + JSON.stringify({ type: "result", result: { ...insight, sections: [] } }) + "\n"],
     ["error event", start() + JSON.stringify({ type: "error", error: { message: "provider details" } }) + "\n"],
-    ["oversized", start() + "x".repeat(64_001)],
+    ["oversized", start() + "x".repeat(limits.rawResponse * 16 + 1)],
   ])("rejects %s without replaying inference", async (_, body) => {
     fetchApiMock.mockResolvedValue(stream([body]).response);
     await expect(streamInsight("risk", {})).rejects.toThrow();
@@ -77,6 +78,68 @@ describe("streamInsight", () => {
     response.source.error(new Error("connection lost"));
     await checked;
     expect(fetchApiMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves longer summaries, headings and points accepted by the server without replay", async () => {
+    const longer: InsightData = { ...insight, summary: "s".repeat(1000), sections: [
+      { title: "t".repeat(80), tone: "neutral", points: ["p".repeat(900)] }, insight.sections[1],
+    ] };
+    fetchApiMock.mockResolvedValue(stream([start(), final(longer)]).response);
+    await expect(streamInsight("briefing", {})).resolves.toEqual(longer);
+    expect(fetchApiMock).toHaveBeenCalledOnce();
+  });
+
+  it.each(["summary", "title", "point"] as const)("rejects %s above the server safety ceiling", async (field) => {
+    const invalid = structuredClone(insight);
+    const oversized = "x".repeat(limits[field] + 1);
+    if (field === "summary") invalid.summary = oversized;
+    else if (field === "title") invalid.sections[0].title = oversized;
+    else invalid.sections[0].points = [oversized];
+    fetchApiMock.mockResolvedValue(stream([start(), final(invalid)]).response);
+    await expect(streamInsight("risk", {})).rejects.toThrow();
+    expect(fetchApiMock).toHaveBeenCalledOnce();
+  });
+
+  function fullTextResult(unicode: boolean): InsightData {
+    const char = unicode ? "🌍" : "x";
+    const result: InsightData = { ...insight, summary: char, sections: Array.from({ length: 4 }, () => ({
+      title: char, tone: "neutral", points: Array.from({ length: 5 }, () => char.repeat(799)),
+    })) };
+    result.sections[0].points[0] = char.repeat(814); // Exactly 16,000 code points.
+    return result;
+  }
+
+  it("accepts the total text ceiling and rejects one extra character", async () => {
+    const exact = fullTextResult(false);
+    fetchApiMock.mockResolvedValueOnce(stream([start(), final(exact)]).response);
+    await expect(streamInsight("risk", {})).resolves.toEqual(exact);
+    exact.sections[0].points[0] += "x";
+    fetchApiMock.mockResolvedValueOnce(stream([start(), final(exact)]).response);
+    await expect(streamInsight("risk", {})).rejects.toThrow();
+    expect(fetchApiMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("matches Python code-point counts at each field ceiling", async () => {
+    const exact: InsightData = { ...insight, summary: "🌍".repeat(2000), sections: [
+      { title: "📈".repeat(160), tone: "neutral", points: ["🧠".repeat(2000)] }, insight.sections[1],
+    ] };
+    fetchApiMock.mockResolvedValue(stream([start(), final(exact)]).response);
+    await expect(streamInsight("interrogate", {})).resolves.toEqual(exact);
+  });
+
+  it("accepts a full Unicode result serialized with Python-style ASCII escapes across chunks", async () => {
+    const exact = fullTextResult(true);
+    const ascii = final(exact).replace(/[\u007f-\uffff]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`);
+    expect(ascii.length).toBeGreaterThan(64_000);
+    fetchApiMock.mockResolvedValue(stream([start(), ascii.slice(0, 80_000), ascii.slice(80_000)]).response);
+    await expect(streamInsight("risk", {})).resolves.toEqual(exact);
+    expect(fetchApiMock).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the existing frame ceiling for other model operations", async () => {
+    fetchApiMock.mockResolvedValue(stream([start(), "x".repeat(64_001)]).response);
+    await expect(streamModelOperation("/other", {}, () => ({}))).rejects.toThrow();
+    expect(fetchApiMock).toHaveBeenCalledOnce();
   });
 
   it("honors longer Deep deadlines without extending them for progress", async () => {

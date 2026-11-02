@@ -4,11 +4,23 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 
 import pytest
 from backend.config.settings import AppSettings
 
 from backend.services import llm_insights
+
+
+def test_browser_insight_limits_match_server_contract():
+    limits_path = Path(__file__).resolve().parents[2] / "frontend/src/api/insightLimits.json"
+    assert json.loads(limits_path.read_text()) == {
+        "summary": llm_insights._MAX_SUMMARY_CHARS,
+        "title": llm_insights._MAX_TITLE_CHARS,
+        "point": llm_insights._MAX_POINT_CHARS,
+        "totalText": llm_insights._MAX_INSIGHT_CHARS,
+        "rawResponse": llm_insights._MAX_RESPONSE_CHARS,
+    }
 
 
 def _settings(enabled: bool = True, timeout: float = 240.0) -> AppSettings:

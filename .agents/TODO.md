@@ -1,6 +1,6 @@
 # Current project state and backlog
 
-Current state **2026-11-02:** **v2.5.0 — Technical context** is released from
+Current state **2026-11-03:** **v2.5.0 — Technical context** is released from
 `fad1c95`. Implementation PRs #242–#245 deliver eligible own-date Yahoo adjusted
 inputs, three deterministic observations, explicit technical briefing scope and
 exact browser metric/date/source inspection. The maintainer tested the completed
@@ -914,8 +914,22 @@ Do not label this blanket model/stream incompatibility.
       plus API/surface/mock/whitespace guards. The internal generation schema
       reflects the new ceilings; public API, provider settings, dependencies
       and database schema are unchanged.
-- [ ] Merge the focused fix and confirm the originally failing host workflow;
-      if still invalid, use the precise safe diagnostic to investigate further.
+- [x] Backend repair/length revision #249 merged. Follow-up host feedback on
+      2026-11-03 exposed a missed duplicate browser contract: its 600/48/220
+      character limits rejected valid longer server results with the generic
+      request error. Frontend limits now match the server, including 16,000
+      total text characters and Python-style Unicode code-point counting.
+      Insight-only NDJSON frames allow escaped Unicode; other operations retain
+      their 64,000-character framing cap. A backend test checks the frontend's
+      actual limits file against the server constants to prevent drift.
+      Checks: all 609 frontend tests, 58 focused backend tests, production build,
+      eighteen installed-Chrome smoke journeys and API/surface/mock/whitespace
+      guards passed. New browser journeys exercise longer valid briefing and
+      Interrogate output, rejection of over-limit data, stale-answer clearing
+      and explicit retry at desktop/narrow widths with deterministic fixtures.
+- [ ] Merge the browser parity fix and retest the original host workflow. If a
+      failure remains, inspect its new safe diagnostic; no live-provider result
+      is claimed from deterministic browser checks.
 
 ### v2.6 — Technical context across AI research (scope agreed)
 
