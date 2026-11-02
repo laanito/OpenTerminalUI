@@ -1,9 +1,11 @@
 # Technical context for comparison briefings
 
-v2.5 is in development as a bounded technical-evidence addition to the existing
+v2.5 is in release preparation as a bounded technical-evidence addition to the existing
 comparison briefing. Inputs and deterministic indicators are now exposed through
 the comparison API. Explicit technical selection, reference validation and
-browser evidence inspection are implemented, pending review/host acceptance.
+browser evidence inspection merged as #245. The maintainer confirmed the
+workflow works as intended on 2026-11-02. Consolidated local release checks
+passed; CI, merge and publication authorization remain.
 Existing comparison returns and descriptive technical panels keep their behavior.
 
 ## Source audit and supported input contract

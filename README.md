@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.4.0-0f172a" alt="Version 2.4.0" />
+  <img src="https://img.shields.io/badge/version-2.5.0-0f172a" alt="Version 2.5.0 (release preparation)" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -188,13 +188,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup and checks.
 
 ### Cross-market context and source checks
 
-**v2.5 development:** the comparison briefing now has a default-off
+**v2.5 release preparation:** the comparison briefing now has a default-off
 **Technical observations** selector alongside news/macro. It includes bounded
 trend, momentum and unannualized volatility from eligible Yahoo adjusted history.
 Click citations to inspect exact values, formulas, dates and supporting closes;
 partial or unavailable inputs stay explicit. See the
 [technical workflow](docs/wiki/Technical-Context.md). v2.4.0 remains the latest
-published release until v2.5 release preparation completes.
+published release pending the 2.5.0 tag. The completed Technical workflow was
+host-tested and accepted on 2026-11-02; publication is a separate final step.
 
 Open **Market context** from equity research, the Security Hub or crypto detail.
 Choose an anchor, add market proxies using symbol suggestions and inspect a

@@ -7,7 +7,7 @@ previously existed only in a maintainer's chat or local agent memory.
 Current state **2026-11-02:** v2.4.0 is released from `e8aaddb`. All twelve generation
 tasks are integrated; the maintainer confirmed individual-PR testing covered
 functionality, answer quality, source accuracy and response times. The full local
-gate and fourteen Chrome smoke journeys passed. Release metadata is 2.4.0;
+gate and fourteen Chrome smoke journeys passed. v2.4 release metadata was 2.4.0;
 release PR #239 passed all three CI jobs and merged, then the maintainer
 authorized tag/GitHub publication. No v2.4 release gate remains. Chapter 20's
 bilingual article and dedicated hero in `praderasblog` PR #117 are merged and
@@ -19,10 +19,16 @@ not add technical evidence to model prompts by default. Deterministic 20-close
 mean gap, 20-period return and unannualized sample 20-return volatility merged
 as #243; explicit `context.technical` API selection/evidence/validation merged
 as #244. The browser's default-off Technical observations selector and exact
-metric/source/date inspection are implemented, pending review/host feedback.
+metric/source/date inspection merged as #245 and were host-tested successfully
+on 2026-11-02.
 The client validates backend-generated technical envelopes and reference rules;
 scope changes abort and clear old work. Existing price-only/news/macro requests
-keep their scope. Next: host acceptance and consolidated exit/release checks. See
+keep their scope. Consolidated local v2.5 checks passed: 1,517 backend tests
+(one skipped; 76.81% coverage), 600 frontend tests, production build, API/surface/
+mock guards and sixteen Chrome smoke journeys. Metadata is aligned to 2.5.0;
+59 focused backend and four frontend identity tests, build/guards/version checks
+passed after the bump. Next: release-prep CI/merge and maintainer publication
+authorization. No new dependencies, database migration or embedding change. See
 `Technical-Context.md`.
 See Roadmap/TODO before implementation; broader v2.x work needs its own scope.
 

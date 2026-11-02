@@ -83,8 +83,13 @@ never silently faked.
   Feeds are not complete historical archives, macro dates are not publication
   dates and current vintages do not establish past investor knowledge or issuer
   relevance. Coverage/failures and exact source links, values, counts and flags
-  remain inspectable. Fundamentals/SEC, technical/FX views, private research and
-  economic calendars are excluded. Inspect values and caveats. Citation/structure
+  remain inspectable. v2.5 adds a separate default-off Technical observations
+  selection: a 20-close mean gap, 20-period return and unannualized sample
+  volatility from eligible own-date Yahoo adjusted history. Exact formulas,
+  dates, counts and supporting closes are inspectable. Adjustment methods,
+  sessions and bar completion remain unverified; insufficient or unsupported
+  inputs stay unavailable without discarding prices. Fundamentals/SEC, FX views,
+  private research and economic calendars are excluded. Inspect values and caveats. Citation/structure
   validation does not prove the model's arithmetic, reasoning or compliance with
   no-advice/no-causation prompt rules. A weaker model can still produce weaker
   prose. v2.4 routes comparison synthesis through configured

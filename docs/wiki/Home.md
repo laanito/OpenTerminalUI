@@ -14,6 +14,11 @@ The previous release was
 Reference checks do not certify model reasoning. See [Roadmap](Roadmap.md)
 and [Releasing](Releasing.md).
 
+**v2.5 release preparation:** opt-in [Technical observations](Technical-Context.md)
+now bring exact trend, momentum and volatility evidence into comparison briefings.
+Implementation and maintainer host acceptance are complete; release verification
+and publication remain separate. v2.4.0 remains the latest published release.
+
 > **North star.** An open, private terminal that helps an individual invest *without being fooled* — by markets, by hype, or by themselves — through AI-native research you can grow privately. Bloomberg parity is pursued only "just enough to be credible"; the differentiation is being AI-native, private, open, and multi-asset. See the [Roadmap](Roadmap) for the full direction.
 
 ## Current Product Focus
@@ -44,7 +49,7 @@ and [Releasing](Releasing.md).
 - [Data Providers](Data-Providers)
 - [Limitations](Limitations) — what works keyless vs. needs keys, and honest caveats
 - [Contributing](Contributing)
-- [Roadmap](Roadmap) — released v2.2 scope and later, unscheduled generation work
+- [Roadmap](Roadmap) — current release scope and later, unscheduled generation work
 - [Releasing](Releasing) — how we cut a tagged release
 
 ## Smoke Routes
