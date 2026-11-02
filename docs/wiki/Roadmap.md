@@ -571,10 +571,12 @@ GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
-## Planned follow-up — technical context across AI research (unscheduled)
+## v2.6 — Technical context across AI research (scope agreed)
 
-Requested on 2026-11-02 after v2.5 publication. Extend the bounded technical
-evidence introduced for comparison briefings to these four experiences:
+Agreed on 2026-11-02 after v2.5 publication. Reuse the existing 20-close mean
+gap, 20-period return and unannualized sample volatility of 20 returns in four
+AI experiences. These are a useful initial technical layer, not comprehensive
+technical analysis. No additional indicators are required for this milestone.
 
 - **AI Investment Briefing:** provide relevant instrument-level technical
   observations alongside the existing research inputs.
@@ -598,9 +600,43 @@ and coverage should be clear to the user; model interpretation must remain
 distinct from deterministic observations. Retain Deep routing, owner scope,
 bounded deadlines/cancellation and honest failure handling.
 
-This is recorded future work, not an implementation start or an assigned v2.6
-scope. Sequence and release boundaries remain to be agreed. It does not reopen
-v2.5 or expand into new providers, trading signals or broker execution.
+### Delivery sequence and acceptance
+
+1. **Standalone instrument evidence.** Generalise the comparison-pair-bound
+   input/calculation contract into a reusable instrument snapshot, with explicit
+   lookback/as-of dates and sufficient warm-up (20 closes for the mean gap;
+   21 for return/volatility). Preserve formulas, own-date sampling, provenance,
+   freshness, stable identities and unverified quality dimensions. Keep existing
+   v2.5 comparison semantics compatible; do not manufacture a comparison pair
+   merely to collect single-instrument evidence.
+2. **Instrument research consumers.** Integrate AI Investment Briefing and
+   Interrogate this coin with inspectable technical evidence and clear coverage.
+   Technical observations can support or challenge the narrative, without being
+   treated as valuation, liquidity, positioning or entry-timing evidence.
+3. **Second Brain.** Add bounded relevant-symbol selection and current technical
+   snapshots alongside retrieved research. Preserve temporal/source citations
+   and make snapshot timing distinct from the effective dates of research notes.
+   Current observations cannot reconstruct historical investor knowledge.
+4. **Portfolio risk consumer.** Add bounded holdings coverage and position
+   relevance. Separate per-holding behaviour from portfolio-wide risk; no new
+   covariance/correlation or portfolio-volatility calculation is required.
+5. **Evaluation and release closure.** Verify source/calculation compatibility,
+   short/unavailable/stale inputs, scope, relevant symbol/holding limits, cache
+   freshness, cancellation and citation/evidence inspection. Evaluate whether
+   the added context improves each workflow's answers on configured models;
+   retain individual-PR host feedback through consolidated release acceptance.
+
+**Exit condition:** all four workflows can use relevant, dated, inspectable
+technical evidence while preserving their existing useful inputs and clearly
+stating missing coverage. No model-computed indicators or fabricated values.
+Implementation has not started. Split PRs around reviewable shared-contract and
+consumer changes; no fixed PR count is agreed.
+
+**Outside v2.6:** additional indicators (including RSI/MACD), longer-horizon trend
+expansion, volume/liquidity or derivatives-positioning feeds, new providers,
+portfolio correlation/risk engines, historical technical reconstruction, trading
+signals and broker execution. These remain later candidates. The inherited
+layout audit below is a separate maintenance track, not an added release gate.
 
 ## Planned follow-up — inherited interface layout debt (unscheduled)
 
