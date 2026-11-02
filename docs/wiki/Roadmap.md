@@ -571,6 +571,37 @@ GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
+## Planned follow-up — technical context across AI research (unscheduled)
+
+Requested on 2026-11-02 after v2.5 publication. Extend the bounded technical
+evidence introduced for comparison briefings to these four experiences:
+
+- **AI Investment Briefing:** provide relevant instrument-level technical
+  observations alongside the existing research inputs.
+- **Interrogate this coin:** let the adversarial review question a crypto thesis
+  using supported technical observations, including its own calendar dates.
+- **Portfolio AI Risk Assessment:** expose relevant holdings-level technical
+  context, with explicit coverage and position relevance. Individual volatility
+  measures must not be presented as portfolio volatility or risk without a
+  justified aggregation method and the required joint history.
+- **Second Brain:** make relevant technical observations available alongside
+  retrieved research, preserving the Brain's time-aware source/citation behavior.
+  Distinguish a current technical snapshot from a dated note and from evidence
+  that was actually available at a past time. Do not silently index transient
+  observations or generated interpretations as durable research facts.
+
+Audit each workflow's current inputs before designing its integration. Reuse
+the supported source/calculation contract where applicable, with exact values,
+units, dates, freshness, provenance and quality caveats. Keep unavailable or
+short history explicit and preserve usable existing evidence. Evidence inclusion
+and coverage should be clear to the user; model interpretation must remain
+distinct from deterministic observations. Retain Deep routing, owner scope,
+bounded deadlines/cancellation and honest failure handling.
+
+This is recorded future work, not an implementation start or an assigned v2.6
+scope. Sequence and release boundaries remain to be agreed. It does not reopen
+v2.5 or expand into new providers, trading signals or broker execution.
+
 ## v2 opening principle — time-aware memory
 
 > **Intelligence begins with time-aware memory.** Before markets can explain one

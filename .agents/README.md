@@ -16,10 +16,15 @@ Release-prep PR #246 passed build-and-test, clean-install and postgres-contract,
 then merged. Following explicit maintainer authorization, the annotated tag and
 GitHub release were published on 2026-11-02. No v2.5 release gate remains; no new
 dependency, database migration or embedding change. Deployment stays with the
-host agent. Chapter 21's bilingual article and dedicated cover are ready in
-`praderasblog` PR #118; do not mark them published before maintainer confirmation.
+host agent. Post-release docs #247 and chapter 21's bilingual article/cover in
+`praderasblog` PR #118 are merged, confirmed by the maintainer. Blog deployment
+remains with the host; no live-site publication check is claimed here.
 The previous release is v2.4.0 at `e8aaddb`; its chapter-20 article is published.
-Broader v2.x work needs its own agreed scope; v3 remains thesis validation.
+The maintainer requested future technical-context integration into AI Investment
+Briefing, Interrogate this coin, Portfolio AI Risk Assessment and Second Brain.
+These are recorded unscheduled follow-ups; implementation has not started and
+no v2.6 scope is assigned. Broader v2.x work needs its own agreed scope; v3 remains
+thesis validation.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR

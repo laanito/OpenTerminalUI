@@ -12,10 +12,15 @@ Release-prep PR #246 passed build-and-test, clean-install and postgres-contract,
 then merged. Following explicit maintainer authorization, the annotated tag and
 GitHub release were published on 2026-11-02. No v2.5 release gate remains; no new
 dependency, database migration or embedding change. Deployment stays with the
-host agent. Chapter 21's bilingual article and dedicated cover are ready in
-`praderasblog` PR #118; do not mark them published before maintainer confirmation.
+host agent. Post-release docs #247 and chapter 21's bilingual article/cover in
+`praderasblog` PR #118 are merged, confirmed by the maintainer. Blog deployment
+remains with the host; no live-site publication check is claimed here.
 The previous release is v2.4.0 at `e8aaddb`; its chapter-20 article is published.
-Broader v2.x work needs its own agreed scope; v3 remains thesis validation.
+The maintainer requested future technical-context integration into AI Investment
+Briefing, Interrogate this coin, Portfolio AI Risk Assessment and Second Brain.
+These are recorded unscheduled follow-ups; implementation has not started and
+no v2.6 scope is assigned. Broader v2.x work needs its own agreed scope; v3 remains
+thesis validation.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
@@ -876,15 +881,42 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
 - [x] Release-prep PR #246 passed all three CI jobs and merged at `fad1c95`.
       Following explicit maintainer authorization, the annotated v2.5.0 tag and
       GitHub release were published on 2026-11-02. Deployment stays with the host.
-- [ ] Merge/publish chapter 21 in `praderasblog` PR #118, then record confirmation.
+- [x] Post-release docs #247 and chapter 21 in `praderasblog` PR #118 merged;
+      maintainer confirmed. Blog deployment belongs to the host; no live-site
+      publication check is claimed here.
 
-No v2.5 release gate remains. Next work is the chapter-21 blog article and
-post-release handoff; later v2.x scope needs discussion. Local exit checks and
+No v2.5 release gate remains. Post-release docs and the article are merged;
+later v2.x scope and sequencing need discussion. Local exit checks and
 host acceptance are complete; retain them without requesting duplicate tests. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.
 Broader multi-dimensional thesis validation remains v3.
+
+### Planned follow-up — technical context across AI research (unscheduled)
+
+Requested on 2026-11-02; see the matching scope in `docs/wiki/Roadmap.md`.
+Implementation has not started; sequence and release scope remain to be
+discussed.
+
+- [ ] Give **AI Investment Briefing** relevant instrument-level technical evidence.
+- [ ] Give **Interrogate this coin** supported, dated crypto technical evidence
+      for adversarial thesis review.
+- [ ] Give **Portfolio AI Risk Assessment** holdings-level technical context with
+      explicit coverage/relevance. Do not equate single-asset volatility with
+      portfolio risk or invent aggregation without the necessary joint history.
+- [ ] Give **Second Brain** relevant technical observations alongside retrieved
+      research. Preserve temporal/source citations; distinguish current snapshots
+      from dated notes and historically available evidence. Decide transient
+      evidence versus persistence explicitly; do not silently index model prose
+      or transient observations as durable research facts.
+
+Audit current inputs per workflow and reuse v2.5's bounded source/calculation
+contract where applicable. Keep exact values/units/dates, freshness/provenance,
+unavailable states and quality caveats inspectable; preserve existing usable
+inputs, Deep routing, owner scope, deadlines/cancellation and failure handling.
+Agree sequence and release boundaries before implementation; no new provider,
+trading-signal or broker scope is implied.
 
 Unchecked evidence-ledger entries below remain later candidates unless the
 bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
