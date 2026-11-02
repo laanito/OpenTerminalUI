@@ -15,7 +15,7 @@ from backend.services.comparison_briefing import (
     _FAILURES, material_price_references, synthesize_checked_briefing, validate_comparison_briefing,
 )
 from backend.services.llm_client import LLMError, parse_json_response
-from backend.services.market_briefing_context_evidence import ComparisonContextEvidence, NewsContextSection
+from backend.services.market_briefing_context_evidence import ComparisonContextEvidence, NewsContextSection, TechnicalContextSection
 
 MAX_CONTEXT_INPUT_CHARS = 120_000
 
@@ -39,8 +39,8 @@ class GeneratedContextBriefing(BaseModel):
     observations: list[BriefingStatement] = Field(min_length=1, max_length=6)
     hypotheses: list[BriefingHypothesis] = Field(min_length=1, max_length=3)
     possible_context: list[ContextStatement] = Field(max_length=12)
-    limitations: list[ContextStatement] = Field(min_length=1, max_length=18)
-    unknowns: list[ContextStatement] = Field(min_length=1, max_length=18)
+    limitations: list[ContextStatement] = Field(min_length=1, max_length=24)
+    unknowns: list[ContextStatement] = Field(min_length=1, max_length=24)
 
 
 class ContextBriefingFailure(ComparisonBriefingFailure):
@@ -60,7 +60,9 @@ class ComparisonContextBriefingResult(BaseModel):
         "AI interpretation of provider-close returns and explicitly selected dated context. "
         "Headlines are untrusted reports, not verified facts or a complete historical archive. "
         "Macro reference periods are not publication dates; current vintages do not establish "
-        "past knowledge or ticker relevance. Interpretations are hypotheses; citations "
+        "past knowledge or ticker relevance. When selected, technical measures use each asset's "
+        "own adjusted observations, not identical calendar spans or verified adjustments, "
+        "sessions, completed bars or trading signals. Interpretations are hypotheses; citations "
         "anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are "
         "checked, not the truth of prose. This is not investment advice. Inspect sources, "
         "dates, coverage and failures; nested price-only exclusions apply to that subpacket."
@@ -106,6 +108,18 @@ def _reference_rules(evidence):
                     usable[item.citation_id] = section.pair_citation_id
                     if item.title_truncated:
                         material.add(item.citation_id)
+        elif isinstance(section, TechnicalContextSection):
+            for asset in section.assets:
+                known.add(asset.citation_id)
+                material.add(asset.citation_id)  # Always retain source-quality/own-date caveats.
+                if asset.status == "unavailable":
+                    missing.add(asset.citation_id)
+                for metric in asset.metrics:
+                    known.add(metric.citation_id)
+                    if metric.status == "available" and metric.value is not None:
+                        usable[metric.citation_id] = section.pair_citation_id
+                    else:
+                        missing.add(metric.citation_id)
         else:
             for series in section.series:
                 known.add(series.citation_id)
@@ -149,6 +163,10 @@ def validate_context_briefing(content: str, evidence: ComparisonContextEvidence)
             raise InvalidComparisonBriefing("context_source_pair", fields=[("possible_context", index, "citation_ids")])
         if any(usable[ref] not in refs for ref in inputs):
             raise InvalidComparisonBriefing("context_source_pair", fields=[("possible_context", index, "citation_ids")])
+    used_context = {ref for item in [*result.possible_context, *result.hypotheses] for ref in item.citation_ids}
+    for group in _technical_required_groups(evidence, usable):
+        if not set(group["at_least_one_of"]) & used_context:
+            raise InvalidComparisonBriefing("technical_coverage", references=group["at_least_one_of"])
     # Reuse every price coverage/caveat rule without allowing context references
     # to masquerade as price observations or removing the nested packet's scope.
     price_refs = {"SCOPE", *(pair.citation_id for pair in evidence.price.comparisons)}
@@ -160,6 +178,15 @@ def validate_context_briefing(content: str, evidence: ComparisonContextEvidence)
         projected[name] = [dict(text="Reference coverage projection only.", citation_ids=refs)] if refs else []
     validate_comparison_briefing(json.dumps(projected), evidence.price)
     return result
+
+
+def _technical_required_groups(evidence, usable):
+    return [{"pair": section.pair_citation_id,
+             "asset": asset.citation_id,
+             "at_least_one_of": [metric.citation_id for metric in asset.metrics
+                                 if metric.citation_id in usable]}
+            for section in evidence.sections if isinstance(section, TechnicalContextSection)
+            for asset in section.assets if any(metric.citation_id in usable for metric in asset.metrics)]
 
 
 def context_reference_requirements(evidence: ComparisonContextEvidence) -> dict:
@@ -183,6 +210,7 @@ def context_reference_requirements(evidence: ComparisonContextEvidence) -> dict:
         "limitations_or_unknowns_required_references": sorted(missing | unavailable),
         "unknowns_required_references": ["SCOPE"],
         "unknowns_forbidden_pair_references": sorted(available),
+        "technical_required_source_groups": _technical_required_groups(evidence, usable),
     }
 
 
@@ -203,10 +231,11 @@ actual shared-UTC window, not guaranteed simultaneous sessions or like-for-like 
 Missing/stale observations cannot become current or zero returns. Keep signs/dates faithful.
 Return ONLY the supplied JSON schema and exact OUTER packet_id. Every statement needs refs.
 Hypotheses must cite at least one available P#; optional context refs must be actual
-usable headlines/series AND their linked available P#. No SCOPE/section/group refs.
+usable headlines/series/technical metrics AND their linked available P#. No SCOPE/section/group refs.
 Observations collectively cite ALL available P1-P6 pairs and ONLY those pairs.
 Possible_context may be empty. Each item MUST cite an available headline (C#G#H#) or
-macro series with values (C#S#), AND its linked P#; no other refs in possible_context.
+macro series with values (C#S#) or technical metric (C#A#T#), AND its linked P#;
+no other refs in possible_context.
 Use tentative language: a dated report/observation may provide context, not explain a move.
 Limitations MUST cite SCOPE, EVERY selected C# section, all material price-caveat pairs,
 and each group/headline/series with withheld values, truncated coverage/title or value flags.
@@ -216,6 +245,23 @@ unavailable pairs plus context references, NOT available pairs. Every unavailabl
 empty/failed/no-price section or group/series must appear in limitations or unknowns.
 No extra fields, uncited summary, links, commands or markdown. Reference checking is not
 semantic fact-checking. Describe uncertainty and do not imply sources prove causation.""" + _INTERPRETATION_INSTRUCTIONS
+
+_TECHNICAL_INSTRUCTIONS = """
+Selected technical metrics are deterministic observed-adjusted-close calculations, not
+trading signals or independently verified adjustments, exchange sessions or completed bars.
+Use their EXACT supplied values, units, formulas, lookbacks and own observation dates;
+do not calculate new indicators, invent thresholds, resample or annualize volatility.
+Twenty equity observations and twenty crypto observations may span different calendar
+periods; distinguish these from the shared-date native provider-close price returns.
+Zero is valid; missing/insufficient-history values remain unavailable, never zero.
+Preserve stale/partial coverage and unknown source-quality dimensions. Technical changes
+describe prices; they do not independently corroborate a causal mechanism or reveal what
+investors knew then. Cite each technical asset group C#A# in limitations. For every group
+listed in technical_required_source_groups, cite at least one of its available metric
+references AND the linked P# in possible_context or a hypothesis. Discuss the observed
+pattern conditionally alongside selected news/macro when useful, and name alternatives
+or distinguishing evidence without recommending trades or inventing absent facts.
+"""
 
 
 async def generate_context_briefing(
@@ -229,7 +275,8 @@ async def generate_context_briefing(
     if len(evidence.model_dump_json()) > MAX_CONTEXT_INPUT_CHARS:
         return unavailable_context_briefing("evidence_too_large", evidence=evidence, profile=profile)
     parsed, failure = await synthesize_checked_briefing(
-        evidence, schema=GeneratedContextBriefing.model_json_schema(), system=_SYSTEM,
+        evidence, schema=GeneratedContextBriefing.model_json_schema(),
+        system=_SYSTEM + (_TECHNICAL_INSTRUCTIONS if evidence.requested.technical else ""),
         validate=validate_context_briefing, on_phase=on_phase, max_tokens=6400,
         reference_requirements=context_reference_requirements(evidence),
         profile=profile,

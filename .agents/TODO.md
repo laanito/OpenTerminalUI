@@ -6,8 +6,9 @@ checks passed; release metadata is aligned. Release PR #239 passed all three
 CI jobs and merged; the maintainer authorized publication and the tag/GitHub
 release are published. Post-release docs and chapter 20 are merged/published.
 Current milestone: v2.5 technical context for comparison briefings. The first
-bounded price/sampling contract merged as #242. Deterministic indicators are
-implemented, pending review; briefing/browser integration follows;
+bounded price/sampling contract merged as #242 and indicators as #243.
+Opt-in technical briefing evidence/validation is implemented, pending review;
+browser selection/inspection is next;
 broader v2.x work needs its own scope. No v2.4 release gate remains.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
@@ -819,10 +820,23 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
       own-date equity/crypto windows, finite arithmetic and briefing exclusion.
       Generated API, surface inventory (477 operations/87 families), mock and
       whitespace guards passed. No UI/model/provider inference run is claimed.
-- [ ] Extend server-owned briefing evidence and validation with explicitly
+- [x] Extend server-owned briefing evidence and validation with explicitly
       selected technical context, bounded local references, coverage and caveats.
       Deep may interpret supplied measures conditionally; citation checks do not
       certify mechanisms or authorize trading signals.
+      `context.technical` defaults false and can be the only selected source or
+      combine with news/macro. One fresh comparison supplies both prices and
+      technical inputs; no second history fetch. Projection rechecks identity,
+      windows/provider and recalculated metrics; source defects withhold technical
+      context without dropping prices. Metric refs `C#A#T#` require linked `P#`;
+      every usable asset must be cited and source-quality groups acknowledged.
+      Missing metrics are known only for limitations/unknowns. Existing Deep
+      profile, repair/deadline/cancellation and evidence-size cap remain intact.
+      Checks: 287 focused backend tests and 115 frontend compatibility tests
+      passed, including mixed/partial/zero evidence, exact references, coverage
+      repair, all 24 sections, one history fetch per symbol and cancellation/
+      timeout cleanup. Generated API/surface/mock and whitespace guards passed.
+      No live-provider/model-quality run or technical browser UI is claimed.
 - [ ] Add default-off browser selection and exact technical evidence inspection;
       preserve profile/deadline/cancellation/repair behavior and the price-only
       path. Optional technical failure leaves available price/news/macro usable.
@@ -833,7 +847,8 @@ Agreed on 2026-10-31. Canonical scope/exit criteria are in
 - [ ] Run consolidated exit checks, align release documentation/metadata and
       obtain publication authorization after the release-prep PR merges.
 
-Next work is explicit briefing evidence/validation, followed by browser inspection. Reuse
+Next work is default-off browser selection, strict technical-envelope validation
+and exact citation inspection. Reuse
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.

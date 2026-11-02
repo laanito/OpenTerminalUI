@@ -15,10 +15,12 @@ published, confirmed by the maintainer. v2.5 scope is agreed: bounded technical
 context for comparison briefings. Its first additive technical input contract
 merged as #242: original Yahoo source consistency, per-asset
 own dates, stable input IDs and explicit unknown quality dimensions. It does
-not add technical evidence to model prompts. Deterministic 20-close mean gap,
-20-period return and unannualized sample 20-return volatility are now implemented,
-pending review, with per-metric history/status/dates and source-bound identities.
-Next: explicit briefing evidence/validation, then browser integration; see
+not add technical evidence to model prompts by default. Deterministic 20-close
+mean gap, 20-period return and unannualized sample 20-return volatility merged
+as #243. Explicit `context.technical` API selection/evidence/validation is now
+implemented, pending review, using that same fresh comparison snapshot, exact
+metric references and source-quality limitations. Browser controls/inspection
+are next; existing price-only/news/macro requests keep their scope. See
 `Technical-Context.md`.
 See Roadmap/TODO before implementation; broader v2.x work needs its own scope.
 

@@ -553,10 +553,13 @@ Yahoo fields survive adapter normalization, so dropped rows and duplicate source
 dates cannot disappear from this assessment. Adjustment quality, sessions and
 bar completion remain explicitly unverified. See the
 [technical contract and source audit](Technical-Context.md). Deterministic
-mean-gap, return and unannualized sample-volatility observations are implemented,
-pending review, with exact windows, warm-up requirements, per-metric unavailable
+mean-gap, return and unannualized sample-volatility observations merged as #243,
+with exact windows, warm-up requirements, per-metric unavailable
 states and source-bound identities. Existing price/drawdown results remain intact.
-Next: opt-in briefing evidence/validation, followed by browser inspection. Split PRs
+Opt-in technical briefing evidence/validation is implemented, pending review.
+It projects the same fresh comparison, binds references to exact metrics/pairs,
+requires coverage of each usable asset and preserves technical-quality caveats.
+Default-off browser selection and citation inspection are next. Split PRs
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 

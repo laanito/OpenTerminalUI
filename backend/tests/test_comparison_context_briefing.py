@@ -283,7 +283,7 @@ def test_evidence_api_skips_model_and_context_stream_has_explicit_budgets_and_fi
     with _client(_Fetcher()) as client:
         response = client.post("/api/market-context/briefing-context-evidence", json=payload)
         assert response.status_code == 200
-        assert response.json()["requested"] == {"news": True, "macro_regions": []}
+        assert response.json()["requested"] == {"news": True, "macro_regions": [], "technical": False}
         response = client.post("/api/market-context/briefing-context/stream", json=payload)
         assert response.status_code == 200
     events = [json.loads(line) for line in response.text.splitlines()]

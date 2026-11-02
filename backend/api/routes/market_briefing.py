@@ -74,11 +74,15 @@ async def prepare_comparison_briefing_evidence(
     This does not generate a briefing, persist a snapshot or reuse the browser's
     previous response. Optional provider panels and private notes are excluded.
     """
+    return build_comparison_evidence(await _prepare_comparison_snapshot(payload, user, fetcher))
+
+
+async def _prepare_comparison_snapshot(payload, user, fetcher) -> MarketComparisonResponse:
     normalized = _normalized_payload(payload)
     selection = MarketComparisonRequest(
         anchor=normalized.anchor, comparisons=normalized.comparisons, period=normalized.period,
-        # This packet intentionally covers only native provider-close returns;
-        # avoid optional FX fetches even if a page has a reporting currency set.
+        # Primary returns stay native provider-close. Optional technical facts
+        # are projected separately; do not fetch unrequested reporting-currency FX.
         reporting_currency=None,
     )
     try:
@@ -89,7 +93,14 @@ async def prepare_comparison_briefing_evidence(
             "code": "evidence_timed_out",
             "message": "Comparison evidence preparation timed out; no packet was created.",
         }) from exc
-    return build_comparison_evidence(MarketComparisonResponse.model_validate(result))
+    return MarketComparisonResponse.model_validate(result)
+
+
+async def _prepare_context_price(payload, user, fetcher):
+    if payload.context.technical:
+        snapshot = await _prepare_comparison_snapshot(_normalized_payload(payload), user, fetcher)
+        return build_comparison_evidence(snapshot), snapshot
+    return await prepare_comparison_briefing_evidence(_normalized_payload(payload), user, fetcher), None
 
 
 async def _run_briefing(
@@ -184,8 +195,8 @@ class ComparisonContextBriefingRequest(ComparisonBriefingEvidenceRequest):
 
     @model_validator(mode="after")
     def selected_context(self):
-        if not self.context.news and not self.context.macro_regions:
-            raise ValueError("Select news or a macro region; use /briefing for price-only synthesis")
+        if not self.context.news and not self.context.macro_regions and not self.context.technical:
+            raise ValueError("Select news, a macro region or technical context; use /briefing for price-only synthesis")
         return self
 
 
@@ -199,15 +210,16 @@ async def prepare_context_briefing_evidence(
     fetcher: Any = Depends(get_unified_fetcher),
     economic_service: EconomicDataService = Depends(get_economic_data_service),
 ) -> ComparisonContextEvidence:
-    """Fresh price plus explicitly selected news/regions; no model, save or index.
+    """Fresh prices plus selected news, macro and/or technical observations.
 
     Price preparation has a 45s budget, selected context a further 40s with up
     to three concurrent source jobs and 12s per job. Partial context survives
-    its deadline; all references resolve within this exact returned snapshot.
+    its deadline; technical projection reuses the same fresh comparison, with
+    no second history request. No model, save or index work occurs here.
     """
-    price_payload = _normalized_payload(payload)
-    price = await prepare_comparison_briefing_evidence(price_payload, user, fetcher)
-    return await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service)
+    price, snapshot = await _prepare_context_price(payload, user, fetcher)
+    return await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service,
+                                          **({"technical_snapshot": snapshot} if snapshot is not None else {}))
 
 
 async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None, *, profile=None):
@@ -215,14 +227,15 @@ async def _run_context_briefing(payload, user, fetcher, economic_service, on_pha
     if on_phase:
         on_phase("preparing_evidence")
     try:
-        price = await prepare_comparison_briefing_evidence(_normalized_payload(payload), user, fetcher)
+        price, snapshot = await _prepare_context_price(payload, user, fetcher)
     except HTTPException as exc:
         if exc.status_code != 504:
             raise
         return unavailable_context_briefing("evidence_timed_out", profile=profile)
     if on_phase:
         on_phase("collecting_context")
-    evidence = await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service)
+    evidence = await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service,
+                                               **({"technical_snapshot": snapshot} if snapshot is not None else {}))
     return await generate_context_briefing(evidence, on_phase=on_phase, profile=profile)
 
 
@@ -233,7 +246,7 @@ async def create_context_briefing(
     fetcher: Any = Depends(get_unified_fetcher),
     economic_service: EconomicDataService = Depends(get_economic_data_service),
 ) -> ComparisonContextBriefingResult:
-    """Opt-in dated context synthesis. No causal verification or investment advice.
+    """Opt-in dated/technical context synthesis; no causal verification or advice.
 
     The complete price/context snapshot and fixed scope notice survive model
     failure. Citation validation checks references and coverage, not prose truth.

@@ -1782,6 +1782,11 @@
             "default": false,
             "title": "News",
             "type": "boolean"
+          },
+          "technical": {
+            "default": false,
+            "title": "Technical",
+            "type": "boolean"
           }
         },
         "title": "BriefingContextOptions",
@@ -3504,7 +3509,7 @@
             "type": "string"
           },
           "scope_notice": {
-            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
             "title": "Scope Notice",
             "type": "string"
           },
@@ -3602,10 +3607,13 @@
                 },
                 {
                   "$ref": "#/components/schemas/MacroContextSection"
+                },
+                {
+                  "$ref": "#/components/schemas/TechnicalContextSection"
                 }
               ]
             },
-            "maxItems": 18,
+            "maxItems": 24,
             "title": "Sections",
             "type": "array"
           }
@@ -18798,6 +18806,465 @@
         "title": "TechnicalAssetInput",
         "type": "object"
       },
+      "TechnicalContextAsset": {
+        "properties": {
+          "adjustment_verification": {
+            "const": "not_independently_verified",
+            "default": "not_independently_verified",
+            "title": "Adjustment Verification",
+            "type": "string"
+          },
+          "annualized": {
+            "const": false,
+            "default": false,
+            "title": "Annualized",
+            "type": "boolean"
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date"
+          },
+          "available_closes": {
+            "title": "Available Closes",
+            "type": "integer"
+          },
+          "bar_completion": {
+            "const": "not_verified",
+            "default": "not_verified",
+            "title": "Bar Completion",
+            "type": "string"
+          },
+          "calculation_version": {
+            "const": "technical-indicators-v1",
+            "default": "technical-indicators-v1",
+            "title": "Calculation Version",
+            "type": "string"
+          },
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "exchange_timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange Timezone"
+          },
+          "feed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feed"
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "enum": [
+                  "current",
+                  "stale"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freshness"
+          },
+          "input_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Id"
+          },
+          "input_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Reason"
+          },
+          "input_status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Input Status",
+            "type": "string"
+          },
+          "instrument_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Type"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalContextMetric"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Metrics",
+            "type": "array"
+          },
+          "price_basis": {
+            "const": "yahoo_reported_adjclose",
+            "default": "yahoo_reported_adjclose",
+            "title": "Price Basis",
+            "type": "string"
+          },
+          "quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Unit"
+          },
+          "sampling": {
+            "const": "own_utc_dates_within_pair_window",
+            "default": "own_utc_dates_within_pair_window",
+            "title": "Sampling",
+            "type": "string"
+          },
+          "session_verification": {
+            "const": "not_performed",
+            "default": "not_performed",
+            "title": "Session Verification",
+            "type": "string"
+          },
+          "shifted_local_dates": {
+            "minimum": 0.0,
+            "title": "Shifted Local Dates",
+            "type": "integer"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supporting_points": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalSupportingPoint"
+            },
+            "maxItems": 21,
+            "title": "Supporting Points",
+            "type": "array"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "value_decimal_places": {
+            "const": 8,
+            "default": 8,
+            "title": "Value Decimal Places",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "symbol",
+          "status",
+          "input_status",
+          "input_reason",
+          "input_id",
+          "source",
+          "feed",
+          "quote_unit",
+          "available_closes",
+          "as_of_date",
+          "freshness",
+          "metrics",
+          "citation_id",
+          "instrument_type",
+          "exchange_timezone",
+          "shifted_local_dates"
+        ],
+        "title": "TechnicalContextAsset",
+        "type": "object"
+      },
+      "TechnicalContextMetric": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "lookback": {
+            "const": 20,
+            "default": 20,
+            "title": "Lookback",
+            "type": "integer"
+          },
+          "name": {
+            "enum": [
+              "sma20_gap_pct",
+              "return20_pct",
+              "volatility20_pp"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "observation_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "maxItems": 21,
+            "title": "Observation Dates",
+            "type": "array"
+          },
+          "observation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observation Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "input_unavailable",
+                  "inconsistent_input",
+                  "insufficient_history",
+                  "non_finite_calculation"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "required_closes": {
+            "enum": [
+              20,
+              21
+            ],
+            "title": "Required Closes",
+            "type": "integer"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "percent",
+              "percentage_points"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "used_closes": {
+            "default": 0,
+            "title": "Used Closes",
+            "type": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "reason",
+          "unit",
+          "formula",
+          "required_closes",
+          "citation_id"
+        ],
+        "title": "TechnicalContextMetric",
+        "type": "object"
+      },
+      "TechnicalContextSection": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalContextAsset"
+            },
+            "maxItems": 2,
+            "title": "Assets",
+            "type": "array"
+          },
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "kind": {
+            "const": "technical",
+            "default": "technical",
+            "title": "Kind",
+            "type": "string"
+          },
+          "pair_citation_id": {
+            "title": "Pair Citation Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "empty",
+              "unavailable",
+              "no_price_window"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "pair_citation_id",
+          "start_date",
+          "end_date",
+          "status"
+        ],
+        "title": "TechnicalContextSection",
+        "type": "object"
+      },
       "TechnicalInputPoint": {
         "properties": {
           "adjusted_close": {
@@ -18988,6 +19455,26 @@
           "comparison"
         ],
         "title": "TechnicalPairInputs",
+        "type": "object"
+      },
+      "TechnicalSupportingPoint": {
+        "properties": {
+          "adjusted_close": {
+            "exclusiveMinimum": 0.0,
+            "title": "Adjusted Close",
+            "type": "number"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "adjusted_close"
+        ],
+        "title": "TechnicalSupportingPoint",
         "type": "object"
       },
       "TokenPairResponse": {
@@ -30419,7 +30906,7 @@
     },
     "/api/market-context/briefing-context": {
       "post": {
-        "description": "Opt-in dated context synthesis. No causal verification or investment advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.",
+        "description": "Opt-in dated/technical context synthesis; no causal verification or advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.",
         "operationId": "create_context_briefing_api_market_context_briefing_context_post",
         "requestBody": {
           "content": {
@@ -30473,7 +30960,7 @@
     },
     "/api/market-context/briefing-context-evidence": {
       "post": {
-        "description": "Fresh price plus explicitly selected news/regions; no model, save or index.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; all references resolve within this exact returned snapshot.",
+        "description": "Fresh prices plus selected news, macro and/or technical observations.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; technical projection reuses the same fresh comparison, with\nno second history request. No model, save or index work occurs here.",
         "operationId": "prepare_context_briefing_evidence_api_market_context_briefing_context_evidence_post",
         "requestBody": {
           "content": {

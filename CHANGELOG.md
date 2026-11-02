@@ -7,6 +7,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Opt-in technical briefing evidence (v2.5)** — context APIs accept an explicit
+  default-off technical selection, projected from the same fresh price snapshot
+  without another history fetch. Exact per-asset metrics, source identities,
+  supporting dates/values and quality caveats get packet-local references.
+  Interpretation must cite usable metrics with their linked pairs and acknowledge
+  each available asset; unavailable metrics and group/section IDs cannot replace
+  numerical evidence. Existing Deep deadlines/repair/cancellation remain. Browser
+  controls and inspection follow separately; price-only synthesis stays scoped.
 - **Deterministic technical observations (v2.5)** — comparison responses add a
   20-close mean gap, 20-period return and unannualized sample volatility of 20
   returns, computed from the bounded adjusted-input contract. Per-metric dates,
