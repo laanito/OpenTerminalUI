@@ -160,6 +160,33 @@ The version numbers continue to follow Semantic Versioning. A generation becomes
 a major release only when its product promise and stable contracts are ready; the
 table is direction, not permission to bump a major version for marketing alone.
 
+### v3 direction — technical thesis validation (deferred)
+
+Clarified by the maintainer on 2026-11-03: the long-term technical-analysis
+surface is substantially broader than v2.5/v2.6's descriptive overview. It should
+include deferred methods such as Elliott-wave analysis, RSI, MACD, volume and
+accumulation areas. Audit existing implementations and their data requirements
+before deciding what is reusable; a route or chart overlay alone does not
+establish a trustworthy analysis capability.
+
+The research goal is to take assumptions ingested from videos and notes and
+test them against the terminal's own technical evidence. Preserve the claim's
+source, date, instrument, timeframe and any stated confirmation/invalidation
+conditions; relate the resulting analysis back to that specific assumption.
+Show support, contradiction/rejection or insufficient evidence with inspectable
+inputs and limitations. Distinguish reproducible indicator calculations from
+interpretive pattern hypotheses: Elliott-wave counts and accumulation-zone
+interpretations can have competing explanations and must expose uncertainty.
+Current revised history does not establish what was known when a video or note
+was created. Volume-based work needs a suitable source/coverage contract beyond
+the current adjusted-close-only foundation.
+
+This belongs to v3's multi-dimensional validation direction, not an additional
+v2.6 requirement or a claim that these methods are implemented. The initial
+snapshot surface preserves dated source/calculation identities so this later
+validation can use traceable evidence rather than treating generated prose as
+market fact. Full technical analysis remains distinct from broker execution.
+
 ### Decision-lifecycle bridge — Journal and Portfolio transactions (unscheduled)
 
 Today Portfolio transactions are the execution/accounting ledger, while Journal
@@ -571,7 +598,7 @@ GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
-## v2.6 — Technical context across AI research (scope agreed)
+## v2.6 — Technical context across AI research (in development)
 
 Agreed on 2026-11-02 after v2.5 publication. Reuse the existing 20-close mean
 gap, 20-period return and unannualized sample volatility of 20 returns in four
@@ -629,8 +656,11 @@ bounded deadlines/cancellation and honest failure handling.
 **Exit condition:** all four workflows can use relevant, dated, inspectable
 technical evidence while preserving their existing useful inputs and clearly
 stating missing coverage. No model-computed indicators or fabricated values.
-Implementation has not started. Split PRs around reviewable shared-contract and
-consumer changes; no fixed PR count is agreed.
+Implementation started on 2026-11-03. The first slice adds reusable standalone
+snapshot models/collection and shares the existing source checks/calculations;
+it is pending review. No AI consumer or public route is wired in this slice.
+Split PRs around reviewable shared-contract and consumer changes; no fixed PR
+count is agreed.
 
 **Outside v2.6:** additional indicators (including RSI/MACD), longer-horizon trend
 expansion, volume/liquidity or derivatives-positioning feeds, new providers,
