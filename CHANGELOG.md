@@ -25,6 +25,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   malformed object/list tone values degrade rather than crash. Text is never
   silently truncated.
 
+### Added
+- **Standalone technical snapshot foundation (v2.6)** — internal typed
+  instrument requests/snapshots select a bounded recent daily window without
+  creating a comparison pair. Shared original-source checks and deterministic
+  20/21-close calculations preserve provenance, actual dates, stable identities
+  and unavailable states. Collection makes one bounded provenance-aware history
+  call and propagates cancellation; no AI consumer, new public route, cache or
+  persistence is introduced. Existing v2.5 comparison contracts remain intact.
+
 ## [2.5.0] - 2026-11-02
 
 Technical context brings a small, deterministic observation set into comparison

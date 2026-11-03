@@ -8,6 +8,49 @@ inspection. Maintainer host acceptance, consolidated local checks and all three
 release-prep CI jobs passed. Existing comparison returns and descriptive
 technical panels keep their behavior.
 
+## v2.6 standalone snapshot foundation (in development)
+
+`backend/services/technical_snapshots.py` adds an internal, reusable collector
+for a single instrument. It creates no comparison pair, public route, AI prompt,
+database record or embedding. The first slice is pending review; existing v2.5
+comparison outputs and source/observation identities retain their contract.
+
+`TechnicalSnapshotRequest` normalises a bounded symbol, fixes the interval at
+daily, and selects 1–181 calendar dates (90 by default). One provenance-aware
+history call requests `3mo` or `6mo`; collection defaults to 15 seconds, is capped
+at 45 seconds, and propagates caller cancellation. It adds no fallback query or
+internal cache. Existing fetcher fallback remains identifiable by its actual
+returned source/feed; unsupported feeds remain unavailable.
+
+The snapshot separates the requested UTC date window from actual observed
+start/end dates. Selection uses original source timestamps, so a bad or dropped
+edge row cannot silently shorten the integrity check. Crypto weekends and
+continuity remain explicit. All selected observations must have valid original
+and adjusted closes matching the selected history. No partial adjusted input,
+raw-close substitution, padding or shortened indicator period is allowed.
+Source/selected-row parsing remains bounded to 1,000 rows; the requested window
+bounds returned points to 181. Provider errors/timeouts expose safe reason codes
+without copying provider exceptions, URLs or unrelated source metadata.
+
+`yahoo-adjusted-instrument-window-v1` inputs use
+`own_utc_dates_within_instrument_window` sampling. The existing
+`technical-indicators-v1` formulas and 20/21-close warm-up are shared with the
+pair calculator. Input/observation identities bind exact source values and
+conventions; `ts_` snapshot identity additionally binds request and coverage.
+Retrieval time is explicit and excluded from the content identity. Staleness is
+still the seven-calendar-day disclosure, not audited exchange sessions.
+
+`history_semantics: current_source_history_not_point_in_time` prevents confusing
+this retrieval with a historical knowledge capture. Adjustment methods,
+sessions and bar completion remain unverified. A short history can produce
+partial metrics; missing/inconsistent source input produces unavailable values.
+
+Later v3 technical thesis validation may use RSI/MACD, volume, accumulation areas
+and Elliott-wave hypotheses to challenge claims in ingested videos/notes. This
+snapshot foundation supplies traceable daily evidence; it does not implement
+those methods or equate its three measures with full technical analysis. See
+[the roadmap direction](Roadmap.md#v3-direction--technical-thesis-validation-deferred).
+
 ## Source audit and supported input contract
 
 The comparison fetcher can return Yahoo charts directly or normalize an adapter's

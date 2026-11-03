@@ -6,11 +6,11 @@ import json
 import math
 from datetime import date
 from statistics import stdev
-from typing import Literal
+from typing import Literal, TypeVar
 
 from pydantic import BaseModel, Field
 
-from backend.services.technical_inputs import TechnicalAssetInput
+from backend.services.technical_inputs import TechnicalAssetInput, TechnicalInstrumentInput
 
 VERSION = "technical-indicators-v1"
 MetricName = Literal["sma20_gap_pct", "return20_pct", "volatility20_pp"]
@@ -65,19 +65,39 @@ class TechnicalPairIndicators(BaseModel):
     comparison: TechnicalAssetIndicators
 
 
+class TechnicalInstrumentIndicators(TechnicalAssetIndicators):
+    sampling: Literal["own_utc_dates_within_instrument_window"] = "own_utc_dates_within_instrument_window"
+
+
+_IndicatorResult = TypeVar("_IndicatorResult", bound=TechnicalAssetIndicators)
+
+
 def calculate_technical_indicators(inputs: TechnicalAssetInput) -> TechnicalAssetIndicators:
     """No new history, shortening, resampling, raw-price fallback or model call.
 
     These are observed-close calculations, not certified sessions or signals.
     Data quality/freshness limitations follow the source even when values exist.
     """
+    return _calculate(inputs, inputs.pair_start_date, inputs.pair_end_date, TechnicalAssetIndicators)
+
+
+def calculate_instrument_indicators(inputs: TechnicalInstrumentInput) -> TechnicalInstrumentIndicators:
+    """Use the same formulas/identities with the standalone observed window."""
+    return _calculate(inputs, inputs.window_start_date, inputs.window_end_date, TechnicalInstrumentIndicators)
+
+
+def _calculate(
+    inputs: TechnicalAssetInput | TechnicalInstrumentInput,
+    expected_start: date | None, expected_end: date | None,
+    result_type: type[_IndicatorResult],
+) -> _IndicatorResult:
     points = inputs.points
     dates = [point.date for point in points]
     consistent = (
         bool(points) and bool(inputs.input_id) and inputs.reason is None
         and len(points) == inputs.observations and dates == sorted(set(dates))
-        and dates[0] == inputs.start_date == inputs.pair_start_date
-        and dates[-1] == inputs.end_date == inputs.pair_end_date
+        and dates[0] == inputs.start_date == expected_start
+        and dates[-1] == inputs.end_date == expected_end
     )
     metrics = []
     for name, required, unit, formula in _DEFINITIONS:
@@ -120,8 +140,9 @@ def calculate_technical_indicators(inputs: TechnicalAssetInput) -> TechnicalAsse
         ).hexdigest()[:24]
         metrics.append(result)
     available = sum(metric.status == "available" for metric in metrics)
-    return TechnicalAssetIndicators(
+    return result_type(
         symbol=inputs.symbol, status="available" if available == 3 else "partial" if available else "unavailable",
+        sampling=inputs.sampling,
         input_status=inputs.status, input_reason=inputs.reason, input_id=inputs.input_id,
         source=inputs.source, feed=inputs.feed, quote_unit=inputs.quote_unit,
         available_closes=len(points) if inputs.status == "available" and consistent else 0,

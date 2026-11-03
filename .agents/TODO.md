@@ -927,21 +927,30 @@ Do not label this blanket model/stream incompatibility.
       guards passed. New browser journeys exercise longer valid briefing and
       Interrogate output, rejection of over-limit data, stale-answer clearing
       and explicit retry at desktop/narrow widths with deterministic fixtures.
-- [ ] Merge the browser parity fix and retest the original host workflow. If a
-      failure remains, inspect its new safe diagnostic; no live-provider result
-      is claimed from deterministic browser checks.
+- [x] Browser parity fix #250 merged; the maintainer confirmed the original
+      issue is fixed. Carry that host acceptance forward.
 
-### v2.6 — Technical context across AI research (scope agreed)
+### v2.6 — Technical context across AI research (in development)
 
 Agreed on 2026-11-02; canonical scope/acceptance in `docs/wiki/Roadmap.md`.
 Reuse the three v2.5 measures; no additional indicators are required.
-Implementation has not started. Sequence: standalone evidence → instrument
+Implementation started on 2026-11-03. Sequence: standalone evidence → instrument
 briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
 
-- [ ] Generalise the pair-bound technical input/calculation contract into a
+- [x] Generalise the pair-bound technical input/calculation contract into a
       standalone instrument snapshot with explicit lookback/as-of dates and
       sufficient 20/21-close warm-up. Preserve v2.5 comparison compatibility,
       formulas, own dates, provenance, freshness and quality caveats.
+      Internal `technical_snapshots.py` request/build/collection models now expose
+      requested versus observed own-date windows, safe failures and content IDs.
+      One provenance-aware fetch, 15s default / 45s maximum, with cancellation;
+      no internal cache, AI consumer, new public route, persistence or migration.
+      Bounds come from original timestamps so dropped bad edges stay visible.
+      Shared source/calculation helpers preserve v2.5 pair output and pinned IDs.
+      Checks: 49 standalone snapshot tests and 246 existing comparison/evidence/
+      route/fetcher/synthesis tests passed; API/surface/mock/whitespace guards
+      passed. Deterministic fixtures only, no live provider/model run. First
+      slice pending review; consumer integrations below remain open.
 
 - [ ] Give **AI Investment Briefing** relevant instrument-level technical evidence.
 - [ ] Give **Interrogate this coin** supported, dated crypto technical evidence
@@ -1292,6 +1301,15 @@ ordered v1.7 milestone above.
       accidental page-wide overflow. Verify affected user journeys and add
       focused regression checks where useful. Future work, no release assigned;
       see the matching follow-up in `docs/wiki/Roadmap.md`.
+- [ ] **Full technical thesis validation (v3 direction).** The maintainer's
+      2026-11-03 clarification covers Elliott waves, RSI, MACD, volume and
+      accumulation areas beyond the v2.5/v2.6 overview. Test assumptions from
+      ingested videos/notes against the terminal's own technical evidence, linked
+      to the claim's source/date/instrument/timeframe and invalidation conditions.
+      Show support, contradiction/rejection or insufficient evidence; distinguish
+      deterministic indicators from competing interpretive pattern hypotheses.
+      Audit existing implementations/data coverage before reuse. This is deferred
+      north-star work, not a new v2.6 gate. See the roadmap's v3 direction.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.

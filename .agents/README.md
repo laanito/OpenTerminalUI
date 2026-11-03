@@ -24,14 +24,20 @@ v2.6 scope is agreed: generalise the pair-bound technical contract into standalo
 instrument snapshots, then integrate the same three measures into AI Investment
 Briefing, Interrogate this coin, Second Brain and Portfolio AI Risk Assessment.
 No additional indicators or portfolio risk engine are required. Implementation
-has not started; see Roadmap/TODO for sequence and acceptance. The inherited
-layout audit stays unscheduled and separate. v3 remains thesis validation.
+started on 2026-11-03: standalone typed snapshot collection and shared source/
+calculation checks are implemented, pending review. No AI consumer or new public
+route is wired in this first slice. Next: instrument briefing/Interrogate, then
+Brain and portfolio risk. See Roadmap/TODO. The inherited layout audit remains
+unscheduled. The maintainer clarified v3's fuller technical-analysis direction:
+RSI/MACD, volume, accumulation areas and Elliott-wave hypotheses should help test
+assumptions ingested from videos/notes against independently derived evidence.
+That broader claim-validation work is deferred, beyond the initial three measures.
 
-Current maintenance before v2.6: #249's backend insight repair/length revision
-is merged. Host feedback exposed the missed browser 600/48/220 limits; a focused
-frontend parity fix is prepared, with all 609 frontend tests, 58 focused backend
-tests and eighteen Chrome smoke journeys passing. See TODO; host retest follows
-merge. Technical-context feature implementation has not started.
+Insight maintenance is accepted: #249's backend repair/length revision and
+#250's missed browser-limit parity fix are merged; the maintainer confirmed the
+original issue is fixed. Preserve this host acceptance; no repeat test is needed
+for that resolved failure. No model/provider compatibility verdict was inferred
+from the original generic validation logs.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
