@@ -619,12 +619,12 @@ export function StockDetailPage() {
             <CryptoOverviewPanel symbol={ticker} />
             <AiInsightCard
               title="AI Investment Briefing"
-              description={`${ticker} · AI-synthesized bull/bear thesis from market context and news`}
+              description={`${ticker} · Market context, news and available technical observations`}
               fetcher={(refresh, options) => fetchStockBriefing(ticker, selectedMarket, refresh, options)}
             />
             <AiInsightCard
               title="Interrogate this Coin"
-              description={`${ticker} · Adversarial pressure-test of the bull case — and of your own notes`}
+              description={`${ticker} · Pressure-test your thesis and notes against available facts and technical observations`}
               fetcher={(refresh, options) => fetchStockInterrogation(ticker, selectedMarket, refresh, options)}
             />
             <TickerNewsCard
@@ -645,12 +645,12 @@ export function StockDetailPage() {
             </div>
             <AiInsightCard
               title="AI Investment Briefing"
-              description={`${ticker} · AI-synthesized read on the index from market context and news`}
+              description={`${ticker} · Index context, news and available technical observations`}
               fetcher={(refresh, options) => fetchStockBriefing(ticker, selectedMarket, refresh, options)}
             />
             <AiInsightCard
               title="Interrogate this Index"
-              description={`${ticker} · Adversarial read of the prevailing index narrative — and of your own notes`}
+              description={`${ticker} · Challenge the index narrative and your notes using available facts and technical observations`}
               fetcher={(refresh, options) => fetchStockInterrogation(ticker, selectedMarket, refresh, options)}
             />
             <TickerNewsCard
@@ -672,12 +672,12 @@ export function StockDetailPage() {
             />
             <AiInsightCard
               title="AI Investment Briefing"
-              description={`${ticker} · AI-synthesized bull/bear thesis from fundamentals and news`}
+              description={`${ticker} · Fundamentals, news and available technical observations`}
               fetcher={(refresh, options) => fetchStockBriefing(ticker, selectedMarket, refresh, options)}
             />
             <AiInsightCard
               title="Interrogate this Stock"
-              description={`${ticker} · Adversarial pressure-test of the bull case — and of your own notes`}
+              description={`${ticker} · Pressure-test your thesis and notes against available facts and technical observations`}
               fetcher={(refresh, options) => fetchStockInterrogation(ticker, selectedMarket, refresh, options)}
             />
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">

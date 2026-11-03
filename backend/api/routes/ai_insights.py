@@ -24,13 +24,13 @@ from datetime import datetime, timezone
 from collections.abc import Callable
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.api.deps import cache_instance, fetch_stock_snapshot_coalesced, get_db
+from backend.api.deps import cache_instance, fetch_stock_snapshot_coalesced, get_db, get_unified_fetcher
 from backend.api.model_lifecycle import model_operation_response
 from backend.config.settings import get_settings
 from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
@@ -46,6 +46,10 @@ from backend.services.insight_lifecycle import stream_insight_lifecycle
 from backend.services.llm_insights import run_insight
 from backend.services.llm_sentiment import score_articles
 from backend.services.news_terms import INDEX_NAME_BY_SYMBOL, is_index_symbol
+from backend.services.technical_snapshots import TechnicalSnapshotRequest, build_technical_snapshot, collect_technical_snapshot
+from backend.services.research_technical_context import (
+    ResearchTechnicalEvidence, research_technical_evidence, technical_research_prompts, validate_technical_references,
+)
 from backend.shared.market_classifier import is_crypto_symbol
 
 router = APIRouter()
@@ -53,6 +57,41 @@ router = APIRouter()
 AssetType = Literal["equity", "crypto", "index"]
 InsightKind = Literal["backtest", "collection", "risk", "briefing", "interrogate"]
 INSIGHT_PREPARATION_SECONDS = 60
+
+
+class ResearchInsightEnvelope(BaseModel):
+    """Additive technical companion; existing insight/asset keys remain intact."""
+
+    model_config = ConfigDict(extra="allow")
+    technical_context: ResearchTechnicalEvidence | None = Field(
+        default=None, description="Exact server-supplied technical evidence used for this research answer; null or absent when generation is disabled.",
+    )
+
+
+async def _technical_for_symbol(symbol: str) -> ResearchTechnicalEvidence:
+    request = TechnicalSnapshotRequest(symbol=symbol)
+    try:
+        # Includes lazy fetcher startup, within the existing preparation budget.
+        async with asyncio.timeout(15):
+            fetcher = await get_unified_fetcher()
+            snapshot = await collect_technical_snapshot(request, fetcher)
+            return research_technical_evidence(snapshot)
+    except TimeoutError:
+        snapshot = build_technical_snapshot(request, None, source=None, feed=None, failure_reason="provider_timeout")
+    except Exception:
+        snapshot = build_technical_snapshot(request, None, source=None, feed=None, failure_reason="provider_error")
+    return research_technical_evidence(snapshot)
+
+
+def _technical_cache_scope() -> dict[str, str]:
+    # Do not reuse pre-technical answers or carry yesterday's window across UTC midnight.
+    return {"technical_contract": "instrument-research-v1", "technical_date": datetime.now(timezone.utc).date().isoformat()}
+
+
+def _note_date(value: Any) -> str:
+    if not isinstance(value, datetime):
+        return "unknown"
+    return (value if value.tzinfo else value.replace(tzinfo=timezone.utc)).astimezone(timezone.utc).isoformat()
 
 
 class ResearchInsightPayload(BaseModel):
@@ -328,9 +367,9 @@ def _interrogation_prompts(
     return system_prompt, user_content
 
 
-@router.get("/ai/briefing/{ticker}")
+@router.get("/ai/briefing/{ticker}", response_model=ResearchInsightEnvelope)
 async def stock_briefing(
-    ticker: str,
+    ticker: str = Path(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9^._=-]+$"),
     market: str | None = Query(default=None, description="Optional market context"),
     refresh: bool = Query(default=False, description="Bypass a cached AI result"),
 ) -> dict[str, Any]:
@@ -347,7 +386,7 @@ async def _stock_briefing(ticker, market, refresh, *, profile, on_token=None):
     asset_type = _asset_type(symbol, market_code)
     cache_key = cache_instance.build_key(
         "ai_insight", f"briefing:{symbol}", {"market": market_code or "", "asset": asset_type,
-                                             "profile": profile.cache_fingerprint()}
+                                             "profile": profile.cache_fingerprint(), **_technical_cache_scope()}
     )
     if not refresh:
         cached = await cache_instance.get(cache_key)
@@ -367,26 +406,29 @@ async def _stock_briefing(ticker, market, refresh, *, profile, on_token=None):
     system_prompt, user_content = _briefing_prompts(
         symbol, asset_type, snap, headlines, crypto
     )
+    technical = await _technical_for_symbol(symbol)
+    system_prompt, user_content = technical_research_prompts(system_prompt, user_content, technical)
 
     result = await run_insight(
         system_prompt,
         user_content,
         max_tokens=900,
         profile=profile, on_token=on_token,
+        validate_result=lambda summary, sections: validate_technical_references(summary, sections, technical),
         unavailable_summary=(
             f"AI briefing for {symbol} is unavailable - start your local LLM (Ollama) "
             "model to enable it."
         ),
     )
-    payload = {"ticker": symbol, "company_name": name, **result}
+    payload = {"ticker": symbol, "company_name": name, **result, "technical_context": technical.model_dump(mode="json")}
     if result["engine"] == "llm":
         await cache_instance.set(cache_key, payload, ttl=ttl_seconds("news_latest", market_open_now()))
     return payload
 
 
-@router.get("/ai/interrogate/{ticker}")
+@router.get("/ai/interrogate/{ticker}", response_model=ResearchInsightEnvelope)
 async def interrogate_stock(
-    ticker: str,
+    ticker: str = Path(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9^._=-]+$"),
     market: str | None = Query(default=None, description="Optional market context"),
     refresh: bool = Query(default=False, description="Bypass a cached AI result"),
     db: Session = Depends(get_db),
@@ -425,7 +467,7 @@ async def _interrogate_stock(ticker, market, refresh, db, current_user, *, profi
         "ai_insight",
         f"interrogate:{symbol}:{current_user.id}",
         {"market": market_code or "", "asset": asset_type, "notes": note_version,
-         "profile": profile.cache_fingerprint()},
+         "profile": profile.cache_fingerprint(), **_technical_cache_scope()},
     )
     if not refresh:
         cached = await cache_instance.get(cache_key)
@@ -442,12 +484,17 @@ async def _interrogate_stock(ticker, market, refresh, db, current_user, *, profi
         .all()
     )
     note_texts: list[str] = []
+    note_query_texts: list[str] = []
     for note in notes:
         title = (note.title or "").strip()
         body = (note.body or "").strip()
         text = f"{title}: {body}" if title and body else (title or body)
         if text:
-            note_texts.append(text[:600])
+            note_query_texts.append(text[:600])
+            note_texts.append(
+                f"[effective: {_note_date(getattr(note, 'effective_at', None))}; "
+                f"recorded: {_note_date(getattr(note, 'created_at', None))}] {text[:600]}"
+            )
 
     snap = await fetch_stock_snapshot_coalesced(symbol) or {}
     crypto = await _crypto_context(symbol, asset_type)
@@ -465,7 +512,7 @@ async def _interrogate_stock(ticker, market, refresh, db, current_user, *, profi
     # (e.g. the same bet made elsewhere). Best-effort — degrades to nothing when the
     # brain is empty or embeddings are unavailable, never failing the endpoint.
     related_query = " ".join(
-        [name, symbol, str(snap.get("sector") or ""), *note_texts]
+        [name, symbol, str(snap.get("sector") or ""), *note_query_texts]
     ).strip()
     related = await brain_service.related_notes(
         db, str(current_user.id), related_query, exclude_symbol=symbol, k=4
@@ -484,11 +531,14 @@ async def _interrogate_stock(ticker, market, refresh, db, current_user, *, profi
         asset_type=asset_type,
         crypto=crypto,
     )
+    technical = await _technical_for_symbol(symbol)
+    system_prompt, user_content = technical_research_prompts(system_prompt, user_content, technical)
     result = await run_insight(
         system_prompt,
         user_content,
         max_tokens=1000,
         profile=profile, on_token=on_token,
+        validate_result=lambda summary, sections: validate_technical_references(summary, sections, technical),
         unavailable_summary=(
             f"AI interrogation for {symbol} is unavailable - start your local LLM (e.g. Ollama) "
             "to pressure-test your thesis."
@@ -498,6 +548,7 @@ async def _interrogate_stock(ticker, market, refresh, db, current_user, *, profi
         "ticker": symbol,
         "note_count": len(note_texts),
         "related_count": len(related_texts),
+        "technical_context": technical.model_dump(mode="json"),
         **result,
     }
     if result["engine"] == "llm":

@@ -236,6 +236,15 @@ revised provider data is not a complete historical vintage.
 [Research guide](docs/wiki/Research-Workflows.md#cross-market-context) ·
 [Detailed limitations](docs/wiki/Limitations.md)
 
+### Instrument AI research
+
+**v2.6 development:** on stock/index/crypto detail, Investment Briefing and
+Interrogate now include available standalone technical observations during
+explicit generation. **[TECH1–3]** references open exact metric dates, formulas,
+source limitations and supporting closes. Missing technical history preserves
+other inputs. Brain and portfolio-risk integrations are still pending. See the
+[instrument research workflow](docs/wiki/Research-Workflows.md#instrument-technical-evidence-v26-development).
+
 ### Private Second Brain and Brain Log
 
 Notes, trade-journal entries, portfolio theses and position/transaction notes

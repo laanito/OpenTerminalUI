@@ -12,7 +12,7 @@ technical panels keep their behavior.
 
 `backend/services/technical_snapshots.py` adds an internal, reusable collector
 for a single instrument. It creates no comparison pair, public route, AI prompt,
-database record or embedding. The first slice is pending review; existing v2.5
+database record or embedding. The foundation merged as #251; existing v2.5
 comparison outputs and source/observation identities retain their contract.
 
 `TechnicalSnapshotRequest` normalises a bounded symbol, fixes the interval at
@@ -50,6 +50,32 @@ and Elliott-wave hypotheses to challenge claims in ingested videos/notes. This
 snapshot foundation supplies traceable daily evidence; it does not implement
 those methods or equate its three measures with full technical analysis. See
 [the roadmap direction](Roadmap.md#v3-direction--technical-thesis-validation-deferred).
+
+## Instrument research consumers (v2.6 development)
+
+AI Investment Briefing and Interrogate now use the collector for the requested
+stock/index/coin when generation is enabled. Technical preparation, including
+lazy fetcher startup, has a 15-second optional budget within the existing
+60-second preparation allowance. Failure/timeout yields unavailable technical
+coverage while preserving the original facts, news and owner-scoped notes.
+
+`research_technical_context.py` rechecks the snapshot's calculations against its
+inputs and projects exact metric values/identities, quality metadata and the
+union of actually used dates (at most 21 supporting closes). `TECH1`/`TECH2`/
+`TECH3` references are local to the generated answer and map to the existing
+three measures. Available evidence requires at least one usable metric reference
+in the analysis; invented/unavailable references enter the same selected-model,
+bounded stream-fallback/completion-repair lifecycle. These are reference checks,
+not semantic fact-checks or a full technical verdict.
+
+The additive `technical_context` companion is available on existing research
+GET/stream results and inspectable from the browser cards. Disabled generation
+skips the fetch. Cache keys add the technical contract and current UTC date;
+profile and Interrogate owner/note-version scope remain intact. Regenerate
+refreshes both evidence and analysis. Source retrieval time remains explicit.
+Same-symbol note effective/recorded dates are supplied separately without
+changing semantic related-note queries, embeddings or indexing. Brain and
+portfolio-risk consumers are not integrated in this slice.
 
 ## Source audit and supported input contract
 

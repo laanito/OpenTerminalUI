@@ -26,6 +26,15 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   silently truncated.
 
 ### Added
+- **Technical context for instrument research (v2.6)** — Investment Briefing and
+  Interrogate gather the three standalone observations during explicit
+  generation. Answer-local metric references open exact dates, formulas,
+  provenance, quality limitations and supporting closes. Missing technical
+  history preserves other research inputs; reference checks share the existing
+  bounded Deep repair/deadline lifecycle. Cache keys include evidence contract/
+  UTC date, and Interrogate retains owner/note scope and distinct effective/
+  recorded note dates. Existing research GET/stream results add typed
+  `technical_context`; no new route, indexing or persistence is introduced.
 - **Standalone technical snapshot foundation (v2.6)** — internal typed
   instrument requests/snapshots select a bounded recent daily window without
   creating a comparison pair. Shared original-source checks and deterministic

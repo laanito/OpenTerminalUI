@@ -40,6 +40,18 @@ def _unique_symbol() -> str:
     return "ZZ" + uuid.uuid4().hex[:6].upper()
 
 
+@pytest.fixture(autouse=True)
+def _isolate_technical_history(monkeypatch):
+    from backend.api.routes import ai_insights
+    from backend.services.technical_snapshots import TechnicalSnapshotRequest, build_technical_snapshot
+    from backend.services.research_technical_context import research_technical_evidence
+
+    async def unavailable(symbol):
+        return research_technical_evidence(build_technical_snapshot(TechnicalSnapshotRequest(symbol=symbol), None, source=None, feed=None))
+
+    monkeypatch.setattr(ai_insights, "_technical_for_symbol", unavailable)
+
+
 def test_interrogation_prompt_is_adversarial_and_folds_in_notes() -> None:
     system, user = _interrogation_prompts(
         "AAPL",

@@ -656,9 +656,14 @@ bounded deadlines/cancellation and honest failure handling.
 **Exit condition:** all four workflows can use relevant, dated, inspectable
 technical evidence while preserving their existing useful inputs and clearly
 stating missing coverage. No model-computed indicators or fabricated values.
-Implementation started on 2026-11-03. The first slice adds reusable standalone
-snapshot models/collection and shares the existing source checks/calculations;
-it is pending review. No AI consumer or public route is wired in this slice.
+Implementation started on 2026-11-03. Standalone snapshot models/collection and
+shared source checks/calculations merged as #251. The Investment Briefing and
+Interrogate consumers are implemented, pending review/host acceptance: automatic
+bounded technical collection on explicit Generate, exact metric references and
+browser inspection, safe unavailable coverage, and contract/date-aware cache
+keys alongside existing profile/owner/note scoping. Same-symbol note dates stay
+distinct from current technical history. Brain and portfolio-risk consumers
+remain open; no new provider, persistence, indexing or public route is added.
 Split PRs around reviewable shared-contract and consumer changes; no fixed PR
 count is agreed.
 
