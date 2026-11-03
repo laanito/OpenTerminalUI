@@ -11,12 +11,13 @@ from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db
 from backend.auth.deps import get_current_user
 from backend.models.brain_memo import BrainMemoORM
+from backend.services.brain.technical_context import BrainTechnicalContext, InvalidBrainTechnicalReferences, validate_brain_technical_references
 from backend.models.notes import NoteORM
 from backend.models.user import User
 from backend.api.routes.notes import NoteOut, _reindex_user_brain, _serialize as serialize_note
@@ -86,6 +87,7 @@ class BrainMemoCreate(BaseModel):
     llm: bool | None = None
     llm_provider: str | None = Field(default=None, max_length=128)
     llm_model: str | None = Field(default=None, max_length=256)
+    technical_context: BrainTechnicalContext | None = None
     title: str = Field(default="", max_length=256)
     tags: list[str] = Field(default_factory=list, max_length=32)
     annotation: str = Field(default="", max_length=10000)
@@ -117,6 +119,16 @@ class BrainMemoCreate(BaseModel):
     @classmethod
     def unique_sources(cls, values: list[BrainSource]) -> list[BrainSource]:
         return list(dict.fromkeys(values))
+
+    @model_validator(mode="after")
+    def keep_technical_references_resolvable(self):
+        if self.technical_context is not None and self.llm:
+            try:
+                validate_brain_technical_references(self.answer, self.technical_context,
+                    [citation.model_dump() for citation in self.citations])
+            except InvalidBrainTechnicalReferences as exc:
+                raise ValueError("Saved answer must use the supplied private and technical references") from exc
+        return self
 
 
 class BrainMemoUpdate(BaseModel):
@@ -192,6 +204,7 @@ class BrainMemoOut(BrainMemoSummary):
     llm: bool | None
     llm_provider: str | None
     llm_model: str | None
+    technical_context: BrainTechnicalContext | None = None
 
 
 class CitationEvidenceStatus(BaseModel):
@@ -244,6 +257,7 @@ def _full(row: BrainMemoORM) -> BrainMemoOut:
         llm=row.llm,
         llm_provider=row.llm_provider,
         llm_model=row.llm_model,
+        technical_context=row.technical_context,
     )
 
 
@@ -289,6 +303,7 @@ def create_brain_memo(
         llm=payload.llm,
         llm_provider=(payload.llm_provider or "").strip() or None,
         llm_model=(payload.llm_model or "").strip() or None,
+        technical_context=payload.technical_context.model_dump(mode="json") if payload.technical_context is not None else None,
         title=title,
         tags=payload.tags,
         annotation=payload.annotation.strip(),

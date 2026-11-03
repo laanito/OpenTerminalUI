@@ -1,6 +1,7 @@
 import { api } from "./base";
 import type { BrainCitation, BrainSource } from "./brain";
 import type { Note } from "./notes";
+import type { BrainTechnicalContext } from "./brainTechnical";
 
 export interface BrainMemoSummary {
   id: string;
@@ -24,11 +25,12 @@ export interface BrainMemo extends BrainMemoSummary {
   llm: boolean | null;
   llm_provider: string | null;
   llm_model: string | null;
+  technical_context?: BrainTechnicalContext | null;
 }
 
 export type BrainMemoCreate = Pick<
   BrainMemo,
-  "question" | "answer" | "sources" | "citations" | "generated_at" | "llm" | "llm_provider" | "llm_model"
+  "question" | "answer" | "sources" | "citations" | "generated_at" | "llm" | "llm_provider" | "llm_model" | "technical_context"
 >;
 export type BrainMemoUpdate = Partial<Pick<BrainMemo, "title" | "tags" | "annotation" | "symbol" | "pinned">>;
 

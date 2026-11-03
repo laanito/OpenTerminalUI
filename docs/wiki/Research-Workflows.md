@@ -99,7 +99,7 @@ types if needed and ask a question. Incremental indexing is queued after note
 writes; a successful save does not mean the text is already embedded. Manual
 reindexing exposes progress and final chunk counts.
 
-In v2.4 development, Brain answers use the configured Deep generation model;
+Brain answers use the configured Deep generation model;
 with Deep unset they use the existing model and show **Default profile (Deep not
 configured)**. The selected profile/model appears during retrieval and on the
 answer. Brain Log saves retain the actual model through the existing provenance
@@ -128,12 +128,39 @@ Brain retrieval uses the owner's recorded research, including deliberate
 external-note imports. Comparison evidence panels do not automatically become
 its corpus or a unified cross-market AI explanation.
 
+### Optional current technical observations (v2.6 development)
+
+Before asking, use **Add technical symbol** to select up to three relevant
+instruments, with suggestions or an explicitly entered symbol. The default is
+empty; words in a question are never treated as tickers automatically. **Ask**
+fetches current technical snapshots only when matching private research exists
+and the model is enabled. Skipped, partial and unavailable coverage is shown.
+
+Private citations keep their numbered `[1]` references. Technical references
+such as **[T1.1]** and **[T2.1]** open the selected asset's exact metric, formula,
+own UTC dates, source limitations and supporting closes. Observations describe
+short-window behaviour; they cannot alone reject a long-term thesis or establish
+what was known when an older note was written. Source adjustments, exchange
+sessions and bar completion remain unverified. No RSI/MACD, volume,
+accumulation or Elliott-wave analysis is implied.
+
+Both ask endpoints accept optional `technical_symbols`, for example
+`{"question":"How does my dated thesis compare with current behaviour?","sources":["note"],"technical_symbols":["AAPL","BTC-USD"]}`.
+The typed `technical_context` companion reports the selected scope, per-asset
+coverage and captured evidence. Omitting symbols preserves private-only use.
+Generation keeps the selected Deep/default model and bounded fallback/repair;
+interrupted or invalid final output is not saved. This adds no retrieval ranking,
+embedding change or automatic indexing. See the [technical contract](Technical-Context.md#second-brain-technical-context-v26-development).
+
 ## Save an answer in the Brain Log
 
 Choose **Save answer** after synthesis completes. A memo preserves the question,
 answer, source scope, dated citation/content snapshots and model provenance.
 Title, tags, annotation, symbol and pin state can be organized; the synthesis
 snapshot is immutable.
+When technical context was selected, its dates, values and supporting closes
+are saved with the answer. They remain historical captures when reopened;
+private citation rechecks do not refresh market data.
 
 Opening a memo compares cited chunk identities against current source records
 and marks matching, changed, unavailable or unverifiable evidence. It does not
@@ -144,6 +171,11 @@ Memos stay out of retrieval by default. **Promote to Note** opens a separate,
 editable draft for review and confirmation; only that Note becomes evidence
 and retains its source-memo link. Theses and Journal remain user-owned records,
 not automatic destinations for generated answers.
+Technical promotion drafts include captured source/date/value/ID footnotes and
+replace active `[T1.1]` references with historical capture labels. Review them
+alongside the prose; the full snapshot stays in the saved memo. Older memos have
+no technical context added retroactively. Existing databases must apply Alembic
+`0018_brain_technical_context`; Docker's entrypoint runs this migration.
 
 JWT-authenticated clients use `/api/brain/memos`, including per-memo
 `/evidence-status` and `/promote-to-note` operations. Use the generated schema
@@ -340,8 +372,9 @@ answer and evidence rather than retaining them under a new attempt.
 Interrogate carries same-symbol notes' effective and recorded dates separately;
 unknown dates remain unknown. A past claim must not be rejected merely because
 current prices differ, or a long-term thesis on a short observation window alone.
-The semantic related-note query is unchanged. Brain and portfolio-risk technical
-integration remain later v2.6 slices; no indexing or persistence is added here.
+The semantic related-note query is unchanged. Brain's explicit integration is
+described above; portfolio-risk technical integration remains a later v2.6 slice.
+The instrument cards introduce no indexing or persistence.
 
 ### Interpretations to investigate (v2.4)
 

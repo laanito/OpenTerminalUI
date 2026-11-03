@@ -13,6 +13,9 @@ import {
 import { extractApiErrorMessage } from "../../api/base";
 import { createBrainMemo } from "../../api/brainMemos";
 import type { InsightModelProfile } from "../../api/types";
+import type { BrainTechnicalContext } from "../../api/brainTechnical";
+import { BrainTechnicalAnswer } from "./BrainTechnicalEvidence";
+import { BrainTechnicalSymbols } from "./BrainTechnicalSymbols";
 import { CitationCard, scopeLabel } from "./BrainEvidence";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
@@ -31,6 +34,7 @@ interface Exchange {
   llm_model?: string | null;
   model_profile?: InsightModelProfile | null;
   savedMemoId?: string;
+  technical_context?: BrainTechnicalContext | null;
 }
 
 const SUGGESTIONS = [
@@ -63,9 +67,7 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
         <Brain className="h-3.5 w-3.5 text-terminal-accent" />
         {exchange.question}
       </p>
-      <p className="whitespace-pre-wrap text-xs leading-relaxed text-terminal-text">
-        {exchange.answer}
-      </p>
+      <BrainTechnicalAnswer answer={exchange.answer} context={exchange.technical_context} />
       <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
         Evidence scope · {scopeLabel(exchange.sources)}
       </p>
@@ -118,12 +120,13 @@ export function SecondBrainPanel() {
   const [streamingExchange, setStreamingExchange] = useState<Exchange | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedSources, setSelectedSources] = useState<BrainSource[]>(allSources);
+  const [technicalSymbols, setTechnicalSymbols] = useState<string[]>([]);
   const [saveError, setSaveError] = useState<{ id: number; message: string } | null>(null);
 
   const statusQuery = useQuery({ queryKey: ["brain", "status"], queryFn: fetchBrainStatus });
 
   const askMutation = useMutation({
-    mutationFn: ({ question: q, sources }: { question: string; sources: BrainSource[] }) => {
+    mutationFn: ({ question: q, sources, technicalSymbols: symbols }: { question: string; sources: BrainSource[]; technicalSymbols: string[] }) => {
       const controller = new AbortController();
       askController.current = controller;
       return askBrainStream(q, 6, sources, (response) => {
@@ -140,8 +143,9 @@ export function SecondBrainPanel() {
           llm_provider: response.llm_provider,
           llm_model: response.llm_model,
           model_profile: response.model_profile,
+          technical_context: response.technical_context,
         });
-      }, { signal: controller.signal });
+      }, { signal: controller.signal, ...(symbols.length ? { technicalSymbols: symbols } : {}) });
     },
     onSuccess: (data, variables) => {
       setHistory((prev) => [
@@ -157,6 +161,7 @@ export function SecondBrainPanel() {
           llm_provider: data.llm_provider,
           llm_model: data.llm_model,
           model_profile: data.model_profile,
+          technical_context: data.technical_context,
         },
         ...prev,
       ]);
@@ -183,6 +188,7 @@ export function SecondBrainPanel() {
       llm: exchange.llm ?? null,
       llm_provider: exchange.llm_provider ?? null,
       llm_model: exchange.llm_model ?? null,
+      ...(exchange.technical_context ? { technical_context: exchange.technical_context } : {}),
     }),
     onMutate: () => setSaveError(null),
     onSuccess: (memo, exchange) => {
@@ -204,11 +210,11 @@ export function SecondBrainPanel() {
 
   const submit = (q: string) => {
     const trimmed = q.trim();
-    if (!trimmed || askMutation.isPending) return;
+    if (!trimmed || askMutation.isPending || !selectedSources.length) return;
     setError(null);
     const sources = [...selectedSources];
     setStreamingExchange({ id: -1, question: trimmed, answer: "", citations: [], sources });
-    askMutation.mutate({ question: trimmed, sources });
+    askMutation.mutate({ question: trimmed, sources, technicalSymbols: [...technicalSymbols] });
   };
 
   const status = statusQuery.data;
@@ -216,7 +222,7 @@ export function SecondBrainPanel() {
   return (
     <TerminalPanel
       title="Second Brain"
-      subtitle="Private RAG over your journal, theses & notes — answers grounded only in your own writing"
+      subtitle="Private research over your journal, theses & notes, with optional current technical evidence"
       actions={
         <div className="flex items-center gap-2 text-[10px] text-terminal-muted">
           {status ? (
@@ -261,6 +267,7 @@ export function SecondBrainPanel() {
             Edit portfolio theses
           </Link>
         </div>
+        <BrainTechnicalSymbols symbols={technicalSymbols} onChange={setTechnicalSymbols} disabled={askMutation.isPending} />
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {

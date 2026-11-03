@@ -1,5 +1,6 @@
 import { api, fetchApi } from "./base";
 import type { InsightModelProfile } from "./types";
+import { normalizeTechnicalSymbols, validBrainTechnicalContext, validBrainTechnicalReferences, type BrainTechnicalContext } from "./brainTechnical";
 
 export type BrainSource = "note" | "journal" | "portfolio" | "holding" | "transaction";
 
@@ -30,6 +31,7 @@ export interface BrainAskResponse {
   llm_provider?: string | null;
   llm_model?: string | null;
   model_profile?: InsightModelProfile | null;
+  technical_context?: BrainTechnicalContext | null;
 }
 
 export interface BrainStatus {
@@ -55,6 +57,13 @@ const record = (value: unknown): value is Record<string, unknown> => value !== n
 const invalid = () => new Error("The Brain stream was incomplete or invalid. No answer was kept; retry manually.");
 const text = (value: unknown, max: number): value is string => typeof value === "string" && value.length <= max;
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+// Context is captured once per operation. Object key order is immaterial, but
+// a final answer must not silently switch its observations after streaming.
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (record(value)) return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
+  return JSON.stringify(value);
+}
 function validScope(value: unknown, expected: BrainSource[]): value is BrainSource[] {
   return Array.isArray(value) && value.length === expected.length && value.every((source, index) => source === expected[index]);
 }
@@ -77,17 +86,18 @@ function generation(value: Record<string, unknown>, selected?: InsightModelProfi
   return { model_profile: profile, llm_model: profile.model, llm_provider: value.llm_provider as string, generated_at: value.generated_at };
 }
 
-export async function askBrain(question: string, k = 6, sources?: BrainSource[], options: { signal?: AbortSignal } = {}): Promise<BrainAskResponse> {
+export async function askBrain(question: string, k = 6, sources?: BrainSource[], options: { signal?: AbortSignal; technicalSymbols?: string[] } = {}): Promise<BrainAskResponse> {
   return askBrainStream(question, k, sources, undefined, options);
 }
 
 export async function askBrainStream(
   question: string, k = 6, sources?: BrainSource[], onUpdate?: (response: BrainAskResponse) => void,
-  options: { signal?: AbortSignal } = {},
+  options: { signal?: AbortSignal; technicalSymbols?: string[] } = {},
 ): Promise<BrainAskResponse> {
   if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
   const scope = sources ? [...new Set(sources)] : [...SOURCES];
-  const payload = sources ? { question, k, sources: scope } : { question, k };
+  const technicalSymbols = normalizeTechnicalSymbols(options.technicalSymbols);
+  const payload = { ...(sources ? { question, k, sources: scope } : { question, k }), ...(technicalSymbols.length ? { technical_symbols: technicalSymbols } : {}) };
   const controller = new AbortController();
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   let rejectAbort!: (error: Error) => void;
@@ -104,8 +114,15 @@ export async function askBrainStream(
   let answer = "";
   let citations: BrainCitation[] = [];
   let metadata: ReturnType<typeof generation> | undefined;
+  let technicalContext: BrainTechnicalContext | null = null;
   let complete: BrainAskResponse | undefined;
-  const current = (): BrainAskResponse => ({ answer, citations, sources: scope, llm: synthesizing, ...metadata });
+  const current = (): BrainAskResponse => ({ answer, citations, sources: scope, llm: synthesizing, ...metadata,
+    ...(technicalContext ? { technical_context: technicalContext } : {}) });
+  const technical = (value: unknown): BrainTechnicalContext | null => {
+    if (!technicalSymbols.length) { if (value != null) throw invalid(); return null; }
+    if (!validBrainTechnicalContext(value, technicalSymbols)) throw invalid();
+    return value;
+  };
   try {
     const response = await Promise.race([fetchApi("/brain/ask/stream", {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
@@ -124,7 +141,9 @@ export async function askBrainStream(
       if (event.type === "heartbeat") return; // Heartbeats never reset the deadline.
       if (event.type === "queued") {
         if (queued || !record(event.deadlines) || !finite(event.deadlines.operation_seconds) || event.deadlines.operation_seconds <= 0
-          || !validScope(event.sources, scope)) throw invalid();
+          || !validScope(event.sources, scope)
+          || (event.technical_symbols === undefined ? technicalSymbols.length > 0
+            : !Array.isArray(event.technical_symbols) || event.technical_symbols.length !== technicalSymbols.length || event.technical_symbols.some((symbol, index) => symbol !== technicalSymbols[index]))) throw invalid();
         const budget = (event.deadlines.operation_seconds + 15) * 1000;
         if (!Number.isSafeInteger(Math.ceil(budget)) || budget > 2_147_483_647) throw invalid();
         metadata = generation(event);
@@ -134,6 +153,7 @@ export async function askBrainStream(
       else if (event.type === "start") {
         if (synthesizing || !validScope(event.sources, scope) || !validCitations(event.citations, scope) || event.llm !== true) throw invalid();
         metadata = generation(event, metadata.model_profile);
+        technicalContext = technical(event.technical_context);
         citations = event.citations; synthesizing = true;
       } else if (event.type === "delta") {
         if (!synthesizing || !text(event.text, 128_000)) throw invalid();
@@ -145,9 +165,13 @@ export async function askBrainStream(
           || !validScope(result.sources, scope) || !validCitations(result.citations, scope)
           || (result.llm != null && typeof result.llm !== "boolean")
           || (result.error != null && !text(result.error, 128))) throw invalid();
+        const context = technical(result.technical_context);
+        if (synthesizing && canonical(context) !== canonical(technicalContext)) throw invalid();
+        if (context && !validBrainTechnicalReferences(result.answer, context, result.citations as BrainCitation[], result.llm === true)) throw invalid();
         complete = { ...result, ...generation(result, metadata.model_profile) } as unknown as BrainAskResponse;
       } else if (event.type === "done") {
         if (!synthesizing || !answer.trim()) throw invalid();
+        if (technicalContext && !validBrainTechnicalReferences(answer, technicalContext, citations)) throw invalid();
         complete = current();
       } else throw invalid();
       onUpdate?.(complete ?? current());

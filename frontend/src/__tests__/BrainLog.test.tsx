@@ -3,8 +3,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { brainTechnicalAnswer } from "./fixtures/brainTechnicalContext";
+
 import { SecondBrainPanel } from "../components/brain/SecondBrainPanel";
 import { BrainLogPanel } from "../components/brain/BrainLogPanel";
+
+const searchSymbolsMock = vi.fn();
+vi.mock("../api/marketData", () => ({ searchSymbols: (...args: unknown[]) => searchSymbolsMock(...args) }));
 
 const askBrainStreamMock = vi.fn();
 const fetchBrainStatusMock = vi.fn();
@@ -67,6 +72,58 @@ describe("Brain Log browser flow", () => {
     updateBrainMemoMock.mockImplementation(async (_id: string, changes: object) => ({ ...memo, ...changes }));
     deleteBrainMemoMock.mockResolvedValue(undefined);
     promoteBrainMemoToNoteMock.mockResolvedValue({ id: "note-1" });
+  });
+
+  it("asks only for explicitly selected symbols and saves the captured multi-asset evidence", async () => {
+    const result = brainTechnicalAnswer();
+    searchSymbolsMock.mockResolvedValue([{ ticker: "AAPL", name: "Apple", exchange: "NASDAQ" }]);
+    askBrainStreamMock.mockResolvedValue(result);
+    renderWithProviders(<SecondBrainPanel />);
+    await screen.findByText(/1 indexed/);
+    expect(searchSymbolsMock).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByRole("combobox", { name: "Add technical symbol" }), { target: { value: "app" } });
+    fireEvent.click(await screen.findByRole("option", { name: /AAPL/ }));
+    expect(screen.getByRole("button", { name: "Remove technical AAPL" })).toBeVisible();
+    fireEvent.change(screen.getByRole("combobox", { name: "Add technical symbol" }), { target: { value: "btc-usd" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add", exact: true }));
+    fireEvent.change(screen.getByPlaceholderText(/Ask your second brain/), { target: { value: "What changed?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask", exact: true }));
+    await waitFor(() => expect(askBrainStreamMock).toHaveBeenCalledWith("What changed?", 6, expect.any(Array), expect.any(Function),
+      expect.objectContaining({ technicalSymbols: ["AAPL", "BTC-USD"] })));
+    fireEvent.click(await screen.findByRole("button", { name: "Inspect T2.1 technical evidence" }));
+    expect(screen.getByRole("region", { name: "T2.1 technical evidence" })).toHaveFocus();
+    expect(screen.getByText("Dated private thesis")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Save answer" }));
+    await waitFor(() => expect(createBrainMemoMock).toHaveBeenCalledWith(expect.objectContaining({
+      answer: result.answer, technical_context: result.technical_context, citations: result.citations,
+    })));
+    expect(promoteBrainMemoToNoteMock).not.toHaveBeenCalled();
+  });
+
+  it("reopens captured market evidence independently of private rechecks and reviews dated promotion text", async () => {
+    const result = brainTechnicalAnswer();
+    const saved = { ...memo, ...result, title: "Dated technical answer" };
+    listBrainMemosMock.mockResolvedValue([saved]); getBrainMemoMock.mockResolvedValue(saved);
+    renderWithProviders(<BrainLogPanel />);
+    fireEvent.click(await screen.findByRole("button", { name: /Dated technical answer/ }));
+    await screen.findByText(/Saved market snapshots are shown as captured/);
+    fireEvent.click(screen.getByRole("button", { name: "Inspect T1.1 technical evidence" }));
+    expect(screen.getByRole("region", { name: "T1.1 technical evidence" })).toHaveFocus();
+    await waitFor(() => expect(getBrainMemoEvidenceStatusMock).toHaveBeenCalledOnce());
+    fireEvent.click(screen.getByRole("button", { name: "Recheck" }));
+    await waitFor(() => expect(getBrainMemoEvidenceStatusMock).toHaveBeenCalledTimes(2));
+    expect(askBrainStreamMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Promote to Note" }));
+    const text = (screen.getByLabelText(/Reviewed note text/) as HTMLTextAreaElement).value;
+    expect(text).toContain("(captured T1.1)"); expect(text).not.toContain("[T1.1]");
+    expect(text).toContain(result.technical_context!.groups[0].snapshot_id);
+    expect(text).toContain(result.technical_context!.groups[1].retrieved_at);
+    expect(text).toContain("Full supporting dates and closes remain in the saved Brain Log memo memo-1");
+    expect(screen.getByRole("button", { name: "Create reviewed Note" })).toBeDisabled();
+    expect(promoteBrainMemoToNoteMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByLabelText(/I reviewed this text/));
+    fireEvent.click(screen.getByRole("button", { name: "Create reviewed Note" }));
+    await waitFor(() => expect(promoteBrainMemoToNoteMock).toHaveBeenCalledWith("memo-1", expect.objectContaining({ body: text })));
   });
 
   it("offers Save only after a complete answer and preserves the answer snapshot", async () => {

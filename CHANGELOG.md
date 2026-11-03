@@ -26,6 +26,20 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   silently truncated.
 
 ### Added
+- **Optional technical evidence for Second Brain (v2.6)** — choose up to three
+  explicit instrument symbols alongside existing private-source filters. One
+  bounded batch supplies the same three descriptive observations after matching
+  private research is found. Namespaced metric citations inspect exact dates,
+  values, formulas, provenance and supporting closes separately from private
+  citations. Current snapshots stay distinct from dated claims and historical
+  knowledge; unavailable coverage preserves private evidence. Same-profile
+  streaming/completion reference repair stays inside existing deadlines, and
+  cancellation joins provider work. Explicit Brain Log saves retain the captured
+  evidence; private citation rechecks never refresh it. Reviewed Note promotion
+  includes dated capture labels rather than reusing active snapshot references.
+  Nullable JSON migration `0018_brain_technical_context` leaves old memos intact
+  without backfill/default and retains the column on rollback. No new route,
+  provider, indicator, retrieval-ranking change or automatic indexing is added.
 - **Technical context for instrument research (v2.6)** — Investment Briefing and
   Interrogate gather the three standalone observations during explicit
   generation. Answer-local metric references open exact dates, formulas,

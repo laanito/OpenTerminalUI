@@ -165,6 +165,7 @@ jobs:
           backend/tests/test_postgres_contract.py
           backend/tests/test_portfolio_primary.py
           backend/tests/test_external_note_ingest.py
+          backend/tests/test_brain_memos.py
           -q
         env:
           OPENTERMINALUI_ALLOW_POSTGRES_TESTS: "1"

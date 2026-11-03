@@ -17,7 +17,7 @@ const sourceReasons = new Set([...Object.keys(TECHNICAL_REASONS), "provider_erro
 const dayDifference = (first: string, last: string) => (Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / 86_400_000;
 
 /** Validate the supplied snapshot conventions/identities, not prose or source truth. */
-export function validResearchTechnicalEvidence(raw: unknown, symbol: string): raw is ResearchTechnicalEvidence {
+export function validResearchTechnicalEvidence(raw: unknown, symbol: string, referencePrefix = "TECH"): raw is ResearchTechnicalEvidence {
   if (!v.record(raw) || raw.schema_version !== 1 || !id(raw.snapshot_id, "ts") || raw.symbol !== symbol
     || raw.input_contract !== "yahoo-adjusted-instrument-window-v1" || raw.interval !== "1d"
     || raw.sampling !== "own_utc_dates_within_instrument_window" || raw.calculation_version !== "technical-indicators-v1"
@@ -58,7 +58,7 @@ export function validResearchTechnicalEvidence(raw: unknown, symbol: string): ra
   let usable = 0; const used = new Set<string>(), observationIds = new Set<string>();
   for (const [index, metric] of raw.metrics.entries()) {
     const spec = TECHNICAL_DEFINITIONS[index];
-    if (!v.record(metric) || metric.citation_id !== `TECH${index + 1}` || metric.name !== spec.name || metric.unit !== spec.unit || metric.formula !== spec.formula
+    if (!v.record(metric) || metric.citation_id !== `${referencePrefix}${index + 1}` || metric.name !== spec.name || metric.unit !== spec.unit || metric.formula !== spec.formula
       || metric.required_closes !== spec.required || metric.lookback !== 20 || !Array.isArray(metric.observation_dates)) return false;
     if (metric.status === "available") {
       const expected = [...supporting.keys()].slice(-spec.required);

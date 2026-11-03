@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import re
+import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import date
 from typing import Any, Literal
 
@@ -11,7 +13,21 @@ from pydantic import AwareDatetime, Field
 from backend.services.llm_insights import InvalidInsightResponse
 from backend.services.technical_inputs import TechnicalInputPoint
 from backend.services.technical_indicators import TechnicalInstrumentIndicators, TechnicalMetric, calculate_instrument_indicators
-from backend.services.technical_snapshots import TechnicalSnapshot
+from backend.services.technical_snapshots import TechnicalSnapshot, TechnicalSnapshotRequest, build_technical_snapshot, collect_technical_snapshot
+
+
+async def collect_research_technical_evidence(symbol: str, fetcher_factory: Callable[[], Awaitable[Any]]) -> ResearchTechnicalEvidence:
+    """Optional history collection, including lazy provider startup, within 15s."""
+    request = TechnicalSnapshotRequest(symbol=symbol)
+    try:
+        async with asyncio.timeout(15):
+            fetcher = await fetcher_factory()
+            return research_technical_evidence(await collect_technical_snapshot(request, fetcher))
+    except TimeoutError:
+        snapshot = build_technical_snapshot(request, None, source=None, feed=None, failure_reason="provider_timeout")
+    except Exception:
+        snapshot = build_technical_snapshot(request, None, source=None, feed=None, failure_reason="provider_error")
+    return research_technical_evidence(snapshot)
 
 REFERENCE_PATTERN = re.compile(r"\[TECH[^\]\n]*\]")
 

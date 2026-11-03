@@ -29,6 +29,7 @@ def test_postgres_lane_uses_migrated_disposable_database() -> None:
         "portfolio_transactions",
         "notes",
         "api_keys",
+        "brain_memos",
     ):
         assert inspector.has_table(table), f"missing migrated PostgreSQL table: {table}"
 
@@ -40,3 +41,6 @@ def test_postgres_lane_uses_migrated_disposable_database() -> None:
     assert holding_columns["cost_basis_currency"]["nullable"] is True
     assert transaction_columns["currency"]["nullable"] is True
     assert transaction_columns["fees_currency"]["nullable"] is True
+    memo_columns = {column["name"]: column for column in inspector.get_columns("brain_memos")}
+    assert memo_columns["technical_context"]["nullable"] is True
+    assert memo_columns["technical_context"]["default"] is None

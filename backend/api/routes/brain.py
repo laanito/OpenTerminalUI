@@ -2,7 +2,8 @@
 
 Mounted under "/api" → /api/brain/*. Authed per-user (never /api/v1, which is
 exempt from auth): a user's brain is built only from their own journal, theses,
-and notes and never leaves the machine.
+and notes. Generation uses the configured provider; optional explicitly selected
+public technical snapshots stay separate from private retrieval and indexing.
 """
 
 from __future__ import annotations
@@ -15,15 +16,16 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
-from backend.api.deps import get_db
+from backend.api.deps import get_db, get_unified_fetcher
 from backend.auth.deps import get_current_user
 from backend.models.user import User
 from backend.services.brain import brain_service
 from backend.services.brain.indexer import reindex_user
 from backend.services.llm_profiles import LLMProfileIdentity
+from backend.services.brain.technical_context import BrainTechnicalContext, normalize_technical_symbols
 
 router = APIRouter(prefix="/brain", tags=["brain"])
 
@@ -66,6 +68,14 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     k: int = Field(default=6, ge=1, le=20)
     sources: list[BrainSource] | None = Field(default=None, min_length=1)
+    technical_symbols: list[str] = Field(default_factory=list, max_length=3, description="Optional explicit current technical scope, at most three unique instrument symbols; never inferred from the question.")
+
+    @field_validator("technical_symbols", mode="before")
+    @classmethod
+    def validate_technical_symbols(cls, value):
+        if value is None:
+            raise ValueError("Technical symbols must be a list")
+        return normalize_technical_symbols(value)
 
 
 class Citation(BaseModel):
@@ -95,6 +105,7 @@ class AskResponse(BaseModel):
     llm_provider: str | None = None
     llm_model: str | None = None
     model_profile: LLMProfileIdentity | None = None
+    technical_context: BrainTechnicalContext | None = None
 
 
 class ReindexResponse(BaseModel):
@@ -125,6 +136,7 @@ async def brain_ask(
         payload.question,
         k=payload.k,
         sources=payload.sources,
+        **({"technical_symbols": payload.technical_symbols, "technical_fetcher_factory": get_unified_fetcher} if payload.technical_symbols else {}),
     )
     return AskResponse(**result)
 
@@ -149,6 +161,7 @@ async def brain_ask_stream(
             payload.question,
             k=payload.k,
             sources=payload.sources,
+            **({"technical_symbols": payload.technical_symbols, "technical_fetcher_factory": get_unified_fetcher} if payload.technical_symbols else {}),
         )
         async with aclosing(_with_heartbeats(source)) as lifecycle:
             async for event in lifecycle:

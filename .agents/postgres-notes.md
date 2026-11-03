@@ -136,3 +136,19 @@ docker compose up -d postgres
 DATABASE_URL=postgresql://openterminalui:openterminalui@localhost:5432/openterminalui \
   alembic -c backend/alembic.ini upgrade head
 ```
+
+
+## v2.6 saved Brain technical evidence
+
+Alembic `0018_brain_technical_context` (down-revision
+`0017_market_fund_captures`) adds nullable `JSON` `technical_context` to
+`brain_memos` with SQLAlchemy inspection and portable `op.add_column`. There is
+no default, data backfill, old-row rewrite, type conversion or runtime PostgreSQL
+ALTER path. Existing memos keep NULL and their original answers/citations. Run
+Alembic before the new app reads memos; Docker entrypoint already upgrades head.
+Application rollback retains the evidence column deliberately; older code ignores
+it, and re-upgrade checks for the existing column. No production DB is touched
+by local verification. Isolated SQLite preservation/idempotence and PostgreSQL
+DDL tests cover the migration; the disposable PostgreSQL CI lane now also checks
+the migrated column and runs Brain memo persistence/ownership API contracts.
+Actual PostgreSQL execution belongs to that CI lane, not the local DDL test.

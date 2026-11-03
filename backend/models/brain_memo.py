@@ -37,6 +37,9 @@ class BrainMemoORM(Base):
     llm: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     llm_provider: Mapped[str | None] = mapped_column(String(128), nullable=True)
     llm_model: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    # Nullable for legacy memos. Explicit saves retain transient market evidence
+    # as captured; it is never backfilled or automatically added to the RAG index.
+    technical_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # User-managed organization; editing these fields never rewrites the snapshot.
     title: Mapped[str] = mapped_column(String(256), default="")

@@ -561,6 +561,15 @@
               }
             ],
             "title": "Sources"
+          },
+          "technical_symbols": {
+            "description": "Optional explicit current technical scope, at most three unique instrument symbols; never inferred from the question.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Technical Symbols",
+            "type": "array"
           }
         },
         "required": [
@@ -672,6 +681,16 @@
             },
             "title": "Sources",
             "type": "array"
+          },
+          "technical_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainTechnicalContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -1273,6 +1292,16 @@
             "title": "Tags",
             "type": "array"
           },
+          "technical_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainTechnicalContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "title": {
             "default": "",
             "maxLength": 256,
@@ -1429,6 +1458,16 @@
             },
             "title": "Tags",
             "type": "array"
+          },
+          "technical_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainTechnicalContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "title": {
             "title": "Title",
@@ -1661,6 +1700,508 @@
           }
         },
         "title": "BrainMemoUpdate",
+        "type": "object"
+      },
+      "BrainTechnicalContext": {
+        "additionalProperties": false,
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/BrainTechnicalEvidence"
+            },
+            "maxItems": 3,
+            "title": "Groups",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "private_context_unavailable",
+                  "model_disabled",
+                  "preparation_timeout"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Requested Symbols",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "unavailable",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_symbols",
+          "status"
+        ],
+        "title": "BrainTechnicalContext",
+        "type": "object"
+      },
+      "BrainTechnicalEvidence": {
+        "properties": {
+          "adjustment_verification": {
+            "const": "not_independently_verified",
+            "default": "not_independently_verified",
+            "title": "Adjustment Verification",
+            "type": "string"
+          },
+          "annualized": {
+            "const": false,
+            "default": false,
+            "title": "Annualized",
+            "type": "boolean"
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date"
+          },
+          "available_closes": {
+            "maximum": 181.0,
+            "minimum": 0.0,
+            "title": "Available Closes",
+            "type": "integer"
+          },
+          "bar_completion": {
+            "const": "not_verified",
+            "default": "not_verified",
+            "title": "Bar Completion",
+            "type": "string"
+          },
+          "calculation_version": {
+            "const": "technical-indicators-v1",
+            "default": "technical-indicators-v1",
+            "title": "Calculation Version",
+            "type": "string"
+          },
+          "exchange_timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange Timezone"
+          },
+          "feed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feed"
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "enum": [
+                  "current",
+                  "stale"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freshness"
+          },
+          "history_semantics": {
+            "const": "current_source_history_not_point_in_time",
+            "default": "current_source_history_not_point_in_time",
+            "title": "History Semantics",
+            "type": "string"
+          },
+          "input_contract": {
+            "const": "yahoo-adjusted-instrument-window-v1",
+            "default": "yahoo-adjusted-instrument-window-v1",
+            "title": "Input Contract",
+            "type": "string"
+          },
+          "input_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Id"
+          },
+          "input_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Reason"
+          },
+          "input_status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Input Status",
+            "type": "string"
+          },
+          "instrument_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Type"
+          },
+          "interval": {
+            "const": "1d",
+            "default": "1d",
+            "title": "Interval",
+            "type": "string"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/BrainTechnicalMetric"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Metrics",
+            "type": "array"
+          },
+          "price_basis": {
+            "const": "yahoo_reported_adjclose",
+            "default": "yahoo_reported_adjclose",
+            "title": "Price Basis",
+            "type": "string"
+          },
+          "quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Unit"
+          },
+          "requested_end_date": {
+            "format": "date",
+            "title": "Requested End Date",
+            "type": "string"
+          },
+          "requested_start_date": {
+            "format": "date",
+            "title": "Requested Start Date",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "sampling": {
+            "const": "own_utc_dates_within_instrument_window",
+            "default": "own_utc_dates_within_instrument_window",
+            "title": "Sampling",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "session_verification": {
+            "const": "not_performed",
+            "default": "not_performed",
+            "title": "Session Verification",
+            "type": "string"
+          },
+          "shifted_local_dates": {
+            "maximum": 181.0,
+            "minimum": 0.0,
+            "title": "Shifted Local Dates",
+            "type": "integer"
+          },
+          "snapshot_id": {
+            "pattern": "^ts_[a-f0-9]{24}$",
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supporting_points": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalInputPoint"
+            },
+            "maxItems": 21,
+            "title": "Supporting Points",
+            "type": "array"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "value_decimal_places": {
+            "const": 8,
+            "default": 8,
+            "title": "Value Decimal Places",
+            "type": "integer"
+          },
+          "window_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window End Date"
+          },
+          "window_start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Start Date"
+          }
+        },
+        "required": [
+          "symbol",
+          "status",
+          "input_status",
+          "input_reason",
+          "input_id",
+          "source",
+          "feed",
+          "quote_unit",
+          "available_closes",
+          "as_of_date",
+          "freshness",
+          "metrics",
+          "snapshot_id",
+          "retrieved_at",
+          "requested_start_date",
+          "requested_end_date",
+          "window_start_date",
+          "window_end_date",
+          "instrument_type",
+          "exchange_timezone",
+          "shifted_local_dates"
+        ],
+        "title": "BrainTechnicalEvidence",
+        "type": "object"
+      },
+      "BrainTechnicalMetric": {
+        "properties": {
+          "citation_id": {
+            "pattern": "^T[1-3]\\.[1-3]$",
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "lookback": {
+            "const": 20,
+            "default": 20,
+            "title": "Lookback",
+            "type": "integer"
+          },
+          "name": {
+            "enum": [
+              "sma20_gap_pct",
+              "return20_pct",
+              "volatility20_pp"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "observation_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "maxItems": 21,
+            "title": "Observation Dates",
+            "type": "array"
+          },
+          "observation_id": {
+            "anyOf": [
+              {
+                "pattern": "^to_[a-f0-9]{24}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observation Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "input_unavailable",
+                  "inconsistent_input",
+                  "insufficient_history",
+                  "non_finite_calculation"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "required_closes": {
+            "enum": [
+              20,
+              21
+            ],
+            "title": "Required Closes",
+            "type": "integer"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "percent",
+              "percentage_points"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "used_closes": {
+            "default": 0,
+            "maximum": 21.0,
+            "minimum": 0.0,
+            "title": "Used Closes",
+            "type": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "reason",
+          "unit",
+          "formula",
+          "required_closes",
+          "citation_id"
+        ],
+        "title": "BrainTechnicalMetric",
         "type": "object"
       },
       "BriefingAssetEvidence": {
