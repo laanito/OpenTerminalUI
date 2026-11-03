@@ -242,7 +242,8 @@ revised provider data is not a complete historical vintage.
 Interrogate now include available standalone technical observations during
 explicit generation. **[TECH1–3]** references open exact metric dates, formulas,
 source limitations and supporting closes. Missing technical history preserves
-other inputs. Brain and portfolio-risk integrations are still pending. See the
+other inputs. Brain also offers an explicit optional technical scope; portfolio
+risk integration remains pending. See the
 [instrument research workflow](docs/wiki/Research-Workflows.md#instrument-technical-evidence-v26-development).
 
 ### Private Second Brain and Brain Log
@@ -256,10 +257,21 @@ A bounded recency signal operates among relevant notes; older conflicting views
 remain available as history. Notes and reindexing expose loading and indexing
 progress rather than silently treating a queued write as searchable evidence.
 
+**v2.6 development:** optionally choose up to three technical symbols before
+asking. Current observations supplement matching private research; **[T1.1]**
+style references inspect each asset's exact metrics, dates and supporting closes
+separately from private **[1]** citations. No symbols are inferred from prose.
+Missing history remains explicit. Current prices cannot reconstruct past
+knowledge or alone invalidate a long-term thesis.
+
 **Save answer** preserves a completed synthesis in the **Brain Log**, with
 citation snapshots and model provenance. Saved memos are not automatically
 reindexed as facts. **Promote to Note** creates a separate, reviewed, editable
 source; opening a memo also reports changed or missing cited records.
+Technical snapshots are retained as captured when saved; private citation
+rechecks do not refresh market data. Existing databases require Alembic migration
+`0018_brain_technical_context` (the Docker entrypoint runs migrations). Legacy
+memos retain their original contents with no technical snapshot backfill.
 
 An external agent such as Hermes can deliberately ingest summaries through the
 API-key-authenticated notes endpoint. This is not automatic web/news indexing

@@ -21,7 +21,12 @@ export function BrainMemoPromotionModal({ memo, evidenceStatus, onClose, onPromo
 }) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState(memo.title);
-  const [body, setBody] = useState(memo.answer);
+  const technicalFootnotes = memo.technical_context?.groups.map((group) =>
+    `${group.symbol} · captured ${group.retrieved_at} · source ${group.source ?? "unknown"}/${group.feed ?? "unknown"} · snapshot ${group.snapshot_id}\n` +
+    group.metrics.map((metric) => `Captured ${metric.citation_id} · ${metric.name}: ${metric.status === "available" ? `${metric.value} ${metric.unit}` : `unavailable (${metric.reason})`}; ${metric.start_date ?? "unknown"} to ${metric.end_date ?? "unknown"}; observation ${metric.observation_id ?? "none"}.`).join("\n")
+  ).join("\n\n");
+  const promotedAnswer = technicalFootnotes ? memo.answer.replace(/\[(T[1-3]\.[1-3])\]/g, "(captured $1)") : memo.answer;
+  const [body, setBody] = useState(promotedAnswer + (technicalFootnotes ? `\n\nCaptured technical context (descriptive, current-source history; not independently verified):\n${technicalFootnotes}\nFull supporting dates and closes remain in the saved Brain Log memo ${memo.id}.` : ""));
   const [symbol, setSymbol] = useState(memo.symbol ?? "");
   const [tags, setTags] = useState(memo.tags.join(", "));
   const [effectiveAt, setEffectiveAt] = useState(localDateTime(memo.generated_at));

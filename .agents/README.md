@@ -28,10 +28,20 @@ started on 2026-11-03: standalone typed snapshot collection and shared source/
 calculation checks merged as #251. Investment Briefing and Interrogate now
 include bounded technical evidence on explicit Generate, with exact metric
 references/browser inspection, safe missing coverage and contract/UTC-date cache
-keys; this consumer slice is pending review/host acceptance. Same-symbol note
+keys; this consumer slice merged as #252, with host quality feedback pending. Same-symbol note
 effective/recorded dates stay distinct; semantic related-note queries are unchanged.
-No new route, provider setting, persistence or indexing. Next: Brain, then
-portfolio risk. See Roadmap/TODO. The inherited layout audit remains
+That instrument slice adds no route, provider setting, persistence or indexing.
+Brain's integration is now implemented for review: default-empty explicit scope
+of up to three symbols; a cancellable 15s batch after matching private research;
+separate private [n] and per-asset [T1.1] references; safe same-profile reference
+repair, exact browser inspection and captured Brain Log evidence. No private
+ranking/embedding or automatic indexing change. Explicit saves require nullable
+JSON migration `0018_brain_technical_context`, no default/backfill or old-row
+rewrite. Docker entrypoint applies Alembic before startup; existing local DBs
+must upgrade. Rollback retains captured research. Private citation rechecks
+never refresh saved market observations; reviewed promotion relabels captured
+references and retains dated source/value/ID footnotes. Next: portfolio risk,
+then consolidated evaluation/release. See Roadmap/TODO. The inherited layout audit remains
 unscheduled. The maintainer clarified v3's fuller technical-analysis direction:
 RSI/MACD, volume, accumulation areas and Elliott-wave hypotheses should help test
 assumptions ingested from videos/notes against independently derived evidence.

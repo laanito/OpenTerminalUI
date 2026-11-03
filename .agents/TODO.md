@@ -970,15 +970,30 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       twenty installed-Chrome smoke journeys and API/surface/mock/whitespace guards
       passed. Backend-generated complete/partial/unavailable/zero/crypto fixtures
       anchor client validation; browser checks use deterministic sources/models.
-      Consumer slice pending review and host usefulness/fidelity/latency feedback.
+      Consumer slice merged as #252; host usefulness/fidelity/latency feedback pending.
 - [ ] Give **Portfolio AI Risk Assessment** holdings-level technical context with
       explicit coverage/relevance. Do not equate single-asset volatility with
       portfolio risk or invent aggregation without the necessary joint history.
-- [ ] Give **Second Brain** bounded relevant-symbol selection and current
-      technical observations alongside retrieved research. Preserve temporal/source citations; distinguish current snapshots
-      from dated notes and historically available evidence. Decide transient
-      evidence versus persistence explicitly; do not silently index model prose
-      or transient observations as durable research facts.
+- [x] Give **Second Brain** bounded relevant-symbol selection and current
+      technical observations alongside matching private research. Explicit
+      default-empty scope of at most three unique symbols; no ticker inference,
+      private source/ranking/embedding changes or automatic indexing. One 15s
+      batch, up to three collectors, with cancellation and skipped/partial/
+      unavailable coverage. Separate private [n] and per-asset [T1.1] references;
+      preserve note dates versus current snapshots, horizon limits and unknown
+      historical knowledge. Require private and usable per-asset citations with
+      bounded same-profile repair; exact browser inspection checks final capture
+      consistency and never replays inference. Explicit Brain Log saves retain
+      evidence as captured via nullable JSON migration 0018 (no default/backfill,
+      old-row rewrite or destructive downgrade); private rechecks never refresh
+      markets. Reviewed promotion adds dated capture footnotes and relabels local
+      refs before creating a separate Note. Implementation pending review/host
+      feedback. Checks: 157 focused backend tests; all 662 frontend tests;
+      production build; twenty existing Chrome smoke journeys plus two new
+      desktop/narrow Brain save/reopen/inspection/promotion/degradation journeys;
+      API/surface/mock/whitespace guards. Deterministic fixtures only, no live
+      model/provider or local PostgreSQL acceptance claimed. Disposable PostgreSQL
+      CI now runs memo API/ownership contracts and checks the nullable column.
 
 Audit current inputs per workflow and reuse v2.5's bounded source/calculation
 contract where applicable. Keep exact values/units/dates, freshness/provenance,

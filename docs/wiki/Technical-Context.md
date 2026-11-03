@@ -74,8 +74,56 @@ skips the fetch. Cache keys add the technical contract and current UTC date;
 profile and Interrogate owner/note-version scope remain intact. Regenerate
 refreshes both evidence and analysis. Source retrieval time remains explicit.
 Same-symbol note effective/recorded dates are supplied separately without
-changing semantic related-note queries, embeddings or indexing. Brain and
-portfolio-risk consumers are not integrated in this slice.
+changing semantic related-note queries, embeddings or indexing. This instrument
+consumer slice merged as #252; host quality feedback is still pending.
+
+## Second Brain technical context (v2.6 development)
+
+Brain offers an explicit, default-empty technical scope of at most three unique
+symbols. It does not infer tickers from question text or change private-source
+selection, ranking, embeddings or indexing. History is collected only after
+matching owner-scoped private research is found and generation is enabled.
+Empty private context, disabled generation or a preparation timeout reports a
+skipped scope with a reason. A 15-second batch bounds at most three concurrent
+collectors, including provider startup, inside Brain's existing preparation
+allowance. Cancellation cancels and joins the children. Partial and unavailable
+asset coverage remain visible beside usable private evidence.
+
+`POST /api/brain/ask` and `/ask/stream` accept `technical_symbols`, for example
+`["AAPL", "BTC-USD"]`. Their additive typed `technical_context` contains selected
+symbols, coverage/reason and per-asset research projections. References are
+local to the answer: `T1.1`–`T1.3` for the first asset, `T2.1`–`T2.3` for the
+second, distinct from private `[1]` citations. Stable snapshot/input/observation
+IDs are preserved. Successful technical synthesis must cite a supplied private
+source and at least one available metric for each usable asset; unknown and
+unavailable references fail validation. These checks locate evidence, not prove
+the interpretation. Current observations cannot alone reject a dated historical
+description or a long-term thesis, and do not establish past investor knowledge.
+
+The frozen Deep/default profile and its existing deadlines remain. Stream text
+is provisional; reference failure uses the existing same-profile completion
+fallback with safe correction. Non-streaming synthesis permits one reference
+repair. Failed completion replaces provisional prose with private sources and
+captured coverage. A validated technical stream finishes with a full `result`
+and completion timestamp; legacy nontechnical success retains `done`. The browser
+checks selected scope, metadata, references and unchanged captured evidence
+between synthesis start and final result, without replaying inference.
+
+An explicit Brain Log save retains the full context as captured, including at
+most 21 supporting closes per asset. It is immutable alongside the answer.
+Reopening or rechecking a memo only compares private source identities and never
+refreshes those market observations. Reviewed **Promote to Note** drafts include
+dated capture/source/value/ID footnotes and relabel local references as
+`(captured T1.1)` so future retrieval cannot confuse them with a new snapshot.
+The user still reviews and confirms the separate Note; transient evidence and
+saved memos are not automatically indexed.
+
+Existing databases need Alembic revision `0018_brain_technical_context`, adding
+one nullable portable JSON column to `brain_memos`, with no default/backfill or
+old-row rewrite. Docker's entrypoint runs the upgrade before app startup; local
+existing databases use `PYTHONPATH=. alembic -c backend/alembic.ini upgrade head`.
+Rollback retains the column and captured research; older code ignores it.
+Portfolio AI Risk Assessment integration remains the next v2.6 slice.
 
 ## Source audit and supported input contract
 

@@ -17,6 +17,10 @@ surface, authenticated shell/navigation/GO-bar routing, and a fixture-backed
 Backtesting submit/poll/result journey, and desktop/narrow-screen comparison
 briefing generation, citation inspection, failed retry and selection invalidation.
 It also checks crypto stock-detail snapshot/chart routing with mocked quote ticks.
+Brain technical journeys at desktop/narrow widths cover explicit symbol scope,
+per-asset metric inspection, captured Brain Log saves/reopening, private-only
+evidence rechecks, reviewed promotion and partial/unavailable history. They use
+the same backend-produced projections as the frontend protocol tests.
 Because those requests are fully
 intercepted, the smoke command runs the built frontend without starting backend
 jobs or contacting upstream providers.

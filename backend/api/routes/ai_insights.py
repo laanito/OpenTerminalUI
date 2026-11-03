@@ -46,9 +46,8 @@ from backend.services.insight_lifecycle import stream_insight_lifecycle
 from backend.services.llm_insights import run_insight
 from backend.services.llm_sentiment import score_articles
 from backend.services.news_terms import INDEX_NAME_BY_SYMBOL, is_index_symbol
-from backend.services.technical_snapshots import TechnicalSnapshotRequest, build_technical_snapshot, collect_technical_snapshot
 from backend.services.research_technical_context import (
-    ResearchTechnicalEvidence, research_technical_evidence, technical_research_prompts, validate_technical_references,
+    ResearchTechnicalEvidence, collect_research_technical_evidence, technical_research_prompts, validate_technical_references,
 )
 from backend.shared.market_classifier import is_crypto_symbol
 
@@ -69,18 +68,7 @@ class ResearchInsightEnvelope(BaseModel):
 
 
 async def _technical_for_symbol(symbol: str) -> ResearchTechnicalEvidence:
-    request = TechnicalSnapshotRequest(symbol=symbol)
-    try:
-        # Includes lazy fetcher startup, within the existing preparation budget.
-        async with asyncio.timeout(15):
-            fetcher = await get_unified_fetcher()
-            snapshot = await collect_technical_snapshot(request, fetcher)
-            return research_technical_evidence(snapshot)
-    except TimeoutError:
-        snapshot = build_technical_snapshot(request, None, source=None, feed=None, failure_reason="provider_timeout")
-    except Exception:
-        snapshot = build_technical_snapshot(request, None, source=None, feed=None, failure_reason="provider_error")
-    return research_technical_evidence(snapshot)
+    return await collect_research_technical_evidence(symbol, get_unified_fetcher)
 
 
 def _technical_cache_scope() -> dict[str, str]:

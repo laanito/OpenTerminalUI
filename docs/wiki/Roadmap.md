@@ -658,12 +658,20 @@ technical evidence while preserving their existing useful inputs and clearly
 stating missing coverage. No model-computed indicators or fabricated values.
 Implementation started on 2026-11-03. Standalone snapshot models/collection and
 shared source checks/calculations merged as #251. The Investment Briefing and
-Interrogate consumers are implemented, pending review/host acceptance: automatic
+Interrogate consumers merged as #252, with host quality feedback pending: automatic
 bounded technical collection on explicit Generate, exact metric references and
 browser inspection, safe unavailable coverage, and contract/date-aware cache
 keys alongside existing profile/owner/note scoping. Same-symbol note dates stay
-distinct from current technical history. Brain and portfolio-risk consumers
-remain open; no new provider, persistence, indexing or public route is added.
+distinct from current technical history. Brain's next slice is implemented for
+review: an explicit optional scope of at most three symbols, separate private
+and per-asset metric citations, a bounded cancellable batch, same-model reference
+repair and exact browser inspection. Explicit Brain Log saves retain captured
+evidence through nullable JSON migration `0018_brain_technical_context`; older
+memos are not backfilled, private citation rechecks do not refresh markets and
+only reviewed promotion creates a new Note. Private ranking/embeddings and
+automatic indexing remain unchanged. Portfolio risk is next, followed by
+configured-model/host evaluation and release closure. No new provider, indicator
+or public route is added.
 Split PRs around reviewable shared-contract and consumer changes; no fixed PR
 count is agreed.
 

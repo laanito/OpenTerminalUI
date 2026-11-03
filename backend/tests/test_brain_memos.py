@@ -10,6 +10,42 @@ from backend.main import app
 from backend.shared.db import init_db
 
 
+def test_saved_technical_context_is_immutable_owner_scoped_and_not_refreshed(monkeypatch):
+    from backend.tests.test_brain_technical_context import context
+    from backend.services.brain import technical_context as technical
+    async def must_not_fetch(*args, **kwargs):
+        raise AssertionError("reading a saved memo must not refresh technical markets")
+    monkeypatch.setattr(technical, "collect_research_technical_evidence", must_not_fetch)
+    init_db()
+    client = TestClient(app)
+    owner, other = _auth(client, "technical-owner"), _auth(client, "technical-other")
+    payload = _payload()
+    payload["answer"] = "The dated private claim [1] can be compared conditionally with [T1.1] and [T2.1]."
+    payload["technical_context"] = context().model_dump(mode="json")
+    payload["generated_at"] = "2026-09-25T12:01:00+00:00"
+    created = client.post("/api/brain/memos", headers=owner, json=payload)
+    assert created.status_code == 201, created.text
+    memo = created.json()
+    assert memo["technical_context"] == payload["technical_context"]
+    url = f"/api/brain/memos/{memo['id']}"
+    assert client.get(url, headers=other).status_code == 404
+    assert client.patch(url, headers=owner, json={"technical_context": None}).status_code == 422
+    assert client.patch(url, headers=owner, json={"title": "Reviewed title"}).status_code == 200
+    assert client.get(url, headers=owner).json()["technical_context"] == payload["technical_context"]
+    assert client.get(url + "/evidence-status", headers=owner).status_code == 200
+    assert client.get(url, headers=owner).json()["technical_context"] == payload["technical_context"]
+
+
+def test_saved_technical_answers_cannot_drop_their_reference_targets():
+    from backend.tests.test_brain_technical_context import context
+    init_db()
+    client = TestClient(app)
+    owner = _auth(client, "technical-invalid")
+    payload = {**_payload(), "technical_context": context().model_dump(mode="json"),
+               "answer": "Wrong or incomplete targets [1] [T9.9]."}
+    assert client.post("/api/brain/memos", headers=owner, json=payload).status_code == 422
+
+
 def _auth(client: TestClient, label: str) -> dict[str, str]:
     email = f"brain-memo-{label}-{uuid.uuid4().hex[:8]}@example.com"
     password = "brain-memo-password"

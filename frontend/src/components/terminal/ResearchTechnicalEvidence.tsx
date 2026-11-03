@@ -12,7 +12,9 @@ const number = (value: number) => new Intl.NumberFormat(undefined, { maximumSign
 export function technicalCitations(text: string, evidence: Evidence | null | undefined, inspect: (id: string) => void): ReactNode {
   if (!evidence) return text;
   const available = new Set(evidence.metrics.filter((metric) => metric.status === "available").map((metric) => `[${metric.citation_id}]`));
-  return text.split(/(\[TECH[1-3]\])/g).map((part, index) => available.has(part)
+  if (!available.size) return text;
+  const escaped = [...available].map((ref) => ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return text.split(new RegExp(`(${escaped.join("|")})`, "g")).map((part, index) => available.has(part)
     ? <button type="button" key={index} className="text-terminal-accent underline" aria-label={`Inspect ${part.slice(1, -1)} technical evidence`}
         onClick={() => inspect(part.slice(1, -1))}>{part}</button>
     : part);

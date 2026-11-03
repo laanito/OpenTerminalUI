@@ -2,9 +2,10 @@
 
 This is the north-star feature — an AI research partner grounded in *your own*
 journal, theses, and notes that helps you invest without being fooled (by the
-market, by hype, or by yourself). It never invents facts: answers are built only
-from retrieved chunks, every claim is cited back to a source, and it says plainly
-when your notes don't cover the question.
+market, by hype, or by yourself). Private retrieval stays owner-scoped and
+time-aware. Explicitly selected current technical evidence can supplement it;
+that transient evidence is not automatically indexed as private research.
+Reference checks locate supplied inputs, not certify the model's reasoning.
 """
 
 from __future__ import annotations
@@ -12,8 +13,8 @@ from __future__ import annotations
 import logging
 import math
 import asyncio
-from contextlib import suppress
-from collections.abc import AsyncIterator
+from contextlib import aclosing, suppress
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
@@ -27,6 +28,10 @@ from backend.services.brain.vector_store import VectorMatch, VectorStore, make_v
 from backend.services.embeddings import EmbeddingError, get_embedding_service
 from backend.services.llm_client import LLMError, get_llm_client
 from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
+from backend.services.brain.technical_context import (
+    BrainTechnicalContext, InvalidBrainTechnicalReferences, collect_brain_technical_context,
+    normalize_technical_symbols, skipped_technical_context, technical_messages, validate_brain_technical_references,
+)
 from backend.shared.db import engine
 
 logger = logging.getLogger(__name__)
@@ -45,7 +50,8 @@ SYSTEM_PROMPT = """You are the user's private "second brain" — a research part
 that helps them invest without being fooled by markets, by hype, or by themselves.
 
 You will be given CONTEXT: numbered excerpts from the user's OWN trading journal, \
-portfolio theses, and position notes. Answer the QUESTION using ONLY that context.
+portfolio theses, and position notes. Answer the QUESTION using ONLY supplied \
+context. Any additional server-selected evidence is identified separately.
 
 Rules:
 - Ground every claim in the context. Cite sources inline like [1], [2] using the \
@@ -204,6 +210,16 @@ class _SynthesisRequest:
     sources: list[str]
     citations: list[dict[str, Any]]
     messages: list[dict[str, str]]
+    technical_context: BrainTechnicalContext | None = None
+
+
+def _technical_fields(request: _SynthesisRequest) -> dict[str, Any]:
+    return {"technical_context": request.technical_context.model_dump(mode="json")} if request.technical_context else {}
+
+
+def _immediate_technical(payload, symbols, profile, reason=None):
+    context = skipped_technical_context(symbols, reason or ("model_disabled" if not profile.enabled else "private_context_unavailable"))
+    return {**payload, "technical_context": context.model_dump(mode="json")} if context else payload
 
 
 def _citations(matches: list[VectorMatch]) -> list[dict[str, Any]]:
@@ -315,6 +331,8 @@ async def _prepare_ask(
     k: int = 6,
     sources: list[str] | None = None,
     profile: ResolvedLLMProfile | None = None,
+    technical_symbols: list[str] | None = None,
+    technical_fetcher_factory: Callable[[], Awaitable[Any]] | None = None,
 ) -> tuple[dict[str, Any] | None, _SynthesisRequest | None]:
     active_sources = _normalize_sources(sources)
     question = (question or "").strip()
@@ -344,8 +362,8 @@ async def _prepare_ask(
                 {
                     "answer": (
                         "Your second brain is empty. Add some trade journal entries, a "
-                        "portfolio thesis, or position notes, then ask again — I only ever "
-                        "answer from your own writing."
+                        "portfolio thesis, or position notes, then ask again. Matching private "
+                        "research is needed before adding optional current technical context."
                     ),
                     "citations": [],
                     "indexed_chunks": 0,
@@ -406,15 +424,17 @@ async def _prepare_ask(
 
     context = _format_context(matches)
     user_msg = f"CONTEXT:\n{context}\n\nQUESTION: {question}"
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_msg}]
+    technical = await collect_brain_technical_context(technical_symbols or [], technical_fetcher_factory)
+    if technical is not None:
+        messages = technical_messages(messages, technical)
     return (
         None,
         _SynthesisRequest(
             sources=active_sources,
             citations=citations,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg},
-            ],
+            messages=messages,
+            technical_context=technical,
         ),
     )
 
@@ -422,12 +442,13 @@ async def _prepare_ask(
 def _llm_unavailable(request: _SynthesisRequest, error: str = "llm_unavailable") -> dict[str, Any]:
     return _with_scope(
         {
-            "answer": (
+            "answer": "The model could not produce a valid answer tied to the supplied evidence. Here are the sources." if error == "invalid_response" else (
                 "I found relevant private writing but couldn't reach the language model to "
                 "synthesize an answer. Here are the sources."
             ),
             "citations": request.citations,
             "error": error,
+            **_technical_fields(request),
         },
         request.sources,
     )
@@ -435,30 +456,34 @@ def _llm_unavailable(request: _SynthesisRequest, error: str = "llm_unavailable")
 
 async def ask(
     db: Session, user_id: str, question: str, *, k: int = 6, sources: list[str] | None = None,
+    technical_symbols: list[str] | None = None,
+    technical_fetcher_factory: Callable[[], Awaitable[Any]] | None = None,
 ) -> dict[str, Any]:
     profile = resolve_llm_profile(get_settings(), "brain_answer")
+    selected_technical = normalize_technical_symbols(technical_symbols)
+    technical_kwargs = {"technical_symbols": selected_technical, "technical_fetcher_factory": technical_fetcher_factory} if selected_technical else {}
     request = None
     try:
         async with asyncio.timeout(profile.timeout_seconds + _PREPARATION_SECONDS):
-            immediate, request = await _prepare_ask(db, user_id, question, k=k, sources=sources, profile=profile)
+            immediate, request = await _prepare_ask(db, user_id, question, k=k, sources=sources, profile=profile, **technical_kwargs)
             if immediate is not None:
-                return _with_generation(immediate, profile)
+                return _with_generation(_immediate_technical(immediate, selected_technical, profile), profile)
             assert request is not None
             async with asyncio.timeout(profile.timeout_seconds):
                 client = get_llm_client(profile=profile)
-                answer = await client.chat(request.messages, temperature=0.2,
-                                           max_tokens=_SYNTHESIS_MAX_TOKENS, retry_on_truncation=True)
-                if not answer.strip():
-                    raise LLMError("LLM completion returned no answer text")
+                try:
+                    answer = await _complete_synthesis(client, request)
+                except InvalidBrainTechnicalReferences as exc:
+                    answer = await _complete_synthesis(client, request, exc)
     except asyncio.TimeoutError:
-        return _with_generation(_timed_out(request, sources), profile)
+        return _with_generation(_immediate_technical(_timed_out(request, sources), selected_technical, profile, "preparation_timeout") if request is None else _timed_out(request, sources), profile)
     except LLMError as exc:
         logger.warning("Brain synthesis failed (%s)", type(exc).__name__)
         if request is None:
             raise
-        return _with_generation(_llm_unavailable(request), profile)
+        return _with_generation(_llm_unavailable(request, "invalid_response" if isinstance(exc, InvalidBrainTechnicalReferences) else "llm_unavailable"), profile)
     return _with_generation(_with_scope(
-        {"answer": answer.strip(), "citations": request.citations, "llm": True}, request.sources,
+        {"answer": answer.strip(), "citations": request.citations, "llm": True, **_technical_fields(request)}, request.sources,
     ), profile)
 
 
@@ -471,49 +496,75 @@ def _timed_out(request, sources):
     }, _normalize_sources(sources))
 
 
+async def _complete_synthesis(client, request, correction=None):
+    messages = request.messages
+    if correction is not None:
+        messages = [*messages, {"role": "system", "content": f"The answer failed reference validation: {correction}. Regenerate the complete answer using the original evidence and its exact references. Do not invent facts or repeat this feedback."}]
+    answer = await client.chat(messages, temperature=0.2, max_tokens=_SYNTHESIS_MAX_TOKENS, retry_on_truncation=True)
+    if not answer.strip() or len(answer) > 128_000:
+        raise LLMError("LLM completion returned no bounded answer text")
+    validate_brain_technical_references(answer, request.technical_context, request.citations)
+    return answer
+
+
 async def _stream_synthesis(request, profile, generation, emit):
     """The producer owns the model deadline across all stream/completion requests."""
     client = get_llm_client(profile=profile)
+    def final_metadata():
+        return _generation_metadata(profile) if request.technical_context is not None else generation
     try:
         async with asyncio.timeout(profile.timeout_seconds):
             try:
-                emitted = False
-                async for text in client.chat_stream(
+                chunks = []
+                length = 0
+                async with aclosing(client.chat_stream(
                     request.messages, temperature=0.2, max_tokens=_SYNTHESIS_MAX_TOKENS,
-                ):
-                    emitted = True
-                    emit({"type": "delta", "text": text})
-                if not emitted:
+                )) as stream:
+                    async for text in stream:
+                        length += len(text)
+                        if length > 128_000:
+                            raise LLMError("Brain stream exceeded its answer limit")
+                        chunks.append(text)
+                        emit({"type": "delta", "text": text})
+                answer = "".join(chunks)
+                if not answer.strip():
                     raise LLMError("LLM stream returned no answer text")
+                validate_brain_technical_references(answer, request.technical_context, request.citations)
             except LLMError as exc:
                 logger.warning("Brain stream unavailable; using same-profile completion (%s)", type(exc).__name__)
-                answer = await client.chat(request.messages, temperature=0.2,
-                                           max_tokens=_SYNTHESIS_MAX_TOKENS, retry_on_truncation=True)
-                if not answer.strip():
-                    raise LLMError("LLM completion returned no answer text")
+                answer = await _complete_synthesis(client, request, exc if isinstance(exc, InvalidBrainTechnicalReferences) else None)
                 emit({"type": "result", "result": {
                     **_with_scope({"answer": answer.strip(), "citations": request.citations, "llm": True}, request.sources),
-                    **generation,
+                    **final_metadata(), **_technical_fields(request),
                 }})
                 return
     except asyncio.TimeoutError:
-        emit({"type": "result", "result": {**_llm_unavailable(request, "timeout"), **generation}})
+        emit({"type": "result", "result": {**_llm_unavailable(request, "timeout"), **final_metadata()}})
         return
     except LLMError as exc:
         logger.warning("Brain synthesis unavailable (%s)", type(exc).__name__)
-        emit({"type": "result", "result": {**_llm_unavailable(request), **generation}})
+        emit({"type": "result", "result": {**_llm_unavailable(request, "invalid_response" if isinstance(exc, InvalidBrainTechnicalReferences) else "llm_unavailable"), **final_metadata()}})
         return
-    emit({"type": "done"})
+    if request.technical_context is not None:
+        emit({"type": "result", "result": {**_with_scope({"answer": answer.strip(), "citations": request.citations, "llm": True,
+              **_technical_fields(request)}, request.sources), **final_metadata()}})
+    else:
+        emit({"type": "done"})
 
 
 async def ask_stream(
     db: Session, user_id: str, question: str, *, k: int = 6, sources: list[str] | None = None,
+    technical_symbols: list[str] | None = None,
+    technical_fetcher_factory: Callable[[], Awaitable[Any]] | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Announce budgets before retrieval, then stream within one owned producer."""
     profile = resolve_llm_profile(get_settings(), "brain_answer")
+    selected_technical = normalize_technical_symbols(technical_symbols)
+    technical_kwargs = {"technical_symbols": selected_technical, "technical_fetcher_factory": technical_fetcher_factory} if selected_technical else {}
     active_sources = _normalize_sources(sources)
     generation = _generation_metadata(profile)
     yield {"type": "queued", "sources": active_sources, **generation,
+           **({"technical_symbols": selected_technical} if selected_technical else {}),
            "deadlines": {"operation_seconds": profile.timeout_seconds + _PREPARATION_SECONDS}}
     queue: asyncio.Queue = asyncio.Queue()
 
@@ -521,16 +572,18 @@ async def ask_stream(
         request = None
         try:
             async with asyncio.timeout(profile.timeout_seconds + _PREPARATION_SECONDS):
-                immediate, request = await _prepare_ask(db, user_id, question, k=k, sources=sources, profile=profile)
+                immediate, request = await _prepare_ask(db, user_id, question, k=k, sources=sources, profile=profile, **technical_kwargs)
                 if immediate is not None:
-                    queue.put_nowait({"type": "result", "result": {**immediate, **generation}})
+                    queue.put_nowait({"type": "result", "result": {**_immediate_technical(immediate, selected_technical, profile), **generation}})
                     return
                 assert request is not None
                 queue.put_nowait({"type": "start", "sources": request.sources,
-                                 "citations": request.citations, "llm": True, **generation})
+                                 "citations": request.citations, "llm": True, **generation, **_technical_fields(request)})
                 await _stream_synthesis(request, profile, generation, queue.put_nowait)
         except asyncio.TimeoutError:
-            queue.put_nowait({"type": "result", "result": {**_timed_out(request, sources), **generation}})
+            timed_out = _timed_out(request, sources)
+            if request is None: timed_out = _immediate_technical(timed_out, selected_technical, profile, "preparation_timeout")
+            queue.put_nowait({"type": "result", "result": {**timed_out, **generation}})
         finally:
             queue.put_nowait(None)
 
