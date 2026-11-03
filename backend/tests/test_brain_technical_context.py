@@ -183,11 +183,15 @@ async def test_real_preparation_keeps_private_owner_scope_and_dates_and_only_col
     monkeypatch.setattr(brain, "collect_brain_technical_context", collect)
     immediate, request = await brain._prepare_ask(None, "private-owner", "AI is a theme, not a ticker", sources=["note"],
         profile=resolve_llm_profile(configured(llm_enabled=enabled), "brain_answer"), technical_symbols=selected)
-    assert calls == (selected if matched and enabled else [])
-    if matched and enabled:
+    assert calls == (selected if enabled else [])
+    if enabled and (matched or selected):
         assert immediate is None and request.sources == ["note"]
-        assert "EFFECTIVE 2026-08-01" in request.messages[1]["content"]
-        assert "RECORDED 2026-09-01" in request.messages[1]["content"]
+        if matched:
+            assert "EFFECTIVE 2026-08-01" in request.messages[1]["content"]
+            assert "RECORDED 2026-09-01" in request.messages[1]["content"]
+        else:
+            assert not request.citations
+            assert "No private sources were retrieved" in request.messages[-2]["content"]
         assert bool(request.technical_context) == bool(selected)
     else:
         assert request is None and immediate["sources"] == ["note"]
@@ -229,3 +233,63 @@ def test_browser_fixtures_match_server_projection_and_response_contract():
         technical.validate_brain_technical_references(parsed.answer, parsed.technical_context, [citation.model_dump() for citation in parsed.citations])
     skipped = AskResponse.model_validate(values["skipped"])
     assert skipped.technical_context == technical.skipped_technical_context(["AAPL", "BTC-USD"], "model_disabled")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("private_state", ["empty", "no_matches", "embedding_failure"])
+@pytest.mark.parametrize("stream", [True, False])
+async def test_explicit_technical_scope_can_answer_without_private_matches(monkeypatch, private_state, stream):
+    from backend.services.embeddings import EmbeddingError
+    class Embedder:
+        dim = 2
+        async def embed_query(self, question):
+            if private_state == "embedding_failure": raise EmbeddingError("offline test")
+            return [1., 0.]
+    class Store:
+        def count(self, db, owner): return 0 if private_state == "empty" else 3
+        def search(self, db, owner, vector, **kwargs):
+            assert owner == "owner" and kwargs["sources"] == ["note"]
+            return []
+    async def reindex(*args): return {}
+    monkeypatch.setattr(brain, "get_settings", configured)
+    monkeypatch.setattr(brain, "get_embedding_service", Embedder)
+    monkeypatch.setattr(brain, "make_vector_store", lambda *args: Store())
+    monkeypatch.setattr(brain, "reindex_user", reindex)
+    calls = []
+    async def collect(symbols, factory):
+        calls.append(symbols)
+        return context()
+    monkeypatch.setattr(brain, "collect_brain_technical_context", collect)
+    class Client:
+        async def chat(self, messages, **kwargs):
+            assert "No private sources were retrieved" in messages[-2]["content"]
+            assert "cannot establish whether a long-term purchase is attractive" in messages[-2]["content"]
+            if private_state == "embedding_failure": assert "does not mean no relevant notes exist" in messages[1]["content"]
+            return "No private evidence was retrieved. Short-window behaviour [T1.1] [T2.1] cannot establish a long-term buying case."
+        async def chat_stream(self, messages, **kwargs):
+            yield await self.chat(messages, **kwargs)
+    monkeypatch.setattr(brain, "get_llm_client", lambda **kwargs: Client())
+    if stream:
+        events = [event async for event in brain.ask_stream(None, "owner", "Is this attractive long term?", sources=["note"], technical_symbols=["AAPL", "BTC-USD"])]
+        assert any(event["type"] == "start" and not event["citations"] for event in events)
+        result = events[-1]["result"]
+    else:
+        result = await brain.ask(None, "owner", "Is this attractive long term?", sources=["note"], technical_symbols=["AAPL", "BTC-USD"])
+    assert result["llm"] is True and result["citations"] == []
+    assert result["technical_context"] == context().model_dump(mode="json")
+    assert calls == [["AAPL", "BTC-USD"]]
+
+
+@pytest.mark.asyncio
+async def test_no_usable_evidence_does_not_ask_the_model_for_an_ungrounded_answer(monkeypatch):
+    async def collect(*args): return context(("unavailable", "unavailable"))
+    monkeypatch.setattr(brain, "collect_brain_technical_context", collect)
+    result, request = await brain._prepare_synthesis("Should I buy?", ["note"], [], ["AAPL", "BTC-USD"], None)
+    assert request is None and result["llm"] is False and result["error"] == "evidence_unavailable"
+    assert result["citations"] == [] and result["technical_context"]["status"] == "unavailable"
+
+
+def test_no_private_sources_does_not_allow_invented_private_citations():
+    technical.validate_brain_technical_references("Limited interpretation [T1.1] [T2.1]", context(), [])
+    with pytest.raises(technical.InvalidBrainTechnicalReferences):
+        technical.validate_brain_technical_references("An invented private note [1] plus [T1.1] [T2.1]", context(), [])

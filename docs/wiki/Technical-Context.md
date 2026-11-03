@@ -81,10 +81,13 @@ consumer slice merged as #252; host quality feedback is still pending.
 
 Brain offers an explicit, default-empty technical scope of at most three unique
 symbols. It does not infer tickers from question text or change private-source
-selection, ranking, embeddings or indexing. History is collected only after
-matching owner-scoped private research is found and generation is enabled.
-Empty private context, disabled generation or a preparation timeout reports a
-skipped scope with a reason. A 15-second batch bounds at most three concurrent
+selection, ranking, embeddings or indexing. With generation enabled, explicit
+technical selection collects history even when private retrieval has no matches,
+the index is empty or query embeddings fail. The private gap is supplied to the
+model, with failed search distinguished from missing notes. The browser labels
+answers without private citations and the limits on long-term investment use.
+Disabled generation or a preparation timeout reports a skipped scope with a
+reason. Older saved skipped scopes retain their original meaning. A 15-second batch bounds at most three concurrent
 collectors, including provider startup, inside Brain's existing preparation
 allowance. Cancellation cancels and joins the children. Partial and unavailable
 asset coverage remain visible beside usable private evidence.
@@ -94,11 +97,15 @@ asset coverage remain visible beside usable private evidence.
 symbols, coverage/reason and per-asset research projections. References are
 local to the answer: `T1.1`–`T1.3` for the first asset, `T2.1`–`T2.3` for the
 second, distinct from private `[1]` citations. Stable snapshot/input/observation
-IDs are preserved. Successful technical synthesis must cite a supplied private
-source and at least one available metric for each usable asset; unknown and
+IDs are preserved. Successful technical synthesis must cite a private source
+when private citations are supplied, and at least one available metric for each usable asset; unknown and
 unavailable references fail validation. These checks locate evidence, not prove
 the interpretation. Current observations cannot alone reject a dated historical
 description or a long-term thesis, and do not establish past investor knowledge.
+When no private citation and no usable technical metric is available, a complete
+retrieval-only result retains coverage and explains the evidence gap without
+asking the model for an ungrounded synthesis. Omitting technical symbols retains
+the existing private-only retrieval behaviour.
 
 The frozen Deep/default profile and its existing deadlines remain. Stream text
 is provisional; reference failure uses the existing same-profile completion

@@ -323,6 +323,26 @@ async def status(db: Session, user_id: str) -> dict[str, Any]:
     }
 
 
+async def _prepare_synthesis(
+    question, sources, matches, technical_symbols, technical_fetcher_factory,
+    *, private_gap="No matching private research was retrieved.",
+):
+    citations = _citations(matches)
+    context = _format_context(matches) if matches else private_gap
+    user_msg = f"CONTEXT:\n{context}\n\nQUESTION: {question}"
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_msg}]
+    technical = await collect_brain_technical_context(technical_symbols or [], technical_fetcher_factory)
+    if technical is not None:
+        if not citations and technical.status == "unavailable":
+            return _with_scope({
+                "answer": f"{private_gap} The selected technical history is also unavailable. There is not enough supplied evidence to answer this question.",
+                "citations": [], "llm": False, "error": "evidence_unavailable",
+                "technical_context": technical.model_dump(mode="json"),
+            }, sources), None
+        messages = technical_messages(messages, technical, has_private_sources=bool(citations))
+    return None, _SynthesisRequest(sources=sources, citations=citations, messages=messages, technical_context=technical)
+
+
 async def _prepare_ask(
     db: Session,
     user_id: str,
@@ -357,13 +377,16 @@ async def _prepare_ask(
             logger.warning("Auto-index failed: %s", exc)
 
     if store.count(db, user_id) == 0:
+        if technical_symbols and profile.enabled:
+            return await _prepare_synthesis(question, active_sources, [], technical_symbols, technical_fetcher_factory,
+                                            private_gap="No private research is indexed yet.")
         return (
             _with_scope(
                 {
                     "answer": (
                         "Your second brain is empty. Add some trade journal entries, a "
-                        "portfolio thesis, or position notes, then ask again. Matching private "
-                        "research is needed before adding optional current technical context."
+                        "portfolio thesis, or position notes, then ask again. You can also "
+                        "explicitly select technical symbols for a limited current-context answer."
                     ),
                     "citations": [],
                     "indexed_chunks": 0,
@@ -376,6 +399,9 @@ async def _prepare_ask(
     try:
         query_vector = await embedder.embed_query(question)
     except EmbeddingError as exc:
+        if technical_symbols and profile.enabled:
+            return await _prepare_synthesis(question, active_sources, [], technical_symbols, technical_fetcher_factory,
+                                            private_gap="Private research search is unavailable because query embeddings failed; this does not mean no relevant notes exist.")
         return (
             _with_scope(
                 {
@@ -393,6 +419,8 @@ async def _prepare_ask(
         store, db, user_id, query_vector, k=k, sources=search_sources
     )
     if not matches:
+        if technical_symbols and profile.enabled:
+            return await _prepare_synthesis(question, active_sources, [], technical_symbols, technical_fetcher_factory)
         return (
             _with_scope(
                 {
@@ -422,29 +450,15 @@ async def _prepare_ask(
             None,
         )
 
-    context = _format_context(matches)
-    user_msg = f"CONTEXT:\n{context}\n\nQUESTION: {question}"
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_msg}]
-    technical = await collect_brain_technical_context(technical_symbols or [], technical_fetcher_factory)
-    if technical is not None:
-        messages = technical_messages(messages, technical)
-    return (
-        None,
-        _SynthesisRequest(
-            sources=active_sources,
-            citations=citations,
-            messages=messages,
-            technical_context=technical,
-        ),
-    )
+    return await _prepare_synthesis(question, active_sources, matches, technical_symbols, technical_fetcher_factory)
 
 
 def _llm_unavailable(request: _SynthesisRequest, error: str = "llm_unavailable") -> dict[str, Any]:
     return _with_scope(
         {
             "answer": "The model could not produce a valid answer tied to the supplied evidence. Here are the sources." if error == "invalid_response" else (
-                "I found relevant private writing but couldn't reach the language model to "
-                "synthesize an answer. Here are the sources."
+                "The language model could not synthesize an answer from the supplied evidence. "
+                "The available sources and technical coverage are retained below."
             ),
             "citations": request.citations,
             "error": error,

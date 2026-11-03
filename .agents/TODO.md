@@ -994,6 +994,17 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       API/surface/mock/whitespace guards. Deterministic fixtures only, no live
       model/provider or local PostgreSQL acceptance claimed. Disposable PostgreSQL
       CI now runs memo API/ownership contracts and checks the nullable column.
+      #253 merged. Host feedback showed missing private matches incorrectly
+      skipped explicitly selected technical evidence. Follow-up: collect selected
+      history with enabled generation even for no matches, an empty index or
+      failed query embeddings. Clearly label the private gap; preserve failed
+      search versus missing notes in prompts. Private citations are required only
+      when supplied; per-asset technical reference rules and invented-reference
+      rejection remain. With neither evidence type usable, skip synthesis.
+      Technical-only answers retain inspectable/savable evidence and an explicit
+      short-window/long-term investment limitation. No new schema or migration.
+      Follow-up checks: 85 focused backend, all 664 frontend, build, four Brain
+      Chrome journeys and API/surface/mock guards; no live model quality claim.
 
 Audit current inputs per workflow and reuse v2.5's bounded source/calculation
 contract where applicable. Keep exact values/units/dates, freshness/provenance,

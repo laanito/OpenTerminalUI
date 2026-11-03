@@ -14,7 +14,7 @@ export function BrainTechnicalSymbols({ symbols, onChange, disabled }: { symbols
   };
   return <fieldset disabled={disabled} className="space-y-2 rounded border border-terminal-border p-2">
     <legend className="px-1 text-[11px] text-terminal-muted">Optional current technical context · up to 3 symbols</legend>
-    <p className="text-[11px] text-terminal-muted">Choose relevant instruments explicitly. Technical history is fetched only when you ask, alongside matching private research.</p>
+    <p className="text-[11px] text-terminal-muted">Choose relevant instruments explicitly. Ask fetches their technical history even if private research has no matches; any private evidence gap is shown.</p>
     <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); add(value); }}>
       <div className="min-w-0 flex-1"><SymbolSuggestions key={symbols.join(",")} label="Add technical symbol" value={value} onChange={setValue} onPick={add}
         exclude={symbols} placeholder="AAPL, BTC-USD…" /></div>

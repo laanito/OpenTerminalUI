@@ -67,9 +67,9 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
         <Brain className="h-3.5 w-3.5 text-terminal-accent" />
         {exchange.question}
       </p>
-      <BrainTechnicalAnswer answer={exchange.answer} context={exchange.technical_context} />
+      <BrainTechnicalAnswer answer={exchange.answer} context={exchange.technical_context} privateCitationCount={exchange.citations.length} />
       <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
-        Evidence scope · {scopeLabel(exchange.sources)}
+        {exchange.technical_context && !exchange.citations.length ? "Private search scope" : "Evidence scope"} · {scopeLabel(exchange.sources)}
       </p>
       {exchange.model_profile ? <p className="break-words text-[11px] text-terminal-muted">
         {exchange.model_profile.resolved_profile === "deep" ? "Deep profile" : "Default profile (Deep not configured)"}

@@ -113,11 +113,19 @@ async def collect_brain_technical_context(
     return BrainTechnicalContext(requested_symbols=symbols, status=status, groups=groups)
 
 
-def technical_messages(messages: list[dict[str, str]], context: BrainTechnicalContext) -> list[dict[str, str]]:
+def technical_messages(messages: list[dict[str, str]], context: BrainTechnicalContext, *, has_private_sources: bool = True) -> list[dict[str, str]]:
+    private_rule = (
+        "Cite at least one supplied private source using [n]. " if has_private_sources else
+        "No private sources were retrieved for this answer. State this gap explicitly, do not invent private citations, "
+        "and use only the available selected technical observations. An empty index, no matches and a failed search "
+        "are different states; preserve the supplied reason and do not claim missing notes do not exist. "
+        "These short-window measures cannot establish whether a long-term purchase is attractive. Explain the "
+        "limited conditional interpretation and the missing long-term fundamental, valuation and risk evidence. "
+    )
     instruction = (
-        "The user explicitly selected the following CURRENT technical snapshots in addition to private research. "
-        "Keep private sources [n] and technical references [T1.1] etc. distinct. Cite at least one private source "
-        "and at least one AVAILABLE metric from each asset with usable observations. Never cite unavailable "
+        "The user explicitly selected the following CURRENT technical snapshots. "
+        "Keep private sources [n] and technical references [T1.1] etc. distinct. " + private_rule +
+        "Cite at least one AVAILABLE metric from each asset with usable observations. Never cite unavailable "
         "metrics or invent references. Missing technical history does not imply zero or invalidate private evidence. "
         "Explain conditional implications, alternatives and what further evidence would distinguish them; do not "
         "merely repeat numbers. These are descriptive 20-observation measures, not full technical analysis, "

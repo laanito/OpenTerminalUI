@@ -298,3 +298,16 @@ def test_evidence_status_uses_live_owner_records_without_mutating_snapshot(monke
     unknown = client.get(f"/api/brain/memos/{legacy_memo.json()['id']}/evidence-status", headers=owner)
     assert unknown.json()["status"] == "unverifiable"
     assert unknown.json()["citations"] == [{"n": 1, "status": "unverifiable"}]
+
+
+def test_technical_only_answer_can_be_saved_without_fabricating_private_citations():
+    from backend.tests.test_brain_technical_context import context
+    init_db()
+    client = TestClient(app)
+    owner = _auth(client, "technical-only")
+    payload = {**_payload(), "technical_context": context().model_dump(mode="json"), "citations": [],
+               "answer": "No private evidence was retrieved. Short-window observations [T1.1] [T2.1] cannot establish a long-term buying case."}
+    created = client.post("/api/brain/memos", headers=owner, json=payload)
+    assert created.status_code == 201, created.text
+    memo = client.get(f"/api/brain/memos/{created.json()['id']}", headers=owner).json()
+    assert memo["citations"] == [] and memo["technical_context"] == payload["technical_context"]

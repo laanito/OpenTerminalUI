@@ -671,7 +671,11 @@ memos are not backfilled, private citation rechecks do not refresh markets and
 only reviewed promotion creates a new Note. Private ranking/embeddings and
 automatic indexing remain unchanged. Portfolio risk is next, followed by
 configured-model/host evaluation and release closure. No new provider, indicator
-or public route is added.
+or public route is added. Brain merged as #253. Host feedback exposed an overly
+strict private-match gate: the follow-up allows explicit technical scope to
+continue without private matches, labels the gap, requires only supplied
+citations and skips synthesis if neither evidence source is usable. Three
+short-window measures still cannot establish a long-term buying case.
 Split PRs around reviewable shared-contract and consumer changes; no fixed PR
 count is agreed.
 
