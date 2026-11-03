@@ -145,11 +145,16 @@ async def run_insight(
     unavailable_summary: str = "AI analysis is unavailable — start your local LLM (e.g. Ollama) to enable it.",
     on_token: Callable[[str], None] | None = None,
     profile: ResolvedLLMProfile | None = None,
+    validate_result: Callable[[str, list[dict[str, Any]]], None] | None = None,
 ) -> dict[str, Any]:
     """Produce a `{summary, sections}` insight, falling back gracefully.
 
     Returns ``engine: "llm"`` when the model answered, ``"unavailable"``
     when LLM is off/unreachable or the response could not be used.
+
+    ``validate_result`` is a server-owned structural/reference check. It may
+    raise InvalidInsightResponse with safe field/reference diagnostics only:
+    these messages enter logs and bounded repair, never echo private/model text.
     """
     profile = profile or resolve_llm_profile(get_settings(), "stock_briefing")
     model = profile.model
@@ -182,6 +187,12 @@ async def run_insight(
         {"role": "user", "content": user_content},
     ]
 
+    def parse_result(content: str) -> tuple[str, list[dict[str, Any]]]:
+        summary, sections = _parse_insight(content)
+        if validate_result is not None:
+            validate_result(summary, sections)
+        return summary, sections
+
     def repair_messages(error: InvalidInsightResponse) -> list[dict[str, str]]:
         return [*messages, {
             "role": "system",
@@ -209,7 +220,7 @@ async def run_insight(
             frequency_penalty=0.3,
         )
         try:
-            return _parse_insight(content)
+            return parse_result(content)
         except InvalidInsightResponse as exc:
             logger.warning(
                 "LLM insight returned malformed structured output; retrying once: %s",
@@ -222,7 +233,7 @@ async def run_insight(
                 json_schema=INSIGHT_SCHEMA,
                 frequency_penalty=0.0,
             )
-            return _parse_insight(content)
+            return parse_result(content)
 
     try:
         # The client may make more than one provider request while stepping down
@@ -263,7 +274,7 @@ async def run_insight(
                             on_token(chunk)
                     if not chunks:
                         raise LLMError("LLM stream returned no response text")
-                    summary, sections = _parse_insight("".join(chunks))
+                    summary, sections = parse_result("".join(chunks))
                 except (LLMError, InvalidInsightResponse) as exc:
                     # Streaming capability and structured-stream fidelity vary by
                     # provider. Fall back inside the same server-owned deadline;

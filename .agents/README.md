@@ -25,9 +25,13 @@ instrument snapshots, then integrate the same three measures into AI Investment
 Briefing, Interrogate this coin, Second Brain and Portfolio AI Risk Assessment.
 No additional indicators or portfolio risk engine are required. Implementation
 started on 2026-11-03: standalone typed snapshot collection and shared source/
-calculation checks are implemented, pending review. No AI consumer or new public
-route is wired in this first slice. Next: instrument briefing/Interrogate, then
-Brain and portfolio risk. See Roadmap/TODO. The inherited layout audit remains
+calculation checks merged as #251. Investment Briefing and Interrogate now
+include bounded technical evidence on explicit Generate, with exact metric
+references/browser inspection, safe missing coverage and contract/UTC-date cache
+keys; this consumer slice is pending review/host acceptance. Same-symbol note
+effective/recorded dates stay distinct; semantic related-note queries are unchanged.
+No new route, provider setting, persistence or indexing. Next: Brain, then
+portfolio risk. See Roadmap/TODO. The inherited layout audit remains
 unscheduled. The maintainer clarified v3's fuller technical-analysis direction:
 RSI/MACD, volume, accumulation areas and Elliott-wave hypotheses should help test
 assumptions ingested from videos/notes against independently derived evidence.

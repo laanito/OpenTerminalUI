@@ -168,6 +168,11 @@ def research(monkeypatch):
     monkeypatch.setattr(routes, "cache_instance", cache)
     monkeypatch.setattr(routes, "fetch_stock_snapshot_coalesced", snapshot)
     monkeypatch.setattr(routes, "_fetch_news_fallback", empty)
+    async def technical(symbol):
+        from backend.services.technical_snapshots import TechnicalSnapshotRequest, build_technical_snapshot
+        from backend.services.research_technical_context import research_technical_evidence
+        return research_technical_evidence(build_technical_snapshot(TechnicalSnapshotRequest(symbol=symbol), None, source=None, feed=None))
+    monkeypatch.setattr(routes, "_technical_for_symbol", technical)
     monkeypatch.setattr(routes, "run_insight", run)
     monkeypatch.setattr(routes.brain_service, "related_notes", empty)
     return cache, calls

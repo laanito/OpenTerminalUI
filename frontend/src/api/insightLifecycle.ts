@@ -1,6 +1,7 @@
 import { fetchApi } from "./base";
 import type { InsightData, InsightModelProfile } from "./types";
 import insightLimits from "./insightLimits.json";
+import { validResearchTechnicalEvidence, validResearchTechnicalReferences } from "./researchTechnicalContext";
 
 export type InsightKind = "backtest" | "collection" | "risk" | "briefing" | "interrogate";
 export type InsightPhase = "queued" | "generating";
@@ -22,7 +23,7 @@ function identity(value: unknown): InsightModelProfile {
     || (value.requested_profile === "fast" && value.resolved_profile !== "fast") || !text(value.model, 256)) throw invalid();
   return value as InsightModelProfile;
 }
-function result(value: unknown, selected: InsightModelProfile): InsightData {
+function result(value: unknown, selected: InsightModelProfile, symbol?: string): InsightData {
   if (selected.requested_profile !== "deep") throw invalid();
   if (!record(value) || !["llm", "unavailable"].includes(String(value.engine)) || !text(value.model, 256)
     || !text(value.summary, insightLimits.summary) || !Array.isArray(value.sections) || value.sections.length > 4
@@ -40,6 +41,10 @@ function result(value: unknown, selected: InsightModelProfile): InsightData {
     }
     if (totalCharacters > insightLimits.totalText) throw invalid();
   }
+  if (value.technical_context !== undefined && value.technical_context !== null) {
+    if (!symbol || value.ticker !== symbol || !validResearchTechnicalEvidence(value.technical_context, symbol)) throw invalid();
+    if (value.engine === "llm" && !validResearchTechnicalReferences(value.summary, value.sections as InsightData["sections"], value.technical_context)) throw invalid();
+  }
   return value as InsightData;
 }
 
@@ -54,7 +59,8 @@ export function validateFastResult<T extends object>(value: unknown, selected: I
 export async function streamInsight(kind: InsightKind, payload: Record<string, unknown>, options: InsightRequestOptions = {}): Promise<InsightData> {
   // Python NDJSON escapes non-ASCII characters (up to 12 ASCII chars for one
   // astral code point). Leave framing/metadata headroom above the raw limit.
-  return streamModelOperation("/ai/insights/stream", { kind, payload }, result, options, insightLimits.rawResponse * 16);
+  const symbol = ["briefing", "interrogate"].includes(kind) && typeof payload.ticker === "string" ? payload.ticker.trim().toUpperCase() : undefined;
+  return streamModelOperation("/ai/insights/stream", { kind, payload }, (value, profile) => result(value, profile, symbol), options, insightLimits.rawResponse * 16);
 }
 
 export async function streamModelOperation<T extends object>(

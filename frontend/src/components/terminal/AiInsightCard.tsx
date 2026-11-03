@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { terminalColors } from "../../theme/terminal";
 import type { InsightData, InsightSection, InsightModelProfile } from "../../api/types";
 import type { InsightPhase, InsightRequestOptions } from "../../api/insightLifecycle";
+import { ResearchTechnicalEvidence, technicalCitations, type TechnicalInspection } from "./ResearchTechnicalEvidence";
 
 export type { InsightData, InsightSection } from "../../api/types";
 
@@ -43,6 +44,7 @@ function unavailableMessage(data: InsightData): string {
 export function AiInsightCard({ title, description, disabled = false, disabledMessage, fetcher }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error" | "cancelled">("idle");
   const [data, setData] = useState<InsightData | null>(null);
+  const [technicalInspection, setTechnicalInspection] = useState<TechnicalInspection>(null);
   const [modelProfile, setModelProfile] = useState<InsightModelProfile | null>(null);
   const [progress, setProgress] = useState<{
     phase: InsightPhase;
@@ -67,6 +69,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
     controllerRef.current = controller;
     setStatus("loading");
     setData(null);
+    setTechnicalInspection(null);
     setModelProfile(null);
     setProgress({ phase: "queued", elapsed: 0, receivedCharacters: 0 });
     try {
@@ -111,6 +114,8 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
   }, []);
 
   const engineLive = data?.engine === "llm";
+  const format = (text: string) => technicalCitations(text, data?.technical_context,
+    (id) => setTechnicalInspection((previous) => ({ id, sequence: (previous?.sequence ?? 0) + 1 })));
   const engineLabel = engineLive
     ? data?.model ?? "LLM"
     : data?.engine === "lexical"
@@ -190,7 +195,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
         <div className="mt-3 space-y-3">
           {data.summary && (
             <p className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs text-terminal-text">
-              {data.summary}
+              {format(data.summary)}
             </p>
           )}
           {data.sections.map((section, idx) => (
@@ -199,13 +204,13 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
                 className="mb-1 text-[11px] font-semibold uppercase tracking-wide"
                 style={{ color: toneColor(section.tone) }}
               >
-                {section.title}
+                {format(section.title)}
               </div>
               <ul className="space-y-1">
                 {section.points.map((point, pIdx) => (
                   <li key={pIdx} className="flex gap-2 text-xs text-terminal-text">
                     <span style={{ color: toneColor(section.tone) }}>▸</span>
-                    <span>{point}</span>
+                    <span>{format(point)}</span>
                   </li>
                 ))}
               </ul>
@@ -227,6 +232,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
               .
             </div>
           )}
+          {data.technical_context && <ResearchTechnicalEvidence evidence={data.technical_context} inspection={technicalInspection} />}
         </div>
       )}
     </section>

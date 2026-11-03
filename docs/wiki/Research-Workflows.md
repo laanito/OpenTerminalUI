@@ -286,7 +286,7 @@ evidence preparation. Clients must allow both stages; heartbeats do not extend
 the server budget. Selected context adds its separately announced collection
 budget. No rejected/partial answer is published as a completed briefing.
 
-In v2.4 development, comparison synthesis uses Deep when configured. With Deep
+Comparison synthesis uses Deep when configured (v2.4). With Deep
 unset it uses the existing model and shows **Default profile (Deep not configured)**;
 otherwise the result shows **Deep profile** and the selected model. A Deep failure
 never retries Fast. The additive `model_profile` response metadata identifies
@@ -306,6 +306,43 @@ or POST inference. Research cache keys distinguish model/provider configuration;
 Interrogate remains owner/note-version scoped and Regenerate bypasses cached
 prose. Model failures remain explicit on the selected profile.
 
+### Instrument technical evidence (v2.6 development)
+
+On a stock, index or crypto detail **Overview**, explicitly generate **AI
+Investment Briefing** or **Interrogate this Stock/Index/Coin**. These research
+actions now gather the standalone technical snapshot automatically alongside
+their existing facts/news and, for Interrogate, the authenticated owner's notes.
+There is no new background inference or comparison-pair requirement.
+
+The initial set is the 20-close mean gap, 20-period return and unannualized
+20-return sample volatility. Click an answer's **[TECH1]**, **[TECH2]** or
+**[TECH3]** reference to open/focus its exact metric under **Inspect technical
+evidence**. Repeated references refocus the same target. Inspect formulas,
+required/used history, own UTC dates, source/feed, quote unit, freshness and the
+supporting adjusted closes. The references are local to that answer; stable
+snapshot/input/observation IDs identify its actual evidence.
+
+Short, unsupported or failed technical history remains visibly unavailable and
+does not discard the other research inputs. Valid zero values remain zero.
+Reference checks require an available metric when technical evidence is usable
+and reject invented/unavailable references through the existing bounded repair;
+they do not verify the model's interpretation. Daily technical observations are
+not complete technical analysis, investment verdicts or historical knowledge
+captures. Source adjustments, exchange sessions and bar completion are unverified.
+
+The API companion is `technical_context` on the existing briefing/Interrogate
+GET responses and their shared streamed result. A disabled model skips technical
+collection. Cache keys distinguish this evidence contract and UTC date as well
+as the existing model/note/owner scope; **Regenerate** bypasses cached prose.
+Retrieval time remains visible. A failed regeneration clears the previous
+answer and evidence rather than retaining them under a new attempt.
+
+Interrogate carries same-symbol notes' effective and recorded dates separately;
+unknown dates remain unknown. A past claim must not be rejected merely because
+current prices differ, or a long-term thesis on a short observation window alone.
+The semantic related-note query is unchanged. Brain and portfolio-risk technical
+integration remain later v2.6 slices; no indexing or persistence is added here.
+
 ### Interpretations to investigate (v2.4)
 
 Following host feedback on 2026-10-29, both briefing modes add a separate
@@ -320,8 +357,8 @@ macro levels do not establish changes, surprises or a market regime.
 The UI labels these interpretations as model hypotheses. Citation buttons open
 the observed inputs, not proof of the proposed mechanism. Every hypothesis
 requires an available price pair; context citations must identify an actual
-usable headline/series (or an explicitly selected technical metric in v2.5
-development) together with its linked pair. Sections, failed sources,
+usable headline/series (or an explicitly selected technical metric since v2.5)
+together with its linked pair. Sections, failed sources,
 SCOPE and unavailable pairs cannot serve as hypothesis evidence. Completed
 generation requires 1–3 hypotheses with all four parts; expected failure states
 return none. Structural/reference checks still cannot judge causal truth or
@@ -330,7 +367,7 @@ whether the interpretation is useful. See the
 
 ### Browser comparison briefing
 
-In v2.5 development, **Briefing evidence scope → Technical observations** adds
+Since v2.5, **Briefing evidence scope → Technical observations** adds
 an explicit, default-off technical selection. It can be used alone or with
 news/macro. Citation inspection shows individual values, units/formulas, own
 observation dates, source/freshness/quality limitations and supporting adjusted

@@ -1047,6 +1047,7 @@ export type InsightData = {
   sections: InsightSection[];
   generated_at?: string;
   model_profile?: InsightModelProfile;
+  technical_context?: import("./researchTechnicalContext").ResearchTechnicalEvidence | null;
   /** Interrogation only: how many of the user's own notes on the ticker fed the analysis. */
   note_count?: number;
   /** Interrogation only: related notes on other tickers/themes folded in semantically. */

@@ -949,12 +949,28 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       Shared source/calculation helpers preserve v2.5 pair output and pinned IDs.
       Checks: 49 standalone snapshot tests and 246 existing comparison/evidence/
       route/fetcher/synthesis tests passed; API/surface/mock/whitespace guards
-      passed. Deterministic fixtures only, no live provider/model run. First
-      slice pending review; consumer integrations below remain open.
+      passed. Deterministic fixtures only, no live provider/model run. Foundation
+      merged as #251; consumer integrations follow below.
 
-- [ ] Give **AI Investment Briefing** relevant instrument-level technical evidence.
-- [ ] Give **Interrogate this coin** supported, dated crypto technical evidence
-      for adversarial thesis review.
+- [x] Give **AI Investment Briefing** relevant instrument-level technical evidence.
+- [x] Give **Interrogate this coin** supported, dated crypto technical evidence
+      for adversarial thesis review. Applies to stock/index/coin research cards.
+      Explicit Generate gathers optional standalone evidence within a 15s budget,
+      including fetcher startup, alongside existing facts/news/owned notes.
+      Typed `technical_context` on existing GET/stream results supplies exact
+      metric references and at most 21 supporting closes. Available metrics must
+      be cited; unknown/unavailable refs share the existing selected-model bounded
+      repair. Source/model failure keeps honest coverage; browser inspection opens
+      exact/repeated refs and clears old prose/evidence on new generation.
+      Cache contract/UTC-date keys complement existing model/owner/note versions;
+      Regenerate bypasses cache. Direct notes carry effective/recorded timestamps,
+      without changing semantic retrieval queries or embeddings. No new route,
+      provider, persistence, indexing or portfolio/Brain integration in this slice.
+      Checks: 158 focused backend tests, all 644 frontend tests, production build,
+      twenty installed-Chrome smoke journeys and API/surface/mock/whitespace guards
+      passed. Backend-generated complete/partial/unavailable/zero/crypto fixtures
+      anchor client validation; browser checks use deterministic sources/models.
+      Consumer slice pending review and host usefulness/fidelity/latency feedback.
 - [ ] Give **Portfolio AI Risk Assessment** holdings-level technical context with
       explicit coverage/relevance. Do not equate single-asset volatility with
       portfolio risk or invent aggregation without the necessary joint history.
