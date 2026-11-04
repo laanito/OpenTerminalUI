@@ -374,6 +374,51 @@ were published from that merge on 2026-11-02. No v2.5 release gate remains.
 Local SQLite coverage does not establish a live PostgreSQL rollout; disposable
 PostgreSQL/clean-install checks passed in CI. Deployment belongs to the host agent.
 
+### v2.6.0 verification ledger (release preparation)
+
+The bounded milestone brings the existing three technical measures into AI
+Investment Briefing, Interrogate, Second Brain and Portfolio AI Risk Assessment.
+Implementation PRs #248–#255 are merged; preparation is based on `5deacc1`.
+The maintainer confirmed #254's Brain fix, including reliable manual symbol
+selection, and confirmed #255's Portfolio integration works as intended.
+Carry that acceptance forward. Instrument-consumer model quality was not
+separately confirmed in the recorded #252 merge acknowledgement; no numerical
+latency or independent reasoning/source-quality benchmark is claimed.
+
+| Contract | Evidence |
+|---|---|
+| Standalone bounded collection, own-date inputs, exact calculations, stable identities and comparison compatibility | `backend/tests/test_technical_snapshots.py`, existing technical input/indicator/comparison tests |
+| Instrument technical references, note effective/recorded dates, scope/cache/deadline compatibility and safe missing history | `backend/tests/test_research_technical_context.py`, `frontend/src/__tests__/researchTechnicalContext.test.ts`, `frontend/tests/e2e/research-technical.spec.ts` |
+| Explicit Brain scope, technical-only fallback, private citation preservation, bounded same-profile repair and no silent indexing | `backend/tests/test_brain_technical_context.py`, `frontend/src/__tests__/brainTechnicalStreaming.test.ts`, Brain browser tests |
+| Captured Brain Log saves, owner isolation, legacy preservation, private-only rechecks and reviewed promotion | `backend/tests/test_brain_memos.py`, `backend/tests/test_brain_technical_migration.py`, `frontend/src/__tests__/BrainLog.test.tsx` |
+| Portfolio ownership/membership, recorded lot context, exact per-holding references, coverage and no technical risk aggregation | `backend/tests/test_portfolio_technical_context.py`, `frontend/src/__tests__/portfolioTechnicalStreaming.test.ts`, `frontend/src/__tests__/PortfolioRiskAssessment.test.tsx` |
+| Scope invalidation, ignored late analytics, missing metrics and desktop/narrow inspection/degradation | `frontend/src/__tests__/PortfolioManager.thesis.test.tsx`, `frontend/tests/e2e/portfolio-technical.spec.ts`, Brain journeys |
+
+On 2026-11-04, after the metadata bump to 2.6.0, consolidated `make gate` passed
+backend compilation, API/surface/mock guards, **1,667 backend tests** (one skipped;
+**77.29% coverage** against the 45% gate), the production build and all **681
+frontend tests**. All **24 installed-Chrome smoke journeys** passed with one
+worker, including the strengthened Brain Add regression and both Portfolio
+widths. Compose configuration validates. Local checks used Python 3.12.16 and
+Node 26.7.0; CI retains its supported Python 3.11 / Node 22 lane. Deterministic
+provider/model fixtures establish contracts, not live inference quality.
+
+Upgrade includes `0018_brain_technical_context`, a nullable portable JSON column
+without a default, backfill or old-memo rewrite. Docker runs Alembic before
+startup; existing local databases must upgrade before using the new app.
+A disposable SQLite check migrated the entire chain through 0017, seeded a
+legacy memo, upgraded to 0018, verified its original answer/source data and NULL
+technical field, then confirmed captured JSON survives downgrade/re-upgrade.
+This is not a live PostgreSQL rollout claim. PostgreSQL DDL/preservation unit
+tests passed; the disposable PostgreSQL memo/migration contracts and fresh-stack
+smoke remain with CI. No dependency, provider, indicator or embedding change.
+
+Backend/frontend/lock/OpenAPI metadata and public version labels are aligned to
+2.6.0. README/wiki, limitations, workflow/migration notes and agent handoff reflect
+the candidate. Remaining release steps: all three CI jobs, review/merge and
+explicit publication authorization. No tag or GitHub release has been created;
+v2.5.0 remains the latest published release. Deployment belongs to the host agent.
+
 ## Cutting the release
 
 ```bash

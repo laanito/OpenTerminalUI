@@ -1,4 +1,9 @@
-# Technical context for comparison briefings
+# Technical context across research and comparison briefings
+
+v2.6.0 is in release preparation after implementation PRs #248–#255 merged.
+The shared three-measure contract now reaches all four AI research workflows.
+The maintainer confirmed the Brain fix and Portfolio integration work as intended;
+release checks, migration and publication status are recorded in [Releasing](Releasing.md#v260-verification-ledger-release-preparation).
 
 v2.5.0 was published on 2026-11-02 from `fad1c95` after implementation PRs
 #242–#245, release-prep PR #246 and explicit maintainer authorization.

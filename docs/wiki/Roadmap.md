@@ -598,7 +598,7 @@ GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
-## v2.6 — Technical context across AI research (in development)
+## v2.6.0 — Technical context across AI research (release preparation)
 
 Agreed on 2026-11-02 after v2.5 publication. Reuse the existing 20-close mean
 gap, 20-period return and unannualized sample volatility of 20 returns in four
@@ -669,13 +669,17 @@ repair and exact browser inspection. Explicit Brain Log saves retain captured
 evidence through nullable JSON migration `0018_brain_technical_context`; older
 memos are not backfilled, private citation rechecks do not refresh markets and
 only reviewed promotion creates a new Note. Private ranking/embeddings and
-automatic indexing remain unchanged. Portfolio risk is implemented for review:
+automatic indexing remain unchanged. Portfolio risk merged as #255 and the
+maintainer confirmed it works as intended:
 explicit selection of up to three held symbols, server-owned membership and lot
 quantities/cost-currency metadata, per-holding metric inspection and symbol-count
 coverage. No value weights or aggregate technical risk are computed. Missing
 risk metrics do not block selected technical evidence. Scope changes clear/cancel
 old browser work, including a guard against late analytics from prior portfolios.
-Configured-model/host evaluation and release closure remain next. No new provider, indicator
+Consolidated release verification, CI, release review and publication remain.
+Recorded host acceptance is qualitative and scoped to the tested workflows;
+no numerical latency or independent source/reasoning benchmark is inferred.
+No new provider, indicator
 or public route is added. Host feedback exposed an overly
 strict private-match gate: the follow-up allows explicit technical scope to
 continue without private matches, labels the gap, requires only supplied

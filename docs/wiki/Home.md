@@ -1,5 +1,17 @@
 # OpenTerminalUI Wiki
 
+**v2.6.0 — Technical context across AI research** is in release preparation.
+The same three inspectable observations now reach Investment Briefing,
+Interrogate, optional Brain symbol scope and selected portfolio holdings. Brain
+Log can retain captured evidence without automatically indexing it. The
+maintainer confirmed the Brain fix and Portfolio workflow; consolidated release
+checks and CI are tracked in [Releasing](Releasing.md#v260-verification-ledger-release-preparation).
+This upgrade includes nullable JSON migration `0018_brain_technical_context`;
+Docker applies Alembic before startup, while existing local databases must
+upgrade. Old memos are preserved without backfill. Publication is pending.
+
+The latest published release remains:
+
 OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
 with intentional provider-gated NSE/BSE F&O support. **v2.5.0 — Technical context**
 was published on 2026-11-02 from `fad1c95`. Comparison briefings can explicitly

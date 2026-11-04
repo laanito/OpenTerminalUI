@@ -98,6 +98,20 @@ never silently faked.
   acceptance is not an exhaustive model benchmark. Failures
   retain evidence when available, never partial prose or an older answer. No automatic Brain Log
   saving or retrieval indexing is introduced.
+- **Technical evidence across AI research is a bounded descriptive layer.**
+  v2.6 reuses the same three daily measures in Investment Briefing, Interrogate,
+  Brain and Portfolio risk. It does not add RSI/MACD, volume, accumulation or
+  Elliott-wave analysis. Own-date equity and crypto windows can span different
+  calendar periods; source adjustments, sessions and bar completion remain
+  unverified. Current revised history cannot reconstruct past investor knowledge
+  or alone establish a long-term buying case. Portfolio coverage counts selected
+  symbols, not value weights; single-asset volatility is not aggregate risk.
+  Reference checks locate available evidence without certifying the reasoning.
+  Brain can use selected technical evidence without private matches, with the
+  gap labelled. Explicit Brain Log saves retain historical captures; private
+  citation rechecks do not refresh their market data. Only reviewed promotion
+  creates a separate indexed Note. Broader technical thesis validation and
+  inherited interface-layout debt remain deferred.
 - **Cross-market comparison is experimental and descriptive.** The read-only
   comparison API aligns each selected proxy with an anchor on common UTC daily
   close dates and exposes stale, missing, and insufficient-overlap states. It

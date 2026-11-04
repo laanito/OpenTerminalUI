@@ -6,6 +6,25 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-11-04
+
+Technical context now reaches AI Investment Briefing, Interrogate, Second Brain
+and Portfolio AI Risk Assessment through the same three descriptive measures.
+Standalone snapshots preserve exact values, own dates, source identities and
+missing coverage. Instrument cards collect evidence on Generate; Brain and
+portfolio risk offer explicit scopes of up to three symbols. Current technical
+history stays distinct from dated private research and portfolio-wide risk.
+Explicit Brain Log saves retain captured evidence; reviewed promotion preserves
+its historical labels instead of silently indexing transient observations.
+
+Implementation PRs #248–#255 are merged. The maintainer confirmed the Brain fix
+and Portfolio integration work as intended. This is release preparation;
+consolidated checks, CI, merge and publication approval are recorded in Releasing.
+The release includes nullable JSON migration `0018_brain_technical_context`;
+Docker applies Alembic before startup. Existing local databases must upgrade.
+Old memos are not backfilled or rewritten, and rollback retains captured research.
+No new provider, indicator, dependency or embedding change is required.
+
 ### Fixed
 - **Reliable manual Brain symbol selection** — Add stays aligned with the input
   when suggestion help disappears on blur, preventing a lost click and an
