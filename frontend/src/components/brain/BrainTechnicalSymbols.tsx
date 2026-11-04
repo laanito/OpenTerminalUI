@@ -15,10 +15,12 @@ export function BrainTechnicalSymbols({ symbols, onChange, disabled }: { symbols
   return <fieldset disabled={disabled} className="space-y-2 rounded border border-terminal-border p-2">
     <legend className="px-1 text-[11px] text-terminal-muted">Optional current technical context · up to 3 symbols</legend>
     <p className="text-[11px] text-terminal-muted">Choose relevant instruments explicitly. Ask fetches their technical history even if private research has no matches; any private evidence gap is shown.</p>
-    <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); add(value); }}>
+    {/* Helper text disappears on input blur. Keep Add anchored to the input
+        row so that blur cannot move it between pointer-down and pointer-up. */}
+    <form className="flex items-start gap-2" onSubmit={(event) => { event.preventDefault(); add(value); }}>
       <div className="min-w-0 flex-1"><SymbolSuggestions key={symbols.join(",")} label="Add technical symbol" value={value} onChange={setValue} onPick={add}
         exclude={symbols} placeholder="AAPL, BTC-USD…" /></div>
-      <TerminalButton type="submit" size="sm" disabled={!value.trim() || symbols.length >= 3}>Add</TerminalButton>
+      <TerminalButton type="submit" size="sm" className="mt-5 shrink-0" disabled={!value.trim() || symbols.length >= 3}>Add</TerminalButton>
     </form>
     {!!symbols.length && <div className="flex flex-wrap gap-2">{symbols.map((symbol) => <button type="button" key={symbol}
       className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-accent" aria-label={`Remove technical ${symbol}`}

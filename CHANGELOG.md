@@ -7,6 +7,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Fixed
+- **Reliable manual Brain symbol selection** — Add stays aligned with the input
+  when suggestion help disappears on blur, preventing a lost click and an
+  unintended ask without technical symbols. Browser coverage waits for empty
+  suggestions and verifies each selected symbol before submission.
 - **Brain technical scope survives missing private matches** — explicitly
   selected technical symbols are collected even when private retrieval has no
   matches, the index is empty or query embeddings fail. The answer reports the

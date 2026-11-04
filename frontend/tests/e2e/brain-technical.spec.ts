@@ -48,8 +48,12 @@ for (const width of [1440, 390]) {
     await page.goto("/equity/brain");
     expect(asks).toBe(0);
     const input = page.getByRole("combobox", { name: "Add technical symbol" });
-    await input.fill("AAPL"); await page.getByRole("button", { name: "Add", exact: true }).click();
-    await input.fill("BTC-USD"); await page.getByRole("button", { name: "Add", exact: true }).click();
+    for (const symbol of ["AAPL", "BTC-USD"]) {
+      await input.fill(symbol);
+      await expect(page.getByText("No matching suggestions; you can enter a symbol manually.", { exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      await expect(page.getByRole("button", { name: `Remove technical ${symbol}`, exact: true })).toBeVisible();
+    }
     const question = page.getByPlaceholder(/Ask your second brain/);
     await question.fill(memo.question); await page.getByRole("button", { name: "Ask", exact: true }).click();
     await expect(page.getByText("Dated private thesis")).toBeVisible();
