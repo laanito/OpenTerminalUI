@@ -4,6 +4,7 @@ import { terminalColors } from "../../theme/terminal";
 import type { InsightData, InsightSection, InsightModelProfile } from "../../api/types";
 import type { InsightPhase, InsightRequestOptions } from "../../api/insightLifecycle";
 import { ResearchTechnicalEvidence, technicalCitations, type TechnicalInspection } from "./ResearchTechnicalEvidence";
+import { PortfolioTechnicalEvidence, portfolioTechnicalCitations } from "../portfolio/PortfolioTechnicalEvidence";
 
 export type { InsightData, InsightSection } from "../../api/types";
 
@@ -114,8 +115,10 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
   }, []);
 
   const engineLive = data?.engine === "llm";
-  const format = (text: string) => technicalCitations(text, data?.technical_context,
-    (id) => setTechnicalInspection((previous) => ({ id, sequence: (previous?.sequence ?? 0) + 1 })));
+  const inspect = (id: string) => setTechnicalInspection((previous) => ({ id, sequence: (previous?.sequence ?? 0) + 1 }));
+  const format = (text: string) => data?.portfolio_technical_context
+    ? portfolioTechnicalCitations(text, data.portfolio_technical_context, inspect)
+    : technicalCitations(text, data?.technical_context, inspect);
   const engineLabel = engineLive
     ? data?.model ?? "LLM"
     : data?.engine === "lexical"
@@ -233,6 +236,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
             </div>
           )}
           {data.technical_context && <ResearchTechnicalEvidence evidence={data.technical_context} inspection={technicalInspection} />}
+          {data.portfolio_technical_context && <PortfolioTechnicalEvidence context={data.portfolio_technical_context} inspection={technicalInspection} />}
         </div>
       )}
     </section>

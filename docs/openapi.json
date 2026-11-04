@@ -7905,6 +7905,448 @@
         "title": "HistoricalAnalyticsIssue",
         "type": "object"
       },
+      "HoldingTechnicalEvidence": {
+        "properties": {
+          "adjustment_verification": {
+            "const": "not_independently_verified",
+            "default": "not_independently_verified",
+            "title": "Adjustment Verification",
+            "type": "string"
+          },
+          "annualized": {
+            "const": false,
+            "default": false,
+            "title": "Annualized",
+            "type": "boolean"
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date"
+          },
+          "available_closes": {
+            "maximum": 181.0,
+            "minimum": 0.0,
+            "title": "Available Closes",
+            "type": "integer"
+          },
+          "bar_completion": {
+            "const": "not_verified",
+            "default": "not_verified",
+            "title": "Bar Completion",
+            "type": "string"
+          },
+          "calculation_version": {
+            "const": "technical-indicators-v1",
+            "default": "technical-indicators-v1",
+            "title": "Calculation Version",
+            "type": "string"
+          },
+          "exchange_timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange Timezone"
+          },
+          "feed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feed"
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "enum": [
+                  "current",
+                  "stale"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freshness"
+          },
+          "history_semantics": {
+            "const": "current_source_history_not_point_in_time",
+            "default": "current_source_history_not_point_in_time",
+            "title": "History Semantics",
+            "type": "string"
+          },
+          "input_contract": {
+            "const": "yahoo-adjusted-instrument-window-v1",
+            "default": "yahoo-adjusted-instrument-window-v1",
+            "title": "Input Contract",
+            "type": "string"
+          },
+          "input_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Id"
+          },
+          "input_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Reason"
+          },
+          "input_status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Input Status",
+            "type": "string"
+          },
+          "instrument_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Type"
+          },
+          "interval": {
+            "const": "1d",
+            "default": "1d",
+            "title": "Interval",
+            "type": "string"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingTechnicalMetric"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Metrics",
+            "type": "array"
+          },
+          "price_basis": {
+            "const": "yahoo_reported_adjclose",
+            "default": "yahoo_reported_adjclose",
+            "title": "Price Basis",
+            "type": "string"
+          },
+          "quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Unit"
+          },
+          "requested_end_date": {
+            "format": "date",
+            "title": "Requested End Date",
+            "type": "string"
+          },
+          "requested_start_date": {
+            "format": "date",
+            "title": "Requested Start Date",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "sampling": {
+            "const": "own_utc_dates_within_instrument_window",
+            "default": "own_utc_dates_within_instrument_window",
+            "title": "Sampling",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "session_verification": {
+            "const": "not_performed",
+            "default": "not_performed",
+            "title": "Session Verification",
+            "type": "string"
+          },
+          "shifted_local_dates": {
+            "maximum": 181.0,
+            "minimum": 0.0,
+            "title": "Shifted Local Dates",
+            "type": "integer"
+          },
+          "snapshot_id": {
+            "pattern": "^ts_[a-f0-9]{24}$",
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supporting_points": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalInputPoint"
+            },
+            "maxItems": 21,
+            "title": "Supporting Points",
+            "type": "array"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "value_decimal_places": {
+            "const": 8,
+            "default": 8,
+            "title": "Value Decimal Places",
+            "type": "integer"
+          },
+          "window_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window End Date"
+          },
+          "window_start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Start Date"
+          }
+        },
+        "required": [
+          "symbol",
+          "status",
+          "input_status",
+          "input_reason",
+          "input_id",
+          "source",
+          "feed",
+          "quote_unit",
+          "available_closes",
+          "as_of_date",
+          "freshness",
+          "metrics",
+          "snapshot_id",
+          "retrieved_at",
+          "requested_start_date",
+          "requested_end_date",
+          "window_start_date",
+          "window_end_date",
+          "instrument_type",
+          "exchange_timezone",
+          "shifted_local_dates"
+        ],
+        "title": "HoldingTechnicalEvidence",
+        "type": "object"
+      },
+      "HoldingTechnicalMetric": {
+        "properties": {
+          "citation_id": {
+            "pattern": "^H[1-3]\\.[1-3]$",
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "lookback": {
+            "const": 20,
+            "default": 20,
+            "title": "Lookback",
+            "type": "integer"
+          },
+          "name": {
+            "enum": [
+              "sma20_gap_pct",
+              "return20_pct",
+              "volatility20_pp"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "observation_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "maxItems": 21,
+            "title": "Observation Dates",
+            "type": "array"
+          },
+          "observation_id": {
+            "anyOf": [
+              {
+                "pattern": "^to_[a-f0-9]{24}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observation Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "input_unavailable",
+                  "inconsistent_input",
+                  "insufficient_history",
+                  "non_finite_calculation"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "required_closes": {
+            "enum": [
+              20,
+              21
+            ],
+            "title": "Required Closes",
+            "type": "integer"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "percent",
+              "percentage_points"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "used_closes": {
+            "default": 0,
+            "maximum": 21.0,
+            "minimum": 0.0,
+            "title": "Used Closes",
+            "type": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "reason",
+          "unit",
+          "formula",
+          "required_closes",
+          "citation_id"
+        ],
+        "title": "HoldingTechnicalMetric",
+        "type": "object"
+      },
       "HotlistItem": {
         "properties": {
           "change": {
@@ -8278,7 +8720,7 @@
           },
           "payload": {
             "additionalProperties": true,
-            "description": "Kind-specific input. briefing/interrogate require ticker (1-40 letters, digits, ^._=-), with optional market (up to 40 characters) and refresh (boolean); no other keys. Interrogate ownership comes from authentication, never the payload. backtest accepts strategy/metrics; risk accepts scope/metrics; collection accepts symbols/scope/facts.",
+            "description": "Kind-specific input. briefing/interrogate require ticker (1-40 letters, digits, ^._=-), with optional market (up to 40 characters) and refresh (boolean); no other keys. Interrogate ownership comes from authentication, never the payload. backtest accepts strategy/metrics; risk accepts scope/metrics and optional portfolio_id/technical_symbols (at most three unique symbols currently held in the authenticated owner's portfolio); collection accepts symbols/scope/facts.",
             "title": "Payload",
             "type": "object"
           }
@@ -15777,6 +16219,86 @@
         "title": "PortfolioSubmitPayload",
         "type": "object"
       },
+      "PortfolioTechnicalContext": {
+        "additionalProperties": false,
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingTechnicalEvidence"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Groups",
+            "type": "array"
+          },
+          "portfolio_id": {
+            "maxLength": 36,
+            "minLength": 1,
+            "title": "Portfolio Id",
+            "type": "string"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalPosition"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Positions",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "selected_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Selected Symbols",
+            "type": "array"
+          },
+          "selection": {
+            "const": "explicit_held_symbols",
+            "default": "explicit_held_symbols",
+            "title": "Selection",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_held_symbols": {
+            "minimum": 1.0,
+            "title": "Total Held Symbols",
+            "type": "integer"
+          },
+          "weighting": {
+            "const": "not_computed",
+            "default": "not_computed",
+            "title": "Weighting",
+            "type": "string"
+          }
+        },
+        "required": [
+          "portfolio_id",
+          "selected_symbols",
+          "total_held_symbols",
+          "status",
+          "positions",
+          "groups"
+        ],
+        "title": "PortfolioTechnicalContext",
+        "type": "object"
+      },
       "PortfolioTransactionCreateRequest": {
         "properties": {
           "currency": {
@@ -17117,6 +17639,63 @@
           "symbol"
         ],
         "title": "RestrictedRequest",
+        "type": "object"
+      },
+      "RiskInsightEnvelope": {
+        "additionalProperties": true,
+        "properties": {
+          "portfolio_technical_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioTechnicalContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "RiskInsightEnvelope",
+        "type": "object"
+      },
+      "RiskInsightRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "additionalProperties": true,
+            "title": "Metrics",
+            "type": "object"
+          },
+          "portfolio_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Id"
+          },
+          "scope": {
+            "default": "portfolio",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Scope",
+            "type": "string"
+          },
+          "technical_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Technical Symbols",
+            "type": "array"
+          }
+        },
+        "title": "RiskInsightRequest",
         "type": "object"
       },
       "RiskPortfolioRequest": {
@@ -20459,6 +21038,47 @@
         "title": "TechnicalPairInputs",
         "type": "object"
       },
+      "TechnicalPosition": {
+        "additionalProperties": false,
+        "properties": {
+          "lot_count": {
+            "minimum": 1.0,
+            "title": "Lot Count",
+            "type": "integer"
+          },
+          "quantity": {
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity",
+            "type": "number"
+          },
+          "recorded_cost_currencies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recorded Cost Currencies",
+            "type": "array"
+          },
+          "symbol": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "unknown_cost_currency": {
+            "title": "Unknown Cost Currency",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "symbol",
+          "quantity",
+          "lot_count",
+          "recorded_cost_currencies",
+          "unknown_cost_currency"
+        ],
+        "title": "TechnicalPosition",
+        "type": "object"
+      },
       "TechnicalSupportingPoint": {
         "properties": {
           "adjusted_close": {
@@ -22154,9 +22774,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "title": "Payload",
-                "type": "object"
+                "$ref": "#/components/schemas/RiskInsightRequest"
               }
             }
           },
@@ -22167,9 +22785,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Risk Insights Api Ai Risk Insights Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RiskInsightEnvelope"
                 }
               }
             },

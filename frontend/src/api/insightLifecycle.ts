@@ -2,6 +2,7 @@ import { fetchApi } from "./base";
 import type { InsightData, InsightModelProfile } from "./types";
 import insightLimits from "./insightLimits.json";
 import { validResearchTechnicalEvidence, validResearchTechnicalReferences } from "./researchTechnicalContext";
+import { validPortfolioTechnicalContext, validPortfolioTechnicalReferences, type PortfolioTechnicalScope } from "./portfolioTechnicalContext";
 
 export type InsightKind = "backtest" | "collection" | "risk" | "briefing" | "interrogate";
 export type InsightPhase = "queued" | "generating";
@@ -23,7 +24,7 @@ function identity(value: unknown): InsightModelProfile {
     || (value.requested_profile === "fast" && value.resolved_profile !== "fast") || !text(value.model, 256)) throw invalid();
   return value as InsightModelProfile;
 }
-function result(value: unknown, selected: InsightModelProfile, symbol?: string): InsightData {
+function result(value: unknown, selected: InsightModelProfile, symbol?: string, riskScope?: PortfolioTechnicalScope): InsightData {
   if (selected.requested_profile !== "deep") throw invalid();
   if (!record(value) || !["llm", "unavailable"].includes(String(value.engine)) || !text(value.model, 256)
     || !text(value.summary, insightLimits.summary) || !Array.isArray(value.sections) || value.sections.length > 4
@@ -45,6 +46,10 @@ function result(value: unknown, selected: InsightModelProfile, symbol?: string):
     if (!symbol || value.ticker !== symbol || !validResearchTechnicalEvidence(value.technical_context, symbol)) throw invalid();
     if (value.engine === "llm" && !validResearchTechnicalReferences(value.summary, value.sections as InsightData["sections"], value.technical_context)) throw invalid();
   }
+  if (value.portfolio_technical_context != null) {
+    if (!riskScope || !validPortfolioTechnicalContext(value.portfolio_technical_context, riskScope)) throw invalid();
+    if (value.engine === "llm" && !validPortfolioTechnicalReferences(value.summary, value.sections as InsightData["sections"], value.portfolio_technical_context)) throw invalid();
+  } else if (riskScope && value.engine === "llm") throw invalid();
   return value as InsightData;
 }
 
@@ -60,7 +65,14 @@ export async function streamInsight(kind: InsightKind, payload: Record<string, u
   // Python NDJSON escapes non-ASCII characters (up to 12 ASCII chars for one
   // astral code point). Leave framing/metadata headroom above the raw limit.
   const symbol = ["briefing", "interrogate"].includes(kind) && typeof payload.ticker === "string" ? payload.ticker.trim().toUpperCase() : undefined;
-  return streamModelOperation("/ai/insights/stream", { kind, payload }, (value, profile) => result(value, profile, symbol), options, insightLimits.rawResponse * 16);
+  let riskScope: PortfolioTechnicalScope | undefined;
+  if (kind === "risk" && Array.isArray(payload.technical_symbols) && payload.technical_symbols.length) {
+    if (typeof payload.portfolio_id !== "string" || !payload.portfolio_id || payload.portfolio_id.length > 36 || payload.technical_symbols.length > 3
+      || payload.technical_symbols.some((symbol) => typeof symbol !== "string" || !/^[A-Z0-9^._=-]{1,40}$/.test(symbol))
+      || new Set(payload.technical_symbols).size !== payload.technical_symbols.length) throw invalid();
+    riskScope = { portfolioId: payload.portfolio_id, symbols: [...payload.technical_symbols] };
+  }
+  return streamModelOperation("/ai/insights/stream", { kind, payload }, (value, profile) => result(value, profile, symbol, riskScope), options, insightLimits.rawResponse * 16);
 }
 
 export async function streamModelOperation<T extends object>(

@@ -21,6 +21,9 @@ Brain technical journeys at desktop/narrow widths cover explicit symbol scope,
 per-asset metric inspection, captured Brain Log saves/reopening, private-only
 evidence rechecks, reviewed promotion and partial/unavailable history. They use
 the same backend-produced projections as the frontend protocol tests.
+Portfolio risk journeys also cover explicit held-symbol selection, exact
+per-holding inspection, partial/unavailable history, retained evidence after
+model failure and clearing on portfolio/scope changes at desktop/narrow widths.
 Because those requests are fully
 intercepted, the smoke command runs the built frontend without starting backend
 jobs or contacting upstream providers.

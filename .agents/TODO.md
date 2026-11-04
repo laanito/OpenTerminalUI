@@ -971,9 +971,26 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       passed. Backend-generated complete/partial/unavailable/zero/crypto fixtures
       anchor client validation; browser checks use deterministic sources/models.
       Consumer slice merged as #252; host usefulness/fidelity/latency feedback pending.
-- [ ] Give **Portfolio AI Risk Assessment** holdings-level technical context with
-      explicit coverage/relevance. Do not equate single-asset volatility with
-      portfolio risk or invent aggregation without the necessary joint history.
+- [x] Give **Portfolio AI Risk Assessment** holdings-level technical context with
+      explicit coverage/relevance. Optional default-empty selection of at most
+      three positive-quantity held symbols, validated against the authenticated
+      portfolio before market/model work. Recorded lot quantities and known/
+      unknown cost currencies provide position context, without value weights,
+      valuations/FX or technical risk aggregation. Symbol-count coverage and
+      per-holding H#.# refs inspect the same exact three observations. Missing
+      portfolio risk metrics do not block selected technical evidence. Shared
+      cancellable 15s batch, same Deep/default profile/deadline/reference repair;
+      source/model failures retain honest coverage. Scope/holdings/metric changes
+      clear/cancel old analysis; versioned loading ignores late prior-portfolio
+      analytics. Risk inputs are typed and bounded at 32,000 serialized JSON
+      characters without slicing; client-supplied metrics remain distinguished
+      from server-owned position evidence. No new provider, indicator, route,
+      persistence, indexing or migration. Implemented pending review/host quality
+      feedback. Checks: 186 focused backend, all 681 frontend, production build,
+      22 existing Chrome journeys plus two new desktop/narrow portfolio journeys
+      after fixing an unrelated attribution fixture; API/surface/mock guards.
+      Backend-produced fixtures anchor browser contracts. No live provider/model
+      quality claim; evaluation/release closure remains open.
 - [x] Give **Second Brain** bounded relevant-symbol selection and current
       technical observations alongside matching private research. Explicit
       default-empty scope of at most three unique symbols; no ticker inference,
@@ -1005,6 +1022,10 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       short-window/long-term investment limitation. No new schema or migration.
       Follow-up checks: 85 focused backend, all 664 frontend, build, four Brain
       Chrome journeys and API/surface/mock guards; no live model quality claim.
+      #254 merged; maintainer confirmed the issue fixed, including stable manual
+      Add after suggestion help disappears on blur. A deterministic browser
+      regression now waits for the helper state and verifies selected chips.
+      Carry this host acceptance forward; do not reopen that resolved issue.
 
 Audit current inputs per workflow and reuse v2.5's bounded source/calculation
 contract where applicable. Keep exact values/units/dates, freshness/provenance,

@@ -32,6 +32,28 @@ async def collect_research_technical_evidence(symbol: str, fetcher_factory: Call
 REFERENCE_PATTERN = re.compile(r"\[TECH[^\]\n]*\]")
 
 
+async def collect_research_technical_batch(symbols: list[str], collector: Callable[[str], Awaitable[ResearchTechnicalEvidence]]) -> list[ResearchTechnicalEvidence]:
+    """At most three selected instruments share a 15s optional-source budget."""
+    if len(symbols) > 3 or len(set(symbols)) != len(symbols):
+        raise ValueError("Choose at most three unique technical symbols")
+    if not symbols:
+        return []
+    tasks = []
+    try:
+        async with asyncio.timeout(15):
+            tasks = [asyncio.create_task(collector(symbol), name="research-technical-history") for symbol in symbols]
+            results = await asyncio.gather(*tasks)
+    except TimeoutError:
+        results = [task.result() if task.done() and not task.cancelled() else research_technical_evidence(
+            build_technical_snapshot(TechnicalSnapshotRequest(symbol=symbol), None, source=None, feed=None, failure_reason="provider_timeout"))
+            for symbol, task in zip(symbols, tasks)]
+    finally:
+        for task in tasks:
+            if not task.done(): task.cancel()
+        if tasks: await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+
+
 class ResearchTechnicalMetric(TechnicalMetric):
     citation_id: str = Field(pattern=r"^TECH[1-3]$")
     used_closes: int = Field(default=0, ge=0, le=21)

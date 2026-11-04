@@ -1048,6 +1048,7 @@ export type InsightData = {
   generated_at?: string;
   model_profile?: InsightModelProfile;
   technical_context?: import("./researchTechnicalContext").ResearchTechnicalEvidence | null;
+  portfolio_technical_context?: import("./portfolioTechnicalContext").PortfolioTechnicalContext | null;
   /** Interrogation only: how many of the user's own notes on the ticker fed the analysis. */
   note_count?: number;
   /** Interrogation only: related notes on other tickers/themes folded in semantically. */

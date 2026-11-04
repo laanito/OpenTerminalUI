@@ -242,8 +242,8 @@ revised provider data is not a complete historical vintage.
 Interrogate now include available standalone technical observations during
 explicit generation. **[TECH1–3]** references open exact metric dates, formulas,
 source limitations and supporting closes. Missing technical history preserves
-other inputs. Brain also offers an explicit optional technical scope; portfolio
-risk integration remains pending. See the
+other inputs. Brain offers an explicit optional technical scope, and Portfolio
+AI Risk Assessment supports selected held-symbol observations. See the
 [instrument research workflow](docs/wiki/Research-Workflows.md#instrument-technical-evidence-v26-development).
 
 ### Private Second Brain and Brain Log
@@ -280,6 +280,12 @@ An external agent such as Hermes can deliberately ingest summaries through the
 API-key-authenticated notes endpoint. This is not automatic web/news indexing
 or a general MCP server.
 [Research and ingestion guide](docs/wiki/Research-Workflows.md)
+
+In **Portfolio → AI Risk Assessment**, optionally select up to three held symbols
+before Generate. **[H1.1]** references open exact observations alongside recorded
+position quantities and cost currencies. Coverage counts symbols; individual
+volatility is not aggregated into portfolio risk. This v2.6 workflow is in
+development and awaiting host feedback.
 
 ### Portfolio and Journal
 

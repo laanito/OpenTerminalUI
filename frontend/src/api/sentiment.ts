@@ -9,6 +9,7 @@ import type {
 } from "./types";
 import { streamInsight, streamModelOperation, validateFastResult, type InsightRequestOptions } from "./insightLifecycle";
 import type { InsightModelProfile } from "./types";
+import type { PortfolioTechnicalScope } from "./portfolioTechnicalContext";
 
 export async function fetchNewsSentiment(ticker: string, days = 7, market?: string): Promise<NewsSentimentSummary> {
   const { data } = await api.get<NewsSentimentSummary>(`/news/sentiment/${encodeURIComponent(ticker)}`, {
@@ -101,8 +102,9 @@ export async function fetchAiRiskInsights(
   metrics: Record<string, any>,
   scope = "portfolio",
   options: InsightRequestOptions = {},
+  technicalScope?: PortfolioTechnicalScope,
 ): Promise<InsightData> {
-  const payload = { metrics, scope };
+  const payload = { metrics, scope, ...(technicalScope ? { portfolio_id: technicalScope.portfolioId, technical_symbols: technicalScope.symbols } : {}) };
   return streamInsight(
     "risk",
     payload,
