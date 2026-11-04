@@ -258,11 +258,14 @@ remain available as history. Notes and reindexing expose loading and indexing
 progress rather than silently treating a queued write as searchable evidence.
 
 **v2.6 development:** optionally choose up to three technical symbols before
-asking. Current observations supplement matching private research; **[T1.1]**
+asking. Current observations supplement private research when available; **[T1.1]**
 style references inspect each asset's exact metrics, dates and supporting closes
 separately from private **[1]** citations. No symbols are inferred from prose.
 Missing history remains explicit. Current prices cannot reconstruct past
 knowledge or alone invalidate a long-term thesis.
+Explicit technical scope also works when private retrieval has no matches or is
+unavailable. The answer labels that gap; short-window observations alone cannot
+establish a long-term investment case. With no usable evidence, synthesis is skipped.
 
 **Save answer** preserves a completed synthesis in the **Brain Log**, with
 citation snapshots and model provenance. Saved memos are not automatically

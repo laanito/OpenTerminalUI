@@ -7,6 +7,18 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Fixed
+- **Reliable manual Brain symbol selection** — Add stays aligned with the input
+  when suggestion help disappears on blur, preventing a lost click and an
+  unintended ask without technical symbols. Browser coverage waits for empty
+  suggestions and verifies each selected symbol before submission.
+- **Brain technical scope survives missing private matches** — explicitly
+  selected technical symbols are collected even when private retrieval has no
+  matches, the index is empty or query embeddings fail. The answer reports the
+  private evidence gap, keeps available technical citations inspectable and
+  preserves captured evidence on save. Private citations are required only when
+  supplied; invented references still fail. Prompts keep long-term investment
+  conclusions beyond the scope of three short-window measures. If private and
+  technical evidence are both unavailable, no synthesis is requested.
 - **Browser insight length parity** — the shared insight reader now accepts the
   server's expanded summary/title/point and total-text safety ceilings, instead
   of rejecting valid longer analysis with a generic request error. Unicode
@@ -28,8 +40,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ### Added
 - **Optional technical evidence for Second Brain (v2.6)** — choose up to three
   explicit instrument symbols alongside existing private-source filters. One
-  bounded batch supplies the same three descriptive observations after matching
-  private research is found. Namespaced metric citations inspect exact dates,
+  bounded batch supplies the same three descriptive observations, alongside
+  private research when available. Namespaced metric citations inspect exact dates,
   values, formulas, provenance and supporting closes separately from private
   citations. Current snapshots stay distinct from dated claims and historical
   knowledge; unavailable coverage preserves private evidence. Same-profile

@@ -133,8 +133,12 @@ its corpus or a unified cross-market AI explanation.
 Before asking, use **Add technical symbol** to select up to three relevant
 instruments, with suggestions or an explicitly entered symbol. The default is
 empty; words in a question are never treated as tickers automatically. **Ask**
-fetches current technical snapshots only when matching private research exists
-and the model is enabled. Skipped, partial and unavailable coverage is shown.
+fetches current technical snapshots when the model is enabled, including when
+private research has no matches, is empty or cannot be searched. The answer
+labels the missing private evidence rather than inventing notes or citations.
+Search failure does not mean no relevant notes exist. Skipped, partial and
+unavailable technical coverage is shown. If both private and technical evidence
+are unavailable, Brain explains the gap without requesting synthesis.
 
 Private citations keep their numbered `[1]` references. Technical references
 such as **[T1.1]** and **[T2.1]** open the selected asset's exact metric, formula,

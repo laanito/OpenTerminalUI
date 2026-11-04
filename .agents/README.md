@@ -31,8 +31,8 @@ references/browser inspection, safe missing coverage and contract/UTC-date cache
 keys; this consumer slice merged as #252, with host quality feedback pending. Same-symbol note
 effective/recorded dates stay distinct; semantic related-note queries are unchanged.
 That instrument slice adds no route, provider setting, persistence or indexing.
-Brain's integration is now implemented for review: default-empty explicit scope
-of up to three symbols; a cancellable 15s batch after matching private research;
+Brain's integration merged as #253: default-empty explicit scope
+of up to three symbols; a cancellable 15s batch; private evidence when available;
 separate private [n] and per-asset [T1.1] references; safe same-profile reference
 repair, exact browser inspection and captured Brain Log evidence. No private
 ranking/embedding or automatic indexing change. Explicit saves require nullable
@@ -41,7 +41,17 @@ rewrite. Docker entrypoint applies Alembic before startup; existing local DBs
 must upgrade. Rollback retains captured research. Private citation rechecks
 never refresh saved market observations; reviewed promotion relabels captured
 references and retains dated source/value/ID footnotes. Next: portfolio risk,
-then consolidated evaluation/release. See Roadmap/TODO. The inherited layout audit remains
+then consolidated evaluation/release. Host feedback on #253 exposed an overly
+strict private-match gate. The follow-up allows explicit technical history when
+private matches are absent, the index is empty or query embeddings fail. The
+answer labels the private gap; search failure is not proof of missing notes.
+Only supplied private citations are required, usable per-asset technical refs
+remain mandatory, and invented refs fail. No usable private/technical evidence
+means no synthesis. Three short-window observations cannot establish long-term
+buying attractiveness. Checks: 85 focused backend tests, all 664 frontend tests,
+production build, four desktop/narrow Brain Chrome journeys and API/surface/mock
+guards. Fixtures only; configured-model host feedback remains pending.
+No new migration, dependency or API shape is needed. See Roadmap/TODO. The inherited layout audit remains
 unscheduled. The maintainer clarified v3's fuller technical-analysis direction:
 RSI/MACD, volume, accumulation areas and Elliott-wave hypotheses should help test
 assumptions ingested from videos/notes against independently derived evidence.

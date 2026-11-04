@@ -18,6 +18,10 @@ for (const width of [1440, 390]) {
         asks++;
         expect(route.request().postDataJSON()).toMatchObject({ technical_symbols: ["AAPL", "BTC-USD"], sources });
         const answer = { ...brainTechnicalAnswer(asks === 2 ? "partial" : asks === 3 ? "unavailable" : "complete"), sources };
+        if (asks === 4) {
+          answer.citations = [];
+          answer.answer = "No private evidence was retrieved. Observations [T1.1] [T2.1] cannot establish a long-term buying case.";
+        }
         await route.fulfill({ contentType: "application/x-ndjson", body: [
           { type: "queued", sources, technical_symbols: ["AAPL", "BTC-USD"], deadlines: { operation_seconds: 300 }, ...{
             generated_at: answer.generated_at, llm_model: answer.llm_model, llm_provider: answer.llm_provider, model_profile: answer.model_profile } },
@@ -44,8 +48,12 @@ for (const width of [1440, 390]) {
     await page.goto("/equity/brain");
     expect(asks).toBe(0);
     const input = page.getByRole("combobox", { name: "Add technical symbol" });
-    await input.fill("AAPL"); await page.getByRole("button", { name: "Add", exact: true }).click();
-    await input.fill("BTC-USD"); await page.getByRole("button", { name: "Add", exact: true }).click();
+    for (const symbol of ["AAPL", "BTC-USD"]) {
+      await input.fill(symbol);
+      await expect(page.getByText("No matching suggestions; you can enter a symbol manually.", { exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      await expect(page.getByRole("button", { name: `Remove technical ${symbol}`, exact: true })).toBeVisible();
+    }
     const question = page.getByPlaceholder(/Ask your second brain/);
     await question.fill(memo.question); await page.getByRole("button", { name: "Ask", exact: true }).click();
     await expect(page.getByText("Dated private thesis")).toBeVisible();
@@ -78,7 +86,12 @@ for (const width of [1440, 390]) {
     await expect(latest).toContainText("partial observations");
     await question.fill("What if history is unavailable?"); await page.getByRole("button", { name: "Ask", exact: true }).click();
     await expect(page.getByRole("region", { name: "Brain technical evidence" }).first()).toContainText("unavailable");
-    expect(asks).toBe(3); expect(saves).toBe(1);
+    await question.fill("Is it a good time to buy BTC-USD long term?"); await page.getByRole("button", { name: "Ask", exact: true }).click();
+    await expect(page.getByText(/Selected technical observations cover a short window/)).toBeVisible();
+    await expect(page.getByText("Private search scope · All private sources", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Inspect T2.1 technical evidence", exact: true }).first().click();
+    await expect(page.getByRole("region", { name: "T2.1 technical evidence", exact: true }).first()).toBeFocused();
+    expect(asks).toBe(4); expect(saves).toBe(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }

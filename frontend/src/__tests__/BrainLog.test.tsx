@@ -59,6 +59,28 @@ function renderWithProviders(element: React.ReactNode, entry = "/equity/brain") 
 }
 
 describe("Brain Log browser flow", () => {
+  it("labels and saves a technical-only answer without pretending the private search scope supplied citations", async () => {
+    const result = brainTechnicalAnswer(); result.citations = [];
+    result.answer = "No private evidence was retrieved. Observations [T1.1] [T2.1] cannot establish a long-term buying case.";
+    askBrainStreamMock.mockResolvedValue(result);
+    renderWithProviders(<SecondBrainPanel />);
+    await screen.findByText(/1 indexed/);
+    for (const label of ["Journal · 0", "Portfolio theses · 0", "Position notes · 0", "Transaction notes · 0"])
+      fireEvent.click(screen.getByRole("button", { name: label }));
+    for (const symbol of ["AAPL", "BTC-USD"]) {
+      fireEvent.change(screen.getByRole("combobox", { name: "Add technical symbol" }), { target: { value: symbol } });
+      fireEvent.click(screen.getByRole("button", { name: "Add", exact: true }));
+    }
+    fireEvent.change(screen.getByPlaceholderText(/Ask your second brain/), { target: { value: "Is it a good time to buy BTC-USD long term?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask", exact: true }));
+    expect(await screen.findByText(/Selected technical observations cover a short window/)).toBeVisible();
+    expect(screen.getByText("Private search scope · Notes")).toBeVisible();
+    expect(screen.queryByText("Sources from your private record")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Inspect T2.1 technical evidence" }));
+    expect(screen.getByRole("region", { name: "T2.1 technical evidence" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Save answer" }));
+    await waitFor(() => expect(createBrainMemoMock).toHaveBeenCalledWith(expect.objectContaining({ citations: [], technical_context: result.technical_context })));
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     fetchBrainStatusMock.mockResolvedValue({

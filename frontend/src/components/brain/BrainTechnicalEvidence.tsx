@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import type { BrainTechnicalContext } from "../../api/brainTechnical";
 import { ResearchTechnicalEvidence, technicalCitations, type TechnicalInspection } from "../terminal/ResearchTechnicalEvidence";
 
-export function BrainTechnicalAnswer({ answer, context, saved = false }: { answer: string; context?: BrainTechnicalContext | null; saved?: boolean }) {
+export function BrainTechnicalAnswer({ answer, context, saved = false, privateCitationCount }: { answer: string; context?: BrainTechnicalContext | null; saved?: boolean; privateCitationCount?: number }) {
   const [inspection, setInspection] = useState<TechnicalInspection>(null);
   const inspect = (id: string) => setInspection((previous) => ({ id, sequence: (previous?.sequence ?? 0) + 1 }));
   let formatted: ReactNode = answer;
@@ -23,6 +23,7 @@ export function BrainTechnicalAnswer({ answer, context, saved = false }: { answe
     <p className="whitespace-pre-wrap text-xs leading-relaxed text-terminal-text">{formatted}</p>
     {context && <section aria-label="Brain technical evidence" className="space-y-2 rounded border border-terminal-border p-2">
       <p className="text-[11px] text-terminal-muted">Technical scope · {context.requested_symbols.join(", ")} · {context.status}</p>
+      {privateCitationCount === 0 && context.status !== "skipped" && <p className="text-[11px] text-terminal-warn">No private evidence was retrieved for this answer. Selected technical observations cover a short window and cannot establish a long-term investment case.</p>}
       {saved ? <p className="text-[11px] text-terminal-warn">Saved market snapshots are shown as captured. Rechecking private citations does not refresh these market observations.</p>
         : <p className="text-[11px] text-terminal-muted">Current technical observations are separate from your dated private research; they are not automatically indexed.</p>}
       {context.status === "skipped" ? <p className="text-xs text-terminal-muted">{skipped[context.reason ?? ""]}</p> : context.groups.map((group) => (

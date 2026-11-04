@@ -86,7 +86,7 @@ function MemoDetail({ memo, onDeleted }: { memo: BrainMemo; onDeleted: () => voi
       </div>
       <div className="space-y-1 text-xs text-terminal-text">
         <p className="font-semibold">{memo.question}</p>
-        <BrainTechnicalAnswer answer={memo.answer} context={memo.technical_context} saved />
+        <BrainTechnicalAnswer answer={memo.answer} context={memo.technical_context} privateCitationCount={memo.citations.length} saved />
       </div>
       <div className="space-y-1.5 rounded-sm border border-terminal-border bg-terminal-bg/60 p-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">

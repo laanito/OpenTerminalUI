@@ -23,6 +23,14 @@ const ask = () => askBrainStream("What do my dated claims mean today?", 6, ["not
 
 describe("Brain technical stream contract", () => {
   beforeEach(() => fetchMock.mockReset());
+  it("accepts technical-only answers but rejects invented private references", async () => {
+    const result = brainTechnicalAnswer(); result.citations = [];
+    result.answer = "No private evidence was retrieved. Current observations [T1.1] [T2.1] cannot establish a long-term purchase case.";
+    mockStream(events(result));
+    await expect(ask()).resolves.toEqual(result);
+    result.answer += " An invented note [1]."; mockStream(events(result));
+    await expect(ask()).rejects.toThrow("incomplete or invalid");
+  });
   it.each(["complete", "partial", "unavailable", "skipped"] as const)("accepts backend-produced %s coverage with exact private and per-asset references", async (kind) => {
     const result = brainTechnicalAnswer(kind);
     mockStream(events(result, kind !== "skipped"));
