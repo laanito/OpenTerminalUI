@@ -130,7 +130,46 @@ one nullable portable JSON column to `brain_memos`, with no default/backfill or
 old-row rewrite. Docker's entrypoint runs the upgrade before app startup; local
 existing databases use `PYTHONPATH=. alembic -c backend/alembic.ini upgrade head`.
 Rollback retains the column and captured research; older code ignores it.
-Portfolio AI Risk Assessment integration remains the next v2.6 slice.
+Portfolio integration is described below.
+
+## Portfolio AI Risk Assessment (v2.6 development)
+
+The selected portfolio's risk card offers a default-empty scope of up to three
+explicitly selected positive-quantity held symbols. This does not rank holdings
+by exposure or silently choose a proxy. Existing supplied risk observations
+remain separate from server-owned position metadata and technical history.
+If portfolio risk metrics are missing, selecting held symbols still permits
+generation with the evidence limits visible.
+
+Both `POST /api/ai/risk-insights` and the shared stream's `risk` payload accept
+optional `portfolio_id` and `technical_symbols`. The server verifies the actual
+portfolio owner and current membership before any market/model work. Foreign
+and absent portfolios both return 404; unheld symbols return 422. Selected lots
+are aggregated into recorded quantities, lot counts and known/unknown cost
+currencies. No position market values, value weights, FX conversion or technical
+risk contributions are computed. Supplied risk observations are explicitly
+client-provided, not independently reverified by this operation. The typed input
+has a 32,000-character JSON limit instead of silently slicing JSON at 2,000.
+
+The additive `portfolio_technical_context` contains portfolio/selected-symbol
+identity, total held-symbol count, selected positions and up to three research
+projections. `H1.1`–`H3.3` references are local to each selected asset. At least
+one available metric per usable asset must be cited; invented/unavailable refs
+use the same Deep/default stream/completion repair and deadline. The browser
+validates requested portfolio, selected symbols, positions, exact evidence and
+references. Coverage counts symbols, not portfolio value; unselected holdings
+have no technical evidence in the packet. Single-asset volatility must never
+be interpreted as portfolio volatility, diversification, covariance or tail risk.
+Those claims require their own supplied portfolio evidence and joint history.
+
+Selected history shares the cancellable 15s batch used by Brain, with at most
+three concurrent collectors. Each Generate/Regenerate collects fresh snapshots;
+there is no insight cache added. Disabled generation does not fetch history.
+Unavailable/short/stale history keeps its source limits and other supplied risk
+inputs. Model failure retains the captured context. Selection, holdings,
+portfolio or supplied-metric changes cancel/clear the old browser result; late
+background analytics from a previous portfolio cannot overwrite the new scope.
+There is no save/indexing action or schema migration for this consumer.
 
 ## Source audit and supported input contract
 

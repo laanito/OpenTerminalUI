@@ -1,7 +1,6 @@
 """Explicit, transient current technical evidence alongside private Brain retrieval."""
 from __future__ import annotations
 
-import asyncio
 import json
 import re
 from collections.abc import Awaitable, Callable
@@ -10,7 +9,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from backend.services.llm_client import LLMError
-from backend.services.research_technical_context import ResearchTechnicalEvidence, collect_research_technical_evidence, research_technical_evidence
+from backend.services.research_technical_context import ResearchTechnicalEvidence, collect_research_technical_evidence, collect_research_technical_batch, research_technical_evidence
 from backend.services.technical_indicators import TechnicalMetric
 from backend.services.technical_snapshots import TechnicalSnapshotRequest, build_technical_snapshot
 
@@ -94,19 +93,7 @@ async def collect_brain_technical_context(
                 TechnicalSnapshotRequest(symbol=symbol), None, source=None, feed=None, failure_reason="provider_error"))
         return await collect_research_technical_evidence(symbol, fetcher_factory)
 
-    tasks = []
-    try:
-        async with asyncio.timeout(15):
-            tasks = [asyncio.create_task(load(symbol), name="brain-technical-history") for symbol in symbols]
-            results = await asyncio.gather(*tasks)
-    except TimeoutError:
-        results = [task.result() if task.done() and not task.cancelled() else research_technical_evidence(
-            build_technical_snapshot(TechnicalSnapshotRequest(symbol=symbol), None, source=None, feed=None, failure_reason="provider_timeout"))
-            for symbol, task in zip(symbols, tasks)]
-    finally:
-        for task in tasks:
-            if not task.done(): task.cancel()
-        if tasks: await asyncio.gather(*tasks, return_exceptions=True)
+    results = await collect_research_technical_batch(symbols, load)
     groups = [_group(value, index) for index, value in enumerate(results, 1)]
     count = sum(metric.status == "available" for group in groups for metric in group.metrics)
     status = "available" if count == len(groups) * 3 else "partial" if count else "unavailable"

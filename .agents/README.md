@@ -4,7 +4,7 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current state **2026-11-03:** **v2.5.0 — Technical context** is released from
+Current state **2026-11-04:** **v2.5.0 — Technical context** is released from
 `fad1c95`. Implementation PRs #242–#245 deliver eligible own-date Yahoo adjusted
 inputs, three deterministic observations, explicit technical briefing scope and
 exact browser metric/date/source inspection. The maintainer tested the completed
@@ -40,9 +40,20 @@ JSON migration `0018_brain_technical_context`, no default/backfill or old-row
 rewrite. Docker entrypoint applies Alembic before startup; existing local DBs
 must upgrade. Rollback retains captured research. Private citation rechecks
 never refresh saved market observations; reviewed promotion relabels captured
-references and retains dated source/value/ID footnotes. Next: portfolio risk,
-then consolidated evaluation/release. Host feedback on #253 exposed an overly
-strict private-match gate. The follow-up allows explicit technical history when
+references and retains dated source/value/ID footnotes. Portfolio risk is now
+implemented for review: explicit default-empty selection of up to three held
+symbols, ownership/membership checked before provider/model work, recorded lot
+quantities/cost currencies and symbol-count coverage with exact H#.# refs.
+A shared cancellable 15s batch preserves partial/unavailable sources; model
+failure keeps the captured evidence. No value weights, technical aggregation,
+new indicator/provider/route, persistence/indexing or migration is introduced.
+Existing risk observations are bounded to 32,000 JSON characters rather than
+silently sliced; they are labelled client-supplied, not independently reverified.
+Selected technical evidence remains usable when portfolio risk metrics are
+missing. Scope/holdings/metrics changes cancel and clear the old browser card;
+late analytics from previous portfolios are ignored. Next: consolidated
+configured-model/host evaluation and release closure. Host feedback on #253 exposed an overly
+strict private-match gate. The merged #254 follow-up allows explicit technical history when
 private matches are absent, the index is empty or query embeddings fail. The
 answer labels the private gap; search failure is not proof of missing notes.
 Only supplied private citations are required, usable per-asset technical refs
@@ -51,7 +62,13 @@ means no synthesis. Three short-window observations cannot establish long-term
 buying attractiveness. Checks: 85 focused backend tests, all 664 frontend tests,
 production build, four desktop/narrow Brain Chrome journeys and API/surface/mock
 guards. Fixtures only; configured-model host feedback remains pending.
-No new migration, dependency or API shape is needed. See Roadmap/TODO. The inherited layout audit remains
+No new migration, dependency or API shape was needed for #254. The maintainer
+confirmed that fix after merge, including the Add-button blur/layout correction.
+Keep that acceptance distinct from overall configured-model quality. Portfolio
+checks: 186 focused backend tests; all 681 frontend tests; production build;
+22 existing Chrome journeys plus two new desktop/narrow portfolio journeys after
+fixing an unrelated attribution-panel fixture; API/surface/mock guards. Fixtures
+only; no live provider/model quality or production database claim. See Roadmap/TODO. The inherited layout audit remains
 unscheduled. The maintainer clarified v3's fuller technical-analysis direction:
 RSI/MACD, volume, accumulation areas and Elliott-wave hypotheses should help test
 assumptions ingested from videos/notes against independently derived evidence.

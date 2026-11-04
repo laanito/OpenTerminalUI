@@ -14,7 +14,6 @@ import {
   fetchPortfolioCorrelation,
   fetchPortfolioDividends,
   fetchPortfolioBenchmarkOverlay,
-  fetchAiRiskInsights,
   updatePortfolioHoldingCurrency,
   updatePortfolioById,
   updatePortfolioTransactionCurrencies,
@@ -39,7 +38,7 @@ import { DividendTracker } from "./DividendTracker";
 import { BenchmarkOverlayChart } from "./BenchmarkOverlayChart";
 import { BacktestResults } from "./BacktestResults";
 import { AttributionPanel } from "./AttributionPanel";
-import { AiInsightCard } from "../terminal/AiInsightCard";
+import { PortfolioRiskAssessment } from "./PortfolioRiskAssessment";
 import { ExportButton } from "../common/ExportButton";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
@@ -97,6 +96,7 @@ export function PortfolioManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const loadVersion = useRef(0);
 
   const [newName, setNewName] = useState("Core Portfolio");
   const [newDescription, setNewDescription] = useState("");
@@ -132,10 +132,12 @@ export function PortfolioManager() {
   const closeCurrencyRepair = useCallback(() => setCurrencyRepairTarget(null), []);
 
   const loadAll = async (nextId?: string) => {
+    const version = ++loadVersion.current;
     setLoading(true);
     setError(null);
     try {
       const pfs = await fetchPortfolios();
+      if (version !== loadVersion.current) return;
       setPortfolios(pfs);
       const activeId = nextId || selectedId || pfs[0]?.id || "";
       if (activeId) {
@@ -145,6 +147,7 @@ export function PortfolioManager() {
           fetchPortfolioAnalyticsV2(activeId),
           fetchPortfolioTransactions(activeId),
         ]);
+        if (version !== loadVersion.current) return;
         setHoldings(h);
         setAnalytics(a);
         setTransactions(t);
@@ -167,10 +170,10 @@ export function PortfolioManager() {
         setCorrelation(null);
         setDividends(null);
         setBenchmarkOverlay(null);
-        void fetchPortfolioRiskMetrics({ benchmark: bench, risk_free_rate: 0.04 }, activeId).then(setRiskMetrics).catch(() => setRiskMetrics(null));
-        void fetchPortfolioCorrelation({ window: 60 }, activeId).then(setCorrelation).catch(() => setCorrelation(null));
-        void fetchPortfolioDividends({ days: 180 }, activeId).then(setDividends).catch(() => setDividends(null));
-        void fetchPortfolioBenchmarkOverlay({ benchmark: bench }, activeId).then(setBenchmarkOverlay).catch(() => setBenchmarkOverlay(null));
+        void fetchPortfolioRiskMetrics({ benchmark: bench, risk_free_rate: 0.04 }, activeId).then((value) => { if (version === loadVersion.current) setRiskMetrics(value); }).catch(() => { if (version === loadVersion.current) setRiskMetrics(null); });
+        void fetchPortfolioCorrelation({ window: 60 }, activeId).then((value) => { if (version === loadVersion.current) setCorrelation(value); }).catch(() => { if (version === loadVersion.current) setCorrelation(null); });
+        void fetchPortfolioDividends({ days: 180 }, activeId).then((value) => { if (version === loadVersion.current) setDividends(value); }).catch(() => { if (version === loadVersion.current) setDividends(null); });
+        void fetchPortfolioBenchmarkOverlay({ benchmark: bench }, activeId).then((value) => { if (version === loadVersion.current) setBenchmarkOverlay(value); }).catch(() => { if (version === loadVersion.current) setBenchmarkOverlay(null); });
       } else {
         setHoldings([]);
         setAnalytics(null);
@@ -184,14 +187,15 @@ export function PortfolioManager() {
         setEditBenchmark(BENCHMARKS[0]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load portfolios");
+      if (version === loadVersion.current) setError(err instanceof Error ? err.message : "Failed to load portfolios");
     } finally {
-      setLoading(false);
+      if (version === loadVersion.current) setLoading(false);
     }
   };
 
   useEffect(() => {
     void loadAll();
+    return () => { loadVersion.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -831,22 +835,12 @@ export function PortfolioManager() {
           <>
             <div className="grid gap-2 xl:grid-cols-2">
               <RiskMetricsPanel metrics={riskMetrics} />
-              <AiInsightCard
-                title="AI Risk Assessment"
-                description="Narrative interpretation of the available portfolio risk and exposure evidence"
-                disabled={!riskMetrics}
-                disabledMessage="Portfolio risk metrics are unavailable; there is nothing factual to assess yet."
-                fetcher={(_, options) =>
-                  fetchAiRiskInsights(
-                    {
-                      risk_metrics: riskMetrics || {},
-                      allocation_by_sector: analytics?.allocation_by_sector || [],
-                      correlation: correlation?.matrix || [],
-                    },
-                    "portfolio",
-                    options,
-                  )
-                }
+              <PortfolioRiskAssessment key={selectedId} portfolioId={selectedId} holdings={holdings} disabled={loading} metricsAvailable={!!riskMetrics}
+                metrics={{
+                  risk_metrics: riskMetrics || {},
+                  allocation_by_sector: analytics?.allocation_by_sector || [],
+                  correlation: correlation?.matrix || [],
+                }}
               />
             </div>
             <div className="grid gap-2 xl:grid-cols-2">

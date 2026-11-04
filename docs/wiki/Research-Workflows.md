@@ -380,6 +380,32 @@ The semantic related-note query is unchanged. Brain's explicit integration is
 described above; portfolio-risk technical integration remains a later v2.6 slice.
 The instrument cards introduce no indexing or persistence.
 
+### Holding technical context in Portfolio AI Risk Assessment (v2.6 development)
+
+Open **Portfolio**, choose a portfolio, and use **Optional holding technical
+context** beside **AI Risk Assessment** to select up to three held symbols.
+The default is empty. **Generate** combines existing supplied risk observations
+with those selected histories; **Regenerate** collects them again. You can select
+technical evidence even when portfolio risk metrics are unavailable. The server
+checks ownership and current holdings; it does not infer tickers from prose or
+substitute unrelated instruments.
+
+Click **[H1.1]** style references to inspect exact metric dates, formulas, source
+quality and supporting adjusted closes. Position context shows recorded
+quantities, lot counts and cost currencies; unknown currency stays unknown.
+The included/total count measures held symbols, not value coverage or risk
+contribution. Selected individual-asset volatility does not establish aggregate
+portfolio volatility, diversification, correlation or tail risk. Those require
+separate portfolio evidence. Short/unavailable history and unselected holdings
+remain explicit gaps, while other supplied risk observations remain usable.
+
+Changing the portfolio, technical selection, holdings or supplied metrics clears
+old analysis and cancels pending work. A failed model result retains inspectable
+technical evidence; retry manually. No derived research is automatically saved
+or indexed. Existing risk APIs accept `portfolio_id` plus `technical_symbols`;
+their typed `portfolio_technical_context` companion preserves the captured
+position/technical scope. See the [technical contract](Technical-Context.md#portfolio-ai-risk-assessment-v26-development).
+
 ### Interpretations to investigate (v2.4)
 
 Following host feedback on 2026-10-29, both briefing modes add a separate

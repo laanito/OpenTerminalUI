@@ -49,6 +49,10 @@ from backend.services.news_terms import INDEX_NAME_BY_SYMBOL, is_index_symbol
 from backend.services.research_technical_context import (
     ResearchTechnicalEvidence, collect_research_technical_evidence, technical_research_prompts, validate_technical_references,
 )
+from backend.services.portfolio_technical_context import (
+    RiskInsightRequest, PortfolioTechnicalContext, owned_technical_positions,
+    collect_portfolio_technical_context, portfolio_technical_prompts, validate_portfolio_technical_references,
+)
 from backend.shared.market_classifier import is_crypto_symbol
 
 router = APIRouter()
@@ -65,6 +69,11 @@ class ResearchInsightEnvelope(BaseModel):
     technical_context: ResearchTechnicalEvidence | None = Field(
         default=None, description="Exact server-supplied technical evidence used for this research answer; null or absent when generation is disabled.",
     )
+
+
+class RiskInsightEnvelope(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    portfolio_technical_context: PortfolioTechnicalContext | None = None
 
 
 async def _technical_for_symbol(symbol: str) -> ResearchTechnicalEvidence:
@@ -95,13 +104,16 @@ class InsightStreamRequest(BaseModel):
         "Kind-specific input. briefing/interrogate require ticker (1-40 letters, digits, ^._=-), "
         "with optional market (up to 40 characters) and refresh (boolean); no other keys. "
         "Interrogate ownership comes from authentication, never the payload. "
-        "backtest accepts strategy/metrics; risk accepts scope/metrics; collection accepts symbols/scope/facts."
+        "backtest accepts strategy/metrics; risk accepts scope/metrics and optional portfolio_id/technical_symbols "
+        "(at most three unique symbols currently held in the authenticated owner's portfolio); collection accepts symbols/scope/facts."
     ))
 
     @model_validator(mode="after")
     def validate_research_target(self):
         if self.kind in {"briefing", "interrogate"}:
             self.payload = ResearchInsightPayload.model_validate(self.payload).model_dump()
+        if self.kind == "risk":
+            self.payload = RiskInsightRequest.model_validate(self.payload).model_dump(exclude_unset=True)
         return self
 
 
@@ -677,10 +689,12 @@ async def _collection_briefing(
     )
 
 
-@router.post("/ai/risk-insights")
-async def risk_insights(payload: dict[str, Any]) -> dict[str, Any]:
+@router.post("/ai/risk-insights", response_model=RiskInsightEnvelope)
+async def risk_insights(payload: RiskInsightRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Return a narrative interpretation of portfolio/ticker risk metrics."""
-    return await _risk_insights(payload)
+    position_scope = owned_technical_positions(db, current_user.id, payload) if payload.technical_symbols else None
+    profile = resolve_llm_profile(get_settings(), "portfolio_risk")
+    return await _bounded_insight(lambda: _risk_insights(payload.model_dump(), profile=profile, position_scope=position_scope), profile)
 
 
 async def _risk_insights(
@@ -688,11 +702,17 @@ async def _risk_insights(
     *,
     on_token: Callable[[str], None] | None = None,
     profile: ResolvedLLMProfile | None = None,
+    position_scope: tuple | None = None,
 ) -> dict[str, Any]:
     profile = profile or resolve_llm_profile(get_settings(), "portfolio_risk")
-    metrics = payload.get("metrics") if isinstance(payload, dict) else None
-    metrics = metrics if isinstance(metrics, dict) else {}
-    scope = str((payload or {}).get("scope") or "the portfolio").strip() or "the portfolio"
+    request = RiskInsightRequest.model_validate(payload)
+    metrics, scope = request.metrics, request.scope
+    technical = None
+    if request.technical_symbols and profile.enabled:
+        if position_scope is None:
+            raise ValueError("Technical risk evidence requires authenticated portfolio scope")
+        total, positions = position_scope
+        technical = await collect_portfolio_technical_context(request, total, positions, get_unified_fetcher)
 
     system_prompt = (
         "You are a skeptical portfolio risk analyst. Interpret only the metrics and "
@@ -705,16 +725,20 @@ async def _risk_insights(
     )
     user_content = (
         f"Scope: {scope}\n"
-        f"Risk metrics (JSON):\n{json.dumps(metrics, default=str)[:2000]}"
+        f"Client-supplied risk observations (JSON; not independently reverified by this operation):\n{json.dumps(metrics, ensure_ascii=False)}"
     )
-    return await run_insight(
+    if technical is not None:
+        system_prompt, user_content = portfolio_technical_prompts(system_prompt, user_content, technical)
+    result = await run_insight(
         system_prompt,
         user_content,
-        max_tokens=900,
+        max_tokens=1800 if technical else 900,
         unavailable_summary="AI risk analysis is unavailable - start your local LLM (e.g. Ollama).",
         profile=profile,
         on_token=on_token,
+        validate_result=(lambda summary, sections: validate_portfolio_technical_references(summary, sections, technical)) if technical else None,
     )
+    return {**result, **({"portfolio_technical_context": technical.model_dump(mode="json")} if technical else {})}
 
 
 @router.post("/ai/insights/stream")
@@ -734,6 +758,9 @@ async def insight_stream(
             "briefing": "stock_briefing", "interrogate": "interrogate",
             "collection": "market_outlook" if payload.payload.get("scope") == "global markets" else "collection_briefing"}[payload.kind]
     profile = resolve_llm_profile(get_settings(), task)
+    risk_scope = None
+    if payload.kind == "risk" and payload.payload.get("technical_symbols"):
+        risk_scope = owned_technical_positions(db, current_user.id, RiskInsightRequest.model_validate(payload.payload))
 
     async def run_stream(on_token: Callable[[str], None]) -> dict[str, Any]:
         if payload.kind == "backtest":
@@ -745,7 +772,7 @@ async def insight_stream(
             if payload.kind == "briefing":
                 return await _stock_briefing(p["ticker"], p["market"], p["refresh"], profile=profile, on_token=on_token)
             return await _interrogate_stock(p["ticker"], p["market"], p["refresh"], db, current_user, profile=profile, on_token=on_token)
-        return await _risk_insights(payload.payload, on_token=on_token, profile=profile)
+        return await _risk_insights(payload.payload, on_token=on_token, profile=profile, **({"position_scope": risk_scope} if risk_scope is not None else {}))
 
     async def run_with_tokens(on_token):
         return await _bounded_insight(lambda: run_stream(on_token), profile)

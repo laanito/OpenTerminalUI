@@ -38,6 +38,20 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   silently truncated.
 
 ### Added
+- **Selected holding technical evidence for Portfolio AI Risk Assessment (v2.6)**
+  — optionally choose up to three held symbols alongside existing risk metrics.
+  The server verifies owner/membership before market or model work, aggregates
+  recorded lot quantities and cost-currency metadata, and collects a cancellable
+  15s batch using the same three observations. Per-holding references inspect
+  exact dates, formulas, provenance and supporting closes, including partial
+  coverage and model failures. Coverage counts symbols; no value weights or
+  aggregate technical risk are computed. Missing risk metrics do not block
+  explicitly selected technical evidence. Scope/holdings/metric changes cancel
+  and clear old analysis, and late analytics from a prior portfolio are ignored.
+  Existing risk APIs add typed optional scope/evidence; supplied risk observations
+  are bounded at 32,000 serialized characters and preserved without truncation.
+  Deep/default profile, deadlines and bounded repair remain. No new indicator,
+  provider, route, persistence, indexing or migration is introduced.
 - **Optional technical evidence for Second Brain (v2.6)** — choose up to three
   explicit instrument symbols alongside existing private-source filters. One
   bounded batch supplies the same three descriptive observations, alongside

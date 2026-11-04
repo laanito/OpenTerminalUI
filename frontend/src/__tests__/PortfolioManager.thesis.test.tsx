@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PortfolioManager } from "../components/portfolio/PortfolioManager";
@@ -292,9 +292,9 @@ describe("PortfolioManager thesis capture", () => {
   it("sends available risk and exposure evidence to the assessment", async () => {
     render(<PortfolioManager />);
 
-    const generate = await screen.findByRole("button", { name: "Generate" });
-    await waitFor(() => expect(generate).toBeEnabled());
-    fireEvent.click(generate);
+    await screen.findByRole("button", { name: "Generate" });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
 
     await waitFor(() =>
       expect(fetchAiRiskInsightsMock).toHaveBeenCalledWith(
@@ -307,5 +307,17 @@ describe("PortfolioManager thesis capture", () => {
         expect.objectContaining({ signal: expect.any(AbortSignal) }),
       ),
     );
+  });
+  it("ignores late risk metrics from a previously selected portfolio", async () => {
+    let resolveOld!: (value: unknown) => void;
+    fetchPortfoliosMock.mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]);
+    fetchPortfolioRiskMetricsMock.mockImplementation((_params, id) => id === "p1" ? new Promise((resolve) => { resolveOld = resolve; }) : Promise.resolve({ sharpe_ratio: 2 }));
+    render(<PortfolioManager />);
+    await waitFor(() => expect(fetchPortfolioRiskMetricsMock).toHaveBeenCalledWith(expect.any(Object), "p1"));
+    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled());
+    await act(async () => resolveOld({ sharpe_ratio: -9 }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+    await waitFor(() => expect(fetchAiRiskInsightsMock).toHaveBeenCalledWith(expect.objectContaining({ risk_metrics: { sharpe_ratio: 2 } }), "portfolio", expect.any(Object)));
   });
 });
