@@ -1,9 +1,10 @@
 # Technical context across research and comparison briefings
 
-v2.6.0 is in release preparation after implementation PRs #248–#255 merged.
-The shared three-measure contract now reaches all four AI research workflows.
-The maintainer confirmed the Brain fix and Portfolio integration work as intended;
-release checks, migration and publication status are recorded in [Releasing](Releasing.md#v260-verification-ledger-release-preparation).
+v2.6.0 was published on 2026-11-05 from `fccb6b3` after implementation PRs
+#248–#255, release-prep #256, green CI and explicit maintainer authorization.
+The shared three-measure contract reaches all four AI research workflows. The
+maintainer confirmed the Brain fix and Portfolio integration work as intended;
+checks and migration details are recorded in [Releasing](Releasing.md#v260-verification-ledger-released).
 
 v2.5.0 was published on 2026-11-02 from `fad1c95` after implementation PRs
 #242–#245, release-prep PR #246 and explicit maintainer authorization.
@@ -13,7 +14,7 @@ inspection. Maintainer host acceptance, consolidated local checks and all three
 release-prep CI jobs passed. Existing comparison returns and descriptive
 technical panels keep their behavior.
 
-## v2.6 standalone snapshot foundation (in development)
+## Standalone snapshot foundation (v2.6)
 
 `backend/services/technical_snapshots.py` adds an internal, reusable collector
 for a single instrument. It creates no comparison pair, public route, AI prompt,
@@ -56,7 +57,7 @@ snapshot foundation supplies traceable daily evidence; it does not implement
 those methods or equate its three measures with full technical analysis. See
 [the roadmap direction](Roadmap.md#v3-direction--technical-thesis-validation-deferred).
 
-## Instrument research consumers (v2.6 development)
+## Instrument research consumers (v2.6)
 
 AI Investment Briefing and Interrogate now use the collector for the requested
 stock/index/coin when generation is enabled. Technical preparation, including
@@ -80,9 +81,10 @@ profile and Interrogate owner/note-version scope remain intact. Regenerate
 refreshes both evidence and analysis. Source retrieval time remains explicit.
 Same-symbol note effective/recorded dates are supplied separately without
 changing semantic related-note queries, embeddings or indexing. This instrument
-consumer slice merged as #252; host quality feedback is still pending.
+consumer slice merged as #252; release approval does not establish an independent
+model/source-quality benchmark.
 
-## Second Brain technical context (v2.6 development)
+## Second Brain technical context (v2.6)
 
 Brain offers an explicit, default-empty technical scope of at most three unique
 symbols. It does not infer tickers from question text or change private-source
@@ -137,7 +139,7 @@ existing databases use `PYTHONPATH=. alembic -c backend/alembic.ini upgrade head
 Rollback retains the column and captured research; older code ignores it.
 Portfolio integration is described below.
 
-## Portfolio AI Risk Assessment (v2.6 development)
+## Portfolio AI Risk Assessment (v2.6)
 
 The selected portfolio's risk card offers a default-empty scope of up to three
 explicitly selected positive-quantity held symbols. This does not rank holdings
@@ -319,7 +321,7 @@ cleanup and 120,000-character context input cap remain. All four selected contex
 types can produce up to 24 sections across six pairs; oversized evidence returns
 the existing typed failure rather than silently dropping inputs.
 
-## Browser workflow (v2.5 development)
+## Browser workflow (v2.5)
 
 1. Open **Cross-market context**, apply an anchor/proxies/window, then find
    **Comparison briefing → Briefing evidence scope**.

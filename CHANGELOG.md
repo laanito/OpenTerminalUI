@@ -6,7 +6,7 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
-## [2.6.0] - 2026-11-04
+## [2.6.0] - 2026-11-05
 
 Technical context now reaches AI Investment Briefing, Interrogate, Second Brain
 and Portfolio AI Risk Assessment through the same three descriptive measures.
@@ -18,8 +18,11 @@ Explicit Brain Log saves retain captured evidence; reviewed promotion preserves
 its historical labels instead of silently indexing transient observations.
 
 Implementation PRs #248–#255 are merged. The maintainer confirmed the Brain fix
-and Portfolio integration work as intended. This is release preparation;
-consolidated checks, CI, merge and publication approval are recorded in Releasing.
+and Portfolio integration work as intended. Release-prep PR #256 passed
+build-and-test, clean-install and postgres-contract, then merged at `fccb6b3`.
+Following explicit maintainer authorization, the annotated tag and GitHub release
+were published on 2026-11-05. Preparation was dated 2026-11-04; this heading is
+reconciled to publication without moving the release tag.
 The release includes nullable JSON migration `0018_brain_technical_context`;
 Docker applies Alembic before startup. Existing local databases must upgrade.
 Old memos are not backfilled or rewritten, and rollback retains captured research.

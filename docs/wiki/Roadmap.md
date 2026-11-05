@@ -598,7 +598,7 @@ GitHub release were published on 2026-11-02. No v2.5 release gate remains. Split
 where review benefits: contract/calculations, briefing integration, browser
 journey and release closure are review boundaries, not a fixed PR quota.
 
-## v2.6.0 — Technical context across AI research (release preparation)
+## v2.6.0 — Technical context across AI research (released 2026-11-05)
 
 Agreed on 2026-11-02 after v2.5 publication. Reuse the existing 20-close mean
 gap, 20-period return and unannualized sample volatility of 20 returns in four
@@ -658,7 +658,7 @@ technical evidence while preserving their existing useful inputs and clearly
 stating missing coverage. No model-computed indicators or fabricated values.
 Implementation started on 2026-11-03. Standalone snapshot models/collection and
 shared source checks/calculations merged as #251. The Investment Briefing and
-Interrogate consumers merged as #252, with host quality feedback pending: automatic
+Interrogate consumers merged as #252, with automatic
 bounded technical collection on explicit Generate, exact metric references and
 browser inspection, safe unavailable coverage, and contract/date-aware cache
 keys alongside existing profile/owner/note scoping. Same-symbol note dates stay
@@ -676,7 +676,9 @@ quantities/cost-currency metadata, per-holding metric inspection and symbol-coun
 coverage. No value weights or aggregate technical risk are computed. Missing
 risk metrics do not block selected technical evidence. Scope changes clear/cancel
 old browser work, including a guard against late analytics from prior portfolios.
-Consolidated release verification, CI, release review and publication remain.
+Release-prep #256 passed build-and-test, clean-install and postgres-contract,
+merged at `fccb6b3`, and the maintainer authorized publication on 2026-11-05.
+The annotated tag and GitHub release are published; no release gate remains.
 Recorded host acceptance is qualitative and scoped to the tested workflows;
 no numerical latency or independent source/reasoning benchmark is inferred.
 No new provider, indicator
@@ -686,8 +688,8 @@ continue without private matches, labels the gap, requires only supplied
 citations and skips synthesis if neither evidence source is usable. Three
 short-window measures still cannot establish a long-term buying case.
 The maintainer confirmed #254's Brain fix after merge, including the Add-button
-blur/layout correction. Carry that acceptance forward; broader model usefulness
-and latency evaluation remains open rather than inferred from fixture checks.
+blur/layout correction. Carry that acceptance forward. Release approval does
+not imply a numerical latency or independent reasoning-quality benchmark.
 Split PRs around reviewable shared-contract and consumer changes; no fixed PR
 count is agreed.
 

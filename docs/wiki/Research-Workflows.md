@@ -128,7 +128,7 @@ Brain retrieval uses the owner's recorded research, including deliberate
 external-note imports. Comparison evidence panels do not automatically become
 its corpus or a unified cross-market AI explanation.
 
-### Optional current technical observations (v2.6 development)
+### Optional current technical observations (v2.6)
 
 Before asking, use **Add technical symbol** to select up to three relevant
 instruments, with suggestions or an explicitly entered symbol. The default is
@@ -154,7 +154,7 @@ The typed `technical_context` companion reports the selected scope, per-asset
 coverage and captured evidence. Omitting symbols preserves private-only use.
 Generation keeps the selected Deep/default model and bounded fallback/repair;
 interrupted or invalid final output is not saved. This adds no retrieval ranking,
-embedding change or automatic indexing. See the [technical contract](Technical-Context.md#second-brain-technical-context-v26-development).
+embedding change or automatic indexing. See the [technical contract](Technical-Context.md#second-brain-technical-context-v26).
 
 ## Save an answer in the Brain Log
 
@@ -342,7 +342,7 @@ or POST inference. Research cache keys distinguish model/provider configuration;
 Interrogate remains owner/note-version scoped and Regenerate bypasses cached
 prose. Model failures remain explicit on the selected profile.
 
-### Instrument technical evidence (v2.6 development)
+### Instrument technical evidence (v2.6)
 
 On a stock, index or crypto detail **Overview**, explicitly generate **AI
 Investment Briefing** or **Interrogate this Stock/Index/Coin**. These research
@@ -380,7 +380,7 @@ The semantic related-note query is unchanged. Brain's explicit integration is
 described above; portfolio-risk technical integration remains a later v2.6 slice.
 The instrument cards introduce no indexing or persistence.
 
-### Holding technical context in Portfolio AI Risk Assessment (v2.6 development)
+### Holding technical context in Portfolio AI Risk Assessment (v2.6)
 
 Open **Portfolio**, choose a portfolio, and use **Optional holding technical
 context** beside **AI Risk Assessment** to select up to three held symbols.
@@ -404,7 +404,7 @@ old analysis and cancels pending work. A failed model result retains inspectable
 technical evidence; retry manually. No derived research is automatically saved
 or indexed. Existing risk APIs accept `portfolio_id` plus `technical_symbols`;
 their typed `portfolio_technical_context` companion preserves the captured
-position/technical scope. See the [technical contract](Technical-Context.md#portfolio-ai-risk-assessment-v26-development).
+position/technical scope. See the [technical contract](Technical-Context.md#portfolio-ai-risk-assessment-v26).
 
 ### Interpretations to investigate (v2.4)
 
@@ -437,7 +437,7 @@ observation dates, source/freshness/quality limitations and supporting adjusted
 closes. Twenty closes can yield a mean gap while return/volatility remain
 unavailable until 21 closes exist; missing is not zero. Prices can still be
 available when technical data is ineligible. See the
-[technical browser workflow](Technical-Context.md#browser-workflow-v25-development)
+[technical browser workflow](Technical-Context.md#browser-workflow-v25)
 for the Yahoo-only source contract and client-validation boundary.
 
 On **Cross-market context**, apply the anchor, proxies and window with
@@ -554,7 +554,7 @@ scope, source inspection and degraded paths. On 2026-10-27 the maintainer confir
 price-only works and combined news/macro completed after its bounded repair;
 the first attempt logged a source/pair reference violation. The fast model's
 shallow synthesis remains a quality limitation, not another v2.3 feature gate;
-Fast/Deep task routing is implemented in v2.4 development. Successful completion is not semantic
+Fast/Deep task routing shipped in v2.4. Successful completion is not semantic
 verification or a claim that every degraded host case was manually tested.
 Release PR #229 passed all three CI jobs and merged; after explicit maintainer
 authorization, v2.3.0 was published from `3fb7de3` on 2026-10-28.
