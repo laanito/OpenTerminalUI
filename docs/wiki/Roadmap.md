@@ -697,26 +697,52 @@ count is agreed.
 expansion, volume/liquidity or derivatives-positioning feeds, new providers,
 portfolio correlation/risk engines, historical technical reconstruction, trading
 signals and broker execution. These remain later candidates. The inherited
-layout audit below is a separate maintenance track, not an added release gate.
+layout audit below leads into a future major frontend overhaul.
 
-## Planned follow-up — inherited interface layout debt (unscheduled)
+## v2.7 — Filing-grounded fundamentals in comparison briefings (agreed scope)
 
-Reported by the maintainer on 2026-11-02: some modules overflow their containers
-or do not stack well as the available width changes. This is legacy layout debt
-inherited from the fork, not a regression attributed to recent feature changes.
+Agreed after v2.6 closure and its chapter-22 article. Bring filing-grounded
+fundamentals into the comparison briefing, starting with a coverage audit and
+an explicit interpretation contract. Implementation has not started.
 
-Review the interface across modules at wide desktop, intermediate and narrow
-widths, including realistic long content and populated data. Identify the
-affected screens and shared layout causes before choosing fixes. Improve grid/
-flex sizing, wrapping, stacking order and spacing so controls and content remain
-usable. Keep intentional scrolling contained within dense tables or charts
-rather than hiding clipped content or causing accidental page-wide overflow.
-Verify the affected user journeys at representative widths and capture focused
-regressions where useful.
+- Audit the existing SEC/FMP evidence paths, metric identities, units, fiscal
+  periods, filing dates, conflicts and historical/revision coverage before
+  selecting the eligible evidence set.
+- Define a bounded, versioned briefing input with inspectable source references,
+  dates and availability states. Keep current fetched facts, retained terminal
+  observations and verified historical availability distinct.
+- Let the briefing interpret eligible filing evidence alongside the selected
+  comparison context, with conditional implications, alternatives and explicit
+  gaps. Withhold unsupported historical attribution and revision claims; a
+  filing date alone does not establish what investors knew at a trading instant.
+- Preserve the existing briefing when fundamentals are unselected. Verify source
+  references, conflicts, missing coverage and provider failures, then obtain
+  maintainer feedback before release preparation.
 
-This is a future usability audit, with no release assignment or implementation
-started. Prioritise concrete layout problems rather than assuming a full visual
-redesign is required.
+The audit should determine a reviewable delivery sequence; no fixed PR count is
+assigned. New providers, broad regional expansion, complete historical archives,
+full technical thesis validation and frontend redesign are outside this scope.
+Other v2 evidence gaps remain candidates, not compulsory releases before v3.
+
+## Future major frontend overhaul — layout audit as discovery
+
+The maintainer reported inherited overflow and poor stacking on 2026-11-02 and
+clarified after v2.6 that the audit should lead into a whole major release devoted
+to overhauling the frontend. Its version number, schedule and implementation
+scope remain undecided. This is a cross-cutting product initiative alongside the
+existing generation goals; it does not silently renumber or replace them.
+
+Start with an inventory at wide desktop, intermediate and narrow widths using
+realistic long content and populated data. Identify affected screens and shared
+layout causes, then use those findings to propose coherent navigation, information
+hierarchy, reusable layout patterns and a staged migration/acceptance plan for
+the overhaul. Preserve research, portfolio and evidence-inspection workflows.
+
+Include container sizing, wrapping, stacking order and spacing in the audit.
+Keep intentional scrolling contained within tables/charts rather than clipping
+content or causing page-wide overflow. The audit is discovery for the major
+initiative, not a minor-release sweep. Concrete regressions can still receive
+focused fixes as needed without starting the overhaul.
 
 ## v2 opening principle — time-aware memory
 

@@ -46,16 +46,19 @@ Per-holding H#.# references inspect the same three observations; shared 15s batc
 Deep/default deadlines and cancellation preserve failures. Scope changes clear
 old output, and late prior-portfolio analytics are ignored.
 
-Post-release docs reconcile the changelog date from preparation on 2026-11-04 to
-publication on 2026-11-05 without moving the tag; the documentation follow-up is
-for review. Next is the established bilingual blog routine in `../praderasblog`;
-no v2.6 article has been written. Blog/deployment remain with the host agent.
-The previous release is v2.5.0 at `fad1c95` (2026-11-02); its post-release docs
-#247 and bilingual chapter 21 (`praderasblog` #118) are merged.
-The inherited layout audit is unscheduled. RSI/MACD, volume, accumulation,
-Elliott-wave hypotheses and independent validation of video/note assumptions
-remain the broader v3 direction. Discuss the next bounded scope before starting
-new feature work. See Roadmap/TODO and `docs/wiki/Releasing.md`.
+Post-release documentation #257 and bilingual chapter 22, “The question we
+almost lost” (`praderasblog` #119), are merged. The changelog records Nov 5
+publication separately from Nov 4 preparation without moving the tag.
+Blog deployment belongs to the host agent.
+
+The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
+briefings**, beginning with a coverage/revision audit and a bounded interpretation
+contract. Implementation has not started.
+The inherited layout audit is the discovery step for a dedicated future major
+frontend overhaul, with its number and timing undecided; it is not a minor-release
+cleanup item. RSI/MACD, volume, accumulation, Elliott-wave hypotheses and
+independent validation of video/note assumptions remain the broader v3 direction.
+See Roadmap/TODO and `docs/wiki/Releasing.md`.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
