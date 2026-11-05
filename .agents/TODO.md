@@ -1,27 +1,56 @@
 # Current project state and backlog
 
-Current state **2026-11-03:** **v2.5.0 — Technical context** is released from
-`fad1c95`. Implementation PRs #242–#245 deliver eligible own-date Yahoo adjusted
-inputs, three deterministic observations, explicit technical briefing scope and
-exact browser metric/date/source inspection. The maintainer tested the completed
-workflow and confirmed it works as intended. Consolidated local checks passed
-1,517 backend tests (one skipped; 76.81% coverage), 600 frontend tests, production
-build, API/surface/mock guards and sixteen Chrome smoke journeys. Metadata is
-2.5.0; post-bump focused tests/build/guards/version consistency also passed.
-Release-prep PR #246 passed build-and-test, clean-install and postgres-contract,
-then merged. Following explicit maintainer authorization, the annotated tag and
-GitHub release were published on 2026-11-02. No v2.5 release gate remains; no new
-dependency, database migration or embedding change. Deployment stays with the
-host agent. Post-release docs #247 and chapter 21's bilingual article/cover in
-`praderasblog` PR #118 are merged, confirmed by the maintainer. Blog deployment
-remains with the host; no live-site publication check is claimed here.
-The previous release is v2.4.0 at `e8aaddb`; its chapter-20 article is published.
-v2.6 scope is agreed: generalise the pair-bound technical contract into standalone
-instrument snapshots, then integrate the same three measures into AI Investment
-Briefing, Interrogate this coin, Second Brain and Portfolio AI Risk Assessment.
-No additional indicators or portfolio risk engine are required. Implementation
-has not started; see Roadmap/TODO for sequence and acceptance. The inherited
-layout audit stays unscheduled and separate. v3 remains thesis validation.
+Current state **2026-11-04:** **v2.6.0 — Technical context across AI research**
+is in release preparation, based on `main` at `5deacc1` (merged #255).
+Implementation PRs #248–#255 are merged. The same three deterministic daily
+measures now support Investment Briefing, Interrogate, optional Brain symbol
+scope and selected portfolio holdings. Standalone snapshots preserve own dates,
+source/observation IDs, exact values and unavailable coverage. No new indicator,
+provider, dependency or embedding change. Current source history is not a
+historical-knowledge audit, and reference checks do not certify interpretations.
+
+The maintainer confirmed #254's Brain fix, including reliable manual Add after
+suggestion-help blur, and confirmed #255's Portfolio workflow works as intended.
+Carry that acceptance forward; do not request duplicate checks for those fixes.
+#252's acknowledgement records a merge, not a separate model-quality verdict.
+No quantitative latency or independent reasoning/source benchmark is claimed.
+
+Release metadata is 2.6.0 in backend/frontend/lock/OpenAPI and public labels.
+Consolidated post-bump `make gate` passed compilation, API/surface/mock guards,
+**1,667 backend tests** (one skipped; **77.29% coverage**), production build and
+**681 frontend tests**. All **24 installed-Chrome smoke journeys** passed with
+one worker. Compose configuration validates. Local Python 3.12.16 / Node 26.7.0
+checks do not replace CI's Python 3.11 / Node 22, clean-install or disposable
+PostgreSQL jobs. Fixtures establish contracts, not live model quality.
+
+Upgrade includes nullable JSON migration `0018_brain_technical_context` with
+no default/backfill or old-row rewrite. Docker applies Alembic before startup;
+existing local databases must upgrade. A disposable SQLite full-chain check
+verified a legacy memo survives 0017→0018, NULL stays NULL, captured JSON survives
+rollback and re-upgrade is idempotent. No production DB was used. Brain Log
+snapshots stay captured; private citation rechecks do not refresh market data.
+Only reviewed promotion creates an indexed Note. Private ranking/embeddings are
+unchanged. Missing private matches do not block explicitly selected technical
+context; if neither evidence type is usable, synthesis is skipped.
+
+Portfolio scope is default-empty and explicitly selects at most three current
+held symbols. Ownership/membership is checked before market/model work. Recorded
+lot quantities/cost currencies and symbol-count coverage are not value weights
+or portfolio risk contributions. Per-holding H#.# refs inspect the original
+three observations; shared 15s batch/deadlines/cancellation preserve failures.
+Selected technicals remain usable when risk metrics are missing. Scope changes
+clear/cancel old browser output; late prior-portfolio analytics are ignored.
+
+Next: release-prep CI, review/merge and explicit publication authorization.
+No tag/release is published; **v2.5.0 remains the latest published release** at
+`fad1c95` (2026-11-02). Its release-prep #246 and post-release docs #247 are
+complete; bilingual chapter 21 in `praderasblog` #118 is merged. Blog/deployment
+remain with the host agent. After v2.6 publication, reconcile post-release docs
+and follow the established blog routine; no article has been written for v2.6.
+The inherited layout audit is unscheduled. Full RSI/MACD, volume, accumulation,
+Elliott-wave hypotheses and validation of video/note assumptions remain the v3
+direction, outside this three-measure release. See Roadmap/TODO and the v2.6
+verification ledger in `docs/wiki/Releasing.md`.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
@@ -930,7 +959,7 @@ Do not label this blanket model/stream incompatibility.
 - [x] Browser parity fix #250 merged; the maintainer confirmed the original
       issue is fixed. Carry that host acceptance forward.
 
-### v2.6 — Technical context across AI research (in development)
+### v2.6.0 — Technical context across AI research (release preparation)
 
 Agreed on 2026-11-02; canonical scope/acceptance in `docs/wiki/Roadmap.md`.
 Reuse the three v2.5 measures; no additional indicators are required.
@@ -985,8 +1014,8 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       analytics. Risk inputs are typed and bounded at 32,000 serialized JSON
       characters without slicing; client-supplied metrics remain distinguished
       from server-owned position evidence. No new provider, indicator, route,
-      persistence, indexing or migration. Implemented pending review/host quality
-      feedback. Checks: 186 focused backend, all 681 frontend, production build,
+      persistence, indexing or migration. #255 merged; the maintainer confirmed
+      the Portfolio workflow works as intended. Checks: 186 focused backend, all 681 frontend, production build,
       22 existing Chrome journeys plus two new desktop/narrow portfolio journeys
       after fixing an unrelated attribution fixture; API/surface/mock guards.
       Backend-produced fixtures anchor browser contracts. No live provider/model
@@ -1004,8 +1033,8 @@ briefing/Interrogate → Second Brain → portfolio risk → evaluation/release.
       evidence as captured via nullable JSON migration 0018 (no default/backfill,
       old-row rewrite or destructive downgrade); private rechecks never refresh
       markets. Reviewed promotion adds dated capture footnotes and relabels local
-      refs before creating a separate Note. Implementation pending review/host
-      feedback. Checks: 157 focused backend tests; all 662 frontend tests;
+      refs before creating a separate Note. Initial implementation merged as
+      #253, followed by the accepted #254 correction below. Checks: 157 focused backend tests; all 662 frontend tests;
       production build; twenty existing Chrome smoke journeys plus two new
       desktop/narrow Brain save/reopen/inspection/promotion/degradation journeys;
       API/surface/mock/whitespace guards. Deterministic fixtures only, no live
@@ -1031,11 +1060,23 @@ Audit current inputs per workflow and reuse v2.5's bounded source/calculation
 contract where applicable. Keep exact values/units/dates, freshness/provenance,
 unavailable states and quality caveats inspectable; preserve existing usable
 inputs, Deep routing, owner scope, deadlines/cancellation and failure handling.
-- [ ] Verify shared contract and all four workflows: missing/short/stale history,
-      relevant symbol/holding bounds, cache freshness, inspection/citations and
-      cancellation. Record configured-model usefulness/fidelity and host feedback
-      in individual PRs; carry it into consolidated release checks.
-- [ ] Complete release checks/documentation/metadata and publication workflow.
+- [x] Verify automated shared contracts and all four workflows: missing/short/
+      stale history, bounded scope, cache freshness, inspection/citations and
+      cancellation. Consolidated post-bump gate: 1,667 backend passed, one skipped,
+      77.29% coverage; all 681 frontend tests; production build; API/surface/mock
+      guards; all 24 Chrome journeys with one worker; Compose config validates.
+      Disposable full-chain SQLite legacy upgrade/rollback/re-upgrade passed.
+- [x] Record the maintainer's #254 Brain-fix and #255 Portfolio acceptance.
+      Preserve its scope: #252 is merged but has no separately recorded model
+      quality verdict. Fixtures are not a live quality/latency benchmark.
+- [x] Prepare 2.6.0 metadata, dated changelog, README/wiki/limitations, migration
+      guidance and release verification ledger. No tag/release is published.
+- [ ] Complete release review, including configured-model usefulness/fidelity/
+      latency acceptance at the candidate level; do not reopen resolved fixes.
+- [ ] Pass release-prep CI (build-and-test, clean-install, postgres-contract),
+      merge and obtain explicit publication authorization; then publish v2.6.0.
+- [ ] After publication, reconcile docs and write the established bilingual blog
+      article. Deployment/publication to the running host belongs to its agent.
 
 No extra indicators, longer-horizon trend expansion, volume/liquidity feeds,
 portfolio correlation/risk engine, new provider, historical reconstruction,

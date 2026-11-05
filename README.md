@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.5.0-0f172a" alt="Version 2.5.0 (release preparation)" />
+  <img src="https://img.shields.io/badge/version-2.6.0-0f172a" alt="Version 2.6.0 (release preparation)" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -42,7 +42,25 @@ failures must be visible. A route existing does not make it a supported product;
 the [surface inventory](docs/wiki/Surface-Inventory.md) and
 [limitations](docs/wiki/Limitations.md) define the retained contracts.
 
-## Current release
+## Release preparation
+
+**v2.6.0 — Technical context across AI research** is the current release
+candidate. The same three dated observations now support AI Investment Briefing,
+Interrogate, optional Second Brain symbol scope and selected holdings in
+Portfolio AI Risk Assessment. Citations expose exact inputs; Brain Log saves
+retain captured evidence without automatically indexing it. Missing private
+matches or portfolio metrics do not block explicitly selected technical evidence.
+Individual-asset observations do not establish portfolio-wide risk or a long-term
+buying case. See the [verification ledger](docs/wiki/Releasing.md#v260-verification-ledger-release-preparation).
+
+Upgrade includes Alembic `0018_brain_technical_context`, one nullable JSON column
+with no default/backfill or old-memo rewrite. Docker runs the upgrade before app
+startup. For an existing local database, run
+`PYTHONPATH=. backend/.venv/bin/python -m alembic -c backend/alembic.ini upgrade head`
+using that installation's configured database. No provider, dependency, indicator
+or embedding change is required. Publication follows release review and CI.
+
+## Latest published release
 
 [v2.5.0 — Technical context](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0)
 was published on **2026-11-02** from `fad1c95`. Comparison briefings now offer a
@@ -238,7 +256,7 @@ revised provider data is not a complete historical vintage.
 
 ### Instrument AI research
 
-**v2.6 development:** on stock/index/crypto detail, Investment Briefing and
+**v2.6 release candidate:** on stock/index/crypto detail, Investment Briefing and
 Interrogate now include available standalone technical observations during
 explicit generation. **[TECH1–3]** references open exact metric dates, formulas,
 source limitations and supporting closes. Missing technical history preserves
@@ -257,7 +275,7 @@ A bounded recency signal operates among relevant notes; older conflicting views
 remain available as history. Notes and reindexing expose loading and indexing
 progress rather than silently treating a queued write as searchable evidence.
 
-**v2.6 development:** optionally choose up to three technical symbols before
+**v2.6 release candidate:** optionally choose up to three technical symbols before
 asking. Current observations supplement private research when available; **[T1.1]**
 style references inspect each asset's exact metrics, dates and supporting closes
 separately from private **[1]** citations. No symbols are inferred from prose.
@@ -284,8 +302,8 @@ or a general MCP server.
 In **Portfolio → AI Risk Assessment**, optionally select up to three held symbols
 before Generate. **[H1.1]** references open exact observations alongside recorded
 position quantities and cost currencies. Coverage counts symbols; individual
-volatility is not aggregated into portfolio risk. This v2.6 workflow is in
-development and awaiting host feedback.
+volatility is not aggregated into portfolio risk. The maintainer confirmed this
+workflow works as intended; it is included in the v2.6 release candidate.
 
 ### Portfolio and Journal
 
