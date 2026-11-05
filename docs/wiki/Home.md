@@ -1,30 +1,27 @@
 # OpenTerminalUI Wiki
 
-**v2.6.0 — Technical context across AI research** is in release preparation.
+OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
+with intentional provider-gated NSE/BSE F&O support. **v2.6.0 — Technical context
+across AI research** was published on 2026-11-05 from `fccb6b3` after release PR
+#256 passed all three CI jobs and merged. The maintainer authorized publication.
+
 The same three inspectable observations now reach Investment Briefing,
 Interrogate, optional Brain symbol scope and selected portfolio holdings. Brain
-Log can retain captured evidence without automatically indexing it. The
-maintainer confirmed the Brain fix and Portfolio workflow; consolidated release
-checks and CI are tracked in [Releasing](Releasing.md#v260-verification-ledger-release-preparation).
-This upgrade includes nullable JSON migration `0018_brain_technical_context`;
-Docker applies Alembic before startup, while existing local databases must
-upgrade. Old memos are preserved without backfill. Publication is pending.
+Log retains captured evidence without automatically indexing it. The maintainer
+confirmed the Brain fix and Portfolio workflow; structural/reference checks do
+not certify model reasoning or source quality. See [v2.6.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.6.0),
+[Roadmap](Roadmap.md) and the [verification ledger](Releasing.md#v260-verification-ledger-released).
 
-The latest published release remains:
+Upgrade includes nullable JSON migration `0018_brain_technical_context`; Docker
+applies Alembic before startup, while existing local databases must upgrade.
+Old memos are preserved without backfill. No new provider, indicator, dependency
+or embedding change is required. Deployment belongs to the host agent.
 
-OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
-with intentional provider-gated NSE/BSE F&O support. **v2.5.0 — Technical context**
-was published on 2026-11-02 from `fad1c95`. Comparison briefings can explicitly
-include bounded trend, momentum and volatility observations with inspectable
-formulas, own dates and supporting adjusted closes. Unavailable inputs stay
-explicit and do not block price comparisons. See the [technical workflow](Technical-Context.md).
-
-Host acceptance, consolidated local checks and all three release-prep CI jobs
-passed. No new dependency, database migration or embedding change is required.
-See [v2.5.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0),
-[Roadmap](Roadmap.md) and [Releasing](Releasing.md). The previous release,
-[v2.4.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0), added
-optional Fast/Deep model roles; that contract remains unchanged.
+The previous release, [v2.5.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0),
+was published on 2026-11-02 from `fad1c95` and introduced comparison technical
+context. [v2.4.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.4.0)
+introduced Fast/Deep model profiles, which remain unchanged. See the
+[technical workflow](Technical-Context.md).
 
 > **North star.** An open, private terminal that helps an individual invest *without being fooled* — by markets, by hype, or by themselves — through AI-native research you can grow privately. Bloomberg parity is pursued only "just enough to be credible"; the differentiation is being AI-native, private, open, and multi-asset. See the [Roadmap](Roadmap) for the full direction.
 

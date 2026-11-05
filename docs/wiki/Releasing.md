@@ -365,7 +365,7 @@ schema changed; no manual migration is required. The consolidated gate preceded
 the metadata-only bump; post-bump verification passed 59 focused backend tests,
 four frontend identity
 tests, the production build, API/surface/mock guards and version consistency.
-v2.5.0 is the latest published release.
+v2.5.0 remained the latest published release until v2.6.0.
 
 Release-prep PR #246 passed build-and-test, clean-install and postgres-contract
 and merged at `fad1c95`. Following explicit maintainer authorization, the annotated
@@ -374,7 +374,7 @@ were published from that merge on 2026-11-02. No v2.5 release gate remains.
 Local SQLite coverage does not establish a live PostgreSQL rollout; disposable
 PostgreSQL/clean-install checks passed in CI. Deployment belongs to the host agent.
 
-### v2.6.0 verification ledger (release preparation)
+### v2.6.0 verification ledger (released)
 
 The bounded milestone brings the existing three technical measures into AI
 Investment Briefing, Interrogate, Second Brain and Portfolio AI Risk Assessment.
@@ -411,13 +411,17 @@ legacy memo, upgraded to 0018, verified its original answer/source data and NULL
 technical field, then confirmed captured JSON survives downgrade/re-upgrade.
 This is not a live PostgreSQL rollout claim. PostgreSQL DDL/preservation unit
 tests passed; the disposable PostgreSQL memo/migration contracts and fresh-stack
-smoke remain with CI. No dependency, provider, indicator or embedding change.
+smoke subsequently passed in release-prep CI. No dependency, provider, indicator
+or embedding change.
 
 Backend/frontend/lock/OpenAPI metadata and public version labels are aligned to
-2.6.0. README/wiki, limitations, workflow/migration notes and agent handoff reflect
-the candidate. Remaining release steps: all three CI jobs, review/merge and
-explicit publication authorization. No tag or GitHub release has been created;
-v2.5.0 remains the latest published release. Deployment belongs to the host agent.
+2.6.0. Release-prep PR [#256](https://github.com/laanito/OpenTerminalUI/pull/256)
+passed build-and-test, clean-install and postgres-contract, then merged at
+`fccb6b3`. Following explicit maintainer authorization, the annotated tag and
+[GitHub release v2.6.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.6.0)
+were published from that commit on 2026-11-05. Preparation was dated 2026-11-04;
+post-release documentation reconciles the changelog date without moving the tag.
+No v2.6 release gate remains. Deployment belongs to the host agent.
 
 ## Cutting the release
 

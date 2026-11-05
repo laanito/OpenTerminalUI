@@ -4,57 +4,58 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current state **2026-11-04:** **v2.6.0 — Technical context across AI research**
-is in release preparation, based on `main` at `5deacc1` (merged #255).
-Implementation PRs #248–#255 are merged. The same three deterministic daily
-measures now support Investment Briefing, Interrogate, optional Brain symbol
-scope and selected portfolio holdings. Standalone snapshots preserve own dates,
-source/observation IDs, exact values and unavailable coverage. No new indicator,
-provider, dependency or embedding change. Current source history is not a
-historical-knowledge audit, and reference checks do not certify interpretations.
+Current state **2026-11-05:** **v2.6.0 — Technical context across AI research**
+is published from `fccb6b3`, the merge of release-prep PR #256. The maintainer
+explicitly authorized publication after merge. The annotated tag and public,
+non-prerelease GitHub release were created and verified on 2026-11-05. All three
+release-prep CI jobs passed: build-and-test, clean-install and postgres-contract.
+No v2.6 release gate remains. Deployment belongs to the host agent.
 
-The maintainer confirmed #254's Brain fix, including reliable manual Add after
-suggestion-help blur, and confirmed #255's Portfolio workflow works as intended.
-Carry that acceptance forward; do not request duplicate checks for those fixes.
-#252's acknowledgement records a merge, not a separate model-quality verdict.
-No quantitative latency or independent reasoning/source benchmark is claimed.
+Implementation PRs #248–#255 delivered the same three deterministic daily
+observations to Investment Briefing, Interrogate, optional Brain symbol scope
+and selected portfolio holdings. Exact values/own dates/source IDs and missing
+coverage remain inspectable. No new indicator, provider, dependency or embedding
+change. Current revised history is not historical investor knowledge, and
+reference validation does not certify reasoning or source quality. Preserve the
+maintainer's #254 Brain-fix and #255 Portfolio acceptance; do not request duplicate
+tests for those resolved paths. Release approval is not a numerical latency or
+independent model/source benchmark.
 
-Release metadata is 2.6.0 in backend/frontend/lock/OpenAPI and public labels.
 Consolidated post-bump `make gate` passed compilation, API/surface/mock guards,
 **1,667 backend tests** (one skipped; **77.29% coverage**), production build and
 **681 frontend tests**. All **24 installed-Chrome smoke journeys** passed with
-one worker. Compose configuration validates. Local Python 3.12.16 / Node 26.7.0
-checks do not replace CI's Python 3.11 / Node 22, clean-install or disposable
-PostgreSQL jobs. Fixtures establish contracts, not live model quality.
+one worker. Compose configuration and backend/frontend/lock/OpenAPI/public-label
+version consistency passed. Local Python 3.12.16 / Node 26.7.0 checks are distinct
+from CI's successful Python 3.11 / Node 22, fresh-stack and disposable PostgreSQL
+lanes. Fixtures establish contracts, not live inference quality.
 
-Upgrade includes nullable JSON migration `0018_brain_technical_context` with
+Upgrade includes nullable JSON migration `0018_brain_technical_context`, with
 no default/backfill or old-row rewrite. Docker applies Alembic before startup;
-existing local databases must upgrade. A disposable SQLite full-chain check
-verified a legacy memo survives 0017→0018, NULL stays NULL, captured JSON survives
-rollback and re-upgrade is idempotent. No production DB was used. Brain Log
-snapshots stay captured; private citation rechecks do not refresh market data.
-Only reviewed promotion creates an indexed Note. Private ranking/embeddings are
-unchanged. Missing private matches do not block explicitly selected technical
-context; if neither evidence type is usable, synthesis is skipped.
+existing local DBs must upgrade. A disposable SQLite full-chain check verified
+legacy memo preservation, NULL preservation, rollback retention and re-upgrade.
+No production DB was used locally. Saved Brain snapshots remain captured; private
+citation rechecks do not refresh market data. Only reviewed promotion creates an
+indexed Note. Private ranking/embeddings are unchanged. Missing private matches
+or risk metrics do not block explicitly selected technical evidence; Brain skips
+synthesis if neither private nor technical evidence is usable.
 
-Portfolio scope is default-empty and explicitly selects at most three current
-held symbols. Ownership/membership is checked before market/model work. Recorded
-lot quantities/cost currencies and symbol-count coverage are not value weights
-or portfolio risk contributions. Per-holding H#.# refs inspect the original
-three observations; shared 15s batch/deadlines/cancellation preserve failures.
-Selected technicals remain usable when risk metrics are missing. Scope changes
-clear/cancel old browser output; late prior-portfolio analytics are ignored.
+Portfolio technical scope explicitly selects up to three current held symbols.
+Ownership/membership precede market/model work. Recorded quantities/cost currencies
+and symbol-count coverage do not establish value weights or aggregate risk.
+Per-holding H#.# references inspect the same three observations; shared 15s batch,
+Deep/default deadlines and cancellation preserve failures. Scope changes clear
+old output, and late prior-portfolio analytics are ignored.
 
-Next: release-prep CI, review/merge and explicit publication authorization.
-No tag/release is published; **v2.5.0 remains the latest published release** at
-`fad1c95` (2026-11-02). Its release-prep #246 and post-release docs #247 are
-complete; bilingual chapter 21 in `praderasblog` #118 is merged. Blog/deployment
-remain with the host agent. After v2.6 publication, reconcile post-release docs
-and follow the established blog routine; no article has been written for v2.6.
-The inherited layout audit is unscheduled. Full RSI/MACD, volume, accumulation,
-Elliott-wave hypotheses and validation of video/note assumptions remain the v3
-direction, outside this three-measure release. See Roadmap/TODO and the v2.6
-verification ledger in `docs/wiki/Releasing.md`.
+Post-release docs reconcile the changelog date from preparation on 2026-11-04 to
+publication on 2026-11-05 without moving the tag; the documentation follow-up is
+for review. Next is the established bilingual blog routine in `../praderasblog`;
+no v2.6 article has been written. Blog/deployment remain with the host agent.
+The previous release is v2.5.0 at `fad1c95` (2026-11-02); its post-release docs
+#247 and bilingual chapter 21 (`praderasblog` #118) are merged.
+The inherited layout audit is unscheduled. RSI/MACD, volume, accumulation,
+Elliott-wave hypotheses and independent validation of video/note assumptions
+remain the broader v3 direction. Discuss the next bounded scope before starting
+new feature work. See Roadmap/TODO and `docs/wiki/Releasing.md`.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
 `3fb7de3` (release preparation PR #229). All three CI jobs passed and the PR
