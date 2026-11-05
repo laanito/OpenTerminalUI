@@ -42,16 +42,19 @@ Per-holding H#.# references inspect the same three observations; shared 15s batc
 Deep/default deadlines and cancellation preserve failures. Scope changes clear
 old output, and late prior-portfolio analytics are ignored.
 
-Post-release docs reconcile the changelog date from preparation on 2026-11-04 to
-publication on 2026-11-05 without moving the tag; the documentation follow-up is
-for review. Next is the established bilingual blog routine in `../praderasblog`;
-no v2.6 article has been written. Blog/deployment remain with the host agent.
-The previous release is v2.5.0 at `fad1c95` (2026-11-02); its post-release docs
-#247 and bilingual chapter 21 (`praderasblog` #118) are merged.
-The inherited layout audit is unscheduled. RSI/MACD, volume, accumulation,
-Elliott-wave hypotheses and independent validation of video/note assumptions
-remain the broader v3 direction. Discuss the next bounded scope before starting
-new feature work. See Roadmap/TODO and `docs/wiki/Releasing.md`.
+Post-release documentation #257 and bilingual chapter 22, “The question we
+almost lost” (`praderasblog` #119), are merged. The changelog records Nov 5
+publication separately from Nov 4 preparation without moving the tag.
+Blog deployment belongs to the host agent.
+
+The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
+briefings**, beginning with a coverage/revision audit and a bounded interpretation
+contract. Implementation has not started.
+The inherited layout audit is the discovery step for a dedicated future major
+frontend overhaul, with its number and timing undecided; it is not a minor-release
+cleanup item. RSI/MACD, volume, accumulation, Elliott-wave hypotheses and
+independent validation of video/note assumptions remain the broader v3 direction.
+See Roadmap/TODO and `docs/wiki/Releasing.md`.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
 Release-prep PR #229 passed build-and-test, clean-install and postgres-contract,
@@ -1081,17 +1084,34 @@ inputs, Deep routing, owner scope, deadlines/cancellation and failure handling.
       published and verified on 2026-11-05. No release gate remains.
 - [x] Prepare post-release README/wiki/changelog/agent reconciliation for review.
       Correct publication date from Nov 4 preparation to Nov 5 without retagging.
-- [ ] Merge post-release docs and write the established bilingual blog article.
-      Deployment/publication to the running host belongs to its agent. Discuss
-      the next bounded milestone before starting additional feature work.
+- [x] Merge post-release docs #257 and bilingual chapter 22 (`praderasblog` #119).
+      Deployment/publication to the running host belongs to its agent.
 
 No extra indicators, longer-horizon trend expansion, volume/liquidity feeds,
 portfolio correlation/risk engine, new provider, historical reconstruction,
 trading signal or broker execution is included. PR boundaries follow reviewable
-changes, not a fixed count. Layout cleanup remains a separate maintenance track.
+changes, not a fixed count. The layout audit leads into a dedicated future major frontend overhaul.
 
 Unchecked evidence-ledger entries below remain later candidates unless the
 bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
+
+### v2.7 — Filing-grounded fundamentals in comparison briefings (agreed scope)
+
+Implementation has not started. See `docs/wiki/Roadmap.md` for the bounded scope.
+
+- [ ] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
+      conflicts and revision limits; identify evidence eligible for synthesis.
+- [ ] Define a bounded, versioned fundamentals briefing contract with inspectable
+      references and explicit current-fetch versus historical-availability limits.
+- [ ] Integrate eligible filing evidence into selected comparison briefings;
+      preserve the unselected flow and withhold unsupported historical attribution.
+- [ ] Verify citation, conflict, missing-data and provider-failure handling; obtain
+      maintainer acceptance before release preparation. Split PRs by reviewable
+      changes after the audit, with no fixed count.
+
+New providers, broad regional expansion, full historical archives, technical
+thesis validation and frontend overhaul are outside this milestone. Remaining
+v2 evidence ideas do not automatically become compulsory sub-releases.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 
@@ -1403,15 +1423,14 @@ These are the clearest remaining items from the current roadmap and code state.
 They are demand-pulled or later-generation inputs, not a substitute for the
 ordered v1.7 milestone above.
 
-- [ ] **Inherited interface layout audit.** Maintainer report (2026-11-02):
-      some modules overflow or stack poorly. This predates recent changes and
-      is legacy fork debt. Inventory affected screens and shared layout causes
-      at wide/intermediate/narrow widths with realistic long/populated content.
-      Fix container sizing, wrapping, grid/flex stacking and spacing; keep
-      intentional table/chart scrolling contained, without hiding content or
-      accidental page-wide overflow. Verify affected user journeys and add
-      focused regression checks where useful. Future work, no release assigned;
-      see the matching follow-up in `docs/wiki/Roadmap.md`.
+- [ ] **Major frontend overhaul — discovery audit first.** The inherited
+      overflow/stacking report leads into a dedicated future major frontend
+      overhaul, not a minor-release cleanup. Number and timing are undecided.
+      Inventory wide/intermediate/narrow layouts with realistic content; use
+      findings to propose navigation, hierarchy, shared layout patterns and a
+      staged migration/acceptance plan. Preserve core workflows and contained
+      table/chart scrolling. Focused regression fixes remain possible separately.
+      See the corresponding roadmap initiative; implementation has not started.
 - [ ] **Full technical thesis validation (v3 direction).** The maintainer's
       2026-11-03 clarification covers Elliott waves, RSI, MACD, volume and
       accumulation areas beyond the v2.5/v2.6 overview. Test assumptions from
