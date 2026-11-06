@@ -216,7 +216,7 @@ def test_fred_missing_key_and_partial_series_failure_retain_their_meaning():
     assert section.series[0].status == "feed_error"
 
 
-@pytest.mark.parametrize("options", [{"news": "true"}, {"macro_regions": ["us", "us"]}, {"macro_regions": ["anywhere"]}, {"fundamentals": True}])
+@pytest.mark.parametrize("options", [{"news": "true"}, {"macro_regions": ["us", "us"]}, {"macro_regions": ["anywhere"]}, {"fundamentals": "true"}])
 def test_options_are_explicit_and_bounded(options):
     with pytest.raises(ValidationError): service.BriefingContextOptions(**options)
 

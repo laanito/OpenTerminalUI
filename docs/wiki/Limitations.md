@@ -112,6 +112,15 @@ never silently faked.
   citation rechecks do not refresh their market data. Only reviewed promotion
   creates a separate indexed Note. Broader technical thesis validation and
   inherited interface-layout debt remain deferred.
+- **Fundamentals briefing integration is staged.** The authenticated context
+  evidence endpoint accepts `context.fundamentals: true` and returns version-2
+  SEC aggregate evidence with pair-linked references and explicit conflicts,
+  missing configuration, coverage and provider failures. It requires
+  `SEC_USER_AGENT`. The existing browser and checked synthesis do not yet select
+  or interpret this evidence; synthesis requests selecting it return 422.
+  Company Facts retrieval is not exact filing corroboration, a historical
+  vintage or proof of investor knowledge. See the
+  [filing evidence contract](Fundamentals-Briefing-Contract.md).
 - **Cross-market comparison is experimental and descriptive.** The read-only
   comparison API aligns each selected proxy with an anchor on common UTC daily
   close dates and exposes stale, missing, and insufficient-overlap states. It

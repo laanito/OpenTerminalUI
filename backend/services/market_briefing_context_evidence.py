@@ -12,7 +12,7 @@ from datetime import date, datetime, timezone
 from typing import Literal
 from urllib.parse import urlencode, urlsplit
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, field_validator, model_serializer
 
 from backend.api.routes.market_context import (
     EuroAreaMacroResponse, MarketHeadlinesResponse, MarketMacroObservationsResponse, MarketComparisonResponse,
@@ -20,6 +20,7 @@ from backend.api.routes.market_context import (
 from backend.services.euro_area_macro import ECB_URL, EUROSTAT_URL, SERIES
 from backend.services.market_briefing_evidence import ComparisonBriefingEvidence, build_comparison_evidence
 from backend.services.technical_indicators import TechnicalAssetIndicators, TechnicalMetric, calculate_technical_indicators
+from backend.services.filing_briefing_evidence import FilingBriefingEvidence
 
 NEWS_LIMIT = 5
 MACRO_LIMIT = 24
@@ -31,6 +32,16 @@ class BriefingContextOptions(BaseModel):
     news: StrictBool = False
     macro_regions: list[Region] = Field(default_factory=list, max_length=2)
     technical: StrictBool = False
+    fundamentals: StrictBool = Field(
+        default=False, description="Opt-in SEC aggregate facts; currently evidence-endpoint only, not synthesis.",
+    )
+
+    @model_serializer(mode="wrap")
+    def preserve_unselected_shape(self, handler):
+        result = handler(self)
+        if not self.fundamentals:
+            result.pop("fundamentals", None)
+        return result
 
     @field_validator("macro_regions")
     @classmethod
@@ -139,15 +150,31 @@ class TechnicalContextSection(ContextSection):
     assets: list[TechnicalContextAsset] = Field(default_factory=list, max_length=2)
 
 
+class FilingContextAsset(BaseModel):
+    citation_id: str
+    symbol: str
+    status: Literal["available", "partial", "empty", "unavailable"]
+    reason: str | None = None
+    snapshot: FilingBriefingEvidence | None = None
+    # Map snapshot-local F# to outer-envelope refs. Never mutate the hashed snapshot.
+    group_citations: dict[str, str] = Field(default_factory=dict)
+
+
+class FilingContextSection(ContextSection):
+    kind: Literal["fundamentals"] = "fundamentals"
+    source: Literal["sec_current_companyfacts"] = "sec_current_companyfacts"
+    assets: list[FilingContextAsset] = Field(default_factory=list, max_length=2)
+
+
 class ComparisonContextEvidence(BaseModel):
-    schema_version: Literal["1"] = "1"
+    schema_version: Literal["1", "2"] = "1"
     evidence_kind: Literal["comparison_with_optional_context"] = "comparison_with_optional_context"
     citation_scope: Literal["packet_local"] = "packet_local"
     packet_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     prepared_at: AwareDatetime
     requested: BriefingContextOptions
     price: ComparisonBriefingEvidence
-    sections: list[NewsContextSection | MacroContextSection | TechnicalContextSection] = Field(max_length=24)
+    sections: list[NewsContextSection | MacroContextSection | TechnicalContextSection | FilingContextSection] = Field(max_length=30)
     news_limit_per_symbol: int = NEWS_LIMIT
     macro_limit_per_series: int = MACRO_LIMIT
     caveats: list[str]
@@ -318,11 +345,42 @@ def _technical(snapshot: MarketComparisonResponse, row, pair, section_id: str) -
                                    reason=None if usable else "technical_inputs_unavailable")
 
 
+def _filings(pair, section_id: str, filings: dict) -> FilingContextSection:
+    fields = dict(citation_id=section_id, pair_citation_id=pair.citation_id,
+                  start_date=pair.returns.start_date if pair.returns else None,
+                  end_date=pair.returns.end_date if pair.returns else None)
+    if pair.returns is None:
+        return FilingContextSection(**fields, status="no_price_window", reason="no_price_window")
+    assets = []
+    for index, symbol in enumerate((pair.anchor.symbol, pair.comparison.symbol), 1):
+        asset_id = f"{section_id}A{index}"
+        snapshot = filings.get((pair.citation_id, symbol))
+        if snapshot is None or isinstance(snapshot, ContextFetchFailure):
+            assets.append(FilingContextAsset(citation_id=asset_id, symbol=symbol, status="unavailable",
+                                            reason=snapshot.reason if snapshot else "not_prepared"))
+            continue
+        if (not isinstance(snapshot, FilingBriefingEvidence) or snapshot.symbol != symbol
+            or snapshot.filed_start != pair.returns.start_date or snapshot.filed_end != pair.returns.end_date):
+            raise ValueError("Filing snapshot targets a different symbol/window")
+        assets.append(FilingContextAsset(
+            citation_id=asset_id, symbol=symbol, status=snapshot.status, reason=snapshot.reason,
+            snapshot=snapshot.model_copy(deep=True),
+            group_citations={group.citation_id: f"{asset_id}{group.citation_id}" for group in snapshot.groups},
+        ))
+    usable = any(asset.status in {"available", "partial"} for asset in assets)
+    failed = any(asset.status == "unavailable" for asset in assets)
+    status = "available" if all(asset.status == "available" for asset in assets) else (
+        "partial" if usable else "unavailable" if failed else "empty")
+    return FilingContextSection(**fields, status=status, assets=assets,
+                                reason="filing_inputs_unavailable" if failed else None)
+
+
 def build_context_evidence(
     price: ComparisonBriefingEvidence, options: BriefingContextOptions, *, prepared_at: datetime,
     news: dict[str, MarketHeadlinesResponse | ContextFetchFailure] | None = None,
     macro: dict[tuple[str, Region], MarketMacroObservationsResponse | EuroAreaMacroResponse | ContextFetchFailure] | None = None,
     technical_snapshot: MarketComparisonResponse | None = None,
+    filings: dict[tuple[str, str], FilingBriefingEvidence | ContextFetchFailure] | None = None,
 ) -> ComparisonContextEvidence:
     """Project server responses only; never fetch, synthesize, save or index.
 
@@ -330,7 +388,14 @@ def build_context_evidence(
     successful searches. No data is silently borrowed from another pair/window.
     """
     news, macro = news or {}, macro or {}
+    filings = filings or {}
     pairs = {pair.citation_id: pair for pair in price.comparisons}
+    if filings and not options.fundamentals:
+        raise ValueError("Unrequested filing evidence")
+    for pair_id, symbol in filings:
+        pair = pairs.get(pair_id)
+        if pair is None or pair.returns is None or symbol not in {pair.anchor.symbol, pair.comparison.symbol}:
+            raise ValueError("Filing evidence targets an unknown pair/symbol or missing price window")
     if any(key not in pairs for key in news) or (news and not options.news):
         raise ValueError("Unrequested news or unknown pair")
     if any(pair not in pairs or region not in options.macro_regions for pair, region in macro):
@@ -344,9 +409,13 @@ def build_context_evidence(
         technical_matches = False
     sections = []
     for pair in price.comparisons:
-        selected = (["headlines"] if options.news else []) + options.macro_regions + (["technical"] if options.technical else [])
+        selected = ((["headlines"] if options.news else []) + options.macro_regions
+                    + (["technical"] if options.technical else []) + (["fundamentals"] if options.fundamentals else []))
         for kind in selected:
             section_id = f"C{len(sections) + 1}"
+            if kind == "fundamentals":
+                sections.append(_filings(pair, section_id, filings))
+                continue
             if kind == "technical":
                 if pair.returns is None or not technical_matches:
                     sections.append(TechnicalContextSection(
@@ -380,6 +449,7 @@ def build_context_evidence(
                     raise ValueError("Macro response region/type mismatch")
                 sections.append(_macro(response, pair, kind, section_id))
     packet = ComparisonContextEvidence(
+        schema_version="2" if options.fundamentals else "1",
         packet_id="0" * 64, prepared_at=prepared_at, requested=options.model_copy(deep=True),
         price=price.model_copy(deep=True), sections=sections,
         caveats=["context_is_not_causation_or_advice", "headlines_are_untrusted_source_text_not_verified_facts",
@@ -390,8 +460,12 @@ def build_context_evidence(
                      "technical_is_observed_adjusted_input_not_a_trading_signal",
                      "technical_adjustments_sessions_and_bar_completion_are_unverified",
                      "technical_lookbacks_are_own_observations_not_identical_calendar_spans",
-                 ] if options.technical else []),
-        always_excluded=["fundamentals", "sec_filing_checks", *([] if options.technical else ["technical_measures"]), "fx_views",
+                 ] if options.technical else []) + ([
+                     "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+                     "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+                     "filing_conflicts_withhold_values_before_output_limits",
+                 ] if options.fundamentals else []),
+        always_excluded=[*([] if options.fundamentals else ["fundamentals"]), "sec_filing_checks", *([] if options.technical else ["technical_measures"]), "fx_views",
                          "adjusted_views", "exchange_local_views", "private_research", "economic_calendar"],
     )
     canonical = json.dumps(packet.model_dump(mode="json", exclude={"packet_id"}),

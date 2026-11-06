@@ -2307,6 +2307,12 @@
       "BriefingContextOptions": {
         "additionalProperties": false,
         "properties": {
+          "fundamentals": {
+            "default": false,
+            "description": "Opt-in SEC aggregate facts; currently evidence-endpoint only, not synthesis.",
+            "title": "Fundamentals",
+            "type": "boolean"
+          },
           "macro_regions": {
             "items": {
               "enum": [
@@ -4135,8 +4141,11 @@
             "$ref": "#/components/schemas/BriefingContextOptions"
           },
           "schema_version": {
-            "const": "1",
             "default": "1",
+            "enum": [
+              "1",
+              "2"
+            ],
             "title": "Schema Version",
             "type": "string"
           },
@@ -4151,10 +4160,13 @@
                 },
                 {
                   "$ref": "#/components/schemas/TechnicalContextSection"
+                },
+                {
+                  "$ref": "#/components/schemas/FilingContextSection"
                 }
               ]
             },
-            "maxItems": 24,
+            "maxItems": 30,
             "title": "Sections",
             "type": "array"
           }
@@ -4169,6 +4181,55 @@
           "always_excluded"
         ],
         "title": "ComparisonContextEvidence",
+        "type": "object"
+      },
+      "ComparisonContextEvidenceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "examples": [
+              "AAPL"
+            ],
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparisons": {
+            "examples": [
+              [
+                "SPY",
+                "BTC-USD"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Comparisons",
+            "type": "array"
+          },
+          "context": {
+            "$ref": "#/components/schemas/BriefingContextOptions"
+          },
+          "period": {
+            "default": "1M",
+            "enum": [
+              "1M",
+              "3M",
+              "6M"
+            ],
+            "title": "Period",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparisons",
+          "context"
+        ],
+        "title": "ComparisonContextEvidenceRequest",
         "type": "object"
       },
       "CompileError": {
@@ -7352,6 +7413,360 @@
         "title": "FactorWeights",
         "type": "object"
       },
+      "FilingBriefingEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "cik": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cik"
+          },
+          "conflicting_group_count": {
+            "default": 0,
+            "title": "Conflicting Group Count",
+            "type": "integer"
+          },
+          "disclosure_limit": {
+            "default": 3,
+            "title": "Disclosure Limit",
+            "type": "integer"
+          },
+          "evidence_kind": {
+            "const": "sec_filing_briefing",
+            "default": "sec_filing_briefing",
+            "title": "Evidence Kind",
+            "type": "string"
+          },
+          "examined_count": {
+            "default": 0,
+            "title": "Examined Count",
+            "type": "integer"
+          },
+          "filed_end": {
+            "format": "date",
+            "title": "Filed End",
+            "type": "string"
+          },
+          "filed_start": {
+            "format": "date",
+            "title": "Filed Start",
+            "type": "string"
+          },
+          "group_limit": {
+            "default": 8,
+            "title": "Group Limit",
+            "type": "integer"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/FilingMetricGroup"
+            },
+            "maxItems": 8,
+            "title": "Groups",
+            "type": "array"
+          },
+          "historical_availability": {
+            "const": "not_established",
+            "default": "not_established",
+            "title": "Historical Availability",
+            "type": "string"
+          },
+          "matched_fact_count": {
+            "default": 0,
+            "title": "Matched Fact Count",
+            "type": "integer"
+          },
+          "matched_group_count": {
+            "default": 0,
+            "title": "Matched Group Count",
+            "type": "integer"
+          },
+          "omitted_group_count": {
+            "default": 0,
+            "title": "Omitted Group Count",
+            "type": "integer"
+          },
+          "packet_id": {
+            "title": "Packet Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "configuration_required",
+                  "not_covered",
+                  "ambiguous_ticker",
+                  "provider_error",
+                  "timed_out"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "revision_order": {
+            "const": "not_established",
+            "default": "not_established",
+            "title": "Revision Order",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "1",
+            "default": "1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "const": "sec_current_companyfacts",
+            "default": "sec_current_companyfacts",
+            "title": "Source",
+            "type": "string"
+          },
+          "source_records_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Records Id"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "empty",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "packet_id",
+          "symbol",
+          "cik",
+          "filed_start",
+          "filed_end",
+          "retrieved_at",
+          "status"
+        ],
+        "title": "FilingBriefingEvidence",
+        "type": "object"
+      },
+      "FilingContextAsset": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "group_citations": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Group Citations",
+            "type": "object"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FilingBriefingEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "empty",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "symbol",
+          "status"
+        ],
+        "title": "FilingContextAsset",
+        "type": "object"
+      },
+      "FilingContextSection": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/FilingContextAsset"
+            },
+            "maxItems": 2,
+            "title": "Assets",
+            "type": "array"
+          },
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "kind": {
+            "const": "fundamentals",
+            "default": "fundamentals",
+            "title": "Kind",
+            "type": "string"
+          },
+          "pair_citation_id": {
+            "title": "Pair Citation Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          },
+          "source": {
+            "const": "sec_current_companyfacts",
+            "default": "sec_current_companyfacts",
+            "title": "Source",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "partial",
+              "empty",
+              "unavailable",
+              "no_price_window"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "pair_citation_id",
+          "start_date",
+          "end_date",
+          "status"
+        ],
+        "title": "FilingContextSection",
+        "type": "object"
+      },
+      "FilingDisclosure": {
+        "properties": {
+          "accession": {
+            "title": "Accession",
+            "type": "string"
+          },
+          "filed_date": {
+            "format": "date",
+            "title": "Filed Date",
+            "type": "string"
+          },
+          "filing_url": {
+            "title": "Filing Url",
+            "type": "string"
+          },
+          "form": {
+            "title": "Form",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accession",
+          "form",
+          "filed_date",
+          "filing_url"
+        ],
+        "title": "FilingDisclosure",
+        "type": "object"
+      },
       "FilingDocument": {
         "properties": {
           "published_at": {
@@ -7392,6 +7807,93 @@
           }
         },
         "title": "FilingDocument",
+        "type": "object"
+      },
+      "FilingMetricGroup": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "concept": {
+            "title": "Concept",
+            "type": "string"
+          },
+          "disclosure_count": {
+            "title": "Disclosure Count",
+            "type": "integer"
+          },
+          "disclosures": {
+            "items": {
+              "$ref": "#/components/schemas/FilingDisclosure"
+            },
+            "maxItems": 3,
+            "title": "Disclosures",
+            "type": "array"
+          },
+          "distinct_value_count": {
+            "title": "Distinct Value Count",
+            "type": "integer"
+          },
+          "omitted_disclosure_count": {
+            "title": "Omitted Disclosure Count",
+            "type": "integer"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "conflicting_values",
+              "conflicting_filing_metadata"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "taxonomy": {
+            "const": "us-gaap",
+            "default": "us-gaap",
+            "title": "Taxonomy",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "citation_id",
+          "concept",
+          "unit",
+          "period_start",
+          "period_end",
+          "status",
+          "value",
+          "distinct_value_count",
+          "disclosure_count",
+          "omitted_disclosure_count",
+          "disclosures"
+        ],
+        "title": "FilingMetricGroup",
         "type": "object"
       },
       "ForecastRequest": {
@@ -32526,7 +33028,7 @@
     },
     "/api/market-context/briefing-context": {
       "post": {
-        "description": "Opt-in dated/technical context synthesis; no causal verification or advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.",
+        "description": "Opt-in dated/technical context synthesis; no causal verification or advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.\nSelected fundamentals currently return 422; collect them through the\nevidence endpoint until checked synthesis supports the version-2 envelope.",
         "operationId": "create_context_briefing_api_market_context_briefing_context_post",
         "requestBody": {
           "content": {
@@ -32580,13 +33082,13 @@
     },
     "/api/market-context/briefing-context-evidence": {
       "post": {
-        "description": "Fresh prices plus selected news, macro and/or technical observations.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; technical projection reuses the same fresh comparison, with\nno second history request. No model, save or index work occurs here.",
+        "description": "Fresh prices plus selected news, macro, technical and/or SEC filing evidence.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; technical projection reuses the same fresh comparison, with\nno second history request. Selected fundamentals use one current Company\nFacts fetch per unique symbol and schema-version 2, with exact pair windows.\nFundamentals are evidence-only until checked synthesis is enabled.\nNo model, save or index work occurs here.",
         "operationId": "prepare_context_briefing_evidence_api_market_context_briefing_context_evidence_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ComparisonContextBriefingRequest"
+                "$ref": "#/components/schemas/ComparisonContextEvidenceRequest"
               }
             }
           },
@@ -32637,7 +33139,7 @@
     },
     "/api/market-context/briefing-context/stream": {
       "post": {
-        "description": "Cancellable completion-based context synthesis, without automatic replay.",
+        "description": "Cancellable completion-based context synthesis, without automatic replay.\n\nSelected fundamentals currently return 422 before stream headers; they are\nsupported only by the evidence endpoint until checked synthesis is enabled.",
         "operationId": "stream_context_briefing_api_market_context_briefing_context_stream_post",
         "requestBody": {
           "content": {

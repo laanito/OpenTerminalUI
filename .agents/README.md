@@ -53,9 +53,13 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. The first internal SEC projection and coverage audit are implemented
-on 2026-11-06; fetching, checked synthesis and browser selection remain next.
-The released briefing still excludes fundamentals. See
+contract. The internal SEC projection/audit (#259, merged) and selected SEC
+collection are implemented. The evidence endpoint accepts fundamentals and
+returns a version-2 pair-linked envelope, with one aggregate fetch per symbol,
+shared source/context budgets and cancellation. Unselected serialized context
+retains version 1. Checked synthesis and browser selection remain next; synthesis
+requests selecting fundamentals currently return 422 before work/stream headers.
+See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release

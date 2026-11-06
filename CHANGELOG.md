@@ -6,6 +6,17 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Selected SEC filing evidence for comparisons** — the authenticated
+  `POST /api/market-context/briefing-context-evidence` endpoint accepts
+  `context.fundamentals: true`. It fetches each unique symbol's current SEC
+  aggregate once, projects exact pair windows and returns schema-version 2
+  with distinct filing references, conflicts and coverage/failure states.
+  Collection shares the existing concurrency/deadline/cancellation limits.
+  Requires `SEC_USER_AGENT`; no filing downloads or historical-knowledge claim.
+  This is evidence-only: fundamentals synthesis and browser selection are pending.
+  Unselected context retains its version-1 serialized shape.
+
 ## [2.6.0] - 2026-11-05
 
 Technical context now reaches AI Investment Briefing, Interrogate, Second Brain

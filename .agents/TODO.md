@@ -49,9 +49,13 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. The first internal SEC projection and coverage audit are implemented
-on 2026-11-06; fetching, checked synthesis and browser selection remain next.
-The released briefing still excludes fundamentals. See
+contract. The internal SEC projection/audit (#259, merged) and selected SEC
+collection are implemented. The evidence endpoint accepts fundamentals and
+returns a version-2 pair-linked envelope, with one aggregate fetch per symbol,
+shared source/context budgets and cancellation. Unselected serialized context
+retains version 1. Checked synthesis and browser selection remain next; synthesis
+requests selecting fundamentals currently return 422 before work/stream headers.
+See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release
@@ -1102,7 +1106,7 @@ bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
 
 Started 2026-11-06. See `docs/wiki/Roadmap.md` for the bounded scope and
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the source audit and sequence.
-The first slice is internal only; no provider/model/browser integration yet.
+SEC collection is now exposed on the evidence endpoint; model/browser integration remains pending.
 
 - [x] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
       conflicts and revision limits. Start with SEC duration facts; the current
@@ -1114,9 +1118,14 @@ The first slice is internal only; no provider/model/browser integration yet.
       missing coverage and failure states. Retrieval is not historical availability,
       and later accessions do not establish revision order. Regression tests cover
       conflicts beyond inspector caps, identity, dates, scope and determinism.
-- [ ] Connect explicitly selected fundamentals to bounded per-symbol fetching
-      and a versioned pair-linked context envelope; preserve cancellation and
-      configuration/coverage/provider failures, and regenerate exposed API docs.
+- [x] Connect explicitly selected fundamentals to bounded per-symbol fetching
+      and a versioned pair-linked context envelope. One aggregate fetch per unique
+      symbol covers all exact pair windows; no-window pairs skip collection.
+      Keep nested filing snapshots intact and map local F# to outer C#A#F#.
+      Preserve cancellation and configuration/coverage/provider failures under
+      shared 3-source/12s-per-source/40s-context budgets. Regenerate exposed API
+      docs. Evidence-only until checked synthesis is enabled; public synthesis
+      rejects selected fundamentals with 422 before work or stream headers.
 - [ ] Integrate eligible filing evidence into selected comparison briefings;
       preserve the unselected flow and withhold unsupported historical attribution.
 - [ ] Verify citation, conflict, missing-data and provider-failure handling; obtain
