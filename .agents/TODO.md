@@ -49,7 +49,10 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. Implementation has not started.
+contract. The first internal SEC projection and coverage audit are implemented
+on 2026-11-06; fetching, checked synthesis and browser selection remain next.
+The released briefing still excludes fundamentals. See
+`docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release
 cleanup item. RSI/MACD, volume, accumulation, Elliott-wave hypotheses and
@@ -1097,12 +1100,23 @@ bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
 
 ### v2.7 — Filing-grounded fundamentals in comparison briefings (agreed scope)
 
-Implementation has not started. See `docs/wiki/Roadmap.md` for the bounded scope.
+Started 2026-11-06. See `docs/wiki/Roadmap.md` for the bounded scope and
+`docs/wiki/Fundamentals-Briefing-Contract.md` for the source audit and sequence.
+The first slice is internal only; no provider/model/browser integration yet.
 
-- [ ] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
-      conflicts and revision limits; identify evidence eligible for synthesis.
-- [ ] Define a bounded, versioned fundamentals briefing contract with inspectable
-      references and explicit current-fetch versus historical-availability limits.
+- [x] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
+      conflicts and revision limits. Start with SEC duration facts; the current
+      FMP/Yahoo PIT projection lacks units, fiscal start and accession.
+- [x] Define an internal version-1 SEC projection with exact concept/unit/duration
+      grouping, full-set conflict checks before 8-group/3-disclosure output caps,
+      packet-local references, generated filing links and a fingerprint including
+      omitted eligible records. Withhold conflicting values/metadata; preserve
+      missing coverage and failure states. Retrieval is not historical availability,
+      and later accessions do not establish revision order. Regression tests cover
+      conflicts beyond inspector caps, identity, dates, scope and determinism.
+- [ ] Connect explicitly selected fundamentals to bounded per-symbol fetching
+      and a versioned pair-linked context envelope; preserve cancellation and
+      configuration/coverage/provider failures, and regenerate exposed API docs.
 - [ ] Integrate eligible filing evidence into selected comparison briefings;
       preserve the unselected flow and withhold unsupported historical attribution.
 - [ ] Verify citation, conflict, missing-data and provider-failure handling; obtain

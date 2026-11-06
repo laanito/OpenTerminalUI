@@ -73,6 +73,15 @@ def filed_facts(payload: dict[str, Any], start: date, end: date) -> tuple[list[d
     return records, len(ordered), examined
 
 
+def eligible_filed_facts(payload: dict[str, Any], start: date, end: date) -> tuple[list[dict[str, Any]], int]:
+    """Uncapped normalized selection for conflict checks before downstream limits.
+
+    This is not a new API response: the existing inspector remains bounded.
+    """
+    ordered, examined = _eligible_facts(payload, start, end)
+    return [_record(item) for item in ordered], examined
+
+
 def contains_filed_fact(payload: dict[str, Any], claim: dict[str, Any]) -> bool:
     """Check the full eligible set, including facts beyond the display cap."""
     ordered, _ = _eligible_facts(payload, claim["filed_date"], claim["filed_date"])

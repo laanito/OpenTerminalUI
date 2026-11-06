@@ -53,7 +53,10 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. Implementation has not started.
+contract. The first internal SEC projection and coverage audit are implemented
+on 2026-11-06; fetching, checked synthesis and browser selection remain next.
+The released briefing still excludes fundamentals. See
+`docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release
 cleanup item. RSI/MACD, volume, accumulation, Elliott-wave hypotheses and
