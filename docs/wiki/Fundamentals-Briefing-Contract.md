@@ -1,8 +1,9 @@
 # Filing evidence for comparison briefings
 
-Status: **v2.7 first slice, 2026-11-06**. This audit and the internal projection
-are implemented; provider orchestration, model use and browser controls are not.
-The released briefing still excludes fundamentals and SEC filing checks.
+Status: **v2.7 collection slice, 2026-11-06**. The audit, internal projection and
+explicit evidence-endpoint collection are implemented. Checked synthesis and
+browser selection are pending; briefing synthesis still excludes fundamentals
+and exact SEC filing checks.
 
 ## Coverage audit
 
@@ -69,13 +70,10 @@ messages. These states describe the projection, not complete SEC coverage.
 
 ## Integration sequence
 
-1. **This slice:** coverage audit, pure projection and regression tests. Existing
-   inspectors, generated API artifacts and briefing selections remain unchanged.
-2. **Provider and envelope integration:** explicitly selected fundamentals,
-   bounded deduplicated per-symbol fetches, pair-window linkage and cancellation;
-   preserve missing keys, non-covered symbols and failures. Add a versioned outer
-   context shape and collision-free pair-linked references. The nested price
-   packet remains unchanged. Expand generated API docs when exposing schemas.
+1. **Completed, #259:** coverage audit, pure projection and regression tests.
+2. **Implemented:** explicitly selected fundamentals on the evidence endpoint,
+   bounded per-symbol fetches, pair-window linkage, cancellation and a versioned
+   outer envelope. Generated API documentation reflects the exposed schemas.
 3. **Checked synthesis:** extend prompt, reference validation and bounded repair
    together. Require source/pair references and material coverage limitations.
    Distinguish fiscal measurement periods, filing dates and today's retrieval;
@@ -89,3 +87,45 @@ These are reviewable boundaries, not a required PR count. No full archival
 reconstruction, provider expansion, automatic filing corroboration, frontend
 overhaul or v3 technical thesis validation is included. The audit does not claim
 live provider or model-quality testing; fixtures establish the local contract.
+
+## Evidence endpoint and collection limits
+
+`POST /api/market-context/briefing-context-evidence` requires the existing user
+JWT and accepts selections only, for example:
+
+```json
+{"anchor":"AAPL","comparisons":["SPY","BTC-USD"],"period":"1M","context":{"fundamentals":true}}
+```
+
+The existing context endpoint returns outer `schema_version: "2"` when
+fundamentals are selected, and version 1 otherwise. A false/omitted selection
+does not fetch SEC data and is omitted from the serialized context-options
+object, preserving the version-1 packet shape/fingerprint behavior. The nested
+price packet and its price-only exclusions are unchanged.
+
+Each selected pair has a `kind: "fundamentals"` section linked to its P#.
+Assets retain the complete bounded version-1 filing snapshot without modifying
+its hash. `group_citations` maps its local F# to an outer reference such as
+`C1A1F1`; those mappings are unique across pairs and assets. Original F# names
+remain local to the nested snapshot. Exact filing checks stay excluded even
+when aggregate filing facts are selected.
+
+The collector resolves each unique symbol once and fetches Company Facts only
+after an unambiguous CIK match. It projects that aggregate separately for each
+distinct pair window. No-window pairs never fetch filing data. There are at most
+seven SEC symbol jobs, sharing the existing three-job concurrency limit, 12s
+per-source budget and 40s context budget with selected news/macro sources.
+The prior 45s price preparation budget remains separate. Completed assets survive
+other jobs' failures/timeouts; cancellation joins pending work. Request-local
+deduplication adds no persistence; the existing SEC client cache still applies.
+
+Missing `SEC_USER_AGENT`, non-covered symbols (including crypto), ambiguous
+ticker mappings, empty eligible facts, malformed responses, provider failures
+and timeouts remain distinguishable. Provider exception strings are not returned
+or logged. These paths perform no synthesis, filing-instance download, capture
+write, private-source read or indexing.
+
+Until checked synthesis is integrated, `/briefing-context` and its stream reject
+`fundamentals: true` with 422 before collection, model work or stream headers.
+The current browser cannot select fundamentals yet. This prevents an unsupported
+evidence section from silently reaching the old prompt or reference validator.

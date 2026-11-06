@@ -267,6 +267,8 @@ or distinguishing evidence without recommending trades or inventing absent facts
 async def generate_context_briefing(
     evidence: ComparisonContextEvidence, *, on_phase=None, profile: ResolvedLLMProfile | None = None,
 ):
+    if evidence.schema_version != "1" or evidence.requested.fundamentals:
+        raise ValueError("Fundamentals are evidence-only until checked synthesis supports version 2")
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if not any(pair.status == "available" for pair in evidence.price.comparisons):
         return unavailable_context_briefing("no_evidence", evidence=evidence, profile=profile)

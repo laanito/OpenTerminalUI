@@ -22,6 +22,7 @@ from backend.api.routes.market_context import (
 )
 from backend.auth.deps import get_current_user
 from backend.config.settings import get_settings
+from backend.core.sec_edgar_client import SecEdgarClient, get_sec_edgar_client
 from backend.services.llm_profiles import ResolvedLLMProfile, resolve_llm_profile
 from backend.models import User
 from backend.services.comparison_briefing import (
@@ -190,13 +191,21 @@ async def stream_comparison_briefing(
     })
 
 
-class ComparisonContextBriefingRequest(ComparisonBriefingEvidenceRequest):
+class ComparisonContextEvidenceRequest(ComparisonBriefingEvidenceRequest):
     context: BriefingContextOptions
 
     @model_validator(mode="after")
     def selected_context(self):
-        if not self.context.news and not self.context.macro_regions and not self.context.technical:
-            raise ValueError("Select news, a macro region or technical context; use /briefing for price-only synthesis")
+        if not (self.context.news or self.context.macro_regions or self.context.technical or self.context.fundamentals):
+            raise ValueError("Select news, a macro region, technical or fundamentals context; use /briefing for price-only synthesis")
+        return self
+
+
+class ComparisonContextBriefingRequest(ComparisonContextEvidenceRequest):
+    @model_validator(mode="after")
+    def synthesis_scope(self):
+        if self.context.fundamentals:
+            raise ValueError("Fundamentals are currently evidence-only; use /briefing-context-evidence. Checked synthesis is not enabled yet.")
         return self
 
 
@@ -205,20 +214,25 @@ class ComparisonContextBriefingRequest(ComparisonBriefingEvidenceRequest):
     responses={504: {"description": "Price evidence timed out; no context packet was created."}},
 )
 async def prepare_context_briefing_evidence(
-    payload: ComparisonContextBriefingRequest,
+    payload: ComparisonContextEvidenceRequest,
     user: User = Depends(get_current_user),
     fetcher: Any = Depends(get_unified_fetcher),
     economic_service: EconomicDataService = Depends(get_economic_data_service),
+    sec_client: SecEdgarClient = Depends(get_sec_edgar_client),
 ) -> ComparisonContextEvidence:
-    """Fresh prices plus selected news, macro and/or technical observations.
+    """Fresh prices plus selected news, macro, technical and/or SEC filing evidence.
 
     Price preparation has a 45s budget, selected context a further 40s with up
     to three concurrent source jobs and 12s per job. Partial context survives
     its deadline; technical projection reuses the same fresh comparison, with
-    no second history request. No model, save or index work occurs here.
+    no second history request. Selected fundamentals use one current Company
+    Facts fetch per unique symbol and schema-version 2, with exact pair windows.
+    Fundamentals are evidence-only until checked synthesis is enabled.
+    No model, save or index work occurs here.
     """
     price, snapshot = await _prepare_context_price(payload, user, fetcher)
     return await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service,
+                                          **({"sec_client": sec_client} if payload.context.fundamentals else {}),
                                           **({"technical_snapshot": snapshot} if snapshot is not None else {}))
 
 
@@ -251,6 +265,8 @@ async def create_context_briefing(
     The complete price/context snapshot and fixed scope notice survive model
     failure. Citation validation checks references and coverage, not prose truth.
     Unselected v2.2 endpoints retain their price-only contract.
+    Selected fundamentals currently return 422; collect them through the
+    evidence endpoint until checked synthesis supports the version-2 envelope.
     """
     _normalized_payload(payload)
     return await _run_context_briefing(payload, user, fetcher, economic_service)
@@ -272,7 +288,11 @@ async def stream_context_briefing(
     fetcher: Any = Depends(get_unified_fetcher),
     economic_service: EconomicDataService = Depends(get_economic_data_service),
 ) -> StreamingResponse:
-    """Cancellable completion-based context synthesis, without automatic replay."""
+    """Cancellable completion-based context synthesis, without automatic replay.
+
+    Selected fundamentals currently return 422 before stream headers; they are
+    supported only by the evidence endpoint until checked synthesis is enabled.
+    """
     _normalized_payload(payload)  # Reject malformed symbols before 200 headers.
     profile = resolve_llm_profile(get_settings(), "comparison_briefing")
     phase: BriefingPhase = "preparing_evidence"

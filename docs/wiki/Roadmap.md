@@ -707,8 +707,9 @@ an explicit interpretation contract. Started on 2026-11-06 with the internal
 projection and [coverage audit](Fundamentals-Briefing-Contract.md). The audit
 selects the existing SEC duration facts; the FMP/Yahoo PIT projection does not
 retain units, fiscal start or accession. Conflicts are checked across all eligible
-records before display limits. Fetching, checked synthesis and browser selection
-remain follow-ups; the released briefing still excludes fundamentals.
+records before display limits. Explicit per-symbol fetching and a pair-linked
+version-2 evidence envelope are implemented. Checked synthesis and browser
+selection remain follow-ups; briefing synthesis still excludes fundamentals.
 
 - Audit the existing SEC/FMP evidence paths, metric identities, units, fiscal
   periods, filing dates, conflicts and historical/revision coverage before
