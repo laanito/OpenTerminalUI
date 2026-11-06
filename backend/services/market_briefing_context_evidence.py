@@ -33,7 +33,7 @@ class BriefingContextOptions(BaseModel):
     macro_regions: list[Region] = Field(default_factory=list, max_length=2)
     technical: StrictBool = False
     fundamentals: StrictBool = Field(
-        default=False, description="Opt-in SEC aggregate facts; currently evidence-endpoint only, not synthesis.",
+        default=False, description="Opt-in current SEC aggregate facts with mapped filing references and coverage limits.",
     )
 
     @model_serializer(mode="wrap")

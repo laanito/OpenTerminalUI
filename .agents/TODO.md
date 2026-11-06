@@ -49,13 +49,14 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. The internal SEC projection/audit (#259, merged) and selected SEC
-collection are implemented. The evidence endpoint accepts fundamentals and
-returns a version-2 pair-linked envelope, with one aggregate fetch per symbol,
-shared source/context budgets and cancellation. Unselected serialized context
-retains version 1. Checked synthesis and browser selection remain next; synthesis
-requests selecting fundamentals currently return 422 before work/stream headers.
-See
+contract. The SEC projection/audit (#259) and collection (#260) are merged.
+Checked synchronous/streaming synthesis now accepts selected fundamentals in
+its version-2 envelope. Only available mapped C#A#F# groups with their linked P#
+can support interpretation; every usable filing asset must contribute evidence,
+with mandatory asset/conflict/truncation limitations. Existing Deep routing,
+bounded repair and deadlines apply; rejected prose is withheld and evidence is
+retained on model failure. Unselected serialized context retains version 1.
+Browser selection/inspection and maintainer feedback remain next. See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release
@@ -1106,7 +1107,7 @@ bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
 
 Started 2026-11-06. See `docs/wiki/Roadmap.md` for the bounded scope and
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the source audit and sequence.
-SEC collection is now exposed on the evidence endpoint; model/browser integration remains pending.
+SEC evidence collection and checked synthesis are implemented; browser integration remains pending.
 
 - [x] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
       conflicts and revision limits. Start with SEC duration facts; the current
@@ -1124,10 +1125,19 @@ SEC collection is now exposed on the evidence endpoint; model/browser integratio
       Keep nested filing snapshots intact and map local F# to outer C#A#F#.
       Preserve cancellation and configuration/coverage/provider failures under
       shared 3-source/12s-per-source/40s-context budgets. Regenerate exposed API
-      docs. Evidence-only until checked synthesis is enabled; public synthesis
-      rejects selected fundamentals with 422 before work or stream headers.
-- [ ] Integrate eligible filing evidence into selected comparison briefings;
-      preserve the unselected flow and withhold unsupported historical attribution.
+      docs. The original evidence-only restriction is lifted by checked synthesis.
+- [x] Integrate selected filing evidence into synchronous/streaming comparison
+      synthesis. Only available mapped groups with linked pairs can support
+      context/hypotheses; require each usable asset to contribute evidence and
+      disclose asset/conflict/truncation limits. Preserve exact concepts, units
+      and durations; prompt against inferred revisions, historical knowledge,
+      growth/valuation calculations and causal verdicts. Extend safe repair refs
+      through C30/F8; keep Deep routing, one repair and existing ceilings/deadlines.
+      Test mixed/maximal sources, gaps/conflicts, safe repair, failed-model evidence
+      retention, user-JWT auth and cancellation of collection/inference.
+- [ ] Add browser fundamentals selection and inspectable filing evidence,
+      including scope changes cancelling stale results and explicit gap/conflict
+      states. Update strict client validation and deterministic browser checks.
 - [ ] Verify citation, conflict, missing-data and provider-failure handling; obtain
       maintainer acceptance before release preparation. Split PRs by reviewable
       changes after the audit, with no fixed count.

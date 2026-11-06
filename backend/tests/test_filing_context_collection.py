@@ -179,22 +179,3 @@ def test_evidence_endpoint_is_authenticated_and_skips_model(monkeypatch):
         response = app.post('/api/market-context/briefing-context-evidence', json={
             'anchor': 'AAPL', 'comparisons': ['SPY'], 'context': {'fundamentals': True}})
     assert response.status_code == 401
-
-
-@pytest.mark.parametrize('path', ['/briefing-context', '/briefing-context/stream'])
-def test_synthesis_rejects_fundamentals_before_fetch_or_stream_headers(monkeypatch, path):
-    monkeypatch.setattr(routes, 'collect_context_evidence', lambda *a, **k: pytest.fail('Not enabled for synthesis yet'))
-    with _client(_Fetcher()) as app:
-        response = app.post('/api/market-context' + path, json={
-            'anchor': 'AAPL', 'comparisons': ['SPY'], 'context': {'fundamentals': True}})
-    assert response.status_code == 422
-    assert 'evidence-only' in response.text
-
-
-@pytest.mark.asyncio
-async def test_internal_synthesis_also_rejects_unsupported_envelope_before_model(monkeypatch):
-    from backend.services import comparison_context_briefing as synthesis
-    packet = await collect(SEC())
-    monkeypatch.setattr(synthesis, 'get_settings', lambda: pytest.fail('No model setup for unsupported envelope'))
-    with pytest.raises(ValueError, match='evidence-only'):
-        await synthesis.generate_context_briefing(packet)

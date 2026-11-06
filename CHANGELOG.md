@@ -14,8 +14,16 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   with distinct filing references, conflicts and coverage/failure states.
   Collection shares the existing concurrency/deadline/cancellation limits.
   Requires `SEC_USER_AGENT`; no filing downloads or historical-knowledge claim.
-  This is evidence-only: fundamentals synthesis and browser selection are pending.
   Unselected context retains its version-1 serialized shape.
+- **Checked filing interpretation** — comparison context synthesis and its
+  progress stream accept selected fundamentals, using only available mapped
+  filing groups with linked price-pair references. Each usable filing asset
+  must contribute evidence; conflicts, truncated disclosures and failed/empty
+  checks remain explicit. Prompts distinguish fiscal periods, filing dates and
+  retrieval time, without asserting historical knowledge, revision priority or
+  price causation. Existing Deep routing, one bounded repair and cancellation
+  apply; rejected prose is withheld and evidence survives model failure.
+  Browser selection and evidence inspection remain pending.
 
 ## [2.6.0] - 2026-11-05
 

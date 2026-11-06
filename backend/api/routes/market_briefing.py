@@ -202,11 +202,7 @@ class ComparisonContextEvidenceRequest(ComparisonBriefingEvidenceRequest):
 
 
 class ComparisonContextBriefingRequest(ComparisonContextEvidenceRequest):
-    @model_validator(mode="after")
-    def synthesis_scope(self):
-        if self.context.fundamentals:
-            raise ValueError("Fundamentals are currently evidence-only; use /briefing-context-evidence. Checked synthesis is not enabled yet.")
-        return self
+    """Same explicit selections for evidence preparation and checked synthesis."""
 
 
 @router.post(
@@ -227,7 +223,6 @@ async def prepare_context_briefing_evidence(
     its deadline; technical projection reuses the same fresh comparison, with
     no second history request. Selected fundamentals use one current Company
     Facts fetch per unique symbol and schema-version 2, with exact pair windows.
-    Fundamentals are evidence-only until checked synthesis is enabled.
     No model, save or index work occurs here.
     """
     price, snapshot = await _prepare_context_price(payload, user, fetcher)
@@ -236,7 +231,7 @@ async def prepare_context_briefing_evidence(
                                           **({"technical_snapshot": snapshot} if snapshot is not None else {}))
 
 
-async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None, *, profile=None):
+async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None, *, profile=None, sec_client=None):
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if on_phase:
         on_phase("preparing_evidence")
@@ -249,6 +244,7 @@ async def _run_context_briefing(payload, user, fetcher, economic_service, on_pha
     if on_phase:
         on_phase("collecting_context")
     evidence = await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service,
+                                               **({"sec_client": sec_client} if sec_client is not None and payload.context.fundamentals else {}),
                                                **({"technical_snapshot": snapshot} if snapshot is not None else {}))
     return await generate_context_briefing(evidence, on_phase=on_phase, profile=profile)
 
@@ -259,17 +255,20 @@ async def create_context_briefing(
     user: User = Depends(get_current_user),
     fetcher: Any = Depends(get_unified_fetcher),
     economic_service: EconomicDataService = Depends(get_economic_data_service),
+    sec_client: SecEdgarClient = Depends(get_sec_edgar_client),
 ) -> ComparisonContextBriefingResult:
     """Opt-in dated/technical context synthesis; no causal verification or advice.
 
     The complete price/context snapshot and fixed scope notice survive model
     failure. Citation validation checks references and coverage, not prose truth.
     Unselected v2.2 endpoints retain their price-only contract.
-    Selected fundamentals currently return 422; collect them through the
-    evidence endpoint until checked synthesis supports the version-2 envelope.
+    Selected SEC fundamentals use the version-2 envelope and mapped filing
+    references. Current aggregates do not establish historical knowledge,
+    corroborated filing-instance values, revision order or price causation.
     """
     _normalized_payload(payload)
-    return await _run_context_briefing(payload, user, fetcher, economic_service)
+    return await _run_context_briefing(payload, user, fetcher, economic_service,
+                                       **({"sec_client": sec_client} if payload.context.fundamentals else {}))
 
 
 @router.post(
@@ -287,11 +286,12 @@ async def stream_context_briefing(
     user: User = Depends(get_current_user),
     fetcher: Any = Depends(get_unified_fetcher),
     economic_service: EconomicDataService = Depends(get_economic_data_service),
+    sec_client: SecEdgarClient = Depends(get_sec_edgar_client),
 ) -> StreamingResponse:
     """Cancellable completion-based context synthesis, without automatic replay.
 
-    Selected fundamentals currently return 422 before stream headers; they are
-    supported only by the evidence endpoint until checked synthesis is enabled.
+    Selected SEC fundamentals share the same checked synthesis and source/model
+    budgets as the synchronous route. Disconnect cancels collection and synthesis.
     """
     _normalized_payload(payload)  # Reject malformed symbols before 200 headers.
     profile = resolve_llm_profile(get_settings(), "comparison_briefing")
@@ -302,7 +302,8 @@ async def stream_context_briefing(
         phase = value
 
     async def operation():
-        result = await _run_context_briefing(payload, user, fetcher, economic_service, set_phase, profile=profile)
+        result = await _run_context_briefing(payload, user, fetcher, economic_service, set_phase, profile=profile,
+                                              **({"sec_client": sec_client} if payload.context.fundamentals else {}))
         return result.model_dump(mode="json")
 
     async def events():

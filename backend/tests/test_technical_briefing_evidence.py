@@ -251,8 +251,8 @@ async def test_deep_synthesis_repairs_missing_technical_coverage_once_with_safe_
 
 
 def test_section_and_safe_reference_bounds_include_six_pairs_and_all_selected_sources():
-    safe = InvalidComparisonBriefing("technical_coverage", references=["C24A2T3", "C25A1T1", "C1A1T1", "secret"])
-    assert safe.references == ["C1A1T1", "C24A2T3"]
+    safe = InvalidComparisonBriefing("technical_coverage", references=["C24A2T3", "C30A1T1", "C31A1T1", "C1A1T1", "secret"])
+    assert safe.references == ["C1A1T1", "C24A2T3", "C30A1T1"]
     data = histories()
     selected = ["BTC-USD", "SPY", "QQQ", "MSFT", "GOOG", "IWM"]
     for symbol in selected[2:]:

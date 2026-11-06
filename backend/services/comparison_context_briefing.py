@@ -15,7 +15,9 @@ from backend.services.comparison_briefing import (
     _FAILURES, material_price_references, synthesize_checked_briefing, validate_comparison_briefing,
 )
 from backend.services.llm_client import LLMError, parse_json_response
-from backend.services.market_briefing_context_evidence import ComparisonContextEvidence, NewsContextSection, TechnicalContextSection
+from backend.services.market_briefing_context_evidence import (
+    ComparisonContextEvidence, FilingContextSection, NewsContextSection, TechnicalContextSection,
+)
 
 MAX_CONTEXT_INPUT_CHARS = 120_000
 
@@ -62,7 +64,11 @@ class ComparisonContextBriefingResult(BaseModel):
         "Macro reference periods are not publication dates; current vintages do not establish "
         "past knowledge or ticker relevance. When selected, technical measures use each asset's "
         "own adjusted observations, not identical calendar spans or verified adjustments, "
-        "sessions, completed bars or trading signals. Interpretations are hypotheses; citations "
+        "sessions, completed bars or trading signals. Selected filing facts identify "
+        "current SEC aggregate values, not exact filing "
+        "corroboration, revision priority or historical investor knowledge. Fiscal periods, "
+        "filing dates and terminal retrieval times have different meanings. Interpretations "
+        "are hypotheses; citations "
         "anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are "
         "checked, not the truth of prose. This is not investment advice. Inspect sources, "
         "dates, coverage and failures; nested price-only exclusions apply to that subpacket."
@@ -120,6 +126,23 @@ def _reference_rules(evidence):
                         usable[metric.citation_id] = section.pair_citation_id
                     else:
                         missing.add(metric.citation_id)
+        elif isinstance(section, FilingContextSection):
+            for asset in section.assets:
+                known.add(asset.citation_id)
+                material.add(asset.citation_id)  # Current aggregate, exact scope and coverage.
+                if asset.status not in {"available", "partial"}:
+                    missing.add(asset.citation_id)
+                if asset.snapshot is None:
+                    continue
+                for group in asset.snapshot.groups:
+                    ref = asset.group_citations[group.citation_id]
+                    known.add(ref)
+                    if group.status == "available" and group.value is not None:
+                        usable[ref] = section.pair_citation_id
+                    else:
+                        missing.add(ref)
+                    if group.status != "available" or group.omitted_disclosure_count:
+                        material.add(ref)
         else:
             for series in section.series:
                 known.add(series.citation_id)
@@ -167,6 +190,9 @@ def validate_context_briefing(content: str, evidence: ComparisonContextEvidence)
     for group in _technical_required_groups(evidence, usable):
         if not set(group["at_least_one_of"]) & used_context:
             raise InvalidComparisonBriefing("technical_coverage", references=group["at_least_one_of"])
+    for group in _filing_required_groups(evidence, usable):
+        if not set(group["at_least_one_of"]) & used_context:
+            raise InvalidComparisonBriefing("fundamentals_coverage", references=group["at_least_one_of"])
     # Reuse every price coverage/caveat rule without allowing context references
     # to masquerade as price observations or removing the nested packet's scope.
     price_refs = {"SCOPE", *(pair.citation_id for pair in evidence.price.comparisons)}
@@ -189,6 +215,13 @@ def _technical_required_groups(evidence, usable):
             for asset in section.assets if any(metric.citation_id in usable for metric in asset.metrics)]
 
 
+def _filing_required_groups(evidence, usable):
+    return [{"pair": section.pair_citation_id, "asset": asset.citation_id,
+             "at_least_one_of": [ref for ref in asset.group_citations.values() if ref in usable]}
+            for section in evidence.sections if isinstance(section, FilingContextSection)
+            for asset in section.assets if any(ref in usable for ref in asset.group_citations.values())]
+
+
 def context_reference_requirements(evidence: ComparisonContextEvidence) -> dict:
     """Explicit obligations derived from the validator, not source instructions.
 
@@ -199,7 +232,7 @@ def context_reference_requirements(evidence: ComparisonContextEvidence) -> dict:
     available = {pair.citation_id for pair in evidence.price.comparisons if pair.status == "available"}
     unavailable = {pair.citation_id for pair in evidence.price.comparisons if pair.status != "available"}
     material_pairs = material_price_references(evidence.price)
-    return {
+    requirements = {
         "packet_id": evidence.packet_id,
         "allowed_references": sorted(known),
         "observations_required_and_only_references": sorted(available),
@@ -212,6 +245,9 @@ def context_reference_requirements(evidence: ComparisonContextEvidence) -> dict:
         "unknowns_forbidden_pair_references": sorted(available),
         "technical_required_source_groups": _technical_required_groups(evidence, usable),
     }
+    if evidence.requested.fundamentals:
+        requirements["fundamentals_required_source_groups"] = _filing_required_groups(evidence, usable)
+    return requirements
 
 
 _SYSTEM = """Write a concise, useful briefing from ONLY this exact context envelope.
@@ -231,10 +267,12 @@ actual shared-UTC window, not guaranteed simultaneous sessions or like-for-like 
 Missing/stale observations cannot become current or zero returns. Keep signs/dates faithful.
 Return ONLY the supplied JSON schema and exact OUTER packet_id. Every statement needs refs.
 Hypotheses must cite at least one available P#; optional context refs must be actual
-usable headlines/series/technical metrics AND their linked available P#. No SCOPE/section/group refs.
+usable headlines/series/technical metrics or selected available filing metric groups AND their
+linked available P#. No SCOPE/section/asset refs or unavailable/conflicting groups.
 Observations collectively cite ALL available P1-P6 pairs and ONLY those pairs.
 Possible_context may be empty. Each item MUST cite an available headline (C#G#H#) or
-macro series with values (C#S#) or technical metric (C#A#T#), AND its linked P#;
+macro series with values (C#S#), technical metric (C#A#T#), or available filing metric
+group (C#A#F#), AND its linked P#;
 no other refs in possible_context.
 Use tentative language: a dated report/observation may provide context, not explain a move.
 Limitations MUST cite SCOPE, EVERY selected C# section, all material price-caveat pairs,
@@ -263,12 +301,36 @@ pattern conditionally alongside selected news/macro when useful, and name altern
 or distinguishing evidence without recommending trades or inventing absent facts.
 """
 
+_FILING_INSTRUCTIONS = """
+Selected fundamentals are bounded duration facts from the current SEC Company Facts
+aggregate. They are not independently corroborated filing-instance values or a complete
+historical archive. Exact filing checks remain excluded. A source filing link is not
+evidence that a filing download or corroboration ran. No private sources were read.
+Keep fiscal start/end, filed date and today's terminal retrieval distinct. Fiscal periods
+measure business activity; filing dates select disclosures in the price window, not
+verified publication instants or evidence of what investors knew or priced in then.
+Use only supplied non-conflicting available values with their exact concept, unit and
+duration; zero and negative values are valid. No inferred currency conversion, growth,
+valuation ratios, latest truth, correction/revision order or cross-issuer comparability.
+Different revenue concepts, fiscal years and quarterly/year-to-date/annual durations
+are not interchangeable. A later accession or amendment is not automatically superior.
+Conflicting values/metadata have been withheld. Never reconstruct or guess them, choose
+a winner, treat them as zero, or use a failed/empty check as proof no filings exist.
+Preserve per-asset source scope, omitted groups/disclosures and conflicts in limitations.
+Outer group_citations map local F# to C#A#F#. Cite ONLY the outer mapped references;
+nested packet-local F#, accessions and filing links are not response citation IDs.
+For each fundamentals_required_source_groups entry, cite at least one listed available
+group AND its linked P# in possible_context or a hypothesis. Cite every filing asset
+C#A# and selected section C# in limitations. Cite conflicted/truncated groups there too;
+disclose empty/failed assets/groups in limitations or unknowns. Discuss conditional
+business implications, plausible alternatives and what further evidence would help;
+do not assert that a filing caused a past price move or make an investment verdict.
+"""
+
 
 async def generate_context_briefing(
     evidence: ComparisonContextEvidence, *, on_phase=None, profile: ResolvedLLMProfile | None = None,
 ):
-    if evidence.schema_version != "1" or evidence.requested.fundamentals:
-        raise ValueError("Fundamentals are evidence-only until checked synthesis supports version 2")
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if not any(pair.status == "available" for pair in evidence.price.comparisons):
         return unavailable_context_briefing("no_evidence", evidence=evidence, profile=profile)
@@ -278,7 +340,8 @@ async def generate_context_briefing(
         return unavailable_context_briefing("evidence_too_large", evidence=evidence, profile=profile)
     parsed, failure = await synthesize_checked_briefing(
         evidence, schema=GeneratedContextBriefing.model_json_schema(),
-        system=_SYSTEM + (_TECHNICAL_INSTRUCTIONS if evidence.requested.technical else ""),
+        system=(_SYSTEM + (_TECHNICAL_INSTRUCTIONS if evidence.requested.technical else "")
+                + (_FILING_INSTRUCTIONS if evidence.requested.fundamentals else "")),
         validate=validate_context_briefing, on_phase=on_phase, max_tokens=6400,
         reference_requirements=context_reference_requirements(evidence),
         profile=profile,

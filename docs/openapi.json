@@ -2309,7 +2309,7 @@
         "properties": {
           "fundamentals": {
             "default": false,
-            "description": "Opt-in SEC aggregate facts; currently evidence-endpoint only, not synthesis.",
+            "description": "Opt-in current SEC aggregate facts with mapped filing references and coverage limits.",
             "title": "Fundamentals",
             "type": "boolean"
           },
@@ -3912,6 +3912,7 @@
       },
       "ComparisonContextBriefingRequest": {
         "additionalProperties": false,
+        "description": "Same explicit selections for evidence preparation and checked synthesis.",
         "properties": {
           "anchor": {
             "examples": [
@@ -4056,7 +4057,7 @@
             "type": "string"
           },
           "scope_notice": {
-            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+            "default": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
             "title": "Scope Notice",
             "type": "string"
           },
@@ -33028,7 +33029,7 @@
     },
     "/api/market-context/briefing-context": {
       "post": {
-        "description": "Opt-in dated/technical context synthesis; no causal verification or advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.\nSelected fundamentals currently return 422; collect them through the\nevidence endpoint until checked synthesis supports the version-2 envelope.",
+        "description": "Opt-in dated/technical context synthesis; no causal verification or advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.\nSelected SEC fundamentals use the version-2 envelope and mapped filing\nreferences. Current aggregates do not establish historical knowledge,\ncorroborated filing-instance values, revision order or price causation.",
         "operationId": "create_context_briefing_api_market_context_briefing_context_post",
         "requestBody": {
           "content": {
@@ -33082,7 +33083,7 @@
     },
     "/api/market-context/briefing-context-evidence": {
       "post": {
-        "description": "Fresh prices plus selected news, macro, technical and/or SEC filing evidence.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; technical projection reuses the same fresh comparison, with\nno second history request. Selected fundamentals use one current Company\nFacts fetch per unique symbol and schema-version 2, with exact pair windows.\nFundamentals are evidence-only until checked synthesis is enabled.\nNo model, save or index work occurs here.",
+        "description": "Fresh prices plus selected news, macro, technical and/or SEC filing evidence.\n\nPrice preparation has a 45s budget, selected context a further 40s with up\nto three concurrent source jobs and 12s per job. Partial context survives\nits deadline; technical projection reuses the same fresh comparison, with\nno second history request. Selected fundamentals use one current Company\nFacts fetch per unique symbol and schema-version 2, with exact pair windows.\nNo model, save or index work occurs here.",
         "operationId": "prepare_context_briefing_evidence_api_market_context_briefing_context_evidence_post",
         "requestBody": {
           "content": {
@@ -33139,7 +33140,7 @@
     },
     "/api/market-context/briefing-context/stream": {
       "post": {
-        "description": "Cancellable completion-based context synthesis, without automatic replay.\n\nSelected fundamentals currently return 422 before stream headers; they are\nsupported only by the evidence endpoint until checked synthesis is enabled.",
+        "description": "Cancellable completion-based context synthesis, without automatic replay.\n\nSelected SEC fundamentals share the same checked synthesis and source/model\nbudgets as the synchronous route. Disconnect cancels collection and synthesis.",
         "operationId": "stream_context_briefing_api_market_context_briefing_context_stream_post",
         "requestBody": {
           "content": {
