@@ -116,8 +116,10 @@ never silently faked.
   evidence endpoint accepts `context.fundamentals: true` and returns version-2
   SEC aggregate evidence with pair-linked references and explicit conflicts,
   missing configuration, coverage and provider failures. It requires
-  `SEC_USER_AGENT`. The existing browser and checked synthesis do not yet select
-  or interpret this evidence; synthesis requests selecting it return 422.
+  `SEC_USER_AGENT`. Checked context synthesis and its stream now accept the same
+  selection, enforce available mapped filing/pair references and preserve scope,
+  conflict and failure limitations. The current browser has no selector or filing
+  evidence inspection yet. Reference checks do not verify the truth of prose.
   Company Facts retrieval is not exact filing corroboration, a historical
   vintage or proof of investor knowledge. See the
   [filing evidence contract](Fundamentals-Briefing-Contract.md).

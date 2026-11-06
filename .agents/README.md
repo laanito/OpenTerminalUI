@@ -53,13 +53,14 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. The internal SEC projection/audit (#259, merged) and selected SEC
-collection are implemented. The evidence endpoint accepts fundamentals and
-returns a version-2 pair-linked envelope, with one aggregate fetch per symbol,
-shared source/context budgets and cancellation. Unselected serialized context
-retains version 1. Checked synthesis and browser selection remain next; synthesis
-requests selecting fundamentals currently return 422 before work/stream headers.
-See
+contract. The SEC projection/audit (#259) and collection (#260) are merged.
+Checked synchronous/streaming synthesis now accepts selected fundamentals in
+its version-2 envelope. Only available mapped C#A#F# groups with their linked P#
+can support interpretation; every usable filing asset must contribute evidence,
+with mandatory asset/conflict/truncation limitations. Existing Deep routing,
+bounded repair and deadlines apply; rejected prose is withheld and evidence is
+retained on model failure. Unselected serialized context retains version 1.
+Browser selection/inspection and maintainer feedback remain next. See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release

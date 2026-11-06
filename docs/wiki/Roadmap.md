@@ -708,8 +708,10 @@ projection and [coverage audit](Fundamentals-Briefing-Contract.md). The audit
 selects the existing SEC duration facts; the FMP/Yahoo PIT projection does not
 retain units, fiscal start or accession. Conflicts are checked across all eligible
 records before display limits. Explicit per-symbol fetching and a pair-linked
-version-2 evidence envelope are implemented. Checked synthesis and browser
-selection remain follow-ups; briefing synthesis still excludes fundamentals.
+version-2 evidence envelope are implemented. Checked synthesis now uses mapped
+filing/pair references, mandatory asset coverage and material limitations under
+the existing Deep profile and bounded repair. Browser selection/inspection and
+maintainer feedback remain follow-ups.
 
 - Audit the existing SEC/FMP evidence paths, metric identities, units, fiscal
   periods, filing dates, conflicts and historical/revision coverage before

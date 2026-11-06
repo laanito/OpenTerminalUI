@@ -1,9 +1,8 @@
 # Filing evidence for comparison briefings
 
-Status: **v2.7 collection slice, 2026-11-06**. The audit, internal projection and
-explicit evidence-endpoint collection are implemented. Checked synthesis and
-browser selection are pending; briefing synthesis still excludes fundamentals
-and exact SEC filing checks.
+Status: **v2.7 synthesis slice, 2026-11-06**. The audit, internal projection,
+explicit collection and checked synthesis are implemented. Browser selection
+and evidence inspection remain pending. Exact SEC filing checks stay excluded.
 
 ## Coverage audit
 
@@ -74,11 +73,9 @@ messages. These states describe the projection, not complete SEC coverage.
 2. **Implemented:** explicitly selected fundamentals on the evidence endpoint,
    bounded per-symbol fetches, pair-window linkage, cancellation and a versioned
    outer envelope. Generated API documentation reflects the exposed schemas.
-3. **Checked synthesis:** extend prompt, reference validation and bounded repair
-   together. Require source/pair references and material coverage limitations.
-   Distinguish fiscal measurement periods, filing dates and today's retrieval;
-   avoid historical causation, presumed revisions or unsupported cross-company
-   comparisons. Structural citation checks do not verify prose truth.
+3. **Implemented:** prompt, reference validation and bounded repair support
+   selected filing evidence in synchronous and streaming context synthesis.
+   See the checked-interpretation contract below.
 4. **Browser journey and acceptance:** opt-in selection, scope changes cancelling
    stale results, inspectable values/units/durations/accessions and conflict/gap
    states; deterministic browser regression checks and maintainer feedback.
@@ -125,7 +122,41 @@ and timeouts remain distinguishable. Provider exception strings are not returned
 or logged. These paths perform no synthesis, filing-instance download, capture
 write, private-source read or indexing.
 
-Until checked synthesis is integrated, `/briefing-context` and its stream reject
-`fundamentals: true` with 422 before collection, model work or stream headers.
-The current browser cannot select fundamentals yet. This prevents an unsupported
-evidence section from silently reaching the old prompt or reference validator.
+## Checked interpretation
+
+`POST /api/market-context/briefing-context` and `/briefing-context/stream` now
+accept the same `context.fundamentals: true` selection. They require the existing
+user JWT, prepare a fresh server comparison, collect selected context and invoke
+the existing Deep profile. The current browser cannot select fundamentals yet.
+
+Only available, non-conflicting numerical groups enter the usable reference
+index, under their mapped C#A#F# IDs. Each use in possible context or a hypothesis
+must include its exact linked P#. Nested F#, filing URLs, accessions, sections,
+asset references and failed/conflicted groups cannot support numerical context.
+Price observations still cite only available price pairs. Each filing asset with
+usable groups must contribute at least one such reference in possible context
+or a hypothesis, so a completed answer cannot silently ignore selected evidence.
+
+Every selected section and filing asset is required in limitations, including
+unavailable assets. Conflicted groups and groups with omitted disclosures are
+also required in limitations. Empty/failed groups remain explicit in limitations
+or unknowns. Asset-level scope includes omitted group counts and conflicts beyond
+the display cap. The rules do not require a particular causal or business claim.
+
+The selected-only filing prompt asks for conditional business implications,
+alternatives and further evidence, while distinguishing fiscal measurement
+periods, filed dates and retrieval time. It prohibits inventing withheld numbers,
+growth rates, currency conversions or valuation ratios; it does not infer revision
+priority, historical investor knowledge or cross-issuer comparability. Structural
+reference validation does not verify those semantic claims or reasoning quality.
+Current Company Facts remain distinct from an exact filing-instance check.
+
+The same version-2 evidence packet is retained across the existing single bounded
+repair. Diagnostics allow only known codes, schema paths and bounded reference
+names through C30 and F8; rejected prose is never echoed into repair feedback or
+streamed as a completed result. The existing input/response ceilings, 6,400-token
+completion ceiling and resolved model deadline remain unchanged. Missing coverage
+does not become fabricated evidence. Model failures retain the collected packet
+with no completed interpretation; disconnect cancels collection or inference.
+No snapshot persistence, automatic capture, private indexing or new model setting
+is introduced. Browser inspection and maintainer feedback remain the next gate.
