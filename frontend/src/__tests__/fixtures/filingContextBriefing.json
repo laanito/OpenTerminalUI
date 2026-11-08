@@ -1,0 +1,2779 @@
+{
+  "selection": {
+    "anchor": "AAPL",
+    "comparisons": [
+      "SPY"
+    ],
+    "period": "1M"
+  },
+  "complete": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "efe3be5539adcaa3097404d167514e839f5870af7f64812c3621a96412d1a7fb",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "available",
+          "reason": null,
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "f97cefc82792054dd880b2cd5d63bf58d61751596f6c266dcb38a92675096b9f",
+                "symbol": "AAPL",
+                "cik": 320193,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "412b18f8f831d51c61c6274bd878fd05a0ffe7667a7a9a90871db025b57bb668",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000320193-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000002/0000320193-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000320193-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/0000320193-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A1F1"
+              }
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "4af006f65f78654bb6672799c6e08f67e070f7e48d3e0cba70dcb346c4398fc6",
+                "symbol": "SPY",
+                "cik": 884394,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "ebf02c93f615003826f6e58a84691bf6e2ca305f8406895eab94d13687d4e263",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000884394-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000002/0000884394-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000884394-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000001/0000884394-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A2F1"
+              }
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1A1F1"
+        ]
+      },
+      {
+        "text": "The selected available evidence may inform a conditional explanation; alternatives remain open.",
+        "citation_ids": [
+          "P1",
+          "C1A1F1",
+          "C1A2F1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "conflict": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "8969c990a58538ad3263cd88c9c9befb464c64d7d4b8d7312faa3eddeaa69f0b",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "partial",
+          "reason": null,
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "empty",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "fe73dec9c314033fa702a021876a70c01bb012b63345a4f6f319bef31c493b22",
+                "symbol": "AAPL",
+                "cik": 320193,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "empty",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 1,
+                "omitted_group_count": 0,
+                "source_records_id": "183ac2ff48e8cdfba2c5901dc80b63a363c4674dc0b8a255af6cedf80b5f0ce9",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "conflicting_values",
+                    "value": null,
+                    "distinct_value_count": 2,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000320193-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000002/0000320193-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000320193-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/0000320193-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A1F1"
+              }
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "4af006f65f78654bb6672799c6e08f67e070f7e48d3e0cba70dcb346c4398fc6",
+                "symbol": "SPY",
+                "cik": 884394,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "ebf02c93f615003826f6e58a84691bf6e2ca305f8406895eab94d13687d4e263",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000884394-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000002/0000884394-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000884394-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000001/0000884394-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A2F1"
+              }
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1A2F1"
+        ]
+      },
+      {
+        "text": "The selected available evidence may inform a conditional explanation; alternatives remain open.",
+        "citation_ids": [
+          "P1",
+          "C1A2F1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A1F1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "truncated": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "af78892879e36a86c9f75db27b827aeed9b407da5cca8822d1f346a4e92c2a47",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "partial",
+          "reason": null,
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "partial",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "588236a50dc3e6e1a8e2380b9ceb15969916ba0d605780bce1373dfab4256937",
+                "symbol": "AAPL",
+                "cik": 320193,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "partial",
+                "reason": null,
+                "examined_count": 59,
+                "matched_fact_count": 59,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "a9bb62f6f7f1118c8ec5b849510d824ce7404d2263c959a68c26b7767b5ba601",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 59,
+                    "omitted_disclosure_count": 56,
+                    "disclosures": [
+                      {
+                        "accession": "0000320193-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000002/0000320193-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000320193-26-000059",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000059/0000320193-26-000059-index.html"
+                      },
+                      {
+                        "accession": "0000320193-26-000058",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000058/0000320193-26-000058-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A1F1"
+              }
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "4af006f65f78654bb6672799c6e08f67e070f7e48d3e0cba70dcb346c4398fc6",
+                "symbol": "SPY",
+                "cik": 884394,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "ebf02c93f615003826f6e58a84691bf6e2ca305f8406895eab94d13687d4e263",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000884394-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000002/0000884394-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000884394-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000001/0000884394-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A2F1"
+              }
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1A1F1"
+        ]
+      },
+      {
+        "text": "The selected available evidence may inform a conditional explanation; alternatives remain open.",
+        "citation_ids": [
+          "P1",
+          "C1A1F1",
+          "C1A2F1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A1F1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "failed": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "8307b4879aa761386a6fff8a7bb20d266e3b556e79dbc84df54a4976332f867b",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "unavailable",
+          "reason": "filing_inputs_unavailable",
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "unavailable",
+              "reason": "provider_error",
+              "snapshot": null,
+              "group_citations": {}
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "unavailable",
+              "reason": "provider_error",
+              "snapshot": null,
+              "group_citations": {}
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "empty": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "195ca83abdbca37d321274ba557e6aa1fa06ce5d0649af7b6f9237824af06490",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "empty",
+          "reason": null,
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "empty",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "fa51bcc8af9d593028e9cab09aaa8d2d5cbb538e7f6a533f3ead03054f4665ed",
+                "symbol": "AAPL",
+                "cik": 320193,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "empty",
+                "reason": null,
+                "examined_count": 0,
+                "matched_fact_count": 0,
+                "matched_group_count": 0,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {}
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "empty",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "6c61f4510bd8aeb146acab83597945017119cd78846a62bf88af085284a4cb46",
+                "symbol": "SPY",
+                "cik": 884394,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "empty",
+                "reason": null,
+                "examined_count": 0,
+                "matched_fact_count": 0,
+                "matched_group_count": 0,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {}
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "mixed": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "58db94b88564cd43b5eb192cf51d6f68c72bd417fcae2e1bfa3824ea59f33bc9",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": true,
+        "macro_regions": [
+          "us"
+        ],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": "2026-10-22T12:00:00Z",
+          "status": "available",
+          "reason": null,
+          "kind": "headlines",
+          "source": "current_keyless_feeds",
+          "fetch_limit_per_symbol": 50,
+          "groups": [
+            {
+              "citation_id": "C1G1",
+              "symbol": "AAPL",
+              "status": "available",
+              "examined_count": 10,
+              "matched_count": 1,
+              "upstream_display_limit": 10,
+              "returned_headline_count": 1,
+              "withheld_invalid_count": 0,
+              "withheld_duplicate_count": 0,
+              "headlines": [
+                {
+                  "citation_id": "C1G1H1",
+                  "title": "A dated report for AAPL",
+                  "title_truncated": false,
+                  "url": "https://example.com/AAPL",
+                  "source": "Test source",
+                  "published_at": "2026-09-29T10:00:00Z"
+                }
+              ]
+            },
+            {
+              "citation_id": "C1G2",
+              "symbol": "SPY",
+              "status": "available",
+              "examined_count": 10,
+              "matched_count": 1,
+              "upstream_display_limit": 10,
+              "returned_headline_count": 1,
+              "withheld_invalid_count": 0,
+              "withheld_duplicate_count": 0,
+              "headlines": [
+                {
+                  "citation_id": "C1G2H1",
+                  "title": "A dated report for SPY",
+                  "title_truncated": false,
+                  "url": "https://example.com/SPY",
+                  "source": "Test source",
+                  "published_at": "2026-09-29T10:00:00Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "citation_id": "C2",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": "2026-10-22T12:00:00Z",
+          "status": "available",
+          "reason": null,
+          "kind": "macro",
+          "region": "us",
+          "vintage_basis": "current_at_retrieval",
+          "realtime_date": "2026-10-22",
+          "series": [
+            {
+              "citation_id": "C2S1",
+              "series_id": "CPIAUCSL",
+              "label": "CPIAUCSL",
+              "source": "fred",
+              "source_url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+              "title": "Official CPIAUCSL",
+              "units": "Percent",
+              "frequency": "Monthly",
+              "status": "available",
+              "returned_observation_count": 1,
+              "upstream_matched_count": 1,
+              "withheld_conflict_count": 2,
+              "observations": [
+                {
+                  "reference_date": "2026-09-01",
+                  "value": 3.123456789,
+                  "flag": null
+                }
+              ]
+            },
+            {
+              "citation_id": "C2S2",
+              "series_id": "UNRATE",
+              "label": "UNRATE",
+              "source": "fred",
+              "source_url": "https://fred.stlouisfed.org/series/UNRATE",
+              "title": "Official UNRATE",
+              "units": "Percent",
+              "frequency": "Monthly",
+              "status": "available",
+              "returned_observation_count": 1,
+              "upstream_matched_count": 1,
+              "withheld_conflict_count": 2,
+              "observations": [
+                {
+                  "reference_date": "2026-09-01",
+                  "value": 3.123456789,
+                  "flag": null
+                }
+              ]
+            },
+            {
+              "citation_id": "C2S3",
+              "series_id": "FEDFUNDS",
+              "label": "FEDFUNDS",
+              "source": "fred",
+              "source_url": "https://fred.stlouisfed.org/series/FEDFUNDS",
+              "title": "Official FEDFUNDS",
+              "units": "Percent",
+              "frequency": "Monthly",
+              "status": "available",
+              "returned_observation_count": 1,
+              "upstream_matched_count": 1,
+              "withheld_conflict_count": 2,
+              "observations": [
+                {
+                  "reference_date": "2026-09-01",
+                  "value": 3.123456789,
+                  "flag": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "citation_id": "C3",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "available",
+          "reason": null,
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C3A1",
+              "symbol": "AAPL",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "f97cefc82792054dd880b2cd5d63bf58d61751596f6c266dcb38a92675096b9f",
+                "symbol": "AAPL",
+                "cik": 320193,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "412b18f8f831d51c61c6274bd878fd05a0ffe7667a7a9a90871db025b57bb668",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000320193-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000002/0000320193-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000320193-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/0000320193-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C3A1F1"
+              }
+            },
+            {
+              "citation_id": "C3A2",
+              "symbol": "SPY",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "4af006f65f78654bb6672799c6e08f67e070f7e48d3e0cba70dcb346c4398fc6",
+                "symbol": "SPY",
+                "cik": 884394,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "ebf02c93f615003826f6e58a84691bf6e2ca305f8406895eab94d13687d4e263",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000884394-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000002/0000884394-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000884394-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000001/0000884394-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C3A2F1"
+              }
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [
+      {
+        "text": "This dated source may provide context, but does not explain the price move.",
+        "citation_ids": [
+          "P1",
+          "C1G1H1"
+        ]
+      },
+      {
+        "text": "The selected available evidence may inform a conditional explanation; alternatives remain open.",
+        "citation_ids": [
+          "P1",
+          "C3A1F1",
+          "C3A2F1"
+        ]
+      }
+    ],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C2",
+          "C2S1",
+          "C2S2",
+          "C2S3",
+          "C3",
+          "C3A1",
+          "C3A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "configuration_required": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "6ba7ff70b9bd1c9eb43aff0d6c82719d0b33eaab6221e99fc62b190434c440d6",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "unavailable",
+          "reason": "filing_inputs_unavailable",
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "unavailable",
+              "reason": "configuration_required",
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "a08bbcb4f366113c8a50ac10bf8f8871825456944eba0c42b640d95e7db632f0",
+                "symbol": "AAPL",
+                "cik": null,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "unavailable",
+                "reason": "configuration_required",
+                "examined_count": 0,
+                "matched_fact_count": 0,
+                "matched_group_count": 0,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": null,
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {}
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "unavailable",
+              "reason": "configuration_required",
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "17d9c9911f63a89ec349fd4a07f7fe0924da36553fec433083ed66d30d14788c",
+                "symbol": "SPY",
+                "cik": null,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "unavailable",
+                "reason": "configuration_required",
+                "examined_count": 0,
+                "matched_fact_count": 0,
+                "matched_group_count": 0,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": null,
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {}
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "not_covered": {
+    "status": "complete",
+    "engine": "llm",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "c8625421132516069c844f46a1b387dd01f3cb20874f54454e65491bc9be046e",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "unavailable",
+          "reason": "filing_inputs_unavailable",
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "unavailable",
+              "reason": "not_covered",
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "97aef00c4bc6e25782e50f3bd2f5559fc6ee514c57f172eca032e7d8f82a4ce4",
+                "symbol": "AAPL",
+                "cik": null,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "unavailable",
+                "reason": "not_covered",
+                "examined_count": 0,
+                "matched_fact_count": 0,
+                "matched_group_count": 0,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": null,
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {}
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "unavailable",
+              "reason": "not_covered",
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "98e87910af878924becec2b8a98698abe198f9a0c986d69482dc2162aa9d0351",
+                "symbol": "SPY",
+                "cik": null,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "unavailable",
+                "reason": "not_covered",
+                "examined_count": 0,
+                "matched_fact_count": 0,
+                "matched_group_count": 0,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": null,
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {}
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [
+      {
+        "text": "The observed provider-close returns differ over this pair's stated window.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+        "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+        "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+        "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+        "citation_ids": [
+          "P1"
+        ]
+      }
+    ],
+    "possible_context": [],
+    "limitations": [
+      {
+        "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+        "citation_ids": [
+          "P1"
+        ]
+      },
+      {
+        "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+        "citation_ids": [
+          "C1",
+          "C1A1",
+          "C1A2",
+          "SCOPE"
+        ]
+      }
+    ],
+    "unknowns": [
+      {
+        "text": "The packet does not establish historical investor knowledge or a causal mechanism.",
+        "citation_ids": [
+          "SCOPE"
+        ]
+      }
+    ],
+    "failure": null
+  },
+  "model_failure": {
+    "status": "unavailable",
+    "engine": "unavailable",
+    "model": "fixture-deep-model",
+    "model_profile": {
+      "requested_profile": "deep",
+      "resolved_profile": "deep",
+      "model": "fixture-deep-model"
+    },
+    "generated_at": "2026-10-22T12:00:00Z",
+    "evidence": {
+      "schema_version": "2",
+      "evidence_kind": "comparison_with_optional_context",
+      "citation_scope": "packet_local",
+      "packet_id": "efe3be5539adcaa3097404d167514e839f5870af7f64812c3621a96412d1a7fb",
+      "prepared_at": "2026-10-22T12:00:00Z",
+      "requested": {
+        "news": false,
+        "macro_regions": [],
+        "technical": false,
+        "fundamentals": true
+      },
+      "price": {
+        "schema_version": "1",
+        "citation_scope": "packet_local",
+        "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+        "status": "available",
+        "anchor": "AAPL",
+        "period": "1M",
+        "retrieved_at": "2026-10-01T10:00:00Z",
+        "data_source": "unified_history",
+        "method": "same_utc_date_daily_closes",
+        "return_basis": "native_quote_currency_provider_closes",
+        "included_evidence": "shared_utc_provider_close_returns",
+        "not_included": [
+          "headlines",
+          "fundamentals",
+          "sec_filing_checks",
+          "macro",
+          "technical_measures",
+          "fx_views",
+          "adjusted_views",
+          "exchange_local_views",
+          "private_research"
+        ],
+        "comparisons": [
+          {
+            "citation_id": "P1",
+            "status": "available",
+            "reason": null,
+            "anchor": {
+              "symbol": "AAPL",
+              "history_adapter": "yahoo",
+              "history_feed": "yahoo_chart",
+              "latest_date": "2026-09-30",
+              "quote_unit": "USD",
+              "quote_unit_source": "yahoo_chart_meta",
+              "reported_adjustment_basis": "unspecified",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "comparison": {
+              "symbol": "SPY",
+              "history_adapter": "alpaca",
+              "history_feed": "alpaca_stocks_bars:iex:raw",
+              "latest_date": "2026-09-30",
+              "quote_unit": null,
+              "quote_unit_source": "unavailable",
+              "reported_adjustment_basis": "raw",
+              "withheld_provider_close_count": 0,
+              "withheld_date_scope": "selected_history_payload"
+            },
+            "pair_reported_basis_status": "unverified",
+            "returns": {
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "observations": 22,
+              "anchor_return_pct": 12.3456,
+              "comparison_return_pct": -2.3456,
+              "relative_return_pp": 14.6912,
+              "freshness": "current"
+            },
+            "caveats": [
+              "native_quote_not_fx_normalized",
+              "utc_dates_not_simultaneous_sessions",
+              "no_causal_or_investment_conclusion",
+              "unknown_quote_unit",
+              "unverified_price_basis"
+            ]
+          }
+        ]
+      },
+      "sections": [
+        {
+          "citation_id": "C1",
+          "pair_citation_id": "P1",
+          "start_date": "2026-09-01",
+          "end_date": "2026-09-30",
+          "retrieved_at": null,
+          "status": "available",
+          "reason": null,
+          "kind": "fundamentals",
+          "source": "sec_current_companyfacts",
+          "assets": [
+            {
+              "citation_id": "C1A1",
+              "symbol": "AAPL",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "f97cefc82792054dd880b2cd5d63bf58d61751596f6c266dcb38a92675096b9f",
+                "symbol": "AAPL",
+                "cik": 320193,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "412b18f8f831d51c61c6274bd878fd05a0ffe7667a7a9a90871db025b57bb668",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000320193-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000002/0000320193-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000320193-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/0000320193-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A1F1"
+              }
+            },
+            {
+              "citation_id": "C1A2",
+              "symbol": "SPY",
+              "status": "available",
+              "reason": null,
+              "snapshot": {
+                "schema_version": "1",
+                "evidence_kind": "sec_filing_briefing",
+                "packet_id": "4af006f65f78654bb6672799c6e08f67e070f7e48d3e0cba70dcb346c4398fc6",
+                "symbol": "SPY",
+                "cik": 884394,
+                "filed_start": "2026-09-01",
+                "filed_end": "2026-09-30",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "source": "sec_current_companyfacts",
+                "historical_availability": "not_established",
+                "revision_order": "not_established",
+                "status": "available",
+                "reason": null,
+                "examined_count": 2,
+                "matched_fact_count": 2,
+                "matched_group_count": 1,
+                "conflicting_group_count": 0,
+                "omitted_group_count": 0,
+                "source_records_id": "ebf02c93f615003826f6e58a84691bf6e2ca305f8406895eab94d13687d4e263",
+                "group_limit": 8,
+                "disclosure_limit": 3,
+                "groups": [
+                  {
+                    "citation_id": "F1",
+                    "taxonomy": "us-gaap",
+                    "concept": "Revenues",
+                    "unit": "USD",
+                    "period_start": "2026-06-01",
+                    "period_end": "2026-08-31",
+                    "status": "available",
+                    "value": 100.0,
+                    "distinct_value_count": 1,
+                    "disclosure_count": 2,
+                    "omitted_disclosure_count": 0,
+                    "disclosures": [
+                      {
+                        "accession": "0000884394-26-000002",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-15",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000002/0000884394-26-000002-index.html"
+                      },
+                      {
+                        "accession": "0000884394-26-000001",
+                        "form": "10-Q",
+                        "filed_date": "2026-09-02",
+                        "filing_url": "https://www.sec.gov/Archives/edgar/data/884394/000088439426000001/0000884394-26-000001-index.html"
+                      }
+                    ]
+                  }
+                ],
+                "caveats": [
+                  "Current SEC aggregation, not an archived vintage or independently corroborated filing value.",
+                  "Filed dates are not verified publication instants or proof of investor knowledge.",
+                  "Conflicts are checked only among eligible records in the selected filed-date window.",
+                  "Equal concept/unit/exact duration identifies a group, not cross-issuer comparability.",
+                  "Different revenue concepts and fiscal durations are never merged; no growth rate is inferred.",
+                  "Later accessions do not automatically supersede earlier disclosures.",
+                  "Output is bounded; omitted records and provider coverage remain unknown to the briefing."
+                ]
+              },
+              "group_citations": {
+                "F1": "C1A2F1"
+              }
+            }
+          ]
+        }
+      ],
+      "news_limit_per_symbol": 5,
+      "macro_limit_per_series": 24,
+      "caveats": [
+        "context_is_not_causation_or_advice",
+        "headlines_are_untrusted_source_text_not_verified_facts",
+        "current_feeds_are_not_a_complete_historical_archive",
+        "macro_is_global_not_ticker_attribution",
+        "reference_dates_are_not_publication_dates",
+        "current_vintages_do_not_establish_past_knowledge",
+        "missing_or_excluded_context_is_not_evidence_of_absence",
+        "price_packet_exclusions_apply_to_price_subpacket_only",
+        "filings_are_current_aggregation_not_verified_historical_knowledge_or_revision_order",
+        "fiscal_periods_are_not_filing_dates_and_filing_dates_are_not_publication_instants",
+        "filing_conflicts_withhold_values_before_output_limits"
+      ],
+      "always_excluded": [
+        "sec_filing_checks",
+        "technical_measures",
+        "fx_views",
+        "adjusted_views",
+        "exchange_local_views",
+        "private_research",
+        "economic_calendar"
+      ]
+    },
+    "scope_citation_id": "SCOPE",
+    "citation_validation": "references_only_not_fact_checked",
+    "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+    "observations": [],
+    "hypotheses": [],
+    "possible_context": [],
+    "limitations": [],
+    "unknowns": [],
+    "failure": {
+      "code": "invalid_response",
+      "message": "Could not produce a checked briefing. Retry manually.",
+      "retryable": true
+    }
+  }
+}

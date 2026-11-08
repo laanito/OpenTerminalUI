@@ -20,6 +20,13 @@ from backend.tests.test_market_briefing_context_evidence import NOW, prices, hea
 from backend.tests.test_market_briefing_evidence import _Fetcher, _client, _row
 
 
+def test_browser_fixture_matches_server_projection():
+    from backend.tests.generate_filing_briefing_fixture import DESTINATION, fixture
+    assert json.loads(DESTINATION.read_text()) == fixture(), (
+        "Regenerate with: PYTHONPATH=. backend/.venv/bin/python -m backend.tests.generate_filing_briefing_fixture"
+    )
+
+
 def packet(*, mode='available', mixed=False, two_pairs=False):
     price = prices(_row(), _row('QQQ')) if two_pairs else prices()
     filings = {}

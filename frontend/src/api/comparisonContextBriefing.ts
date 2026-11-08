@@ -3,9 +3,10 @@ import {
   type BriefingEvidence, type BriefingSelection, type BriefingStatement, type ComparisonBriefingResult, type BriefingPhase,
 } from "./comparisonBriefing";
 import { TECHNICAL_CAVEATS, validTechnicalSection, type ContextTechnicalSection } from "./technicalContext";
+import { FILING_CAVEATS, validFilingSection, type ContextFilingSection } from "./filingContext";
 
 export type MacroRegion = "us" | "euro_area";
-export type BriefingContextOptions = { news: boolean; macro_regions: MacroRegion[]; technical?: boolean };
+export type BriefingContextOptions = { news: boolean; macro_regions: MacroRegion[]; technical?: boolean; fundamentals?: boolean };
 type ContextStatus = "available" | "partial" | "empty" | "unavailable" | "no_price_window";
 export interface ContextSectionBase {
   citation_id: string; pair_citation_id: string; start_date: string | null; end_date: string | null;
@@ -33,9 +34,9 @@ export interface ContextMacroSeries {
 export interface ContextMacroSection extends ContextSectionBase {
   kind: "macro"; region: MacroRegion; vintage_basis: "current_at_retrieval"; realtime_date: string | null; series: ContextMacroSeries[];
 }
-export type ContextSection = ContextNewsSection | ContextMacroSection | ContextTechnicalSection;
+export type ContextSection = ContextNewsSection | ContextMacroSection | ContextTechnicalSection | ContextFilingSection;
 export interface ContextEvidence {
-  schema_version: "1"; evidence_kind: "comparison_with_optional_context"; citation_scope: "packet_local";
+  schema_version: "1" | "2"; evidence_kind: "comparison_with_optional_context"; citation_scope: "packet_local";
   packet_id: string; prepared_at: string; requested: BriefingContextOptions; price: BriefingEvidence;
   sections: ContextSection[]; news_limit_per_symbol: 5; macro_limit_per_series: 24; caveats: string[]; always_excluded: string[];
 }
@@ -61,6 +62,7 @@ export const CONTEXT_REASONS: Record<string, string> = {
   provider_error: "Provider failed", timed_out: "Source deadline reached", missing_api_key: "Provider key not configured",
   invalid_response: "Source response could not be validated", not_prepared: "Source not prepared", no_price_window: "No shared price window; source not queried",
   technical_inputs_unavailable: "No eligible technical observations",
+  filing_inputs_unavailable: "Some SEC evidence could not be collected",
 };
 export function safeContextUrl(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 4096) return null;
@@ -75,18 +77,20 @@ const boundedText = (value: unknown, max: number): value is string => v.text(val
 const sameSet = (value: unknown, expected: string[]) => v.strings(value) && v.unique(value) && value.length === expected.length && expected.every((key) => value.includes(key));
 
 function validPacket(value: unknown, selection: BriefingSelection, options: BriefingContextOptions): value is ContextEvidence {
-  if (!v.record(value) || value.schema_version !== "1" || value.evidence_kind !== "comparison_with_optional_context"
+  if (!v.record(value) || value.schema_version !== (options.fundamentals ? "2" : "1") || value.evidence_kind !== "comparison_with_optional_context"
     || value.citation_scope !== "packet_local" || !v.text(value.packet_id) || !/^[a-f0-9]{64}$/.test(value.packet_id)
     || !v.timestamp(value.prepared_at) || !v.validEvidence(value.price, selection) || !v.record(value.requested)
     || value.requested.news !== options.news || !sameSet(value.requested.macro_regions, options.macro_regions)
     || (value.requested.technical !== undefined && typeof value.requested.technical !== "boolean")
     || Boolean(value.requested.technical) !== Boolean(options.technical)
+    || (value.requested.fundamentals !== undefined && typeof value.requested.fundamentals !== "boolean")
+    || Boolean(value.requested.fundamentals) !== Boolean(options.fundamentals)
     || value.news_limit_per_symbol !== 5 || value.macro_limit_per_series !== 24
-    || !sameSet(value.caveats, [...Object.keys(CONTEXT_CAVEATS), ...(options.technical ? Object.keys(TECHNICAL_CAVEATS) : [])])
-    || !sameSet(value.always_excluded, CONTEXT_EXCLUSIONS.filter((key) => !options.technical || key !== "technical_measures"))
+    || !sameSet(value.caveats, [...Object.keys(CONTEXT_CAVEATS), ...(options.technical ? Object.keys(TECHNICAL_CAVEATS) : []), ...(options.fundamentals ? Object.keys(FILING_CAVEATS) : [])])
+    || !sameSet(value.always_excluded, CONTEXT_EXCLUSIONS.filter((key) => (!options.technical || key !== "technical_measures") && (!options.fundamentals || key !== "fundamentals")))
     || !Array.isArray(value.sections)) return false;
-  const kinds = [...(options.news ? ["headlines"] : []), ...options.macro_regions, ...(options.technical ? ["technical"] : [])];
-  if (value.sections.length > 24) return false;
+  const kinds = [...(options.news ? ["headlines"] : []), ...options.macro_regions, ...(options.technical ? ["technical"] : []), ...(options.fundamentals ? ["fundamentals"] : [])];
+  if (value.sections.length > 30) return false;
   if (value.sections.length !== kinds.length * value.price.comparisons.length) return false;
   for (const [index, raw] of value.sections.entries()) {
     if (!v.record(raw)) return false;
@@ -98,7 +102,10 @@ function validPacket(value: unknown, selection: BriefingSelection, options: Brie
       || !v.choice(raw.status, Object.keys(CONTEXT_STATUS)) || !v.nullableText(raw.reason)
       || (raw.retrieved_at !== null && !v.timestamp(raw.retrieved_at))
       || (!pair.returns && raw.status !== "no_price_window") || (pair.returns && raw.status === "no_price_window")) return false;
-    if (kind === "technical") {
+    if (kind === "fundamentals") {
+      if (!validFilingSection(raw, pair, id)) return false;
+      continue;
+    } else if (kind === "technical") {
       if (!validTechnicalSection(raw, pair, id, value.price.retrieved_at)) return false;
       continue;
     } else if (kind === "headlines") {
@@ -194,6 +201,18 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
           else missing.add(metric.citation_id);
         }
       }
+    } else if (section.kind === "fundamentals") {
+      for (const asset of section.assets) {
+        known.add(asset.citation_id); material.add(asset.citation_id);
+        if (!["available", "partial"].includes(asset.status)) missing.add(asset.citation_id);
+        for (const group of asset.snapshot?.groups ?? []) {
+          const ref = asset.group_citations[group.citation_id];
+          known.add(ref);
+          if (group.status === "available" && group.value !== null) usable.set(ref, section.pair_citation_id);
+          else missing.add(ref);
+          if (group.status !== "available" || group.omitted_disclosure_count) material.add(ref);
+        }
+      }
     } else for (const series of section.series) {
       known.add(series.citation_id);
       if (series.status === "available" && series.observations.length) usable.set(series.citation_id, section.pair_citation_id);
@@ -225,6 +244,10 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
       const refs = asset.metrics.filter((metric) => usable.has(metric.citation_id)).map((metric) => metric.citation_id);
       if (refs.length && !refs.some((ref) => used.has(ref))) throw v.invalid();
     }
+    for (const section of packet?.sections ?? []) if (section.kind === "fundamentals") for (const asset of section.assets) {
+      const refs = Object.values(asset.group_citations).filter((ref) => usable.has(ref));
+      if (refs.length && !refs.some((ref) => used.has(ref))) throw v.invalid();
+    }
   } else if (result.possible_context.length) throw v.invalid();
   const priceRefs = new Set(["SCOPE", ...(packet?.price.comparisons.map((pair) => pair.citation_id) ?? [])]);
   const project = (points: BriefingStatement[]) => {
@@ -241,10 +264,11 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
 export function streamContextBriefing(selection: BriefingSelection, context: BriefingContextOptions,
   options: { signal?: AbortSignal; onProgress?: (phase: BriefingPhase) => void } = {}): Promise<ContextBriefingResult> {
   const requested: BriefingContextOptions = { news: context.news, macro_regions: (["us", "euro_area"] as const).filter((region) => context.macro_regions.includes(region)),
-    ...(context.technical ? { technical: true } : {}) };
+    ...(context.technical ? { technical: true } : {}), ...(context.fundamentals ? { fundamentals: true } : {}) };
   if (typeof context.news !== "boolean" || (context.technical !== undefined && typeof context.technical !== "boolean")
-    || context.macro_regions.length !== requested.macro_regions.length || (!requested.news && !requested.macro_regions.length && !requested.technical)) {
-    return Promise.reject(new Error("Choose news, a macro region or technical observations before generating a context briefing."));
+    || (context.fundamentals !== undefined && typeof context.fundamentals !== "boolean")
+    || context.macro_regions.length !== requested.macro_regions.length || (!requested.news && !requested.macro_regions.length && !requested.technical && !requested.fundamentals)) {
+    return Promise.reject(new Error("Choose news, a macro region, technical observations or SEC filing facts before generating a context briefing."));
   }
   return streamBriefing(selection, options, {
     path: "/market-context/briefing-context/stream", context: true,

@@ -3,17 +3,18 @@ import {
   type ContextEvidence, type ContextSection,
 } from "../../api/comparisonContextBriefing";
 import { TechnicalBriefingEvidence } from "./TechnicalBriefingEvidence";
+import { FilingBriefingEvidence } from "./FilingBriefingEvidence";
 
 const dateTime = (value: string) => new Date(value).toLocaleString();
 const number = (value: number) => new Intl.NumberFormat(undefined, { maximumSignificantDigits: 21 }).format(value);
-export const contextName = (section: ContextSection) => section.kind === "headlines" ? "Dated headlines" : section.kind === "technical" ? "Technical observations" : section.region === "us" ? "US macro (FRED)" : "Euro-area macro (Eurostat/ECB)";
+export const contextName = (section: ContextSection) => section.kind === "headlines" ? "Dated headlines" : section.kind === "technical" ? "Technical observations" : section.kind === "fundamentals" ? "SEC filing facts" : section.region === "us" ? "US macro (FRED)" : "Euro-area macro (Eurostat/ECB)";
 function SourceLink({ url, children }: { url: string; children: React.ReactNode }) {
   const safe = safeContextUrl(url);
   return safe ? <a className="break-words text-terminal-accent underline" href={safe} target="_blank" rel="noopener noreferrer">{children}</a> : <span>Source link unavailable</span>;
 }
 function SectionStatus({ section }: { section: ContextSection }) {
   return <>
-    {CONTEXT_STATUS[section.status]}{section.reason ? ` · ${CONTEXT_REASONS[section.reason] ?? "Source unavailable"}` : ""}.
+    {section.kind === "fundamentals" && section.status === "empty" ? "No usable filing values" : CONTEXT_STATUS[section.status]}{section.reason ? ` · ${CONTEXT_REASONS[section.reason] ?? "Source unavailable"}` : ""}.
     {section.start_date ? ` Window ${section.start_date} to ${section.end_date}.` : " No context window was invented."}
     {section.retrieved_at ? ` Retrieved ${dateTime(section.retrieved_at)}.` : ""}
   </>;
@@ -21,7 +22,7 @@ function SectionStatus({ section }: { section: ContextSection }) {
 export function ContextCoverage({ evidence, inspect }: { evidence: ContextEvidence; inspect: (ref: string) => void }) {
   return <section aria-label="Selected context coverage" className="space-y-2 rounded border border-terminal-border p-2 text-xs">
     <h3 className="font-semibold">Selected context coverage</h3>
-    <p>{evidence.requested.technical ? "Unavailable sources provide no values; they do not imply zero observations or absence of relevant events."
+    <p>{evidence.requested.technical || evidence.requested.fundamentals ? "Unavailable sources provide no values; they do not imply zero observations or absence of relevant events."
       : "Missing, empty or failed feeds do not establish that no news or relevant macro activity occurred."}</p>
     {evidence.sections.map((section) => <p key={section.citation_id} className={section.status === "available" ? "text-terminal-muted" : "text-terminal-warn"}>
       <button type="button" className="text-terminal-accent underline" onClick={() => inspect(section.citation_id)}
@@ -47,7 +48,8 @@ export function ContextEvidenceSections({ evidence, id }: { evidence: ContextEvi
           <SourceLink url={headline.url}>Open source headline</SourceLink>
         </section>)}
       </section>)}
-    </> : section.kind === "technical" ? <TechnicalBriefingEvidence section={section} target={target} /> : <>
+    </> : section.kind === "technical" ? <TechnicalBriefingEvidence section={section} target={target} />
+      : section.kind === "fundamentals" ? <FilingBriefingEvidence section={section} target={target} /> : <>
       <p>Explicitly selected {section.region === "us" ? "US" : "euro-area"} global context, not ticker attribution. Current-at-retrieval vintage{section.realtime_date ? ` · FRED real-time view ${section.realtime_date}` : ""}. Reference periods are not publication dates and do not establish past knowledge.</p>
       {section.series.map((series) => <section key={series.citation_id} {...target(series.citation_id)}>
         <h4 className="font-semibold">{series.citation_id}: {series.label} · {series.status.replace(/_/g, " ")}</h4>
