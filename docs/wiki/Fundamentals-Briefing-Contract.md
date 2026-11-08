@@ -1,8 +1,9 @@
 # Filing evidence for comparison briefings
 
-Status: **v2.7 synthesis slice, 2026-11-06**. The audit, internal projection,
-explicit collection and checked synthesis are implemented. Browser selection
-and evidence inspection remain pending. Exact SEC filing checks stay excluded.
+Status: **v2.7 browser slice, 2026-11-08**. The audit, internal projection,
+explicit collection, checked synthesis and browser selection/inspection are
+implemented. Maintainer feedback remains before release preparation.
+Exact SEC filing checks stay excluded.
 
 ## Coverage audit
 
@@ -76,9 +77,10 @@ messages. These states describe the projection, not complete SEC coverage.
 3. **Implemented:** prompt, reference validation and bounded repair support
    selected filing evidence in synchronous and streaming context synthesis.
    See the checked-interpretation contract below.
-4. **Browser journey and acceptance:** opt-in selection, scope changes cancelling
-   stale results, inspectable values/units/durations/accessions and conflict/gap
-   states; deterministic browser regression checks and maintainer feedback.
+4. **Implemented, acceptance pending:** opt-in browser selection, scope changes
+   cancelling stale results, inspectable values/units/durations/accessions and
+   conflict/gap states, with client/component and deterministic browser checks.
+   Maintainer feedback remains before release preparation.
 
 These are reviewable boundaries, not a required PR count. No full archival
 reconstruction, provider expansion, automatic filing corroboration, frontend
@@ -127,7 +129,7 @@ write, private-source read or indexing.
 `POST /api/market-context/briefing-context` and `/briefing-context/stream` now
 accept the same `context.fundamentals: true` selection. They require the existing
 user JWT, prepare a fresh server comparison, collect selected context and invoke
-the existing Deep profile. The current browser cannot select fundamentals yet.
+the existing Deep profile. The browser now offers the same explicit selection.
 
 Only available, non-conflicting numerical groups enter the usable reference
 index, under their mapped C#A#F# IDs. Each use in possible context or a hypothesis
@@ -159,4 +161,36 @@ completion ceiling and resolved model deadline remain unchanged. Missing coverag
 does not become fabricated evidence. Model failures retain the collected packet
 with no completed interpretation; disconnect cancels collection or inference.
 No snapshot persistence, automatic capture, private indexing or new model setting
-is introduced. Browser inspection and maintainer feedback remain the next gate.
+is introduced. Maintainer feedback remains the next gate.
+
+## Browser selection and inspection
+
+On Market Context, choose **SEC filing facts** in **Briefing evidence scope**,
+then **Generate briefing**. Selecting the checkbox alone makes no request.
+It can be combined with the existing headlines, macro and technical selections;
+unselected fundamentals remain excluded. Changing scope or the applied price
+selection aborts running work and clears old results; generation is always manual.
+
+Each mapped citation opens the snapshot and focuses the exact group, including
+repeated clicks. Inspect values with original units, exact US-GAAP concepts,
+fiscal start/end, disclosure forms, accessions, filed dates and official SEC
+filing-index links. Retrieval time is labelled separately and may reflect the
+provider client's cached aggregate. Inspect omitted group/disclosure counts and
+conflicts without inventing a current truth. A failed model response keeps the
+validated evidence available through coverage links.
+
+The browser validates version/selection, asset and pair/window identities,
+counts and caps, supported units/concepts, dates, official generated links,
+status/value consistency and exact reference mappings. Completed interpretations
+must obey the same available-source/pair, asset-coverage and material-limitation
+rules as the server. Conflicted values cannot become numerical support. No usable
+filing values, missing configuration, unsupported tickers and provider failures
+stay distinct; none becomes zero or evidence that no filings exist. Malformed
+responses are rejected without replay. Hashes are displayed as identities and
+are not independently verified signatures; reasoning remains unverified prose.
+
+Client and browser tests share deterministic server-generated fixtures. Refresh
+them with `PYTHONPATH=. backend/.venv/bin/python -m backend.tests.generate_filing_briefing_fixture`
+from the repository root; append `--check` to verify without writing. No live SEC
+or model is involved. Smoke journeys check exact citation focus, failures and
+contained layout at 1440px and 390px; the wider frontend overhaul remains separate.

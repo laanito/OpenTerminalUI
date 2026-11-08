@@ -13,6 +13,7 @@ import {
 } from "../../api/comparisonContextBriefing";
 import { ContextCoverage, ContextEvidenceSections } from "./BriefingContextEvidence";
 import { TECHNICAL_CAVEATS } from "../../api/technicalContext";
+import { FILING_CAVEATS } from "../../api/filingContext";
 
 const PHASES: Record<BriefingPhase, string> = {
   queued: "Starting briefing", preparing_evidence: "Preparing fresh comparison evidence",
@@ -59,7 +60,7 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
   const [status, setStatus] = useState<"idle" | "running" | "finished" | "failed" | "cancelled">("idle");
   const [phase, setPhase] = useState<BriefingPhase>("queued");
   const [context, setContext] = useState<BriefingContextOptions>({ news: false, macro_regions: [] });
-  const hasContext = Boolean(context.news || context.macro_regions.length || context.technical);
+  const hasContext = Boolean(context.news || context.macro_regions.length || context.technical || context.fundamentals);
   const [result, setResult] = useState<ComparisonBriefingResult | ContextBriefingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -150,7 +151,7 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
       <p className="text-terminal-muted">
         Applied selection: {selection.anchor} vs {selection.comparisons.join(", ")} · {selection.period}.
         {" "}This fetches a fresh shared-UTC, native-quote return snapshot, which may differ from the comparison below.
-        {hasContext ? " Only context explicitly selected below will be included. Other page panels never imply inclusion. Fundamentals, SEC, separate FX/adjusted/local-date comparison views, private research and economic-calendar events remain excluded."
+        {hasContext ? " Only context explicitly selected below will be included. Other page panels never imply inclusion. Exact SEC filing checks, separate FX/adjusted/local-date comparison views, private research and economic-calendar events remain excluded."
           : " Optional news, fundamentals, SEC, macro, technical, FX/adjusted/local-date views and private research are not included—even if open elsewhere on this page."}
       </p>
       <fieldset className="space-y-2 rounded border border-terminal-border p-3">
@@ -164,9 +165,12 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
             {region === "us" ? "US macro (FRED)" : "Euro-area macro (Eurostat/ECB)"}</label>)}
           <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(context.technical)}
             onChange={(event) => changeContext({ ...context, technical: event.target.checked })} />Technical observations</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(context.fundamentals)}
+            onChange={(event) => changeContext({ ...context, fundamentals: event.target.checked })} />SEC filing facts</label>
         </div>
         {context.news || context.macro_regions.length ? <p className="text-xs text-terminal-warn">Headlines are unverified source text from incomplete current feeds. Macro is global reference-period context, not publication-day evidence or ticker relevance; current vintages do not establish past knowledge.</p> : null}
         {context.technical ? <p className="text-xs text-terminal-warn">Trend, momentum and unannualized volatility use each asset’s own Yahoo-reported adjusted closes. Lookbacks can span different calendar periods. Adjustment methods, sessions and bar completion remain unverified. Other feeds may provide prices without eligible technical values; these observations are not trading signals.</p> : null}
+        {context.fundamentals ? <p className="text-xs text-terminal-warn">Selected US filing facts come from the current SEC aggregate and require host configuration of SEC_USER_AGENT. Conflicts are withheld. Fiscal periods, filing dates and retrieval times differ; these facts do not establish historical investor knowledge or verified revision order. Crypto and other unsupported symbols show their coverage gap.</p> : null}
       </fieldset>
       <p className="text-xs text-terminal-warn">References are checked, not the truth of the model’s prose. This is neither a causal explanation nor investment advice.</p>
       <div className="flex flex-wrap items-center gap-3">
@@ -222,9 +226,9 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
               <h3 className="font-semibold">SCOPE: this packet only</h3>
               <p>Fetched {new Date(packet.retrieved_at).toLocaleString()} · {packet.anchor} · {packet.period}. Shared UTC daily closes; native provider-close returns, not FX-normalized or verified simultaneous sessions.</p>
               {contextPacket ? <>
-                <p>Included by explicit request: {contextPacket.requested.news ? "dated headlines" : "no news"}; macro regions {contextPacket.requested.macro_regions.join(", ") || "none"}; {contextPacket.requested.technical ? "technical observations" : "no technical observations"}. Prepared {new Date(contextPacket.prepared_at).toLocaleString()}.</p>
+                <p>Included by explicit request: {contextPacket.requested.news ? "dated headlines" : "no news"}; macro regions {contextPacket.requested.macro_regions.join(", ") || "none"}; {contextPacket.requested.technical ? "technical observations" : "no technical observations"}; {contextPacket.requested.fundamentals ? "SEC filing facts" : "no filing facts"}. Prepared {new Date(contextPacket.prepared_at).toLocaleString()}.</p>
                 <p>Always excluded (not evidence of absence): {contextPacket.always_excluded.map((key) => key === "economic_calendar" ? "Economic calendar" : BRIEFING_EXCLUSIONS[key as keyof typeof BRIEFING_EXCLUSIONS]).join(", ")}.</p>
-                <ul className="list-disc space-y-1 pl-5">{contextPacket.caveats.map((key) => <li key={key}>{({ ...CONTEXT_CAVEATS, ...TECHNICAL_CAVEATS })[key as keyof typeof CONTEXT_CAVEATS | keyof typeof TECHNICAL_CAVEATS]}</li>)}</ul>
+                <ul className="list-disc space-y-1 pl-5">{contextPacket.caveats.map((key) => <li key={key}>{({ ...CONTEXT_CAVEATS, ...TECHNICAL_CAVEATS, ...FILING_CAVEATS })[key as keyof typeof CONTEXT_CAVEATS | keyof typeof TECHNICAL_CAVEATS | keyof typeof FILING_CAVEATS]}</li>)}</ul>
                 <p className="break-all">Price subpacket ID: {packet.packet_id}</p>
               </> : <p>Not included (not evidence of absence): {packet.not_included.map((key) => BRIEFING_EXCLUSIONS[key]).join(", ")}.</p>}
               <p className="break-all">Snapshot ID: {contextPacket?.packet_id ?? packet.packet_id}</p>

@@ -23,7 +23,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   retrieval time, without asserting historical knowledge, revision priority or
   price causation. Existing Deep routing, one bounded repair and cancellation
   apply; rejected prose is withheld and evidence survives model failure.
-  Browser selection and evidence inspection remain pending.
+  The comparison briefing offers an opt-in **SEC filing facts** selector, exact
+  citation inspection with concepts/units/fiscal periods, dated filing links,
+  retrieval time, withheld conflicts and explicit coverage/failure states.
+  Changing scope cancels pending work and discards stale results; strict browser
+  validation preserves source/pair linkage and mandatory limitations.
 
 ## [2.6.0] - 2026-11-05
 

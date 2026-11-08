@@ -710,8 +710,10 @@ retain units, fiscal start or accession. Conflicts are checked across all eligib
 records before display limits. Explicit per-symbol fetching and a pair-linked
 version-2 evidence envelope are implemented. Checked synthesis now uses mapped
 filing/pair references, mandatory asset coverage and material limitations under
-the existing Deep profile and bounded repair. Browser selection/inspection and
-maintainer feedback remain follow-ups.
+the existing Deep profile and bounded repair. The opt-in browser selector and
+exact filing-group inspection are implemented, including scope cancellation,
+strict client validation and desktop/narrow regression coverage. Maintainer
+feedback remains before release preparation.
 
 - Audit the existing SEC/FMP evidence paths, metric identities, units, fiscal
   periods, filing dates, conflicts and historical/revision coverage before

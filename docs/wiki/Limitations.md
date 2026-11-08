@@ -118,8 +118,11 @@ never silently faked.
   missing configuration, coverage and provider failures. It requires
   `SEC_USER_AGENT`. Checked context synthesis and its stream now accept the same
   selection, enforce available mapped filing/pair references and preserve scope,
-  conflict and failure limitations. The current browser has no selector or filing
-  evidence inspection yet. Reference checks do not verify the truth of prose.
+  conflict and failure limitations. The browser offers an opt-in SEC filing facts
+  selector and exact group inspection, including fiscal/filing/retrieval dates,
+  original units, disclosure links, withheld conflicts and coverage gaps.
+  Reference checks do not verify the truth of prose; maintainer acceptance of
+  this v2.7 journey remains pending.
   Company Facts retrieval is not exact filing corroboration, a historical
   vintage or proof of investor knowledge. See the
   [filing evidence contract](Fundamentals-Briefing-Contract.md).

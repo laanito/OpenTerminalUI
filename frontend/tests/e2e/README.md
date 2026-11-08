@@ -24,6 +24,14 @@ the same backend-produced projections as the frontend protocol tests.
 Portfolio risk journeys also cover explicit held-symbol selection, exact
 per-holding inspection, partial/unavailable history, retained evidence after
 model failure and clearing on portfolio/scope changes at desktop/narrow widths.
+Filing comparison journeys cover opt-in SEC facts, exact citation focus,
+concepts/units/fiscal periods versus filing/retrieval dates, withheld conflicts,
+missing configuration, model-failure evidence retention and malformed-reference
+rejection at desktop/narrow widths. Their serialized fixtures come from server
+projections; regenerate/check with
+`PYTHONPATH=. backend/.venv/bin/python -m backend.tests.generate_filing_briefing_fixture [--check]`
+from the repository root. These are deterministic protocol/UI checks, not live
+SEC access or model-quality benchmarks.
 Because those requests are fully
 intercepted, the smoke command runs the built frontend without starting backend
 jobs or contacting upstream providers.

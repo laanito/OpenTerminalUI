@@ -49,14 +49,15 @@ Blog deployment belongs to the host agent.
 
 The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
-contract. The SEC projection/audit (#259) and collection (#260) are merged.
-Checked synchronous/streaming synthesis now accepts selected fundamentals in
-its version-2 envelope. Only available mapped C#A#F# groups with their linked P#
-can support interpretation; every usable filing asset must contribute evidence,
-with mandatory asset/conflict/truncation limitations. Existing Deep routing,
-bounded repair and deadlines apply; rejected prose is withheld and evidence is
-retained on model failure. Unselected serialized context retains version 1.
-Browser selection/inspection and maintainer feedback remain next. See
+contract. The SEC projection/audit (#259), collection (#260) and checked
+synthesis (#261) are merged. The browser now offers opt-in SEC filing facts
+with strict version-2 validation, exact citation focus, original concepts/units,
+fiscal/filing/retrieval dates, disclosure links and conflict/gap states. Scope
+changes abort and discard late work. Existing Deep routing, bounded repair and
+deadlines apply; failed models retain validated evidence. Unselected context
+retains version 1. Shared server-generated fixtures have a repository-owned
+regeneration/check command. Maintainer acceptance remains before release prep.
+See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
 frontend overhaul, with its number and timing undecided; it is not a minor-release
@@ -1107,7 +1108,7 @@ bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
 
 Started 2026-11-06. See `docs/wiki/Roadmap.md` for the bounded scope and
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the source audit and sequence.
-SEC evidence collection and checked synthesis are implemented; browser integration remains pending.
+SEC evidence collection, checked synthesis and browser integration are implemented; maintainer acceptance remains pending.
 
 - [x] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
       conflicts and revision limits. Start with SEC duration facts; the current
@@ -1135,9 +1136,16 @@ SEC evidence collection and checked synthesis are implemented; browser integrati
       through C30/F8; keep Deep routing, one repair and existing ceilings/deadlines.
       Test mixed/maximal sources, gaps/conflicts, safe repair, failed-model evidence
       retention, user-JWT auth and cancellation of collection/inference.
-- [ ] Add browser fundamentals selection and inspectable filing evidence,
-      including scope changes cancelling stale results and explicit gap/conflict
-      states. Update strict client validation and deterministic browser checks.
+- [x] Add opt-in browser SEC filing facts, alone or with other selected sources.
+      Match strict client validation to version-2 identity/count/reference rules,
+      numeric conflicts, official links and asset/limitation coverage. Citation
+      buttons focus exact groups with original concepts/units, fiscal periods,
+      filing/retrieval dates, accessions and omitted/conflict counts. Distinguish
+      missing configuration, unsupported scope, empty checks and provider failures;
+      retain validated evidence on model failure. Scope/selection changes cancel
+      and discard late work. Server-generated fixtures are reproducible with
+      `PYTHONPATH=. backend/.venv/bin/python -m backend.tests.generate_filing_briefing_fixture [--check]`.
+      Component/protocol and desktop/narrow browser tests cover the journey.
 - [ ] Verify citation, conflict, missing-data and provider-failure handling; obtain
       maintainer acceptance before release preparation. Split PRs by reviewable
       changes after the audit, with no fixed count.
