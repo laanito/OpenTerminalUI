@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.6.0-0f172a" alt="Version 2.6.0" />
+  <img src="https://img.shields.io/badge/version-2.7.0-0f172a" alt="Version 2.7.0" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -42,7 +42,25 @@ failures must be visible. A route existing does not make it a supported product;
 the [surface inventory](docs/wiki/Surface-Inventory.md) and
 [limitations](docs/wiki/Limitations.md) define the retained contracts.
 
-## Current release
+## v2.7.0 — release preparation
+
+**Filing-grounded comparison briefings** adds opt-in **SEC filing facts** in
+Market Context → Briefing evidence scope. Generate manually, then inspect exact
+values, concepts, units, fiscal periods, disclosure accessions and filing dates,
+with retrieval time labelled separately. Conflicts are withheld and unsupported,
+empty or failed sources remain explicit. Scope changes cancel and clear old
+work. Checked Deep-profile synthesis uses exact source/pair citations; reference
+checks do not establish source truth, historical knowledge or price causation.
+
+Implementation PRs #259–#262 are merged, and the maintainer confirmed the browser
+journey as tested. Version metadata is prepared for 2.7.0; tagging/publication
+remain pending release review. No migration, dependency, provider, persistence
+or embedding change is introduced. Filing data requires the existing host
+`SEC_USER_AGENT` setting and supported SEC coverage/access. See the
+[filing contract](docs/wiki/Fundamentals-Briefing-Contract.md) and
+[release verification](docs/wiki/Releasing.md#v270-verification-ledger-release-preparation).
+
+## Latest published release
 
 [v2.6.0 — Technical context across AI research](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.6.0)
 was published on **2026-11-05** from `fccb6b3`. The same three dated observations

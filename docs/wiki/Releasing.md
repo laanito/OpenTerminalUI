@@ -423,6 +423,52 @@ were published from that commit on 2026-11-05. Preparation was dated 2026-11-04;
 post-release documentation reconciles the changelog date without moving the tag.
 No v2.6 release gate remains. Deployment belongs to the host agent.
 
+### v2.7.0 verification ledger (release preparation)
+
+The bounded milestone adds filing-grounded fundamentals to selected comparison
+briefings. Implementation PRs #259–#262 are merged; release preparation starts
+from `f89028b` (the #262 merge). The maintainer confirmed #262 as merged and
+tested. Carry that acceptance forward; fixtures and host testing do not imply
+an independent source/model-quality or numerical latency benchmark.
+
+| Contract | Evidence |
+|---|---|
+| Exact concept/unit/duration identity, full-set conflicts before output caps, coverage and deterministic snapshot identities | `backend/tests/test_filing_briefing_evidence.py`, SEC normalization tests |
+| Explicit selection, per-symbol dedup across pair windows, isolated configuration/coverage/provider failures, bounded concurrency and cancellation | `backend/tests/test_filing_context_collection.py` |
+| Closed mapped source/pair references, mandatory usable-asset coverage and limitations, safe repair and retained evidence on inference failure | `backend/tests/test_filing_context_synthesis.py`, existing price/context/technical briefing tests |
+| Version-2 browser decoding, official links, withheld conflicts, exact citation focus and scope invalidation | `frontend/src/__tests__/filingContextBriefing.test.ts`, `frontend/src/__tests__/FilingBriefingPanel.test.tsx` |
+| Desktop/narrow inspection, conflicts, missing configuration, model failure and malformed-reference rejection | `frontend/tests/e2e/filing-briefing.spec.ts` |
+| Server/browser fixture parity | `backend/tests/generate_filing_briefing_fixture.py --check`, the backend synthesis parity test |
+
+After the metadata bump to 2.7.0, consolidated `make gate` passed backend
+compilation, API/surface/mock guards, **1,739 backend tests** (one skipped;
+**77.54% coverage** against the 45% gate), production build and **730 frontend
+tests across 124 files**. Compose configuration validates. Server-generated
+filing fixtures are current. Local checks used Python 3.12.16 and Node 26.7.0;
+CI retains Python 3.11 / Node 22 plus disposable PostgreSQL and fresh-stack lanes.
+All **26 post-bump installed-Chrome smoke journeys** passed with one worker,
+including the filing journey at 1440px and 390px. The installed browser was used
+through the documented frontend npm smoke command.
+
+Backend/frontend/package-lock/OpenAPI and README/site version labels align to
+2.7.0. No DB/model/Alembic/SQL-compat change exists since v2.6.0; no migration,
+dependency, provider, setting, persistence or embedding change is introduced.
+Existing `SEC_USER_AGENT`, upstream access and supported SEC filing coverage
+remain prerequisites. Migration head remains `0018_brain_technical_context`
+from v2.6; installations predating that release must still apply existing
+upgrades. No production database was used for local checks.
+
+Current SEC aggregates are not independently corroborated filing-instance
+values, complete historical vintages, revision order or proof of investor
+knowledge/price causation. Unselected context retains its version-1 shape and
+the nested price contract is unchanged. The wider technical-validation and
+major frontend-overhaul directions are outside this release.
+
+This is release preparation, dated 2026-11-09; review/CI and explicit maintainer
+publication authorization remain before tag/GitHub release. The latest published
+release remains v2.6.0. Deployment belongs to the host agent; after publication,
+reconcile documentation and follow the established bilingual blog routine.
+
 ## Cutting the release
 
 ```bash

@@ -6,6 +6,21 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-11-09
+
+Filing-grounded fundamentals now join selected comparison briefings. Choose
+**SEC filing facts** in Market Context, generate manually and inspect exact
+concepts, units, fiscal periods, filing accessions and retrieval dates. Current
+SEC aggregates provide conditional research context, not verified historical
+knowledge, revision order or proof of price causation. Conflicting numerical
+values are withheld before output limits; missing coverage remains visible.
+
+Implementation PRs #259–#262 are merged. The maintainer confirmed #262 as
+merged and tested; carry that acceptance forward. This is release preparation,
+not tag/publication. No new provider, setting, dependency, migration, persistence
+or embedding change is required. Existing host `SEC_USER_AGENT` configuration
+and SEC coverage/access remain prerequisites for filing data.
+
 ### Added
 - **Selected SEC filing evidence for comparisons** — the authenticated
   `POST /api/market-context/briefing-context-evidence` endpoint accepts

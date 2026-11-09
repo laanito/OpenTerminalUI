@@ -4,7 +4,28 @@ This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
-Current state **2026-11-05:** **v2.6.0 — Technical context across AI research**
+Current state **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
+is in release preparation from `f89028b` (merged browser PR #262). Implementation
+PRs #259–#262 are merged; the maintainer explicitly confirmed #262 as merged
+and tested. Carry that acceptance forward. Backend/frontend/lock/OpenAPI and
+public version labels align to 2.7.0. Post-bump `make gate` passed compilation,
+API/surface/mock guards, 1,739 backend tests (one skipped; 77.54% coverage),
+production build and 730 frontend tests. All 26 post-bump installed-Chrome smoke
+journeys passed with one worker. Compose, fixture parity and version consistency
+checks passed. Local Python 3.12.16 / Node 26.7.0 are distinct from CI's supported
+Python 3.11 / Node 22 and disposable PostgreSQL/fresh-stack lanes. No tag or
+GitHub publication has occurred; release-prep review/CI remain before explicit
+maintainer publication authorization. See `docs/wiki/Releasing.md`.
+
+The bounded SEC aggregate, exact concept/unit/duration grouping, full-set conflict
+checks, per-symbol collection, version-2 references, checked Deep synthesis and
+opt-in browser inspection are complete. Current aggregates do not establish
+historical investor knowledge, revision order or exact filing corroboration.
+No migration, provider, setting, dependency, persistence or embedding change.
+Deployment stays with the host agent. Broader technical validation remains v3;
+the layout audit leads into a separately scoped future major frontend overhaul.
+
+Previous published baseline **2026-11-05:** **v2.6.0 — Technical context across AI research**
 is published from `fccb6b3`, the merge of release-prep PR #256. The maintainer
 explicitly authorized publication after merge. The annotated tag and public,
 non-prerelease GitHub release were created and verified on 2026-11-05. All three
@@ -60,7 +81,8 @@ fiscal/filing/retrieval dates, disclosure links and conflict/gap states. Scope
 changes abort and discard late work. Existing Deep routing, bounded repair and
 deadlines apply; failed models retain validated evidence. Unselected context
 retains version 1. Shared server-generated fixtures have a repository-owned
-regeneration/check command. Maintainer acceptance remains before release prep.
+regeneration/check command. The maintainer confirmed #262 as merged and tested;
+release preparation is underway, with tag/publication pending release review.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major

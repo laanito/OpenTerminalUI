@@ -699,7 +699,7 @@ portfolio correlation/risk engines, historical technical reconstruction, trading
 signals and broker execution. These remain later candidates. The inherited
 layout audit below leads into a future major frontend overhaul.
 
-## v2.7 — Filing-grounded fundamentals in comparison briefings (agreed scope)
+## v2.7.0 — Filing-grounded comparison briefings (release preparation)
 
 Agreed after v2.6 closure and its chapter-22 article. Bring filing-grounded
 fundamentals into the comparison briefing, starting with a coverage audit and
@@ -712,8 +712,12 @@ version-2 evidence envelope are implemented. Checked synthesis now uses mapped
 filing/pair references, mandatory asset coverage and material limitations under
 the existing Deep profile and bounded repair. The opt-in browser selector and
 exact filing-group inspection are implemented, including scope cancellation,
-strict client validation and desktop/narrow regression coverage. Maintainer
-feedback remains before release preparation.
+strict client validation and desktop/narrow regression coverage. Implementation
+PRs #259–#262 are merged, and the maintainer confirmed #262 as merged and tested.
+Release preparation starts from `f89028b`; tag/publication await release review.
+No migration, provider, setting, dependency, persistence or embedding change is
+introduced. Existing SEC configuration/access and source coverage still apply.
+See the verification ledger in [Releasing](Releasing.md).
 
 - Audit the existing SEC/FMP evidence paths, metric identities, units, fiscal
   periods, filing dates, conflicts and historical/revision coverage before

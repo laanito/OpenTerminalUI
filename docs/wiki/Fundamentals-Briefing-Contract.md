@@ -2,8 +2,8 @@
 
 Status: **v2.7 browser slice, 2026-11-08**. The audit, internal projection,
 explicit collection, checked synthesis and browser selection/inspection are
-implemented. Maintainer feedback remains before release preparation.
-Exact SEC filing checks stay excluded.
+implemented. The maintainer confirmed #262 as merged and tested; v2.7.0 release
+preparation is underway. Exact SEC filing checks stay excluded.
 
 ## Coverage audit
 
@@ -77,10 +77,10 @@ messages. These states describe the projection, not complete SEC coverage.
 3. **Implemented:** prompt, reference validation and bounded repair support
    selected filing evidence in synchronous and streaming context synthesis.
    See the checked-interpretation contract below.
-4. **Implemented, acceptance pending:** opt-in browser selection, scope changes
+4. **Implemented and accepted:** opt-in browser selection, scope changes
    cancelling stale results, inspectable values/units/durations/accessions and
    conflict/gap states, with client/component and deterministic browser checks.
-   Maintainer feedback remains before release preparation.
+   The maintainer confirmed the merged browser journey as tested.
 
 These are reviewable boundaries, not a required PR count. No full archival
 reconstruction, provider expansion, automatic filing corroboration, frontend
@@ -161,7 +161,7 @@ completion ceiling and resolved model deadline remain unchanged. Missing coverag
 does not become fabricated evidence. Model failures retain the collected packet
 with no completed interpretation; disconnect cancels collection or inference.
 No snapshot persistence, automatic capture, private indexing or new model setting
-is introduced. Maintainer feedback remains the next gate.
+is introduced. The maintainer confirmed the merged journey as tested; release preparation is next.
 
 ## Browser selection and inspection
 
