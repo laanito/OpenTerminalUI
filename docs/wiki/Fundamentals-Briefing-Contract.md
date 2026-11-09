@@ -1,9 +1,9 @@
 # Filing evidence for comparison briefings
 
-Status: **v2.7 browser slice, 2026-11-08**. The audit, internal projection,
+Status: **v2.7.0 released, 2026-11-09**. The audit, internal projection,
 explicit collection, checked synthesis and browser selection/inspection are
-implemented. The maintainer confirmed #262 as merged and tested; v2.7.0 release
-preparation is underway. Exact SEC filing checks stay excluded.
+implemented. The maintainer confirmed #262 as merged and tested. v2.7.0 was
+published from `4bc03cf` on 2026-11-09. Exact SEC filing checks stay excluded.
 
 ## Coverage audit
 
@@ -161,7 +161,7 @@ completion ceiling and resolved model deadline remain unchanged. Missing coverag
 does not become fabricated evidence. Model failures retain the collected packet
 with no completed interpretation; disconnect cancels collection or inference.
 No snapshot persistence, automatic capture, private indexing or new model setting
-is introduced. The maintainer confirmed the merged journey as tested; release preparation is next.
+is introduced. The maintainer confirmed the merged journey as tested; v2.7.0 is published.
 
 ## Browser selection and inspection
 

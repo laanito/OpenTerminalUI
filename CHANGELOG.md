@@ -16,8 +16,10 @@ knowledge, revision order or proof of price causation. Conflicting numerical
 values are withheld before output limits; missing coverage remains visible.
 
 Implementation PRs #259–#262 are merged. The maintainer confirmed #262 as
-merged and tested; carry that acceptance forward. This is release preparation,
-not tag/publication. No new provider, setting, dependency, migration, persistence
+merged and tested. Release-prep PR #263 passed build-and-test, clean-install and
+postgres-contract, then merged as `4bc03cf`. Following maintainer authorization,
+the annotated tag and GitHub release were published and verified on 2026-11-09.
+No new provider, setting, dependency, migration, persistence
 or embedding change is required. Existing host `SEC_USER_AGENT` configuration
 and SEC coverage/access remain prerequisites for filing data.
 

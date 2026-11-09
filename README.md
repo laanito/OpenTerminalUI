@@ -42,9 +42,10 @@ failures must be visible. A route existing does not make it a supported product;
 the [surface inventory](docs/wiki/Surface-Inventory.md) and
 [limitations](docs/wiki/Limitations.md) define the retained contracts.
 
-## v2.7.0 — release preparation
+## Current release
 
-**Filing-grounded comparison briefings** adds opt-in **SEC filing facts** in
+[v2.7.0 — Filing-grounded comparison briefings](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.7.0)
+was published on **2026-11-09** from `4bc03cf`. It adds opt-in **SEC filing facts** in
 Market Context → Briefing evidence scope. Generate manually, then inspect exact
 values, concepts, units, fiscal periods, disclosure accessions and filing dates,
 with retrieval time labelled separately. Conflicts are withheld and unsupported,
@@ -53,14 +54,15 @@ work. Checked Deep-profile synthesis uses exact source/pair citations; reference
 checks do not establish source truth, historical knowledge or price causation.
 
 Implementation PRs #259–#262 are merged, and the maintainer confirmed the browser
-journey as tested. Version metadata is prepared for 2.7.0; tagging/publication
-remain pending release review. No migration, dependency, provider, persistence
+journey as tested. Release-prep PR #263 passed build-and-test, clean-install and
+postgres-contract, then merged. Following maintainer authorization, the annotated
+tag and GitHub release were published and verified. No migration, dependency, provider, persistence
 or embedding change is introduced. Filing data requires the existing host
 `SEC_USER_AGENT` setting and supported SEC coverage/access. See the
 [filing contract](docs/wiki/Fundamentals-Briefing-Contract.md) and
-[release verification](docs/wiki/Releasing.md#v270-verification-ledger-release-preparation).
+[release verification](docs/wiki/Releasing.md#v270-verification-ledger-released).
 
-## Latest published release
+## Previous release
 
 [v2.6.0 — Technical context across AI research](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.6.0)
 was published on **2026-11-05** from `fccb6b3`. The same three dated observations
@@ -84,7 +86,7 @@ startup. For an existing local database, run
 using that installation's configured database. No provider, dependency, indicator
 or embedding change is required. Deployment stays with the host agent.
 
-## Previous release
+## Earlier release
 
 [v2.5.0 — Technical context](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.5.0)
 was published on **2026-11-02** from `fad1c95`. Comparison briefings now offer a

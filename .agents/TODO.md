@@ -1,7 +1,7 @@
 # Current project state and backlog
 
 Current state **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
-is in release preparation from `f89028b` (merged browser PR #262). Implementation
+is published from `4bc03cf`, the merge of release-prep PR #263. Implementation
 PRs #259–#262 are merged; the maintainer explicitly confirmed #262 as merged
 and tested. Carry that acceptance forward. Backend/frontend/lock/OpenAPI and
 public version labels align to 2.7.0. Post-bump `make gate` passed compilation,
@@ -9,9 +9,12 @@ API/surface/mock guards, 1,739 backend tests (one skipped; 77.54% coverage),
 production build and 730 frontend tests. All 26 post-bump installed-Chrome smoke
 journeys passed with one worker. Compose, fixture parity and version consistency
 checks passed. Local Python 3.12.16 / Node 26.7.0 are distinct from CI's supported
-Python 3.11 / Node 22 and disposable PostgreSQL/fresh-stack lanes. No tag or
-GitHub publication has occurred; release-prep review/CI remain before explicit
-maintainer publication authorization. See `docs/wiki/Releasing.md`.
+Python 3.11 / Node 22 and disposable PostgreSQL/fresh-stack lanes. Release-prep
+#263 passed build-and-test, clean-install and postgres-contract, then merged.
+Following explicit maintainer authorization, the annotated tag and public,
+non-prerelease GitHub release were published and verified on 2026-11-09. The
+remote tag resolves to `4bc03cfd71febaa87169c62b977e739b6197aaaf`; do not move it.
+No v2.7 release gate remains. See `docs/wiki/Releasing.md`.
 
 The bounded SEC aggregate, exact concept/unit/duration grouping, full-set conflict
 checks, per-symbol collection, version-2 references, checked Deep synthesis and
@@ -68,7 +71,7 @@ almost lost” (`praderasblog` #119), are merged. The changelog records Nov 5
 publication separately from Nov 4 preparation without moving the tag.
 Blog deployment belongs to the host agent.
 
-The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
+The latest completed milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
 contract. The SEC projection/audit (#259), collection (#260) and checked
 synthesis (#261) are merged. The browser now offers opt-in SEC filing facts
@@ -78,7 +81,8 @@ changes abort and discard late work. Existing Deep routing, bounded repair and
 deadlines apply; failed models retain validated evidence. Unselected context
 retains version 1. Shared server-generated fixtures have a repository-owned
 regeneration/check command. The maintainer confirmed #262 as merged and tested;
-release preparation is underway, with tag/publication pending release review.
+release/publication is complete. Post-release docs are prepared for review;
+the bilingual blog article is next, before discussing a new bounded scope.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
@@ -1126,11 +1130,11 @@ changes, not a fixed count. The layout audit leads into a dedicated future major
 Unchecked evidence-ledger entries below remain later candidates unless the
 bounded v2.3/v2.4/v2.5 sequence explicitly includes them.
 
-### v2.7 — Filing-grounded fundamentals in comparison briefings (agreed scope)
+### v2.7.0 — Filing-grounded comparison briefings (released 2026-11-09)
 
 Started 2026-11-06. See `docs/wiki/Roadmap.md` for the bounded scope and
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the source audit and sequence.
-SEC evidence collection, checked synthesis and browser integration are implemented and accepted. Release preparation is underway.
+SEC evidence collection, checked synthesis and browser integration are implemented and accepted. Release publication is complete.
 
 - [x] Audit SEC/FMP coverage, metric identities, units, fiscal periods, dates,
       conflicts and revision limits. Start with SEC duration facts; the current
@@ -1175,12 +1179,14 @@ SEC evidence collection, checked synthesis and browser integration are implement
       consolidated verification ledger. Post-bump gate: 1,739 backend tests
       (one skipped; 77.54% coverage), 730 frontend tests, build and guards; all
       26 Chrome smoke journeys pass. Compose, fixture parity and version checks
-      pass. No DB migration or new deployment setting. Release-prep review/CI
-      and explicit publication authorization remain before tagging.
-- [ ] After release-prep review and explicit maintainer publication authorization,
-      tag/publish v2.7.0 from the merged release-preparation commit.
-- [ ] Reconcile post-release docs and the established bilingual blog routine.
-      Deployment remains with the host agent.
+      pass. No DB migration or new deployment setting.
+- [x] Release-prep #263 passed all three CI jobs and merged as `4bc03cf`.
+      Following explicit maintainer authorization, tag and public non-prerelease
+      v2.7.0 were published/verified on 2026-11-09. No release gate remains.
+- [x] Prepare post-release README/changelog/wiki/agent reconciliation for review.
+- [ ] Complete the established bilingual blog routine in `../praderasblog`.
+      Deployment remains with the host agent. Discuss the next bounded scope
+      before starting new feature work.
 
 New providers, broad regional expansion, full historical archives, technical
 thesis validation and frontend overhaul are outside this milestone. Remaining
