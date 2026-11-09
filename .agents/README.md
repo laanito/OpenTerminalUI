@@ -5,7 +5,7 @@ maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
 
 Current state **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
-is in release preparation from `f89028b` (merged browser PR #262). Implementation
+is published from `4bc03cf`, the merge of release-prep PR #263. Implementation
 PRs #259–#262 are merged; the maintainer explicitly confirmed #262 as merged
 and tested. Carry that acceptance forward. Backend/frontend/lock/OpenAPI and
 public version labels align to 2.7.0. Post-bump `make gate` passed compilation,
@@ -13,9 +13,12 @@ API/surface/mock guards, 1,739 backend tests (one skipped; 77.54% coverage),
 production build and 730 frontend tests. All 26 post-bump installed-Chrome smoke
 journeys passed with one worker. Compose, fixture parity and version consistency
 checks passed. Local Python 3.12.16 / Node 26.7.0 are distinct from CI's supported
-Python 3.11 / Node 22 and disposable PostgreSQL/fresh-stack lanes. No tag or
-GitHub publication has occurred; release-prep review/CI remain before explicit
-maintainer publication authorization. See `docs/wiki/Releasing.md`.
+Python 3.11 / Node 22 and disposable PostgreSQL/fresh-stack lanes. Release-prep
+#263 passed build-and-test, clean-install and postgres-contract, then merged.
+Following explicit maintainer authorization, the annotated tag and public,
+non-prerelease GitHub release were published and verified on 2026-11-09. The
+remote tag resolves to `4bc03cfd71febaa87169c62b977e739b6197aaaf`; do not move it.
+No v2.7 release gate remains. See `docs/wiki/Releasing.md`.
 
 The bounded SEC aggregate, exact concept/unit/duration grouping, full-set conflict
 checks, per-symbol collection, version-2 references, checked Deep synthesis and
@@ -72,7 +75,7 @@ almost lost” (`praderasblog` #119), are merged. The changelog records Nov 5
 publication separately from Nov 4 preparation without moving the tag.
 Blog deployment belongs to the host agent.
 
-The agreed next milestone is **v2.7 — Filing-grounded fundamentals in comparison
+The latest completed milestone is **v2.7 — Filing-grounded fundamentals in comparison
 briefings**, beginning with a coverage/revision audit and a bounded interpretation
 contract. The SEC projection/audit (#259), collection (#260) and checked
 synthesis (#261) are merged. The browser now offers opt-in SEC filing facts
@@ -82,7 +85,8 @@ changes abort and discard late work. Existing Deep routing, bounded repair and
 deadlines apply; failed models retain validated evidence. Unselected context
 retains version 1. Shared server-generated fixtures have a repository-owned
 regeneration/check command. The maintainer confirmed #262 as merged and tested;
-release preparation is underway, with tag/publication pending release review.
+release/publication is complete. Post-release docs are prepared for review;
+the bilingual blog article is next, before discussing a new bounded scope.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major

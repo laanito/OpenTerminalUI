@@ -423,7 +423,7 @@ were published from that commit on 2026-11-05. Preparation was dated 2026-11-04;
 post-release documentation reconciles the changelog date without moving the tag.
 No v2.6 release gate remains. Deployment belongs to the host agent.
 
-### v2.7.0 verification ledger (release preparation)
+### v2.7.0 verification ledger (released)
 
 The bounded milestone adds filing-grounded fundamentals to selected comparison
 briefings. Implementation PRs #259–#262 are merged; release preparation starts
@@ -464,10 +464,14 @@ knowledge/price causation. Unselected context retains its version-1 shape and
 the nested price contract is unchanged. The wider technical-validation and
 major frontend-overhaul directions are outside this release.
 
-This is release preparation, dated 2026-11-09; review/CI and explicit maintainer
-publication authorization remain before tag/GitHub release. The latest published
-release remains v2.6.0. Deployment belongs to the host agent; after publication,
-reconcile documentation and follow the established bilingual blog routine.
+Release-prep PR [#263](https://github.com/laanito/OpenTerminalUI/pull/263) passed
+build-and-test, clean-install and postgres-contract, then merged as `4bc03cf`.
+Following explicit maintainer authorization, annotated tag and
+[GitHub release v2.7.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.7.0)
+were published on 2026-11-09. The public, non-prerelease metadata and remote tag
+were verified; the tag resolves to `4bc03cfd71febaa87169c62b977e739b6197aaaf`.
+No v2.7 release gate remains. Deployment belongs to the host agent. Post-release
+documentation reconciliation and the established bilingual blog routine follow.
 
 ## Cutting the release
 

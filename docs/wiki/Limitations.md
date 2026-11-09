@@ -122,7 +122,7 @@ never silently faked.
   selector and exact group inspection, including fiscal/filing/retrieval dates,
   original units, disclosure links, withheld conflicts and coverage gaps.
   Reference checks do not verify the truth of prose. The maintainer confirmed
-  the v2.7 journey as merged and tested; release preparation is underway.
+  the v2.7 journey as merged and tested; v2.7.0 was published on 2026-11-09.
   Company Facts retrieval is not exact filing corroboration, a historical
   vintage or proof of investor knowledge. See the
   [filing evidence contract](Fundamentals-Briefing-Contract.md).

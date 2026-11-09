@@ -699,7 +699,7 @@ portfolio correlation/risk engines, historical technical reconstruction, trading
 signals and broker execution. These remain later candidates. The inherited
 layout audit below leads into a future major frontend overhaul.
 
-## v2.7.0 — Filing-grounded comparison briefings (release preparation)
+## v2.7.0 — Filing-grounded comparison briefings (released 2026-11-09)
 
 Agreed after v2.6 closure and its chapter-22 article. Bring filing-grounded
 fundamentals into the comparison briefing, starting with a coverage audit and
@@ -714,7 +714,9 @@ the existing Deep profile and bounded repair. The opt-in browser selector and
 exact filing-group inspection are implemented, including scope cancellation,
 strict client validation and desktop/narrow regression coverage. Implementation
 PRs #259–#262 are merged, and the maintainer confirmed #262 as merged and tested.
-Release preparation starts from `f89028b`; tag/publication await release review.
+Release-prep PR #263 passed all three CI jobs and merged as `4bc03cf`. Following
+explicit maintainer authorization, v2.7.0 was tagged/published and verified on
+2026-11-09. No v2.7 release gate remains.
 No migration, provider, setting, dependency, persistence or embedding change is
 introduced. Existing SEC configuration/access and source coverage still apply.
 See the verification ledger in [Releasing](Releasing.md).
