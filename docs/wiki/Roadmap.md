@@ -747,8 +747,11 @@ comparison briefings. On 2026-11-11 the maintainer established a prerequisite:
 news and sentiment used as references must be durable for a retention period so
 an analysis can be revisited with the evidence it actually used. Durability and
 replay are part of this milestone's design, not a follow-up after integration.
-Implementation has not started; the retention duration and detailed delivery
-sequence remain to be agreed. No fixed PR count is assigned.
+Implementation has begun with owner-scoped exact-text snapshots and append-only
+assessments, an additive migration and storage tests. This foundation is not yet
+wired to news/scoring/comparison routes. See [News evidence contract](News-Evidence-Contract.md)
+for the provenance audit and precise boundary. The retention duration and remaining
+delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
 
 ### Evidence and replay contract
 

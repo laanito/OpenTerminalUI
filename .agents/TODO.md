@@ -1205,12 +1205,20 @@ v2 evidence ideas do not automatically become compulsory sub-releases.
 Maintainer requirement agreed 2026-11-11: news and sentiment used as references
 must remain durable for a retention period so an analysis can be revisited with
 its original evidence. The proposed headline-sentiment increment must include
-this foundation. Detailed scope/retention duration are still open; implementation
-has not started. See `docs/wiki/Roadmap.md` for the contract and boundaries.
+this foundation. Implementation now has a storage boundary; integration and the
+retention duration remain open. See `docs/wiki/Roadmap.md` and
+`docs/wiki/News-Evidence-Contract.md` for the contract and boundaries.
 
-- [ ] Audit existing news ingestion, live/cache-only paths and baseline/Fast
-      scoring semantics/provenance. Set text-version, target-asset, assessment,
-      complete-analysis identity and ownership before implementation.
+- [x] Audit existing ingestion/live/cache paths and baseline/Fast scoring. Record
+      truncation, URL uniqueness, missing method/time and implicit target gaps in
+      `News-Evidence-Contract.md`; preserve legacy scores without invented provenance.
+- [x] Add initial owner-scoped exact-text/assessment contracts and insert-only
+      storage helpers, with UUID records, versioned payloads, exact-input hashes,
+      independent capture/scoring/recording times and composite ownership FK.
+      Additive `0019_news_evidence` preserves legacy data and rollback research.
+      SQLite round-trip/migration/ownership and PostgreSQL DDL tests pass locally;
+      actual PostgreSQL round-trip/owner-FK coverage is added to the guarded CI lane.
+      Existing ingestion/scorers/routes are not wired; no cleanup or public API.
 - [ ] Agree an explicit configurable unreferenced retention window. Keep evidence
       pinned while a saved analysis references it; define expiry, shared-reference
       release and owner-authorized deletion/missing-source behavior.
@@ -1231,8 +1239,9 @@ has not started. See `docs/wiki/Roadmap.md` for the contract and boundaries.
 
 Replay means recovering original evidence/results and enabling a new run from
 those inputs, not promising identical LLM prose. The retention duration and
-migration/cleanup implementation remain open; this documentation change performs
-no production operations.
+scoring/comparison integration and cleanup remain open. The storage foundation
+performs no production operations during development; normal upgrade applies its
+additive migration.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 

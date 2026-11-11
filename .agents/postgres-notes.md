@@ -152,3 +152,16 @@ by local verification. Isolated SQLite preservation/idempotence and PostgreSQL
 DDL tests cover the migration; the disposable PostgreSQL CI lane now also checks
 the migrated column and runs Brain memo persistence/ownership API contracts.
 Actual PostgreSQL execution belongs to that CI lane, not the local DDL test.
+
+
+## v2.8 news evidence foundation
+
+Additive `0019_news_evidence` introduces `news_text_snapshots` and
+`news_sentiment_assessments` with portable JSON and timezone-aware timestamps.
+The snapshot `(user_id, id)` unique key is referenced by the assessment composite
+foreign key, so database enforcement also rejects cross-owner links. Account
+deletion cascades private evidence. No existing table/row is altered or backfilled;
+downgrade retains the new research tables. SQLite fresh/legacy/idempotent upgrade
+and rollback retention plus PostgreSQL DDL are checked locally. An actual migrated
+PostgreSQL insert/read/owner-FK contract is included in the guarded disposable CI
+lane; local DDL checks alone do not establish live PostgreSQL verification.
