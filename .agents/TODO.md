@@ -81,8 +81,17 @@ changes abort and discard late work. Existing Deep routing, bounded repair and
 deadlines apply; failed models retain validated evidence. Unselected context
 retains version 1. Shared server-generated fixtures have a repository-owned
 regeneration/check command. The maintainer confirmed #262 as merged and tested;
-release/publication is complete. Post-release docs are prepared for review;
-the bilingual blog article is next, before discussing a new bounded scope.
+release/publication is complete. Post-release docs #264 and bilingual chapter 23
+(`praderasblog` #120) are merged; host publication remains outside this repo.
+
+The next proposed increment is **v2.8 — Durable news and sentiment evidence**.
+On 2026-11-11 the maintainer required durability for news/sentiment references
+so analyses remain inspectable/repeatable. Plan immutable text snapshots,
+versioned method/model/context-linked assessments and complete captured analysis
+inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
+referenced evidence; unreferenced retention must be configurable, with its exact
+duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
+Implementation has not started. See the new roadmap planning section.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
@@ -1184,13 +1193,46 @@ SEC evidence collection, checked synthesis and browser integration are implement
       Following explicit maintainer authorization, tag and public non-prerelease
       v2.7.0 were published/verified on 2026-11-09. No release gate remains.
 - [x] Prepare post-release README/changelog/wiki/agent reconciliation for review.
-- [ ] Complete the established bilingual blog routine in `../praderasblog`.
-      Deployment remains with the host agent. Discuss the next bounded scope
-      before starting new feature work.
+- [x] Post-release docs #264 and bilingual chapter 23 (`praderasblog` #120)
+      are merged. Deployment/publication remains with the host agent.
 
 New providers, broad regional expansion, full historical archives, technical
 thesis validation and frontend overhaul are outside this milestone. Remaining
 v2 evidence ideas do not automatically become compulsory sub-releases.
+
+### v2.8 planning — Durable news and sentiment evidence
+
+Maintainer requirement agreed 2026-11-11: news and sentiment used as references
+must remain durable for a retention period so an analysis can be revisited with
+its original evidence. The proposed headline-sentiment increment must include
+this foundation. Detailed scope/retention duration are still open; implementation
+has not started. See `docs/wiki/Roadmap.md` for the contract and boundaries.
+
+- [ ] Audit existing news ingestion, live/cache-only paths and baseline/Fast
+      scoring semantics/provenance. Set text-version, target-asset, assessment,
+      complete-analysis identity and ownership before implementation.
+- [ ] Agree an explicit configurable unreferenced retention window. Keep evidence
+      pinned while a saved analysis references it; define expiry, shared-reference
+      release and owner-authorized deletion/missing-source behavior.
+- [ ] Add reviewed portable persistence for immutable text snapshots and
+      append-only sentiment assessments, with method/model/prompt/context identity
+      and real capture/scoring times. Label legacy gaps; never overwrite history.
+- [ ] Capture full bounded comparison selections/evidence and analysis input,
+      generation metadata, citations and completed result/typed failure, without
+      credentials. Reopen without providers/inference; explicit captured-input
+      re-runs and current-data refreshes create distinct linked runs.
+- [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
+      interpretation and inspectable retained references. Preserve failures,
+      disagreements, deduplication and coverage; no market-wide sentiment claim.
+- [ ] Add capture/review, retention and deletion UX with scope invalidation;
+      verify restart/cache-expiry/provider-edit survival, immutable rescoring,
+      PostgreSQL/SQLite parity, ownership and reference-aware pruning. Obtain
+      maintainer acceptance before release preparation.
+
+Replay means recovering original evidence/results and enabling a new run from
+those inputs, not promising identical LLM prose. The retention duration and
+migration/cleanup implementation remain open; this documentation change performs
+no production operations.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 

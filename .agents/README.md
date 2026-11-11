@@ -85,8 +85,17 @@ changes abort and discard late work. Existing Deep routing, bounded repair and
 deadlines apply; failed models retain validated evidence. Unselected context
 retains version 1. Shared server-generated fixtures have a repository-owned
 regeneration/check command. The maintainer confirmed #262 as merged and tested;
-release/publication is complete. Post-release docs are prepared for review;
-the bilingual blog article is next, before discussing a new bounded scope.
+release/publication is complete. Post-release docs #264 and bilingual chapter 23
+(`praderasblog` #120) are merged; host publication remains outside this repo.
+
+The next proposed increment is **v2.8 — Durable news and sentiment evidence**.
+On 2026-11-11 the maintainer required durability for news/sentiment references
+so analyses remain inspectable/repeatable. Plan immutable text snapshots,
+versioned method/model/context-linked assessments and complete captured analysis
+inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
+referenced evidence; unreferenced retention must be configurable, with its exact
+duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
+Implementation has not started. See the new roadmap planning section.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major
