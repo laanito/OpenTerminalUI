@@ -740,6 +740,103 @@ assigned. New providers, broad regional expansion, complete historical archives,
 full technical thesis validation and frontend redesign are outside this scope.
 Other v2 evidence gaps remain candidates, not compulsory releases before v3.
 
+## v2.8 planning — Durable news and sentiment evidence
+
+The proposed next cross-market increment is selected-headline sentiment in
+comparison briefings. On 2026-11-11 the maintainer established a prerequisite:
+news and sentiment used as references must be durable for a retention period so
+an analysis can be revisited with the evidence it actually used. Durability and
+replay are part of this milestone's design, not a follow-up after integration.
+Implementation has not started; the retention duration and detailed delivery
+sequence remain to be agreed. No fixed PR count is assigned.
+
+### Evidence and replay contract
+
+- Retain immutable snapshots of the exact title and supplied summary/excerpt used
+  for scoring or synthesis, source URL/publisher, reported publication time,
+  terminal retrieval/capture time, content identity and relevant symbol context.
+  Record whether the input was headline-only, included a summary or was truncated.
+  Snapshotting supplied text does not require crawling or archiving full articles.
+  Later edits to the same URL create a new version; they never overwrite evidence
+  already referenced by an analysis.
+- Keep sentiment assessments append-only and linked to their precise text
+  snapshot and scoring context, including the target instrument when relevant.
+  Record score/label/rationale, engine/method/model identity, prompt/calculation
+  version, scoring time and fallback/failure status. Rescoring produces a new
+  assessment. Preserve the distinction between text tone, an inferred implication
+  for a particular asset and actual observed investor sentiment; audit the
+  existing scoring semantics before reuse. Confidence is not automatically a
+  calibrated probability, and legacy unversioned scores must remain labelled.
+- Capture the complete bounded comparison evidence packet and selection at
+  analysis time, including prices and any selected macro/fundamental/technical
+  inputs. Durable news alone cannot reproduce an analysis if its other inputs
+  are fetched anew. Retain source/assessment IDs, original citations, schema and
+  calculation/prompt versions, public model/profile identity and generation
+  parameters, the rendered model input needed for inspection/re-run, and the
+  completed answer or typed failure. Never persist connection credentials or
+  authentication headers. Preserve recorded/retrieved/scored/generated times
+  separately from source publication times; do not backdate old records into
+  verified point-in-time market knowledge.
+- Reopening a captured analysis loads its original evidence and result without
+  provider fetches or inference. An explicitly requested re-run from captured
+  inputs creates a separate linked result and preserves the original; a refresh
+  from current sources is a different, newly captured analysis. Model/provider
+  changes and nondeterminism mean replayable evidence does not promise identical
+  newly generated prose. Record model-version limits honestly.
+
+### Retention and ownership
+
+Persist evidence used by an analysis independently of short-lived response/LLM
+caches. The retention window for unreferenced article/assessment/run snapshots
+must be explicit and configurable before cleanup is enabled. The exact duration
+is not yet agreed; volume/storage considerations should inform the default.
+This plan does not prescribe a new expiry for the existing global news table.
+
+Saved analyses pin their referenced evidence for as long as those analyses are
+retained. Ordinary TTL cleanup must not break their citations; deduplicated data
+remains until all retaining references are released. Unsaved/expired captures
+follow the agreed policy. Show retention/expiry status in the review flow.
+Explicit deletion must be owner-authorized; if a retained analysis can lose a
+source through such deletion, show that loss rather than silently replacing it
+from the network. Retention cleanup must be bounded and reference-aware.
+
+Saved analysis and assessment access must enforce ownership, including lookup
+by evidence/hash IDs. Existing installation-wide public news is not implicitly
+made private; any shared immutable text storage must not expose another user's
+analyses, research selections or private annotations. Choose the storage/access
+boundary explicitly during the schema audit. Preserve PostgreSQL/SQLite parity;
+review additive migrations, legacy-row preservation and cleanup on disposable
+DBs before rollout. This is a planning entry; it changes no schema or stored data.
+
+### Delivery and acceptance
+
+1. Audit the existing ingestor, live news fallbacks, baseline scores, on-demand
+   Fast scoring/cache and comparison collector. Define text/assessment/analysis
+   identity, retention and ownership, including legacy provenance gaps, before
+   reusing a score as durable historical evidence.
+2. Implement the reviewed persistence/migration and capture contracts, with
+   immutable revisions, safe deduplication, owner boundaries and reference-aware
+   expiry. A cache hit must still be tied to the retained text/context/method
+   that produced it; never relabel an old assessment as newly scored.
+3. Add explicit, bounded sentiment of selected dated headlines and checked Deep
+   interpretation using those retained references. Keep missing/failed/mixed
+   scores, duplicate reports and incomplete feed coverage visible. A headline
+   sample does not establish whole-market sentiment, future returns or causation.
+4. Provide capture/reopen, explicit re-run versus refresh, citation inspection,
+   retention/deletion UX and scope cancellation. Verify that provider edits,
+   changed model results, cache expiry and backend restart cannot silently alter
+   retained evidence or conclusions. Test SQLite/PostgreSQL persistence, owner
+   isolation, retained versus unreferenced pruning and missing-source handling;
+   obtain maintainer feedback before release preparation.
+
+These are reviewable boundaries, not four compulsory PRs. Full web crawling,
+complete historical news archives, calibrated market-wide sentiment, automatic
+private-memory indexing, provider expansion, technical thesis validation and the
+major frontend overhaul are outside this proposed increment. Historical macro
+vintages and economic-calendar reliability remain separate candidates.
+Capture is bounded to the comparison workflow; this does not redesign Brain Log
+or the journal/portfolio decision lifecycle.
+
 ## Future major frontend overhaul — layout audit as discovery
 
 The maintainer reported inherited overflow and poor stacking on 2026-11-02 and
