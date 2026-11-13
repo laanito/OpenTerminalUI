@@ -97,10 +97,16 @@ referenced evidence; unreferenced retention must be configurable, with its exact
 duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
 The first storage foundation now adds owner-scoped exact-text snapshots and
 append-only assessments, with additive migration `0019_news_evidence`. News/scoring
-and comparison routes are not wired to it yet; no cleanup runs. Read
+routes are not wired to those tables yet; no cleanup runs. PR #266 is merged.
+The next increment adds explicit JWT comparison capture/list/reopen/delete APIs
+with self-contained evidence, public generation identity and exact dispatched
+model inputs (including format/token retries and repair), plus additive
+`0020_comparison_captures`. Existing generation endpoints remain ephemeral; no
+browser save flow, captured-input rerun, linked refresh or sentiment integration
+is implied. Inline evidence cannot expire underneath a retained capture. Read
 `docs/wiki/News-Evidence-Contract.md` for the audited legacy gaps and storage
-boundary. Retention duration, saved comparison capture/replay and integration
-remain open. See the roadmap planning section.
+boundary. Retention duration, browser review, rerun/refresh linkage and scoring
+integration remain open. See the roadmap planning section.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major

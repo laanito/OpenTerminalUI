@@ -107,7 +107,7 @@ async def _prepare_context_price(payload, user, fetcher):
 async def _run_briefing(
     payload: ComparisonBriefingEvidenceRequest, user: User, fetcher: Any,
     on_phase: Callable[[BriefingPhase], None] | None = None,
-    *, profile: ResolvedLLMProfile | None = None,
+    *, profile: ResolvedLLMProfile | None = None, on_request=None,
 ) -> ComparisonBriefingResult:
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if on_phase is not None:
@@ -122,7 +122,10 @@ async def _run_briefing(
     except Exception as exc:
         logger.warning("Comparison briefing evidence preparation failed (%s)", type(exc).__name__)
         raise
-    return await generate_comparison_briefing(evidence, on_phase=on_phase, profile=profile)
+    return await generate_comparison_briefing(
+        evidence, on_phase=on_phase, profile=profile,
+        **({"on_request": on_request} if on_request is not None else {}),
+    )
 
 
 @router.post("/briefing", response_model=ComparisonBriefingResult)
@@ -231,7 +234,7 @@ async def prepare_context_briefing_evidence(
                                           **({"technical_snapshot": snapshot} if snapshot is not None else {}))
 
 
-async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None, *, profile=None, sec_client=None):
+async def _run_context_briefing(payload, user, fetcher, economic_service, on_phase=None, *, profile=None, sec_client=None, on_request=None):
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if on_phase:
         on_phase("preparing_evidence")
@@ -246,7 +249,10 @@ async def _run_context_briefing(payload, user, fetcher, economic_service, on_pha
     evidence = await collect_context_evidence(price, payload.context, user=user, economic_service=economic_service,
                                                **({"sec_client": sec_client} if sec_client is not None and payload.context.fundamentals else {}),
                                                **({"technical_snapshot": snapshot} if snapshot is not None else {}))
-    return await generate_context_briefing(evidence, on_phase=on_phase, profile=profile)
+    return await generate_context_briefing(
+        evidence, on_phase=on_phase, profile=profile,
+        **({"on_request": on_request} if on_request is not None else {}),
+    )
 
 
 @router.post("/briefing-context", response_model=ComparisonContextBriefingResult)

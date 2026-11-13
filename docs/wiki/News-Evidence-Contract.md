@@ -1,9 +1,11 @@
 # Durable news evidence — v2.8 foundation
 
-Status: storage foundation only, 2026-11-11. The comparison briefing, news APIs
-and scorers do **not yet write these records**. Saving/reopening comparisons,
-retention UX and headline-sentiment integration remain future v2.8 work. This
-contract supports repeatable evidence; it does not promise identical model prose.
+Status: v2.8 storage/capture foundation, 2026-11-13. The existing news APIs and
+scorers do **not yet write the text/assessment tables**. Explicit comparison
+capture now stores its own complete evidence/results inline; existing comparison
+generation endpoints remain ephemeral. Browser save/review, captured-input reruns,
+retention UX and headline-sentiment integration remain future work. This contract
+supports repeatable evidence; it does not promise identical model prose.
 
 ## Existing paths and provenance gaps
 
@@ -12,7 +14,7 @@ contract supports repeatable evidence; it does not promise identical model prose
 | `bg_services/news_ingestor.py` | Installation-wide `news_articles`, unique URL, baseline score | Repeated URLs are skipped. Scoring precedes title/summary storage truncation, so the stored text may differ from the scored input. No per-score method/model/version/scoring timestamp. |
 | `api/routes/news.py` | DB-backed lists or cached live fallback | Live fallback items are not automatically inserted. Missing baseline scores may be calculated on read without a write. |
 | `services/llm_sentiment.py` | Short-lived per-text/profile cache | No durable assessment or original scoring timestamp. Its existing trader-oriented prompt infers an asset implication, rather than measuring investor sentiment. Target asset is not explicit in that cache identity. Confidence is heuristic. |
-| Comparison headline collector and synthesis | Bounded response/evidence packet | Live headlines and generated answers are not automatically saved. A response fingerprint is not durable storage. |
+| Existing comparison headline collector and synthesis endpoints | Bounded response/evidence packet | Not automatically saved. The separate explicit capture API below retains a complete run. A response fingerprint alone is not durable storage. |
 
 Leave legacy rows intact. Neither current configuration nor the legacy article
 creation time establishes how/when an old score was computed. Do not relabel old
@@ -80,7 +82,81 @@ Storage will grow once callers are wired; define bounded capture and lifecycle
 behavior in that integration. Shared-reference release, explicit evidence deletion
 and missing-source UX are still unimplemented, not implied by these tables.
 
-Next: persist complete bounded comparison selections/evidence, rendered model
-input and result/failure with generation metadata; build owner-scoped replay,
-separate captured-input rerun/current-data refresh, then connect selected-headline
-sentiment to checked Deep interpretation. See [Roadmap](Roadmap.md).
+## Explicit comparison capture API
+
+JWT-authenticated `POST /api/market-context/briefing-captures` accepts server-side
+selections only, for example:
+
+```json
+{"anchor":"AAPL","comparisons":["SPY"],"period":"1M","context":{"news":true,"macro_regions":["us"],"technical":true,"fundamentals":true}}
+```
+
+Omitted or entirely unselected context uses price-only synthesis. The endpoint
+resolves Deep once, reuses the existing bounded server evidence collection and
+checked synthesis, then commits one immutable `comparison_captures` row. It
+returns 201 with capture identity, actual save time, retention state and a
+schema-versioned content envelope containing:
+
+- normalized selections and the complete original result, including its bounded
+  price/news/macro/technical/filing evidence, local citations, scope notices,
+  source dates, calculation methods/formulas and original schema versions;
+- original generation time, answer or handled typed failure (no rejected partial
+  prose), plus public model/profile identity, protocol, enabled state, selected
+  structured-output mode and configured model deadline;
+- each exact dispatched JSON model request body with its terminal dispatch time,
+  rendered prompts/evidence, JSON schema and effective generation parameters.
+  This includes client-added JSON instructions, response-format fallback,
+  token-cap retries and bounded repair feedback. It never includes authentication
+  headers, endpoint URLs or provider settings. A dispatch record does not prove
+  provider receipt or identify the actual weights behind a mutable model alias.
+
+The client callback observes detached payload copies immediately before HTTP
+submission. Requests not reached (disabled model, health failure, evidence
+failure) have no dispatched inputs; empty attempts are not an invented prompt.
+Unexpected exceptions/cancellation before completion do not publish a capture.
+Handled evidence timeout can retain its typed failure with no evidence packet.
+
+`GET /api/market-context/briefing-captures` lists bounded owner summaries
+(`limit`/`offset`). `GET /api/market-context/briefing-captures/{id}` reopens the
+original contents using only the database, without live providers or inference.
+Saved JSON is returned verbatim rather than applying defaults/field projection
+from the current generation models.
+Each new POST fetches fresh evidence and produces a new ID; there is no
+captured-input rerun or parent-run linkage yet. The browser still uses existing
+generation endpoints and does not yet offer this save flow. This API uses a
+synchronous JSON response, not a new progress stream. Transport disconnection
+does not prove that a synchronous server operation stopped or did not save;
+there is no automatic retry or idempotency promise.
+
+`DELETE /api/market-context/briefing-captures/{id}` explicitly removes only the
+owner's capture and its embedded evidence; another owner's ID returns the same
+404 as an unknown ID. It does not delete public news, text/assessment rows,
+Brain or portfolio records. Account deletion cascades private captures.
+No API-key scope is added; existing external note ingestion permissions do not
+grant capture access.
+
+Captures are self-contained: the exact selected headline text is retained inline,
+not looked up through live URLs, public news IDs or mutable caches. There are no
+shared blobs or external evidence dependencies to expire underneath a capture.
+They do not yet link separate text snapshots/assessments; that comes with sentiment
+integration. News is still headline-only where the packet says so; no full article
+archive or historical-knowledge claim is introduced.
+
+Content hashes cover the complete serialized content, including generation/input
+times. They identify retained contents, not cross-run semantic equality. Saved
+captures have no automatic expiry. Future cleanup must preserve their embedded
+inputs/results while retained; deleting a capture releases its own inline data.
+A 4,000,000-byte serialized UTF-8 cap rejects oversized captures with 413 before
+inserting; nothing is silently dropped. Storage errors return 503 without
+claiming retention. Ambiguous commit/network failures can require listing captures
+to confirm whether a record exists.
+
+Additive migration `0020_comparison_captures` follows `0019_news_evidence`, changes
+no existing rows and retains the new table on downgrade. SQLite migration,
+restart/provider-edit, privacy, repair/dispatch and optional-source tests run
+locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
+explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
+
+Next: browser save/review and captured-input rerun versus linked refresh,
+selected-headline sentiment/assessment integration, then configurable
+reference-aware retention and deletion UX. See [Roadmap](Roadmap.md).

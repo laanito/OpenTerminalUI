@@ -32,6 +32,7 @@ def test_postgres_lane_uses_migrated_disposable_database() -> None:
         "brain_memos",
         "news_text_snapshots",
         "news_sentiment_assessments",
+        "comparison_captures",
     ):
         assert inspector.has_table(table), f"missing migrated PostgreSQL table: {table}"
 
@@ -84,5 +85,49 @@ def test_news_evidence_round_trip_and_owner_constraint_on_postgres() -> None:
                         id=str(uuid4()), user_id=other, snapshot_id=snapshot.id, recorded_at=now, payload={},
                     ))
                     db.flush()
+        finally:
+            transaction.rollback()
+
+
+def test_comparison_capture_json_ownership_and_delete_on_postgres() -> None:
+    from datetime import datetime, timezone
+    from uuid import uuid4
+    from sqlalchemy.orm import Session
+    from fastapi import HTTPException
+    from backend.models import ComparisonCaptureORM, User
+    from backend.api.routes.comparison_captures import get_capture, list_captures, delete_capture
+    from backend.services.comparison_briefing import unavailable_briefing
+    from backend.tests.test_comparison_briefing import _packet
+    from types import SimpleNamespace
+
+    with engine.connect() as connection:
+        transaction = connection.begin()
+        try:
+            with Session(bind=connection, join_transaction_mode="create_savepoint") as db:
+                owner, other, capture_id = str(uuid4()), str(uuid4()), str(uuid4())
+                db.add_all([User(id=value, email=f"{value}@example.test", hashed_password="") for value in (owner, other)])
+                db.flush()
+                payload = {
+                    "schema_version": 1, "mode": "price", "selection": {"anchor": "AAPL", "comparisons": ["SPY"], "period": "1M", "context": None},
+                    "generation": {"contract_version": "comparison-capture-v1", "protocol": "openai_compatible_chat_completions",
+                        "profile": {"requested_profile": "deep", "resolved_profile": "fast", "model": "test"},
+                        "enabled": False, "timeout_seconds": 1, "structured_output": "auto", "attempts": []},
+                    "result": unavailable_briefing("disabled", evidence=_packet()).model_dump(mode="json"),
+                }
+                db.add(ComparisonCaptureORM(id=capture_id, user_id=owner, captured_at=datetime.now(timezone.utc),
+                    mode="price", status="unavailable", content_hash="a"*64, payload=payload))
+                db.flush(); db.expire_all()
+                user = SimpleNamespace(id=owner)
+                import json
+                detail = json.loads(get_capture(capture_id, user, db).body)
+                assert detail["content"] == payload
+                assert datetime.fromisoformat(detail["captured_at"].replace("Z", "+00:00")).tzinfo is not None
+                assert len(list_captures(limit=20, offset=0, user=user, db=db)) == 1
+                for operation in (get_capture, delete_capture):
+                    with pytest.raises(HTTPException) as failure:
+                        operation(capture_id, SimpleNamespace(id=other), db)
+                    assert failure.value.status_code == 404
+                delete_capture(capture_id, user, db)
+                assert db.get(ComparisonCaptureORM, capture_id) is None
         finally:
             transaction.rollback()

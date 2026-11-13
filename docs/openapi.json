@@ -2597,6 +2597,167 @@
         "title": "CapexTrackerResponse",
         "type": "object"
       },
+      "CaptureDetail": {
+        "properties": {
+          "anchor": {
+            "title": "Anchor",
+            "type": "string"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "comparisons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Comparisons",
+            "type": "array"
+          },
+          "content": {
+            "discriminator": {
+              "mapping": {
+                "context": "#/components/schemas/ContextCaptureContent",
+                "price": "#/components/schemas/PriceCaptureContent"
+              },
+              "propertyName": "mode"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PriceCaptureContent"
+              },
+              {
+                "$ref": "#/components/schemas/ContextCaptureContent"
+              }
+            ],
+            "title": "Content"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "price",
+              "context"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "period": {
+            "enum": [
+              "1M",
+              "3M",
+              "6M"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "retention": {
+            "const": "retained_no_automatic_expiry",
+            "default": "retained_no_automatic_expiry",
+            "title": "Retention",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "captured_at",
+          "mode",
+          "status",
+          "anchor",
+          "comparisons",
+          "period",
+          "content_hash",
+          "content"
+        ],
+        "title": "CaptureDetail",
+        "type": "object"
+      },
+      "CaptureSummary": {
+        "properties": {
+          "anchor": {
+            "title": "Anchor",
+            "type": "string"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "comparisons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Comparisons",
+            "type": "array"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "price",
+              "context"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "period": {
+            "enum": [
+              "1M",
+              "3M",
+              "6M"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "retention": {
+            "const": "retained_no_automatic_expiry",
+            "default": "retained_no_automatic_expiry",
+            "title": "Retention",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "captured_at",
+          "mode",
+          "status",
+          "anchor",
+          "comparisons",
+          "period",
+          "content_hash"
+        ],
+        "title": "CaptureSummary",
+        "type": "object"
+      },
       "CapturedFundamentalRecord": {
         "properties": {
           "fiscal_period_end": {
@@ -2636,6 +2797,75 @@
           "source"
         ],
         "title": "CapturedFundamentalRecord",
+        "type": "object"
+      },
+      "CapturedGeneration": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/CapturedModelRequest"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": "comparison-capture-v1",
+            "default": "comparison-capture-v1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/LLMProfileIdentity"
+          },
+          "protocol": {
+            "const": "openai_compatible_chat_completions",
+            "default": "openai_compatible_chat_completions",
+            "title": "Protocol",
+            "type": "string"
+          },
+          "structured_output": {
+            "title": "Structured Output",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "title": "Timeout Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "profile",
+          "enabled",
+          "timeout_seconds",
+          "structured_output",
+          "attempts"
+        ],
+        "title": "CapturedGeneration",
+        "type": "object"
+      },
+      "CapturedModelRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "additionalProperties": true,
+            "title": "Body",
+            "type": "object"
+          },
+          "dispatched_at": {
+            "format": "date-time",
+            "title": "Dispatched At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dispatched_at",
+          "body"
+        ],
+        "title": "CapturedModelRequest",
         "type": "object"
       },
       "CausalityRequest": {
@@ -3910,6 +4140,61 @@
         "title": "ComparisonBriefingResult",
         "type": "object"
       },
+      "ComparisonCaptureRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "examples": [
+              "AAPL"
+            ],
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Anchor",
+            "type": "string"
+          },
+          "comparisons": {
+            "examples": [
+              [
+                "SPY",
+                "BTC-USD"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Comparisons",
+            "type": "array"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BriefingContextOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "period": {
+            "default": "1M",
+            "enum": [
+              "1M",
+              "3M",
+              "6M"
+            ],
+            "title": "Period",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comparisons"
+        ],
+        "title": "ComparisonCaptureRequest",
+        "type": "object"
+      },
       "ComparisonContextBriefingRequest": {
         "additionalProperties": false,
         "description": "Same explicit selections for evidence preparation and checked synthesis.",
@@ -4339,6 +4624,39 @@
           "retryable"
         ],
         "title": "ContextBriefingFailure",
+        "type": "object"
+      },
+      "ContextCaptureContent": {
+        "additionalProperties": false,
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/CapturedGeneration"
+          },
+          "mode": {
+            "const": "context",
+            "title": "Mode",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ComparisonContextBriefingResult"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/ComparisonCaptureRequest"
+          }
+        },
+        "required": [
+          "mode",
+          "selection",
+          "generation",
+          "result"
+        ],
+        "title": "ContextCaptureContent",
         "type": "object"
       },
       "ContextObservation": {
@@ -17051,6 +17369,39 @@
           }
         },
         "title": "PortfolioUpdateRequest",
+        "type": "object"
+      },
+      "PriceCaptureContent": {
+        "additionalProperties": false,
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/CapturedGeneration"
+          },
+          "mode": {
+            "const": "price",
+            "title": "Mode",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ComparisonBriefingResult"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/ComparisonCaptureRequest"
+          }
+        },
+        "required": [
+          "mode",
+          "selection",
+          "generation",
+          "result"
+        ],
+        "title": "PriceCaptureContent",
         "type": "object"
       },
       "PriceRange": {
@@ -33015,6 +33366,239 @@
           }
         ],
         "summary": "Create Comparison Briefing",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-captures": {
+      "get": {
+        "description": "List this owner's captures without fetching sources or calling a model.",
+        "operationId": "list_captures_api_market_context_briefing_captures_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 10000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CaptureSummary"
+                  },
+                  "title": "Response List Captures Api Market Context Briefing Captures Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Captures",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      },
+      "post": {
+        "description": "Generate from fresh server-fetched selections and explicitly retain the run.\n\nStores complete bounded evidence, checked answer or typed failure, and exact\nmodel request bodies (including client format/token retries and repair).\nNo browser-supplied result/provenance is accepted. No indexing or automatic\nexpiry. Existing briefing endpoints remain ephemeral. No captured-input rerun\nis exposed yet; another POST fetches new evidence and creates a new capture.",
+        "operationId": "create_capture_api_market_context_briefing_captures_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparisonCaptureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "413": {
+            "description": "Capture exceeds the storage limit; nothing was saved."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "Capture could not be saved; do not assume it is retained."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Capture",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-captures/{capture_id}": {
+      "delete": {
+        "description": "Explicitly delete the owner's self-contained capture and embedded evidence.",
+        "operationId": "delete_capture_api_market_context_briefing_captures__capture_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Capture",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      },
+      "get": {
+        "description": "Reopen the original evidence/result, without refreshing or inference.",
+        "operationId": "get_capture_api_market_context_briefing_captures__capture_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Capture",
         "tags": [
           "market-context"
         ],

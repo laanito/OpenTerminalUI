@@ -287,6 +287,7 @@ async def generate_comparison_briefing(
     evidence: ComparisonBriefingEvidence,
     *, on_phase: Callable[[BriefingPhase], None] | None = None,
     profile: ResolvedLLMProfile | None = None,
+    on_request: Callable[[dict], None] | None = None,
 ) -> ComparisonBriefingResult:
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if not any(pair.status == "available" for pair in evidence.comparisons):
@@ -297,6 +298,7 @@ async def generate_comparison_briefing(
     parsed, failure = await synthesize_checked_briefing(
         evidence, schema=GeneratedComparisonBriefing.model_json_schema(), system=_SYSTEM,
         validate=validate_comparison_briefing, on_phase=on_phase, profile=profile,
+        **({"on_request": on_request} if on_request is not None else {}),
     )
     if failure:
         return unavailable_briefing(failure, evidence=evidence, profile=profile)
@@ -313,6 +315,7 @@ async def synthesize_checked_briefing(
     on_phase: Callable[[BriefingPhase], None] | None = None, max_tokens: int = 3200,
     reference_requirements: dict | None = None,
     profile: ResolvedLLMProfile,
+    on_request: Callable[[dict], None] | None = None,
 ):
     """Shared single-deadline completion/repair lifecycle; never emit raw prose."""
 
@@ -339,6 +342,7 @@ async def synthesize_checked_briefing(
                 content = await client.chat(
                     messages, temperature=0.2 if attempt == 0 else 0.0,
                     max_tokens=max_tokens, json_schema=schema, frequency_penalty=0.0,
+                    **({"on_request": on_request} if on_request is not None else {}),
                 )
                 phase("validating")
                 try:
