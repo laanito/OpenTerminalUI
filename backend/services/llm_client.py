@@ -13,10 +13,11 @@ on the next form whenever the endpoint rejects the previous one.
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
@@ -112,12 +113,15 @@ class LLMClient:
         json_schema: dict[str, Any] | None = None,
         frequency_penalty: float = 0.0,
         retry_on_truncation: bool = False,
+        on_request: Callable[[dict[str, Any]], None] | None = None,
     ) -> str:
         """Send a chat completion and return the assistant message text.
 
         When ``json_schema`` is supplied the request asks the provider to
         constrain output to JSON, stepping down through the response_format
         ladder if the endpoint rejects a given form.
+        Optional on_request receives a detached copy of each dispatched JSON body,
+        including retries; connection settings and headers are never passed.
         """
         url = f"{self.base_url}/chat/completions"
         ladder = self._response_format_ladder(json_schema)
@@ -141,6 +145,10 @@ class LLMClient:
                 if response_format is not None:
                     payload["response_format"] = response_format
 
+                # Capture the exact dispatched JSON body, including augmentation,
+                # format fallback and token-budget retries. Never URLs or headers.
+                if on_request is not None:
+                    on_request(copy.deepcopy(payload))
                 try:
                     async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
                         resp = await client.post(url, json=payload, headers=self._headers())

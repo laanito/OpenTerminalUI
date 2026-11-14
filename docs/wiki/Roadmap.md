@@ -749,7 +749,11 @@ an analysis can be revisited with the evidence it actually used. Durability and
 replay are part of this milestone's design, not a follow-up after integration.
 Implementation has begun with owner-scoped exact-text snapshots and append-only
 assessments, an additive migration and storage tests. This foundation is not yet
-wired to news/scoring/comparison routes. See [News evidence contract](News-Evidence-Contract.md)
+wired to existing news/scoring routes. Explicit comparison capture now retains
+full bounded evidence/results and dispatched model inputs, with owner-scoped
+list/reopen/delete APIs and additive `0020_comparison_captures`; existing generation
+endpoints remain ephemeral. Browser save/review, rerun/refresh linkage and sentiment
+integration remain open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
 

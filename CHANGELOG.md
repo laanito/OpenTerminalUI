@@ -6,6 +6,17 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Explicit durable comparison captures (API)** — authenticated
+  `POST /api/market-context/briefing-captures` generates from fresh server-fetched
+  selections and retains the full bounded evidence, checked answer or typed
+  failure, public model profile and dispatched model inputs, including repair
+  and structured-format/token retries. Owner-scoped list/reopen/delete endpoints
+  recover the original record without fetching sources or running inference.
+  Additive migration `0020_comparison_captures` preserves existing research.
+  Existing generation endpoints stay ephemeral; a browser save/review flow,
+  captured-input reruns, sentiment integration and retention cleanup remain open.
+
 ## [2.7.0] - 2026-11-09
 
 Filing-grounded fundamentals now join selected comparison briefings. Choose

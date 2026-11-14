@@ -285,6 +285,19 @@ Exclusion does not establish that evidence is absent or that a provider failed.
 The preparation endpoint generates no answer. Separate generation APIs below
 now build on that contract; nothing is persisted or indexed.
 
+### Explicit durable comparison captures (v2.8 API foundation)
+
+Use JWT-authenticated `POST /api/market-context/briefing-captures` with the same
+anchor/comparisons/period and optional `context` selections to generate and retain
+a new comparison. List owner captures with GET on that path, reopen the original
+contents with GET `/{id}`, or explicitly delete one with DELETE `/{id}`.
+Reopening fetches no sources and calls no model. Full bounded evidence and the
+checked result or typed failure stay attached, along with original model inputs
+and public generation identity. There is no automatic expiry. Existing browser
+briefings remain ephemeral until the separate save/review flow is added.
+Another POST fetches current evidence; captured-input reruns and linked refreshes
+are not exposed yet. See [the capture contract](News-Evidence-Contract.md#explicit-comparison-capture-api).
+
 ### Comparison briefing APIs
 
 JWT-authenticated `POST /api/market-context/briefing` accepts the same selection

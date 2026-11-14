@@ -165,3 +165,16 @@ downgrade retains the new research tables. SQLite fresh/legacy/idempotent upgrad
 and rollback retention plus PostgreSQL DDL are checked locally. An actual migrated
 PostgreSQL insert/read/owner-FK contract is included in the guarded disposable CI
 lane; local DDL checks alone do not establish live PostgreSQL verification.
+
+
+## v2.8 explicit comparison captures
+
+`0020_comparison_captures` follows `0019_news_evidence` and creates only an
+owner-scoped table with portable JSON/timestamps, a user FK with account cascade,
+and an owner/time index. The entire evidence/result/input envelope is inline,
+so it has no mutable external snapshot dependency. No prior rows are changed,
+no backfill/cleanup runs, and downgrade retains research. Fresh/idempotent SQLite
+DDL and retention on rollback are tested; a disposable full-chain upgrade kept
+legacy news untouched. PostgreSQL DDL checks run locally and an actual migrated
+JSON/owner-filter/delete contract is added to the guarded CI lane. No production
+database is used.

@@ -329,7 +329,7 @@ do not assert that a filing caused a past price move or make an investment verdi
 
 
 async def generate_context_briefing(
-    evidence: ComparisonContextEvidence, *, on_phase=None, profile: ResolvedLLMProfile | None = None,
+    evidence: ComparisonContextEvidence, *, on_phase=None, profile: ResolvedLLMProfile | None = None, on_request=None,
 ):
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     if not any(pair.status == "available" for pair in evidence.price.comparisons):
@@ -345,6 +345,7 @@ async def generate_context_briefing(
         validate=validate_context_briefing, on_phase=on_phase, max_tokens=6400,
         reference_requirements=context_reference_requirements(evidence),
         profile=profile,
+        **({"on_request": on_request} if on_request is not None else {}),
     )
     if failure:
         return unavailable_context_briefing(failure, evidence=evidence, profile=profile)

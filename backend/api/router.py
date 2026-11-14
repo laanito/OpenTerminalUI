@@ -20,6 +20,7 @@ from backend.api.routes.heatmap import router as heatmap_router
 from backend.api.routes.insider import router as insider_router
 from backend.api.routes.journal import router as journal_router
 from backend.api.routes.market_context import router as market_context_router
+from backend.api.routes.comparison_captures import router as comparison_captures_router
 from backend.api.routes.market_briefing import router as market_briefing_router
 from backend.api.routes.market_fundamental_captures import router as market_fundamental_captures_router
 from backend.api.routes.market_sec_facts import router as market_sec_facts_router
@@ -74,6 +75,7 @@ api_router.include_router(analytics_router)
 api_router.include_router(correlation_router)
 api_router.include_router(market_context_router)
 api_router.include_router(market_briefing_router)
+api_router.include_router(comparison_captures_router)
 api_router.include_router(market_fundamental_captures_router)
 api_router.include_router(market_sec_facts_router)
 # pair trading router carries its own "/api/pairs" prefix.

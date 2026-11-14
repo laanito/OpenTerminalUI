@@ -1218,17 +1218,26 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       Additive `0019_news_evidence` preserves legacy data and rollback research.
       SQLite round-trip/migration/ownership and PostgreSQL DDL tests pass locally;
       actual PostgreSQL round-trip/owner-FK coverage is added to the guarded CI lane.
-      Existing ingestion/scorers/routes are not wired; no cleanup or public API.
+      Foundation PR #266 is merged. Existing ingestion/scorers are not wired to
+      those tables. No automatic cleanup runs.
 - [ ] Agree an explicit configurable unreferenced retention window. Keep evidence
       pinned while a saved analysis references it; define expiry, shared-reference
       release and owner-authorized deletion/missing-source behavior.
-- [ ] Add reviewed portable persistence for immutable text snapshots and
-      append-only sentiment assessments, with method/model/prompt/context identity
-      and real capture/scoring times. Label legacy gaps; never overwrite history.
-- [ ] Capture full bounded comparison selections/evidence and analysis input,
-      generation metadata, citations and completed result/typed failure, without
-      credentials. Reopen without providers/inference; explicit captured-input
-      re-runs and current-data refreshes create distinct linked runs.
+- [ ] Wire the reviewed text/assessment storage into selected sentiment scoring
+      and captures, preserving method/model/prompt/context identity and actual
+      scoring times through cache hits. Label legacy gaps; never overwrite history.
+- [x] Add explicit JWT comparison capture/list/reopen/delete APIs. Retain complete
+      bounded evidence/result or typed failure, normalized selectors, public model
+      identity and exact dispatched JSON bodies including augmentation, client
+      format/token retries and repair; never credentials/settings. Reopen uses DB
+      only. `0020_comparison_captures` is additive/rollback-retaining. Captures hold
+      evidence inline and do not yet reference text/assessment rows. No automatic
+      expiry; legacy generation/browser paths stay ephemeral. Locally 305 focused
+      tests pass (three PostgreSQL-only checks skipped), with a new actual migrated
+      PostgreSQL JSON/ownership/deletion contract in the guarded CI lane.
+- [ ] Add browser save/review and captured-input reruns versus separately linked
+      current-data refreshes. Do not regenerate prompts from current code when
+      replaying retained requests; model aliases/nondeterminism limit equivalence.
 - [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
       interpretation and inspectable retained references. Preserve failures,
       disagreements, deduplication and coverage; no market-wide sentiment claim.
