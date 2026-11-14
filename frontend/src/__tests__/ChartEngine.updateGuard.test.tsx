@@ -1,8 +1,9 @@
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChartEngine } from "../shared/chart/ChartEngine";
 
+const crosshairHandlers = new Set<(event: { time?: number }) => void>();
 const updateByPane = new Map<number, ReturnType<typeof vi.fn>>();
 const setDataByPane = new Map<number, ReturnType<typeof vi.fn>>();
 
@@ -41,8 +42,8 @@ vi.mock("lightweight-charts", () => {
       subscribeVisibleLogicalRangeChange: vi.fn(),
       unsubscribeVisibleLogicalRangeChange: vi.fn(),
     })),
-    subscribeCrosshairMove: vi.fn(),
-    unsubscribeCrosshairMove: vi.fn(),
+    subscribeCrosshairMove: vi.fn((handler) => crosshairHandlers.add(handler)),
+    unsubscribeCrosshairMove: vi.fn((handler) => crosshairHandlers.delete(handler)),
     applyOptions: vi.fn(),
     remove: vi.fn(),
   });
@@ -78,6 +79,7 @@ vi.mock("../shared/chart/ChartSyncContext", () => ({
 
 describe("ChartEngine incremental update guard", () => {
   beforeEach(() => {
+    crosshairHandlers.clear();
     updateByPane.clear();
     setDataByPane.clear();
   });
@@ -133,4 +135,21 @@ describe("ChartEngine incremental update guard", () => {
     });
     expect(updateByPane.get(1)?.mock.calls.length ?? 0).toBe(initialUpdateCalls);
   });
+
+  it("emits hovered volume with OHLC and clears through the current callback", async () => {
+    const bar = { time: 100, open: 66944, high: 67500, low: 66500, close: 67110, volume: 4321 };
+    const original = vi.fn();
+    const current = vi.fn();
+    const props = { symbol: "BTC-USD", timeframe: "1h" as const, historicalData: [bar],
+      activeIndicators: [], chartType: "candle" as const, showVolume: true, enableRealtime: false };
+    const view = render(<ChartEngine {...props} onCrosshairOHLC={original} />);
+    await waitFor(() => expect(crosshairHandlers.size).toBe(1));
+    act(() => [...crosshairHandlers][0]({ time: 100 }));
+    expect(original).toHaveBeenLastCalledWith(bar);
+    view.rerender(<ChartEngine {...props} onCrosshairOHLC={current} />);
+    act(() => [...crosshairHandlers][0]({}));
+    expect(current).toHaveBeenLastCalledWith(null);
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
 });

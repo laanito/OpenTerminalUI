@@ -73,3 +73,57 @@ test("@smoke crypto stock detail keeps crypto feeds and a single Deep briefing l
   await expect(briefing).not.toContainText("A completed crypto briefing.");
   expect(insights).toBe(2);
 });
+
+// Keep the real chart and toolbar mounted together: checking only the refresh
+// hook misses a second latest-OHLCV prop overriding the crosshair's OHLC.
+test("@smoke BTC hourly candle inspection updates OHLCV and restores the latest candle on leave", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const hour = Math.floor(Date.now() / 3600000) * 3600;
+  await page.addInitScript(() => {
+    localStorage.setItem("stock-state", JSON.stringify({ state: { ticker: "BTC-USD", interval: "1h", range: "3mo" }, version: 0 }));
+  });
+  await page.routeWebSocket(/\/api\/ws\//, (socket) => {
+    socket.onMessage((message) => {
+      const request = JSON.parse(String(message));
+      if (request.op === "subscribe" && request.symbols?.includes("CRYPTO:BTC-USD")) {
+        socket.send(JSON.stringify({ type: "tick", symbol: "CRYPTO:BTC-USD", ltp: 67110, change: 10, change_pct: 0.01, ts: new Date().toISOString() }));
+      }
+    });
+  });
+  await page.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url());
+    let data: unknown = { items: [] };
+    if (url.pathname.endsWith("/crypto/candles")) {
+      expect(url.searchParams.get("interval")).toBe("1h");
+      data = { ticker: "BTC-USD", interval: "1h", currency: "USD", data: [
+        { t: hour - 7200, o: 65000, h: 67000, l: 64000, c: 66000, v: 100 },
+        { t: hour - 3600, o: 66000, h: 68000, l: 65000, c: 66944, v: 200 },
+        { t: hour, o: 66944, h: 67500, l: 66500, c: 67110, v: 300 },
+      ] };
+    } else if (url.pathname.endsWith("/quotes")) {
+      data = { market: "CRYPTO", quotes: [{ symbol: "BTC-USD", last: 67110, change: 10, changePct: 0.01 }] };
+    }
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await page.goto("/equity/stocks");
+  const values = page.getByRole("group", { name: "Candle values" });
+  await expect(values).toContainText("O:66944.00");
+  const canvas = page.locator("canvas").first();
+  await expect(canvas).toBeVisible();
+  const box = (await canvas.boundingBox())!;
+  let selected = false;
+  for (let x = box.width - 90; x > 20; x -= 12) {
+    await page.mouse.move(box.x + x, box.y + 50);
+    const text = await values.innerText();
+    if (text.includes("O:65000.00") || text.includes("O:66000.00")) { selected = true; break; }
+  }
+  expect(selected, "Hover must select a historical candle through the real chart").toBe(true);
+  const historical = await values.innerText();
+  expect(historical).toMatch(/V:(100|200)/);
+  const latest = page.getByText("Latest Price", { exact: true }).locator("xpath=ancestor::section[1]");
+  await expect(latest).toContainText("67,110.00");
+  await page.mouse.move(5, 5);
+  await expect(values).toContainText("O:66944.00");
+  await expect(values).toContainText("C:67110.00");
+  await expect(values).toContainText("V:300");
+});

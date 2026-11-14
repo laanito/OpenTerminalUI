@@ -33,7 +33,6 @@ vi.mock("../realtime/useQuotesStream", () => ({
 vi.mock("../shared/chart/ChartEngine", () => ({
   ChartEngine: (props: any) => { mocks.chartProps = props; return <div>Chart fixture</div>; },
 }));
-vi.mock("../shared/chart/ChartToolbar", () => ({ SharedChartToolbar: () => null }));
 vi.mock("../shared/chart/IndicatorPanel", () => ({ IndicatorPanel: () => null }));
 vi.mock("../components/crypto/CryptoOverviewPanel", () => ({ CryptoOverviewPanel: () => null }));
 vi.mock("../components/terminal/AiInsightCard", () => ({ AiInsightCard: () => null }));
@@ -86,6 +85,40 @@ describe("StockDetail crypto quote routing", () => {
     mocks.chart = { ...mocks.chart, data: [{ ...mocks.chart.data[0], o: 66944, h: 67400, l: 66600, c: 67110, v: 1234 }] };
     view.rerender(<MemoryRouter><StockDetailPage /></MemoryRouter>);
     await waitFor(() => expect(mocks.chartProps.historicalData[0]).toMatchObject({ open: 66944, high: 67400, low: 66600, close: 67110, volume: 1234 }));
+  });
+
+  it("inspects the hovered candle's complete OHLCV despite a flat latest bar", async () => {
+    mocks.fetchQuotes.mockResolvedValue({ quotes: [{ last: 67110, change: 10, changePct: 0.01 }] });
+    renderPage();
+    await waitFor(() => expect(mocks.chartProps).not.toBeNull());
+    const candle = screen.getByRole("group", { name: "Candle values" });
+    const flat = { time: 1792520000, open: 66941.09, high: 66941.09, low: 66941.09, close: 66941.09, volume: 0 };
+    act(() => mocks.chartProps.onRealtimeMeta({ status: "live", currentBar: flat }));
+    expect(candle).toHaveTextContent("O:66941.09");
+    act(() => mocks.chartProps.onCrosshairOHLC({ time: 1792433600, open: 66944, high: 67500, low: 66500, close: 67100, volume: 4321 }));
+    expect(candle).toHaveTextContent("O:66944.00");
+    expect(candle).toHaveTextContent("H:67500.00");
+    expect(candle).toHaveTextContent("L:66500.00");
+    expect(candle).toHaveTextContent("C:67100.00");
+    expect(candle).toHaveTextContent(`V:${(4321).toLocaleString()}`);
+    expect(await latest().findByText("$67110.00")).toBeVisible();
+    act(() => mocks.chartProps.onRealtimeMeta({ status: "live", currentBar: { ...flat, close: 67112 } }));
+    expect(candle).toHaveTextContent("C:67100.00");
+    act(() => mocks.chartProps.onCrosshairOHLC(null));
+    expect(candle).toHaveTextContent("O:66941.09");
+    expect(candle).toHaveTextContent("C:67112.00");
+    expect(candle).toHaveTextContent("V:0");
+  });
+
+  it("clears inspected candles on scope change and never borrows latest volume for missing hover volume", async () => {
+    renderPage();
+    await waitFor(() => expect(mocks.chartProps).not.toBeNull());
+    const candle = screen.getByRole("group", { name: "Candle values" });
+    act(() => mocks.chartProps.onCrosshairOHLC({ time: 1, open: 1, high: 3, low: 0.5, close: 2 }));
+    expect(candle).toHaveTextContent("O:1.00");
+    expect(candle).toHaveTextContent("V:-");
+    act(() => useStockStore.setState({ interval: "1h" }));
+    expect(candle).toHaveTextContent("O:82000.00");
   });
 
   it("retains equity routing for non-crypto symbols", async () => {

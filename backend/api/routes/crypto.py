@@ -337,6 +337,34 @@ async def search_crypto(q: str = Query(default=""), limit: int = Query(default=2
     return {"items": await search_universe(q, limit=limit)}
 
 
+def _coalesce_yahoo_quote_tail(rows: list[OhlcvPoint], interval: str) -> list[OhlcvPoint]:
+    """Yahoo can append a current quote at its actual time after hourly bars.
+
+    Crypto periods below have UTC boundaries. An off-grid, zero-volume flat
+    tail is a quote sample, not another full candle. Incorporate it into an
+    existing period without inventing its open or summing overlapping volume.
+    This applies only to Yahoo rows, never CoinGecko's different granularity.
+    """
+    seconds = {"1m": 60, "2m": 120, "5m": 300, "15m": 900, "30m": 1800,
+               "60m": 3600, "1h": 3600, "90m": 5400, "1d": 86400}.get(interval)
+    if not rows or seconds is None:
+        return rows
+    tail = rows[-1]
+    if tail.t % seconds == 0 or tail.v != 0 or not tail.o == tail.h == tail.l == tail.c:
+        return rows
+    if not math.isfinite(tail.c) or tail.c <= 0:
+        return rows[:-1]
+    bucket = tail.t // seconds * seconds
+    if len(rows) > 1 and rows[-2].t == bucket:
+        known = rows[-2]
+        return [*rows[:-2], known.model_copy(update={
+            "h": max(known.h, tail.c), "l": min(known.l, tail.c), "c": tail.c,
+        })]
+    # No period candle was supplied: a quote alone cannot establish its open,
+    # range or volume. Keep older real bars; the Latest Price uses quotes.
+    return rows[:-1]
+
+
 @router.get("/v1/crypto/candles", response_model=ChartResponse)
 async def crypto_candles(
     symbol: str = Query(...),
@@ -361,9 +389,12 @@ async def crypto_candles(
             )
         )
 
+    has_yahoo_rows = bool(rows)
+    rows = _coalesce_yahoo_quote_tail(rows, interval)
+
     # Yahoo doesn't list most of the CoinGecko universe (RENDER, PEPE, ...), so
     # fall back to CoinGecko OHLC for any symbol it can't chart.
-    if not rows:
+    if not rows and not has_yahoo_rows:
         for c in await load_candles(symbol, range):
             rows.append(OhlcvPoint(t=c["t"], o=c["o"], h=c["h"], l=c["l"], c=c["c"], v=c["v"]))
 

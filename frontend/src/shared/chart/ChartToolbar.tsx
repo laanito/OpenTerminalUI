@@ -127,12 +127,12 @@ export function SharedChartToolbar({
             </span>
           )}
 
-          <div className="hidden tabular-nums text-terminal-muted xl:block">
+          <div role="group" aria-label="Candle values" className="hidden tabular-nums text-terminal-muted xl:block">
             <span className="mr-2">O:{(ohlcv ?? ohlc)?.open?.toFixed(2) ?? "-"}</span>
             <span className="mr-2">H:{(ohlcv ?? ohlc)?.high?.toFixed(2) ?? "-"}</span>
             <span className="mr-2">L:{(ohlcv ?? ohlc)?.low?.toFixed(2) ?? "-"}</span>
             <span className="mr-2">C:{(ohlcv ?? ohlc)?.close?.toFixed(2) ?? "-"}</span>
-            <span>V:{Number.isFinite(Number(ohlcv?.volume)) ? Number(ohlcv?.volume).toLocaleString() : "-"}</span>
+            <span>V:{typeof ohlcv?.volume === "number" && Number.isFinite(ohlcv.volume) ? ohlcv.volume.toLocaleString() : "-"}</span>
           </div>
         </div>
 
