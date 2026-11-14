@@ -17,6 +17,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   Existing generation endpoints stay ephemeral; a browser save/review flow,
   captured-input reruns, sentiment integration and retention cleanup remain open.
 
+### Fixed
+- **Stock-chart candle refreshes** — accept OHLCV and session corrections when
+  candle timestamps and row counts stay unchanged. Full history can now replace
+  a flat quote-only candle. Live aggregates starting mid-candle preserve the known
+  open/range and do not erase known volume with a zero sample or sum overlapping
+  volumes. Identical history retains stable references to avoid render loops.
+
 ## [2.7.0] - 2026-11-09
 
 Filing-grounded fundamentals now join selected comparison briefings. Choose

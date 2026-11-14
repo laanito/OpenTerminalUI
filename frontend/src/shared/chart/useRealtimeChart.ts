@@ -3,7 +3,7 @@ import type { Bar } from "oakscriptjs";
 
 import { useQuotesStore, useQuotesStream } from "../../realtime/useQuotesStream";
 import { isUSMarketCode, useUSQuotesStore, useUSQuotesStream } from "../../realtime/useUsQuotesStream";
-import { candleBoundary } from "./chartUtils";
+import { candleBoundary, sameChartBars } from "./chartUtils";
 import type { ChartTimeframe } from "./types";
 
 type RealtimeMeta = {
@@ -43,6 +43,18 @@ function normalizeBars(input: Bar[]): Bar[] {
     byTime.set(time, next);
   }
   return Array.from(byTime.values()).sort((a, b) => Number(a.time) - Number(b.time));
+}
+
+function mergeObservedCandle(known: Bar, observed: Bar): Bar {
+  return {
+    ...known,
+    high: Math.max(Number(known.high), Number(observed.high)),
+    low: Math.min(Number(known.low), Number(observed.low)),
+    close: Number(observed.close),
+    // Live aggregates may overlap history or cover only part of the bucket.
+    // Never sum overlapping totals or replace known volume with a zero sample.
+    volume: Math.max(Number(known.volume ?? 0), Number(observed.volume ?? 0)),
+  };
 }
 
 function wsCandleInterval(timeframe: ChartTimeframe): string | null {
@@ -168,24 +180,10 @@ export function useRealtimeChart(
       setBars(effectiveUSBars);
       return;
     }
-    // Use a functional update with a structural bail-out: if normalizeBars produces a
-    // result with the same length and same first/last timestamps as the current bars
-    // (i.e., the data hasn't actually changed), keep the previous reference to avoid
-    // triggering downstream effects that depend on `bars` (realtimeMeta → onRealtimeMeta
-    // → setChartRealtimeMeta → parent re-render → React error #185 cascade).
+    // Keep a stable reference for identical input, but accept corrected prices,
+    // volume and session metadata even when the time range has not changed.
     const next = normalizeBars(seedBars);
-    setBars((prev) => {
-      if (
-        prev.length === next.length &&
-        prev.length > 0 &&
-        prev[0]?.time === next[0]?.time &&
-        prev[prev.length - 1]?.time === next[next.length - 1]?.time
-      ) {
-        return prev;
-      }
-      if (prev.length === 0 && next.length === 0) return prev;
-      return next;
-    });
+    setBars((prev) => sameChartBars(prev, next) ? prev : next);
   }, [seedBars, symbol, timeframe, supportsUSStreamingBars, effectiveUSBars]);
 
   useEffect(() => {
@@ -216,12 +214,14 @@ export function useRealtimeChart(
       const next = [...prev];
       const last = next[next.length - 1];
       if (Number(last.time) === t) {
-        next[next.length - 1] = nextBar;
+        // A live aggregate starts when this server first observes a tick, not
+        // necessarily at the candle's real open. Preserve the known history.
+        next[next.length - 1] = mergeObservedCandle(last, nextBar);
         return next;
       }
       if (Number(last.time) > t) {
         const idx = next.findIndex((b) => Number(b.time) === t);
-        if (idx >= 0) next[idx] = nextBar;
+        if (idx >= 0) next[idx] = mergeObservedCandle(next[idx], nextBar);
         return next;
       }
       return [...next, nextBar];

@@ -47,6 +47,7 @@ describe("StockDetail crypto quote routing", () => {
     mocks.fetchQuotes.mockReset().mockResolvedValue({ quotes: [] });
     mocks.market.mockClear(); mocks.subscribe.mockClear(); mocks.unsubscribe.mockClear();
     mocks.chartProps = null; mocks.ticks = {}; mocks.stock = { current_price: null, change_pct: null };
+    mocks.chart = { currency: "USD", data: [{ t: 1792520000, o: 82000, h: 83000, l: 81000, c: 82500, v: 10 }] };
     useStockStore.setState({ ticker: "BTC-USD", interval: "1d", range: "1y" });
     useSettingsStore.setState({ selectedMarket: "NASDAQ" });
   });
@@ -77,6 +78,14 @@ describe("StockDetail crypto quote routing", () => {
     act(() => mocks.chartProps.onTick({ ltp: 0, change_pct: 0 }));
     expect(latest().getByText("$82521.45")).toBeVisible();
     expect(latest().getByText("+0.65%")).toBeVisible();
+  });
+
+  it("forwards refreshed OHLCV without requiring a new candle timestamp", async () => {
+    const view = renderPage();
+    await waitFor(() => expect(mocks.chartProps?.historicalData[0].open).toBe(82000));
+    mocks.chart = { ...mocks.chart, data: [{ ...mocks.chart.data[0], o: 66944, h: 67400, l: 66600, c: 67110, v: 1234 }] };
+    view.rerender(<MemoryRouter><StockDetailPage /></MemoryRouter>);
+    await waitFor(() => expect(mocks.chartProps.historicalData[0]).toMatchObject({ open: 66944, high: 67400, low: 66600, close: 67110, volume: 1234 }));
   });
 
   it("retains equity routing for non-crypto symbols", async () => {

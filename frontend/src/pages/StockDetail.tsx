@@ -39,7 +39,7 @@ import { ChartEngine } from "../shared/chart/ChartEngine";
 import { SharedChartToolbar } from "../shared/chart/ChartToolbar";
 import { IndicatorPanel } from "../shared/chart/IndicatorPanel";
 import { shouldDefaultExtendedHoursOn } from "../shared/chart/candlePresentation";
-import { chartPointsToBars } from "../shared/chart/chartUtils";
+import { chartPointsToBars, sameChartBars } from "../shared/chart/chartUtils";
 import { normalizeIndicatorConfigs } from "../shared/chart/indicatorCatalog";
 import type { ChartKind, ChartTimeframe, IndicatorConfig } from "../shared/chart/types";
 import { quickAddToFirstPortfolio } from "../shared/portfolioQuickAdd";
@@ -218,15 +218,7 @@ export function StockDetailPage() {
     const next = chart?.data ?? [];
     setChartPoints((prev) => {
       if (prev === next) return prev;
-      if (
-        prev.length === next.length &&
-        prev.length > 0 &&
-        prev[0]?.t === next[0]?.t &&
-        prev[prev.length - 1]?.t === next[next.length - 1]?.t
-      ) {
-        return prev;
-      }
-      if (prev.length === 0 && next.length === 0) return prev;
+      if (sameChartBars(chartPointsToBars(prev), chartPointsToBars(next))) return prev;
       return next;
     });
   }, [chart?.data]);

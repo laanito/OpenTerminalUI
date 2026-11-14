@@ -99,6 +99,12 @@ function sameStableBar(a: ComparableChartBar, b: ComparableChartBar): boolean {
   );
 }
 
+// Timestamp equality alone does not imply immutable OHLCV: providers revise the
+// current candle in place, including the first full bar after a quote-only seed.
+export function sameChartBars(previous: ComparableChartBar[], next: ComparableChartBar[]): boolean {
+  return previous.length === next.length && previous.every((bar, index) => sameStableBar(bar, next[index]));
+}
+
 export function canApplyTailUpdate<T extends ComparableChartBar>(previous: T[], next: T[]): boolean {
   if (!previous.length || !next.length || previous.length !== next.length) {
     return false;
