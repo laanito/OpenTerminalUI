@@ -132,22 +132,28 @@ exposure, and private research; support investing, trading, and scalping across
 spot and leveraged instruments; and eventually interact with brokers through
 strictly controlled execution.
 
-The roadmap uses seven major product generations:
+The adopted release targets and later north-star themes are:
 
 | Generation | Primary promise |
 |---|---|
 | **v1 — Coherent, honest fork** | One product identity, intentional surface area, accurate docs/contracts, and no accidental inherited defaults |
 | **v2 — Cross-market intelligence** | Markets and asset classes explain one another instead of remaining isolated screens |
-| **v3 — Multi-dimensional validation** | Fundamentals, technicals, sentiment, regime, portfolio context, and private evidence converge |
-| **v4 — Decision lifecycle** | Evidence → thesis → decision → position → outcome → review becomes one traceable loop |
-| **v5 — Multiple horizons and instruments** | Investing, swing, intraday/scalping, spot, and leveraged workflows have explicit risk semantics |
-| **v6 — Agent-native terminal** | External models can safely read, investigate, ingest, and propose through stable scoped interfaces |
-| **v7 — Controlled execution** | Broker sync matures through paper and approval-gated orders into auditable, bounded automation |
+| **v3 — UX and frontend overhaul** | Existing capabilities form coherent, discoverable workflows, beginning with Portfolio |
+| **Later — Multi-dimensional validation** | Fundamentals, technicals, sentiment, regime, portfolio context, and private evidence converge |
+| **Later — Decision lifecycle** | Evidence → thesis → decision → position → outcome → review becomes one traceable loop |
+| **Later — Multiple horizons and instruments** | Investing, swing, intraday/scalping, spot, and leveraged workflows have explicit risk semantics |
+| **Later — Agent-native terminal** | External models can safely read, investigate, ingest, and propose through stable scoped interfaces |
+| **Later — Controlled execution** | Broker sync matures through paper and approval-gated orders into auditable, bounded automation |
+
+Sequencing agreed 2026-11-14: **finish v2 first, then make the UX overhaul v3
+before expanding the feature set further**. This replaces the former v3 label
+for multi-dimensional validation. Later themes retain their goals without
+assigning replacement release numbers yet; they are not v3 release gates.
 
 These are dominant promises, not isolated feature buckets. The journal is an
-early v4 foundation, derivatives contribute to v5, and the Hermes-compatible
-notes endpoint begins v6, but none makes its generation complete. The existing
-principles *don't get fooled* and *grow privately* remain trust invariants across
+early decision-lifecycle foundation, derivatives contribute to broader instrument
+support, and Hermes-compatible notes begin agent-native access, but none makes
+its longer-term theme complete. The existing principles *don't get fooled* and *grow privately* remain trust invariants across
 every generation rather than competing release themes.
 
 The execution progression is deliberately conservative: **read-only broker sync
@@ -160,7 +166,9 @@ The version numbers continue to follow Semantic Versioning. A generation becomes
 a major release only when its product promise and stable contracts are ready; the
 table is direction, not permission to bump a major version for marketing alone.
 
-### v3 direction — technical thesis validation (deferred)
+<a id="v3-direction--technical-thesis-validation-deferred"></a>
+
+### Later direction — technical thesis validation (deferred)
 
 Clarified by the maintainer on 2026-11-03: the long-term technical-analysis
 surface is substantially broader than v2.5/v2.6's descriptive overview. It should
@@ -181,7 +189,7 @@ Current revised history does not establish what was known when a video or note
 was created. Volume-based work needs a suitable source/coverage contract beyond
 the current adjusted-close-only foundation.
 
-This belongs to v3's multi-dimensional validation direction, not an additional
+This belongs to the later multi-dimensional validation direction, not an additional
 v2.6 requirement or a claim that these methods are implemented. The initial
 snapshot surface preserves dated source/calculation identities so this later
 validation can use traceable evidence rather than treating generated prose as
@@ -190,7 +198,7 @@ market fact. Full technical analysis remains distinct from broker execution.
 ### Decision-lifecycle bridge — Journal and Portfolio transactions (unscheduled)
 
 Today Portfolio transactions are the execution/accounting ledger, while Journal
-entries independently describe and score trades. A future v4-aligned workflow
+entries independently describe and score trades. A future decision-lifecycle workflow
 should make the relationship explicit: when creating or editing a Journal trade,
 the user can attach existing transactions from an owned portfolio and create any
 missing transaction inline. For example, select an existing buy, enter a missing
@@ -200,8 +208,9 @@ the Journal entry. If the sell already exists, attach it rather than duplicate i
 The link must allocate quantities, not mark whole transactions simply
 "matched": a trade may scale in/out across several executions, and one buy may
 be reviewed through multiple partial closes. The portfolio ledger remains the
-source of truth for quantities, cash, fees, currency, and realized accounting;
-Journal owns rationale, strategy, emotion, and review. Creating a missing
+source of truth for quantities, cash, fees, currency, and realized accounting.
+Transactions retain execution-specific rationale; Journal owns trade-level
+strategy, emotion, outcome, and review. Creating a missing
 transaction and its link must be atomic, owner-scoped, and idempotent. Existing
 Journal SHORT entries remain journal-only until Portfolio supports short
 positions. This is an unscheduled decision-lifecycle item, **not** a prerequisite
@@ -226,8 +235,8 @@ that interaction. Host acceptance, tag and GitHub release are complete at
 v2.0 does **not** promise causation, a recommendation, automatically selected
 market relationships, portfolio-wide context, grounded AI explanations, or
 decision-grade adjusted technical signals. Those are candidates for later v2.x
-increments, while multi-dimensional opportunity validation remains the v3
-promise. The unresolved historical fundamentals, macro release/vintage, and
+increments, while multi-dimensional opportunity validation remains a later
+north-star goal. The unresolved historical fundamentals, macro release/vintage, and
 provider-session/adjustment contracts documented below are therefore not
 hidden v2.0 blockers. Each needs its own explicit scope and acceptance criteria
 before implementation. This boundary replaces treating every useful evidence
@@ -362,7 +371,7 @@ degraded case. No new database schema is required by the initial evidence slice.
 broader historical fundamentals/vintages, deeper macro publication-time audits,
 provider acquisition as a gate, trade recommendations and execution. Saving
 briefings into Brain Log or adding them to private retrieval is not implicit.
-Multi-dimensional opportunity validation remains the v3 promise. Other unchecked
+Multi-dimensional opportunity validation remains a later north-star goal. Other unchecked
 items below remain later candidates, not automatically authorized follow-ups.
 
 ## v2.3.0 — Context beyond price (released 2026-10-28)
@@ -426,8 +435,7 @@ knew during the comparison window. Regions are selected, not guessed from ticker
 **Outside v2.3:** fundamentals/SEC, technical evidence, private notes, portfolio-
 wide analysis, automatic proxy discovery, saving/Brain indexing, historical
 market-knowledge audits, model upgrades, trade advice and execution. These do not
-become compulsory sub-releases. v3 remains thesis-oriented multi-dimensional
-validation; v2.3 improves contextual understanding, not an investment verdict.
+become compulsory sub-releases. Thesis-oriented multi-dimensional validation remains deferred; v2.3 improves contextual understanding, not an investment verdict.
 
 ## v2.4.0 — Task-appropriate models (released 2026-10-31)
 
@@ -513,7 +521,7 @@ Agreed on 2026-10-31 after v2.4 publication and its chapter-20 article. Make a
 small set of technical observations inspectable and optionally usable alongside
 prices, selected news and macro context in the existing comparison briefing.
 The outcome is a better-grounded research question, not an entry/exit signal or
-a multi-dimensional investment verdict; that broader validation remains v3.
+a multi-dimensional investment verdict; that broader validation remains deferred beyond the UX overhaul.
 
 Existing comparison panels already expose drawdown, a 20-close moving-average
 gap, and separate provider-close/adjusted and shared-date/own-date views. Reuse
@@ -697,7 +705,7 @@ count is agreed.
 expansion, volume/liquidity or derivatives-positioning feeds, new providers,
 portfolio correlation/risk engines, historical technical reconstruction, trading
 signals and broker execution. These remain later candidates. The inherited
-layout audit below leads into a future major frontend overhaul.
+layout audit below leads into the v3 frontend overhaul after v2 is finished.
 
 ## v2.7.0 — Filing-grounded comparison briefings (released 2026-11-09)
 
@@ -758,6 +766,19 @@ by a cancellable capture progress stream. Rerun/refresh linkage and sentiment
 integration remain open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
+
+### Sentiment decision-model evaluation candidate
+
+The maintainer highlighted [Ollama's System One support](https://ollama.com/blog/ollama-now-supports-jev-style-decision-models).
+The announcement documents Ollama 0.35+ native `/v1/systemone` access and local
+`nimble`/`tev1` decision models. This is a local evaluation option for the planned
+structured scorer, not a drop-in chat-model name or an adopted new release gate.
+Compare bounded finance-headline/target-asset judgments against the existing
+baseline/Fast scorer before choosing a default. Preserve insufficient evidence
+separately from neutral, exact rubric/model/input/output provenance and actual
+scoring times. Deep interpretation remains a separate task. General benchmark or
+confidence claims do not establish calibration on the terminal's own corpus.
+No model installation, runtime-version verification or adapter is implied here.
 
 ### Evidence and replay contract
 
@@ -846,13 +867,41 @@ vintages and economic-calendar reliability remain separate candidates.
 Capture is bounded to the comparison workflow; this does not redesign Brain Log
 or the journal/portfolio decision lifecycle.
 
-## Future major frontend overhaul — layout audit as discovery
+<a id="future-major-frontend-overhaul--layout-audit-as-discovery"></a>
+
+## v3 — UX and frontend overhaul (after v2)
 
 The maintainer reported inherited overflow and poor stacking on 2026-11-02 and
-clarified after v2.6 that the audit should lead into a whole major release devoted
-to overhauling the frontend. Its version number, schedule and implementation
-scope remain undecided. This is a cross-cutting product initiative alongside the
-existing generation goals; it does not silently renumber or replace them.
+initially requested a whole major frontend initiative. On 2026-11-14 the release
+priority became explicit: **finish v2 first; v3 is the UX overhaul before further
+feature expansion**. Finish the currently approved v2 scope and release close-out;
+optional evidence backlog items do not automatically justify more v2 minors.
+Implementation starts after v2 close-out, not alongside its remaining slices.
+Multi-dimensional/technical validation remains a later goal.
+
+Portfolio is the first concrete workflow workstream:
+
+- Default to an overview of consolidated positions by instrument. Support one
+  portfolio or all owned portfolios, with drill-down into portfolios and lots.
+  Preserve native currencies, explicit reporting/base-currency accounting, FX
+  coverage and missing-value semantics when consolidating.
+- Make **Record operation → Buy / Sell** the primary entry flow. Keep **Add an
+  existing position / Transfer in** as an explicit non-cash alternative. Today's
+  Add holding route creates a buy transaction; moving its form alone does not
+  implement this alternative. Define auditable opening-position/transfer ledger
+  semantics, original lot/cost/date/currency provenance and unknown basis without
+  fabricating a purchase, cash movement, deposit or profit. Preserve v1 accounting
+  integrity and PostgreSQL/SQLite ownership/migration safety.
+- Put execution-specific thesis/rationale on the operation. Preserve optional
+  portfolio mandate/constraints and ongoing position thesis as distinct concepts.
+  Align later Journal links with those operations rather than duplicate executions.
+- Replace the permanently reserved left portfolio column with a floating,
+  collapsible portfolio selector/drawer. Keep the selected scope visible when
+  closed; account for keyboard use, focus and narrow layouts.
+
+This work improves how existing capabilities are used. It does not absorb the
+broader validation algorithms, new instruments, broker execution or agent APIs.
+Detailed migration/acceptance slices will be scoped during discovery.
 
 Start with an inventory at wide desktop, intermediate and narrow widths using
 realistic long content and populated data. Identify affected screens and shared

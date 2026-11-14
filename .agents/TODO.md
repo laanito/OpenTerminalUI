@@ -21,8 +21,9 @@ checks, per-symbol collection, version-2 references, checked Deep synthesis and
 opt-in browser inspection are complete. Current aggregates do not establish
 historical investor knowledge, revision order or exact filing corroboration.
 No migration, provider, setting, dependency, persistence or embedding change.
-Deployment stays with the host agent. Broader technical validation remains v3;
-the layout audit leads into a separately scoped future major frontend overhaul.
+Deployment stays with the host agent. Finish the approved v2 scope first;
+v3 now targets the UX/frontend overhaul,
+beginning with Portfolio. Broader technical validation remains a later theme.
 
 Previous published baseline **2026-11-05:** **v2.6.0 — Technical context across AI research**
 is published from `fccb6b3`, the merge of release-prep PR #256. The maintainer
@@ -91,13 +92,14 @@ versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
 referenced evidence; unreferenced retention must be configurable, with its exact
 duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
-Implementation has not started. See the new roadmap planning section.
+Storage/capture foundations are merged; browser review PR #270 is merged. Scoring linkage, rerun/refresh and retention work remain open; see the
+current v2.8 checklist below.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
-The inherited layout audit is the discovery step for a dedicated future major
-frontend overhaul, with its number and timing undecided; it is not a minor-release
+The inherited layout audit is the discovery step for a dedicated
+v3 frontend overhaul after v2 close-out; it is not a minor-release
 cleanup item. RSI/MACD, volume, accumulation, Elliott-wave hypotheses and
-independent validation of video/note assumptions remain the broader v3 direction.
+independent validation of video/note assumptions remain later north-star work.
 See Roadmap/TODO and `docs/wiki/Releasing.md`.
 
 Previous post-release audit: **2026-10-28**, against **v2.3.0** at `3fb7de3`.
@@ -969,7 +971,7 @@ host acceptance are complete; retain them without requesting duplicate tests. Re
 existing descriptive technical panels; do not turn their broad historical
 quality caveats into an open-ended adapter/provider audit. No recommendations,
 new providers, private-research/portfolio-wide synthesis or broker execution.
-Broader multi-dimensional thesis validation remains v3.
+Broader multi-dimensional thesis validation remains later north-star work; v3 is UX.
 
 ### Current maintenance — shared structured insight repair
 
@@ -1274,7 +1276,7 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       expiry; legacy generation/browser paths stay ephemeral. Locally 305 focused
       tests pass (three PostgreSQL-only checks skipped), with a new actual migrated
       PostgreSQL JSON/ownership/deletion contract in the guarded CI lane.
-- [x] Add explicit browser generate-and-save with cancellable progress and a
+- [x] PR #270 merged: browser generate-and-save with cancellable progress and a
       commit-confirmed receipt. Temporary generation remains available. List,
       paginate, reopen original scope/evidence/result, inspect citations and
       original dispatched inputs, and confirm deletion. Reuse the same evidence
@@ -1615,15 +1617,28 @@ These are the clearest remaining items from the current roadmap and code state.
 They are demand-pulled or later-generation inputs, not a substitute for the
 ordered v1.7 milestone above.
 
-- [ ] **Major frontend overhaul — discovery audit first.** The inherited
-      overflow/stacking report leads into a dedicated future major frontend
-      overhaul, not a minor-release cleanup. Number and timing are undecided.
+- [ ] **v3 UX/frontend overhaul — after v2, discovery first.** Sequencing agreed
+      2026-11-14: finish the currently approved v2 scope/release, then overhaul UX
+      before further feature expansion. Do not start v3 during v2 close-out.
       Inventory wide/intermediate/narrow layouts with realistic content; use
       findings to propose navigation, hierarchy, shared layout patterns and a
       staged migration/acceptance plan. Preserve core workflows and contained
       table/chart scrolling. Focused regression fixes remain possible separately.
       See the corresponding roadmap initiative; implementation has not started.
-- [ ] **Full technical thesis validation (v3 direction).** The maintainer's
+      Portfolio is the first workflow: consolidated instrument positions with
+      portfolio/lot drill-down; primary Buy/Sell operations; explicit non-cash
+      existing-position/transfer entry with correct cost/currency/ledger semantics;
+      operation rationale distinct from optional portfolio mandate/position thesis;
+      floating/collapsible portfolio drawer. The current Add holding route creates
+      a buy, so moving the form alone cannot implement non-cash entry.
+- [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
+      highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
+      https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
+      Compare narrow finance headline/target/rubric judgments with baseline/Fast
+      scoring. Preserve ambiguity vs neutral and versioned provenance. No adapter,
+      model installation, runtime verification or adoption is implied; this is
+      not a new mandatory v2 gate. Deep synthesis remains a separate task.
+- [ ] **Full technical thesis validation (later direction).** The maintainer's
       2026-11-03 clarification covers Elliott waves, RSI, MACD, volume and
       accumulation areas beyond the v2.5/v2.6 overview. Test assumptions from
       ingested videos/notes against the terminal's own technical evidence, linked
@@ -1631,7 +1646,7 @@ ordered v1.7 milestone above.
       Show support, contradiction/rejection or insufficient evidence; distinguish
       deterministic indicators from competing interpretive pattern hypotheses.
       Audit existing implementations/data coverage before reuse. This is deferred
-      north-star work, not a new v2.6 gate. See the roadmap's v3 direction.
+      north-star work, not a new v2.6 gate. See the roadmap's later technical-validation direction.
 - [ ] **Relative Strength engine.** Replace the intentionally degraded `/rs/*`
       endpoints with a real, tested IBD-style computation. Never restore the old
       fabricated Indian rankings.
@@ -1671,7 +1686,7 @@ ordered v1.7 milestone above.
 
 ## UX and domain follow-ups
 
-- [ ] **Link Journal trades to Portfolio transactions (v4 decision lifecycle).**
+- [ ] **Link Journal trades to Portfolio transactions (later decision lifecycle).**
       Let a user select existing portfolio buys/sells when journaling a trade, or
       enter a missing transaction inline and create it in the chosen portfolio
       with the journal link in one atomic operation. Track assigned quantities,
