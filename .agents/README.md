@@ -25,8 +25,9 @@ checks, per-symbol collection, version-2 references, checked Deep synthesis and
 opt-in browser inspection are complete. Current aggregates do not establish
 historical investor knowledge, revision order or exact filing corroboration.
 No migration, provider, setting, dependency, persistence or embedding change.
-Deployment stays with the host agent. Broader technical validation remains v3;
-the layout audit leads into a separately scoped future major frontend overhaul.
+Deployment stays with the host agent. Finish the approved v2 scope first;
+v3 now targets the UX/frontend overhaul,
+beginning with Portfolio. Broader technical validation remains a later theme.
 
 Previous published baseline **2026-11-05:** **v2.6.0 — Technical context across AI research**
 is published from `fccb6b3`, the merge of release-prep PR #256. The maintainer
@@ -88,6 +89,13 @@ regeneration/check command. The maintainer confirmed #262 as merged and tested;
 release/publication is complete. Post-release docs #264 and bilingual chapter 23
 (`praderasblog` #120) are merged; host publication remains outside this repo.
 
+Sequencing decision (2026-11-14): finish the currently approved v2 work/release
+first; v3 is the UX/frontend overhaul before further feature expansion. Portfolio
+is the first concrete workstream. Do not start v3 or expand v2 from optional
+backlog items. See Roadmap for the operation/non-cash-entry and thesis boundaries.
+Ollama 0.35+ local System One models are an evaluation candidate for sentiment,
+not an adopted provider, verified runtime or new release gate.
+
 The next proposed increment is **v2.8 — Durable news and sentiment evidence**.
 On 2026-11-11 the maintainer required durability for news/sentiment references
 so analyses remain inspectable/repeatable. Plan immutable text snapshots,
@@ -101,7 +109,7 @@ routes are not wired to those tables yet; no cleanup runs. PR #266 is merged.
 PR #267 is merged and adds explicit JWT comparison capture/list/reopen/delete APIs
 with self-contained evidence, public generation identity and exact dispatched
 model inputs (including format/token retries and repair), plus additive
-`0020_comparison_captures`. This increment adds browser **Generate and save
+`0020_comparison_captures`. Merged PR #270 adds browser **Generate and save
 briefing**, paginated owner history, original citation/input inspection and
 confirmed deletion. Temporary generation remains explicit. Saved review uses
 original scope/dates and fetches no market data or inference. A new JWT-only
@@ -132,10 +140,10 @@ is not independently verified full-period volume; weekly/monthly and CoinGecko
 tail behavior are unchanged by the hotfix.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
-The inherited layout audit is the discovery step for a dedicated future major
-frontend overhaul, with its number and timing undecided; it is not a minor-release
+The inherited layout audit is the discovery step for a dedicated
+v3 frontend overhaul after v2 close-out; it is not a minor-release
 cleanup item. RSI/MACD, volume, accumulation, Elliott-wave hypotheses and
-independent validation of video/note assumptions remain the broader v3 direction.
+independent validation of video/note assumptions remain later north-star work.
 See Roadmap/TODO and `docs/wiki/Releasing.md`.
 
 Previous post-release audit: **2026-10-28**, against published **v2.3.0** at
@@ -205,17 +213,15 @@ strictly controlled execution. The major-generation targets are:
    trustworthy base-currency accounting for multi-market portfolios.
 2. **v2 — cross-market intelligence:** markets and asset classes explain one
    another rather than existing as isolated screens.
-3. **v3 — multi-dimensional validation:** fundamentals, technicals, sentiment,
-   regime, portfolio context, and private evidence converge on an opportunity.
-4. **v4 — decision lifecycle:** evidence, thesis, decision, position, outcome,
-   and review form one traceable loop.
-5. **v5 — multiple horizons and instruments:** investing, swing trading,
-   intraday/scalping, spot, and leveraged products have coherent workflows and
-   risk semantics.
-6. **v6 — agent-native terminal:** external models receive stable, scoped APIs
-   for reading, investigating, ingesting, and proposing.
-7. **v7 — controlled execution:** broker sync progresses from read-only and
-   paper workflows to approval-gated, auditable, bounded automation.
+3. **v3 — UX/frontend overhaul:** coherent workflows for existing capabilities,
+   beginning with consolidated Portfolio positions, operations-first entry and
+   floating/collapsible portfolio navigation.
+
+Later north-star themes retain multi-dimensional validation, the decision
+lifecycle, multiple horizons/instruments, agent-native access and controlled
+execution. Their replacement release numbers are not assigned. On 2026-11-14 the
+maintainer explicitly chose to finish v2 first, then prioritize v3 UX before
+further feature expansion; the former v3 validation label is superseded.
 
 These are dominant product promises, not silos. Existing journal, derivatives,
 and Hermes ingestion work are foundations for later generations, not evidence
@@ -360,7 +366,7 @@ release-level interpretation and safety boundaries.
   and host acceptance are complete, including the final proxy-suggestion click
   fix. The broader fundamentals-vintage, macro-release, technical-session,
   automatic relationship, portfolio-context, and AI-interpretation ambitions
-  are later v2.x candidates (or v3 validation work), not implicit pre-release
+  are later v2.x candidates (or later validation work), not implicit pre-release
   PRs. See the explicit v2.0 gate in `TODO.md` and `docs/wiki/Roadmap.md`.
 - **v2.1 shipped filing-grounded US fundamentals:** `POST /api/market-context/sec-filing-fact-check`
   checks one selected current Company Facts claim against an official,

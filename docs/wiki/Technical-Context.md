@@ -51,11 +51,11 @@ this retrieval with a historical knowledge capture. Adjustment methods,
 sessions and bar completion remain unverified. A short history can produce
 partial metrics; missing/inconsistent source input produces unavailable values.
 
-Later v3 technical thesis validation may use RSI/MACD, volume, accumulation areas
+Later technical thesis validation may use RSI/MACD, volume, accumulation areas
 and Elliott-wave hypotheses to challenge claims in ingested videos/notes. This
 snapshot foundation supplies traceable daily evidence; it does not implement
 those methods or equate its three measures with full technical analysis. See
-[the roadmap direction](Roadmap.md#v3-direction--technical-thesis-validation-deferred).
+[the roadmap direction](Roadmap.md#later-direction--technical-thesis-validation-deferred).
 
 ## Instrument research consumers (v2.6)
 

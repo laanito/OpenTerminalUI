@@ -84,7 +84,7 @@ messages. These states describe the projection, not complete SEC coverage.
 
 These are reviewable boundaries, not a required PR count. No full archival
 reconstruction, provider expansion, automatic filing corroboration, frontend
-overhaul or v3 technical thesis validation is included. The audit does not claim
+overhaul or full technical thesis validation is included. The audit does not claim
 live provider or model-quality testing; fixtures establish the local contract.
 
 ## Evidence endpoint and collection limits
