@@ -58,7 +58,8 @@ describe("ComparisonBriefingPanel", () => {
     const { container } = render(<ComparisonBriefingPanel selection={briefingSelection} />);
     expect(generate).not.toHaveBeenCalled();
     expect(screen.getByText(/not included—even if open/)).toBeVisible();
-    expect(screen.queryByRole("button", { name: /save|index/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Generate and save briefing" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Review saved briefings" })).toBeVisible();
     clickGenerate();
     expect(await screen.findByText(value.observations[0].text)).toBeVisible();
     expect(container.querySelector("img")).toBeNull();

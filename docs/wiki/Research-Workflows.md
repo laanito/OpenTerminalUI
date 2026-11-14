@@ -285,7 +285,7 @@ Exclusion does not establish that evidence is absent or that a provider failed.
 The preparation endpoint generates no answer. Separate generation APIs below
 now build on that contract; nothing is persisted or indexed.
 
-### Explicit durable comparison captures (v2.8 API foundation)
+### Saved comparison briefings (v2.8)
 
 Use JWT-authenticated `POST /api/market-context/briefing-captures` with the same
 anchor/comparisons/period and optional `context` selections to generate and retain
@@ -293,10 +293,27 @@ a new comparison. List owner captures with GET on that path, reopen the original
 contents with GET `/{id}`, or explicitly delete one with DELETE `/{id}`.
 Reopening fetches no sources and calls no model. Full bounded evidence and the
 checked result or typed failure stay attached, along with original model inputs
-and public generation identity. There is no automatic expiry. Existing browser
-briefings remain ephemeral until the separate save/review flow is added.
-Another POST fetches current evidence; captured-input reruns and linked refreshes
-are not exposed yet. See [the capture contract](News-Evidence-Contract.md#explicit-comparison-capture-api).
+and public generation identity. There is no automatic expiry.
+
+In Market Context, **Generate briefing** keeps the existing temporary workflow.
+**Generate and save briefing** starts a new run with fresh evidence and retains
+its checked result or typed failure. It shows progress and confirms storage after
+commit. This does not save an already displayed temporary answer by rerunning it
+silently: the action explicitly creates a new analysis.
+
+Use **Review saved briefings** for paginated owner history. Opening a saved run
+shows its original scope and dates independently of the live page selection,
+with the same citation inspector. **Inspect saved model inputs** reveals the
+original dispatched prompts and generation metadata. Deletion requires an
+explicit confirmation and removes that capture's embedded evidence/inputs.
+Scope changes cancel pending work and clear review. If cancellation, timeout or
+connection loss interrupts acknowledgement, refresh the saved list before retrying
+because a completed commit may already exist. No automatic replay occurs.
+
+`POST /api/market-context/briefing-captures/stream` is the browser progress API;
+its final result is a capture receipt emitted after storage. The synchronous
+POST remains available. Another POST fetches current evidence; captured-input
+reruns and linked refreshes are not exposed yet. See [the capture contract](News-Evidence-Contract.md#explicit-comparison-capture-api).
 
 ### Comparison briefing APIs
 

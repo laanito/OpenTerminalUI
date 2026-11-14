@@ -101,39 +101,35 @@ routes are not wired to those tables yet; no cleanup runs. PR #266 is merged.
 PR #267 is merged and adds explicit JWT comparison capture/list/reopen/delete APIs
 with self-contained evidence, public generation identity and exact dispatched
 model inputs (including format/token retries and repair), plus additive
-`0020_comparison_captures`. Existing generation endpoints remain ephemeral; no
-browser save flow, captured-input rerun, linked refresh or sentiment integration
-is implied. Inline evidence cannot expire underneath a retained capture. Read
-`docs/wiki/News-Evidence-Contract.md` for the audited legacy gaps and storage
-boundary. Retention duration, browser review, rerun/refresh linkage and scoring
-integration remain open. See the roadmap planning section.
+`0020_comparison_captures`. This increment adds browser **Generate and save
+briefing**, paginated owner history, original citation/input inspection and
+confirmed deletion. Temporary generation remains explicit. Saved review uses
+original scope/dates and fetches no market data or inference. A new JWT-only
+`/briefing-captures/stream` uses the shared lifecycle and returns a receipt only
+after commit; ambiguous acknowledgement is recovered by refreshing saved history,
+never by automatic inference retry. Current source/model work cancels on scope
+changes; late save/list/detail responses are ignored. List SQL projects summary
+and selection JSON rather than full input envelopes (SQLite/PostgreSQL portable).
+No new migration, provider, settings, dependency or API-key scope. Capture JSON
+remains self-contained; scoring/text-assessment linkage, captured-input reruns,
+linked refresh and unreferenced retention duration/cleanup remain open.
+Read `docs/wiki/News-Evidence-Contract.md` for precise boundaries. Locally 310
+focused backend tests passed (three PostgreSQL-only checks skipped), all 756
+frontend tests passed (127 files), production build and API/surface/mock guards
+passed, and all 29 installed-Chrome smoke journeys passed with one worker. The
+new saved-review desktop/narrow journeys also passed after the final pagination
+refresh adjustment. Native PostgreSQL JSON/list execution remains in its guarded
+CI lane. Maintainer acceptance of this new UI is still pending.
 
-Maintainer stock-view feedback on 2026-11-14 interrupted the next v2.8 slice:
-flat OHLCV beside a newer quote. Both StockDetail and useRealtimeChart discarded
-history corrections when counts/endpoint timestamps matched. They now compare
-complete normalized bars (including session metadata), accepting in-place
-corrections while keeping identical-input references stable. Legacy live candle
-overlays preserve the known open/extremes and use non-additive volume merging
-instead of replacing full history with a mid-bucket/zero-volume sample. Volume
-from overlapping partial aggregates remains incomplete; do not claim full traded
-volume or exchange-verified session boundaries from it. PR #268 merged, but the
-maintainer reported the same symptom; its fixture coverage did not establish a
-complete live fix. The maintainer confirmed BTC-USD, 1h, with no hover change.
-Read-only checks against the running localhost:8019 hourly endpoint reproduced
-an off-grid 10:36:33 flat/zero-volume row after its real 10:00 candle. The crypto
-route now folds only recognizable Yahoo quote tails into an existing fixed UTC
-period, retaining its open/volume and extending range/close. A missing period
-omits the quote rather than inventing an open or invoking a differently grained
-fallback. CoinGecko and weekly/monthly periods are unchanged. Separately, the
-StockDetail toolbar's latest OHLCV prop overrode every crosshair selection; it
-now selects one complete candle with its own volume and clears on scope change.
-ChartEngine forwards volume and uses the latest callback on leave. The captured
-running payload passes the normalization check, 30 focused backend and all 737
-frontend tests pass, production build/API guard pass, and two isolated installed-
-Chrome smoke journeys pass, including actual hourly chart hover/leave. No schema,
-settings, dependency, provider additions, deployment or production DB changes.
-Maintainer post-merge verification of this follow-up remains open. v2.8 browser/
-replay/sentiment work remains next.
+The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
+insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)
+coalesced the reproduced Yahoo off-grid quote tail and repaired full crosshair
+OHLCV selection. Its smoke test now targets the interaction canvas, waits for
+all five values, uses a populated history and consistent clock. The maintainer
+confirmed "that fixed it" and authorized continuing. Carry that acceptance
+forward; do not request another test of the resolved case. Partial live volume
+is not independently verified full-period volume; weekly/monthly and CoinGecko
+tail behavior are unchanged by the hotfix.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major

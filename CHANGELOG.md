@@ -7,6 +7,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Saved comparison briefings in Market Context** — choose **Generate and save
+  briefing** to retain a fresh run with its evidence, answer or typed failure and
+  model inputs. Review and paginate your saved runs, inspect their original
+  citations and inputs, or explicitly delete them. Reopening performs no new
+  market or model work. A cancellable progress endpoint acknowledges saving only
+  after commit; interrupted acknowledgement can be checked in saved history.
+  Temporary generation remains available. Captured-input reruns, linked refresh,
+  sentiment integration and retention cleanup remain later work.
 - **Explicit durable comparison captures (API)** — authenticated
   `POST /api/market-context/briefing-captures` generates from fresh server-fetched
   selections and retains the full bounded evidence, checked answer or typed

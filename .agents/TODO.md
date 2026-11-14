@@ -1236,8 +1236,8 @@ v2 evidence ideas do not automatically become compulsory sub-releases.
       The original scan also passed locally under throttling, so the precise CI
       timing/coordinate sequence was not reproduced. This follow-up changes tests
       only; it preserves the production candle/hover fixes and their expectations.
-- [ ] Obtain maintainer verification after merging/deploying the follow-up; local
-      read-only payload and browser fixture checks are not deployment acceptance.
+- [x] Maintainer confirmed "that fixed it" and authorized continuing after #269
+      merged at `cf03cf4`. Carry this deployed-view acceptance forward.
 
 ### v2.8 planning — Durable news and sentiment evidence
 
@@ -1274,16 +1274,30 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       expiry; legacy generation/browser paths stay ephemeral. Locally 305 focused
       tests pass (three PostgreSQL-only checks skipped), with a new actual migrated
       PostgreSQL JSON/ownership/deletion contract in the guarded CI lane.
-- [ ] Add browser save/review and captured-input reruns versus separately linked
-      current-data refreshes. Do not regenerate prompts from current code when
-      replaying retained requests; model aliases/nondeterminism limit equivalence.
+- [x] Add explicit browser generate-and-save with cancellable progress and a
+      commit-confirmed receipt. Temporary generation remains available. List,
+      paginate, reopen original scope/evidence/result, inspect citations and
+      original dispatched inputs, and confirm deletion. Reuse the same evidence
+      renderer; reopening performs no market/model work. Retention stays explicit.
+      Abort and ignore late save/list/detail responses on scope changes; recover
+      ambiguous completion via saved list, never an automatic model retry.
+      List SQL projects selection/summary fields instead of full JSON envelopes.
+      No schema/settings/provider/dependency or API-key changes.
+- [x] Verify 310 focused backend tests (three guarded PostgreSQL checks skipped),
+      all 756 frontend tests/127 files, production build, API/surface/mock guards
+      and 29 installed-Chrome smoke journeys. Saved price/context reload, citation
+      inspection, plain-text input display and deletion pass at desktop/narrow
+      sizes; final pagination refresh was rechecked on both new browser journeys.
+- [ ] Add captured-input reruns versus separately linked current-data refreshes.
+      Do not regenerate prompts from current code when replaying retained requests;
+      model aliases/nondeterminism limit equivalence.
 - [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
       interpretation and inspectable retained references. Preserve failures,
       disagreements, deduplication and coverage; no market-wide sentiment claim.
-- [ ] Add capture/review, retention and deletion UX with scope invalidation;
-      verify restart/cache-expiry/provider-edit survival, immutable rescoring,
-      PostgreSQL/SQLite parity, ownership and reference-aware pruning. Obtain
-      maintainer acceptance before release preparation.
+- [ ] Finish configurable retention/expiry and reference-aware pruning, linked
+      sentiment lifecycle and their remaining restart/cache/provider-edit/parity
+      checks. Obtain maintainer acceptance of the saved browser workflow and
+      subsequent milestone slices before release preparation.
 
 Replay means recovering original evidence/results and enabling a new run from
 those inputs, not promising identical LLM prose. The retention duration and

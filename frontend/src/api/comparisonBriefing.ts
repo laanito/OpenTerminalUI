@@ -60,7 +60,7 @@ export interface ComparisonBriefingResult {
   hypotheses: BriefingHypothesis[];
   failure: null | { code: string; message: string; retryable: boolean };
 }
-export type BriefingPhase = "queued" | "preparing_evidence" | "collecting_context" | "checking_model" | "generating" | "validating" | "retrying";
+export type BriefingPhase = "queued" | "preparing_evidence" | "collecting_context" | "checking_model" | "generating" | "validating" | "retrying" | "saving_capture";
 
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -170,6 +170,8 @@ export function validateBriefingResult(value: unknown, selection: BriefingSelect
 
 export const briefingValidation = { record, text, nullableText, finite, day, timestamp, choice, strings, unique, invalid, validEvidence };
 
+export class BriefingNotRetainedError extends Error {}
+
 type StreamOptions = { signal?: AbortSignal; onProgress?: (phase: BriefingPhase) => void };
 /** No automatic replay: a new request would incur a new model run and snapshot. */
 export function streamComparisonBriefing(selection: BriefingSelection, options: StreamOptions = {}): Promise<ComparisonBriefingResult> {
@@ -183,7 +185,7 @@ export function streamComparisonBriefing(selection: BriefingSelection, options: 
 export async function streamBriefing<T>(
   selection: BriefingSelection,
   options: StreamOptions,
-  contract: { path: string; context: boolean; body: (selection: BriefingSelection) => unknown;
+  contract: { path: string; context: boolean; capture?: boolean; body: (selection: BriefingSelection) => unknown;
     validate: (value: unknown, selection: BriefingSelection) => T },
 ): Promise<T> {
   if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
@@ -203,7 +205,7 @@ export async function streamBriefing<T>(
   let rejectAbort!: (error: Error) => void;
   const aborted = new Promise<never>((_, reject) => { rejectAbort = reject; });
   const onInternalAbort = () => rejectAbort(timedOut
-    ? new Error("The briefing exceeded its time limit. No answer was kept; retry manually.")
+    ? new Error(contract.capture ? "The operation timed out. Refresh saved briefings to check whether saving completed." : "The briefing exceeded its time limit. No answer was kept; retry manually.")
     : new DOMException("Cancelled", "AbortError"));
   controller.signal.addEventListener("abort", onInternalAbort, { once: true });
   const externalAbort = () => controller.abort();
@@ -212,7 +214,7 @@ export async function streamBriefing<T>(
   let timer = setTimeout(expire, 300_000);
   let startedEvent = false;
   let result: T | null = null;
-  const maxRecord = contract.context ? 512_000 : 256_000;
+  const maxRecord = contract.capture ? 4_100_000 : contract.context ? 512_000 : 256_000;
   try {
     const response = await Promise.race([fetchApi(contract.path, {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
@@ -244,10 +246,15 @@ export async function streamBriefing<T>(
         options.onProgress?.("queued");
       } else if (!startedEvent) throw invalid();
       else if (event.type === "progress") {
-        if (!choice(event.phase, ["preparing_evidence", "checking_model", "generating", "validating", "retrying", ...(contract.context ? ["collecting_context"] : [])])) throw invalid();
+        if (!choice(event.phase, ["preparing_evidence", "checking_model", "generating", "validating", "retrying", ...(contract.context ? ["collecting_context"] : []), ...(contract.capture ? ["saving_capture"] : [])])) throw invalid();
         options.onProgress?.(event.phase as BriefingPhase);
       } else if (event.type === "result") result = contract.validate(event.result, requested);
-      else if (event.type === "error") throw new Error("The briefing failed before completion. No answer was kept; retry manually.");
+      else if (event.type === "error") {
+        if (contract.capture && record(event.error) && event.error.code === "capture_too_large") {
+          throw new BriefingNotRetainedError("The saved briefing exceeds the storage limit. Nothing was saved.");
+        }
+        throw new Error(contract.capture ? "Saving could not be confirmed. Refresh saved briefings before retrying." : "The briefing failed before completion. No answer was kept; retry manually.");
+      }
       else throw invalid(); // In particular, never render unchecked provider deltas.
     };
     while (true) {
@@ -262,7 +269,7 @@ export async function streamBriefing<T>(
         if (buffer.trim()) throw invalid();
         return result;
       }
-      if (done) throw new Error("The briefing stream ended before completion. No answer was kept; retry manually.");
+      if (done) throw new Error(contract.capture ? "Saving could not be confirmed. Refresh saved briefings before retrying." : "The briefing stream ended before completion. No answer was kept; retry manually.");
     }
   } finally {
     clearTimeout(timer);

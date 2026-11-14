@@ -178,3 +178,11 @@ DDL and retention on rollback are tested; a disposable full-chain upgrade kept
 legacy news untouched. PostgreSQL DDL checks run locally and an actual migrated
 JSON/owner-filter/delete contract is added to the guarded CI lane. No production
 database is used.
+
+
+The v2.8 browser capture increment changes no schema. Owner history now selects
+only summary columns and `payload["selection"]` through SQLAlchemy JSON
+projection, avoiding full multi-megabyte envelopes for each list item. SQLite
+API coverage passes locally; the existing migrated PostgreSQL owner/list/delete
+contract exercises this query in the guarded CI lane. Full stored JSON remains
+unchanged, and the stream reuses the same atomic capture transaction.

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from contextlib import aclosing
 import hashlib
 import json
 import logging
@@ -9,7 +10,7 @@ from typing import Annotated, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -25,6 +26,7 @@ from backend.services.comparison_briefing import ComparisonBriefingResult
 from backend.services.comparison_context_briefing import ComparisonContextBriefingResult
 from backend.services.economic_data import get_economic_data_service
 from backend.services.llm_profiles import LLMProfileIdentity, resolve_llm_profile
+from backend.services.insight_lifecycle import stream_insight_lifecycle
 from backend.services.market_briefing_context_evidence import BriefingContextOptions
 
 router = APIRouter(prefix="/api/market-context/briefing-captures", tags=["market-context"])
@@ -91,8 +93,8 @@ class CaptureDetail(CaptureSummary):
     content: CaptureContent
 
 
-def _summary(row):
-    selection = row.payload["selection"]
+def _summary(row, selection=None):
+    selection = row.payload["selection"] if selection is None else selection
     captured_at = row.captured_at
     if captured_at.tzinfo is None:  # SQLite DateTime drops timezone information.
         captured_at = captured_at.replace(tzinfo=timezone.utc)
@@ -132,9 +134,13 @@ async def create_capture(
     expiry. Existing briefing endpoints remain ephemeral. No captured-input rerun
     is exposed yet; another POST fetches new evidence and creates a new capture.
     """
+    return await _capture_briefing(payload, user, db, fetcher, economic_service, sec_client)
+
+
+async def _capture_briefing(payload, user, db, fetcher, economic_service, sec_client, *, profile=None, on_phase=None):
     normalized = briefings._normalized_payload(payload)
     selection = ComparisonCaptureRequest(**normalized.model_dump(), context=payload.context)
-    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
+    profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
     attempts = []
 
     def record(body):
@@ -145,12 +151,12 @@ async def create_capture(
     if with_context:
         request = briefings.ComparisonContextBriefingRequest(**normalized.model_dump(), context=selected)
         result = await briefings._run_context_briefing(
-            request, user, fetcher, economic_service, profile=profile, on_request=record,
+            request, user, fetcher, economic_service, profile=profile, on_request=record, on_phase=on_phase,
             **({"sec_client": sec_client} if selected.fundamentals else {}),
         )
         content_type, mode = ContextCaptureContent, "context"
     else:
-        result = await briefings._run_briefing(normalized, user, fetcher, profile=profile, on_request=record)
+        result = await briefings._run_briefing(normalized, user, fetcher, profile=profile, on_request=record, on_phase=on_phase)
         content_type, mode = PriceCaptureContent, "price"
     content = content_type(
         mode=mode, selection=selection,
@@ -168,6 +174,8 @@ async def create_capture(
         status=result.status, content_hash=hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
         payload=json.loads(serialized),
     )
+    if on_phase is not None:
+        on_phase("saving_capture")
     try:
         db.add(row)
         db.commit()
@@ -179,6 +187,64 @@ async def create_capture(
     return CaptureDetail(**_summary(row).model_dump(), content=content)
 
 
+@router.post("/stream", response_class=StreamingResponse, responses={200: {"content": {
+    "application/x-ndjson": {"schema": {"type": "string", "description": (
+        "NDJSON start with source/model budgets, progress including saving_capture, "
+        "and one final CaptureDetail only after commit, or a safe error. "
+        "Disconnect cancels collection and synthesis; an interrupted acknowledgement "
+        "can leave a completed capture, so list saved records before retrying."
+    )}}
+}}})
+async def stream_capture(
+    payload: ComparisonCaptureRequest,
+    user: User = Depends(get_current_user), db: Session = Depends(get_db),
+    fetcher=Depends(get_unified_fetcher), economic_service=Depends(get_economic_data_service),
+    sec_client=Depends(get_sec_edgar_client),
+):
+    """Explicitly generate and retain with progress; existing ephemeral APIs remain unchanged."""
+    normalized = briefings._normalized_payload(payload)  # Validate before 200 headers.
+    selection = ComparisonCaptureRequest(**normalized.model_dump(), context=payload.context)
+    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
+    phase = "preparing_evidence"
+    failure = None
+
+    def set_phase(value):
+        nonlocal phase
+        phase = value
+
+    async def operation():
+        nonlocal failure
+        try:
+            saved = await _capture_briefing(selection, user, db, fetcher, economic_service, sec_client,
+                                            profile=profile, on_phase=set_phase)
+            return saved.model_dump(mode="json")
+        except HTTPException as exc:
+            if exc.status_code == 413:
+                failure = {"code": "capture_too_large", "message": "Capture exceeds the storage limit; nothing was saved."}
+            elif exc.status_code == 503:
+                failure = {"code": "capture_not_confirmed", "message": "Saving could not be confirmed. Refresh saved briefings before retrying."}
+            raise
+
+    async def events():
+        async with aclosing(stream_insight_lifecycle(operation)) as lifecycle:
+            async for event in lifecycle:
+                if event["type"] == "start":
+                    event = {**event, "deadlines": {
+                        "evidence_seconds": briefings.EVIDENCE_TIMEOUT_SECONDS,
+                        "context_seconds": briefings.CONTEXT_TIMEOUT_SECONDS,
+                        "model_seconds": profile.timeout_seconds,
+                    }}
+                elif event["type"] == "progress":
+                    event = {**event, "phase": phase}
+                elif event["type"] == "error" and failure is not None:
+                    event = {**event, "error": failure}
+                yield json.dumps(event, separators=(",", ":"), ensure_ascii=False) + "\n"
+
+    return StreamingResponse(events(), media_type="application/x-ndjson", headers={
+        "Cache-Control": "no-store", "X-Accel-Buffering": "no",
+    })
+
+
 @router.get("", response_model=list[CaptureSummary])
 def list_captures(
     limit: int = Query(default=20, ge=1, le=100),
@@ -186,10 +252,16 @@ def list_captures(
     user: User = Depends(get_current_user), db: Session = Depends(get_db),
 ):
     """List this owner's captures without fetching sources or calling a model."""
-    rows = db.scalars(select(ComparisonCaptureORM).where(ComparisonCaptureORM.user_id == user.id).order_by(
+    # Do not load up to 20 multi-megabyte evidence/input envelopes for a list.
+    # SQLAlchemy JSON projection is portable on SQLite and PostgreSQL.
+    rows = db.execute(select(
+        ComparisonCaptureORM.id, ComparisonCaptureORM.captured_at, ComparisonCaptureORM.mode,
+        ComparisonCaptureORM.status, ComparisonCaptureORM.content_hash,
+        ComparisonCaptureORM.payload["selection"].label("selection"),
+    ).where(ComparisonCaptureORM.user_id == user.id).order_by(
         ComparisonCaptureORM.captured_at.desc(), ComparisonCaptureORM.id.desc(),
     ).offset(offset).limit(limit)).all()
-    return [_summary(row) for row in rows]
+    return [_summary(row, row.selection) for row in rows]
 
 
 @router.get("/{capture_id}", response_model=CaptureDetail)
