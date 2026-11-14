@@ -5,18 +5,22 @@ import {
 } from "./comparisonBriefing";
 import { validateContextBriefingResult, type BriefingContextOptions, type ContextBriefingResult } from "./comparisonContextBriefing";
 
+export type CaptureLineage = {
+  kind: "saved_input_rerun" | "fresh_refresh"; parent_id: string; parent_content_hash: string;
+  source_generated_at: string; replay_request_index: number | null; model_policy: "current_deep";
+};
 export type CaptureSummary = BriefingSelection & {
   id: string; captured_at: string; mode: "price" | "context"; status: "complete" | "unavailable";
-  content_hash: string; retention: "retained_no_automatic_expiry";
+  lineage?: CaptureLineage | null; content_hash: string; retention: "retained_no_automatic_expiry";
 };
 export type ComparisonCapture = CaptureSummary & {
   content: {
-    schema_version: 1; mode: "price" | "context";
+    schema_version: 1; lineage?: CaptureLineage | null; mode: "price" | "context";
     selection: BriefingSelection & { context: BriefingContextOptions | null };
     generation: {
       contract_version: "comparison-capture-v1"; protocol: "openai_compatible_chat_completions";
       profile: BriefingModelProfile; enabled: boolean; timeout_seconds: number; structured_output: string;
-      attempts: Array<{ dispatched_at: string; body: Record<string, unknown> }>;
+      prepared_request?: Record<string, unknown> | null; attempts: Array<{ dispatched_at: string; body: Record<string, unknown> }>;
     };
     result: ComparisonBriefingResult | ContextBriefingResult;
   };
@@ -24,12 +28,26 @@ export type ComparisonCapture = CaptureSummary & {
 const path = "/market-context/briefing-captures";
 const invalid = () => new Error("This saved briefing could not be displayed safely. Its stored contents have not been changed.");
 
+function validLineage(value: unknown): boolean {
+  return value === null || value === undefined || (v.record(value)
+    && v.choice(value.kind, ["saved_input_rerun", "fresh_refresh"]) && v.text(value.parent_id)
+    && v.text(value.parent_content_hash) && /^[a-f0-9]{64}$/.test(value.parent_content_hash)
+    && v.timestamp(value.source_generated_at) && value.model_policy === "current_deep"
+    && (value.replay_request_index === null || (Number.isInteger(value.replay_request_index) && Number(value.replay_request_index) >= 0))
+    && (value.kind !== "fresh_refresh" || value.replay_request_index === null));
+}
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (v.record(value)) return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+  return JSON.stringify(value);
+}
+
 export function validateCaptureSummary(value: unknown): CaptureSummary {
   if (!v.record(value) || !v.text(value.id) || !v.timestamp(value.captured_at)
     || !v.text(value.anchor) || !v.strings(value.comparisons) || !value.comparisons.length || value.comparisons.length > 6
     || !v.choice(value.period, ["1M", "3M", "6M"]) || !v.choice(value.mode, ["price", "context"])
     || !v.choice(value.status, ["complete", "unavailable"]) || !v.text(value.content_hash) || !/^[a-f0-9]{64}$/.test(value.content_hash)
-    || value.retention !== "retained_no_automatic_expiry") throw invalid();
+    || value.retention !== "retained_no_automatic_expiry" || !validLineage(value.lineage)) throw invalid();
   return value as unknown as CaptureSummary;
 }
 export function validateComparisonCapture(value: unknown): ComparisonCapture {
@@ -39,12 +57,14 @@ export function validateComparisonCapture(value: unknown): ComparisonCapture {
   if (content.schema_version !== 1 || content.mode !== summary.mode || !v.record(content.selection)
     || !v.record(content.generation) || content.selection.anchor !== summary.anchor || content.selection.period !== summary.period
     || JSON.stringify(content.selection.comparisons) !== JSON.stringify(summary.comparisons)) throw invalid();
+  if (!validLineage(content.lineage) || stableJson(content.lineage ?? null) !== stableJson(summary.lineage ?? null)) throw invalid();
   const generation = content.generation;
   if (generation.contract_version !== "comparison-capture-v1" || generation.protocol !== "openai_compatible_chat_completions"
     || !v.record(generation.profile) || !v.choice(generation.profile.requested_profile, ["fast", "deep"])
     || !v.choice(generation.profile.resolved_profile, ["fast", "deep"]) || !v.text(generation.profile.model)
     || typeof generation.enabled !== "boolean" || !v.finite(generation.timeout_seconds) || generation.timeout_seconds <= 0
     || !v.text(generation.structured_output) || !Array.isArray(generation.attempts)
+    || (generation.prepared_request !== undefined && generation.prepared_request !== null && !v.record(generation.prepared_request))
     || generation.attempts.some((attempt) => !v.record(attempt) || !v.timestamp(attempt.dispatched_at) || !v.record(attempt.body))) throw invalid();
   const context = content.selection.context;
   if (context !== null && (!v.record(context) || typeof context.news !== "boolean" || !Array.isArray(context.macro_regions)
@@ -94,5 +114,38 @@ export async function streamComparisonCapture(selection: BriefingSelection, cont
   } catch (error) {
     if (options.signal?.aborted || error instanceof BriefingNotRetainedError) throw error;
     throw new Error("Saving could not be confirmed or the saved result could not be displayed. Refresh saved briefings before retrying.");
+  }
+}
+
+
+export async function streamCaptureFollowup(source: ComparisonCapture, kind: "rerun" | "refresh",
+  options: { signal?: AbortSignal; onProgress?: (phase: BriefingPhase) => void } = {}): Promise<ComparisonCapture> {
+  try {
+    return await streamBriefing(source.content.selection, options, {
+      path: `${path}/${encodeURIComponent(source.id)}/${kind}/stream`, context: source.mode === "context", capture: true,
+      body: () => ({}),
+      validate: (value) => {
+        const saved = validateComparisonCapture(value);
+        const lineage = saved.lineage;
+        if (saved.id === source.id || !lineage || lineage.kind !== (kind === "rerun" ? "saved_input_rerun" : "fresh_refresh")
+          || lineage.parent_id !== source.id || lineage.parent_content_hash !== source.content_hash
+          || Date.parse(lineage.source_generated_at) !== Date.parse(source.content.result.generated_at)
+          || saved.mode !== source.mode || stableJson(saved.content.selection) !== stableJson(source.content.selection)) throw invalid();
+        if (kind === "rerun") {
+          const attempts = source.content.generation.attempts;
+          const index = attempts.length ? attempts.length - 1 : null;
+          const original = index !== null ? attempts[index].body : source.content.generation.prepared_request;
+          const next = saved.content.generation.attempts[0]?.body ?? saved.content.generation.prepared_request;
+          if (!original || !next || saved.content.generation.attempts.length > 1 || lineage.replay_request_index !== index
+            || next.model !== saved.content.generation.profile.model
+            || stableJson({ ...original, model: next.model }) !== stableJson(next)
+            || stableJson(saved.content.result.evidence) !== stableJson(source.content.result.evidence)) throw invalid();
+        }
+        return saved;
+      },
+    });
+  } catch (error) {
+    if (options.signal?.aborted || error instanceof BriefingNotRetainedError) throw error;
+    throw new Error("The follow-up could not be confirmed or displayed. Refresh saved briefings before retrying; the source run is unchanged.");
   }
 }

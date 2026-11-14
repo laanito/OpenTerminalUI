@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteComparisonCapture, getComparisonCapture, listComparisonCaptures, streamComparisonCapture, validateComparisonCapture } from "../api/comparisonCaptures";
+import { deleteComparisonCapture, getComparisonCapture, listComparisonCaptures, streamComparisonCapture, validateComparisonCapture, streamCaptureFollowup } from "../api/comparisonCaptures";
 import { streamComparisonBriefing } from "../api/comparisonBriefing";
-import { makeCapture, captureSummary } from "./fixtures/comparisonCaptures";
+import { makeCapture, makeCaptureFollowup, captureSummary } from "./fixtures/comparisonCaptures";
 import { briefingSelection } from "./fixtures/comparisonBriefing";
 const mocks = vi.hoisted(() => ({ get: vi.fn(), delete: vi.fn(), fetch: vi.fn() }));
 vi.mock("../api/base", () => ({ api: { get: mocks.get, delete: mocks.delete }, fetchApi: mocks.fetch }));
@@ -66,4 +66,29 @@ describe("saved comparison capture contract", () => {
     await expect(streamComparisonCapture(briefingSelection, { news: false, macro_regions: [] })).rejects.toThrow("Nothing was saved");
   });
 
+});
+
+describe("linked saved run contract", () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+  it.each(["rerun", "refresh"] as const)("explicit %s selects the owned source without resending inputs", async (kind) => {
+    const source = makeCapture(); const child = makeCaptureFollowup(source, kind);
+    mocks.fetch.mockResolvedValue(response(child));
+    expect(await streamCaptureFollowup(source, kind)).toEqual(child);
+    expect(mocks.fetch.mock.calls[0][0]).toBe(`/market-context/briefing-captures/saved-1/${kind}/stream`);
+    expect(JSON.parse(mocks.fetch.mock.calls[0][1].body)).toEqual({});
+    expect(source.content.generation.profile.model).not.toBe("current-deep");
+    expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
+  it.each([
+    (child: ReturnType<typeof makeCapture>) => { child.lineage!.parent_id = "other"; },
+    (child: ReturnType<typeof makeCapture>) => { child.lineage!.parent_content_hash = "a".repeat(64); },
+    (child: ReturnType<typeof makeCapture>) => { child.content.generation.attempts[0].body.temperature = 0.9; },
+    (child: ReturnType<typeof makeCapture>) => { child.content.result.evidence!.packet_id = "silently-refetched"; },
+    (child: ReturnType<typeof makeCapture>) => { child.content.generation.attempts.push(child.content.generation.attempts[0]); },
+  ])("rejects altered provenance/frozen inputs without automatically retrying", async (change) => {
+    const source = makeCapture(); const child = makeCaptureFollowup(source); change(child);
+    mocks.fetch.mockResolvedValue(response(child));
+    await expect(streamCaptureFollowup(source, "rerun")).rejects.toThrow("source run is unchanged");
+    expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
 });

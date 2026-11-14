@@ -1,12 +1,12 @@
 # Durable news evidence — v2.8 foundation
 
-Status: v2.8 storage/capture and browser review, 2026-11-14. The existing news APIs and
+Status: v2.8 storage/capture, browser review and linked follow-ups, 2026-11-14. The existing news APIs and
 scorers do **not yet write the text/assessment tables**. Explicit comparison
 capture now stores its own complete evidence/results inline; existing comparison
 generation endpoints remain ephemeral. The browser now offers an explicit saved
 run with paginated review, original evidence/input inspection and deletion.
-Captured-input reruns, linked refresh, configurable retention cleanup and
-headline-sentiment integration remain future work. This contract
+Captured-input reruns and linked fresh-data refreshes are available. Configurable
+retention cleanup and headline-sentiment integration remain future work. This contract
 supports repeatable evidence; it does not promise identical model prose.
 
 ## Existing paths and provenance gaps
@@ -123,8 +123,7 @@ Handled evidence timeout can retain its typed failure with no evidence packet.
 original contents using only the database, without live providers or inference.
 Saved JSON is returned verbatim rather than applying defaults/field projection
 from the current generation models.
-Each new POST fetches fresh evidence and produces a new ID; there is no
-captured-input rerun or parent-run linkage yet. The synchronous POST retains its
+Each initial capture POST fetches fresh evidence and produces a new ID. The synchronous POST retains its
 JSON response. The browser's explicit **Generate and save briefing** action uses
 `POST /api/market-context/briefing-captures/stream` for bounded NDJSON progress.
 One resolved Deep profile and the same collection/synthesis deadlines apply.
@@ -178,7 +177,53 @@ restart/provider-edit, privacy, repair/dispatch and optional-source tests run
 locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
 explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
 
-Next: captured-input rerun versus linked refresh, selected-headline
-sentiment/assessment integration, then configurable reference-aware retention.
+Next: selected-headline sentiment/assessment integration, then configurable
+reference-aware retention.
 Browser save/review/deletion is implemented; it does not introduce a private Brain
 index or shared evidence-blob lifecycle. See [Roadmap](Roadmap.md).
+
+## Linked reruns and fresh-data refreshes
+
+Both JWT-only follow-up endpoints take an empty JSON object `{}`. The owned source
+ID comes from the path; browser-supplied prompts, evidence, settings or lineage
+are rejected. Ownership, stored-content SHA-256 integrity and supported contracts
+are checked before starting a stream. Unknown/other-owner IDs return 404, damaged
+stored contents return 409, and unsupported inputs return 422. No migration is
+needed: linkage is immutable JSON inside the existing capture envelope.
+
+- `POST /api/market-context/briefing-captures/{id}/rerun/stream` reuses the last
+  **actually dispatched** request, including any saved repair prompt, schema,
+  response format and generation settings. Only its `model` field changes to
+  today's resolved Deep model; the connection, credentials and deadline are
+  current. It performs one checked completion, with no source collection, prompt
+  rebuilding, repair, response-format fallback or token-budget increase.
+- `POST /api/market-context/briefing-captures/{id}/refresh/stream` collects fresh
+  evidence for the saved selection, using the current relative-period window,
+  prompts, Deep profile and normal checked synthesis pipeline. It does not use
+  the live page's possibly different selection.
+
+Both return the existing NDJSON lifecycle and a committed new capture receipt.
+The original stays unchanged. Each child records `lineage` in its contents and
+summary: kind (`saved_input_rerun` or `fresh_refresh`), parent ID/content hash,
+source generation time, replay request index (null for refresh or a prepared
+request) and `model_policy: current_deep`. Each child embeds its own full evidence
+and inputs. Deleting a parent leaves its children inspectable and usable; opening
+the deleted source returns 404 without clearing the child review.
+
+A rerun validates references against a typed view of the original evidence but
+retains the original raw evidence JSON and scope notice, including retained
+extensions. Invalid/truncated/model-error/timeout responses produce a typed
+unavailable child without partial prose or automatic repair. If generation never
+reaches dispatch (disabled/health failure), `generation.prepared_request` retains
+the selected request with the current model so that child remains independently
+rerunnable. Its actual `attempts` stay empty. An original capture with no saved
+request can be refreshed but cannot be rerun. Mutable model aliases, provider
+behavior and nondeterminism prevent any guarantee of identical wording or weights.
+
+In saved review, **Re-run saved inputs** and **Refresh with current data** are
+explicit separate actions. Progress, cancellation and lineage are visible.
+Cancellation closes unfinished work; a commit already completed is not undone.
+Refresh saved history after uncertain acknowledgement before manually retrying.
+No automatic retry or idempotency guarantee is introduced. Existing generation
+endpoints remain temporary; these endpoints introduce no API-key scope, private
+Brain indexing, new provider or retention cleanup.

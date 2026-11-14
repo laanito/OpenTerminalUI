@@ -78,9 +78,11 @@ def setup_provider(monkeypatch, *, context=False, replies=None, enabled=True, ev
         calls.append(body)
         response = responses[min(len(calls) - 1, len(responses) - 1)]
         if isinstance(response, int): return httpx.Response(response, json={"error": "unsupported"})
+        finish = "stop"
+        if isinstance(response, tuple): response, finish = response
         if isinstance(response, str): content = response
         else: content = json.dumps(response)
-        return httpx.Response(200, json={"choices": [{"message": {"content": content}, "finish_reason": "stop"}]})
+        return httpx.Response(200, json={"choices": [{"message": {"content": content}, "finish_reason": finish}]})
     original = httpx.AsyncClient
     monkeypatch.setattr(llm_client.httpx, "AsyncClient", lambda **kwargs: original(transport=httpx.MockTransport(handle), **kwargs))
     return evidence, calls, preparations
@@ -318,6 +320,9 @@ def test_current_optional_packets_reopen_with_original_versions_and_source_detai
     assert saved["content"]["result"]["evidence"] == evidence.model_dump(mode="json")
     assert saved["content"]["result"]["evidence"]["schema_version"] == ("2" if source == "fundamentals" else "1")
     assert client.get(f"{URL}/{saved['id']}").json() == saved
+    child = followup(client, saved)
+    assert child["status"] == "complete"
+    assert child["content"]["result"]["evidence"] == saved["content"]["result"]["evidence"]
 
 
 def test_capture_requires_login_before_source_or_model_work(store, monkeypatch):
@@ -326,6 +331,8 @@ def test_capture_requires_login_before_source_or_model_work(store, monkeypatch):
     client.app.dependency_overrides.pop(get_current_user)
     assert client.post(URL, json=SELECTION).status_code == 401
     assert client.get(URL).status_code == 401
+    for kind in ("rerun", "refresh"):
+        assert client.post(f"{URL}/unknown/{kind}/stream", json={}).status_code == 401
     assert calls == [] and preparations == []
 
 
@@ -395,3 +402,192 @@ async def test_closing_capture_stream_cancels_collection_and_never_commits_parti
         await iterator.aclose()
         assert cancelled.is_set()
         assert db.scalar(sa.select(sa.func.count()).select_from(ComparisonCaptureORM)) == 0
+
+
+def followup(client, saved, kind="rerun"):
+    response = client.post(f"{URL}/{saved['id']}/{kind}/stream", json={})
+    assert response.status_code == 200, response.text
+    events = [json.loads(line) for line in response.text.splitlines()]
+    assert events[-1]["type"] == "result", events
+    return events[-1]["result"]
+
+
+@pytest.mark.parametrize("context", [False, True])
+def test_frozen_rerun_changes_only_model_and_survives_parent_deletion(store, monkeypatch, context):
+    client, _, _, _ = store
+    _, calls, preparations = setup_provider(monkeypatch, context=context)
+    selection = {**SELECTION, "context": {"news": True, "macro_regions": ["us", "euro_area"]}} if context else SELECTION
+    original = client.post(URL, json=selection).json()
+    monkeypatch.setattr(routes, "get_settings", lambda: AppSettings(llm_enabled=True, llm_model="current-deep", llm_timeout_seconds=1))
+    child = followup(client, original)
+    assert child["id"] != original["id"] and child["status"] == "complete"
+    assert calls[-1] == {**calls[0], "model": "current-deep"}
+    assert len(calls) == 2 and len(preparations) == 1
+    assert child["content"]["result"]["evidence"] == original["content"]["result"]["evidence"]
+    assert child["lineage"] == child["content"]["lineage"] == {
+        "kind": "saved_input_rerun", "parent_id": original["id"], "parent_content_hash": original["content_hash"],
+        "source_generated_at": original["content"]["result"]["generated_at"], "replay_request_index": 0, "model_policy": "current_deep",
+    }
+    assert client.get(f"{URL}/{original['id']}").json() == original
+    assert client.get(URL).json()[0]["lineage"] == child["lineage"]
+    assert client.delete(f"{URL}/{original['id']}").status_code == 204
+    assert client.get(f"{URL}/{child['id']}").json() == child
+    assert followup(client, child)["status"] == "complete"
+    assert len(preparations) == 1
+
+
+def test_rerun_uses_last_repair_request_and_no_new_repair(store, monkeypatch):
+    client, _, _, _ = store
+    evidence = _packet()
+    _, calls, preparations = setup_provider(monkeypatch, replies=["invalid", _valid(evidence), "invalid"])
+    original = client.post(URL, json=SELECTION).json()
+    assert len(calls) == 2
+    child = followup(client, original)
+    assert calls[2] == calls[1] and len(calls) == 3
+    assert child["lineage"]["replay_request_index"] == 1
+    assert child["status"] == "unavailable"
+    assert child["content"]["result"]["failure"]["code"] == "invalid_response"
+    assert child["content"]["result"]["observations"] == []
+    assert len(preparations) == 1
+
+
+@pytest.mark.parametrize("reply,expected", [(400, "provider_error"), ("invalid", "invalid_response")])
+def test_rerun_provider_failures_do_not_fallback_or_repair(store, monkeypatch, reply, expected):
+    client, _, _, _ = store
+    _, calls, _ = setup_provider(monkeypatch, replies=[_valid(_packet()), reply])
+    original = client.post(URL, json=SELECTION).json()
+    child = followup(client, original)
+    assert len(calls) == 2
+    assert child["content"]["result"]["failure"]["code"] == expected
+    assert len(child["content"]["generation"]["attempts"]) == 1
+
+
+def test_disabled_rerun_retains_prepared_input_for_later_without_parent(store, monkeypatch):
+    client, _, _, _ = store
+    _, calls, preparations = setup_provider(monkeypatch)
+    original = client.post(URL, json=SELECTION).json()
+    monkeypatch.setattr(routes, "get_settings", lambda: AppSettings(llm_enabled=False, llm_model="disabled-model"))
+    child = followup(client, original)
+    assert child["content"]["result"]["failure"]["code"] == "disabled"
+    assert child["content"]["generation"]["attempts"] == []
+    assert child["content"]["generation"]["prepared_request"] == {**calls[0], "model": "disabled-model"}
+    client.delete(f"{URL}/{original['id']}")
+    monkeypatch.setattr(routes, "get_settings", lambda: AppSettings(llm_enabled=True, llm_model="reenabled", llm_timeout_seconds=1))
+    grandchild = followup(client, child)
+    assert grandchild["status"] == "complete" and grandchild["lineage"]["replay_request_index"] is None
+    assert calls[-1] == {**calls[0], "model": "reenabled"}
+    assert len(preparations) == 1
+
+
+@pytest.mark.parametrize("kind", ["rerun", "refresh"])
+def test_followup_owner_body_integrity_and_size_boundaries(store, monkeypatch, kind):
+    client, factory, owner, _ = store
+    _, calls, preparations = setup_provider(monkeypatch)
+    original = client.post(URL, json=SELECTION).json()
+    path = f"{URL}/{original['id']}/{kind}/stream"
+    owner["id"] = "other"
+    assert client.post(path, json={}).status_code == 404
+    assert client.post(f"{URL}/missing/{kind}/stream", json={}).status_code == 404
+    owner["id"] = "owner"
+    assert client.post(path, json={"messages": []}).status_code == 422
+    assert len(calls) == len(preparations) == 1
+    monkeypatch.setattr(routes, "MAX_CAPTURE_BYTES", 1)
+    response = client.post(path, json={})
+    assert '"code":"capture_too_large"' in response.text
+    assert len(client.get(URL).json()) == 1
+    with factory() as db:
+        db.execute(sa.update(ComparisonCaptureORM).where(ComparisonCaptureORM.id == original["id"]).values(content_hash="0" * 64))
+        db.commit()
+    count = len(calls)
+    assert client.post(path, json={}).status_code == 409
+    assert len(calls) == count
+
+
+def test_refresh_collects_current_evidence_for_saved_selection(store, monkeypatch):
+    client, _, _, _ = store
+    evidence = _packet()
+    updated = evidence.model_copy(update={"packet_id": "e" * 64})
+    _, calls, preparations = setup_provider(monkeypatch, replies=[_valid(evidence), _valid(updated)])
+    original = client.post(URL, json=SELECTION).json()
+    async def changed(*args, **kwargs):
+        preparations.append((args, kwargs))
+        return evidence.model_copy(update={"packet_id": "e" * 64})
+    monkeypatch.setattr(briefings, "prepare_comparison_briefing_evidence", changed)
+    child = followup(client, original, "refresh")
+    assert len(preparations) == 2 and len(calls) == 2
+    assert child["content"]["selection"] == original["content"]["selection"]
+    assert child["content"]["result"]["evidence"]["packet_id"] == "e" * 64
+    assert child["lineage"]["kind"] == "fresh_refresh" and child["lineage"]["replay_request_index"] is None
+    assert client.get(f"{URL}/{original['id']}").json() == original
+
+
+def test_missing_dispatch_can_refresh_but_cannot_rerun(store, monkeypatch):
+    client, _, _, _ = store
+    setup_provider(monkeypatch, enabled=False)
+    original = client.post(URL, json=SELECTION).json()
+    assert client.post(f"{URL}/{original['id']}/rerun/stream", json={}).status_code == 422
+    assert followup(client, original, "refresh")["lineage"]["kind"] == "fresh_refresh"
+
+
+def test_rerun_preserves_raw_evidence_extensions_and_checks_contract(store, monkeypatch):
+    client, factory, _, _ = store
+    setup_provider(monkeypatch)
+    original = client.post(URL, json=SELECTION).json()
+    payload = copy.deepcopy(original["content"])
+    payload["result"]["evidence"]["future_provenance"] = {"retained": [1, "original"]}
+    def replace(content):
+        digest = hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode()).hexdigest()
+        with factory() as db:
+            db.execute(sa.update(ComparisonCaptureORM).where(ComparisonCaptureORM.id == original["id"]).values(payload=content, content_hash=digest))
+            db.commit()
+    replace(payload)
+    original = client.get(f"{URL}/{original['id']}").json()
+    child = followup(client, original)
+    assert child["content"]["result"]["evidence"] == payload["result"]["evidence"]
+    payload["generation"]["protocol"] = "unsupported-protocol"
+    replace(payload)
+    assert client.post(f"{URL}/{original['id']}/rerun/stream", json={}).status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_cancelled_rerun_never_stores_a_child(store, monkeypatch):
+    client, factory, _, _ = store
+    setup_provider(monkeypatch)
+    original = client.post(URL, json=SELECTION).json()
+    entered, cancelled = asyncio.Event(), asyncio.Event()
+    async def block(self, *args, **kwargs):
+        entered.set()
+        try: await asyncio.Future()
+        finally: cancelled.set()
+    monkeypatch.setattr(llm_client.LLMClient, "chat_saved_request", block)
+    with factory() as db:
+        stream = await routes.stream_rerun(original["id"], routes.FollowupRequest(), SimpleNamespace(id="owner"), db)
+        iterator = stream.body_iterator
+        await anext(iterator)
+        await anext(iterator)
+        await asyncio.wait_for(entered.wait(), 2)
+        await iterator.aclose()
+        await asyncio.wait_for(cancelled.wait(), 2)
+    assert len(client.get(URL).json()) == 1
+
+
+@pytest.mark.parametrize("failure", ["health", "timeout", "truncated"])
+def test_rerun_deadline_health_and_truncation_keep_checked_failure(store, monkeypatch, failure):
+    client, _, _, _ = store
+    _, calls, preparations = setup_provider(monkeypatch, replies=[_valid(_packet()), (_valid(_packet()), "length")])
+    original = client.post(URL, json=SELECTION).json()
+    if failure == "health":
+        async def unhealthy(self): return False
+        monkeypatch.setattr(llm_client.LLMClient, "health", unhealthy)
+        expected = "provider_unavailable"
+    elif failure == "timeout":
+        async def timeout(self, *args, **kwargs): raise TimeoutError()
+        monkeypatch.setattr(llm_client.LLMClient, "chat_saved_request", timeout)
+        expected = "timeout"
+    else:
+        expected = "invalid_response"
+    child = followup(client, original)
+    assert child["content"]["result"]["failure"]["code"] == expected
+    assert child["content"]["result"]["observations"] == []
+    assert len(preparations) == 1
+    assert len(calls) == (2 if failure == "truncated" else 1)

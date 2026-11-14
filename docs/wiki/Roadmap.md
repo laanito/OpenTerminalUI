@@ -762,8 +762,11 @@ full bounded evidence/results and dispatched model inputs, with owner-scoped
 list/reopen/delete APIs and additive `0020_comparison_captures`; existing generation
 endpoints remain ephemeral. The browser now offers explicit generate-and-save,
 paginated saved review, original citation/input inspection and deletion, backed
-by a cancellable capture progress stream. Rerun/refresh linkage and sentiment
-integration remain open. See [News evidence contract](News-Evidence-Contract.md)
+by a cancellable capture progress stream. Saved-input reruns and separately
+linked fresh-data refreshes now preserve the original while storing independent
+children with lineage. Reruns freeze prompts/evidence and use the current Deep
+model for one checked completion; refresh uses current collection/prompts. Sentiment
+integration remains open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
 
