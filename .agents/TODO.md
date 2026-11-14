@@ -1226,6 +1226,16 @@ v2 evidence ideas do not automatically become compulsory sub-releases.
       focused backend tests, all 737 frontend tests (125 files), production build
       and generated API check. Both installed-Chrome crypto stock-detail smoke
       journeys pass, including a real hourly hover/leave regression.
+- [x] Harden #269's browser regression after its three-candle pixel scan failed
+      in CI despite passing locally. Target Lightweight Charts' upper interaction
+      canvas, populate a fitted 40-candle history, hold Date/tick/fixture times
+      consistent across hour boundaries, and retry assertions on all five actual
+      displayed OHLCV values after one stable hover. Keep leave/latest assertions.
+      Five stress runs passed at 6x CPU throttling; temporary throttling was removed
+      and the full 27-test installed-Chrome smoke suite passed with one worker.
+      The original scan also passed locally under throttling, so the precise CI
+      timing/coordinate sequence was not reproduced. This follow-up changes tests
+      only; it preserves the production candle/hover fixes and their expectations.
 - [ ] Obtain maintainer verification after merging/deploying the follow-up; local
       read-only payload and browser fixture checks are not deployment acceptance.
 

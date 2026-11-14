@@ -78,7 +78,9 @@ test("@smoke crypto stock detail keeps crypto feeds and a single Deep briefing l
 // hook misses a second latest-OHLCV prop overriding the crosshair's OHLC.
 test("@smoke BTC hourly candle inspection updates OHLCV and restores the latest candle on leave", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const hour = Math.floor(Date.now() / 3600000) * 3600;
+  const now = new Date();
+  await page.clock.setFixedTime(now);
+  const hour = Math.floor(now.getTime() / 3600000) * 3600;
   await page.addInitScript(() => {
     localStorage.setItem("stock-state", JSON.stringify({ state: { ticker: "BTC-USD", interval: "1h", range: "3mo" }, version: 0 }));
   });
@@ -86,7 +88,7 @@ test("@smoke BTC hourly candle inspection updates OHLCV and restores the latest 
     socket.onMessage((message) => {
       const request = JSON.parse(String(message));
       if (request.op === "subscribe" && request.symbols?.includes("CRYPTO:BTC-USD")) {
-        socket.send(JSON.stringify({ type: "tick", symbol: "CRYPTO:BTC-USD", ltp: 67110, change: 10, change_pct: 0.01, ts: new Date().toISOString() }));
+        socket.send(JSON.stringify({ type: "tick", symbol: "CRYPTO:BTC-USD", ltp: 67110, change: 10, change_pct: 0.01, ts: now.toISOString() }));
       }
     });
   });
@@ -96,8 +98,11 @@ test("@smoke BTC hourly candle inspection updates OHLCV and restores the latest 
     if (url.pathname.endsWith("/crypto/candles")) {
       expect(url.searchParams.get("interval")).toBe("1h");
       data = { ticker: "BTC-USD", interval: "1h", currency: "USD", data: [
-        { t: hour - 7200, o: 65000, h: 67000, l: 64000, c: 66000, v: 100 },
-        { t: hour - 3600, o: 66000, h: 68000, l: 65000, c: 66944, v: 200 },
+        // Fill the fitted viewport with known historical candles, so a point
+        // inside the plot selects real data independent of platform bar spacing.
+        ...Array.from({ length: 39 }, (_, index) => ({
+          t: hour - (39 - index) * 3600, o: 65000, h: 67000, l: 64000, c: 66000, v: 100,
+        })),
         { t: hour, o: 66944, h: 67500, l: 66500, c: 67110, v: 300 },
       ] };
     } else if (url.pathname.endsWith("/quotes")) {
@@ -108,18 +113,20 @@ test("@smoke BTC hourly candle inspection updates OHLCV and restores the latest 
   await page.goto("/equity/stocks");
   const values = page.getByRole("group", { name: "Candle values" });
   await expect(values).toContainText("O:66944.00");
-  const canvas = page.locator("canvas").first();
+  // Lightweight Charts stacks an interaction canvas above its rendering
+  // canvas. Target the upper layer that actually receives pointer events.
+  const canvas = page.locator(".tv-lightweight-charts").first().locator("canvas").nth(1);
   await expect(canvas).toBeVisible();
+  await canvas.scrollIntoViewIfNeeded();
   const box = (await canvas.boundingBox())!;
-  let selected = false;
-  for (let x = box.width - 90; x > 20; x -= 12) {
-    await page.mouse.move(box.x + x, box.y + 50);
-    const text = await values.innerText();
-    if (text.includes("O:65000.00") || text.includes("O:66000.00")) { selected = true; break; }
-  }
-  expect(selected, "Hover must select a historical candle through the real chart").toBe(true);
-  const historical = await values.innerText();
-  expect(historical).toMatch(/V:(100|200)/);
+  await canvas.hover({ position: { x: Math.floor(box.width * 0.4), y: Math.floor(box.height * 0.4) } });
+  // Mouse dispatch is not a React/rendering barrier. Retry the observable result
+  // rather than sampling innerText immediately during a moving pixel scan.
+  await expect(values).toContainText("O:65000.00");
+  await expect(values).toContainText("H:67000.00");
+  await expect(values).toContainText("L:64000.00");
+  await expect(values).toContainText("C:66000.00");
+  await expect(values).toContainText("V:100");
   const latest = page.getByText("Latest Price", { exact: true }).locator("xpath=ancestor::section[1]");
   await expect(latest).toContainText("67,110.00");
   await page.mouse.move(5, 5);
