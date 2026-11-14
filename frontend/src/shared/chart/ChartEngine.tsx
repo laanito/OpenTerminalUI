@@ -377,7 +377,7 @@ export function ChartEngine({
     const onCrosshairMove = (param: { time?: Time }) => {
       const t = typeof param.time === "number" ? Number(param.time) : null;
       if (!t) {
-        onCrosshairOHLC?.(null);
+        crosshairCbRef.current?.(null);
         return;
       }
       const b = byTimeRef.current.get(t);
@@ -386,7 +386,8 @@ export function ChartEngine({
         return;
       }
       publish({ sourceId: panelId, timestamp: t, price: Number(b.close) });
-      crosshairCbRef.current?.({ open: Number(b.open), high: Number(b.high), low: Number(b.low), close: Number(b.close), time: t });
+      crosshairCbRef.current?.({ open: Number(b.open), high: Number(b.high), low: Number(b.low), close: Number(b.close), time: t,
+        volume: Number.isFinite(Number(b.volume)) ? Number(b.volume) : undefined });
     };
 
     chart.subscribeCrosshairMove(onCrosshairMove as never);

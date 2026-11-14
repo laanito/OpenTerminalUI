@@ -1211,8 +1211,33 @@ v2 evidence ideas do not automatically become compulsory sub-releases.
 - [x] Regress flat quote-only daily bars replaced by full history, interior/session
       corrections, identical-reference stability, page-to-chart forwarding and
       mid-candle streaming overlays. Production build and all 734 frontend tests
-      passed (125 files). Maintainer retest of the running instance remains open;
-      ticker/timeframe/hover details were requested, not assumed verified.
+      passed (125 files). PR #268 merged; maintainer retest reported the same
+      issue. These guards were real defects but insufficient to resolve it.
+- [x] Follow up on confirmed BTC-USD / 1h / unchanging hover. Read-only running
+      endpoint inspection reproduced a flat zero-volume quote at 10:36:33 after
+      its real 10:00 period. Coalesce recognizable off-grid Yahoo quote tails into
+      an existing fixed UTC crypto candle; preserve open/volume, update range/close.
+      Drop a quote for a missing period without inventing an open or switching
+      to differently grained fallback. Leave CoinGecko/weekly/monthly behavior.
+- [x] Select one complete OHLCV source in StockDetail: crosshair before latest.
+      Forward selected candle volume, clear on scope change and restore latest
+      through the current callback on chart leave. Unknown volume stays unknown.
+- [x] Replay the captured running BTC payload through normalization. Pass 30
+      focused backend tests, all 737 frontend tests (125 files), production build
+      and generated API check. Both installed-Chrome crypto stock-detail smoke
+      journeys pass, including a real hourly hover/leave regression.
+- [x] Harden #269's browser regression after its three-candle pixel scan failed
+      in CI despite passing locally. Target Lightweight Charts' upper interaction
+      canvas, populate a fitted 40-candle history, hold Date/tick/fixture times
+      consistent across hour boundaries, and retry assertions on all five actual
+      displayed OHLCV values after one stable hover. Keep leave/latest assertions.
+      Five stress runs passed at 6x CPU throttling; temporary throttling was removed
+      and the full 27-test installed-Chrome smoke suite passed with one worker.
+      The original scan also passed locally under throttling, so the precise CI
+      timing/coordinate sequence was not reproduced. This follow-up changes tests
+      only; it preserves the production candle/hover fixes and their expectations.
+- [ ] Obtain maintainer verification after merging/deploying the follow-up; local
+      read-only payload and browser fixture checks are not deployment acceptance.
 
 ### v2.8 planning — Durable news and sentiment evidence
 

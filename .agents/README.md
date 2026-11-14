@@ -116,10 +116,24 @@ corrections while keeping identical-input references stable. Legacy live candle
 overlays preserve the known open/extremes and use non-additive volume merging
 instead of replacing full history with a mid-bucket/zero-volume sample. Volume
 from overlapping partial aggregates remains incomplete; do not claim full traded
-volume or exchange-verified session boundaries from it. Regression fixtures use
-the reported price pattern; no exact live-provider reproduction/maintainer
-acceptance is implied. All 734 frontend tests and the production build passed.
-No backend/schema/provider changes. v2.8 browser/replay/sentiment work remains next.
+volume or exchange-verified session boundaries from it. PR #268 merged, but the
+maintainer reported the same symptom; its fixture coverage did not establish a
+complete live fix. The maintainer confirmed BTC-USD, 1h, with no hover change.
+Read-only checks against the running localhost:8019 hourly endpoint reproduced
+an off-grid 10:36:33 flat/zero-volume row after its real 10:00 candle. The crypto
+route now folds only recognizable Yahoo quote tails into an existing fixed UTC
+period, retaining its open/volume and extending range/close. A missing period
+omits the quote rather than inventing an open or invoking a differently grained
+fallback. CoinGecko and weekly/monthly periods are unchanged. Separately, the
+StockDetail toolbar's latest OHLCV prop overrode every crosshair selection; it
+now selects one complete candle with its own volume and clears on scope change.
+ChartEngine forwards volume and uses the latest callback on leave. The captured
+running payload passes the normalization check, 30 focused backend and all 737
+frontend tests pass, production build/API guard pass, and two isolated installed-
+Chrome smoke journeys pass, including actual hourly chart hover/leave. No schema,
+settings, dependency, provider additions, deployment or production DB changes.
+Maintainer post-merge verification of this follow-up remains open. v2.8 browser/
+replay/sentiment work remains next.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major

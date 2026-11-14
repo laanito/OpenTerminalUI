@@ -36,7 +36,7 @@ export type ChartEngineProps = {
   height?: number;
   market?: string;
   symbolIsFnO?: boolean;
-  onCrosshairOHLC?: (payload: { open: number; high: number; low: number; close: number; time: number } | null) => void;
+  onCrosshairOHLC?: (payload: { open: number; high: number; low: number; close: number; time: number; volume?: number } | null) => void;
   onTick?: (payload: { ltp: number; change_pct: number } | null) => void;
   onRealtimeMeta?: (payload: {
     status: "live" | "delayed" | "disconnected";

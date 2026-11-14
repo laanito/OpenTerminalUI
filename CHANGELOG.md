@@ -18,6 +18,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   captured-input reruns, sentiment integration and retention cleanup remain open.
 
 ### Fixed
+- **BTC hourly candles and inspection** — fold Yahoo's off-boundary, zero-volume
+  flat quote tail into an existing crypto period candle, preserving its open and
+  volume while updating close/extremes. Omit a quote-only tail when its period is
+  missing instead of inventing a period open. This normalization excludes
+  CoinGecko and non-fixed weekly/monthly intervals. Hovered OHLCV now takes
+  precedence over the latest candle, with volume from the same selected candle;
+  leaving the chart restores latest values and scope changes clear inspection.
 - **Stock-chart candle refreshes** — accept OHLCV and session corrections when
   candle timestamps and row counts stay unchanged. Full history can now replace
   a flat quote-only candle. Live aggregates starting mid-candle preserve the known

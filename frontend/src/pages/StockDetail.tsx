@@ -107,7 +107,7 @@ export function StockDetailPage() {
   const [chartType, setChartType] = useState<ChartKind>("candle");
   const [showIndicators, setShowIndicators] = useState(true);
   const [selectedIndicators, setSelectedIndicators] = useState<IndicatorConfig[]>([]);
-  const [crosshair, setCrosshair] = useState<{ open: number; high: number; low: number; close: number; time: number } | null>(null);
+  const [crosshair, setCrosshair] = useState<{ open: number; high: number; low: number; close: number; time: number; volume?: number } | null>(null);
   const [realtimeTick, setRealtimeTick] = useState<{ ltp: number; change_pct: number } | null>(null);
   const [chartRealtimeMeta, setChartRealtimeMeta] = useState<{
     status: "live" | "delayed" | "disconnected";
@@ -228,6 +228,10 @@ export function StockDetailPage() {
   }, [ticker, interval, range]);
 
   useEffect(() => {
+    setCrosshair(null);
+  }, [ticker, interval, range, extended]);
+
+  useEffect(() => {
     const inferred = intervalToTimeframe(interval);
     setSelectedChartTimeframe((prev) => ((prev === "2m" || prev === "30m") && inferred === "1m") ? prev : inferred);
   }, [interval]);
@@ -305,37 +309,14 @@ export function StockDetailPage() {
     ticker,
     stockClassification?.exchange ?? selectedMarket,
   );
-  const ohlcForToolbar =
-    crosshair ??
-    (chartRealtimeMeta.currentBar
-      ? {
-          open: chartRealtimeMeta.currentBar.open,
-          high: chartRealtimeMeta.currentBar.high,
-          low: chartRealtimeMeta.currentBar.low,
-          close: chartRealtimeMeta.currentBar.close,
-          time: chartRealtimeMeta.currentBar.time,
-        }
-      : null) ??
-    (chartPoints.length
-      ? (() => {
-          const last = chartPoints[chartPoints.length - 1];
-          return { open: last.o, high: last.h, low: last.l, close: last.c, time: last.t };
-        })()
-      : null);
-  const ohlcvForToolbar = chartRealtimeMeta.currentBar
-    ? {
-        open: chartRealtimeMeta.currentBar.open,
-        high: chartRealtimeMeta.currentBar.high,
-        low: chartRealtimeMeta.currentBar.low,
-        close: chartRealtimeMeta.currentBar.close,
-        volume: chartRealtimeMeta.currentBar.volume,
-      }
-    : chartPoints.length
+  // One selected candle supplies every field. A separate latest-bar OHLCV
+  // fallback used to override crosshair OHLC in the toolbar on every hover.
+  const selectedCandle = crosshair ?? chartRealtimeMeta.currentBar ?? (chartPoints.length
     ? (() => {
         const last = chartPoints[chartPoints.length - 1];
-        return { open: last.o, high: last.h, low: last.l, close: last.c, volume: last.v };
+        return { open: last.o, high: last.h, low: last.l, close: last.c, volume: last.v, time: last.t };
       })()
-    : null;
+    : null);
   const effectiveChartLiveStatus = chartRealtimeMeta.status;
   const deliveryOverlaySeries = useMemo(
     () =>
@@ -444,8 +425,8 @@ export function StockDetailPage() {
             currency={instrumentCurrency}
             ltp={displayedLatestPrice}
             changePct={displayedChangePct}
-            ohlc={ohlcForToolbar}
-            ohlcv={ohlcvForToolbar}
+            ohlc={selectedCandle}
+            ohlcv={selectedCandle}
             timeframe={timeframe}
             onTimeframeChange={(tf) => {
               setSelectedChartTimeframe(tf);
