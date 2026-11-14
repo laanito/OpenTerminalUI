@@ -98,7 +98,7 @@ duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety
 The first storage foundation now adds owner-scoped exact-text snapshots and
 append-only assessments, with additive migration `0019_news_evidence`. News/scoring
 routes are not wired to those tables yet; no cleanup runs. PR #266 is merged.
-The next increment adds explicit JWT comparison capture/list/reopen/delete APIs
+PR #267 is merged and adds explicit JWT comparison capture/list/reopen/delete APIs
 with self-contained evidence, public generation identity and exact dispatched
 model inputs (including format/token retries and repair), plus additive
 `0020_comparison_captures`. Existing generation endpoints remain ephemeral; no
@@ -107,6 +107,19 @@ is implied. Inline evidence cannot expire underneath a retained capture. Read
 `docs/wiki/News-Evidence-Contract.md` for the audited legacy gaps and storage
 boundary. Retention duration, browser review, rerun/refresh linkage and scoring
 integration remain open. See the roadmap planning section.
+
+Maintainer stock-view feedback on 2026-11-14 interrupted the next v2.8 slice:
+flat OHLCV beside a newer quote. Both StockDetail and useRealtimeChart discarded
+history corrections when counts/endpoint timestamps matched. They now compare
+complete normalized bars (including session metadata), accepting in-place
+corrections while keeping identical-input references stable. Legacy live candle
+overlays preserve the known open/extremes and use non-additive volume merging
+instead of replacing full history with a mid-bucket/zero-volume sample. Volume
+from overlapping partial aggregates remains incomplete; do not claim full traded
+volume or exchange-verified session boundaries from it. Regression fixtures use
+the reported price pattern; no exact live-provider reproduction/maintainer
+acceptance is implied. All 734 frontend tests and the production build passed.
+No backend/schema/provider changes. v2.8 browser/replay/sentiment work remains next.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
 The inherited layout audit is the discovery step for a dedicated future major

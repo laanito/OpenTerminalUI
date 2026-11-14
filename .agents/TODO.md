@@ -1200,6 +1200,20 @@ New providers, broad regional expansion, full historical archives, technical
 thesis validation and frontend overhaul are outside this milestone. Remaining
 v2 evidence ideas do not automatically become compulsory sub-releases.
 
+### Stock-detail candle refresh correction — 2026-11-14
+
+- [x] Fix StockDetail and shared realtime history guards dropping in-place OHLCV
+      corrections at unchanged row counts/timestamps. Keep stable references only
+      for identical normalized values and session metadata.
+- [x] Preserve known open/extremes/volume when a legacy streaming aggregate starts
+      within a seeded candle. Do not sum overlapping volume totals; partial stream
+      coverage is not full-period traded volume.
+- [x] Regress flat quote-only daily bars replaced by full history, interior/session
+      corrections, identical-reference stability, page-to-chart forwarding and
+      mid-candle streaming overlays. Production build and all 734 frontend tests
+      passed (125 files). Maintainer retest of the running instance remains open;
+      ticker/timeframe/hover details were requested, not assumed verified.
+
 ### v2.8 planning — Durable news and sentiment evidence
 
 Maintainer requirement agreed 2026-11-11: news and sentiment used as references
@@ -1226,7 +1240,7 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
 - [ ] Wire the reviewed text/assessment storage into selected sentiment scoring
       and captures, preserving method/model/prompt/context identity and actual
       scoring times through cache hits. Label legacy gaps; never overwrite history.
-- [x] Add explicit JWT comparison capture/list/reopen/delete APIs. Retain complete
+- [x] Add explicit JWT comparison capture/list/reopen/delete APIs (PR #267 merged). Retain complete
       bounded evidence/result or typed failure, normalized selectors, public model
       identity and exact dispatched JSON bodies including augmentation, client
       format/token retries and repair; never credentials/settings. Reopen uses DB
