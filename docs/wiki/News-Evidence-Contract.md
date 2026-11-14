@@ -1,10 +1,12 @@
 # Durable news evidence — v2.8 foundation
 
-Status: v2.8 storage/capture foundation, 2026-11-13. The existing news APIs and
+Status: v2.8 storage/capture and browser review, 2026-11-14. The existing news APIs and
 scorers do **not yet write the text/assessment tables**. Explicit comparison
 capture now stores its own complete evidence/results inline; existing comparison
-generation endpoints remain ephemeral. Browser save/review, captured-input reruns,
-retention UX and headline-sentiment integration remain future work. This contract
+generation endpoints remain ephemeral. The browser now offers an explicit saved
+run with paginated review, original evidence/input inspection and deletion.
+Captured-input reruns, linked refresh, configurable retention cleanup and
+headline-sentiment integration remain future work. This contract
 supports repeatable evidence; it does not promise identical model prose.
 
 ## Existing paths and provenance gaps
@@ -122,11 +124,27 @@ original contents using only the database, without live providers or inference.
 Saved JSON is returned verbatim rather than applying defaults/field projection
 from the current generation models.
 Each new POST fetches fresh evidence and produces a new ID; there is no
-captured-input rerun or parent-run linkage yet. The browser still uses existing
-generation endpoints and does not yet offer this save flow. This API uses a
-synchronous JSON response, not a new progress stream. Transport disconnection
-does not prove that a synchronous server operation stopped or did not save;
-there is no automatic retry or idempotency promise.
+captured-input rerun or parent-run linkage yet. The synchronous POST retains its
+JSON response. The browser's explicit **Generate and save briefing** action uses
+`POST /api/market-context/briefing-captures/stream` for bounded NDJSON progress.
+One resolved Deep profile and the same collection/synthesis deadlines apply.
+Only a committed record produces a final capture result; model failures retain
+their original typed outcome. The stream uses detached JSON bodies and emits no
+unchecked model deltas. Closing the stream cancels unfinished source/model work;
+a commit that completed before disconnection is not undone. Refresh saved history
+if acknowledgement was lost. There is no automatic retry or idempotency promise.
+
+**Generate briefing** continues to produce a temporary result; choosing save
+starts a separate fresh run rather than quietly resynthesizing a visible answer.
+**Review saved briefings** pages through the owner's records (20 per page),
+reopens the original result/evidence through the same citation viewer, and offers
+plain-text original model-input inspection and confirmed deletion. Saved scope
+and dates are labelled separately from the active live page. Scope changes abort
+and discard late in-flight responses. Raw retained JSON is not hydrated with new
+defaults; unsupported browser formats fail explicitly without changing storage.
+Listing projects only selection/summary columns from JSON rather than loading
+full evidence/input payloads for every row; this uses portable SQLAlchemy JSON
+projection, covered by SQLite and the guarded PostgreSQL contract.
 
 `DELETE /api/market-context/briefing-captures/{id}` explicitly removes only the
 owner's capture and its embedded evidence; another owner's ID returns the same
@@ -148,8 +166,11 @@ captures have no automatic expiry. Future cleanup must preserve their embedded
 inputs/results while retained; deleting a capture releases its own inline data.
 A 4,000,000-byte serialized UTF-8 cap rejects oversized captures with 413 before
 inserting; nothing is silently dropped. Storage errors return 503 without
-claiming retention. Ambiguous commit/network failures can require listing captures
-to confirm whether a record exists.
+claiming retention. The stream reports allowlisted `capture_too_large` or
+`capture_not_confirmed` errors. Its reader permits a bounded 4,100,000-character
+record including receipt metadata; legacy ephemeral stream bounds are unchanged.
+Ambiguous commit/network failures can require listing captures to confirm whether
+a record exists.
 
 Additive migration `0020_comparison_captures` follows `0019_news_evidence`, changes
 no existing rows and retains the new table on downgrade. SQLite migration,
@@ -157,6 +178,7 @@ restart/provider-edit, privacy, repair/dispatch and optional-source tests run
 locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
 explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
 
-Next: browser save/review and captured-input rerun versus linked refresh,
-selected-headline sentiment/assessment integration, then configurable
-reference-aware retention and deletion UX. See [Roadmap](Roadmap.md).
+Next: captured-input rerun versus linked refresh, selected-headline
+sentiment/assessment integration, then configurable reference-aware retention.
+Browser save/review/deletion is implemented; it does not introduce a private Brain
+index or shared evidence-blob lifecycle. See [Roadmap](Roadmap.md).

@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **481 operations** across **429 paths** and **87 families**.
-- Authentication: **436 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **482 operations** across **430 paths** and **87 families**.
+- Authentication: **437 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 27 |
+| `market-context` | `experimental` | 28 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -680,6 +680,7 @@ State: **experimental**
 | `POST` | `/api/market-context/briefing` | Bearer token | Create Comparison Briefing |
 | `GET` | `/api/market-context/briefing-captures` | Bearer token | List Captures |
 | `POST` | `/api/market-context/briefing-captures` | Bearer token | Create Capture |
+| `POST` | `/api/market-context/briefing-captures/stream` | Bearer token | Stream Capture |
 | `DELETE` | `/api/market-context/briefing-captures/{capture_id}` | Bearer token | Delete Capture |
 | `GET` | `/api/market-context/briefing-captures/{capture_id}` | Bearer token | Get Capture |
 | `POST` | `/api/market-context/briefing-context` | Bearer token | Create Context Briefing |

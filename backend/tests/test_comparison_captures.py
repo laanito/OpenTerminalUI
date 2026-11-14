@@ -341,3 +341,57 @@ def test_reopen_returns_retained_json_without_todays_schema_projection(store, mo
         db.execute(sa.update(ComparisonCaptureORM).where(ComparisonCaptureORM.id == saved["id"]).values(payload=original))
         db.commit()
     assert client.get(f"{URL}/{saved['id']}").json()["content"] == original
+
+
+@pytest.mark.parametrize("context,enabled", [(False, True), (True, True), (False, False)])
+def test_capture_stream_acknowledges_only_committed_owner_record(store, monkeypatch, context, enabled):
+    client, factory, owner, _ = store
+    setup_provider(monkeypatch, context=context, enabled=enabled)
+    selection = {**SELECTION, **({"context": {"news": True, "macro_regions": ["us", "euro_area"]}} if context else {})}
+    response = client.post(f"{URL}/stream", json=selection)
+    assert response.status_code == 200 and "application/x-ndjson" in response.headers["content-type"]
+    events = [json.loads(line) for line in response.text.splitlines()]
+    assert events[0]["type"] == "start" and events[0]["deadlines"]["model_seconds"] == 1
+    assert events[-1]["type"] == "result"
+    saved = events[-1]["result"]
+    assert saved["mode"] == ("context" if context else "price")
+    assert saved["status"] == ("complete" if enabled else "unavailable")
+    assert client.get(f"{URL}/{saved['id']}").json() == saved
+    owner["id"] = "other"
+    assert client.get(f"{URL}/{saved['id']}").status_code == 404
+    assert "PRIVATE-CONFIGURED-KEY" not in response.text and "private-endpoint.test" not in response.text
+
+
+def test_stream_rejects_invalid_scope_before_headers_and_sanitizes_storage_failure(store, monkeypatch):
+    client, _, _, _ = store
+    _, calls, preparations = setup_provider(monkeypatch)
+    assert client.post(f"{URL}/stream", json={**SELECTION, "comparisons": ["AAPL"]}).status_code == 422
+    assert calls == [] and preparations == []
+    def failure(*args): raise RuntimeError("PRIVATE-STORAGE-DETAIL")
+    monkeypatch.setattr(Session, "commit", failure)
+    response = client.post(f"{URL}/stream", json=SELECTION)
+    events = [json.loads(line) for line in response.text.splitlines()]
+    assert events[-1]["type"] == "error" and events[-1]["error"]["code"] == "capture_not_confirmed"
+    assert "PRIVATE-STORAGE-DETAIL" not in response.text
+    assert client.get(URL).json() == []
+
+
+@pytest.mark.asyncio
+async def test_closing_capture_stream_cancels_collection_and_never_commits_partial_work(store, monkeypatch):
+    _, factory, _, _ = store
+    started, cancelled = asyncio.Event(), asyncio.Event()
+    async def slow(*args, **kwargs):
+        started.set()
+        try: await asyncio.sleep(60)
+        finally: cancelled.set()
+    monkeypatch.setattr(briefings, "_run_briefing", slow)
+    with factory() as db:
+        response = await routes.stream_capture(routes.ComparisonCaptureRequest(**SELECTION),
+            user=SimpleNamespace(id="owner"), db=db, fetcher=None, economic_service=None, sec_client=None)
+        iterator = response.body_iterator
+        assert json.loads(await anext(iterator))["type"] == "start"
+        assert json.loads(await anext(iterator))["type"] == "progress"
+        await started.wait()
+        await iterator.aclose()
+        assert cancelled.is_set()
+        assert db.scalar(sa.select(sa.func.count()).select_from(ComparisonCaptureORM)) == 0

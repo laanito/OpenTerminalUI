@@ -752,7 +752,9 @@ assessments, an additive migration and storage tests. This foundation is not yet
 wired to existing news/scoring routes. Explicit comparison capture now retains
 full bounded evidence/results and dispatched model inputs, with owner-scoped
 list/reopen/delete APIs and additive `0020_comparison_captures`; existing generation
-endpoints remain ephemeral. Browser save/review, rerun/refresh linkage and sentiment
+endpoints remain ephemeral. The browser now offers explicit generate-and-save,
+paginated saved review, original citation/input inspection and deletion, backed
+by a cancellable capture progress stream. Rerun/refresh linkage and sentiment
 integration remain open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.

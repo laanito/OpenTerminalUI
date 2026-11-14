@@ -33510,6 +33510,61 @@
         }
       }
     },
+    "/api/market-context/briefing-captures/stream": {
+      "post": {
+        "description": "Explicitly generate and retain with progress; existing ephemeral APIs remain unchanged.",
+        "operationId": "stream_capture_api_market_context_briefing_captures_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparisonCaptureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "NDJSON start with source/model budgets, progress including saving_capture, and one final CaptureDetail only after commit, or a safe error. Disconnect cancels collection and synthesis; an interrupted acknowledgement can leave a completed capture, so list saved records before retrying.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Capture",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
     "/api/market-context/briefing-captures/{capture_id}": {
       "delete": {
         "description": "Explicitly delete the owner's self-contained capture and embedded evidence.",
