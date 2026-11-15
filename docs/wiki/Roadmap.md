@@ -765,8 +765,11 @@ paginated saved review, original citation/input inspection and deletion, backed
 by a cancellable capture progress stream. Saved-input reruns and separately
 linked fresh-data refreshes now preserve the original while storing independent
 children with lineage. Reruns freeze prompts/evidence and use the current Deep
-model for one checked completion; refresh uses current collection/prompts. Sentiment
-integration remains open. See [News evidence contract](News-Evidence-Contract.md)
+model for one checked completion; refresh uses current collection/prompts. Explicit
+saved-headline assessment APIs now retain exact selected source text and separate
+keyword tone/Fast asset implication, including original scoring times across
+cache reuse and actual model inputs. Browser sentiment selection/review and
+checked Deep integration remain open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
 

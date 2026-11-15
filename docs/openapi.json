@@ -700,6 +700,61 @@
         "title": "AskResponse",
         "type": "object"
       },
+      "AssessmentGeneration": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessmentModelRequest"
+            },
+            "maxItems": 12,
+            "title": "Attempts",
+            "type": "array"
+          },
+          "context_hash": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Context Hash",
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/LLMProfileIdentity"
+          },
+          "protocol": {
+            "const": "openai_compatible_chat_completions",
+            "default": "openai_compatible_chat_completions",
+            "title": "Protocol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile",
+          "context_hash"
+        ],
+        "title": "AssessmentGeneration",
+        "type": "object"
+      },
+      "AssessmentModelRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "additionalProperties": true,
+            "title": "Body",
+            "type": "object"
+          },
+          "dispatched_at": {
+            "format": "date-time",
+            "title": "Dispatched At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dispatched_at",
+          "body"
+        ],
+        "title": "AssessmentModelRequest",
+        "type": "object"
+      },
       "AutocorrRequest": {
         "properties": {
           "lookback_days": {
@@ -4603,6 +4658,44 @@
           "context"
         ],
         "title": "ComparisonContextEvidenceRequest",
+        "type": "object"
+      },
+      "ComparisonNewsOrigin": {
+        "additionalProperties": false,
+        "properties": {
+          "capture_content_hash": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Capture Content Hash",
+            "type": "string"
+          },
+          "capture_id": {
+            "maxLength": 36,
+            "minLength": 1,
+            "title": "Capture Id",
+            "type": "string"
+          },
+          "citation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Citation Ids",
+            "type": "array"
+          },
+          "kind": {
+            "const": "saved_comparison_headlines",
+            "default": "saved_comparison_headlines",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capture_id",
+          "capture_content_hash",
+          "citation_ids"
+        ],
+        "title": "ComparisonNewsOrigin",
         "type": "object"
       },
       "CompileError": {
@@ -8781,6 +8874,29 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HeadlineSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "citation_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "target_symbol": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Target Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "target_symbol"
+        ],
+        "title": "HeadlineSelection",
         "type": "object"
       },
       "HistoricalAnalyticsIssue": {
@@ -13555,6 +13671,96 @@
           "news"
         ],
         "title": "NewsSummary",
+        "type": "object"
+      },
+      "NewsText": {
+        "additionalProperties": false,
+        "properties": {
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComparisonNewsOrigin"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "publisher": {
+            "maxLength": 1024,
+            "title": "Publisher",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_url": {
+            "maxLength": 8192,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "maxLength": 65536,
+            "title": "Summary",
+            "type": "string"
+          },
+          "symbols": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Symbols",
+            "type": "array"
+          },
+          "text_scope": {
+            "enum": [
+              "headline_only",
+              "headline_and_summary"
+            ],
+            "title": "Text Scope",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 16384,
+            "title": "Title",
+            "type": "string"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "title",
+          "source_url",
+          "publisher",
+          "retrieved_at",
+          "text_scope"
+        ],
+        "title": "NewsText",
         "type": "object"
       },
       "NoteCreate": {
@@ -18608,6 +18814,71 @@
         "title": "RestrictedRequest",
         "type": "object"
       },
+      "RetainedAssessment": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/SentimentAssessment"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "recorded_at",
+          "payload"
+        ],
+        "title": "RetainedAssessment",
+        "type": "object"
+      },
+      "RetainedHeadline": {
+        "properties": {
+          "assessments": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedAssessment"
+            },
+            "title": "Assessments",
+            "type": "array"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NewsText"
+          },
+          "retention": {
+            "const": "retained_no_automatic_expiry",
+            "default": "retained_no_automatic_expiry",
+            "title": "Retention",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "captured_at",
+          "content_hash",
+          "payload",
+          "assessments"
+        ],
+        "title": "RetainedHeadline",
+        "type": "object"
+      },
       "RiskInsightEnvelope": {
         "additionalProperties": true,
         "properties": {
@@ -20386,6 +20657,226 @@
           "weight_pct"
         ],
         "title": "SectorAllocationSectorResponse",
+        "type": "object"
+      },
+      "SelectedHeadlines": {
+        "additionalProperties": false,
+        "properties": {
+          "headlines": {
+            "items": {
+              "$ref": "#/components/schemas/HeadlineSelection"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Headlines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "headlines"
+        ],
+        "title": "SelectedHeadlines",
+        "type": "object"
+      },
+      "SentimentAssessment": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "confidence_kind": {
+            "default": "not_provided",
+            "enum": [
+              "heuristic",
+              "not_provided"
+            ],
+            "title": "Confidence Kind",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "generation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentGeneration"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_text": {
+            "maxLength": 131072,
+            "minLength": 1,
+            "title": "Input Text",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "enum": [
+                  "bullish",
+                  "bearish",
+                  "neutral"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "meaning": {
+            "enum": [
+              "text_tone",
+              "asset_implication"
+            ],
+            "title": "Meaning",
+            "type": "string"
+          },
+          "method": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Method",
+            "type": "string"
+          },
+          "method_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Method Version",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "maxLength": 16384,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "reused_from_cache": {
+            "default": false,
+            "title": "Reused From Cache",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": -1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "scored_at": {
+            "format": "date-time",
+            "title": "Scored At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "fallback",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_symbol": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Symbol"
+          }
+        },
+        "required": [
+          "meaning",
+          "method",
+          "method_version",
+          "input_text",
+          "scored_at",
+          "status"
+        ],
+        "title": "SentimentAssessment",
         "type": "object"
       },
       "SignalSummary": {
@@ -33565,7 +34056,7 @@
         }
       },
       "post": {
-        "description": "Generate from fresh server-fetched selections and explicitly retain the run.\n\nStores complete bounded evidence, checked answer or typed failure, and exact\nmodel request bodies (including client format/token retries and repair).\nNo browser-supplied result/provenance is accepted. No indexing or automatic\nexpiry. Existing briefing endpoints remain ephemeral. No captured-input rerun\nis exposed yet; another POST fetches new evidence and creates a new capture.",
+        "description": "Generate from fresh server-fetched selections and explicitly retain the run.\n\nStores complete bounded evidence, checked answer or typed failure, and exact\nmodel request bodies (including client format/token retries and repair).\nNo browser-supplied result/provenance is accepted. No indexing or automatic\nexpiry. Existing briefing endpoints remain ephemeral. Another initial POST\nfetches fresh evidence; separate follow-up endpoints rerun saved inputs or\nrefresh a saved selection into a new linked capture.",
         "operationId": "create_capture_api_market_context_briefing_captures_post",
         "requestBody": {
           "content": {
@@ -33899,6 +34390,156 @@
           }
         ],
         "summary": "Stream Rerun",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-captures/{capture_id}/sentiment": {
+      "get": {
+        "description": "Owner-only retained assessments for this source ID, including a deleted source.\n\nNo live fetch/model work or current-model defaults. Unknown and other-owner\nsource IDs return an empty list. Each record remains independently readable.",
+        "operationId": "list_headline_sentiment_api_market_context_briefing_captures__capture_id__sentiment_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 10000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetainedHeadline"
+                  },
+                  "title": "Response List Headline Sentiment Api Market Context Briefing Captures  Capture Id  Sentiment Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Headline Sentiment",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      },
+      "post": {
+        "description": "Assess up to ten explicitly selected saved headlines and retain both methods.\n\nTargets must match their saved news groups. Deduplicate exact repeated\nsource/target observations across selected pair-local references. No live\ntext fetch or legacy-score promotion. Fast judges asset implication;\ndeterministic keyword tone is separate and never masks a failed model.\nOriginal capture/result stays unchanged; Deep interpretation is not rerun.\nOne transaction stores the selected text plus independent assessments.\nCache hits preserve original scoring times, model inputs and context identity.\nRetained until explicit future lifecycle policy; no automatic expiry.",
+        "operationId": "capture_headline_sentiment_api_market_context_briefing_captures__capture_id__sentiment_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedHeadlines"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetainedHeadline"
+                  },
+                  "title": "Response Capture Headline Sentiment Api Market Context Briefing Captures  Capture Id  Sentiment Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Capture Headline Sentiment",
         "tags": [
           "market-context"
         ],
@@ -36913,6 +37554,61 @@
         },
         "x-openterminalui-feature-state": {
           "news": "supported"
+        }
+      }
+    },
+    "/api/news/evidence/{snapshot_id}": {
+      "get": {
+        "description": "Read exact retained text and assessments, even after a source capture is deleted.\n\nNo providers or scoring. Another owner's ID is indistinguishable from unknown.",
+        "operationId": "read_headline_api_news_evidence__snapshot_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetainedHeadline"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read Headline",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
         }
       }
     },

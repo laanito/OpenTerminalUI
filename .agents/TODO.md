@@ -92,7 +92,7 @@ versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
 referenced evidence; unreferenced retention must be configurable, with its exact
 duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
-Storage/capture foundations are merged; browser review PR #270 is merged. Scoring linkage and retention work remain open; see the
+Capture/review/follow-up foundations are merged through #272. Durable selected-headline scoring APIs are implemented; browser/Deep sentiment linkage and retention remain open; see the
 current v2.8 checklist below.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
@@ -1264,9 +1264,11 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
 - [ ] Agree an explicit configurable unreferenced retention window. Keep evidence
       pinned while a saved analysis references it; define expiry, shared-reference
       release and owner-authorized deletion/missing-source behavior.
-- [ ] Wire the reviewed text/assessment storage into selected sentiment scoring
-      and captures, preserving method/model/prompt/context identity and actual
-      scoring times through cache hits. Label legacy gaps; never overwrite history.
+- [ ] Finish text/assessment integration into comparison captures. Durable selected
+      scoring APIs are implemented below; browser selection and new checked Deep
+      analyses with explicit retained references remain open. Preserve method/model/
+      prompt/context identity and actual scoring times through cache hits. Label
+      legacy gaps; never overwrite history.
 - [x] Add explicit JWT comparison capture/list/reopen/delete APIs (PR #267 merged). Retain complete
       bounded evidence/result or typed failure, normalized selectors, public model
       identity and exact dispatched JSON bodies including augmentation, client
@@ -1312,7 +1314,30 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       follow-up journeys cover exact scope, current
       model, both lineage kinds, original preservation and deleted-source review.
       The guarded PostgreSQL contract now checks lineage JSON projection and
-      child survival after parent deletion. Maintainer review remains pending.
+      child survival after parent deletion. PR #272 is merged.
+- [x] Implement explicit durable selected-headline scoring APIs using existing
+      evidence tables. POST `/{capture_id}/sentiment` selects 1–10 owned saved
+      headline citations and exact news-group target symbols. Reject browser text,
+      invalid/duplicate references, unsupported evidence and integrity failures
+      before scoring. Deduplicate exact selected source/target pair copies while
+      retaining all selected citation IDs. No live article fetch or legacy-score
+      promotion. Atomically retain text plus separate deterministic keyword-tone
+      and Fast asset-implication assessments; model failures remain failed with
+      no fabricated neutral, baseline fallback or confidence. Missing verdicts
+      remain explicit alongside valid ones. Current comparison results are unchanged.
+      Preserve exact batch prompts/schema/targets, public profile, actual dispatched
+      bodies/times and original scoring times through owner/profile/context cache
+      hits. Cache TTL15min is not evidence retention; cache I/O bound2s. GET source
+      sentiment pages and `/api/news/evidence/{snapshot_id}` return raw retained
+      payloads without providers/models; deletion of source does not hide records.
+      The synchronous POST may finish after a client disconnect; list before
+      manually retrying an ambiguous reply. No migration, old-row rewrite,
+      provider/dependency/API-key changes or cleanup. UI/Deep integration is next.
+- [x] Verify 370 focused research/scoring tests plus 57 legacy news/auth tests,
+      API generation check, surface inventory (487 operations/87 families), mock
+      and whitespace guards. Three PostgreSQL-only tests remain in guarded CI;
+      extend that lane with nested origin JSON filtering and owner-only reads.
+      No frontend behavior changed. Maintainer review remains pending.
 - [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
       interpretation and inspectable retained references. Preserve failures,
       disagreements, deduplication and coverage; no market-wide sentiment claim.

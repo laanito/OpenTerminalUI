@@ -55,7 +55,7 @@ def test_news_evidence_round_trip_and_owner_constraint_on_postgres() -> None:
     from sqlalchemy.orm import Session
     from sqlalchemy.exc import IntegrityError
     from backend.models import User, NewsSentimentAssessmentORM
-    from backend.services.news_evidence import NewsText, SentimentAssessment, capture_text, append_assessment, get_text
+    from backend.services.news_evidence import NewsText, SentimentAssessment, ComparisonNewsOrigin, capture_text, append_assessment, get_text
 
     # Always roll back, even on assertion failure; the lane is disposable but
     # this contract need not leave test research behind.
@@ -70,6 +70,7 @@ def test_news_evidence_round_trip_and_owner_constraint_on_postgres() -> None:
                 snapshot = capture_text(db, user_id=owner, evidence=NewsText(
                     title="Exact headline", source_url="https://example.test/story", publisher="Example",
                     retrieved_at=now, text_scope="headline_only",
+                    origin=ComparisonNewsOrigin(capture_id="retained-source", capture_content_hash="a"*64, citation_ids=("C1G1H1",)),
                 ))
                 result = append_assessment(db, user_id=owner, snapshot_id=snapshot.id, assessment=SentimentAssessment(
                     meaning="text_tone", method="lexicon", method_version="v1", input_text="Exact headline",
@@ -80,6 +81,14 @@ def test_news_evidence_round_trip_and_owner_constraint_on_postgres() -> None:
                 assert snapshot.captured_at.tzinfo is not None
                 assert result.payload["scored_at"] == now.isoformat().replace("+00:00", "Z")
                 assert get_text(db, user_id=other, snapshot_id=snapshot.id) is None
+                import json
+                from types import SimpleNamespace
+                from backend.api.routes.comparison_captures import list_headline_sentiment
+                retained = json.loads(list_headline_sentiment("retained-source", limit=20, offset=0, user=SimpleNamespace(id=owner), db=db).body)
+                assert retained[0]["id"] == snapshot.id
+                assert retained[0]["payload"]["origin"]["citation_ids"] == ["C1G1H1"]
+                assert retained[0]["assessments"][0]["payload"] == result.payload
+                assert json.loads(list_headline_sentiment("retained-source", limit=20, offset=0, user=SimpleNamespace(id=other), db=db).body) == []
                 with pytest.raises(IntegrityError), db.begin_nested():
                     db.add(NewsSentimentAssessmentORM(
                         id=str(uuid4()), user_id=other, snapshot_id=snapshot.id, recorded_at=now, payload={},
