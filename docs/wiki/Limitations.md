@@ -383,6 +383,14 @@ never silently faked.
   and separates security, currency, and interaction return. Missing price,
   denomination, or FX history produces a partial result instead of a guessed
   curve; frontend display conversion is not part of the accounting contract.
+  Home's **30-day open-holdings comparison** explicitly resolves the primary
+  portfolio ID and shows the actual shared date range in the last 30 UTC calendar
+  days. Both lines start at index 100 on the first shared date and share one scale;
+  neither is forced to today's net liquidation value. Empty/failed/unsupported
+  or partial history has no chart, sample curve or retained old line. Historical
+  FX degradation and withheld invalid/conflicting observations are disclosed.
+  Today's net-liquidation card has no implied historical sparkline. A full NAV
+  or cash-flow-adjusted transaction-ledger curve remains unimplemented.
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,
   quote-backed simulator, not broker execution, and it does not update Paper
   portfolios. Ops shows measured system state only; global restricted-list and

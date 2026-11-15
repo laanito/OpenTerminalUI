@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,6 +16,7 @@ import { fetchChainSummary } from "../fno/api/fnoApi";
 import { HomePage } from "../pages/HomePage";
 
 const navigateSpy = vi.fn();
+const settings = vi.hoisted(() => ({ selectedMarket: "NSE" }));
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
@@ -60,7 +61,7 @@ vi.mock("../store/settingsStore", () => ({
     }) => unknown,
   ) =>
     selector({
-      selectedMarket: "NSE",
+      selectedMarket: settings.selectedMarket,
       displayCurrency: "INR",
       realtimeMode: "polling",
       newsAutoRefresh: true,
@@ -80,6 +81,9 @@ vi.mock("../api/client", () => ({
 vi.mock("../fno/api/fnoApi", () => ({
   fetchChainSummary: vi.fn(),
 }));
+
+// Home history tests do not exercise model health or generation.
+vi.mock("../components/terminal/AiInsightCard", () => ({ AiInsightCard: () => null }));
 
 // Layout-focused test: stub the currency hook so it doesn't pull react-query
 // (cross-rates / market-status) into the render without a QueryClientProvider.
@@ -109,9 +113,11 @@ function renderPage() {
 
 describe("HomePage mission-control revamp", () => {
   beforeEach(() => {
-    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-03-11T12:00:00Z"));
     navigateSpy.mockReset();
     sessionStorage.clear();
+    settings.selectedMarket = "NSE";
 
     vi.mocked(fetchPortfolio).mockResolvedValue({
       items: [
@@ -159,6 +165,7 @@ describe("HomePage mission-control revamp", () => {
 
     vi.mocked(fetchPortfolioBenchmarkOverlay).mockResolvedValue({
       benchmark: "NIFTY50",
+      base_currency: "USD", status: "complete", methodology: "current_open_holdings_constant_quantity", issues: [], degraded_reasons: [],
       alpha: 0.02,
       tracking_error: 0.12,
       equity_curve: [
@@ -207,6 +214,63 @@ describe("HomePage mission-control revamp", () => {
     sessionStorage.clear();
   });
 
+  function history() { return screen.getByRole("region", { name: "Primary portfolio historical comparison" }); }
+  it("shows indexed open holdings with explicit scope and methodology, independently of today's net liquidation value", async () => {
+    renderPage();
+    await waitFor(() => expect(history()).toHaveTextContent("History available"));
+    expect(history()).toHaveTextContent("Primary portfolio · Primary");
+    expect(history()).toHaveTextContent("excludes cash, closed positions and transaction-ledger returns");
+    expect(history()).toHaveTextContent("Open holdings 107.83 index");
+    expect(history()).toHaveTextContent("Benchmark (NIFTY50) 106.33 index");
+    expect(history()).not.toHaveTextContent("$2480000");
+    expect(history()).not.toHaveTextContent("Synced");
+    expect(screen.queryByRole("img", { name: "Net liquidation trend" })).not.toBeInTheDocument();
+  });
+  it.each(["failed", "empty", "old"])("shows an honest empty state for %s history instead of sample values", async (kind) => {
+    if (kind === "failed") vi.mocked(fetchPortfolioBenchmarkOverlay).mockRejectedValue(new Error("Unavailable"));
+    else vi.mocked(fetchPortfolioBenchmarkOverlay).mockResolvedValue({ base_currency: "USD", status: "complete",
+      methodology: "current_open_holdings_constant_quantity", benchmark: "SPY", issues: [], degraded_reasons: [],
+      equity_curve: kind === "old" ? [{ date: "2025-01-01", portfolio: 1, benchmark: 1 }, { date: "2025-01-02", portfolio: 2, benchmark: 2 }] : [], alpha: 0, tracking_error: 0 });
+    renderPage();
+    await waitFor(() => expect(history()).toHaveTextContent("History unavailable"));
+    expect(within(history()).queryByRole("group", { name: "Primary open-holdings indexed comparison" })).not.toBeInTheDocument();
+    expect(history().querySelector("svg")).toBeNull(); expect(history()).not.toHaveTextContent("24300000");
+  });
+  it("clears a previously valid curve when the next refresh fails and does not overlap polls", async () => {
+    const interval = vi.spyOn(window, "setInterval");
+    renderPage();
+    await waitFor(() => expect(history()).toHaveTextContent("History available"));
+    const poll = interval.mock.calls.find(([, delay]) => delay === 30000)![0] as () => void;
+    let reject!: (reason: Error) => void;
+    vi.mocked(fetchPortfolioBenchmarkOverlay).mockReturnValue(new Promise((_, fail) => { reject = fail; }));
+    act(() => { poll(); poll(); });
+    await waitFor(() => expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledTimes(2));
+    expect(history()).toHaveTextContent("Loading history"); expect(history().querySelector("svg")).toBeNull();
+    await act(async () => reject(new Error("History failed")));
+    await waitFor(() => expect(history()).toHaveTextContent("History unavailable"));
+    expect(history()).toHaveTextContent("No previous curve is shown"); expect(history().querySelector("svg")).toBeNull();
+    interval.mockRestore();
+  });
+  it("ignores an earlier scope response and does not fetch its analytics after the scope changes", async () => {
+    const original = await vi.mocked(fetchPortfolio)();
+    let finish!: (value: typeof original) => void;
+    vi.mocked(fetchPortfolio).mockClear();
+    vi.mocked(fetchPortfolio).mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }))
+      .mockResolvedValue({ ...original, portfolio_id: "new-primary", portfolio_name: "New primary" });
+    const view = renderPage();
+    settings.selectedMarket = "US";
+    view.rerender(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><HomePage /></MemoryRouter>);
+    await waitFor(() => expect(history()).toHaveTextContent("Primary portfolio · New primary"));
+    await act(async () => finish({ ...original, portfolio_id: "old-primary", portfolio_name: "Old primary" }));
+    expect(history()).not.toHaveTextContent("Old primary");
+    expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledExactlyOnceWith(undefined, "new-primary");
+  });
+  it("does not request historical analytics for an empty primary portfolio", async () => {
+    const original = await vi.mocked(fetchPortfolio)();
+    vi.mocked(fetchPortfolio).mockClear(); vi.mocked(fetchPortfolio).mockResolvedValue({ ...original, items: [] });
+    renderPage(); await waitFor(() => expect(history()).toHaveTextContent("No open holdings in the primary portfolio"));
+    expect(fetchPortfolioBenchmarkOverlay).not.toHaveBeenCalled();
+  });
   it("preserves the existing loaders while rendering the new mission-control layout", async () => {
     renderPage();
 
@@ -215,7 +279,7 @@ describe("HomePage mission-control revamp", () => {
       expect(fetchWatchlist).toHaveBeenCalledTimes(1);
       expect(fetchBacktestV1Presets).toHaveBeenCalledTimes(1);
       expect(fetchChainSummary).toHaveBeenCalledWith("SPY");
-      expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledTimes(1);
+      expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledWith(undefined, "portfolio-1");
       expect(fetchLatestNews).toHaveBeenCalledWith(15);
       expect(fetchQuotesBatch).toHaveBeenCalledWith(
         ["^GSPC", "^IXIC", "^DJI", "GC=F", "SI=F", "CL=F"],
@@ -242,6 +306,7 @@ describe("HomePage mission-control revamp", () => {
   }, 10000);
 
   it("preserves the transition loading overlay before revealing the dashboard", async () => {
+    vi.useRealTimers();
     vi.useFakeTimers({ now: new Date("2026-03-11T12:00:00.000Z") });
     sessionStorage.setItem("ot-terminal-transition", "1");
 

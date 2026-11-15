@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -16,6 +16,7 @@ import { IntelligenceTimeline } from "../components/dashboard/IntelligenceTimeli
 import { LiveClockStrip } from "../components/home/LiveClockStrip";
 import { MarketHeatStrip, type MarketHeatStripItem } from "../components/home/MarketHeatStrip";
 import { MetricCard } from "../components/home/MetricCard";
+import { buildHomeHistory, emptyHomeHistory, type HomePortfolioHistory } from "../components/home/homePortfolioHistory";
 import { PortfolioMiniChart } from "../components/home/PortfolioMiniChart";
 import { ProfileCompletionRing } from "../components/home/ProfileCompletionRing";
 import { QuickNavGrid, type QuickNavSection } from "../components/home/QuickNavGrid";
@@ -164,12 +165,6 @@ const INITIAL_MARKET_ROWS: MarketRow[] = [
 
 const MARKET_PULSE_SYMBOLS = INITIAL_MARKET_ROWS.map((row) => row.symbol);
 
-const FALLBACK_PERFORMANCE_POINTS = [
-  24300000, 24200000, 24400000, 24500000, 24450000, 24680000, 24720000, 24610000, 24790000, 24840000,
-  24770000, 24890000, 24950000, 24810000, 24780000, 24910000, 25030000, 24980000, 25120000, 25190000,
-  25150000, 25230000, 25310000, 25280000, 25390000, 25470000, 25420000, 25510000, 25590000, 25670000,
-];
-
 const EMPTY_SNAPSHOT: DashboardSnapshot = {
   equityValue: null,
   equityCost: null,
@@ -192,12 +187,6 @@ function formatPrice(value: number): string {
 function formatPercent(value: number | null, digits = 2): string {
   if (value == null || !Number.isFinite(value)) return "--";
   return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
-}
-
-function formatCompactDateLabel(date: string): string {
-  const parsed = Date.parse(`${date}T00:00:00Z`);
-  if (!Number.isFinite(parsed)) return date;
-  return new Date(parsed).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function slugify(value: string): string {
@@ -247,24 +236,36 @@ export function HomePage() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [portfolioCurrency, setPortfolioCurrency] = useState<CurrencyCode | null>(null);
   const [activePreset, setActivePreset] = useState(readWorkspacePreset);
-  const [performancePoints, setPerformancePoints] = useState<number[]>(FALLBACK_PERFORMANCE_POINTS);
-  const [performanceBenchmarkPoints, setPerformanceBenchmarkPoints] = useState<number[]>([]);
-  const [performanceLabels, setPerformanceLabels] = useState<string[]>([]);
+  const [performance, setPerformance] = useState<HomePortfolioHistory>(() => ({ ...emptyHomeHistory("Loading historical comparison…"), status: "loading" }));
+  const [primaryName, setPrimaryName] = useState<string | null>(null);
+  const snapshotRequest = useRef(0);
+  const snapshotInFlight = useRef(false);
   const [selectedHeatId, setSelectedHeatId] = useState<string | null>(INITIAL_MARKET_ROWS[0]?.symbol ?? null);
   const [initializing, setInitializing] = useState(() => sessionStorage.getItem(TRANSITION_FLAG_KEY) === "1");
 
   const loadSnapshot = useCallback(async () => {
+    if (snapshotInFlight.current) return;
+    snapshotInFlight.current = true;
+    const request = ++snapshotRequest.current;
+    setPerformance({ ...emptyHomeHistory("Loading historical comparison…"), status: "loading" });
+    const portfolioTask = fetchPortfolio();
+    const benchmarkTask = portfolioTask.then((portfolio) => {
+      if (request !== snapshotRequest.current) return null;
+      if (!portfolio.portfolio_id) throw new Error("Primary portfolio identity unavailable");
+      return portfolio.items.length ? fetchPortfolioBenchmarkOverlay(undefined, portfolio.portfolio_id) : null;
+    });
     const [portfolioRes, watchlistRes, backtestRes, chainRes, benchmarkRes] = await Promise.allSettled([
-      fetchPortfolio(),
+      portfolioTask,
       fetchWatchlist(),
       fetchBacktestV1Presets(),
       fetchChainSummary("SPY"),
-      fetchPortfolioBenchmarkOverlay(),
+      benchmarkTask,
     ]);
 
+    if (request !== snapshotRequest.current) return;
+    snapshotInFlight.current = false;
     let next = { ...EMPTY_SNAPSHOT };
-    let nextBenchmarkPoints: number[] = [];
-    let nextPerformanceLabels: string[] = [];
+    setPrimaryName(portfolioRes.status === "fulfilled" ? portfolioRes.value.portfolio_name : null);
 
     if (portfolioRes.status === "fulfilled") {
       const data = portfolioRes.value;
@@ -296,54 +297,16 @@ export function HomePage() {
       next.fnoSignal = String(chainRes.value.pcr?.signal || "NA").toUpperCase();
     }
 
-    if (benchmarkRes.status === "fulfilled" && benchmarkRes.value?.equity_curve?.length > 0) {
-      const curve = benchmarkRes.value.equity_curve;
-      const cutoffMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const recentCurve = curve.filter((pt) => {
-        const ms = Date.parse(`${pt.date}T00:00:00Z`);
-        return Number.isFinite(ms) && ms >= cutoffMs;
-      });
-      const windowCurve = (recentCurve.length >= 2 ? recentCurve : curve.slice(-30)).filter((pt) =>
-        Number.isFinite(Number(pt.portfolio)) && Number(pt.portfolio) > 0,
-      );
-
-      const currentPortfolioValue =
-        next.equityValue != null && Number.isFinite(next.equityValue)
-          ? next.equityValue
-          : null;
-      const lastPortfolio = Number(windowCurve[windowCurve.length - 1]?.portfolio ?? NaN);
-      const lastBenchmark = Number(windowCurve[windowCurve.length - 1]?.benchmark ?? NaN);
-      const canScalePortfolio = currentPortfolioValue != null && Number.isFinite(lastPortfolio) && lastPortfolio > 0;
-      const canScaleBenchmark = currentPortfolioValue != null && Number.isFinite(lastBenchmark) && lastBenchmark > 0;
-
-      const scaledPoints = windowCurve
-        .map((pt) => {
-          const portfolio = Number(pt.portfolio);
-          if (!Number.isFinite(portfolio)) return 0;
-          return canScalePortfolio ? (portfolio / lastPortfolio) * currentPortfolioValue! : portfolio;
-        })
-        .filter((value) => Number.isFinite(value) && value > 0);
-
-      const scaledBenchmarkPoints = windowCurve
-        .map((pt) => {
-          const benchmark = Number(pt.benchmark);
-          if (!Number.isFinite(benchmark)) return 0;
-          return canScaleBenchmark ? (benchmark / lastBenchmark) * currentPortfolioValue! : benchmark;
-        })
-        .filter((value) => Number.isFinite(value) && value > 0);
-
-      if (scaledPoints.length >= 2) {
-        setPerformancePoints(scaledPoints);
-        nextPerformanceLabels = windowCurve.map((pt) => formatCompactDateLabel(pt.date));
-      }
-
-      if (scaledBenchmarkPoints.length >= 2) {
-        nextBenchmarkPoints = scaledBenchmarkPoints;
-      }
-    }
-
-    setPerformanceBenchmarkPoints(nextBenchmarkPoints);
-    setPerformanceLabels(nextPerformanceLabels);
+    const checkedAt = Date.now();
+    setPerformance(portfolioRes.status === "rejected"
+      ? emptyHomeHistory("Primary portfolio could not be loaded.", checkedAt)
+      : !portfolioRes.value.portfolio_id
+        ? emptyHomeHistory("Primary portfolio identity is unavailable.", checkedAt)
+      : !portfolioRes.value.items.length
+        ? emptyHomeHistory("No open holdings in the primary portfolio.", checkedAt)
+        : benchmarkRes.status === "rejected"
+          ? emptyHomeHistory("Historical comparison could not be loaded. No previous curve is shown.", checkedAt)
+          : buildHomeHistory(benchmarkRes.value, checkedAt));
     next.updatedAt = Date.now();
     setSnapshot(next);
   }, [selectedMarket]);
@@ -353,7 +316,10 @@ export function HomePage() {
     const timer = window.setInterval(() => {
       void loadSnapshot();
     }, 30000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      snapshotRequest.current++; snapshotInFlight.current = false;
+    };
   }, [loadSnapshot]);
 
   useEffect(() => {
@@ -449,24 +415,6 @@ export function HomePage() {
     if (snapshot.equityPnl == null || snapshot.equityCost == null || snapshot.equityCost <= 0) return null;
     return (snapshot.equityPnl / snapshot.equityCost) * 100;
   }, [snapshot.equityCost, snapshot.equityPnl]);
-
-  const performanceSeries = useMemo(
-    () =>
-      performancePoints.map((value, index) => ({
-        label: performanceLabels[index] ?? `D${index + 1}`,
-        value,
-      })),
-    [performanceLabels, performancePoints],
-  );
-
-  const benchmarkSeries = useMemo(
-    () =>
-      performanceBenchmarkPoints.map((value, index) => ({
-        label: performanceLabels[index] ?? `D${index + 1}`,
-        value,
-      })),
-    [performanceBenchmarkPoints, performanceLabels],
-  );
 
   const heatItems = useMemo<MarketHeatStripItem[]>(
     () =>
@@ -740,8 +688,6 @@ export function HomePage() {
                       },
                       { label: "Sync", value: updatedLabel, tone: "neutral" },
                     ]}
-                    sparklinePoints={performancePoints}
-                    sparklineAriaLabel="Net liquidation trend"
                     footer={
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -831,27 +777,34 @@ export function HomePage() {
                   </div>
                 </div>
 
-                <div className="mt-3 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
+                <section aria-label="Primary portfolio historical comparison" className="mt-3 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">30D Performance</h3>
+                      <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">30-day open-holdings comparison</h3>
                       <p className="mt-1 text-xs text-terminal-muted">
-                        Portfolio trajectory normalized against the benchmark overlay from the portfolio analytics feed.
+                        Primary portfolio{primaryName ? ` · ${primaryName}` : ""}. Today’s open holdings at constant quantities; excludes cash, closed positions and transaction-ledger returns.
                       </p>
                     </div>
                     <span className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted">
-                      Synced {updatedLabel}
+                      {performance.status === "loading" ? "Loading history" : performance.status === "unavailable" ? "History unavailable" : performance.status === "degraded" ? "Degraded history" : "History available"}
                     </span>
                   </div>
                   <PortfolioMiniChart
-                    points={performanceSeries}
-                    benchmarkPoints={benchmarkSeries}
-                    ariaLabel="Portfolio HQ chart"
-                    valueFormatter={(value) => portfolioCurrency
-                      ? formatMoney(value, portfolioCurrency)
-                      : value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    points={performance.points}
+                    benchmarkPoints={performance.benchmarkPoints}
+                    ariaLabel="Primary open-holdings indexed comparison"
+                    emptyLabel={performance.message}
+                    seriesLabel="Open holdings"
+                    benchmarkLabel={performance.benchmark ? `Benchmark (${performance.benchmark})` : "Benchmark"}
+                    valueFormatter={(value) => `${value.toFixed(2)} index`}
                   />
-                </div>
+                  {performance.start && performance.end ? <p className="mt-2 text-xs text-terminal-muted">
+                    {performance.start} to {performance.end} · {performance.points.length} shared observations · history valued in {performance.baseCurrency}.
+                    Both series start at 100 on the first shared date in the last 30 UTC calendar days. Latest historical observation: {performance.end}.
+                  </p> : null}
+                  {performance.checkedAt !== null ? <p className="mt-1 text-xs text-terminal-muted">History checked {new Date(performance.checkedAt).toLocaleTimeString()}; this is a retrieval check, not a live quote.</p> : null}
+                  {performance.notes.length ? <ul className="mt-2 text-xs text-terminal-warn">{performance.notes.map((note, index) => <li key={index}>{note}</li>)}</ul> : null}
+                </section>
               </div>
               ) : null}
 

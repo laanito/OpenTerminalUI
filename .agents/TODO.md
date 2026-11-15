@@ -1361,7 +1361,8 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       verify selection, reload, original inputs, cache/failures, deleted-source
       history and no horizontal overflow. Pin the existing Hermes Node path for
       local browser runs if the Homebrew node/simdutf installation is inconsistent;
-      no repo/host runtime repair was needed. Maintainer review remains pending.
+      no repo/host runtime repair was needed. PR #274 is merged and tested; carry
+      maintainer acceptance forward.
 - [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
       interpretation and inspectable retained references. Preserve failures,
       disagreements, deduplication and coverage; no market-wide sentiment claim.
@@ -1375,6 +1376,36 @@ those inputs, not promising identical LLM prose. The retention duration and
 scoring/comparison integration and cleanup remain open. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.
+
+### Home portfolio history correctness — separate fix
+
+- [x] Trace the misleading 30D graph to hard-coded sample points, stale state after
+      failure, older-window fallback, end-value rescaling and independently drawn
+      axes. Resolve the primary portfolio ID before requesting existing analytics;
+      remove fabricated fallback and the false net-liquidation sparkline.
+- [x] Plot shared dated observations from exactly the last 30 UTC calendar days;
+      sort/deduplicate, withhold conflicting dates, and filter both lines jointly.
+      Rebase both series to 100 on the same first shared date, with one scale.
+      Display primary scope/name, actual dates/count, benchmark and base currency,
+      current-open-holdings methodology and missing/degraded input reasons.
+      Empty/failed/partial/unsupported history has no curve, not old/sample data.
+      Separate historical endpoint from retrieval-check time; no live-sync claim.
+      Single-flight polling and request invalidation prevent scope/result races.
+- [x] Verify all 814 frontend tests/130 files, production build, production-data
+      and whitespace guards, and all 35 installed-Chrome smoke journeys. New
+      desktop/narrow journeys cover actual primary ID, divergent ending returns,
+      failed-refresh clearing, missing FX, old-window rejection and recovery.
+      No backend/API/schema/settings/provider/dependency or DB changes.
+- [x] Harden #275's Home browser clock test after CI timed out at both widths.
+      Pause fake time before navigation, fast-forward one polling interval at a
+      time and wait for request count plus UI state. Verify five total history
+      requests. Avoid replaying all timer/animation ticks with `runFor`; do not
+      raise timeouts. Six repeated width-specific tests and all 35 full smoke
+      journeys pass locally after correction; production code is unchanged.
+- [ ] Maintainer review/acceptance of the fix. Preserve the existing explicit
+      limitation: current-open-holdings analytics are not cash-flow-adjusted
+      transaction-ledger/NAV performance. Full reconstruction remains deferred;
+      do not conceal this by relabelling an indexed basket as account wealth.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 

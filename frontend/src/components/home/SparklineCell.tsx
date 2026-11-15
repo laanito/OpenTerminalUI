@@ -51,6 +51,7 @@ export function buildSparklineGeometry(
   width: number,
   height: number,
   padding = SPARKLINE_PADDING,
+  domain?: { min: number; max: number },
 ): SparklineGeometry {
   const points = sanitizePoints(rawPoints);
   const safeWidth = Math.max(1, width);
@@ -68,8 +69,8 @@ export function buildSparklineGeometry(
     };
   }
 
-  const min = Math.min(...points);
-  const max = Math.max(...points);
+  const min = domain?.min ?? Math.min(...points);
+  const max = domain?.max ?? Math.max(...points);
   const range = max - min || 1;
 
   const chartPoints = (points.length === 1 ? [points[0], points[0]] : points).map((value, index, values) => {
