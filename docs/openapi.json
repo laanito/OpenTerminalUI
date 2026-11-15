@@ -2641,6 +2641,16 @@
             "title": "Id",
             "type": "string"
           },
+          "lineage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureLineage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "mode": {
             "enum": [
               "price",
@@ -2687,6 +2697,61 @@
         "title": "CaptureDetail",
         "type": "object"
       },
+      "CaptureLineage": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "saved_input_rerun",
+              "fresh_refresh"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_policy": {
+            "const": "current_deep",
+            "default": "current_deep",
+            "title": "Model Policy",
+            "type": "string"
+          },
+          "parent_content_hash": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Parent Content Hash",
+            "type": "string"
+          },
+          "parent_id": {
+            "maxLength": 36,
+            "minLength": 1,
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "replay_request_index": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replay Request Index"
+          },
+          "source_generated_at": {
+            "format": "date-time",
+            "title": "Source Generated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "parent_id",
+          "parent_content_hash",
+          "source_generated_at"
+        ],
+        "title": "CaptureLineage",
+        "type": "object"
+      },
       "CaptureSummary": {
         "properties": {
           "anchor": {
@@ -2712,6 +2777,16 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "lineage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureLineage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "mode": {
             "enum": [
@@ -2818,6 +2893,18 @@
           "enabled": {
             "title": "Enabled",
             "type": "boolean"
+          },
+          "prepared_request": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared Request"
           },
           "profile": {
             "$ref": "#/components/schemas/LLMProfileIdentity"
@@ -4631,6 +4718,16 @@
         "properties": {
           "generation": {
             "$ref": "#/components/schemas/CapturedGeneration"
+          },
+          "lineage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureLineage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "mode": {
             "const": "context",
@@ -8213,6 +8310,12 @@
           "disclosures"
         ],
         "title": "FilingMetricGroup",
+        "type": "object"
+      },
+      "FollowupRequest": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "FollowupRequest",
         "type": "object"
       },
       "ForecastRequest": {
@@ -17376,6 +17479,16 @@
         "properties": {
           "generation": {
             "$ref": "#/components/schemas/CapturedGeneration"
+          },
+          "lineage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureLineage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "mode": {
             "const": "price",
@@ -33654,6 +33767,138 @@
           }
         ],
         "summary": "Get Capture",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-captures/{capture_id}/refresh/stream": {
+      "post": {
+        "description": "Fetch current evidence for the owned saved selection and save a linked run.\n\nSources, relative period window, prompts and Deep profile are current. The\noriginal capture is unchanged. The child embeds its own complete evidence.",
+        "operationId": "stream_refresh_api_market_context_briefing_captures__capture_id__refresh_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "Collect fresh evidence for the saved selection and return a new linked committed CaptureDetail.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Refresh",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-captures/{capture_id}/rerun/stream": {
+      "post": {
+        "description": "Save a linked rerun of frozen prompts/settings with today's Deep model.\n\nKeep original messages, schema, response format and generation parameters;\nchange only the model field to the current resolved Deep model. Perform one\nchecked completion without augmentation, repair, format or token fallback.\nNo source fetch or original-record rewrite. Providers/aliases may change.",
+        "operationId": "stream_rerun_api_market_context_briefing_captures__capture_id__rerun_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "Progress and one committed CaptureDetail; no market collection. Uses the last saved request and current Deep model.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Rerun",
         "tags": [
           "market-context"
         ],

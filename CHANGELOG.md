@@ -7,14 +7,21 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Linked saved comparison follow-ups** — **Re-run saved inputs** reuses the last
+  dispatched prompts, response format and generation settings with the current
+  Deep model and frozen evidence, making one checked completion. **Refresh with
+  current data** collects new evidence for the saved selection. Both save a
+  separate run with inspectable lineage; deleting a source keeps its children
+  usable. Progress and cancellation preserve the original and avoid automatic
+  retry. No migration or provider/configuration change is required.
 - **Saved comparison briefings in Market Context** — choose **Generate and save
   briefing** to retain a fresh run with its evidence, answer or typed failure and
   model inputs. Review and paginate your saved runs, inspect their original
   citations and inputs, or explicitly delete them. Reopening performs no new
   market or model work. A cancellable progress endpoint acknowledges saving only
   after commit; interrupted acknowledgement can be checked in saved history.
-  Temporary generation remains available. Captured-input reruns, linked refresh,
-  sentiment integration and retention cleanup remain later work.
+  Temporary generation remains available. Sentiment integration and retention
+  cleanup remain later work.
 - **Explicit durable comparison captures (API)** — authenticated
   `POST /api/market-context/briefing-captures` generates from fresh server-fetched
   selections and retains the full bounded evidence, checked answer or typed
@@ -22,8 +29,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   and structured-format/token retries. Owner-scoped list/reopen/delete endpoints
   recover the original record without fetching sources or running inference.
   Additive migration `0020_comparison_captures` preserves existing research.
-  Existing generation endpoints stay ephemeral; a browser save/review flow,
-  captured-input reruns, sentiment integration and retention cleanup remain open.
+  Existing generation endpoints stay ephemeral; sentiment integration and retention
+  cleanup remain open.
 
 ### Fixed
 - **BTC hourly candles and inspection** — fold Yahoo's off-boundary, zero-volume

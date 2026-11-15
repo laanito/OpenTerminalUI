@@ -312,8 +312,16 @@ because a completed commit may already exist. No automatic replay occurs.
 
 `POST /api/market-context/briefing-captures/stream` is the browser progress API;
 its final result is a capture receipt emitted after storage. The synchronous
-POST remains available. Another POST fetches current evidence; captured-input
-reruns and linked refreshes are not exposed yet. See [the capture contract](News-Evidence-Contract.md#explicit-comparison-capture-api).
+POST remains available. In saved review, **Re-run saved inputs** sends the last
+saved request to the current Deep model, preserving its prompts, response format,
+token budget and frozen evidence. It makes one checked completion without repair
+or format fallback. **Refresh with current data** collects fresh evidence for the
+saved selection with current prompts/settings. Both save a new linked run and
+preserve the original; lineage links back to the source ID, hash and generation
+time. Each child retains its own inputs/evidence even if its source is deleted.
+An original capture with no saved completion request offers refresh only. See
+[the follow-up contract](News-Evidence-Contract.md#linked-reruns-and-fresh-data-refreshes)
+for endpoints and failure/cancellation behavior.
 
 ### Comparison briefing APIs
 

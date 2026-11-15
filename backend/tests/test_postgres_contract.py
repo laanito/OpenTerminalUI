@@ -127,7 +127,20 @@ def test_comparison_capture_json_ownership_and_delete_on_postgres() -> None:
                     with pytest.raises(HTTPException) as failure:
                         operation(capture_id, SimpleNamespace(id=other), db)
                     assert failure.value.status_code == 404
+                from copy import deepcopy
+                from backend.api.routes.comparison_captures import CaptureLineage
+                child_id = str(uuid4())
+                child = deepcopy(payload)
+                lineage = CaptureLineage(kind="fresh_refresh", parent_id=capture_id, parent_content_hash="a"*64,
+                    source_generated_at=payload["result"]["generated_at"]).model_dump(mode="json")
+                child["lineage"] = lineage
+                db.add(ComparisonCaptureORM(id=child_id, user_id=owner, captured_at=datetime.now(timezone.utc),
+                    mode="price", status="unavailable", content_hash="b"*64, payload=child))
+                db.flush(); db.expire_all()
+                summaries = list_captures(limit=20, offset=0, user=user, db=db)
+                assert next(row for row in summaries if row.id == child_id).lineage.model_dump(mode="json") == lineage
                 delete_capture(capture_id, user, db)
                 assert db.get(ComparisonCaptureORM, capture_id) is None
+                assert json.loads(get_capture(child_id, user, db).body)["content"] == child
         finally:
             transaction.rollback()

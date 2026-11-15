@@ -1,12 +1,12 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ComparisonBriefingPanel } from "../components/market/ComparisonBriefingPanel";
-import { makeCapture, captureSummary } from "./fixtures/comparisonCaptures";
+import { makeCapture, makeCaptureFollowup, captureSummary } from "./fixtures/comparisonCaptures";
 import { briefingSelection } from "./fixtures/comparisonBriefing";
-const mocks = vi.hoisted(() => ({ save: vi.fn(), list: vi.fn(), get: vi.fn(), remove: vi.fn() }));
+const mocks = vi.hoisted(() => ({ save: vi.fn(), list: vi.fn(), get: vi.fn(), remove: vi.fn(), follow: vi.fn() }));
 vi.mock("../api/comparisonCaptures", async (original) => ({
   ...await original<typeof import("../api/comparisonCaptures")>(), streamComparisonCapture: mocks.save,
-  listComparisonCaptures: mocks.list, getComparisonCapture: mocks.get, deleteComparisonCapture: mocks.remove,
+  listComparisonCaptures: mocks.list, getComparisonCapture: mocks.get, deleteComparisonCapture: mocks.remove, streamCaptureFollowup: mocks.follow,
 }));
 
 describe("saved comparison workflow", () => {
@@ -119,4 +119,39 @@ describe("saved comparison workflow", () => {
     expect(screen.getByText(/Inspect briefing evidence snapshot/)).toBeVisible();
   });
 
+});
+
+describe("saved follow-up controls", () => {
+  beforeEach(() => {
+    vi.clearAllMocks(); mocks.list.mockResolvedValue([captureSummary()]); mocks.get.mockResolvedValue(makeCapture());
+  });
+  async function open() {
+    const view = render(<ComparisonBriefingPanel selection={briefingSelection} />);
+    fireEvent.click(screen.getByRole("button", { name: "Review saved briefings" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Open saved AAPL/ }));
+    return { view, saved: await screen.findByRole("region", { name: "Saved briefing review" }) };
+  }
+  it.each(["rerun", "refresh"] as const)("saves a linked %s only on explicit action, and keeps the child when its source is missing", async (kind) => {
+    const source = makeCapture(); const child = makeCaptureFollowup(source, kind); mocks.follow.mockResolvedValue(child);
+    const { saved } = await open(); expect(mocks.follow).not.toHaveBeenCalled();
+    fireEvent.click(within(saved).getByRole("button", { name: kind === "rerun" ? "Re-run saved inputs" : "Refresh with current data" }));
+    await waitFor(() => expect(within(saved).getByLabelText("Saved run lineage")).toBeVisible());
+    expect(mocks.follow).toHaveBeenCalledWith(source, kind, expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    mocks.get.mockRejectedValueOnce(new Error("Source deleted"));
+    fireEvent.click(within(saved).getByRole("button", { name: "Open source saved run" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Source deleted");
+    expect(within(saved).getByLabelText("Saved run lineage")).toBeVisible();
+  });
+  it("cancels a pending follow-up and ignores a late committed receipt", async () => {
+    let finish!: (value: ReturnType<typeof makeCapture>) => void;
+    mocks.follow.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    const { saved } = await open();
+    fireEvent.click(within(saved).getByRole("button", { name: "Re-run saved inputs" }));
+    const signal = mocks.follow.mock.calls[0][2].signal;
+    fireEvent.click(within(saved).getByRole("button", { name: "Cancel saved follow-up" }));
+    expect(signal.aborted).toBe(true);
+    await act(async () => finish(makeCaptureFollowup()));
+    expect(screen.queryByLabelText("Saved run lineage")).not.toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Refresh saved briefings");
+  });
 });

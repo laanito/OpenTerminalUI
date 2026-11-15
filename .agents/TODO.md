@@ -92,7 +92,7 @@ versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
 referenced evidence; unreferenced retention must be configurable, with its exact
 duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
-Storage/capture foundations are merged; browser review PR #270 is merged. Scoring linkage, rerun/refresh and retention work remain open; see the
+Storage/capture foundations are merged; browser review PR #270 is merged. Scoring linkage and retention work remain open; see the
 current v2.8 checklist below.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
@@ -1290,9 +1290,29 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       and 29 installed-Chrome smoke journeys. Saved price/context reload, citation
       inspection, plain-text input display and deletion pass at desktop/narrow
       sizes; final pagination refresh was rechecked on both new browser journeys.
-- [ ] Add captured-input reruns versus separately linked current-data refreshes.
-      Do not regenerate prompts from current code when replaying retained requests;
-      model aliases/nondeterminism limit equivalence.
+- [x] Add captured-input reruns versus separately linked current-data refreshes.
+      JWT-only `/{id}/rerun/stream` reuses the last actual dispatched request,
+      including repair/schema/format/token settings, changing only the model to
+      current Deep. One checked completion, no new prompt augmentation, repair,
+      token/format fallback or market collection. Fresh `/{id}/refresh/stream`
+      collects current evidence for the saved selection using current prompts.
+      Both create immutable independent children with parent ID/hash/generation
+      time/request-index lineage; deleting a parent keeps children usable.
+      Empty strict request bodies prevent browser-supplied prompts or provenance.
+      Integrity/ownership/format checks precede streaming. Raw original evidence
+      is preserved; typed model failures retain no partial prose. If a rerun
+      stops before dispatch, its prepared request remains independently usable.
+      Browser actions disclose current Deep behavior, progress, cancellation and
+      source linkage. Original disabled/no-request captures offer refresh only.
+      No migration, provider, settings, dependency or API-key scope changes.
+      Model aliases/nondeterminism limit equivalence. API/wiki docs are updated.
+- [x] Verify 325 focused backend tests (three PostgreSQL-only checks skipped),
+      all 766 frontend tests/127 files, production build and API/surface/mock
+      guards and all 31 installed-Chrome smoke journeys. Desktop/narrow saved
+      follow-up journeys cover exact scope, current
+      model, both lineage kinds, original preservation and deleted-source review.
+      The guarded PostgreSQL contract now checks lineage JSON projection and
+      child survival after parent deletion. Maintainer review remains pending.
 - [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
       interpretation and inspectable retained references. Preserve failures,
       disagreements, deduplication and coverage; no market-wide sentiment claim.

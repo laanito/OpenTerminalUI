@@ -119,15 +119,36 @@ never by automatic inference retry. Current source/model work cancels on scope
 changes; late save/list/detail responses are ignored. List SQL projects summary
 and selection JSON rather than full input envelopes (SQLite/PostgreSQL portable).
 No new migration, provider, settings, dependency or API-key scope. Capture JSON
-remains self-contained; scoring/text-assessment linkage, captured-input reruns,
-linked refresh and unreferenced retention duration/cleanup remain open.
+remains self-contained; scoring/text-assessment linkage and unreferenced
+retention duration/cleanup remain open.
 Read `docs/wiki/News-Evidence-Contract.md` for precise boundaries. Locally 310
 focused backend tests passed (three PostgreSQL-only checks skipped), all 756
 frontend tests passed (127 files), production build and API/surface/mock guards
 passed, and all 29 installed-Chrome smoke journeys passed with one worker. The
 new saved-review desktop/narrow journeys also passed after the final pagination
 refresh adjustment. Native PostgreSQL JSON/list execution remains in its guarded
-CI lane. Maintainer acceptance of this new UI is still pending.
+CI lane. The maintainer confirmed #270 and roadmap #271 merged. Carry the
+accepted BTC fix forward; no repeat chart testing is requested.
+
+The next implemented v2.8 slice adds JWT-only owner follow-up streams:
+`/briefing-captures/{id}/rerun/stream` and `/{id}/refresh/stream`, both strict empty
+JSON bodies. Rerun preserves the last actual request (including a saved repair),
+changes only `model` to current Deep and makes one checked completion; no source
+fetch, prompt augmentation, repair or format/token fallback. Refresh uses the
+saved selection with current sources/prompts/settings. Both create separate,
+self-contained children with parent ID/hash/generation time/request index JSON
+lineage, preserving the original. Deleted-source children remain inspectable and
+rerunnable. Reruns preserve raw evidence extensions and scope; disabled/health
+failures retain a prepared request with empty honest dispatch attempts. Original
+no-request captures can refresh only. Integrity/ownership/supported-input checks
+precede streaming. Browser controls show progress, cancel, lineage and source
+navigation; uncertain acknowledgement is recovered via saved history, without
+automatic retry. No schema/config/provider/dependency/API-key changes. Local
+verification: 325 focused backend tests passed, three PostgreSQL-only skipped;
+766 frontend tests/127 files, build and API/surface/mock guards passed. Installed
+Chrome full smoke suite passes all 31 journeys, including desktop/narrow follow-ups.
+Maintainer review of this slice is
+pending. Sentiment linkage and the unreferenced retention policy remain open.
 
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)

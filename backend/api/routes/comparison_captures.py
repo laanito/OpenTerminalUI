@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from contextlib import aclosing
+from copy import deepcopy
 import hashlib
 import json
 import logging
@@ -27,6 +28,7 @@ from backend.services.comparison_context_briefing import ComparisonContextBriefi
 from backend.services.economic_data import get_economic_data_service
 from backend.services.llm_profiles import LLMProfileIdentity, resolve_llm_profile
 from backend.services.insight_lifecycle import stream_insight_lifecycle
+from backend.services.comparison_rerun import checked_source, saved_request, rerun_saved_inputs
 from backend.services.market_briefing_context_evidence import BriefingContextOptions
 
 router = APIRouter(prefix="/api/market-context/briefing-captures", tags=["market-context"])
@@ -45,6 +47,22 @@ class CapturedModelRequest(BaseModel):
     body: dict
 
 
+class CaptureLineage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["saved_input_rerun", "fresh_refresh"]
+    parent_id: str = Field(min_length=1, max_length=36)
+    parent_content_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    source_generated_at: AwareDatetime
+    replay_request_index: int | None = Field(default=None, ge=0)
+    model_policy: Literal["current_deep"] = "current_deep"
+
+
+class FollowupRequest(BaseModel):
+    # Select an owned source by path only; never accept replacement evidence,
+    # prompts, model parameters or browser-supplied lineage.
+    model_config = ConfigDict(extra="forbid")
+
+
 class CapturedGeneration(BaseModel):
     model_config = ConfigDict(extra="forbid")
     contract_version: Literal["comparison-capture-v1"] = "comparison-capture-v1"
@@ -54,6 +72,7 @@ class CapturedGeneration(BaseModel):
     timeout_seconds: float
     structured_output: str
     attempts: list[CapturedModelRequest]
+    prepared_request: dict | None = None
 
 
 class CaptureSummary(BaseModel):
@@ -66,11 +85,13 @@ class CaptureSummary(BaseModel):
     period: Literal["1M", "3M", "6M"]
     content_hash: str
     retention: Literal["retained_no_automatic_expiry"] = "retained_no_automatic_expiry"
+    lineage: CaptureLineage | None = None
 
 
 class PriceCaptureContent(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_version: Literal[1] = 1
+    lineage: CaptureLineage | None = None
     mode: Literal["price"]
     selection: ComparisonCaptureRequest
     generation: CapturedGeneration
@@ -80,6 +101,7 @@ class PriceCaptureContent(BaseModel):
 class ContextCaptureContent(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_version: Literal[1] = 1
+    lineage: CaptureLineage | None = None
     mode: Literal["context"]
     selection: ComparisonCaptureRequest
     generation: CapturedGeneration
@@ -93,15 +115,17 @@ class CaptureDetail(CaptureSummary):
     content: CaptureContent
 
 
-def _summary(row, selection=None):
-    selection = row.payload["selection"] if selection is None else selection
+def _summary(row, selection=None, lineage=None):
+    if selection is None:
+        selection = row.payload["selection"]
+        lineage = row.payload.get("lineage")
     captured_at = row.captured_at
     if captured_at.tzinfo is None:  # SQLite DateTime drops timezone information.
         captured_at = captured_at.replace(tzinfo=timezone.utc)
     return CaptureSummary(
         id=row.id, captured_at=captured_at, mode=row.mode, status=row.status,
         anchor=selection["anchor"], comparisons=selection["comparisons"], period=selection["period"],
-        content_hash=row.content_hash,
+        content_hash=row.content_hash, lineage=lineage,
     )
 
 
@@ -137,7 +161,7 @@ async def create_capture(
     return await _capture_briefing(payload, user, db, fetcher, economic_service, sec_client)
 
 
-async def _capture_briefing(payload, user, db, fetcher, economic_service, sec_client, *, profile=None, on_phase=None):
+async def _capture_briefing(payload, user, db, fetcher, economic_service, sec_client, *, profile=None, on_phase=None, lineage=None):
     normalized = briefings._normalized_payload(payload)
     selection = ComparisonCaptureRequest(**normalized.model_dump(), context=payload.context)
     profile = profile or resolve_llm_profile(get_settings(), "comparison_briefing")
@@ -159,19 +183,24 @@ async def _capture_briefing(payload, user, db, fetcher, economic_service, sec_cl
         result = await briefings._run_briefing(normalized, user, fetcher, profile=profile, on_request=record, on_phase=on_phase)
         content_type, mode = PriceCaptureContent, "price"
     content = content_type(
-        mode=mode, selection=selection,
+        mode=mode, selection=selection, lineage=lineage,
         generation=CapturedGeneration(
             profile=LLMProfileIdentity(**profile.public_identity()), enabled=profile.enabled,
             timeout_seconds=profile.timeout_seconds, structured_output=profile.structured_output, attempts=attempts,
         ),
         result=result,
     )
-    serialized = json.dumps(content.model_dump(mode="json"), sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    row = _store_content(db, user.id, content.model_dump(mode="json"), on_phase=on_phase)
+    return CaptureDetail(**_summary(row).model_dump(), content=content)
+
+
+def _store_content(db, user_id, content, *, on_phase=None):
+    serialized = json.dumps(content, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     if len(serialized.encode("utf-8")) > MAX_CAPTURE_BYTES:
         raise HTTPException(status_code=413, detail="Comparison capture exceeds the storage limit; nothing was saved")
     row = ComparisonCaptureORM(
-        id=str(uuid4()), user_id=user.id, captured_at=datetime.now(timezone.utc), mode=mode,
-        status=result.status, content_hash=hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
+        id=str(uuid4()), user_id=user_id, captured_at=datetime.now(timezone.utc), mode=content["mode"],
+        status=content["result"]["status"], content_hash=hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
         payload=json.loads(serialized),
     )
     if on_phase is not None:
@@ -184,7 +213,11 @@ async def _capture_briefing(payload, user, db, fetcher, economic_service, sec_cl
         db.rollback()
         logger.warning("Comparison capture storage failed (%s)", type(exc).__name__)
         raise HTTPException(status_code=503, detail="Comparison capture could not be saved; do not assume it is retained") from exc
-    return CaptureDetail(**_summary(row).model_dump(), content=content)
+    return row
+
+
+def _receipt(row):
+    return {**_summary(row).model_dump(mode="json"), "content": row.payload}
 
 
 @router.post("/stream", response_class=StreamingResponse, responses={200: {"content": {
@@ -205,6 +238,11 @@ async def stream_capture(
     normalized = briefings._normalized_payload(payload)  # Validate before 200 headers.
     selection = ComparisonCaptureRequest(**normalized.model_dump(), context=payload.context)
     profile = resolve_llm_profile(get_settings(), "comparison_briefing")
+    return _stream_run(lambda phase: _capture_briefing(selection, user, db, fetcher, economic_service, sec_client,
+                                                       profile=profile, on_phase=phase), profile)
+
+
+def _stream_run(run, profile):
     phase = "preparing_evidence"
     failure = None
 
@@ -215,9 +253,8 @@ async def stream_capture(
     async def operation():
         nonlocal failure
         try:
-            saved = await _capture_briefing(selection, user, db, fetcher, economic_service, sec_client,
-                                            profile=profile, on_phase=set_phase)
-            return saved.model_dump(mode="json")
+            saved = await run(set_phase)
+            return saved.model_dump(mode="json") if hasattr(saved, "model_dump") else saved
         except HTTPException as exc:
             if exc.status_code == 413:
                 failure = {"code": "capture_too_large", "message": "Capture exceeds the storage limit; nothing was saved."}
@@ -245,6 +282,78 @@ async def stream_capture(
     })
 
 
+def _source_capture(db, user_id, capture_id):
+    row = _owned(db, user_id, capture_id)
+    payload = deepcopy(row.payload)
+    try:
+        serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+        if hashlib.sha256(serialized.encode("utf-8")).hexdigest() != row.content_hash:
+            raise ValueError("Changed stored content")
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=409, detail="Stored capture integrity check failed; no follow-up was started") from exc
+    return row.id, row.content_hash, payload
+
+
+def _lineage(capture_id, content_hash, payload, kind, index=None):
+    return CaptureLineage(kind=kind, parent_id=capture_id, parent_content_hash=content_hash,
+                          source_generated_at=payload["result"]["generated_at"], replay_request_index=index)
+
+
+@router.post("/{capture_id}/rerun/stream", response_class=StreamingResponse,
+             responses={200: {"content": {"application/x-ndjson": {"schema": {"type": "string", "description": "Progress and one committed CaptureDetail; no market collection. Uses the last saved request and current Deep model."}}}}})
+async def stream_rerun(
+    capture_id: str, payload: FollowupRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    """Save a linked rerun of frozen prompts/settings with today's Deep model.
+
+    Keep original messages, schema, response format and generation parameters;
+    change only the model field to the current resolved Deep model. Perform one
+    checked completion without augmentation, repair, format or token fallback.
+    No source fetch or original-record rewrite. Providers/aliases may change.
+    """
+    source_id, digest, source = _source_capture(db, user.id, capture_id)
+    try:
+        evidence = checked_source(source)
+        body, index = saved_request(source)
+        lineage = _lineage(source_id, digest, source, "saved_input_rerun", index)
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail="Saved inputs cannot be rerun with this contract; inspect the original or refresh current data") from exc
+    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
+
+    async def run(phase):
+        result, generation = await rerun_saved_inputs(source, evidence, body, profile=profile, on_phase=phase)
+        child = deepcopy(source)
+        child.update(result=result, generation=generation, lineage=lineage.model_dump(mode="json"))
+        return _receipt(_store_content(db, user.id, child, on_phase=phase))
+
+    return _stream_run(run, profile)
+
+
+@router.post("/{capture_id}/refresh/stream", response_class=StreamingResponse,
+             responses={200: {"content": {"application/x-ndjson": {"schema": {"type": "string", "description": "Collect fresh evidence for the saved selection and return a new linked committed CaptureDetail."}}}}})
+async def stream_refresh(
+    capture_id: str, payload: FollowupRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db),
+    fetcher=Depends(get_unified_fetcher), economic_service=Depends(get_economic_data_service), sec_client=Depends(get_sec_edgar_client),
+):
+    """Fetch current evidence for the owned saved selection and save a linked run.
+
+    Sources, relative period window, prompts and Deep profile are current. The
+    original capture is unchanged. The child embeds its own complete evidence.
+    """
+    source_id, digest, source = _source_capture(db, user.id, capture_id)
+    try:
+        if source.get("schema_version") != 1:
+            raise ValueError("Unsupported capture")
+        selection = ComparisonCaptureRequest.model_validate(source["selection"])
+        briefings._normalized_payload(selection)
+        lineage = _lineage(source_id, digest, source, "fresh_refresh")
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail="Saved selection is not supported for refresh; the original is unchanged") from exc
+    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
+    return _stream_run(lambda phase: _capture_briefing(selection, user, db, fetcher, economic_service, sec_client,
+                                                       profile=profile, on_phase=phase, lineage=lineage), profile)
+
+
 @router.get("", response_model=list[CaptureSummary])
 def list_captures(
     limit: int = Query(default=20, ge=1, le=100),
@@ -258,10 +367,11 @@ def list_captures(
         ComparisonCaptureORM.id, ComparisonCaptureORM.captured_at, ComparisonCaptureORM.mode,
         ComparisonCaptureORM.status, ComparisonCaptureORM.content_hash,
         ComparisonCaptureORM.payload["selection"].label("selection"),
+        ComparisonCaptureORM.payload["lineage"].label("lineage"),
     ).where(ComparisonCaptureORM.user_id == user.id).order_by(
         ComparisonCaptureORM.captured_at.desc(), ComparisonCaptureORM.id.desc(),
     ).offset(offset).limit(limit)).all()
-    return [_summary(row, row.selection) for row in rows]
+    return [_summary(row, row.selection, row.lineage) for row in rows]
 
 
 @router.get("/{capture_id}", response_model=CaptureDetail)

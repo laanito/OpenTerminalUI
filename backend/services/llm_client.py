@@ -194,6 +194,29 @@ class LLMClient:
         # Exhausted the ladder (every structured form was rejected).
         raise LLMError("LLM rejected all response formats") from last_exc
 
+    async def chat_saved_request(self, body: dict[str, Any], *, on_request=None) -> str:
+        """Submit one validated saved body verbatim; no augmentation/fallback/repair.
+
+        Connection and credentials still come from this configured client. The
+        caller chooses the model explicitly and records the actual public body.
+        """
+        payload = copy.deepcopy(body)
+        if on_request is not None:
+            on_request(copy.deepcopy(payload))
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
+                response = await client.post(f"{self.base_url}/chat/completions", json=payload, headers=self._headers())
+                response.raise_for_status()
+                data = response.json()
+            choice = data["choices"][0]
+            # A truncated result is not a completed answer; let the bounded
+            # caller record invalid_response without retaining partial prose.
+            if choice.get("finish_reason") == "length":
+                return ""
+            return str((choice.get("message") or {}).get("content") or "")
+        except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+            raise LLMError("Saved-request completion failed") from exc
+
     async def chat_stream(
         self,
         messages: list[dict[str, str]],
