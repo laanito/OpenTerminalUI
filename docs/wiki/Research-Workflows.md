@@ -5,6 +5,28 @@ inspect selected SEC evidence, ask questions of private notes, and save an
 answer without turning generated prose into an unquestioned source. It does
 not describe automatic trading or a complete historical archive.
 
+## Home portfolio history
+
+Home's **30-day open-holdings comparison** uses your primary portfolio, identified
+by name and resolved ID, rather than the Portfolio Manager's currently selected
+portfolio or a consolidation across portfolios. It reads the existing benchmark
+analytics for today's open basket at constant quantities, valued with historical
+FX in the portfolio base currency. It excludes cash, closed positions and
+transaction-ledger returns; it is not a historical net-liquidation account curve.
+
+Both lines start at index 100 at the first shared observation within the last 30
+UTC calendar days, on a shared vertical scale. The displayed dates/count identify
+actual coverage, which may be shorter than the window because the whole current
+basket only existed after its latest opening purchase. The benchmark keeps its
+own return rather than being forced to finish at today's portfolio value.
+
+No available history means no curve. Failures and partial history remove the old
+line; missing price/currency/FX and degraded inputs are disclosed. The historical
+end date is separate from the retrieval-check time, which is not a live-quote
+claim. There is no substitution of older dates or sample values. Polls do not
+overlap, and old-scope responses are ignored. The current net-liquidation card
+remains a current accounting snapshot with no fabricated historical sparkline.
+
 ## Fast tasks (v2.4)
 
 Headline sentiment, ticker emotion and natural-language query classification use

@@ -45,6 +45,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cleanup remain open.
 
 ### Fixed
+- **Home portfolio history** — remove the hard-coded 24–26 million demo curve
+  and clear old data on failed refreshes. Resolve the actual primary portfolio
+  ID, use only shared observations in the last 30 UTC calendar days, and rebase
+  holdings/benchmark to 100 at the same first date on one shared vertical scale.
+  Show the actual dates, base currency, history status and missing-input reasons.
+  Label this as current-open-holdings history, rather than ledger/NAV returns,
+  and remove the misleading net-liquidation sparkline. No backend/accounting
+  changes; overlapping polls and late prior-scope responses cannot replace data.
 - **BTC hourly candles and inspection** — fold Yahoo's off-boundary, zero-volume
   flat quote tail into an existing crypto period candle, preserving its open and
   volume while updating close/extremes. Omit a quote-only tail when its period is

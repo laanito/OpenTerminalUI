@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import { buildSparklineGeometry, type SparklineGeometryPoint } from "./SparklineCell";
 
@@ -12,6 +12,8 @@ export type PortfolioMiniChartProps = {
   className?: string;
   ariaLabel?: string;
   emptyLabel?: string;
+  seriesLabel?: string;
+  benchmarkLabel?: string;
   valueFormatter?: (value: number) => string;
 };
 
@@ -74,19 +76,26 @@ export function PortfolioMiniChart({
   ariaLabel = "Portfolio performance chart",
   emptyLabel = "No portfolio performance data available",
   valueFormatter = formatDefaultValue,
+  seriesLabel = "Current",
+  benchmarkLabel = "Benchmark",
 }: PortfolioMiniChartProps) {
   const gradientId = useId().replace(/:/g, "");
   const normalizedPoints = useMemo(() => normalizePoints(points), [points]);
   const normalizedBenchmark = useMemo(() => normalizePoints(benchmarkPoints ?? []), [benchmarkPoints]);
+  const domain = useMemo(() => {
+    const values = [...normalizedPoints, ...normalizedBenchmark].map((point) => point.value);
+    return { min: values.length ? Math.min(...values) : 0, max: values.length ? Math.max(...values) : 0 };
+  }, [normalizedPoints, normalizedBenchmark]);
   const geometry = useMemo(
-    () => buildSparklineGeometry(normalizedPoints.map((point) => point.value), width, height, CHART_PADDING),
-    [height, normalizedPoints, width],
+    () => buildSparklineGeometry(normalizedPoints.map((point) => point.value), width, height, CHART_PADDING, domain),
+    [domain, height, normalizedPoints, width],
   );
   const benchmarkGeometry = useMemo(
-    () => buildSparklineGeometry(normalizedBenchmark.map((point) => point.value), width, height, CHART_PADDING),
-    [height, normalizedBenchmark, width],
+    () => buildSparklineGeometry(normalizedBenchmark.map((point) => point.value), width, height, CHART_PADDING, domain),
+    [domain, height, normalizedBenchmark, width],
   );
   const [activeIndex, setActiveIndex] = useState<number>(Math.max(0, normalizedPoints.length - 1));
+  useEffect(() => setActiveIndex(Math.max(0, normalizedPoints.length - 1)), [normalizedPoints]);
   const activePoint = geometry.points[Math.min(activeIndex, Math.max(geometry.points.length - 1, 0))];
   const activeLabel = normalizedPoints[activeIndex]?.label ?? normalizedPoints[normalizedPoints.length - 1]?.label ?? "";
   const yAxisLabels = buildYAxisLabels(geometry.min, geometry.max, valueFormatter);
@@ -127,8 +136,8 @@ export function PortfolioMiniChart({
         }}
       >
         <div className="ot-home-widget-chart-axis ot-home-widget-chart-axis-y" aria-hidden="true">
-          {yAxisLabels.map((label) => (
-            <span key={label}>{label}</span>
+          {yAxisLabels.map((label, index) => (
+            <span key={`${label}-${index}`}>{label}</span>
           ))}
         </div>
 
@@ -199,14 +208,14 @@ export function PortfolioMiniChart({
 
       <figcaption className="ot-home-widget-chart-meta">
         <div className="ot-home-widget-chart-axis ot-home-widget-chart-axis-x" aria-hidden="true">
-          {xAxisLabels.map((label) => (
-            <span key={label}>{label}</span>
+          {xAxisLabels.map((label, index) => (
+            <span key={`${label}-${index}`}>{label}</span>
           ))}
         </div>
         <div className="ot-home-widget-chart-summary">
-          <span>Current {valueFormatter(normalizedPoints[normalizedPoints.length - 1]?.value ?? 0)}</span>
+          <span>{seriesLabel} {valueFormatter(normalizedPoints[normalizedPoints.length - 1]?.value ?? 0)}</span>
           {normalizedBenchmark.length > 0 ? (
-            <span>Benchmark {valueFormatter(normalizedBenchmark[normalizedBenchmark.length - 1]?.value ?? 0)}</span>
+            <span>{benchmarkLabel} {valueFormatter(normalizedBenchmark[normalizedBenchmark.length - 1]?.value ?? 0)}</span>
           ) : null}
         </div>
       </figcaption>

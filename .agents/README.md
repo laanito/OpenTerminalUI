@@ -217,8 +217,35 @@ cache labels, failed models, deleted-source discovery and overflow. A child
 Homebrew Node failed to load a missing simdutf library during the initial browser
 attempt; rerunning with existing `/Users/lamigo/.hermes/node/bin` first in the
 process PATH passed. No host runtime or repo test configuration was changed.
-Maintainer review is pending. Checked Deep integration and reference-aware
-retention/deletion/cleanup remain open before v2.8 release preparation.
+The maintainer confirmed PR #274 merged and tested. Carry that acceptance
+forward. Checked Deep integration and reference-aware retention/deletion/cleanup
+remain open before v2.8 release preparation.
+
+A separate Home correctness fix follows maintainer feedback that the 30D graph
+looked unrelated to Portfolio. The audit found a hard-coded 24–26m fallback,
+retained old curves after failure, older-date substitution, independent ending
+rescaling and independent visual scales. The fix removes those paths and the
+misleading net-liquidation sparkline. Home resolves the actual primary portfolio
+ID before requesting its existing benchmark analytics. It shows only shared dated
+observations within the last 30 UTC calendar days, independently rebased to 100 at
+the same first date and plotted on one vertical scale. Dates, base currency,
+primary name, original open-holdings methodology, history status and missing/
+degraded inputs are explicit. Null/string/nonfinite/nonpositive points and
+conflicting dates cannot silently misalign the two series. Partial, unsupported,
+empty, failed or insufficient recent history has no curve. Loading clears old
+history, single-flight polling avoids overlaps, and cleanup invalidates old scope
+requests/results. History check time is distinct from the final historical date.
+
+This is a presentation/data-integrity fix, not full historical account performance:
+the backend models today's open basket at constant quantities after the date all
+its positions existed, including historical FX. Cash, closed positions and full
+transaction-ledger/NAV returns remain excluded. No backend/API/schema/provider/
+settings/dependency change or production DB operation. Local checks: all 814
+frontend tests/130 files, production build, production-data/whitespace guards and
+all 35 installed-Chrome smoke journeys passed. New desktop/narrow Home journeys
+verify actual primary ID, independent ending returns, failed-refresh clearing,
+missing FX, old-window rejection and recovery. Maintainer review of this fix is
+pending; do not reopen #274 testing or treat the fix as v2.8 release acceptance.
 
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)

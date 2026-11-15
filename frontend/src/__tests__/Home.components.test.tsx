@@ -155,6 +155,19 @@ describe("shared home widgets", () => {
     expect(within(chart).getByText("Benchmark 1,100")).toBeInTheDocument();
   });
 
+  it("plots both comparison series against one shared vertical scale and resets inspection when the data changes", () => {
+    const view = render(<PortfolioMiniChart points={[100, 110]} benchmarkPoints={[100, 120]} />);
+    const chart = screen.getByRole("group", { name: "Portfolio performance chart" });
+    const benchmark = chart.querySelector(".ot-home-widget-chart-benchmark")!;
+    const area = chart.querySelector("path[fill^='url']")!;
+    // The benchmark's final value is twice the rise, so its endpoint is higher.
+    expect(benchmark.getAttribute("d")).toContain("L348.00 12.00");
+    expect(area.getAttribute("d")).toContain("L348.00 98.00");
+    fireEvent.focus(screen.getByLabelText("Portfolio performance chart interaction surface"));
+    fireEvent.keyDown(screen.getByLabelText("Portfolio performance chart interaction surface"), { key: "ArrowLeft" });
+    view.rerender(<PortfolioMiniChart points={[100, 103, 108]} benchmarkPoints={[100, 102, 104]} />);
+    expect(within(chart).getByText("108", { selector: ".ot-home-widget-chart-tooltip-value" })).toBeInTheDocument();
+  });
   it("renders a fixed multi-timezone clock strip", () => {
     render(
       <LiveClockStrip
