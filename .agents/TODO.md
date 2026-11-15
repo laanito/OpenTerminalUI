@@ -92,7 +92,7 @@ versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
 referenced evidence; unreferenced retention must be configurable, with its exact
 duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
-Capture/review/follow-up foundations are merged through #272. Durable selected-headline scoring APIs are implemented; browser/Deep sentiment linkage and retention remain open; see the
+Capture/review/follow-up foundations are merged through #272. Durable headline scoring and browser review are implemented; Deep sentiment linkage and retention remain open; see the
 current v2.8 checklist below.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
@@ -1337,7 +1337,31 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       API generation check, surface inventory (487 operations/87 families), mock
       and whitespace guards. Three PostgreSQL-only tests remain in guarded CI;
       extend that lane with nested origin JSON filtering and owner-only reads.
-      No frontend behavior changed. Maintainer review remains pending.
+      No frontend behavior changed in that slice. PR #273 is merged.
+- [x] Add saved-headline selection/review in Market Context saved briefings. Explicit
+      1–10 reference/target checkboxes use saved text, not current live page data.
+      New JWT `/sentiment/stream` shares synchronous scoring/storage, Fast budget
+      and cancellable post-commit lifecycle. Reject invalid scope before headers;
+      discard late receipts on cancellation/scope change and recover ambiguous
+      acknowledgement through retained history, never automatic model retry.
+      New JWT `GET /api/news/evidence` exposes paginated owner history; review
+      works without a source and after source deletion. A current saved-run filter
+      can widen to all retained observations. Inspection shows original text,
+      truncation/scope/dates, source ID/hash/citations, methods/model, independent
+      tone/asset outcomes, failed verdicts, cache reuse and escaped batch inputs.
+      Tone labels become positive/negative/neutral; no combined sentiment signal
+      or confidence is invented. Client receipts check exact selection/source and
+      dedup coverage. Parent mutation controls disable during scoring; closing
+      remains available. Source deletion confirms independent assessments remain.
+      No migration/settings/provider/dependency/API-key change; Deep is not wired.
+- [x] Verify 373 focused backend tests (three PostgreSQL-only skipped), all 795
+      frontend tests/129 files, production build, all 33 installed-Chrome smoke
+      journeys and API/surface/mock/whitespace guards (489 operations/87 families).
+      Extend guarded PostgreSQL history ownership coverage. Desktop/narrow journeys
+      verify selection, reload, original inputs, cache/failures, deleted-source
+      history and no horizontal overflow. Pin the existing Hermes Node path for
+      local browser runs if the Homebrew node/simdutf installation is inconsistent;
+      no repo/host runtime repair was needed. Maintainer review remains pending.
 - [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
       interpretation and inspectable retained references. Preserve failures,
       disagreements, deduplication and coverage; no market-wide sentiment claim.

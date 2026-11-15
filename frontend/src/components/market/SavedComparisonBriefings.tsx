@@ -3,6 +3,7 @@ import { deleteComparisonCapture, getComparisonCapture, listComparisonCaptures, 
   type CaptureSummary, type ComparisonCapture } from "../../api/comparisonCaptures";
 import type { BriefingPhase } from "../../api/comparisonBriefing";
 import { extractApiErrorMessage } from "../../api/base";
+import { SavedHeadlineSentiment } from "./SavedHeadlineSentiment";
 import { ComparisonBriefingResultView } from "./ComparisonBriefingResultView";
 
 export function SavedComparisonBriefings({ revision, onDeleted }: { revision: number; onDeleted?: (id: string) => void }) {
@@ -18,6 +19,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
   const [showInputs, setShowInputs] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [scoring, setScoring] = useState(false);
   const [following, setFollowing] = useState<"rerun" | "refresh" | null>(null);
   const [followPhase, setFollowPhase] = useState<BriefingPhase>("queued");
   const followup = useRef<AbortController | null>(null);
@@ -114,7 +116,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
       {loading ? <p role="status">Loading saved briefings…</p> : loaded && !error && !rows.length ? <p>{offset ? "No more saved briefings on this page." : "No saved briefings yet."}</p> : null}
       {error ? <p role="alert" className="text-terminal-warn">{error}</p> : null}
       <ul className="space-y-2">{rows.map((row) => <li key={row.id}>
-        <button type="button" className="text-terminal-accent underline disabled:opacity-50" disabled={deleting || Boolean(following)}
+        <button type="button" className="text-terminal-accent underline disabled:opacity-50" disabled={deleting || Boolean(following) || scoring}
           onClick={() => void inspect(row.id)} aria-pressed={selected?.id === row.id}>
           Open saved {row.anchor} vs {row.comparisons.join(", ")} · {row.period} · {new Date(row.captured_at).toLocaleString()} · {row.status}
         </button>
@@ -130,28 +132,28 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
         <p className="text-xs text-terminal-muted">Saved {new Date(selected.captured_at).toLocaleString()}. Evidence and generation dates below belong to this original run, independently of the page’s current selection. Retained until deleted.</p>
         <div className="flex flex-wrap gap-3">
           <button type="button" className="underline" onClick={close}>Close saved briefing</button>
-          <button type="button" disabled={Boolean(following) || Boolean(opening)} className="text-terminal-neg underline disabled:opacity-50" onClick={() => setConfirmDelete(true)}>Delete saved briefing</button>
+          <button type="button" disabled={Boolean(following) || scoring || Boolean(opening)} className="text-terminal-neg underline disabled:opacity-50" onClick={() => setConfirmDelete(true)}>Delete saved briefing</button>
         </div>
         {selected.lineage ? <div aria-label="Saved run lineage" className="space-y-1 rounded border border-terminal-border p-2 text-xs">
           <p>{selected.lineage.kind === "saved_input_rerun" ? "Saved-input rerun" : "Fresh-data refresh"} of a run generated {new Date(selected.lineage.source_generated_at).toLocaleString()}.</p>
           <p className="break-all">Source ID: {selected.lineage.parent_id} · source content hash: {selected.lineage.parent_content_hash}</p>
-          <button type="button" disabled={Boolean(following) || Boolean(opening) || deleting} className="text-terminal-accent underline" onClick={() => void inspect(selected.lineage!.parent_id, true)}>Open source saved run</button>
+          <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting} className="text-terminal-accent underline" onClick={() => void inspect(selected.lineage!.parent_id, true)}>Open source saved run</button>
           <p>Each run retains its own evidence even if its source run is deleted.</p>
         </div> : null}
         <div aria-label="Saved run follow-up" className="space-y-2 rounded border border-terminal-border p-3 text-xs">
           <p>Re-run sends the last saved prompts and generation settings to the current Deep model with frozen source data. Refresh fetches current evidence for this saved selection and uses current prompts. Both save a separate linked run and keep this original unchanged.</p>
           <p>Re-run makes one checked completion with the saved response format and token budget. Model aliases and provider behavior can change; identical wording is not guaranteed.</p>
           <div className="flex flex-wrap gap-3">
-            <button type="button" disabled={Boolean(following) || Boolean(opening) || deleting || !selected.content.result.evidence || !(selected.content.generation.attempts.length || selected.content.generation.prepared_request)}
+            <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting || !selected.content.result.evidence || !(selected.content.generation.attempts.length || selected.content.generation.prepared_request)}
               className="text-terminal-accent underline disabled:opacity-50" onClick={() => void follow("rerun")}>Re-run saved inputs</button>
-            <button type="button" disabled={Boolean(following) || Boolean(opening) || deleting} className="text-terminal-accent underline disabled:opacity-50" onClick={() => void follow("refresh")}>Refresh with current data</button>
+            <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting} className="text-terminal-accent underline disabled:opacity-50" onClick={() => void follow("refresh")}>Refresh with current data</button>
             {following ? <button type="button" className="underline" onClick={() => { stopFollowup(); setError("Request stopped. Refresh saved briefings to check whether saving completed."); }}>Cancel saved follow-up</button> : null}
           </div>
           {following ? <p role="status">{following === "rerun" ? "Re-running saved inputs" : "Refreshing current evidence"} · {followPhase.replace(/_/g, " ")}…</p> : null}
           {!selected.content.generation.attempts.length && !selected.content.generation.prepared_request ? <p>No saved completion request is available to re-run. Refresh can collect new evidence and start a new run.</p> : null}
         </div>
         {confirmDelete ? <div role="group" aria-label="Confirm saved briefing deletion" className="space-y-2 rounded border border-terminal-warn p-3">
-          <p>Delete this saved briefing and its retained evidence and model inputs?</p>
+          <p>Delete this saved briefing and its retained evidence and model inputs? Independent headline assessments remain in retained history.</p>
           <button type="button" disabled={deleting} className="mr-3 text-terminal-neg underline" onClick={() => void remove()}>{deleting ? "Deleting…" : "Confirm deletion"}</button>
           <button type="button" disabled={deleting} className="underline" onClick={() => setConfirmDelete(false)}>Keep saved briefing</button>
         </div> : null}
@@ -163,6 +165,8 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
           {showInputs ? <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-words">{JSON.stringify(selected.content.generation, null, 2)}</pre> : null}
         </details>
       </section> : null}
+      <SavedHeadlineSentiment key={selected?.id ?? "all-retained"} source={selected}
+        disabled={Boolean(following) || Boolean(opening) || deleting || confirmDelete} onBusyChange={setScoring} />
     </> : null}
   </section>;
 }

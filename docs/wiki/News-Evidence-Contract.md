@@ -1,13 +1,14 @@
 # Durable news evidence — v2.8 foundation
 
-Status: v2.8 capture/review/follow-ups and explicit durable headline scoring API,
+Status: v2.8 capture/review/follow-ups and durable headline scoring/review,
 2026-11-15. Legacy news APIs/scorers still do not write text/assessment tables.
 The new explicit saved-headline endpoint does: it stores exact selected text,
 separate keyword tone and Fast asset-implication assessments, and cache provenance.
 Saved comparisons retain their original evidence/results; generation endpoints
-remain ephemeral. Browser sentiment selection and checked Deep integration,
-configurable retention and cleanup remain future work. This contract supports
-repeatable evidence; it does not promise identical model prose.
+remain ephemeral. Browser sentiment selection, progress and retained history are
+available. Checked Deep sentiment integration, configurable retention and cleanup
+remain future work. This contract supports repeatable evidence; it does not
+promise identical model prose.
 
 ## Existing paths and provenance gaps
 
@@ -180,8 +181,8 @@ restart/provider-edit, privacy, repair/dispatch and optional-source tests run
 locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
 explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
 
-Next: browser selection/review and checked Deep sentiment integration, then
-configurable reference-aware retention.
+Next: checked Deep sentiment integration, then configurable reference-aware
+retention.
 Browser save/review/deletion is implemented; it does not introduce a private Brain
 index or shared evidence-blob lifecycle. See [Roadmap](Roadmap.md).
 
@@ -317,6 +318,46 @@ fields preserve existing records; no migration, old-row rewrite or new API-key
 scope is introduced. These routes remain experimental in `market-context`.
 There is no automatic expiry or delete endpoint yet; each call retains up to ten
 snapshots/twenty assessments. Account deletion still cascades private records.
-The current browser and Deep comparison prompts do not consume these records yet;
-the next slice adds explicit selection, inspection and checked references. Future
+The browser now exposes explicit selection, progress and retained inspection;
+Deep comparison prompts do not consume these records yet. The next slice adds
+new checked analyses with explicit retained references. Future
 cleanup must preserve referenced evidence and define deletion/missing-source UX.
+
+## Browser assessment progress and retained history
+
+Saved briefing review offers explicit headline checkboxes with news-group target
+symbols and a ten-reference cap. No model runs on open, history pagination or
+inspection. Submission sends only selected citation/target pairs through JWT-only
+`POST /api/market-context/briefing-captures/{id}/sentiment/stream`.
+Ownership/integrity/reference checks precede 200 headers. It reuses the same
+scoring/storage operation as synchronous POST, the shared bounded NDJSON
+lifecycle, current Fast deadline, safe errors and a final retained-record list
+only after commit. Source text, rubrics, cache identity and outcomes are unchanged.
+The stream emits progress rather than unchecked model deltas. Closing cancels
+unfinished scoring; it cannot undo a commit that finished first. A lost/invalid
+receipt directs users to retained history, never an automatic generation retry.
+
+JWT-only `GET /api/news/evidence?limit=20&offset=0` provides owner-wide history
+(maximum limit100, offset10000), including records with deleted source captures.
+It uses original stored JSON and no providers/models. The source-filtered GET and
+individual snapshot GET remain available. Unknown formats fail browser validation
+without modifying stored records. There is no source-parent foreign key to remove
+these independent observations when a saved comparison is deleted.
+
+In the browser, open **Review retained headline assessments** within saved review;
+use the optional **Show all retained headline assessments** filter, or open history
+without a source briefing. Results show exact original text/scope/truncation,
+source URL/publisher, publication/retrieval/capture dates, source ID/hash/citations,
+methods/model versions, original scoring/recording dates and cache reuse. Input
+inspection renders saved JSON as escaped plain text. Text-tone labels are shown
+as positive/negative/neutral, independently of the model's asset implication.
+Failed model assessments show no score or neutral verdict. No confidence or
+agreement metric is invented. This is not a whole-market sentiment sample.
+
+Progress, disabled duplicate-submit controls, cancellation, owner-history paging,
+late-response guards and detail focus are covered at desktop/narrow sizes.
+Changing saved source or page scope aborts pending work and discards its late
+results. Source deletion confirmation explicitly preserves independent
+assessments in retained history. No migration/settings/provider/dependency or
+API-key scope changes are introduced. Individual assessment deletion, automatic
+expiry and checked Deep integration remain open.

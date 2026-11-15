@@ -88,6 +88,10 @@ def test_news_evidence_round_trip_and_owner_constraint_on_postgres() -> None:
                 assert retained[0]["id"] == snapshot.id
                 assert retained[0]["payload"]["origin"]["citation_ids"] == ["C1G1H1"]
                 assert retained[0]["assessments"][0]["payload"] == result.payload
+                from backend.api.routes.news_evidence import list_retained_headlines
+                history = json.loads(list_retained_headlines(limit=20, offset=0, user=SimpleNamespace(id=owner), db=db).body)
+                assert history == retained
+                assert json.loads(list_retained_headlines(limit=20, offset=0, user=SimpleNamespace(id=other), db=db).body) == []
                 assert json.loads(list_headline_sentiment("retained-source", limit=20, offset=0, user=SimpleNamespace(id=other), db=db).body) == []
                 with pytest.raises(IntegrityError), db.begin_nested():
                     db.add(NewsSentimentAssessmentORM(

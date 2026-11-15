@@ -179,8 +179,46 @@ lane now checks nested origin JSON filtering and owner-only retained reads.
 Generated API reference, surface inventory (487 operations/87 families), mock
 and whitespace guards pass. This slice changes no frontend behavior: browser
 sentiment selection/review/progress, checked Deep reference integration and
-reference-aware retention/cleanup remain subsequent work. Maintainer review is
-pending. Do not treat this as v2.8 release acceptance.
+reference-aware retention/cleanup remained subsequent work at that slice. The
+maintainer confirmed PR #273 merged. Do not infer release acceptance.
+
+The next implemented v2.8 slice exposes **Headline sentiment** inside Market
+Context's **Review saved briefings**. Open a news-containing saved run, select up
+to ten explicit headline references/targets and **Assess and retain selected
+headlines**. Browser validation checks returned text, dates, source identity,
+original hash, targets, full selection coverage and deduplication before showing
+receipts. Keyword tone renders as positive/negative/neutral independently from
+Fast asset implication; failed models have no score/neutral verdict. Original
+scoring and recording times, cache reuse, exact source/truncation metadata,
+public method/model identity and escaped saved batch inputs remain inspectable.
+No model runs on opening, paging or inspecting retained records. Parent saved-run
+mutation controls are disabled during scoring, while close/scope changes cancel
+unfinished work and ignore late results.
+
+New JWT `/{capture_id}/sentiment/stream` shares synchronous scoring/storage and
+the existing cancellable lifecycle, current Fast budget and post-commit list
+receipt. Preflight ownership/hash/reference validation happens before headers.
+Source collection and Deep synthesis do not run. A commit completed before
+cancellation is not undone; refresh retained history before manually retrying
+uncertain completion. No automatic model retry. New JWT `GET /api/news/evidence`
+provides owner-only paginated history, including observations from deleted source
+captures. **Review retained headline assessments** works with no saved run open;
+when one is open, an optional all-history filter widens the default source scope.
+Deleting a source explicitly preserves independent headline assessments.
+No schema/settings/provider/dependency/API-key changes. The guarded PostgreSQL
+contract now checks global owner-history reads as well as source-filtered reads.
+
+Local verification: 373 focused backend tests passed; three PostgreSQL-only
+checks skipped. All 795 frontend tests/129 files, production build, all 33
+installed-Chrome smoke journeys, generated API check, surface inventory
+(489 operations/87 families), production-data and whitespace guards pass. The
+new desktop/narrow journeys cover explicit selection, exact inputs, reload,
+cache labels, failed models, deleted-source discovery and overflow. A child
+Homebrew Node failed to load a missing simdutf library during the initial browser
+attempt; rerunning with existing `/Users/lamigo/.hermes/node/bin` first in the
+process PATH passed. No host runtime or repo test configuration was changed.
+Maintainer review is pending. Checked Deep integration and reference-aware
+retention/deletion/cleanup remain open before v2.8 release preparation.
 
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)

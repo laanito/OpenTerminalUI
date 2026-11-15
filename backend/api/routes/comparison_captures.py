@@ -373,14 +373,23 @@ async def capture_headline_sentiment(
     Cache hits preserve original scoring times, model inputs and context identity.
     Retained until explicit future lifecycle policy; no automatic expiry.
     """
-    source_id, digest, source = _source_capture(db, user.id, capture_id)
+    texts = _selected_headlines(db, user.id, capture_id, selection)
+    profile = resolve_llm_profile(get_settings(), "news_sentiment")
+    return JSONResponse(await _capture_sentiment(texts, user, db, profile=profile), status_code=201)
+
+
+def _selected_headlines(db, user_id, capture_id, selection):
+    source_id, digest, source = _source_capture(db, user_id, capture_id)
     try:
         evidence = checked_source(source)
         texts = select_headlines(evidence, selection, capture_id=source_id, content_hash=digest)
     except (ValueError, KeyError, TypeError) as exc:
         raise HTTPException(status_code=422, detail="Select supported saved headlines and their source-group target symbols") from exc
-    profile = resolve_llm_profile(get_settings(), "news_sentiment")
-    results = await assess_headlines(texts, profile=profile, user_id=user.id)
+    return texts
+
+
+async def _capture_sentiment(texts, user, db, *, profile, on_phase=None):
+    results = await assess_headlines(texts, profile=profile, user_id=user.id, on_phase=on_phase)
     rows = []
     try:
         for text, assessments in zip(texts, results, strict=True):
@@ -388,13 +397,33 @@ async def capture_headline_sentiment(
             for assessment in assessments:
                 append_assessment(db, user_id=user.id, snapshot_id=row.id, assessment=assessment)
             rows.append(row)
+        if on_phase is not None:
+            on_phase("saving_capture")
         db.commit()
     except Exception as exc:
         db.rollback()
         logger.warning("Headline sentiment storage failed (%s)", type(exc).__name__)
         raise HTTPException(status_code=503, detail="Sentiment retention could not be confirmed; inspect retained evidence before retrying") from exc
     from fastapi.encoders import jsonable_encoder
-    return JSONResponse(jsonable_encoder(retained_headlines(db, user.id, rows)), status_code=201)
+    return jsonable_encoder(retained_headlines(db, user.id, rows))
+
+
+@router.post("/{capture_id}/sentiment/stream", response_class=StreamingResponse, responses={200: {"content": {
+    "application/x-ndjson": {"schema": {"type": "string", "description": "Progress with the Fast model budget and a final list of retained headline receipts only after commit. Closing cancels unfinished scoring; list retained records after uncertain acknowledgement."}}
+}}})
+async def stream_headline_sentiment(
+    capture_id: str, selection: SelectedHeadlines, user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    """Score explicit saved references with progress and cancellable unfinished work.
+
+    Same selection/retention contract as synchronous scoring. Ownership, integrity
+    and references are checked before headers; no live news collection or Deep
+    synthesis. Cache hits preserve original inputs/times. A final receipt follows
+    commit; disconnect cannot undo a completed commit. Never automatically retry.
+    """
+    texts = _selected_headlines(db, user.id, capture_id, selection)
+    profile = resolve_llm_profile(get_settings(), "news_sentiment")
+    return _stream_run(lambda phase: _capture_sentiment(texts, user, db, profile=profile, on_phase=phase), profile)
 
 
 @router.get("/{capture_id}/sentiment", response_model=list[RetainedHeadline])

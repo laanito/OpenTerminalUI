@@ -768,8 +768,10 @@ children with lineage. Reruns freeze prompts/evidence and use the current Deep
 model for one checked completion; refresh uses current collection/prompts. Explicit
 saved-headline assessment APIs now retain exact selected source text and separate
 keyword tone/Fast asset implication, including original scoring times across
-cache reuse and actual model inputs. Browser sentiment selection/review and
-checked Deep integration remain open. See [News evidence contract](News-Evidence-Contract.md)
+cache reuse and actual model inputs. Saved review now exposes explicit bounded
+headline selection, cancellable assessment progress, original text/model-input
+inspection and owner history that survives source deletion. Checked Deep
+sentiment integration remains open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
 

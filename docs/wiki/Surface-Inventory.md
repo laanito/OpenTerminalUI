@@ -154,8 +154,9 @@ capture/review/follow-up APIs and explicit selected-headline sentiment retention
 The latter scores saved text only and provides separate keyword-tone/Fast
 asset-implication assessments; owner-only `/api/news/evidence/{snapshot_id}` reads
 also belong to this family. Existing news-screen scorers are unchanged. Browser
-sentiment controls and Deep integration remain subsequent work; these additions
-do not reclassify the experimental API as stable.
+sentiment selection, progress and retained-history inspection are implemented;
+checked Deep integration remains subsequent work. These additions do not
+reclassify the experimental API as stable.
 
 
 ## Removed orphan surfaces

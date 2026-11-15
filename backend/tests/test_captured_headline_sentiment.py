@@ -361,3 +361,65 @@ def test_read_preserves_raw_stored_extensions_without_hydrating_current_defaults
         db.commit()
     assert client.get(f"/api/news/evidence/{row['id']}").json()["payload"] == payload
     assert client.get(f"{URL}/{saved['id']}/sentiment").json()[0]["payload"] == payload
+
+
+def test_stream_commits_then_receipts_and_global_history_survives_deleted_source(store, monkeypatch):
+    client, _, owner, _ = store
+    saved, calls, _ = source(client, monkeypatch)
+    response = client.post(f"{URL}/{saved['id']}/sentiment/stream", json=CHOICE)
+    assert response.status_code == 200 and "application/x-ndjson" in response.headers["content-type"]
+    events = [json.loads(line) for line in response.text.splitlines()]
+    assert events[0]["type"] == "start" and events[0]["deadlines"]["model_seconds"] == 1
+    assert events[-1]["type"] == "result"
+    rows = events[-1]["result"]
+    assert len(rows) == 1 and rows[0]["assessments"][1]["payload"]["status"] == "complete"
+    assert client.get("/api/news/evidence").json() == rows
+    assert client.get("/api/news/evidence?limit=1&offset=1").json() == []
+    owner["id"] = "other"
+    assert client.get("/api/news/evidence").json() == []
+    assert client.post(f"{URL}/{saved['id']}/sentiment/stream", json=CHOICE).status_code == 404
+    owner["id"] = "owner"
+    assert len(calls) == 2
+    client.delete(f"{URL}/{saved['id']}")
+    assert client.get("/api/news/evidence").json() == rows
+    assert client.get(f"/api/news/evidence/{rows[0]['id']}").json() == rows[0]
+
+
+@pytest.mark.asyncio
+async def test_closing_sentiment_stream_cancels_unfinished_model_without_partial_rows(store, monkeypatch):
+    client, factory, _, _ = store
+    saved, _, _ = source(client, monkeypatch)
+    started, cancelled = asyncio.Event(), asyncio.Event()
+    async def blocked(self, *args, **kwargs):
+        started.set()
+        try: await asyncio.Future()
+        finally: cancelled.set()
+    monkeypatch.setattr(llm_client.LLMClient, "chat", blocked)
+    with factory() as db:
+        response = await routes.stream_headline_sentiment(saved["id"], scoring.SelectedHeadlines(**CHOICE), SimpleNamespace(id="owner"), db)
+        iterator = response.body_iterator
+        assert json.loads(await anext(iterator))["type"] == "start"
+        assert json.loads(await anext(iterator))["type"] == "progress"
+        await asyncio.wait_for(started.wait(), 2)
+        await iterator.aclose()
+        assert cancelled.is_set()
+        assert db.scalar(sa.select(sa.func.count()).select_from(NewsTextSnapshotORM)) == 0
+
+
+def test_stream_scope_auth_and_storage_failures_do_not_claim_saved_results(store, monkeypatch):
+    from backend.auth.deps import get_current_user
+    client, _, _, _ = store
+    saved, calls, _ = source(client, monkeypatch)
+    assert client.post(f"{URL}/{saved['id']}/sentiment/stream", json={"headlines": []}).status_code == 422
+    assert client.post(f"{URL}/{saved['id']}/sentiment/stream", json={"headlines": [{"citation_id": "P1", "target_symbol": "AAPL"}]}).status_code == 422
+    assert len(calls) == 1
+    def fail(*args): raise RuntimeError("PRIVATE-STORAGE-DETAIL")
+    monkeypatch.setattr(Session, "commit", fail)
+    response = client.post(f"{URL}/{saved['id']}/sentiment/stream", json=CHOICE)
+    events = [json.loads(line) for line in response.text.splitlines()]
+    assert events[-1]["type"] == "error" and events[-1]["error"]["code"] == "capture_not_confirmed"
+    assert "PRIVATE-STORAGE-DETAIL" not in response.text
+    assert client.get("/api/news/evidence").json() == []
+    client.app.dependency_overrides.pop(get_current_user)
+    assert client.post(f"{URL}/{saved['id']}/sentiment/stream", json=CHOICE).status_code == 401
+    assert client.get("/api/news/evidence").status_code == 401
