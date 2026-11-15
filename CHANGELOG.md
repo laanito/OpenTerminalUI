@@ -45,6 +45,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cleanup remain open.
 
 ### Fixed
+- **Portfolio benchmark daily alignment** — normalize daily provider timestamps
+  to UTC dates before portfolio/benchmark alignment. Crypto midnight bars and US
+  equity session bars no longer lose their overlap and falsely report benchmark
+  history unavailable. Hourly timestamps and genuine missing-history failures
+  retain their behavior; no benchmark/provider substitution or accounting change.
 - **Home portfolio history** — remove the hard-coded 24–26 million demo curve
   and clear old data on failed refreshes. Resolve the actual primary portfolio
   ID, use only shared observations in the last 30 UTC calendar days, and rebase

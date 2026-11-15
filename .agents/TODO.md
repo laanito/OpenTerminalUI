@@ -1402,10 +1402,28 @@ additive migration.
       requests. Avoid replaying all timer/animation ticks with `runFor`; do not
       raise timeouts. Six repeated width-specific tests and all 35 full smoke
       journeys pass locally after correction; production code is unchanged.
-- [ ] Maintainer review/acceptance of the fix. Preserve the existing explicit
+- [x] PR #275 is merged. Preserve the existing explicit
       limitation: current-open-holdings analytics are not cash-flow-adjusted
       transaction-ledger/NAV performance. Full reconstruction remains deferred;
       do not conceal this by relabelling an indexed basket as account wealth.
+
+### Portfolio daily history alignment — Home follow-up
+
+- [x] Diagnose the reported sole `benchmark_history_unavailable (^GSPC)` issue.
+      The route is user-owned, not the retired shared portfolio. Reproduce valid
+      crypto midnight and index 14:30 UTC bars being erased by exact-timestamp
+      reindexing. Normalize daily Yahoo bars to UTC dates; keep intraday timestamps
+      and existing FMP daily labels, past-close carry-forward and no future fill.
+      Do not substitute SPY, a different provider or guessed currencies.
+- [x] Add regressions for Yahoo/FMP combinations, weekend history, no future fill,
+      UTC day rollover, intraday preservation and genuinely absent benchmark data.
+      Verify 70 relevant backend tests, 29 Home frontend tests, production build,
+      both Home browser journeys, generated API, production-data and whitespace
+      guards. Add daily-calendar disclosure to Home and documentation. No schema,
+      dependency/settings/accounting change or production database operation.
+- [ ] Maintainer review/deployment check of the daily-alignment fix. Local source
+      fixtures reproduce the exact error; direct inspection of the live instance
+      was unavailable. Keep full transaction-ledger/NAV performance deferred.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 

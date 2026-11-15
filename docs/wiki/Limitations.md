@@ -377,6 +377,10 @@ never silently faked.
   than pretending a provider-free report can value FX. Risk and benchmark views
   follow today's open holdings at constant quantity from the first date when the
   entire current basket was open, converting each retained close with dated FX.
+  Daily bars are aligned by UTC calendar date rather than exchange opening hour;
+  these labels do not establish simultaneous quote instants. The benchmark can
+  carry its prior available close on non-trading dates; future quotes are never
+  backfilled into earlier dates. Intraday requests retain their timestamps.
   They therefore
   exclude closed positions and do not represent ledger-reconstructed,
   cash-flow-adjusted performance. Attribution uses the same explicit boundary

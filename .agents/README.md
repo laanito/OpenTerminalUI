@@ -256,7 +256,28 @@ and rendered outcome before the next jump. Assert exactly five total history
 requests. No application logic or timeout was changed. Both widths passed three
 consecutive runs (six tests), and the complete 35-journey Chrome smoke suite
 passed after correction. Keep this deterministic clock pattern for polling tests;
-CI acceptance of #275 is still pending.
+The maintainer confirmed #275 merged. Live follow-up then reported only
+`Benchmark history unavailable (^GSPC)`, with no missing holding/FX issue.
+
+The following backend fix reproduces that precise failure with valid source data:
+Yahoo daily crypto bars use UTC midnight while US index bars use the session's
+14:30 UTC timestamp. `_close_series` preserved these hours and benchmark reindexing
+matched exact instants, erasing all overlap. Normalize Yahoo daily bars to UTC
+calendar dates before the existing deduplication/alignment; FMP date labels already
+use midnight. Hourly requests keep their actual timestamps. No provider, benchmark,
+ownership, price, FX or quantity/accounting policy changes. Existing past-close
+carry-forward remains; no future benchmark quote is backfilled. Add a brief Home
+calendar disclosure so a weekend date is not mistaken for a new index quote.
+Regression tests fail on the old code and pass on the fix, covering mixed Yahoo/
+FMP history, crypto/equity session hours, weekend carry, no future fill, UTC rollover,
+intraday preservation and genuinely missing benchmark data. Local verification:
+70 backend tests (portfolio analytics/attribution/accounting/primary ownership/
+ledger), 29 Home frontend tests, production build and both installed-Chrome Home
+journeys passed. Generated API reference check, production-data and whitespace
+guards pass. No schema/dependency/settings change or production DB operation.
+Maintainer review of the daily-alignment follow-up is pending; the reported live
+instance was not directly inspected. This is separate from the remaining v2.8
+Deep sentiment integration and retention work.
 
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)
