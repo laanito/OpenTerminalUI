@@ -42,6 +42,13 @@ Confirm the target milestone in [Roadmap](Roadmap.md) is complete, then:
    surface-inventory, and generated API-reference guards, `pytest` + coverage
    gate, frontend build, Vitest, and the deterministic Chromium `@smoke` set.
    Broader pre-1.0 Playwright fixtures remain manual while rehabilitated.
+   The browser-bearing `build-and-test` job is pinned to `ubuntu-24.04`: the
+   locked Playwright 1.58.2 has Chromium/dependency support for that image, while
+   `ubuntu-latest` can move to an unsupported distribution (observed with 26.04).
+   Check the locked Playwright platform matrix before moving this job's OS;
+   GitHub's [runner image list](https://github.com/actions/runner-images#available-images)
+   documents explicit labels. Compose and PostgreSQL jobs retain their existing
+   runner selection.
 5. **Smoke matrix** — manually verify the core flows on each combination:
 
    | DB | Keys | Must work |

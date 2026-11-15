@@ -1425,6 +1425,16 @@ additive migration.
       fixtures reproduce the exact error; direct inspection of the live instance
       was unavailable. Keep full transaction-ledger/NAV performance deferred.
 
+### CI browser runner compatibility — #276 follow-up
+
+- [x] Pin only `build-and-test` to `ubuntu-24.04` after moving `ubuntu-latest`
+      selected 26.04 and Playwright 1.58.2 failed before installing Chromium.
+      Validate YAML and unchanged other job semantics; inspect the locked SDK's
+      Ubuntu24 dependency table and successful Linux-target install dry-run.
+      No dependency upgrade, skipped test, altered Node/Python or other runner
+      changes. Actual Ubuntu dependency installation remains a hosted CI check.
+      Record the pin and upgrade boundary in Releasing; update the open #276.
+
 ### v2 evidence implementation ledger — shipped work and later gaps
 
 The completed entries below shipped in v2.0/v2.1. Unchecked entries remain later

@@ -279,6 +279,18 @@ Maintainer review of the daily-alignment follow-up is pending; the reported live
 instance was not directly inspected. This is separate from the remaining v2.8
 Deep sentiment integration and retention work.
 
+PR #276 then hit a CI setup failure before browser tests: `ubuntu-latest` resolved
+to Ubuntu 26.04, which locked Playwright 1.58.2 does not support for Chromium
+installation/dependencies. Pin only the browser-bearing `build-and-test` job to
+`ubuntu-24.04`; keep Compose/PostgreSQL runner selection, Node/Python, SDK/lockfile
+and all test gates unchanged. Existing Playwright platform/dependency tables
+explicitly support Ubuntu 24.04 x64. YAML parsing/diff verifies that only this
+job's runner label changed semantically, and a Linux-target browser install
+`--dry-run --with-deps chromium` resolves successfully. This is not an actual
+Ubuntu package/browser installation on the local Mac; hosted CI must verify it.
+The release guide records the OS pin and requirement to check locked SDK support
+before moving the runner. #276 remains open; do not monitor CI unless requested.
+
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)
 coalesced the reproduced Yahoo off-grid quote tail and repaired full crosshair
