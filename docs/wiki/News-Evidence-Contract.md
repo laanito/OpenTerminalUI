@@ -1,13 +1,13 @@
 # Durable news evidence — v2.8 foundation
 
-Status: v2.8 storage/capture, browser review and linked follow-ups, 2026-11-14. The existing news APIs and
-scorers do **not yet write the text/assessment tables**. Explicit comparison
-capture now stores its own complete evidence/results inline; existing comparison
-generation endpoints remain ephemeral. The browser now offers an explicit saved
-run with paginated review, original evidence/input inspection and deletion.
-Captured-input reruns and linked fresh-data refreshes are available. Configurable
-retention cleanup and headline-sentiment integration remain future work. This contract
-supports repeatable evidence; it does not promise identical model prose.
+Status: v2.8 capture/review/follow-ups and explicit durable headline scoring API,
+2026-11-15. Legacy news APIs/scorers still do not write text/assessment tables.
+The new explicit saved-headline endpoint does: it stores exact selected text,
+separate keyword tone and Fast asset-implication assessments, and cache provenance.
+Saved comparisons retain their original evidence/results; generation endpoints
+remain ephemeral. Browser sentiment selection and checked Deep integration,
+configurable retention and cleanup remain future work. This contract supports
+repeatable evidence; it does not promise identical model prose.
 
 ## Existing paths and provenance gaps
 
@@ -27,7 +27,8 @@ scores as verified assessments or backfill provenance from today's model.
 `models/news_evidence.py` adds two owner-scoped tables. `services/news_evidence.py`
 provides validated inputs, insert-only helpers and owner-filtered reads. Helpers
 flush within the caller's transaction; they do not commit, fetch, score or prune.
-There is no public endpoint in this increment.
+The initial storage increment exposed no endpoint; the explicit scoring/read
+API below now uses these helpers. Legacy rows are not backfilled.
 
 Each text capture gets a UUID, actual terminal `captured_at`, SHA-256 text hash
 and schema-versioned JSON. The payload preserves exact title and supplied summary,
@@ -65,7 +66,7 @@ Assessment writes first check snapshot ownership. A composite database foreign
 key also prevents linking another owner's snapshot by ID. Reads require an owner
 and never resolve by text hash. Rescoring inserts a new assessment. Ordinary ORM
 updates are rejected; this application contract is not a tamper-proof audit store
-against privileged SQL. There are no update/delete HTTP surfaces in this increment.
+against privileged SQL. There are no text/assessment update/delete HTTP surfaces yet.
 Deleting an account cascades its private records, with no other owner sharing them.
 
 ## Migration and retention
@@ -155,8 +156,10 @@ grant capture access.
 Captures are self-contained: the exact selected headline text is retained inline,
 not looked up through live URLs, public news IDs or mutable caches. There are no
 shared blobs or external evidence dependencies to expire underneath a capture.
-They do not yet link separate text snapshots/assessments; that comes with sentiment
-integration. News is still headline-only where the packet says so; no full article
+The explicit assessment API records the source capture ID/hash and selected
+headline citations in independent text snapshots. It does not rewrite the saved
+comparison or add assessments to its evidence/prompt; checked Deep integration
+will create a new analysis with explicit retained references. News is still headline-only where the packet says so; no full article
 archive or historical-knowledge claim is introduced.
 
 Content hashes cover the complete serialized content, including generation/input
@@ -177,8 +180,8 @@ restart/provider-edit, privacy, repair/dispatch and optional-source tests run
 locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
 explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
 
-Next: selected-headline sentiment/assessment integration, then configurable
-reference-aware retention.
+Next: browser selection/review and checked Deep sentiment integration, then
+configurable reference-aware retention.
 Browser save/review/deletion is implemented; it does not introduce a private Brain
 index or shared evidence-blob lifecycle. See [Roadmap](Roadmap.md).
 
@@ -227,3 +230,93 @@ Refresh saved history after uncertain acknowledgement before manually retrying.
 No automatic retry or idempotency guarantee is introduced. Existing generation
 endpoints remain temporary; these endpoints introduce no API-key scope, private
 Brain indexing, new provider or retention cleanup.
+
+## Explicit saved-headline assessments (API)
+
+JWT-only `POST /api/market-context/briefing-captures/{id}/sentiment` accepts one to
+ten selected headline/target pairs from an owned, integrity-checked saved context:
+
+```json
+{"headlines":[{"citation_id":"C1G1H1","target_symbol":"AAPL"}]}
+```
+
+Use the actual packet-local headline ID and its news group's symbol, not a pair,
+section or group ID. Targets must match that group exactly. Unknown/mismatched
+references, duplicates, replacement browser text, prompts and extra fields are
+rejected before scoring. Price-only/absent/unsupported evidence cannot be scored.
+This endpoint reads saved headline text only: no live fetch, URL read, article
+summary, legacy score or inferred historical knowledge is added. Source capture
+ownership/integrity is checked before model work. Another owner's ID returns 404;
+changed stored contents return 409; unsupported selections return 422.
+
+Exact repeated selected source/target observations across pair-local copies are
+scored once, with all selected local citations retained. Identity includes title,
+URL, publisher, publication/retrieval times and truncation; equal URLs or text
+hashes alone do not merge observations. Different targets stay distinct. Each
+explicit call creates new snapshot/assessment UUIDs, including cache hits.
+
+The 201 response is a list of retained headline records, each with exact original
+title, empty summary, publication and original collection times, truncation flag,
+source URL/publisher, terminal capture time and text hash. Additive optional
+`origin` JSON records the source capture ID/hash and selected headline IDs. Two
+independent assessments are stored per selected observation, in one transaction:
+
+- **Keyword text tone**, `method: lexical`, `finance-keyword-tone-v1`: counts
+  positive/negative finance-term substring matches, with score `(positive -
+  negative) / max(1, positive + negative)`. `bullish`/`bearish` labels here mean
+  positive/negative keyword tone. This engine uses no hidden FinBERT/TextBlob
+  fallback and declares no target-price implication or confidence.
+- **Fast asset implication**, `method: llm`, `saved-headline-asset-v1`: explicitly
+  names the target in a bounded batch prompt. Scores/labels/rationales must pass
+  finite-range, index, duplicate, schema and label/score consistency checks.
+  It is a model opinion about the supplied headline, not measured investor
+  sentiment, a forecast or proof of market impact. No confidence is fabricated.
+
+The rubrics differ; comparing them does not establish classifier agreement or an
+investment conclusion. A disabled, unreachable, timed-out or malformed model
+produces a **failed** asset-implication assessment with an allowlisted code and
+no score/label/rationale. Missing verdicts stay failed while valid other items are
+retained. A failed model is never silently replaced by keyword tone or neutral.
+The resolved Fast profile bounds health/completion/format-token retries; there is
+no Deep/model escalation or semantic repair. Server-task cancellation aborts
+unfinished work without inserting partial rows. This endpoint is synchronous;
+a client disconnect alone can leave the request running. Storage errors roll back the whole batch and
+return 503 without claiming success. A completed commit may outlive a lost reply;
+list the retained records before manually retrying. No automatic retry or
+idempotency guarantee is introduced.
+
+Fast assessments retain exact title input, target/meaning/method/prompt versions,
+public model identity, original completion `scored_at`, and additive optional
+`generation` JSON: protocol, public profile, context hash and exact dispatched
+JSON request bodies/times (including client augmentation and format/token
+fallback). Connection URLs, authentication headers and credentials are excluded. The context hash covers
+the versioned full batch prompt and response schema, including targets/order and
+truncation; it is not a provider-receipt or immutable-weights guarantee.
+
+A separate owner/profile/context-scoped cache stores only wholly valid Fast
+batches for 15 minutes. That TTL is a scoring optimization, **not evidence
+retention**. Cache hits preserve original scoring time, model inputs and context;
+`reused_from_cache` is explicit, while new `recorded_at`/capture times reflect the
+new write. Keyword tone is recomputed with its own scoring time. Legacy cache
+entries lack provenance and are never promoted. Target, batch, prompt/schema,
+profile/connection identity or exact text changes invalidate reuse. Cache failures
+fall back to scoring; neither read nor write failure discards a valid retained
+assessment. Cache I/O has a two-second bound, independently of the Fast deadline.
+
+Read without source/model work through:
+
+- `GET /api/market-context/briefing-captures/{id}/sentiment?limit=20&offset=0`:
+  owner-filtered retained observations (maximum limit 100, offset 10000).
+  Unknown/other-owner IDs return an empty list. Deleting the source capture does
+  not remove or hide independent retained assessments.
+- `GET /api/news/evidence/{snapshot_id}`: exact saved payload/assessments, including
+  original scoring and recording times. Unknown/other-owner IDs return 404.
+
+Reads return stored payload JSON without adding today's defaults. Optional JSON
+fields preserve existing records; no migration, old-row rewrite or new API-key
+scope is introduced. These routes remain experimental in `market-context`.
+There is no automatic expiry or delete endpoint yet; each call retains up to ten
+snapshots/twenty assessments. Account deletion still cascades private records.
+The current browser and Deep comparison prompts do not consume these records yet;
+the next slice adds explicit selection, inspection and checked references. Future
+cleanup must preserve referenced evidence and define deletion/missing-source UX.

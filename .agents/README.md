@@ -147,8 +147,40 @@ automatic retry. No schema/config/provider/dependency/API-key changes. Local
 verification: 325 focused backend tests passed, three PostgreSQL-only skipped;
 766 frontend tests/127 files, build and API/surface/mock guards passed. Installed
 Chrome full smoke suite passes all 31 journeys, including desktop/narrow follow-ups.
-Maintainer review of this slice is
-pending. Sentiment linkage and the unreferenced retention policy remain open.
+The maintainer confirmed PR #272 merged. Sentiment browser/Deep linkage and the
+unreferenced retention policy remain open.
+
+The next v2.8 slice implements explicit durable selected-headline scoring APIs:
+`POST /api/market-context/briefing-captures/{id}/sentiment` selects up to ten
+saved headline IDs with their news-group target symbols. Reads use GET on that
+path (paginated) or `GET /api/news/evidence/{snapshot_id}`. Ownership, source
+integrity and target/reference checks precede scoring; no live text/URL fetch or
+browser replacement text is accepted. Exact repeated source/target observations
+across selected pair copies retain all local citations and score once. Each call
+creates new text and assessment UUIDs, atomically using existing tables.
+Independent keyword tone (`finance-keyword-tone-v1`) and Fast asset implication
+(`saved-headline-asset-v1`) are retained; the former is not a fallback model
+verdict. Model failure/missing/invalid output stays failed without a neutral or
+baseline replacement. Full batch/target/schema/version/owner/profile cache
+identity and actual dispatched bodies preserve original scoring times and inputs
+on cache hits; new recording/capture times remain distinct. Cache TTL is 15min,
+not evidence expiry. Cache I/O is bounded at 2s and failures do not lose results.
+No hidden FinBERT/TextBlob chain, Deep escalation, decision-model provider,
+confidence invention, legacy-score promotion, migration or old-row rewrite.
+New optional JSON origin/generation/cache flags preserve older records.
+Saved reads return raw original payloads, and retained text/assessments survive
+source-capture deletion. API-key scopes stay unchanged; routes are experimental.
+The synchronous scoring request can finish after a client disconnect; inspect
+retained records before manually retrying an uncertain reply. Server-task
+cancellation leaves no partial rows; storage failure rolls the whole batch back.
+Locally 370 focused research/scoring tests and 57 legacy news/auth tests passed;
+three actual PostgreSQL checks skipped and remain in the guarded CI lane. That
+lane now checks nested origin JSON filtering and owner-only retained reads.
+Generated API reference, surface inventory (487 operations/87 families), mock
+and whitespace guards pass. This slice changes no frontend behavior: browser
+sentiment selection/review/progress, checked Deep reference integration and
+reference-aware retention/cleanup remain subsequent work. Maintainer review is
+pending. Do not treat this as v2.8 release acceptance.
 
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)

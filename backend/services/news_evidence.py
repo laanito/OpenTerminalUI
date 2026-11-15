@@ -15,12 +15,36 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from backend.services.llm_profiles import LLMProfileIdentity
 from backend.models.news_evidence import NewsSentimentAssessmentORM, NewsTextSnapshotORM
+
+
+class ComparisonNewsOrigin(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    kind: Literal["saved_comparison_headlines"] = "saved_comparison_headlines"
+    capture_id: str = Field(min_length=1, max_length=36)
+    capture_content_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    citation_ids: tuple[str, ...] = Field(min_length=1, max_length=10)
+
+
+class AssessmentModelRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    dispatched_at: AwareDatetime
+    body: dict
+
+
+class AssessmentGeneration(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    protocol: Literal["openai_compatible_chat_completions"] = "openai_compatible_chat_completions"
+    profile: LLMProfileIdentity
+    context_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    attempts: tuple[AssessmentModelRequest, ...] = Field(default=(), max_length=12)
 
 
 class NewsText(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     schema_version: Literal[1] = 1
+    origin: ComparisonNewsOrigin | None = None
     title: str = Field(max_length=16384)
     summary: str = Field(default="", max_length=65536)
     source_url: str = Field(max_length=8192)
@@ -51,6 +75,8 @@ class NewsText(BaseModel):
 class SentimentAssessment(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     schema_version: Literal[1] = 1
+    generation: AssessmentGeneration | None = None
+    reused_from_cache: bool = False
     target_symbol: str | None = Field(default=None, min_length=1, max_length=64)
     meaning: Literal["text_tone", "asset_implication"]
     method: str = Field(min_length=1, max_length=128)

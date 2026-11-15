@@ -149,6 +149,15 @@ saving/indexing or reclassification, and does not imply that optional panels
 informed a briefing. See the
 [v2.2 scope](Roadmap.md) and [research guide](Research-Workflows.md).
 
+The same experimental family now includes v2.8's owner-scoped saved comparison
+capture/review/follow-up APIs and explicit selected-headline sentiment retention.
+The latter scores saved text only and provides separate keyword-tone/Fast
+asset-implication assessments; owner-only `/api/news/evidence/{snapshot_id}` reads
+also belong to this family. Existing news-screen scorers are unchanged. Browser
+sentiment controls and Deep integration remain subsequent work; these additions
+do not reclassify the experimental API as stable.
+
+
 ## Removed orphan surfaces
 
 Static import/reachability inspection found four page implementations absent from

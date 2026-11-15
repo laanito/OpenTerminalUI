@@ -323,6 +323,22 @@ An original capture with no saved completion request offers refresh only. See
 [the follow-up contract](News-Evidence-Contract.md#linked-reruns-and-fresh-data-refreshes)
 for endpoints and failure/cancellation behavior.
 
+### Retained selected-headline scoring (API first)
+
+Saved context captures with headline evidence can now be explicitly scored through
+`POST /api/market-context/briefing-captures/{id}/sentiment`, selecting one to ten
+packet-local headline IDs and their source-group symbols. This retains exact
+headline text plus independent keyword-tone and Fast asset-implication assessments.
+Failures remain failed; a keyword baseline is not a replacement model verdict.
+Cache reuse preserves original scoring times and dispatched inputs. List through
+`GET /api/market-context/briefing-captures/{id}/sentiment`, or reopen a returned
+snapshot ID through `GET /api/news/evidence/{snapshot_id}` without live calls.
+Assessments survive deletion of their source comparison and do not change its
+answer. Browser sentiment controls and Deep interpretation are the next slice;
+current news pages and briefing prompts are unchanged. See the
+[assessment contract](News-Evidence-Contract.md#explicit-saved-headline-assessments-api)
+for requests, limits, provenance and retention boundaries.
+
 ### Comparison briefing APIs
 
 JWT-authenticated `POST /api/market-context/briefing` accepts the same selection

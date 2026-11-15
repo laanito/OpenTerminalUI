@@ -21,13 +21,16 @@ from backend.api.routes import market_briefing as briefings
 from backend.auth.deps import get_current_user
 from backend.config.settings import get_settings
 from backend.core.sec_edgar_client import get_sec_edgar_client
-from backend.models import User
+from backend.models import User, NewsTextSnapshotORM
 from backend.models.comparison_capture import ComparisonCaptureORM
 from backend.services.comparison_briefing import ComparisonBriefingResult
 from backend.services.comparison_context_briefing import ComparisonContextBriefingResult
 from backend.services.economic_data import get_economic_data_service
 from backend.services.llm_profiles import LLMProfileIdentity, resolve_llm_profile
 from backend.services.insight_lifecycle import stream_insight_lifecycle
+from backend.services.captured_headline_sentiment import SelectedHeadlines, select_headlines, assess_headlines
+from backend.services.news_evidence import capture_text, append_assessment
+from backend.api.routes.news_evidence import RetainedHeadline, retained_headlines
 from backend.services.comparison_rerun import checked_source, saved_request, rerun_saved_inputs
 from backend.services.market_briefing_context_evidence import BriefingContextOptions
 
@@ -155,8 +158,9 @@ async def create_capture(
     Stores complete bounded evidence, checked answer or typed failure, and exact
     model request bodies (including client format/token retries and repair).
     No browser-supplied result/provenance is accepted. No indexing or automatic
-    expiry. Existing briefing endpoints remain ephemeral. No captured-input rerun
-    is exposed yet; another POST fetches new evidence and creates a new capture.
+    expiry. Existing briefing endpoints remain ephemeral. Another initial POST
+    fetches fresh evidence; separate follow-up endpoints rerun saved inputs or
+    refresh a saved selection into a new linked capture.
     """
     return await _capture_briefing(payload, user, db, fetcher, economic_service, sec_client)
 
@@ -352,6 +356,63 @@ async def stream_refresh(
     profile = resolve_llm_profile(get_settings(), "comparison_briefing")
     return _stream_run(lambda phase: _capture_briefing(selection, user, db, fetcher, economic_service, sec_client,
                                                        profile=profile, on_phase=phase, lineage=lineage), profile)
+
+
+@router.post("/{capture_id}/sentiment", response_model=list[RetainedHeadline], status_code=201)
+async def capture_headline_sentiment(
+    capture_id: str, selection: SelectedHeadlines, user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    """Assess up to ten explicitly selected saved headlines and retain both methods.
+
+    Targets must match their saved news groups. Deduplicate exact repeated
+    source/target observations across selected pair-local references. No live
+    text fetch or legacy-score promotion. Fast judges asset implication;
+    deterministic keyword tone is separate and never masks a failed model.
+    Original capture/result stays unchanged; Deep interpretation is not rerun.
+    One transaction stores the selected text plus independent assessments.
+    Cache hits preserve original scoring times, model inputs and context identity.
+    Retained until explicit future lifecycle policy; no automatic expiry.
+    """
+    source_id, digest, source = _source_capture(db, user.id, capture_id)
+    try:
+        evidence = checked_source(source)
+        texts = select_headlines(evidence, selection, capture_id=source_id, content_hash=digest)
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail="Select supported saved headlines and their source-group target symbols") from exc
+    profile = resolve_llm_profile(get_settings(), "news_sentiment")
+    results = await assess_headlines(texts, profile=profile, user_id=user.id)
+    rows = []
+    try:
+        for text, assessments in zip(texts, results, strict=True):
+            row = capture_text(db, user_id=user.id, evidence=text)
+            for assessment in assessments:
+                append_assessment(db, user_id=user.id, snapshot_id=row.id, assessment=assessment)
+            rows.append(row)
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        logger.warning("Headline sentiment storage failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=503, detail="Sentiment retention could not be confirmed; inspect retained evidence before retrying") from exc
+    from fastapi.encoders import jsonable_encoder
+    return JSONResponse(jsonable_encoder(retained_headlines(db, user.id, rows)), status_code=201)
+
+
+@router.get("/{capture_id}/sentiment", response_model=list[RetainedHeadline])
+def list_headline_sentiment(
+    capture_id: str, limit: int = Query(default=20, ge=1, le=100), offset: int = Query(default=0, ge=0, le=10000),
+    user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    """Owner-only retained assessments for this source ID, including a deleted source.
+
+    No live fetch/model work or current-model defaults. Unknown and other-owner
+    source IDs return an empty list. Each record remains independently readable.
+    """
+    from fastapi.encoders import jsonable_encoder
+    rows = db.scalars(select(NewsTextSnapshotORM).where(
+        NewsTextSnapshotORM.user_id == user.id,
+        NewsTextSnapshotORM.payload["origin"]["capture_id"].as_string() == capture_id,
+    ).order_by(NewsTextSnapshotORM.captured_at.desc(), NewsTextSnapshotORM.id.desc()).offset(offset).limit(limit)).all()
+    return JSONResponse(jsonable_encoder(retained_headlines(db, user.id, rows)))
 
 
 @router.get("", response_model=list[CaptureSummary])
