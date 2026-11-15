@@ -3,7 +3,9 @@ import { expect, test } from "@playwright/test";
 for (const width of [1440, 390]) {
   test(`@smoke Home shows honest primary open-holdings history and clears failed refreshes at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.clock.install({ time: new Date("2026-11-15T16:30:00Z") });
+    // Pause before the app registers timers, so host speed cannot add polls.
+    await page.clock.install({ time: new Date("2026-11-15T16:29:00Z") });
+    await page.clock.pauseAt(new Date("2026-11-15T16:30:00Z"));
     let mode: "valid" | "failed" | "partial" | "old" = "valid";
     const requested: string[] = [];
     await page.route("**/api/**", async (route) => {
@@ -38,15 +40,23 @@ for (const width of [1440, 390]) {
     const chart = panel.getByRole("group", { name: "Primary open-holdings indexed comparison", exact: true });
     await chart.getByLabel("Primary open-holdings indexed comparison interaction surface").focus();
     await page.keyboard.press("ArrowLeft"); await expect(chart.locator(".ot-home-widget-chart-tooltip-value")).toHaveText("100.00 index");
-    mode = "failed"; await page.clock.runFor(30001);
+    const poll = async (nextMode: typeof mode) => {
+      const previous = requested.length;
+      mode = nextMode;
+      // One interval callback is enough; do not replay every clock/animation tick.
+      await page.clock.fastForward(30001);
+      await expect.poll(() => requested.length).toBe(previous + 1);
+    };
+    await poll("failed");
     await expect(panel).toContainText("History unavailable"); await expect(panel).toContainText("No previous curve is shown");
     await expect(chart).toHaveCount(0); await expect(panel.locator("svg")).toHaveCount(0);
-    mode = "partial"; await page.clock.runFor(30001);
+    await poll("partial");
     await expect(panel).toContainText("Historical FX unavailable (SAP.DE)"); await expect(chart).toHaveCount(0);
-    mode = "old"; await page.clock.runFor(30001);
+    await poll("old");
     await expect(panel).toContainText("At least two shared observations"); await expect(chart).toHaveCount(0);
-    mode = "valid"; await page.clock.runFor(30001);
+    await poll("valid");
     await expect(panel).toContainText("History available"); await expect(panel).toContainText("Open holdings 110.00 index");
+    expect(requested).toHaveLength(5);
     await expect(panel).not.toContainText("Synced");
     expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
   });

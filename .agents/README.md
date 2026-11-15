@@ -247,6 +247,17 @@ verify actual primary ID, independent ending returns, failed-refresh clearing,
 missing FX, old-window rejection and recovery. Maintainer review of this fix is
 pending; do not reopen #274 testing or treat the fix as v2.8 release acceptance.
 
+PR #275's initial CI run timed out in both Home browser journeys despite local
+passes. The test used four `clock.runFor(30001)` calls while fake time also ran
+automatically, replaying all due timer/animation callbacks and allowing host-speed
+poll races. The correction pauses the clock before navigation, then uses
+`fastForward(30001)` for one poll per phase, awaiting the expected request count
+and rendered outcome before the next jump. Assert exactly five total history
+requests. No application logic or timeout was changed. Both widths passed three
+consecutive runs (six tests), and the complete 35-journey Chrome smoke suite
+passed after correction. Keep this deterministic clock pattern for polling tests;
+CI acceptance of #275 is still pending.
+
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)
 coalesced the reproduced Yahoo off-grid quote tail and repaired full crosshair

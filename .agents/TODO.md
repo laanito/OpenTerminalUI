@@ -1396,6 +1396,12 @@ additive migration.
       desktop/narrow journeys cover actual primary ID, divergent ending returns,
       failed-refresh clearing, missing FX, old-window rejection and recovery.
       No backend/API/schema/settings/provider/dependency or DB changes.
+- [x] Harden #275's Home browser clock test after CI timed out at both widths.
+      Pause fake time before navigation, fast-forward one polling interval at a
+      time and wait for request count plus UI state. Verify five total history
+      requests. Avoid replaying all timer/animation ticks with `runFor`; do not
+      raise timeouts. Six repeated width-specific tests and all 35 full smoke
+      journeys pass locally after correction; production code is unchanged.
 - [ ] Maintainer review/acceptance of the fix. Preserve the existing explicit
       limitation: current-open-holdings analytics are not cash-flow-adjusted
       transaction-ledger/NAV performance. Full reconstruction remains deferred;
