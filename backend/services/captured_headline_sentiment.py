@@ -142,7 +142,10 @@ def baseline(text):
     )
 
 
-async def assess_headlines(texts, *, profile, user_id):
+async def assess_headlines(texts, *, profile, user_id, on_phase=None):
+    def phase(value):
+        if on_phase is not None:
+            on_phase(value)
     messages = _prompt(texts)
     context_hash = hashlib.sha256(_canonical([PROMPT_VERSION, messages, Verdicts.model_json_schema()]).encode()).hexdigest()
     key = cache_instance.build_key("saved_headline_assessment_v1", hashlib.sha256(user_id.encode()).hexdigest(),
@@ -164,6 +167,7 @@ async def assess_headlines(texts, *, profile, user_id):
         except Exception:
             logger.info("Saved-headline assessment cache unavailable; scoring selected inputs")
     if cached is not None:
+        phase("validating")
         return [(baseline(text), item) for text, item in zip(texts, cached)]
 
     attempts = []
@@ -176,12 +180,15 @@ async def assess_headlines(texts, *, profile, user_id):
     else:
         try:
             async with asyncio.timeout(profile.timeout_seconds):
+                phase("checking_model")
                 client = get_llm_client(profile=profile)
                 if not await client.health():
                     failure = "provider_unavailable"
                 else:
+                    phase("generating")
                     response = await client.chat(messages, temperature=0.1, max_tokens=min(5000, 400 * len(texts) + 300),
                                                  json_schema=Verdicts.model_json_schema(), retry_on_truncation=True, on_request=record)
+                    phase("validating")
                     try:
                         parsed = Verdicts.model_validate(parse_json_response(response))
                         indices = [item.index for item in parsed.articles]

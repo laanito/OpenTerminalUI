@@ -34552,6 +34552,72 @@
         }
       }
     },
+    "/api/market-context/briefing-captures/{capture_id}/sentiment/stream": {
+      "post": {
+        "description": "Score explicit saved references with progress and cancellable unfinished work.\n\nSame selection/retention contract as synchronous scoring. Ownership, integrity\nand references are checked before headers; no live news collection or Deep\nsynthesis. Cache hits preserve original inputs/times. A final receipt follows\ncommit; disconnect cannot undo a completed commit. Never automatically retry.",
+        "operationId": "stream_headline_sentiment_api_market_context_briefing_captures__capture_id__sentiment_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedHeadlines"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "Progress with the Fast model budget and a final list of retained headline receipts only after commit. Closing cancels unfinished scoring; list retained records after uncertain acknowledgement.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Headline Sentiment",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
     "/api/market-context/briefing-context": {
       "post": {
         "description": "Opt-in dated/technical context synthesis; no causal verification or advice.\n\nThe complete price/context snapshot and fixed scope notice survive model\nfailure. Citation validation checks references and coverage, not prose truth.\nUnselected v2.2 endpoints retain their price-only contract.\nSelected SEC fundamentals use the version-2 envelope and mapped filing\nreferences. Current aggregates do not establish historical knowledge,\ncorroborated filing-instance values, revision order or price causation.",
@@ -37554,6 +37620,80 @@
         },
         "x-openterminalui-feature-state": {
           "news": "supported"
+        }
+      }
+    },
+    "/api/news/evidence": {
+      "get": {
+        "description": "Owner-only paginated history, including evidence whose source was deleted.\n\nReads stored text/assessments without providers, scoring or current defaults.",
+        "operationId": "list_retained_headlines_api_news_evidence_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 10000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetainedHeadline"
+                  },
+                  "title": "Response List Retained Headlines Api News Evidence Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Retained Headlines",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
         }
       }
     },

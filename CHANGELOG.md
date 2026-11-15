@@ -7,13 +7,18 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Headline sentiment in saved briefing review** — explicitly select up to ten
+  saved headline references, retain assessments with cancellable progress, and
+  inspect original text, methods, scoring times and model inputs. Keyword tone
+  and Fast asset implication stay separate; failed models are not shown as
+  neutral. Paginated retained history works after source-briefing deletion.
+  Deep sentiment interpretation and retention cleanup remain subsequent work.
 - **Durable selected-headline assessments (API)** — explicitly score up to ten
   headlines from an owned saved comparison, retaining exact text and independent
   keyword tone/Fast asset-implication assessments. Model failures stay failed;
   cache hits preserve original scoring times and model inputs. Owner-only reads
   work after source-capture deletion. No migration or legacy-score backfill.
-  Browser selection/review, checked Deep interpretation and retention cleanup
-  remain subsequent work.
+  Checked Deep interpretation and retention cleanup remain subsequent work.
 - **Linked saved comparison follow-ups** — **Re-run saved inputs** reuses the last
   dispatched prompts, response format and generation settings with the current
   Deep model and frozen evidence, making one checked completion. **Refresh with

@@ -323,7 +323,7 @@ An original capture with no saved completion request offers refresh only. See
 [the follow-up contract](News-Evidence-Contract.md#linked-reruns-and-fresh-data-refreshes)
 for endpoints and failure/cancellation behavior.
 
-### Retained selected-headline scoring (API first)
+### Retained selected-headline scoring
 
 Saved context captures with headline evidence can now be explicitly scored through
 `POST /api/market-context/briefing-captures/{id}/sentiment`, selecting one to ten
@@ -334,8 +334,33 @@ Cache reuse preserves original scoring times and dispatched inputs. List through
 `GET /api/market-context/briefing-captures/{id}/sentiment`, or reopen a returned
 snapshot ID through `GET /api/news/evidence/{snapshot_id}` without live calls.
 Assessments survive deletion of their source comparison and do not change its
-answer. Browser sentiment controls and Deep interpretation are the next slice;
-current news pages and briefing prompts are unchanged. See the
+answer.
+
+In Market Context, choose **Review saved briefings** and open a saved run that
+contains news. Under **Headline sentiment**, check up to ten named headline
+references and choose **Assess and retain selected headlines**. It reads the saved
+text; it does not fetch the full article or change the original briefing. Progress
+uses the current Fast model deadline. Cancel or scope changes stop unfinished
+work and discard late receipts. A commit completed before disconnect is not
+undone; refresh retained history before manually retrying uncertain completion.
+
+**Review retained headline assessments** reads paginated history for that saved
+run; **Show all retained headline assessments** widens it to all your retained
+observations. The history button is also available with no saved briefing open,
+including after deleting the source. Open a record to inspect original text,
+publication/retrieval/capture dates, truncation and source references, independent
+text-tone and asset-implication outcomes, original scoring/recording dates and
+cache-reuse labels. **Inspect scoring inputs** shows the original batch context
+as plain text without inference. Keyword tone uses positive/negative/neutral
+wording; failed models have no verdict. These rubrics are not one combined signal.
+Deleting a saved briefing leaves independent headline assessments in history, as
+the confirmation explains. Individual assessment deletion/expiry remains later.
+
+The browser uses `POST /api/market-context/briefing-captures/{id}/sentiment/stream`
+for cancellable progress and a post-commit receipt, plus JWT-only
+`GET /api/news/evidence` for owner history. The synchronous POST remains available.
+Checked Deep sentiment interpretation is the next slice; current news pages and
+briefing prompts remain unchanged. See the
 [assessment contract](News-Evidence-Contract.md#explicit-saved-headline-assessments-api)
 for requests, limits, provenance and retention boundaries.
 

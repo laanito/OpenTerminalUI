@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timezone
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import AwareDatetime, BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -49,6 +49,23 @@ def retained_headlines(db, user_id, rows):
     # Preserve saved JSON exactly; no hydration through today's payload models.
     return [{"id": row.id, "captured_at": _date(row.captured_at), "content_hash": row.content_hash,
              "retention": "retained_no_automatic_expiry", "payload": row.payload, "assessments": grouped[row.id]} for row in rows]
+
+
+@router.get("", response_model=list[RetainedHeadline])
+def list_retained_headlines(
+    limit: int = Query(default=20, ge=1, le=100), offset: int = Query(default=0, ge=0, le=10000),
+    user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    """Owner-only paginated history, including evidence whose source was deleted.
+
+    Reads stored text/assessments without providers, scoring or current defaults.
+    """
+    from fastapi.encoders import jsonable_encoder
+    from fastapi.responses import JSONResponse
+    rows = db.scalars(select(NewsTextSnapshotORM).where(NewsTextSnapshotORM.user_id == user.id).order_by(
+        NewsTextSnapshotORM.captured_at.desc(), NewsTextSnapshotORM.id.desc(),
+    ).offset(offset).limit(limit)).all()
+    return JSONResponse(jsonable_encoder(retained_headlines(db, user.id, rows)))
 
 
 @router.get("/{snapshot_id}", response_model=RetainedHeadline)
