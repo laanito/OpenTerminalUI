@@ -813,7 +813,7 @@ export function HomePage() {
                   {performance.notes.length ? <ul className="mt-2 text-xs text-terminal-warn">{performance.notes.map((note, index) => <li key={index}>{note}</li>)}</ul> : null}
                   {performance.valuations.length ? <details className="mt-3 text-xs text-terminal-muted">
                     <summary className="cursor-pointer text-terminal-accent">Inspect reconstructed daily values</summary>
-                    <p className="my-2">Opening cash applies from the earliest ledger activity or portfolio creation. Cash uses transaction-date FX; securities use each valuation day’s FX. No missing trade or deposit is inferred. Values are recalculated from the current ledger and provider history, not preserved account snapshots.</p>
+                    <p className="my-2">Opening cash applies from the earliest ledger activity or portfolio creation. Cash uses transaction-date FX; securities use each valuation day’s FX. Any estimated legacy opening positions are listed above; unrecorded add/remove dates are unknown. No missing trade or deposit is created. Values are recalculated from the current ledger and provider history, not preserved account snapshots.</p>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left" aria-label="Reconstructed daily portfolio values">
                         <thead><tr>{["UTC date", "Value", "Cash", "Holdings", "External flow", "Native close dates"].map((heading) => <th className="p-2" key={heading}>{heading}</th>)}</tr></thead>

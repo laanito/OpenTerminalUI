@@ -16641,6 +16641,45 @@
         "title": "PortfolioHistoryExclusion",
         "type": "object"
       },
+      "PortfolioHistoryOpeningAdjustment": {
+        "properties": {
+          "basis": {
+            "const": "current_holdings_minus_window_trades",
+            "title": "Basis",
+            "type": "string"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "ledger_quantity": {
+            "title": "Ledger Quantity",
+            "type": "number"
+          },
+          "opening_quantity": {
+            "title": "Opening Quantity",
+            "type": "number"
+          },
+          "quantity_delta": {
+            "title": "Quantity Delta",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "date",
+          "ledger_quantity",
+          "opening_quantity",
+          "quantity_delta",
+          "basis"
+        ],
+        "title": "PortfolioHistoryOpeningAdjustment",
+        "type": "object"
+      },
       "PortfolioHistoryPoint": {
         "properties": {
           "benchmark": {
@@ -16772,6 +16811,13 @@
             "title": "Methodology",
             "type": "string"
           },
+          "opening_position_adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioHistoryOpeningAdjustment"
+            },
+            "title": "Opening Position Adjustments",
+            "type": "array"
+          },
           "portfolio_id": {
             "title": "Portfolio Id",
             "type": "string"
@@ -16797,7 +16843,8 @@
           "checked_at",
           "assumptions",
           "equity_curve",
-          "excluded_transactions"
+          "excluded_transactions",
+          "opening_position_adjustments"
         ],
         "title": "PortfolioHistoryResponse",
         "type": "object"

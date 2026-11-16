@@ -22,6 +22,8 @@ for (const width of [1440, 390]) {
         await route.fulfill({ json: { benchmark: "SPY", base_currency: "USD", status: mode === "partial" ? "partial" : "complete",
           methodology: "daily_ledger_reconstruction", issues: mode === "partial" ? [{ code: "ledger_price_or_fx_unavailable", symbol: "SAP.DE" }] : [],
           excluded_transactions: [{ id: "legacy-sale", symbol: "BTC-USD", date: "2026-07-27", shares: 2, reason: "legacy_unmatched_sale" }],
+          opening_position_adjustments: [{ symbol: "BTC-USD", date: "2026-10-17", ledger_quantity: 1, opening_quantity: 2, quantity_delta: 1,
+            basis: "current_holdings_minus_window_trades" }],
           degraded_reasons: [], equity_curve: mode === "old"
             ? [{ date: "2025-01-01", portfolio: 100, benchmark: 200, net_liquidation_value: 1000 }, { date: "2025-01-02", portfolio: 110, benchmark: 240, net_liquidation_value: 1500 }]
             : Array.from({ length: 30 }, (_, i) => ({
@@ -44,6 +46,7 @@ for (const width of [1440, 390]) {
     await expect(panel).toContainText("Portfolio (flow-adjusted) 110.00 index"); await expect(panel).toContainText("Benchmark (SPY) 120.00 index");
     await expect(panel).toContainText("Benchmark close used: 2026-11-13");
     await expect(panel).toContainText("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction legacy-sale.");
+    await expect(panel).toContainText("Estimated opening position: BTC-USD · 2026-10-17 · 2 shares (ledger: 1; adjustment: 1). No cash movement inferred.");
     await expect(panel).toContainText("2026-10-17 to 2026-11-15"); await expect(panel).not.toContainText("999999");
     const valueHistory = page.getByRole("img", { name: "Reconstructed daily portfolio value", exact: true });
     await expect(valueHistory).toBeVisible();

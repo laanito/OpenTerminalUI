@@ -50,9 +50,18 @@ can distort history. Compatibility with early add/remove portfolios: an unmatche
 The warning lists its symbol, date, quantity and transaction ID; the API returns
 `excluded_transactions`. These exclusions can make reconstructed cash differ
 from current ledger accounting. Stored rows are unchanged. Matched sales remain
-in the replay, and unmatched sales within the displayed window still fail.
+in the replay. For a symbol with an excluded legacy sale, or a current holding
+whose recorded purchase date predates the window, an opening inventory mismatch
+can be estimated as today's quantity minus the net recorded in-window trades.
+The API's `opening_position_adjustments` and Home warnings show the original
+ledger opening quantity, estimated opening quantity and signed difference.
+These are non-cash assumptions at the start of the window, not synthetic trades;
+the missing add/remove dates remain unknown. Every in-window trade is preserved.
+Negative inferred opening inventory or an oversell after applying that opening
+balance still fails. Recent/undated holdings without legacy evidence keep strict
+quantity reconciliation.
 
-After exclusions, net ledger quantities must reconcile to current holdings;
+After exclusions and any disclosed opening adjustments, replayed quantities must reconcile to current holdings;
 unknown currencies, invalid dates/amounts, oversold positions, missing required
 prices/FX or mismatched quantities produce an explicit gap, without a partial or
 sample curve. Poll failures clear previous curves, including the sparkline.

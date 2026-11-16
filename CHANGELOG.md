@@ -52,6 +52,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cleanup remain open.
 
 ### Fixed
+- **Legacy opening portfolio positions** — reconcile legacy add/remove inventory
+  with today's holdings by estimating opening quantities before the 30-day
+  window's recorded trades. Home and the API expose the original quantities and
+  non-cash adjustments. Keep all in-window activity, reject negative opening
+  balances/remaining oversells and leave stored holdings/transactions unchanged.
 - **Legacy add/remove portfolio history** — exclude unmatched sales before the
   displayed 30-day window, including their proceeds and fees, rather than blocking
   reconstruction. Warnings identify every excluded row and explain possible cash

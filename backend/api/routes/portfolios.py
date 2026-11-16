@@ -470,6 +470,15 @@ class PortfolioHistoryExclusion(BaseModel):
     reason: Literal["legacy_unmatched_sale"]
 
 
+class PortfolioHistoryOpeningAdjustment(BaseModel):
+    symbol: str
+    date: str
+    ledger_quantity: float
+    opening_quantity: float
+    quantity_delta: float
+    basis: Literal["current_holdings_minus_window_trades"]
+
+
 class PortfolioHistoryResponse(HistoricalAnalyticsMetadata):
     portfolio_id: str
     benchmark: str
@@ -477,6 +486,7 @@ class PortfolioHistoryResponse(HistoricalAnalyticsMetadata):
     assumptions: list[str]
     equity_curve: list[PortfolioHistoryPoint]
     excluded_transactions: list[PortfolioHistoryExclusion]
+    opening_position_adjustments: list[PortfolioHistoryOpeningAdjustment]
 
 
 class PortfolioReturnAttributionHolding(BaseModel):

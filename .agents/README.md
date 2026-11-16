@@ -221,6 +221,25 @@ The maintainer confirmed PR #274 merged and tested. Carry that acceptance
 forward. Checked Deep integration and reference-aware retention/deletion/cleanup
 remain open before v2.8 release preparation.
 
+Legacy opening inventory follow-up (2026-11-16): #279 is merged/deployed,
+but excluding unmatched old sales exposed remaining quantity differences from
+unrecorded development-era adds/removes. For legacy symbols only (an excluded
+pre-window sale or a current holding with a purchase date before the window),
+reconstruct opening shares as today's shares minus recorded net in-window trades.
+Keep every in-window trade, and show `opening_position_adjustments` with original
+ledger shares, estimated shares, signed delta and boundary date in the API/Home.
+These are non-cash assumptions, not synthetic buys/sells or database updates.
+Negative required opening inventory and remaining chronological oversells fail;
+new/undated holdings without legacy evidence keep strict reconciliation. Unknown
+historical add/remove dates and approximate cash/returns remain disclosed. Values
+can differ from current accounting; exclusions and adjustments stay inspectable.
+Validation: 48 backend checks, 23 focused frontend tests, production build and
+both Home browser widths pass, as do generated API and whitespace checks. Tests
+cover positive/negative adjustments, imported positions, recorded sales, eight
+excluded rows across three synthetic symbols, no cash creation and strict guards.
+Maintainer review/deployed validation remains pending. This supersedes the
+blanket remaining-mismatch failure rule in the older compatibility notes below.
+
 Legacy Home history follow-up (2026-11-16): #278 is merged/deployed. The
 maintainer identified unmatched old sales as development-era add/remove artifacts
 and authorized ignoring them for reconstruction. Exclude an unmatched sale row

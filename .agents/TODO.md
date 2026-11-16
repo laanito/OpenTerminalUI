@@ -1377,6 +1377,21 @@ scoring/comparison integration and cleanup remain open. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.
 
+### Legacy opening inventory reconstruction
+
+- [x] After deployed #279, handle remaining development-era add/remove quantity
+      differences with explicit non-cash opening adjustments for legacy symbols
+      only. Anchor current shares minus net recorded in-window trades. Return
+      original/estimated opening shares and signed deltas; Home displays them.
+      Preserve all in-window trades, reject negative required opening balances
+      and remaining chronological oversells, keep new/undated holdings strict.
+      No stored holdings/transactions, synthetic trades or cash movements.
+- [x] Verify 48 backend checks, 23 focused frontend tests, production build, both
+      Home browser widths and API/whitespace guards. Cover positive/negative
+      adjustments, imported holdings, subsequent sales, synthetic multi-symbol
+      legacy artifacts, unchanged cash and invalid recent inventory scenarios.
+- [ ] Maintainer review and deployed-data validation.
+
 ### Legacy add/remove history compatibility
 
 - [x] Per maintainer authorization after deployed #278, ignore unmatched sale

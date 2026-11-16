@@ -232,7 +232,7 @@ def test_legacy_unmatched_sale_is_excluded_with_its_proceeds_and_fees(market):
     PortfolioHistoryResponse.model_validate(result)
 
 
-def test_legacy_exclusion_retains_matched_sales_and_still_reconciles(market):
+def test_legacy_exclusion_retains_matched_sales_and_discloses_opening_adjustment(market):
     rows = [tx("sell", "2026-07-27", "A", 1, 100), tx("buy", "2026-09-01", "A", 2, 100),
             tx("sell", "2026-10-01", "A", 1, 110)]
     result = run(rows, [NS(symbol="A", shares=1)])
@@ -240,11 +240,81 @@ def test_legacy_exclusion_retains_matched_sales_and_still_reconciles(market):
     assert result["equity_curve"][-1]["cash_balance"] == 910
     assert result["equity_curve"][-1]["holdings_value"] == 120
     mismatch = run(rows, [NS(symbol="A", shares=2)])
-    assert mismatch["status"] == "partial"
-    assert mismatch["issues"][0]["code"] == "ledger_holdings_mismatch"
+    assert mismatch["status"] == "degraded"
+    assert mismatch["opening_position_adjustments"][0]["quantity_delta"] == 1
+    assert mismatch["equity_curve"][-1]["holdings_value"] == 240
 
 
 def test_unmatched_sale_on_window_boundary_is_not_ignored(market):
     result = run([tx("sell", "2026-10-18", "A", 1, 100)], [])
     assert result["status"] == "partial"
     assert result["excluded_transactions"] == []
+
+
+@pytest.mark.parametrize("current_quantity,delta", [(3, 2), (0.5, -0.5)])
+def test_legacy_opening_balance_anchors_current_holdings_and_preserves_window_trades(market, current_quantity, delta):
+    rows = [tx("sell", "2026-07-01", "A", 1, 100), tx("buy", "2026-09-01", "A", 2, 100),
+            tx("sell", "2026-11-10", "A", 1, 120)]
+    result = run(rows, [NS(symbol="A", shares=current_quantity)])
+    assert result["status"] == "degraded"
+    assert len(result["equity_curve"]) == 30
+    adjustment = result["opening_position_adjustments"][0]
+    assert adjustment["ledger_quantity"] == 2
+    assert adjustment["quantity_delta"] == delta
+    assert adjustment["opening_quantity"] == current_quantity + 1
+    assert result["equity_curve"][0]["holdings_value"] == (current_quantity + 1) * 100
+    assert result["equity_curve"][-1]["holdings_value"] == current_quantity * 120
+    assert result["equity_curve"][-1]["cash_balance"] == 920
+    assert result["equity_curve"][-1]["external_flow"] == 0
+    PortfolioHistoryResponse.model_validate(result)
+
+
+def test_old_imported_holding_without_a_buy_can_seed_the_opening_inventory(market):
+    holding = NS(symbol="A", shares=1, purchase_date="2026-01-01")
+    result = run([], [holding])
+    assert len(result["equity_curve"]) == 30
+    assert result["equity_curve"][0]["holdings_value"] == 100
+    assert result["equity_curve"][-1]["holdings_value"] == 120
+    assert result["equity_curve"][-1]["cash_balance"] == 1000
+    assert result["opening_position_adjustments"][0]["opening_quantity"] == 1
+    assert holding.shares == 1
+
+
+def test_legacy_opening_balance_supports_recorded_in_window_sale_of_imported_shares(market):
+    rows = [tx("sell", "2026-07-01", "A", 1, 100), tx("sell", "2026-11-10", "A", 1, 120)]
+    result = run(rows, [NS(symbol="A", shares=1)])
+    assert len(result["excluded_transactions"]) == 1
+    assert result["opening_position_adjustments"][0]["opening_quantity"] == 2
+    assert result["equity_curve"][0]["holdings_value"] == 200
+    assert result["equity_curve"][-1]["cash_balance"] == 1120
+    assert result["equity_curve"][-1]["holdings_value"] == 120
+
+
+def test_legacy_anchor_cannot_invent_a_negative_opening_balance_or_hide_a_recent_oversell(market):
+    rows = [tx("sell", "2026-07-01", "A", 1, 100), tx("buy", "2026-11-10", "A", 2, 100)]
+    result = run(rows, [NS(symbol="A", shares=1)])
+    assert result["status"] == "partial"
+    assert result["issues"][0]["code"] == "ledger_holdings_mismatch"
+    rows = [tx("sell", "2026-07-01", "A", 1, 100), tx("sell", "2026-11-01", "A", 2, 100),
+            tx("buy", "2026-11-10", "A", 2, 100)]
+    result = run(rows, [])
+    assert result["status"] == "partial"
+    assert result["issues"][0]["code"] == "ledger_position_negative"
+
+
+def test_multiple_legacy_symbols_with_unrecorded_adds_and_removals_keep_thirty_days(market):
+    rows = [tx("sell", "2026-07-01", symbol, 1, 100, currency=None)
+            for symbol in ["A", "A", "A", "A", "B", "B", "C", "C"]]
+    rows += [tx("buy", "2026-09-01", "A", 2, 100), tx("buy", "2026-09-01", "B", 3, 50),
+             tx("buy", "2026-09-01", "C", 4, 100), tx("sell", "2026-11-10", "A", 1, 120),
+             tx("buy", "2026-11-15", "A", 0.5, 120)]
+    result = run(rows, [NS(symbol="A", shares=3), NS(symbol="B", shares=1)])
+    assert len(result["equity_curve"]) == 30
+    assert len(result["excluded_transactions"]) == 8
+    adjustments = {row["symbol"]: row for row in result["opening_position_adjustments"]}
+    assert adjustments["A"]["opening_quantity"] == 3.5
+    assert adjustments["B"]["opening_quantity"] == 1
+    assert adjustments["C"]["opening_quantity"] == 0
+    assert result["equity_curve"][-1]["holdings_value"] == 410
+    assert result["equity_curve"][-1]["cash_balance"] == 310
+    assert "C" not in market
