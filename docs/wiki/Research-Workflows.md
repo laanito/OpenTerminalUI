@@ -14,6 +14,11 @@ analytics for today's open basket at constant quantities, valued with historical
 FX in the portfolio base currency. It excludes cash, closed positions and
 transaction-ledger returns; it is not a historical net-liquidation account curve.
 
+Daily provider bars are labelled by UTC date so crypto midnight timestamps can
+align with US/other exchange session timestamps. Date alignment does not imply
+simultaneous quotes; non-trading benchmark dates can carry the prior available
+close. This does not substitute another benchmark or backfill future quotes.
+
 Both lines start at index 100 at the first shared observation within the last 30
 UTC calendar days, on a shared vertical scale. The displayed dates/count identify
 actual coverage, which may be shorter than the window because the whole current

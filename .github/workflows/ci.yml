@@ -26,7 +26,8 @@ jobs:
         run: sh scripts/verify_clean_install.sh
 
   build-and-test:
-    runs-on: ubuntu-latest
+    # Playwright 1.58.2 supports Ubuntu 24.04, not ubuntu-latest's 26.04.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7

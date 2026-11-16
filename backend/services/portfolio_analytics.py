@@ -201,7 +201,13 @@ class PortfolioAnalyticsService:
                     if close is None:
                         continue
                     try:
-                        points.append((pd.Timestamp(int(ts), unit="s", tz="UTC"), float(close)))
+                        timestamp = pd.Timestamp(int(ts), unit="s", tz="UTC")
+                        # Daily bars from different exchanges carry different
+                        # session hours (crypto midnight, US equities 14:30 UTC,
+                        # etc.). Align by UTC date, not by exact opening instant.
+                        if interval == "1d":
+                            timestamp = timestamp.normalize()
+                        points.append((timestamp, float(close)))
                     except Exception:
                         continue
                 if not points:
