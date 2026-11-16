@@ -381,6 +381,14 @@ never silently faked.
   these labels do not establish simultaneous quote instants. The benchmark can
   carry its prior available close on non-trading dates; future quotes are never
   backfilled into earlier dates. Intraday requests retain their timestamps.
+  Benchmark carry-forward looks up the original source series before restricting
+  it to the holdings window, preserving a Friday seed for a weekend-started
+  basket. Each point exposes `benchmark_as_of`; coverage bounds distinguish an
+  absent feed from no prior close. Alpha and tracking error are null with fewer
+  than two paired return observations; this does not prevent plotting valid
+  prices. Home still requires two portfolio observations and rejects benchmark
+  closes entirely older than its 30-day window. Full ledger/NAV history remains
+  outside this current-basket comparison.
   They therefore
   exclude closed positions and do not represent ledger-reconstructed,
   cash-flow-adjusted performance. Attribution uses the same explicit boundary

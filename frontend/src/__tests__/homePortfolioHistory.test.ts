@@ -51,3 +51,25 @@ describe("Home current-open-holdings history", () => {
     expect(buildHomeHistory(value, NOW).status).toBe("unavailable");
   });
 });
+
+it("keeps a recent prior benchmark close explicit and rejects future or out-of-window source dates", () => {
+  const curve = [
+    { date: "2026-11-14", portfolio: 1, benchmark: 1, benchmark_as_of: "2026-11-13" },
+    { date: "2026-11-15", portfolio: 1.1, benchmark: 1, benchmark_as_of: "2026-11-13" },
+  ];
+  const valid = buildHomeHistory(overlay(curve), NOW);
+  expect(valid.benchmarkAsOf).toBe("2026-11-13"); expect(valid.points).toHaveLength(2);
+  const future = buildHomeHistory(overlay(curve.map((point) => ({ ...point, benchmark_as_of: "2026-11-16" }))), NOW);
+  expect(future.status).toBe("unavailable");
+  const old = buildHomeHistory(overlay(curve.map((point) => ({ ...point, benchmark_as_of: "2026-09-01" }))), NOW);
+  expect(old.status).toBe("unavailable"); expect(old.message).toContain("No benchmark close");
+});
+
+
+it("explains the actual source date ranges when a comparison cannot be made", () => {
+  const result = buildHomeHistory(overlay([], { status: "partial", issues: [{ code: "benchmark_no_prior_close", symbol: "SPY" }],
+    coverage: { portfolio_start: "2026-11-14", portfolio_end: "2026-11-15", benchmark_start: "2026-11-16", benchmark_end: "2026-11-16" } }), NOW);
+  expect(result.notes).toContain("Current basket history: 2026-11-14 to 2026-11-15.");
+  expect(result.notes).toContain("Usable benchmark history: 2026-11-16 to 2026-11-16.");
+  expect(result.notes[0]).toContain("No benchmark close on or before");
+});

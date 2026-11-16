@@ -1435,6 +1435,26 @@ additive migration.
       changes. Actual Ubuntu dependency installation remains a hosted CI check.
       Record the pin and upgrade boundary in Releasing; update the open #276.
 
+### Benchmark seed before holdings window — follow-up to merged #276
+
+- [x] Reproduce the still-reported benchmark error when the whole current basket
+      begins after the benchmark's last session. Resolve prior closes in the
+      original source series; do not remove Friday before filling a weekend
+      basket. Keep past-only daily labels and current quantities/FX/ownership.
+- [x] Add per-point benchmark_as_of and optional coverage bounds. Distinguish no
+      prior close from absent history. Home exposes source dates and unavailable
+      coverage, rejects benchmark closes outside its 30-day window, and still
+      requires two observations. Return null alpha/tracking error with fewer than
+      two paired returns; fix Portfolio Manager's missing-as-zero display. Update
+      API schema/types/generated reference. No database migration is required.
+- [x] Verify 78 backend tests, all 818 frontend tests/131 files, production build,
+      all 35 Chrome journeys and API/surface/mock/whitespace guards. Regressions
+      exercise weekend-start raw-provider history, no future-date backfill,
+      one/two-point serialization, source dates, stale quotes and coverage UX.
+- [ ] Maintainer review/deployment check. This is current-basket history since
+      its latest opening date, not a full month of reconstructed account/NAV
+      performance. Keep that limitation and the browser CI OS pin explicit.
+
 ### v2 evidence implementation ledger — shipped work and later gaps
 
 The completed entries below shipped in v2.0/v2.1. Unchecked entries remain later

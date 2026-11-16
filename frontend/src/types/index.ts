@@ -358,10 +358,11 @@ export type PortfolioDividendTracker = {
 };
 
 export type PortfolioBenchmarkOverlay = {
+  coverage?: { portfolio_start: string | null; portfolio_end: string | null; benchmark_start: string | null; benchmark_end: string | null } | null;
   benchmark: string;
-  equity_curve: Array<{ date: string; portfolio: number; benchmark: number; portfolio_value_base?: number }>;
-  alpha: number;
-  tracking_error: number;
+  equity_curve: Array<{ date: string; portfolio: number; benchmark: number; benchmark_as_of?: string | null; portfolio_value_base?: number }>;
+  alpha: number | null;
+  tracking_error: number | null;
   base_currency?: string;
   status?: "complete" | "degraded" | "partial";
   methodology?: string;

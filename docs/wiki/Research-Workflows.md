@@ -17,7 +17,19 @@ transaction-ledger returns; it is not a historical net-liquidation account curve
 Daily provider bars are labelled by UTC date so crypto midnight timestamps can
 align with US/other exchange session timestamps. Date alignment does not imply
 simultaneous quotes; non-trading benchmark dates can carry the prior available
-close. This does not substitute another benchmark or backfill future quotes.
+close. Lookup uses the full original benchmark history, so a Friday close remains
+available even when the current basket only starts on Sunday. Each response point
+records `benchmark_as_of`, and Home/Portfolio Manager display the last close used.
+This does not substitute another benchmark or backfill a later UTC-date close
+into an earlier date; daily labels are not intraday knowledge claims.
+
+If history is unavailable, the API's `coverage` reports the available basket and
+benchmark date ranges. Home displays those bounds alongside the reason. A source
+with no earlier close is distinct from a missing benchmark feed. Home requires
+at least two portfolio observations, so a basket first opened today may need more
+history. Fewer than two paired returns leave alpha/tracking error null, displayed
+as **Unavailable** rather than zero. A carried benchmark close wholly outside
+Home's 30-day window is not shown as a fresh comparison.
 
 Both lines start at index 100 at the first shared observation within the last 30
 UTC calendar days, on a shared vertical scale. The displayed dates/count identify

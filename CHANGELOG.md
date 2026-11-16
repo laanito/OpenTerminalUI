@@ -45,6 +45,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cleanup remain open.
 
 ### Fixed
+- **Benchmark prior close at a new holdings window** — retain earlier benchmark
+  observations when the current basket starts after the last market session,
+  such as a weekend. The response includes quote as-of dates and coverage bounds;
+  Home shows the actual close used and diagnoses missing overlap separately from
+  missing history. Very short histories return null alpha/tracking error instead
+  of NaN or invented zero metrics. No portfolio/accounting migration is needed.
 - **Portfolio benchmark daily alignment** — normalize daily provider timestamps
   to UTC dates before portfolio/benchmark alignment. Crypto midnight bars and US
   equity session bars no longer lose their overlap and falsely report benchmark

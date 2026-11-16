@@ -427,17 +427,26 @@ class PortfolioRiskMetricsResponse(HistoricalAnalyticsMetadata):
 
 
 class PortfolioBenchmarkPoint(BaseModel):
+    benchmark_as_of: str | None = None
     date: str
     portfolio: float
     benchmark: float
     portfolio_value_base: float
 
 
+class PortfolioBenchmarkCoverage(BaseModel):
+    portfolio_start: str | None
+    portfolio_end: str | None
+    benchmark_start: str | None
+    benchmark_end: str | None
+
+
 class PortfolioBenchmarkOverlayResponse(HistoricalAnalyticsMetadata):
+    coverage: PortfolioBenchmarkCoverage | None = None
     benchmark: str
     equity_curve: list[PortfolioBenchmarkPoint]
-    alpha: float
-    tracking_error: float
+    alpha: float | None
+    tracking_error: float | None
 
 
 class PortfolioReturnAttributionHolding(BaseModel):

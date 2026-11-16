@@ -575,24 +575,35 @@ class PortfolioAnalyticsService:
             holdings, base_currency=base_currency, range_str="5y", benchmark=benchmark
         )
         portfolio_values = history["portfolio_values"]
+        benchmark_source = history["benchmark_values"].dropna().sort_index()
+        coverage = {
+            "portfolio_start": portfolio_values.index.min().date().isoformat() if not portfolio_values.empty else None,
+            "portfolio_end": portfolio_values.index.max().date().isoformat() if not portfolio_values.empty else None,
+            "benchmark_start": benchmark_source.index.min().date().isoformat() if not benchmark_source.empty else None,
+            "benchmark_end": benchmark_source.index.max().date().isoformat() if not benchmark_source.empty else None,
+        }
         if portfolio_values.empty:
             return {
-                "equity_curve": [], "alpha": 0.0, "tracking_error": 0.0, "benchmark": benchmark,
+                "coverage": coverage, "equity_curve": [], "alpha": None, "tracking_error": None, "benchmark": benchmark,
                 "base_currency": history["base_currency"], "status": history["status"],
                 "methodology": history["methodology"], "issues": history["issues"],
                 "degraded_reasons": history["degraded_reasons"],
             }
 
-        bench_close = history["benchmark_values"]
-        bench_close = bench_close.reindex(portfolio_values.index).ffill().dropna()
+        # Look up the latest earlier close in the ORIGINAL benchmark series.
+        # Reindexing first would discard Friday when the basket starts Saturday.
+        bench_close = (benchmark_source.reindex(portfolio_values.index, method="ffill").dropna()
+                       if not benchmark_source.empty else pd.Series(dtype="float64"))
         if bench_close.empty:
             return {
-                "equity_curve": [], "alpha": 0.0, "tracking_error": 0.0, "benchmark": benchmark,
+                "coverage": coverage, "equity_curve": [], "alpha": None, "tracking_error": None, "benchmark": benchmark,
                 "base_currency": history["base_currency"], "status": "partial",
                 "methodology": history["methodology"],
-                "issues": [*history["issues"], {"code": "benchmark_history_unavailable", "symbol": history["benchmark_symbol"]}],
+                "issues": [*history["issues"], {"code": "benchmark_history_unavailable" if benchmark_source.empty else "benchmark_no_prior_close",
+                    "symbol": history["benchmark_symbol"], "date": portfolio_values.index.min().date().isoformat()}],
                 "degraded_reasons": history["degraded_reasons"],
             }
+        benchmark_dates = pd.Series(benchmark_source.index, index=benchmark_source.index).reindex(bench_close.index, method="ffill")
         portfolio_values = portfolio_values.reindex(bench_close.index).ffill().dropna()
         bench_close = bench_close.reindex(portfolio_values.index).ffill().dropna()
         bench_norm = bench_close / float(bench_close.iloc[0])
@@ -601,14 +612,15 @@ class PortfolioAnalyticsService:
         port_ret = port_norm.pct_change().dropna()
         bench_ret = bench_norm.pct_change().dropna()
         aligned = pd.concat([port_ret, bench_ret], axis=1).dropna()
-        alpha = float((aligned.iloc[:, 0].mean() - aligned.iloc[:, 1].mean()) * TRADING_DAYS) if not aligned.empty else 0.0
-        tracking_error = float((aligned.iloc[:, 0] - aligned.iloc[:, 1]).std() * math.sqrt(TRADING_DAYS)) if not aligned.empty else 0.0
+        alpha = float((aligned.iloc[:, 0].mean() - aligned.iloc[:, 1].mean()) * TRADING_DAYS) if len(aligned) >= 2 else None
+        tracking_error = float((aligned.iloc[:, 0] - aligned.iloc[:, 1]).std() * math.sqrt(TRADING_DAYS)) if len(aligned) >= 2 else None
 
         curve = [
             {
                 "date": idx.date().isoformat(),
                 "portfolio": float(port_norm.loc[idx]),
-                "benchmark": float(bench_norm.loc[idx]) if idx in bench_norm.index else 1.0,
+                "benchmark": float(bench_norm.loc[idx]),
+                "benchmark_as_of": benchmark_dates.loc[idx].date().isoformat(),
                 "portfolio_value_base": float(portfolio_values.loc[idx]),
             }
             for idx in port_norm.index
@@ -616,6 +628,7 @@ class PortfolioAnalyticsService:
         return {
             "benchmark": benchmark,
             "equity_curve": curve,
+            "coverage": coverage,
             "alpha": alpha,
             "tracking_error": tracking_error,
             "base_currency": history["base_currency"],
