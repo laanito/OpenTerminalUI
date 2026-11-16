@@ -58,6 +58,7 @@ async def reconstruct_portfolio_history(
         "methodology": METHOD, "status": "degraded", "issues": issues,
         "degraded_reasons": reasons, "assumptions": list(ASSUMPTIONS), "equity_curve": [],
         "checked_at": datetime.now(timezone.utc).isoformat(),
+        "excluded_transactions": [],
     }
 
     def fail(code: str, symbol: str | None = None, day: date | None = None) -> dict[str, Any]:
@@ -88,12 +89,32 @@ async def reconstruct_portfolio_history(
 
     # Reconcile by symbol; historical sells may have consumed several FIFO lots.
     net: dict[str, float] = defaultdict(float)
+    replay_rows = []
     for occurred, tx in rows:
         kind, symbol = str(tx.type).lower(), str(tx.symbol or "").strip().upper()
         if kind in {"buy", "sell"}:
-            net[symbol] += float(tx.shares) * (1 if kind == "buy" else -1)
-            if net[symbol] < -1e-7:
+            next_quantity = net[symbol] + float(tx.shares) * (1 if kind == "buy" else -1)
+            if next_quantity < -1e-7 and occurred < window_start:
+                # Legacy add/remove portfolios can contain sales with no recorded
+                # acquisition. Ignore the whole old row, including proceeds and
+                # fees; do not invent a purchase or change the stored ledger.
+                payload["excluded_transactions"].append({
+                    "id": str(getattr(tx, "id", "")), "symbol": symbol,
+                    "date": occurred.isoformat(), "shares": float(tx.shares),
+                    "reason": "legacy_unmatched_sale",
+                })
+                continue
+            if next_quantity < -1e-7:
                 return fail("ledger_position_negative", symbol, occurred)
+            net[symbol] = next_quantity
+        replay_rows.append((occurred, tx))
+    rows = replay_rows
+    if payload["excluded_transactions"]:
+        reasons.append(
+            f"Excluded {len(payload['excluded_transactions'])} unmatched legacy sale(s) before the 30-day window, "
+            "including their proceeds and fees. Reconstructed cash can differ from current ledger accounting; "
+            "inspect the excluded rows. Stored transactions are unchanged."
+        )
     current: dict[str, float] = defaultdict(float)
     try:
         for holding in holdings:

@@ -221,6 +221,20 @@ The maintainer confirmed PR #274 merged and tested. Carry that acceptance
 forward. Checked Deep integration and reference-aware retention/deletion/cleanup
 remain open before v2.8 release preparation.
 
+Legacy Home history follow-up (2026-11-16): #278 is merged/deployed. The
+maintainer identified unmatched old sales as development-era add/remove artifacts
+and authorized ignoring them for reconstruction. Exclude an unmatched sale row
+only when it predates the displayed 30-day window; exclude its entire cash
+proceeds and fees too, without modifying stored rows or inventing purchases.
+Return `excluded_transactions` (ID, symbol, date, shares, reason) and show each
+row in Home warnings. Explicitly disclose that reconstructed cash may now differ
+from current ledger accounting. Matched sales remain; in-window oversells and
+remaining quantity mismatches still fail. No migration or database operation.
+This compatibility exception supersedes the blanket oversell statement below.
+Validation: 42 backend checks, 22 focused frontend tests, production build and
+both Home browser widths pass; generated API and whitespace checks pass.
+Maintainer review and deployed-data validation remain pending.
+
 Latest Home follow-up (2026-11-16): the maintainer explicitly chose **actual
 portfolio history**, permitting approximate ledger backfill for validation.
 The chart restored by #277 exposed the current-basket limitation (a new purchase

@@ -49,3 +49,11 @@ describe("Home actual ledger history", () => {
     expect(buildHomeHistory(value, NOW).status).toBe("unavailable");
   });
 });
+
+it("discloses excluded legacy sales with their identities alongside the approximate curve", () => {
+  const result = buildHomeHistory(history([point("2026-11-15"), point("2026-11-16")], {
+    excluded_transactions: [{ id: "old-sale", symbol: "BTC-USD", date: "2026-07-27", shares: 2, reason: "legacy_unmatched_sale" }],
+  }), NOW);
+  expect(result.navPoints).toHaveLength(2);
+  expect(result.notes).toContain("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction old-sale.");
+});

@@ -45,7 +45,14 @@ dates. Negative cash is disclosed; no missing funding is invented.
 This is **approximate reconstructed history**, not an audited or retained NAV
 record. Current ledger edits, revised provider data and adjusted closes can alter
 older values. There is no corporate-action replay: splits or missing activity
-can distort history. Net ledger quantities must reconcile to current holdings;
+can distort history. Compatibility with early add/remove portfolios: an unmatched sale **before** the
+30-day window is excluded as a whole row, including its cash proceeds and fees.
+The warning lists its symbol, date, quantity and transaction ID; the API returns
+`excluded_transactions`. These exclusions can make reconstructed cash differ
+from current ledger accounting. Stored rows are unchanged. Matched sales remain
+in the replay, and unmatched sales within the displayed window still fail.
+
+After exclusions, net ledger quantities must reconcile to current holdings;
 unknown currencies, invalid dates/amounts, oversold positions, missing required
 prices/FX or mismatched quantities produce an explicit gap, without a partial or
 sample curve. Poll failures clear previous curves, including the sparkline.

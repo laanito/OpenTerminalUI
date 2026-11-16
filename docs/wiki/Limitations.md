@@ -406,7 +406,11 @@ never silently faked.
   This read-only backfill is not retained NAV or exact time-weighted performance.
   No corporate-action replay or inferred missing funding/trades is provided;
   adjusted/revised prices and ledger edits can change earlier values. Quantity
-  mismatches, oversells and missing prices/currencies/FX are explicit gaps.
+  mismatches and missing prices/currencies/FX are explicit gaps. For legacy
+  add/remove portfolios, unmatched sale rows before the 30-day window are excluded
+  with their proceeds/fees and listed explicitly. Reconstructed cash can then
+  differ from the current ledger total. In-window oversells still fail, and the
+  remaining replay must reconcile to current holdings. No stored row is changed.
   Failure/partial states clear old curves and the sparkline. See
   [Research workflows](Research-Workflows.md#home-portfolio-history).
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,

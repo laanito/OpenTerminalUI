@@ -361,6 +361,7 @@ export type PortfolioHistory = {
   portfolio_id: string; base_currency: string; benchmark: string; checked_at: string;
   methodology: "daily_ledger_reconstruction"; status: "complete" | "degraded" | "partial";
   assumptions: string[]; degraded_reasons: string[];
+  excluded_transactions: Array<{ id: string; symbol: string; date: string; shares: number; reason: "legacy_unmatched_sale" }>;
   issues: Array<{ code: string; symbol?: string | null; date?: string | null }>;
   equity_curve: Array<{ date: string; net_liquidation_value: number; cash_balance: number; holdings_value: number;
     external_flow: number; portfolio: number | null; benchmark: number | null; benchmark_as_of: string | null; price_dates: Record<string, string> }>;

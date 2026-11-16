@@ -52,6 +52,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cleanup remain open.
 
 ### Fixed
+- **Legacy add/remove portfolio history** — exclude unmatched sales before the
+  displayed 30-day window, including their proceeds and fees, rather than blocking
+  reconstruction. Warnings identify every excluded row and explain possible cash
+  differences from current accounting. In-window oversells and remaining quantity
+  mismatches still fail explicitly; no stored transaction is changed.
 - **Benchmark prior close at a new holdings window** — retain earlier benchmark
   observations when the current basket starts after the last market session,
   such as a weekend. The response includes quote as-of dates and coverage bounds;

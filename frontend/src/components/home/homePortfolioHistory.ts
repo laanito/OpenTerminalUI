@@ -36,6 +36,13 @@ export function buildHomeHistory(value: unknown, now = Date.now()): HomePortfoli
   const notes = Array.isArray(value.issues) ? value.issues.filter(record).map((issue) =>
     `${issueLabels[String(issue.code)] ?? "Historical input unavailable"}${typeof issue.symbol === "string" ? ` (${issue.symbol})` : ""}${typeof issue.date === "string" ? ` on ${issue.date}` : ""}`) : [];
   if (Array.isArray(value.degraded_reasons)) notes.push(...value.degraded_reasons.filter((reason): reason is string => typeof reason === "string"));
+  if (Array.isArray(value.excluded_transactions)) {
+    for (const row of value.excluded_transactions) {
+      if (record(row) && row.reason === "legacy_unmatched_sale" && typeof row.symbol === "string" && date(row.date) && positive(row.shares)) {
+        notes.push(`Excluded legacy sale: ${row.symbol} · ${row.date} · ${row.shares} shares${typeof row.id === "string" ? ` · transaction ${row.id}` : ""}.`);
+      }
+    }
+  }
   if (value.status === "partial") return { ...unavailable("Historical reconstruction is incomplete; no partial portfolio curve is shown."), notes };
   const end = new Date(now).toISOString().slice(0, 10);
   const start = new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86400000).toISOString().slice(0, 10);
