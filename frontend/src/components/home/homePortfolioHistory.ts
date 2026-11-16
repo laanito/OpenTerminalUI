@@ -43,6 +43,14 @@ export function buildHomeHistory(value: unknown, now = Date.now()): HomePortfoli
       }
     }
   }
+  if (Array.isArray(value.opening_position_adjustments)) {
+    for (const row of value.opening_position_adjustments) {
+      if (record(row) && row.basis === "current_holdings_minus_window_trades" && typeof row.symbol === "string" && date(row.date)
+        && finite(row.ledger_quantity) && finite(row.opening_quantity) && finite(row.quantity_delta)) {
+        notes.push(`Estimated opening position: ${row.symbol} · ${row.date} · ${row.opening_quantity} shares (ledger: ${row.ledger_quantity}; adjustment: ${row.quantity_delta}). No cash movement inferred.`);
+      }
+    }
+  }
   if (value.status === "partial") return { ...unavailable("Historical reconstruction is incomplete; no partial portfolio curve is shown."), notes };
   const end = new Date(now).toISOString().slice(0, 10);
   const start = new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86400000).toISOString().slice(0, 10);

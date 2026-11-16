@@ -409,8 +409,14 @@ never silently faked.
   mismatches and missing prices/currencies/FX are explicit gaps. For legacy
   add/remove portfolios, unmatched sale rows before the 30-day window are excluded
   with their proceeds/fees and listed explicitly. Reconstructed cash can then
-  differ from the current ledger total. In-window oversells still fail, and the
-  remaining replay must reconcile to current holdings. No stored row is changed.
+  differ from the current ledger total. After opening assumptions, oversells still fail and the
+  replay must reconcile to current holdings. Legacy symbols (excluded old sales
+  or a current holding dated before the window) can receive a disclosed non-cash
+  opening inventory estimate: current quantity minus recorded in-window net
+  trades. Original/estimated opening quantities and signed adjustments are
+  inspectable. Unrecorded add/remove dates remain unknown; no in-window trade is
+  removed, negative opening balances and later oversells still fail, and no stored
+  row is changed.
   Failure/partial states clear old curves and the sparkline. See
   [Research workflows](Research-Workflows.md#home-portfolio-history).
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,

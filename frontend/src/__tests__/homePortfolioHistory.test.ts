@@ -57,3 +57,12 @@ it("discloses excluded legacy sales with their identities alongside the approxim
   expect(result.navPoints).toHaveLength(2);
   expect(result.notes).toContain("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction old-sale.");
 });
+
+it("shows estimated opening inventory separately from excluded sales and cash flows", () => {
+  const result = buildHomeHistory(history([point("2026-11-15"), point("2026-11-16")], {
+    opening_position_adjustments: [{ symbol: "A", date: "2026-10-18", ledger_quantity: 2, opening_quantity: 3, quantity_delta: 1,
+      basis: "current_holdings_minus_window_trades" }],
+  }), NOW);
+  expect(result.navPoints).toHaveLength(2);
+  expect(result.notes).toContain("Estimated opening position: A · 2026-10-18 · 3 shares (ledger: 2; adjustment: 1). No cash movement inferred.");
+});
