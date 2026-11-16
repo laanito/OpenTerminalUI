@@ -47,13 +47,14 @@ record. Current ledger edits, revised provider data and adjusted closes can alte
 older values. There is no corporate-action replay: splits or missing activity
 can distort history. Compatibility with early add/remove portfolios: an unmatched sale **before** the
 30-day window is excluded as a whole row, including its cash proceeds and fees.
-The warning lists its symbol, date, quantity and transaction ID; the API returns
+A compact, collapsed **Legacy data adjusted for this estimate** disclosure
+contains its symbol, date, quantity and transaction ID; the API returns
 `excluded_transactions`. These exclusions can make reconstructed cash differ
 from current ledger accounting. Stored rows are unchanged. Matched sales remain
 in the replay. For a symbol with an excluded legacy sale, or a current holding
 whose recorded purchase date predates the window, an opening inventory mismatch
 can be estimated as today's quantity minus the net recorded in-window trades.
-The API's `opening_position_adjustments` and Home warnings show the original
+The API's `opening_position_adjustments` and the same expandable details show the original
 ledger opening quantity, estimated opening quantity and signed difference.
 These are non-cash assumptions at the start of the window, not synthetic trades;
 the missing add/remove dates remain unknown. Every in-window trade is preserved.

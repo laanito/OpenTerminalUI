@@ -52,6 +52,9 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   cleanup remain open.
 
 ### Fixed
+- **Compact portfolio history notices** — show one collapsed legacy-adjustment
+  summary, with transaction IDs, quantities and reconstruction explanations
+  available on demand. Active history failures and other warnings remain visible.
 - **Legacy opening portfolio positions** — reconcile legacy add/remove inventory
   with today's holdings by estimating opening quantities before the 30-day
   window's recorded trades. Home and the API expose the original quantities and

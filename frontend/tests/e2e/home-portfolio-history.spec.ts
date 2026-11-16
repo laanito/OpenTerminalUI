@@ -24,7 +24,8 @@ for (const width of [1440, 390]) {
           excluded_transactions: [{ id: "legacy-sale", symbol: "BTC-USD", date: "2026-07-27", shares: 2, reason: "legacy_unmatched_sale" }],
           opening_position_adjustments: [{ symbol: "BTC-USD", date: "2026-10-17", ledger_quantity: 1, opening_quantity: 2, quantity_delta: 1,
             basis: "current_holdings_minus_window_trades" }],
-          degraded_reasons: [], equity_curve: mode === "old"
+          degraded_reasons: ["Excluded 1 unmatched legacy sale(s) before the 30-day window.",
+            "Legacy opening positions are estimated from current holdings minus recorded 30-day trades."], equity_curve: mode === "old"
             ? [{ date: "2025-01-01", portfolio: 100, benchmark: 200, net_liquidation_value: 1000 }, { date: "2025-01-02", portfolio: 110, benchmark: 240, net_liquidation_value: 1500 }]
             : Array.from({ length: 30 }, (_, i) => ({
               date: new Date(Date.UTC(2026, 9, 17 + i)).toISOString().slice(0, 10),
@@ -45,8 +46,14 @@ for (const width of [1440, 390]) {
     await expect(panel).toContainText("Includes closed positions while they were held");
     await expect(panel).toContainText("Portfolio (flow-adjusted) 110.00 index"); await expect(panel).toContainText("Benchmark (SPY) 120.00 index");
     await expect(panel).toContainText("Benchmark close used: 2026-11-13");
-    await expect(panel).toContainText("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction legacy-sale.");
-    await expect(panel).toContainText("Estimated opening position: BTC-USD · 2026-10-17 · 2 shares (ledger: 1; adjustment: 1). No cash movement inferred.");
+    const legacyDetail = panel.getByText("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction legacy-sale.", { exact: true });
+    const openingDetail = panel.getByText("Estimated opening position: BTC-USD · 2026-10-17 · 2 shares (ledger: 1; adjustment: 1). No cash movement inferred.", { exact: true });
+    await expect(legacyDetail).not.toBeVisible(); await expect(openingDetail).not.toBeVisible();
+    const adjustmentToggle = panel.getByText("Legacy data adjusted for this estimate · Details", { exact: true });
+    await expect(adjustmentToggle).toBeVisible();
+    await adjustmentToggle.click();
+    await expect(legacyDetail).toBeVisible(); await expect(openingDetail).toBeVisible();
+    await adjustmentToggle.click(); await expect(legacyDetail).not.toBeVisible();
     await expect(panel).toContainText("2026-10-17 to 2026-11-15"); await expect(panel).not.toContainText("999999");
     const valueHistory = page.getByRole("img", { name: "Reconstructed daily portfolio value", exact: true });
     await expect(valueHistory).toBeVisible();

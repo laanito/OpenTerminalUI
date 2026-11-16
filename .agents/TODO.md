@@ -1377,6 +1377,15 @@ scoring/comparison integration and cleanup remain open. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.
 
+### Compact Home history adjustment notices
+
+- [x] Maintainer confirmed #280 reconstruction works. Replace the verbose legacy
+      warnings with one collapsed summary; retain details on demand and keep
+      active input errors/FX warnings visible. No accounting/API changes.
+      Verify 24 focused frontend tests, production build and desktop/mobile
+      disclosure expansion/collapse in the existing Home journeys.
+- [ ] Maintainer review of the compact notice presentation.
+
 ### Legacy opening inventory reconstruction
 
 - [x] After deployed #279, handle remaining development-era add/remove quantity

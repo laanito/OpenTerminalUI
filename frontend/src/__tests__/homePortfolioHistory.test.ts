@@ -55,7 +55,7 @@ it("discloses excluded legacy sales with their identities alongside the approxim
     excluded_transactions: [{ id: "old-sale", symbol: "BTC-USD", date: "2026-07-27", shares: 2, reason: "legacy_unmatched_sale" }],
   }), NOW);
   expect(result.navPoints).toHaveLength(2);
-  expect(result.notes).toContain("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction old-sale.");
+  expect(result.adjustmentDetails).toContain("Excluded legacy sale: BTC-USD · 2026-07-27 · 2 shares · transaction old-sale.");
 });
 
 it("shows estimated opening inventory separately from excluded sales and cash flows", () => {
@@ -64,5 +64,15 @@ it("shows estimated opening inventory separately from excluded sales and cash fl
       basis: "current_holdings_minus_window_trades" }],
   }), NOW);
   expect(result.navPoints).toHaveLength(2);
-  expect(result.notes).toContain("Estimated opening position: A · 2026-10-18 · 3 shares (ledger: 2; adjustment: 1). No cash movement inferred.");
+  expect(result.adjustmentDetails).toContain("Estimated opening position: A · 2026-10-18 · 3 shares (ledger: 2; adjustment: 1). No cash movement inferred.");
+});
+
+it("moves legacy explanations into details while preserving actionable warnings", () => {
+  const result = buildHomeHistory(history([point("2026-11-15"), point("2026-11-16")], {
+    excluded_transactions: [{ id: "old", symbol: "A", date: "2026-07-01", shares: 1, reason: "legacy_unmatched_sale" }],
+    opening_position_adjustments: [{ symbol: "A", date: "2026-10-18", ledger_quantity: 0, opening_quantity: 1, quantity_delta: 1, basis: "current_holdings_minus_window_trades" }],
+    degraded_reasons: ["Excluded 1 unmatched legacy sale(s) before the 30-day window.", "Legacy opening positions are estimated from current holdings minus recorded 30-day trades.", "Historical FX is stale"],
+  }), NOW);
+  expect(result.notes).toEqual(["Historical FX is stale"]);
+  expect(result.adjustmentDetails).toHaveLength(4);
 });
