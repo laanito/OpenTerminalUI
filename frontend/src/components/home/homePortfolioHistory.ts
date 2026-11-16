@@ -5,11 +5,11 @@ export type HomePortfolioHistory = {
   message: string; points: Point[]; benchmarkPoints: Point[]; navPoints: Point[];
   valuations: Valuation[];
   benchmark: string | null; benchmarkAsOf: string | null; baseCurrency: string | null;
-  start: string | null; end: string | null; checkedAt: number | null; notes: string[];
+  start: string | null; end: string | null; checkedAt: number | null; notes: string[]; adjustmentDetails: string[];
 };
 export function emptyHomeHistory(message: string, checkedAt: number | null = null): HomePortfolioHistory {
   return { status: "unavailable", message, points: [], benchmarkPoints: [], navPoints: [], valuations: [], benchmark: null, benchmarkAsOf: null, baseCurrency: null,
-    start: null, end: null, checkedAt, notes: [] };
+    start: null, end: null, checkedAt, notes: [], adjustmentDetails: [] };
 }
 const record = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -35,11 +35,21 @@ export function buildHomeHistory(value: unknown, now = Date.now()): HomePortfoli
     || !Array.isArray(value.equity_curve)) return unavailable("Historical reconstruction metadata is unavailable.");
   const notes = Array.isArray(value.issues) ? value.issues.filter(record).map((issue) =>
     `${issueLabels[String(issue.code)] ?? "Historical input unavailable"}${typeof issue.symbol === "string" ? ` (${issue.symbol})` : ""}${typeof issue.date === "string" ? ` on ${issue.date}` : ""}`) : [];
-  if (Array.isArray(value.degraded_reasons)) notes.push(...value.degraded_reasons.filter((reason): reason is string => typeof reason === "string"));
+  const adjustmentDetails: string[] = [];
+  if (Array.isArray(value.degraded_reasons)) {
+    for (const reason of value.degraded_reasons) {
+      if (typeof reason !== "string") continue;
+      const legacyReason = (Array.isArray(value.excluded_transactions) && value.excluded_transactions.length > 0
+        && /^Excluded \d+ unmatched legacy sale/.test(reason))
+        || (Array.isArray(value.opening_position_adjustments) && value.opening_position_adjustments.length > 0
+          && reason.startsWith("Legacy opening positions are estimated"));
+      (legacyReason ? adjustmentDetails : notes).push(reason);
+    }
+  }
   if (Array.isArray(value.excluded_transactions)) {
     for (const row of value.excluded_transactions) {
       if (record(row) && row.reason === "legacy_unmatched_sale" && typeof row.symbol === "string" && date(row.date) && positive(row.shares)) {
-        notes.push(`Excluded legacy sale: ${row.symbol} · ${row.date} · ${row.shares} shares${typeof row.id === "string" ? ` · transaction ${row.id}` : ""}.`);
+        adjustmentDetails.push(`Excluded legacy sale: ${row.symbol} · ${row.date} · ${row.shares} shares${typeof row.id === "string" ? ` · transaction ${row.id}` : ""}.`);
       }
     }
   }
@@ -47,23 +57,23 @@ export function buildHomeHistory(value: unknown, now = Date.now()): HomePortfoli
     for (const row of value.opening_position_adjustments) {
       if (record(row) && row.basis === "current_holdings_minus_window_trades" && typeof row.symbol === "string" && date(row.date)
         && finite(row.ledger_quantity) && finite(row.opening_quantity) && finite(row.quantity_delta)) {
-        notes.push(`Estimated opening position: ${row.symbol} · ${row.date} · ${row.opening_quantity} shares (ledger: ${row.ledger_quantity}; adjustment: ${row.quantity_delta}). No cash movement inferred.`);
+        adjustmentDetails.push(`Estimated opening position: ${row.symbol} · ${row.date} · ${row.opening_quantity} shares (ledger: ${row.ledger_quantity}; adjustment: ${row.quantity_delta}). No cash movement inferred.`);
       }
     }
   }
-  if (value.status === "partial") return { ...unavailable("Historical reconstruction is incomplete; no partial portfolio curve is shown."), notes };
+  if (value.status === "partial") return { ...unavailable("Historical reconstruction is incomplete; no partial portfolio curve is shown."), notes, adjustmentDetails };
   const end = new Date(now).toISOString().slice(0, 10);
   const start = new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86400000).toISOString().slice(0, 10);
   const observations = new Map<string, Record<string, unknown>>();
   for (const point of value.equity_curve) {
-    if (!record(point) || !date(point.date)) return { ...unavailable("Historical reconstruction contains an invalid date."), notes };
+    if (!record(point) || !date(point.date)) return { ...unavailable("Historical reconstruction contains an invalid date."), notes, adjustmentDetails };
     if (point.date < start || point.date > end) continue;
-    if (!finite(point.net_liquidation_value) || observations.has(point.date)) return { ...unavailable("Historical reconstruction contains invalid or duplicate values."), notes };
+    if (!finite(point.net_liquidation_value) || observations.has(point.date)) return { ...unavailable("Historical reconstruction contains invalid or duplicate values."), notes, adjustmentDetails };
     observations.set(point.date, point);
   }
   const ordered = [...observations].sort(([a], [b]) => a.localeCompare(b));
-  if (ordered.length < 2) return { ...unavailable("At least two daily observations are needed within the last 30 UTC calendar days."), notes };
-  if (ordered.some(([label], i) => i > 0 && Date.parse(label) - Date.parse(ordered[i - 1][0]) !== 86400000)) return { ...unavailable("Historical reconstruction has missing calendar days."), notes };
+  if (ordered.length < 2) return { ...unavailable("At least two daily observations are needed within the last 30 UTC calendar days."), notes, adjustmentDetails };
+  if (ordered.some(([label], i) => i > 0 && Date.parse(label) - Date.parse(ordered[i - 1][0]) !== 86400000)) return { ...unavailable("Historical reconstruction has missing calendar days."), notes, adjustmentDetails };
   const navPoints = ordered.map(([label, point]) => ({ label, value: point.net_liquidation_value as number }));
   const valuations = ordered.flatMap(([label, point]) => finite(point.cash_balance) && finite(point.holdings_value) && finite(point.external_flow)
     ? [{ label, value: point.net_liquidation_value as number, cash: point.cash_balance, holdings: point.holdings_value, flow: point.external_flow,
@@ -75,10 +85,10 @@ export function buildHomeHistory(value: unknown, now = Date.now()): HomePortfoli
   const validBenchmark = validIndex && indexed.every(([label, point]) => positive(point.benchmark) && date(point.benchmark_as_of)
     && point.benchmark_as_of <= label && Date.parse(label) - Date.parse(point.benchmark_as_of) <= 7 * 86400000);
   const benchmarkPoints = validBenchmark ? indexed.map(([label, point]) => ({ label, value: (point.benchmark as number) / (indexed[0][1].benchmark as number) * 100 })) : [];
-  if ([...points, ...benchmarkPoints].some((point) => !finite(point.value))) return { ...unavailable("Historical values could not be indexed safely."), notes };
+  if ([...points, ...benchmarkPoints].some((point) => !finite(point.value))) return { ...unavailable("Historical values could not be indexed safely."), notes, adjustmentDetails };
   if (!validIndex) notes.push("Flow-adjusted comparison unavailable; reconstructed portfolio values are shown in Portfolio HQ.");
   else if (!validBenchmark) notes.push("Benchmark comparison unavailable; the portfolio return index remains available.");
   return { status: value.status === "degraded" || !validBenchmark ? "degraded" : "complete", message: points.length ? "" : "Flow-adjusted return index unavailable.",
     points, benchmarkPoints, navPoints, valuations, benchmark: value.benchmark, benchmarkAsOf: validBenchmark ? indexed[indexed.length - 1][1].benchmark_as_of as string : null,
-    baseCurrency: value.base_currency, start: ordered[0][0], end: ordered[ordered.length - 1][0], checkedAt: now, notes };
+    baseCurrency: value.base_currency, start: ordered[0][0], end: ordered[ordered.length - 1][0], checkedAt: now, notes, adjustmentDetails };
 }

@@ -221,6 +221,15 @@ The maintainer confirmed PR #274 merged and tested. Carry that acceptance
 forward. Checked Deep integration and reference-aware retention/deletion/cleanup
 remain open before v2.8 release preparation.
 
+Home history UX follow-up: the maintainer confirmed #280 works and requested
+less verbosity. Legacy explanations, excluded transaction IDs/quantities and
+opening adjustments now live in one collapsed “Legacy data adjusted for this
+estimate · Details” disclosure. Keep active input failures and non-legacy/FX
+warnings visible. Calculation and API payloads are unchanged. Validation: 24
+focused frontend tests, production build and both Home browser widths pass,
+including default-hidden details and expansion/collapse. Preserve the maintainer's
+functional acceptance; do not request duplicate reconstruction testing.
+
 Legacy opening inventory follow-up (2026-11-16): #279 is merged/deployed,
 but excluding unmatched old sales exposed remaining quantity differences from
 unrecorded development-era adds/removes. For legacy symbols only (an excluded
