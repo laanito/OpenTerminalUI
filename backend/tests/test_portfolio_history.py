@@ -109,7 +109,7 @@ def test_closed_positions_withdrawals_and_separate_fee_currency(market):
 
 @pytest.mark.parametrize("rows,holdings,code", [
     ([tx("buy", "2026-10-01", "A", 2, 100)], [NS(symbol="A", shares=3)], "ledger_holdings_mismatch"),
-    ([tx("sell", "2026-10-01", "A", 1, 100)], [], "ledger_position_negative"),
+    ([tx("sell", "2026-11-01", "A", 1, 100)], [], "ledger_position_negative"),
     ([tx("deposit", "invalid", price=100)], [], "ledger_date_or_value_invalid"),
     ([tx("deposit", "2026-10-01", price=float("nan"))], [], "ledger_date_or_value_invalid"),
     ([tx("deposit", "2026-10-01", price=100, currency=None)], [], "ledger_fx_or_currency_unavailable"),
@@ -215,3 +215,36 @@ def test_security_missing_quote_currency_does_not_assume_reporting_currency(mark
     result = run([tx("buy", "2026-10-01", "A", 1, 100)], [NS(symbol="A", shares=1)])
     assert result["status"] == "partial"
     assert result["issues"][0]["code"] == "ledger_price_or_fx_unavailable"
+
+
+def test_legacy_unmatched_sale_is_excluded_with_its_proceeds_and_fees(market):
+    orphan = tx("sell", "2026-07-27", "BTC-USD", 2, 60000, currency=None, fees=150, fees_currency=None)
+    buy = tx("buy", "2026-10-01", "A", 1, 100)
+    result = run([orphan, buy], [NS(symbol="A", shares=1)])
+    control = run([buy], [NS(symbol="A", shares=1)])
+    assert result["status"] == "degraded"
+    assert result["equity_curve"] == control["equity_curve"]
+    assert result["equity_curve"][-1]["cash_balance"] == 900
+    assert result["excluded_transactions"] == [{"id": orphan.id, "symbol": "BTC-USD", "date": "2026-07-27", "shares": 2, "reason": "legacy_unmatched_sale"}]
+    assert any("cash can differ" in reason for reason in result["degraded_reasons"])
+    assert "BTC-USD" not in market
+    assert orphan.shares == 2 and orphan.fees == 150
+    PortfolioHistoryResponse.model_validate(result)
+
+
+def test_legacy_exclusion_retains_matched_sales_and_still_reconciles(market):
+    rows = [tx("sell", "2026-07-27", "A", 1, 100), tx("buy", "2026-09-01", "A", 2, 100),
+            tx("sell", "2026-10-01", "A", 1, 110)]
+    result = run(rows, [NS(symbol="A", shares=1)])
+    assert len(result["excluded_transactions"]) == 1
+    assert result["equity_curve"][-1]["cash_balance"] == 910
+    assert result["equity_curve"][-1]["holdings_value"] == 120
+    mismatch = run(rows, [NS(symbol="A", shares=2)])
+    assert mismatch["status"] == "partial"
+    assert mismatch["issues"][0]["code"] == "ledger_holdings_mismatch"
+
+
+def test_unmatched_sale_on_window_boundary_is_not_ignored(market):
+    result = run([tx("sell", "2026-10-18", "A", 1, 100)], [])
+    assert result["status"] == "partial"
+    assert result["excluded_transactions"] == []

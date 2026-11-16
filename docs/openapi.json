@@ -16607,6 +16607,40 @@
         "title": "PortfolioFactorAttribution",
         "type": "object"
       },
+      "PortfolioHistoryExclusion": {
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "const": "legacy_unmatched_sale",
+            "title": "Reason",
+            "type": "string"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "date",
+          "shares",
+          "reason"
+        ],
+        "title": "PortfolioHistoryExclusion",
+        "type": "object"
+      },
       "PortfolioHistoryPoint": {
         "properties": {
           "benchmark": {
@@ -16720,6 +16754,13 @@
             "title": "Equity Curve",
             "type": "array"
           },
+          "excluded_transactions": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioHistoryExclusion"
+            },
+            "title": "Excluded Transactions",
+            "type": "array"
+          },
           "issues": {
             "items": {
               "$ref": "#/components/schemas/HistoricalAnalyticsIssue"
@@ -16755,7 +16796,8 @@
           "benchmark",
           "checked_at",
           "assumptions",
-          "equity_curve"
+          "equity_curve",
+          "excluded_transactions"
         ],
         "title": "PortfolioHistoryResponse",
         "type": "object"

@@ -1377,6 +1377,19 @@ scoring/comparison integration and cleanup remain open. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.
 
+### Legacy add/remove history compatibility
+
+- [x] Per maintainer authorization after deployed #278, ignore unmatched sale
+      rows before the 30-day window, including proceeds and fees. Return explicit
+      excluded-row identities and render warnings; disclose cash divergence from
+      current accounting. No stored transaction is changed. Keep matched sales,
+      in-window oversell errors and final quantity reconciliation.
+- [x] Verify 42 backend checks, 22 focused frontend tests, production build, both
+      Home browser widths, generated API and whitespace checks. Cover excluded
+      unknown-currency rows, unchanged input records, matched sales, mismatch
+      failures, window-boundary failures and visible exclusions at both widths.
+- [ ] Maintainer review/deployed validation of the legacy compatibility path.
+
 ### Actual Home portfolio history — explicitly authorized follow-up
 
 - [x] Replace Home's current-basket comparison with a separate owned, JWT,

@@ -462,12 +462,21 @@ class PortfolioHistoryPoint(BaseModel):
     price_dates: dict[str, str]
 
 
+class PortfolioHistoryExclusion(BaseModel):
+    id: str
+    symbol: str
+    date: str
+    shares: float
+    reason: Literal["legacy_unmatched_sale"]
+
+
 class PortfolioHistoryResponse(HistoricalAnalyticsMetadata):
     portfolio_id: str
     benchmark: str
     checked_at: datetime
     assumptions: list[str]
     equity_curve: list[PortfolioHistoryPoint]
+    excluded_transactions: list[PortfolioHistoryExclusion]
 
 
 class PortfolioReturnAttributionHolding(BaseModel):
