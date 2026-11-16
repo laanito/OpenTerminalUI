@@ -386,23 +386,29 @@ never silently faked.
   basket. Each point exposes `benchmark_as_of`; coverage bounds distinguish an
   absent feed from no prior close. Alpha and tracking error are null with fewer
   than two paired return observations; this does not prevent plotting valid
-  prices. Home still requires two portfolio observations and rejects benchmark
-  closes entirely older than its 30-day window. Full ledger/NAV history remains
-  outside this current-basket comparison.
+  prices. Full ledger/NAV history remains outside this current-basket analytics
+  endpoint; Home now uses the separate reconstruction described below.
   They therefore
   exclude closed positions and do not represent ledger-reconstructed,
   cash-flow-adjusted performance. Attribution uses the same explicit boundary
   and separates security, currency, and interaction return. Missing price,
   denomination, or FX history produces a partial result instead of a guessed
   curve; frontend display conversion is not part of the accounting contract.
-  Home's **30-day open-holdings comparison** explicitly resolves the primary
-  portfolio ID and shows the actual shared date range in the last 30 UTC calendar
-  days. Both lines start at index 100 on the first shared date and share one scale;
-  neither is forced to today's net liquidation value. Empty/failed/unsupported
-  or partial history has no chart, sample curve or retained old line. Historical
-  FX degradation and withheld invalid/conflicting observations are disclosed.
-  Today's net-liquidation card has no implied historical sparkline. A full NAV
-  or cash-flow-adjusted transaction-ledger curve remains unimplemented.
+  Home's separate **30-day portfolio history** replays the owned primary ledger
+  into daily cash, holdings and NAV, including positions later sold. Portfolio HQ
+  shows reconstructed NAV; its comparison uses approximate end-of-day external
+  flow adjustment, rather than treating deposits as returns. Inspect daily values
+  and native close dates in the expandable table. Benchmark failures do not hide
+  portfolio values, and non-positive/unfunded NAV can prevent only the return
+  index. Opening cash is applied from the earlier of creation and first activity;
+  history is shorter for genuinely new portfolios. Prices carry at most seven
+  days; securities use daily FX while cash follows dated transaction conversion.
+  This read-only backfill is not retained NAV or exact time-weighted performance.
+  No corporate-action replay or inferred missing funding/trades is provided;
+  adjusted/revised prices and ledger edits can change earlier values. Quantity
+  mismatches, oversells and missing prices/currencies/FX are explicit gaps.
+  Failure/partial states clear old curves and the sparkline. See
+  [Research workflows](Research-Workflows.md#home-portfolio-history).
 - **Several retained tools are compatibility-only.** OMS is a user-scoped,
   quote-backed simulator, not broker execution, and it does not update Paper
   portfolios. Ops shows measured system state only; global restricted-list and

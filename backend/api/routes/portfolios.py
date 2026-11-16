@@ -26,6 +26,7 @@ from backend.services.legacy_holdings import (
 from backend.services.forex_service import service as forex_service
 from backend.services.portfolio_accounting import calculate_portfolio_accounting
 from backend.services.portfolio_analytics import portfolio_analytics_service
+from backend.services.portfolio_history import reconstruct_portfolio_history
 from backend.shared.market_classifier import is_crypto_symbol, market_classifier
 
 router = APIRouter()
@@ -447,6 +448,26 @@ class PortfolioBenchmarkOverlayResponse(HistoricalAnalyticsMetadata):
     equity_curve: list[PortfolioBenchmarkPoint]
     alpha: float | None
     tracking_error: float | None
+
+
+class PortfolioHistoryPoint(BaseModel):
+    date: str
+    net_liquidation_value: float
+    cash_balance: float
+    holdings_value: float
+    external_flow: float
+    portfolio: float | None
+    benchmark: float | None
+    benchmark_as_of: str | None
+    price_dates: dict[str, str]
+
+
+class PortfolioHistoryResponse(HistoricalAnalyticsMetadata):
+    portfolio_id: str
+    benchmark: str
+    checked_at: datetime
+    assumptions: list[str]
+    equity_curve: list[PortfolioHistoryPoint]
 
 
 class PortfolioReturnAttributionHolding(BaseModel):
@@ -1304,6 +1325,26 @@ async def get_portfolio_benchmark_overlay(
     return await portfolio_analytics_service.benchmark_overlay(
         holdings, benchmark=bench, base_currency=portfolio.currency
     )
+
+
+@router.get("/portfolios/{portfolio_id}/analytics/history", response_model=PortfolioHistoryResponse)
+async def get_portfolio_history(
+    portfolio_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Approximate 30-day ledger NAV and end-of-day-flow-adjusted comparison.
+
+    Read-only reconstruction; does not create transactions or retained NAV snapshots.
+    """
+    # This reconstruction must not materialise a default portfolio on a GET.
+    portfolio = (primary_portfolio(db, current_user.id, create=False) if portfolio_id == "primary"
+                 else _portfolio_for_user(db, portfolio_id, current_user.id))
+    if portfolio is None:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+    holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id == portfolio.id).all()
+    transactions = db.query(PortfolioTransactionORM).filter(PortfolioTransactionORM.portfolio_id == portfolio.id).all()
+    return await reconstruct_portfolio_history(portfolio, holdings, transactions)
 
 
 @router.get("/portfolios/{portfolio_id}/attribution", response_model=PortfolioAttributionResponse)

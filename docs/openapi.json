@@ -16607,6 +16607,159 @@
         "title": "PortfolioFactorAttribution",
         "type": "object"
       },
+      "PortfolioHistoryPoint": {
+        "properties": {
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark"
+          },
+          "benchmark_as_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark As Of"
+          },
+          "cash_balance": {
+            "title": "Cash Balance",
+            "type": "number"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "external_flow": {
+            "title": "External Flow",
+            "type": "number"
+          },
+          "holdings_value": {
+            "title": "Holdings Value",
+            "type": "number"
+          },
+          "net_liquidation_value": {
+            "title": "Net Liquidation Value",
+            "type": "number"
+          },
+          "portfolio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio"
+          },
+          "price_dates": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Price Dates",
+            "type": "object"
+          }
+        },
+        "required": [
+          "date",
+          "net_liquidation_value",
+          "cash_balance",
+          "holdings_value",
+          "external_flow",
+          "portfolio",
+          "benchmark",
+          "benchmark_as_of",
+          "price_dates"
+        ],
+        "title": "PortfolioHistoryPoint",
+        "type": "object"
+      },
+      "PortfolioHistoryResponse": {
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "base_currency": {
+            "title": "Base Currency",
+            "type": "string"
+          },
+          "benchmark": {
+            "title": "Benchmark",
+            "type": "string"
+          },
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "degraded_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Degraded Reasons",
+            "type": "array"
+          },
+          "equity_curve": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioHistoryPoint"
+            },
+            "title": "Equity Curve",
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalAnalyticsIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "methodology": {
+            "title": "Methodology",
+            "type": "string"
+          },
+          "portfolio_id": {
+            "title": "Portfolio Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "degraded",
+              "partial"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_currency",
+          "status",
+          "methodology",
+          "issues",
+          "degraded_reasons",
+          "portfolio_id",
+          "benchmark",
+          "checked_at",
+          "assumptions",
+          "equity_curve"
+        ],
+        "title": "PortfolioHistoryResponse",
+        "type": "object"
+      },
       "PortfolioHoldingCreateRequest": {
         "properties": {
           "cost_basis_per_share": {
@@ -42082,6 +42235,61 @@
           }
         ],
         "summary": "Get Portfolio Dividends",
+        "tags": [
+          "portfolios"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "portfolios": "supported"
+        }
+      }
+    },
+    "/api/portfolios/{portfolio_id}/analytics/history": {
+      "get": {
+        "description": "Approximate 30-day ledger NAV and end-of-day-flow-adjusted comparison.\n\nRead-only reconstruction; does not create transactions or retained NAV snapshots.",
+        "operationId": "get_portfolio_history_api_portfolios__portfolio_id__analytics_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portfolio_id",
+            "required": true,
+            "schema": {
+              "title": "Portfolio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioHistoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Portfolio History",
         "tags": [
           "portfolios"
         ],

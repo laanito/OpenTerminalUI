@@ -7,42 +7,52 @@ not describe automatic trading or a complete historical archive.
 
 ## Home portfolio history
 
-Home's **30-day open-holdings comparison** uses your primary portfolio, identified
-by name and resolved ID, rather than the Portfolio Manager's currently selected
-portfolio or a consolidation across portfolios. It reads the existing benchmark
-analytics for today's open basket at constant quantities, valued with historical
-FX in the portfolio base currency. It excludes cash, closed positions and
-transaction-ledger returns; it is not a historical net-liquidation account curve.
+Home's **30-day portfolio history** uses your primary portfolio's recorded
+ledger, not today's basket held at constant quantities. Adding a position no
+longer resets the entire window. Fully closed positions contribute while they
+were held. Cash, purchases, sales, dividends and fees are replayed by date.
 
-Daily provider bars are labelled by UTC date so crypto midnight timestamps can
-align with US/other exchange session timestamps. Date alignment does not imply
-simultaneous quotes; non-trading benchmark dates can carry the prior available
-close. Lookup uses the full original benchmark history, so a Friday close remains
-available even when the current basket only starts on Sunday. Each response point
-records `benchmark_as_of`, and Home/Portfolio Manager display the last close used.
-This does not substitute another benchmark or backfill a later UTC-date close
-into an earlier date; daily labels are not intraday knowledge claims.
+`GET /api/portfolios/{portfolio_id}/analytics/history` is a JWT-authenticated,
+owner-scoped, read-only reconstruction (the `primary` sentinel also works).
+It returns at most 30 UTC calendar days, ending today, with daily cash, holdings
+value, net liquidation value, external flows, native close dates, an approximate
+flow-adjusted index and a benchmark close/as-of date. It does not create trades,
+write a backfill into the database or retain immutable account snapshots.
 
-If history is unavailable, the API's `coverage` reports the available basket and
-benchmark date ranges. Home displays those bounds alongside the reason. A source
-with no earlier close is distinct from a missing benchmark feed. Home requires
-at least two portfolio observations, so a basket first opened today may need more
-history. Fewer than two paired returns leave alpha/tracking error null, displayed
-as **Unavailable** rather than zero. A carried benchmark close wholly outside
-Home's 30-day window is not shown as a fresh comparison.
+Portfolio HQ's net-liquidation sparkline shows the reconstructed **value**,
+including deposits and withdrawals. The main comparison adjusts those external
+flows as end-of-day movements, so adding cash does not itself count as investment
+gain. Both return indices start at 100 on the first comparable funded date, with
+one shared scale. Fees and dividends remain internal losses/income. Daily timing
+is approximate because transaction dates do not establish intraday execution.
 
-Both lines start at index 100 at the first shared observation within the last 30
-UTC calendar days, on a shared vertical scale. The displayed dates/count identify
-actual coverage, which may be shorter than the window because the whole current
-basket only existed after its latest opening purchase. The benchmark keeps its
-own return rather than being forced to finish at today's portfolio value.
+Open **Inspect reconstructed daily values** to review the daily cash, holdings,
+value, external flow and native source dates. The sparkline may differ from the
+current net-liquidation headline: it uses historical closes, while the headline
+uses the current accounting snapshot. Benchmark failures preserve portfolio
+value history; an unfunded/non-positive period can prevent the return index
+without hiding reconstructed values.
 
-No available history means no curve. Failures and partial history remove the old
-line; missing price/currency/FX and degraded inputs are disclosed. The historical
-end date is separate from the retrieval-check time, which is not a live-quote
-claim. There is no substitution of older dates or sample values. Polls do not
-overlap, and old-scope responses are ignored. The current net-liquidation card
-remains a current accounting snapshot with no fabricated historical sparkline.
+Opening cash is applied from the earlier of portfolio creation and the earliest
+recorded activity. History starts there if the portfolio is younger than 30 days;
+older recorded trades can support backfill before its repository creation date.
+Each ledger amount and fee uses its own dated currency conversion, following
+current base-currency cash accounting. Each day's securities use their own
+native close and valuation-day FX. Native closes carry forward at most seven
+calendar days, with source dates shown; later closes are never used for earlier
+dates. Negative cash is disclosed; no missing funding is invented.
+
+This is **approximate reconstructed history**, not an audited or retained NAV
+record. Current ledger edits, revised provider data and adjusted closes can alter
+older values. There is no corporate-action replay: splits or missing activity
+can distort history. Net ledger quantities must reconcile to current holdings;
+unknown currencies, invalid dates/amounts, oversold positions, missing required
+prices/FX or mismatched quantities produce an explicit gap, without a partial or
+sample curve. Poll failures clear previous curves, including the sparkline.
+
+The Portfolio Manager's existing benchmark/risk analytics keep their distinct
+current-open-holdings methodology and nullable short-history statistics. Home's
+new ledger history does not silently change those endpoints.
 
 ## Fast tasks (v2.4)
 

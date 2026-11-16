@@ -1377,6 +1377,31 @@ scoring/comparison integration and cleanup remain open. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.
 
+### Actual Home portfolio history — explicitly authorized follow-up
+
+- [x] Replace Home's current-basket comparison with a separate owned, JWT,
+      read-only 30-day ledger history API. Replay all recorded cash/trades/fees/
+      dividends, including sold positions; a new purchase cannot reset history.
+      Reuse shared transaction/fee FX accounting, use daily security FX and carry
+      only prior native closes (maximum seven days). Reconcile quantities before
+      fetching; expose missing inputs/mismatches rather than infer records.
+- [x] Label reconstruction approximate. Document opening-cash and end-of-day flow
+      assumptions, current-ledger/provider revisions, lack of corporate-action
+      replay and short/new portfolio coverage. Keep raw NAV distinct from the
+      flow-adjusted return index and preserve NAV if a benchmark/index fails.
+- [x] Restore Portfolio HQ's sparkline from reconstructed NAV; add a daily
+      cash/holdings/value/external-flow/source-date inspection table. Preserve
+      failed-refresh clearing, single-flight polling and scope invalidation.
+      Existing Manager risk/benchmark endpoints keep their current-basket scope.
+- [x] Verify 65 backend checks, all 817 frontend tests, production build and
+      all 35 Chrome smoke journeys; API/surface (490 operations/87 families),
+      production-data and whitespace guards pass. History cases cover closed
+      positions, new purchases, cash flows, dividends, separate fee currencies,
+      daily FX, missing/future prices, quantity gaps and owner/read-only access.
+- [ ] Maintainer PR review and deployed-data validation.
+      No production queries, database writes/migration or claimed retained NAV.
+      This authorization supersedes the Home reconstruction deferral below.
+
 ### Home portfolio history correctness — separate fix
 
 - [x] Trace the misleading 30D graph to hard-coded sample points, stale state after
@@ -1451,9 +1476,9 @@ additive migration.
       all 35 Chrome journeys and API/surface/mock/whitespace guards. Regressions
       exercise weekend-start raw-provider history, no future-date backfill,
       one/two-point serialization, source dates, stale quotes and coverage UX.
-- [ ] Maintainer review/deployment check. This is current-basket history since
-      its latest opening date, not a full month of reconstructed account/NAV
-      performance. Keep that limitation and the browser CI OS pin explicit.
+- [x] #277 is merged/deployed: the maintainer confirms the chart now appears.
+      The two-day coverage exposed its current-basket limitation and led to the
+      separately authorized ledger reconstruction above. Keep the CI OS pin.
 
 ### v2 evidence implementation ledger — shipped work and later gaps
 

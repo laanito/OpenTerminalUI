@@ -357,6 +357,15 @@ export type PortfolioDividendTracker = {
   annual_income_projection: number;
 };
 
+export type PortfolioHistory = {
+  portfolio_id: string; base_currency: string; benchmark: string; checked_at: string;
+  methodology: "daily_ledger_reconstruction"; status: "complete" | "degraded" | "partial";
+  assumptions: string[]; degraded_reasons: string[];
+  issues: Array<{ code: string; symbol?: string | null; date?: string | null }>;
+  equity_curve: Array<{ date: string; net_liquidation_value: number; cash_balance: number; holdings_value: number;
+    external_flow: number; portfolio: number | null; benchmark: number | null; benchmark_as_of: string | null; price_dates: Record<string, string> }>;
+};
+
 export type PortfolioBenchmarkOverlay = {
   coverage?: { portfolio_start: string | null; portfolio_end: string | null; benchmark_start: string | null; benchmark_end: string | null } | null;
   benchmark: string;

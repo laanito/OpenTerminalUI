@@ -6,6 +6,7 @@ import type {
   PortfolioCorrelationResponse,
   PortfolioDividendTracker,
   PortfolioBenchmarkOverlay,
+  PortfolioHistory,
   PortfolioMutualFundsResponse,
   PaperPortfolio,
   PaperOrder,
@@ -158,6 +159,11 @@ export async function fetchPortfolioCorrelation(params?: { window?: number }, po
 
 export async function fetchPortfolioDividends(params?: { days?: number }, portfolioId = "primary"): Promise<PortfolioDividendTracker> {
   const { data } = await api.get<PortfolioDividendTracker>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/dividends`, { params });
+  return data;
+}
+
+export async function fetchPortfolioHistory(portfolioId = "primary"): Promise<PortfolioHistory> {
+  const { data } = await api.get<PortfolioHistory>(`/portfolios/${encodeURIComponent(portfolioId)}/analytics/history`);
   return data;
 }
 

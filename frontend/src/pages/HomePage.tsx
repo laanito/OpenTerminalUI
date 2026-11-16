@@ -5,7 +5,7 @@ import {
   fetchBacktestV1Presets,
   fetchLatestNews,
   fetchPortfolio,
-  fetchPortfolioBenchmarkOverlay,
+  fetchPortfolioHistory,
   fetchQuotesBatch,
   fetchWatchlist,
   type NewsLatestApiItem,
@@ -252,7 +252,7 @@ export function HomePage() {
     const benchmarkTask = portfolioTask.then((portfolio) => {
       if (request !== snapshotRequest.current) return null;
       if (!portfolio.portfolio_id) throw new Error("Primary portfolio identity unavailable");
-      return portfolio.items.length ? fetchPortfolioBenchmarkOverlay(undefined, portfolio.portfolio_id) : null;
+      return fetchPortfolioHistory(portfolio.portfolio_id);
     });
     const [portfolioRes, watchlistRes, backtestRes, chainRes, benchmarkRes] = await Promise.allSettled([
       portfolioTask,
@@ -302,8 +302,6 @@ export function HomePage() {
       ? emptyHomeHistory("Primary portfolio could not be loaded.", checkedAt)
       : !portfolioRes.value.portfolio_id
         ? emptyHomeHistory("Primary portfolio identity is unavailable.", checkedAt)
-      : !portfolioRes.value.items.length
-        ? emptyHomeHistory("No open holdings in the primary portfolio.", checkedAt)
         : benchmarkRes.status === "rejected"
           ? emptyHomeHistory("Historical comparison could not be loaded. No previous curve is shown.", checkedAt)
           : buildHomeHistory(benchmarkRes.value, checkedAt));
@@ -669,6 +667,8 @@ export function HomePage() {
                     label="Net Liquidation"
                     value={formatMoney(snapshot.equityValue, portfolioCurrency ?? undefined)}
                     tone={getMetricTone(snapshot.equityPnl)}
+                    sparklinePoints={performance.navPoints.map((point) => point.value)}
+                    sparklineAriaLabel="Reconstructed daily portfolio value"
                     delta={
                       snapshot.equityPnl == null
                         ? undefined
@@ -689,6 +689,10 @@ export function HomePage() {
                       { label: "Sync", value: updatedLabel, tone: "neutral" },
                     ]}
                     footer={
+                      <div>
+                      <p className="mb-2 text-xs text-terminal-muted">{performance.navPoints.length > 1
+                        ? `Approximate ledger value · ${performance.start} to ${performance.end} · ${performance.baseCurrency}. Includes cash flows; this sparkline is value, not investment return.`
+                        : "Reconstructed value history unavailable."}</p>
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
@@ -704,6 +708,7 @@ export function HomePage() {
                         >
                           Run Backtests
                         </button>
+                      </div>
                       </div>
                     }
                   />
@@ -780,32 +785,46 @@ export function HomePage() {
                 <section aria-label="Primary portfolio historical comparison" className="mt-3 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">30-day open-holdings comparison</h3>
+                      <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">30-day portfolio history</h3>
                       <p className="mt-1 text-xs text-terminal-muted">
-                        Primary portfolio{primaryName ? ` · ${primaryName}` : ""}. Today’s open holdings at constant quantities; excludes cash, closed positions and transaction-ledger returns.
+                        Primary portfolio{primaryName ? ` · ${primaryName}` : ""}. Approximate daily reconstruction of recorded buys, sells, cash, fees and dividends. Includes closed positions while they were held.
                       </p>
                     </div>
                     <span className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted">
-                      {performance.status === "loading" ? "Loading history" : performance.status === "unavailable" ? "History unavailable" : performance.status === "degraded" ? "Degraded history" : "History available"}
+                      {performance.status === "loading" ? "Loading history" : performance.status === "unavailable" ? "History unavailable" : "Approximate history"}
                     </span>
                   </div>
                   <PortfolioMiniChart
                     points={performance.points}
                     benchmarkPoints={performance.benchmarkPoints}
-                    ariaLabel="Primary open-holdings indexed comparison"
+                    ariaLabel="Primary portfolio flow-adjusted comparison"
                     emptyLabel={performance.message}
-                    seriesLabel="Open holdings"
+                    seriesLabel="Portfolio (flow-adjusted)"
                     benchmarkLabel={performance.benchmark ? `Benchmark (${performance.benchmark})` : "Benchmark"}
                     valueFormatter={(value) => `${value.toFixed(2)} index`}
                   />
                   {performance.start && performance.end ? <p className="mt-2 text-xs text-terminal-muted">
-                    {performance.start} to {performance.end} · {performance.points.length} shared observations · history valued in {performance.baseCurrency}.
-                    Both series start at 100 on the first shared date in the last 30 UTC calendar days. Latest historical observation: {performance.end}.
-                    Daily UTC labels do not imply simultaneous quotes; non-trading benchmark dates can carry its prior available close.
+                    {performance.start} to {performance.end} · {performance.navPoints.length} daily valuations · history valued in {performance.baseCurrency}.
+                    Return indices start at 100 on the first comparable funded date. Deposits/withdrawals are treated as end-of-day flows; intraday timing is unknown.
+                    Daily UTC labels do not imply simultaneous quotes; non-trading dates can carry a prior close for up to 7 days. No corporate-action replay; provider adjustments or missing trades may distort reconstruction.
                     {performance.benchmarkAsOf ? ` Benchmark close used: ${performance.benchmarkAsOf}.` : ""}
                   </p> : null}
                   {performance.checkedAt !== null ? <p className="mt-1 text-xs text-terminal-muted">History checked {new Date(performance.checkedAt).toLocaleTimeString()}; this is a retrieval check, not a live quote.</p> : null}
                   {performance.notes.length ? <ul className="mt-2 text-xs text-terminal-warn">{performance.notes.map((note, index) => <li key={index}>{note}</li>)}</ul> : null}
+                  {performance.valuations.length ? <details className="mt-3 text-xs text-terminal-muted">
+                    <summary className="cursor-pointer text-terminal-accent">Inspect reconstructed daily values</summary>
+                    <p className="my-2">Opening cash applies from the earliest ledger activity or portfolio creation. Cash uses transaction-date FX; securities use each valuation day’s FX. No missing trade or deposit is inferred. Values are recalculated from the current ledger and provider history, not preserved account snapshots.</p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left" aria-label="Reconstructed daily portfolio values">
+                        <thead><tr>{["UTC date", "Value", "Cash", "Holdings", "External flow", "Native close dates"].map((heading) => <th className="p-2" key={heading}>{heading}</th>)}</tr></thead>
+                        <tbody>{performance.valuations.map((day) => <tr key={day.label} className="border-t border-terminal-border">
+                          <th className="whitespace-nowrap p-2 font-normal">{day.label}</th>
+                          {[day.value, day.cash, day.holdings, day.flow].map((value, i) => <td className="whitespace-nowrap p-2" key={i}>{formatMoney(value, asCurrencyCode(performance.baseCurrency) ?? undefined)}</td>)}
+                          <td className="p-2">{Object.entries(day.priceDates).map(([symbol, date]) => `${symbol}: ${date}`).join("; ") || "Cash only"}</td>
+                        </tr>)}</tbody>
+                      </table>
+                    </div>
+                  </details> : null}
                 </section>
               </div>
               ) : null}
