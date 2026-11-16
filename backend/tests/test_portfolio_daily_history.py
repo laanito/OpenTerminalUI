@@ -47,6 +47,7 @@ async def test_crypto_and_equity_benchmark_share_daily_labels_despite_session_ho
     curve = result["equity_curve"]
     # Thursday has no earlier benchmark observation: never backfill from Friday.
     assert [point["date"] for point in curve] == ["2026-11-13", "2026-11-14", "2026-11-15", "2026-11-16"]
+    assert [point["benchmark_as_of"] for point in curve] == ["2026-11-13", "2026-11-13", "2026-11-13", "2026-11-16"]
     assert [point["benchmark"] for point in curve] == pytest.approx([1., 1., 1., 1.02])
     assert [point["portfolio_value_base"] for point in curve] == pytest.approx([220., 230., 240., 260.])
     assert curve[-1]["portfolio"] == pytest.approx(130 / 110)
@@ -87,3 +88,41 @@ async def test_daily_labels_use_the_utc_day_instead_of_the_exchange_local_day(da
     close = await PortfolioAnalyticsService()._close_series("LATE")
     assert list(close.index) == [pd.Timestamp("2026-11-14T00:00:00Z")]
     assert list(close.values) == [123.]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("buy_date,dates", [
+    ("2026-11-14", ["2026-11-14", "2026-11-15"]),
+    ("2026-11-15", ["2026-11-15"]),
+])
+async def test_basket_opened_after_last_benchmark_session_keeps_prior_close(daily_market, buy_date, dates):
+    # Weekend/new holdings: the Friday benchmark seed lies outside basket dates.
+    # Monday's quote has not happened yet. There must be no invented Monday data.
+    payloads, _ = daily_market
+    for symbol in ("BTC-USD", "^GSPC"):
+        quote = payloads[symbol]["chart"]["result"][0]
+        quote["timestamp"] = quote["timestamp"][:-1]
+        quote["indicators"]["quote"][0]["close"] = quote["indicators"]["quote"][0]["close"][:-1]
+    result = await PortfolioAnalyticsService().benchmark_overlay([SimpleNamespace(ticker="BTC-USD", quantity=2., buy_date=buy_date)])
+    assert result["status"] != "partial", result
+    assert result["coverage"] == {"portfolio_start": buy_date, "portfolio_end": "2026-11-15", "benchmark_start": "2026-11-13", "benchmark_end": "2026-11-13"}
+    assert [point["date"] for point in result["equity_curve"]] == dates
+    assert [point["benchmark"] for point in result["equity_curve"]] == [1.] * len(dates)
+    assert all(point["benchmark_as_of"] == "2026-11-13" for point in result["equity_curve"])
+    assert result["alpha"] is None and result["tracking_error"] is None
+    from backend.api.routes.portfolios import PortfolioBenchmarkOverlayResponse
+    PortfolioBenchmarkOverlayResponse.model_validate(result)
+    import json
+    json.dumps(result, allow_nan=False)  # Short history must not leak NaN metrics.
+
+
+@pytest.mark.asyncio
+async def test_future_only_benchmark_is_reported_as_no_prior_close(daily_market):
+    payloads, _ = daily_market
+    crypto = payloads["BTC-USD"]["chart"]["result"][0]
+    crypto["timestamp"] = crypto["timestamp"][:1]
+    crypto["indicators"]["quote"][0]["close"] = [100.]
+    result = await PortfolioAnalyticsService().benchmark_overlay([SimpleNamespace(ticker="BTC-USD", quantity=1., buy_date="2026-11-12")])
+    assert result["status"] == "partial" and result["equity_curve"] == []
+    assert result["issues"][-1] == {"code": "benchmark_no_prior_close", "symbol": "^GSPC", "date": "2026-11-12"}
+    assert result["alpha"] is None and result["tracking_error"] is None

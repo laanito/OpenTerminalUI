@@ -21,9 +21,10 @@ for (const width of [1440, 390]) {
         if (mode === "failed") { await route.fulfill({ status: 503, json: { detail: "History unavailable" } }); return; }
         await route.fulfill({ json: { benchmark: "SPY", base_currency: "USD", status: mode === "partial" ? "partial" : "complete",
           methodology: "current_open_holdings_constant_quantity", issues: mode === "partial" ? [{ code: "fx_history_unavailable", symbol: "SAP.DE" }] : [],
+          coverage: { portfolio_start: "2026-10-17", portfolio_end: "2026-11-15", benchmark_start: "2026-10-16", benchmark_end: "2026-11-13" },
           degraded_reasons: [], equity_curve: mode === "old"
             ? [{ date: "2025-01-01", portfolio: 1, benchmark: 1 }, { date: "2025-01-02", portfolio: 2, benchmark: 3 }]
-            : [{ date: "2026-10-01", portfolio: 0.5, benchmark: 0.5 }, { date: "2026-10-17", portfolio: 1, benchmark: 2 }, { date: "2026-11-15", portfolio: 1.1, benchmark: 2.4 }],
+            : [{ date: "2026-10-01", portfolio: 0.5, benchmark: 0.5 }, { date: "2026-10-17", portfolio: 1, benchmark: 2, benchmark_as_of: "2026-10-16" }, { date: "2026-11-15", portfolio: 1.1, benchmark: 2.4, benchmark_as_of: "2026-11-13" }],
           alpha: 0, tracking_error: 0 } }); return;
       }
       if (path.endsWith("/watchlists") || path.includes("/backtest/v1/presets")) { await route.fulfill({ json: [] }); return; }
@@ -35,6 +36,7 @@ for (const width of [1440, 390]) {
     await expect(panel).toContainText("Primary portfolio · Long term");
     await expect(panel).toContainText("excludes cash, closed positions and transaction-ledger returns");
     await expect(panel).toContainText("Open holdings 110.00 index"); await expect(panel).toContainText("Benchmark (SPY) 120.00 index");
+    await expect(panel).toContainText("Benchmark close used: 2026-11-13");
     await expect(panel).toContainText("2026-10-17 to 2026-11-15"); await expect(panel).not.toContainText("999999");
     expect(requested).toEqual(["/api/portfolios/primary-real-id/analytics/benchmark-overlay"]);
     const chart = panel.getByRole("group", { name: "Primary open-holdings indexed comparison", exact: true });
@@ -51,6 +53,7 @@ for (const width of [1440, 390]) {
     await expect(panel).toContainText("History unavailable"); await expect(panel).toContainText("No previous curve is shown");
     await expect(chart).toHaveCount(0); await expect(panel.locator("svg")).toHaveCount(0);
     await poll("partial");
+    await expect(panel).toContainText("Usable benchmark history: 2026-10-16 to 2026-11-13");
     await expect(panel).toContainText("Historical FX unavailable (SAP.DE)"); await expect(chart).toHaveCount(0);
     await poll("old");
     await expect(panel).toContainText("At least two shared observations"); await expect(chart).toHaveCount(0);

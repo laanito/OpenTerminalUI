@@ -802,6 +802,7 @@ export function HomePage() {
                     {performance.start} to {performance.end} · {performance.points.length} shared observations · history valued in {performance.baseCurrency}.
                     Both series start at 100 on the first shared date in the last 30 UTC calendar days. Latest historical observation: {performance.end}.
                     Daily UTC labels do not imply simultaneous quotes; non-trading benchmark dates can carry its prior available close.
+                    {performance.benchmarkAsOf ? ` Benchmark close used: ${performance.benchmarkAsOf}.` : ""}
                   </p> : null}
                   {performance.checkedAt !== null ? <p className="mt-1 text-xs text-terminal-muted">History checked {new Date(performance.checkedAt).toLocaleTimeString()}; this is a retrieval check, not a live quote.</p> : null}
                   {performance.notes.length ? <ul className="mt-2 text-xs text-terminal-warn">{performance.notes.map((note, index) => <li key={index}>{note}</li>)}</ul> : null}

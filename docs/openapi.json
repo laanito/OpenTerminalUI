@@ -15854,11 +15854,74 @@
         "title": "PortfolioAttributionResponse",
         "type": "object"
       },
+      "PortfolioBenchmarkCoverage": {
+        "properties": {
+          "benchmark_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark End"
+          },
+          "benchmark_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Start"
+          },
+          "portfolio_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio End"
+          },
+          "portfolio_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Start"
+          }
+        },
+        "required": [
+          "portfolio_start",
+          "portfolio_end",
+          "benchmark_start",
+          "benchmark_end"
+        ],
+        "title": "PortfolioBenchmarkCoverage",
+        "type": "object"
+      },
       "PortfolioBenchmarkOverlayResponse": {
         "properties": {
           "alpha": {
-            "title": "Alpha",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha"
           },
           "base_currency": {
             "title": "Base Currency",
@@ -15867,6 +15930,16 @@
           "benchmark": {
             "title": "Benchmark",
             "type": "string"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioBenchmarkCoverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "degraded_reasons": {
             "items": {
@@ -15903,8 +15976,15 @@
             "type": "string"
           },
           "tracking_error": {
-            "title": "Tracking Error",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking Error"
           }
         },
         "required": [
@@ -15926,6 +16006,17 @@
           "benchmark": {
             "title": "Benchmark",
             "type": "number"
+          },
+          "benchmark_as_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark As Of"
           },
           "date": {
             "title": "Date",

@@ -289,7 +289,38 @@ job's runner label changed semantically, and a Linux-target browser install
 `--dry-run --with-deps chromium` resolves successfully. This is not an actual
 Ubuntu package/browser installation on the local Mac; hosted CI must verify it.
 The release guide records the OS pin and requirement to check locked SDK support
-before moving the runner. #276 remains open; do not monitor CI unless requested.
+before moving the runner. #276 is merged; keep the Ubuntu 24.04 browser-runner pin. Do not monitor CI
+unless requested.
+
+A later live report still showed only `benchmark_history_unavailable (^GSPC)`.
+The daily-hours fix missed a distinct weekend-start case: the basket begins after
+Friday's last benchmark session. `source.reindex(basket_dates).ffill()` removed
+Friday before filling, even though its close was available. A full-path regression
+fails on that code. Resolve prior closes against the original sorted source with
+`reindex(..., method="ffill")`, preserving earlier seeds and never backfilling a
+later UTC-date close. A reported weekend-started basket matches this case.
+
+The follow-up adds per-point `benchmark_as_of` and optional response `coverage`
+(portfolio/benchmark start/end dates), and distinguishes no prior close from no
+benchmark feed. Home displays quote as-of and unavailable coverage; it rejects a
+benchmark close wholly older than its 30-day window. One portfolio point is not
+an error, but Home still requires two observations to draw a comparison. Alpha
+and tracking error are now nullable without two paired returns, preventing NaN
+serialization and false zero metrics. Portfolio Manager renders missing metrics
+as Unavailable while preserving genuine computed zero. API schema/types and
+generated OpenAPI are updated; no DB migration, owner/benchmark/provider/FX or
+quantity policy changes. Quotes remain daily-date observations, not intraday
+knowledge. Current-basket history still starts at the latest opening date; do
+not fabricate a full-month NAV curve from today's quantities.
+
+Validation: 78 relevant backend tests, all 818 frontend tests/131 files,
+production build and all 35 installed-Chrome journeys pass. Tests include the
+weekend-start full fetch/FX/basket path, one/two-row JSON serialization, no later
+date backfill, source-date provenance, nullable metrics and coverage display.
+Generated API reference/surface inventory (489 operations/87 families), production
+mock and whitespace guards pass. No production DB was queried or changed.
+Maintainer review of the prior-close-window follow-up is pending. Remaining v2.8
+Deep sentiment and retention work stays separate.
 
 The BTC stock-view issue is accepted as fixed: #268's timestamp/value guards were
 insufficient on their own; #269 (`cf03cf4`, including test-hardening `5601656`)
