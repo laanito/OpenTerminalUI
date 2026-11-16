@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Reconstructed portfolio history** — Home replays the primary portfolio's
+  ledger across the last 30 UTC days, including cash, closed positions, fees and
+  dividends. New purchases no longer reset the window. A daily inspection table
+  and Portfolio HQ value sparkline expose the approximate backfill; the main
+  comparison adjusts deposits/withdrawals as end-of-day flows. A new owner-only
+  JWT history endpoint provides the same values. Missing records or valuation
+  inputs remain explicit gaps; no database backfill or migration is required.
 - **Headline sentiment in saved briefing review** — explicitly select up to ten
   saved headline references, retain assessments with cancellable progress, and
   inspect original text, methods, scoring times and model inputs. Keyword tone

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 for (const width of [1440, 390]) {
-  test(`@smoke Home shows honest primary open-holdings history and clears failed refreshes at ${width}px`, async ({ page }) => {
+  test(`@smoke Home shows honest reconstructed ledger history and clears failed refreshes at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     // Pause before the app registers timers, so host speed cannot add polls.
     await page.clock.install({ time: new Date("2026-11-15T16:29:00Z") });
@@ -16,15 +16,20 @@ for (const width of [1440, 390]) {
           summary: { net_liquidation_value: 999999, total_cost: 800000, overall_pnl: 199999, day_change: 1, day_change_pct: 0.01 },
           accounting: { base_currency: "USD", status: "complete", issues: [], degraded_reasons: [], fx_rates: [] } } }); return;
       }
-      if (path.includes("/analytics/benchmark-overlay")) {
+      if (path.includes("/analytics/history")) {
         requested.push(path);
         if (mode === "failed") { await route.fulfill({ status: 503, json: { detail: "History unavailable" } }); return; }
         await route.fulfill({ json: { benchmark: "SPY", base_currency: "USD", status: mode === "partial" ? "partial" : "complete",
-          methodology: "current_open_holdings_constant_quantity", issues: mode === "partial" ? [{ code: "fx_history_unavailable", symbol: "SAP.DE" }] : [],
-          coverage: { portfolio_start: "2026-10-17", portfolio_end: "2026-11-15", benchmark_start: "2026-10-16", benchmark_end: "2026-11-13" },
+          methodology: "daily_ledger_reconstruction", issues: mode === "partial" ? [{ code: "ledger_price_or_fx_unavailable", symbol: "SAP.DE" }] : [],
           degraded_reasons: [], equity_curve: mode === "old"
-            ? [{ date: "2025-01-01", portfolio: 1, benchmark: 1 }, { date: "2025-01-02", portfolio: 2, benchmark: 3 }]
-            : [{ date: "2026-10-01", portfolio: 0.5, benchmark: 0.5 }, { date: "2026-10-17", portfolio: 1, benchmark: 2, benchmark_as_of: "2026-10-16" }, { date: "2026-11-15", portfolio: 1.1, benchmark: 2.4, benchmark_as_of: "2026-11-13" }],
+            ? [{ date: "2025-01-01", portfolio: 100, benchmark: 200, net_liquidation_value: 1000 }, { date: "2025-01-02", portfolio: 110, benchmark: 240, net_liquidation_value: 1500 }]
+            : Array.from({ length: 30 }, (_, i) => ({
+              date: new Date(Date.UTC(2026, 9, 17 + i)).toISOString().slice(0, 10),
+              portfolio: 100 + i * 10 / 29, benchmark: 200 + i * 40 / 29,
+              benchmark_as_of: i >= 28 ? "2026-11-13" : new Date(Date.UTC(2026, 9, 17 + i)).toISOString().slice(0, 10),
+              net_liquidation_value: 1000 + i * 500 / 29, cash_balance: 500, holdings_value: 500 + i * 500 / 29,
+              external_flow: i === 28 ? 400 : 0, price_dates: { "BTC-USD": new Date(Date.UTC(2026, 9, 17 + i)).toISOString().slice(0, 10) },
+            })),
           alpha: 0, tracking_error: 0 } }); return;
       }
       if (path.endsWith("/watchlists") || path.includes("/backtest/v1/presets")) { await route.fulfill({ json: [] }); return; }
@@ -32,16 +37,24 @@ for (const width of [1440, 390]) {
     });
     await page.goto("/");
     const panel = page.getByRole("region", { name: "Primary portfolio historical comparison", exact: true });
-    await expect(panel).toContainText("History available");
+    await expect(panel).toContainText("Approximate history");
     await expect(panel).toContainText("Primary portfolio · Long term");
-    await expect(panel).toContainText("excludes cash, closed positions and transaction-ledger returns");
-    await expect(panel).toContainText("Open holdings 110.00 index"); await expect(panel).toContainText("Benchmark (SPY) 120.00 index");
+    await expect(panel).toContainText("Includes closed positions while they were held");
+    await expect(panel).toContainText("Portfolio (flow-adjusted) 110.00 index"); await expect(panel).toContainText("Benchmark (SPY) 120.00 index");
     await expect(panel).toContainText("Benchmark close used: 2026-11-13");
     await expect(panel).toContainText("2026-10-17 to 2026-11-15"); await expect(panel).not.toContainText("999999");
-    expect(requested).toEqual(["/api/portfolios/primary-real-id/analytics/benchmark-overlay"]);
-    const chart = panel.getByRole("group", { name: "Primary open-holdings indexed comparison", exact: true });
-    await chart.getByLabel("Primary open-holdings indexed comparison interaction surface").focus();
-    await page.keyboard.press("ArrowLeft"); await expect(chart.locator(".ot-home-widget-chart-tooltip-value")).toHaveText("100.00 index");
+    const valueHistory = page.getByRole("img", { name: "Reconstructed daily portfolio value", exact: true });
+    await expect(valueHistory).toBeVisible();
+    await panel.getByText("Inspect reconstructed daily values", { exact: true }).click();
+    const values = panel.getByRole("table", { name: "Reconstructed daily portfolio values" });
+    await expect(values.getByRole("row")).toHaveCount(31);
+    await expect(values).toContainText("2026-11-14");
+    await expect(values).toContainText("BTC-USD: 2026-11-15");
+    expect(requested).toEqual(["/api/portfolios/primary-real-id/analytics/history"]);
+    const chart = panel.getByRole("group", { name: "Primary portfolio flow-adjusted comparison", exact: true });
+    await chart.getByLabel("Primary portfolio flow-adjusted comparison interaction surface").focus();
+    await page.keyboard.press("ArrowLeft"); await expect(chart.locator(".ot-home-widget-chart-tooltip-value")).toHaveText("109.66 index");
+    await page.keyboard.press("ArrowRight"); await expect(chart.locator(".ot-home-widget-chart-tooltip-value")).toHaveText("110.00 index");
     const poll = async (nextMode: typeof mode) => {
       const previous = requested.length;
       mode = nextMode;
@@ -51,14 +64,13 @@ for (const width of [1440, 390]) {
     };
     await poll("failed");
     await expect(panel).toContainText("History unavailable"); await expect(panel).toContainText("No previous curve is shown");
-    await expect(chart).toHaveCount(0); await expect(panel.locator("svg")).toHaveCount(0);
+    await expect(chart).toHaveCount(0); await expect(panel.locator("svg")).toHaveCount(0); await expect(valueHistory).toHaveCount(0);
     await poll("partial");
-    await expect(panel).toContainText("Usable benchmark history: 2026-10-16 to 2026-11-13");
-    await expect(panel).toContainText("Historical FX unavailable (SAP.DE)"); await expect(chart).toHaveCount(0);
+    await expect(panel).toContainText("Historical price or FX unavailable (SAP.DE)"); await expect(chart).toHaveCount(0);
     await poll("old");
-    await expect(panel).toContainText("At least two shared observations"); await expect(chart).toHaveCount(0);
+    await expect(panel).toContainText("At least two daily observations"); await expect(chart).toHaveCount(0);
     await poll("valid");
-    await expect(panel).toContainText("History available"); await expect(panel).toContainText("Open holdings 110.00 index");
+    await expect(panel).toContainText("Approximate history"); await expect(panel).toContainText("Portfolio (flow-adjusted) 110.00 index");
     expect(requested).toHaveLength(5);
     await expect(panel).not.toContainText("Synced");
     expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);

@@ -8,7 +8,7 @@ import {
   fetchBacktestV1Presets,
   fetchLatestNews,
   fetchPortfolio,
-  fetchPortfolioBenchmarkOverlay,
+  fetchPortfolioHistory,
   fetchQuotesBatch,
   fetchWatchlist,
 } from "../api/client";
@@ -73,7 +73,7 @@ vi.mock("../api/client", () => ({
   fetchPortfolio: vi.fn(),
   fetchWatchlist: vi.fn(),
   fetchBacktestV1Presets: vi.fn(),
-  fetchPortfolioBenchmarkOverlay: vi.fn(),
+  fetchPortfolioHistory: vi.fn(),
   fetchLatestNews: vi.fn(),
   fetchQuotesBatch: vi.fn(),
 }));
@@ -163,17 +163,17 @@ describe("HomePage mission-control revamp", () => {
       },
     } as any);
 
-    vi.mocked(fetchPortfolioBenchmarkOverlay).mockResolvedValue({
+    vi.mocked(fetchPortfolioHistory).mockResolvedValue({
       benchmark: "NIFTY50",
-      base_currency: "USD", status: "complete", methodology: "current_open_holdings_constant_quantity", issues: [], degraded_reasons: [],
+      base_currency: "USD", status: "complete", methodology: "daily_ledger_reconstruction", issues: [], degraded_reasons: [],
       alpha: 0.02,
       tracking_error: 0.12,
-      equity_curve: [
-        { date: "2026-02-20", portfolio: 2300000, benchmark: 2210000 },
-        { date: "2026-02-27", portfolio: 2380000, benchmark: 2260000 },
-        { date: "2026-03-05", portfolio: 2440000, benchmark: 2310000 },
-        { date: "2026-03-10", portfolio: 2480000, benchmark: 2350000 },
-      ],
+      equity_curve: Array.from({ length: 19 }, (_, index) => ({
+        date: new Date(Date.UTC(2026, 1, 20 + index)).toISOString().slice(0, 10),
+        portfolio: 2300000 + 180000 * index / 18, benchmark: 2210000 + 140000 * index / 18,
+        benchmark_as_of: new Date(Date.UTC(2026, 1, 20 + index)).toISOString().slice(0, 10),
+        net_liquidation_value: 2300000 + 180000 * index / 18,
+      })),
     } as any);
 
     vi.mocked(fetchLatestNews).mockResolvedValue([
@@ -217,34 +217,34 @@ describe("HomePage mission-control revamp", () => {
   function history() { return screen.getByRole("region", { name: "Primary portfolio historical comparison" }); }
   it("shows indexed open holdings with explicit scope and methodology, independently of today's net liquidation value", async () => {
     renderPage();
-    await waitFor(() => expect(history()).toHaveTextContent("History available"));
+    await waitFor(() => expect(history()).toHaveTextContent("Approximate history"));
     expect(history()).toHaveTextContent("Primary portfolio · Primary");
-    expect(history()).toHaveTextContent("excludes cash, closed positions and transaction-ledger returns");
-    expect(history()).toHaveTextContent("Open holdings 107.83 index");
+    expect(history()).toHaveTextContent("Includes closed positions while they were held");
+    expect(history()).toHaveTextContent("Portfolio (flow-adjusted) 107.83 index");
     expect(history()).toHaveTextContent("Benchmark (NIFTY50) 106.33 index");
     expect(history()).not.toHaveTextContent("$2480000");
     expect(history()).not.toHaveTextContent("Synced");
-    expect(screen.queryByRole("img", { name: "Net liquidation trend" })).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Reconstructed daily portfolio value" })).toBeInTheDocument();
   });
   it.each(["failed", "empty", "old"])("shows an honest empty state for %s history instead of sample values", async (kind) => {
-    if (kind === "failed") vi.mocked(fetchPortfolioBenchmarkOverlay).mockRejectedValue(new Error("Unavailable"));
-    else vi.mocked(fetchPortfolioBenchmarkOverlay).mockResolvedValue({ base_currency: "USD", status: "complete",
-      methodology: "current_open_holdings_constant_quantity", benchmark: "SPY", issues: [], degraded_reasons: [],
+    if (kind === "failed") vi.mocked(fetchPortfolioHistory).mockRejectedValue(new Error("Unavailable"));
+    else vi.mocked(fetchPortfolioHistory).mockResolvedValue({ base_currency: "USD", status: "complete",
+      methodology: "daily_ledger_reconstruction", benchmark: "SPY", issues: [], degraded_reasons: [],
       equity_curve: kind === "old" ? [{ date: "2025-01-01", portfolio: 1, benchmark: 1 }, { date: "2025-01-02", portfolio: 2, benchmark: 2 }] : [], alpha: 0, tracking_error: 0 });
     renderPage();
     await waitFor(() => expect(history()).toHaveTextContent("History unavailable"));
-    expect(within(history()).queryByRole("group", { name: "Primary open-holdings indexed comparison" })).not.toBeInTheDocument();
+    expect(within(history()).queryByRole("group", { name: "Primary portfolio flow-adjusted comparison" })).not.toBeInTheDocument();
     expect(history().querySelector("svg")).toBeNull(); expect(history()).not.toHaveTextContent("24300000");
   });
   it("clears a previously valid curve when the next refresh fails and does not overlap polls", async () => {
     const interval = vi.spyOn(window, "setInterval");
     renderPage();
-    await waitFor(() => expect(history()).toHaveTextContent("History available"));
+    await waitFor(() => expect(history()).toHaveTextContent("Approximate history"));
     const poll = interval.mock.calls.find(([, delay]) => delay === 30000)![0] as () => void;
     let reject!: (reason: Error) => void;
-    vi.mocked(fetchPortfolioBenchmarkOverlay).mockReturnValue(new Promise((_, fail) => { reject = fail; }));
+    vi.mocked(fetchPortfolioHistory).mockReturnValue(new Promise((_, fail) => { reject = fail; }));
     act(() => { poll(); poll(); });
-    await waitFor(() => expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetchPortfolioHistory).toHaveBeenCalledTimes(2));
     expect(history()).toHaveTextContent("Loading history"); expect(history().querySelector("svg")).toBeNull();
     await act(async () => reject(new Error("History failed")));
     await waitFor(() => expect(history()).toHaveTextContent("History unavailable"));
@@ -263,13 +263,13 @@ describe("HomePage mission-control revamp", () => {
     await waitFor(() => expect(history()).toHaveTextContent("Primary portfolio · New primary"));
     await act(async () => finish({ ...original, portfolio_id: "old-primary", portfolio_name: "Old primary" }));
     expect(history()).not.toHaveTextContent("Old primary");
-    expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledExactlyOnceWith(undefined, "new-primary");
+    expect(fetchPortfolioHistory).toHaveBeenCalledExactlyOnceWith("new-primary");
   });
-  it("does not request historical analytics for an empty primary portfolio", async () => {
+  it("loads historical analytics for a cash-only or fully sold primary portfolio", async () => {
     const original = await vi.mocked(fetchPortfolio)();
     vi.mocked(fetchPortfolio).mockClear(); vi.mocked(fetchPortfolio).mockResolvedValue({ ...original, items: [] });
-    renderPage(); await waitFor(() => expect(history()).toHaveTextContent("No open holdings in the primary portfolio"));
-    expect(fetchPortfolioBenchmarkOverlay).not.toHaveBeenCalled();
+    renderPage(); await waitFor(() => expect(history()).toHaveTextContent("Approximate history"));
+    expect(fetchPortfolioHistory).toHaveBeenCalledWith("portfolio-1");
   });
   it("preserves the existing loaders while rendering the new mission-control layout", async () => {
     renderPage();
@@ -279,7 +279,7 @@ describe("HomePage mission-control revamp", () => {
       expect(fetchWatchlist).toHaveBeenCalledTimes(1);
       expect(fetchBacktestV1Presets).toHaveBeenCalledTimes(1);
       expect(fetchChainSummary).toHaveBeenCalledWith("SPY");
-      expect(fetchPortfolioBenchmarkOverlay).toHaveBeenCalledWith(undefined, "portfolio-1");
+      expect(fetchPortfolioHistory).toHaveBeenCalledWith("portfolio-1");
       expect(fetchLatestNews).toHaveBeenCalledWith(15);
       expect(fetchQuotesBatch).toHaveBeenCalledWith(
         ["^GSPC", "^IXIC", "^DJI", "GC=F", "SI=F", "CL=F"],

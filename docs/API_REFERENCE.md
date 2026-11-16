@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **489 operations** across **436 paths** and **87 families**.
-- Authentication: **444 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **490 operations** across **437 paths** and **87 families**.
+- Authentication: **445 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -98,7 +98,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `portfolio-lab` | `hidden` | 9 |
 | `portfolio-optimizer` | `experimental` | 3 |
 | `portfolio_backtests` | `experimental` | 3 |
-| `portfolios` | `supported` | 19 |
+| `portfolios` | `supported` | 20 |
 | `public-api` | `supported` | 5 |
 | `quotes` | `supported` | 1 |
 | `reports` | `supported` | 9 |
@@ -938,6 +938,7 @@ State: **supported**
 | `GET` | `/api/portfolios/{portfolio_id}/analytics/benchmark-overlay` | Bearer token | Get Portfolio Benchmark Overlay |
 | `GET` | `/api/portfolios/{portfolio_id}/analytics/correlation` | Bearer token | Get Portfolio Correlation |
 | `GET` | `/api/portfolios/{portfolio_id}/analytics/dividends` | Bearer token | Get Portfolio Dividends |
+| `GET` | `/api/portfolios/{portfolio_id}/analytics/history` | Bearer token | Get Portfolio History |
 | `GET` | `/api/portfolios/{portfolio_id}/analytics/risk-metrics` | Bearer token | Get Portfolio Risk Metrics |
 | `GET` | `/api/portfolios/{portfolio_id}/analytics/sector-allocation` | Bearer token | Get Portfolio Sector Allocation |
 | `GET` | `/api/portfolios/{portfolio_id}/attribution` | Bearer token | Get Portfolio Attribution |

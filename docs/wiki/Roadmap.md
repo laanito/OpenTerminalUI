@@ -1656,6 +1656,12 @@ comparison in v2 depends on trustworthy cross-currency portfolio truth.
   portfolio base. Their stated methodology follows today's open holdings from
   the first date when the complete current basket existed; it does not claim to
   reconstruct closed positions or a full ledger time-weighted return.
+  The subsequent Home correctness follow-up adds a separate, read-only 30-day
+  ledger reconstruction: daily cash/holdings/NAV and approximate end-of-day-flow
+  adjusted returns, including sold positions and daily inspection. Portfolio HQ
+  consumes its reconstructed values. This is not retained NAV or exact intraday
+  time-weighted performance; no corporate-action replay or missing-trade/funding
+  inference is provided. The current-basket analytics above remain separate.
 - **Separate investment and currency effects.** Attribute security return and FX
   return independently wherever the available history supports it; never imply
   that a currency move was instrument performance. The attribution response now

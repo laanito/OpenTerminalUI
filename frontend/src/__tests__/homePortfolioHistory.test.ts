@@ -1,75 +1,51 @@
 import { describe, expect, it } from "vitest";
 import { buildHomeHistory } from "../components/home/homePortfolioHistory";
-const NOW = Date.parse("2026-11-15T16:30:00Z");
-const point = (date: string, portfolio = 1, benchmark = 1) => ({ date, portfolio, benchmark });
-function overlay(equity_curve: unknown[], changes = {}) {
-  return { status: "complete", methodology: "current_open_holdings_constant_quantity", base_currency: "USD", benchmark: "SPY", issues: [], degraded_reasons: [], equity_curve, ...changes };
+const NOW = Date.parse("2026-11-16T16:30:00Z");
+const point = (date: string, portfolio: number | null = 100, benchmark: number | null = 200) => ({ date, portfolio, benchmark,
+  benchmark_as_of: date, net_liquidation_value: 1000, cash_balance: 500, holdings_value: 500, external_flow: 0, price_dates: { A: date } });
+function history(equity_curve: unknown[], changes = {}) {
+  return { status: "degraded", methodology: "daily_ledger_reconstruction", base_currency: "USD", benchmark: "SPY", issues: [], degraded_reasons: [], equity_curve, ...changes };
 }
-describe("Home current-open-holdings history", () => {
-  it("uses exactly the last thirty UTC calendar days and independently rebases both lines at the same first date", () => {
-    const result = buildHomeHistory(overlay([
-      point("2026-10-16", 10, 10), point("2026-11-16", 50, 50),
-      point("2026-11-15", 2.2, 3.15), point("2026-10-17", 2, 3), point("2026-11-01", 2.1, 3.1),
-    ]), NOW);
-    expect(result.status).toBe("complete");
-    expect(result.points.map((p) => p.label)).toEqual(["2026-10-17", "2026-11-01", "2026-11-15"]);
-    expect(result.points[0].value).toBe(100); expect(result.benchmarkPoints[0].value).toBe(100);
-    expect(result.points[2].value).toBeCloseTo(110); expect(result.benchmarkPoints[2].value).toBeCloseTo(105);
-    expect(result.start).toBe("2026-10-17"); expect(result.end).toBe("2026-11-15");
+describe("Home actual ledger history", () => {
+  it("keeps thirty daily values despite yesterday's new holding and separates NAV from returns", () => {
+    const curve = Array.from({ length: 30 }, (_, i) => ({ ...point(new Date(Date.UTC(2026, 9, 18 + i)).toISOString().slice(0, 10), 100 + i), net_liquidation_value: 1000 + i * 20 }));
+    const result = buildHomeHistory(history(curve), NOW);
+    expect(result.navPoints).toHaveLength(30); expect(result.points).toHaveLength(30);
+    expect(result.navPoints.at(-1)?.value).toBe(1580); expect(result.points.at(-1)?.value).toBe(129);
+    expect(result.start).toBe("2026-10-18"); expect(result.end).toBe("2026-11-16");
+    expect(result.valuations[0].cash).toBe(500);
   });
-  it.each([
-    [point("2026-09-01"), point("2026-09-02")], [point("2026-11-15")], [],
-  ].map((points) => [points]))("does not substitute older observations or invent a curve", (points) => {
-    const result = buildHomeHistory(overlay(points), NOW);
-    expect(result.status).toBe("unavailable"); expect(result.points).toEqual([]); expect(result.benchmarkPoints).toEqual([]);
+  it("does not rebase NAV as performance when deposits change its value", () => {
+    const result = buildHomeHistory(history([point("2026-11-15"), { ...point("2026-11-16"), net_liquidation_value: 1500, external_flow: 500 }]), NOW);
+    expect(result.navPoints.map(p => p.value)).toEqual([1000, 1500]);
+    expect(result.points.map(p => p.value)).toEqual([100, 100]);
   });
-  it("filters both series together, withholds conflicting dates and rejects null, numeric strings and impossible dates", () => {
-    const result = buildHomeHistory(overlay([
-      point("2026-11-01", 1, 2), point("2026-11-15", 2, 3),
-      point("2026-11-03", 1.1, 2.1), point("2026-11-03", 1.2, 2.1),
-      { date: "2026-11-04", portfolio: null, benchmark: 2.1 },
-      { date: "2026-11-05", portfolio: 1.1, benchmark: "2.1" },
-      point("2026-11-06", NaN, 2), point("2026-11-07", 1, 0), point("2026-11-31"),
-      point("2026-11-01", 1, 2),
-    ]), NOW);
-    expect(result.status).toBe("degraded"); expect(result.points.map((p) => p.label)).toEqual(["2026-11-01", "2026-11-15"]);
-    expect(result.benchmarkPoints.map((p) => p.label)).toEqual(result.points.map((p) => p.label));
-    expect(result.notes.join(" ")).toContain("withheld");
+  it("preserves portfolio values when a benchmark fails or an index cannot be calculated", () => {
+    const missingBenchmark = buildHomeHistory(history([point("2026-11-15", 100, null), point("2026-11-16", 101, null)]), NOW);
+    expect(missingBenchmark.navPoints).toHaveLength(2); expect(missingBenchmark.points).toHaveLength(2);
+    expect(missingBenchmark.benchmarkPoints).toEqual([]);
+    const noIndex = buildHomeHistory(history([point("2026-11-15", null), { ...point("2026-11-16", null), net_liquidation_value: -5 }]), NOW);
+    expect(noIndex.navPoints).toHaveLength(2); expect(noIndex.points).toEqual([]);
   });
-  it("exposes backend FX/price/currency issues without presenting a partial basket", () => {
-    const result = buildHomeHistory(overlay([point("2026-11-01"), point("2026-11-15")], {
-      status: "partial", issues: [{ code: "instrument_currency_unknown", symbol: "BTC-USD" }, { code: "fx_history_unavailable", symbol: "SAP.DE" }],
-    }), NOW);
-    expect(result.status).toBe("unavailable"); expect(result.points).toEqual([]);
-    expect(result.notes).toEqual(["Instrument currency unknown (BTC-USD)", "Historical FX unavailable (SAP.DE)"]);
+  it.each([[], [point("2026-11-16")], [point("2025-01-01"), point("2025-01-02")]])("does not invent absent or short history", (...curve) => {
+    expect(buildHomeHistory(history(curve), NOW).navPoints).toEqual([]);
   });
-  it("keeps degraded-history disclosure with actual endpoint dates", () => {
-    const result = buildHomeHistory(overlay([point("2026-11-01"), point("2026-11-05")], { status: "degraded", degraded_reasons: ["latest_past_rate"] }), NOW);
-    expect(result.status).toBe("degraded"); expect(result.end).toBe("2026-11-05"); expect(result.notes).toContain("latest past rate");
+  it("rejects gaps, duplicate dates and invalid NAV", () => {
+    for (const curve of [[point("2026-11-14"), point("2026-11-16")], [point("2026-11-15"), point("2026-11-15")],
+      [point("2026-11-15"), { ...point("2026-11-16"), net_liquidation_value: NaN }]]) {
+      expect(buildHomeHistory(history(curve), NOW).status).toBe("unavailable");
+    }
   });
-  it.each([{}, { methodology: "transaction_ledger" }, { status: "complete" }, null])("fails closed when methodology or accounting metadata is missing", (value) => {
+  it("keeps benchmark source dates visible and rejects future source quotes", () => {
+    const curve = [{ ...point("2026-11-15"), benchmark_as_of: "2026-11-13" }, { ...point("2026-11-16"), benchmark_as_of: "2026-11-13" }];
+    expect(buildHomeHistory(history(curve), NOW).benchmarkAsOf).toBe("2026-11-13");
+    expect(buildHomeHistory(history(curve.map(p => ({ ...p, benchmark_as_of: "2026-11-17" }))), NOW).benchmarkPoints).toEqual([]);
+  });
+  it("explains unmatched ledger quantities without showing a partial curve", () => {
+    const result = buildHomeHistory(history([point("2026-11-15"), point("2026-11-16")], { status: "partial", issues: [{ code: "ledger_holdings_mismatch", symbol: "A" }] }), NOW);
+    expect(result.navPoints).toEqual([]); expect(result.notes).toContain("Ledger quantities do not match current holdings (A)");
+  });
+  it.each([{}, { methodology: "current_open_holdings_constant_quantity" }, null])("rejects legacy or missing metadata", (value) => {
     expect(buildHomeHistory(value, NOW).status).toBe("unavailable");
   });
-});
-
-it("keeps a recent prior benchmark close explicit and rejects future or out-of-window source dates", () => {
-  const curve = [
-    { date: "2026-11-14", portfolio: 1, benchmark: 1, benchmark_as_of: "2026-11-13" },
-    { date: "2026-11-15", portfolio: 1.1, benchmark: 1, benchmark_as_of: "2026-11-13" },
-  ];
-  const valid = buildHomeHistory(overlay(curve), NOW);
-  expect(valid.benchmarkAsOf).toBe("2026-11-13"); expect(valid.points).toHaveLength(2);
-  const future = buildHomeHistory(overlay(curve.map((point) => ({ ...point, benchmark_as_of: "2026-11-16" }))), NOW);
-  expect(future.status).toBe("unavailable");
-  const old = buildHomeHistory(overlay(curve.map((point) => ({ ...point, benchmark_as_of: "2026-09-01" }))), NOW);
-  expect(old.status).toBe("unavailable"); expect(old.message).toContain("No benchmark close");
-});
-
-
-it("explains the actual source date ranges when a comparison cannot be made", () => {
-  const result = buildHomeHistory(overlay([], { status: "partial", issues: [{ code: "benchmark_no_prior_close", symbol: "SPY" }],
-    coverage: { portfolio_start: "2026-11-14", portfolio_end: "2026-11-15", benchmark_start: "2026-11-16", benchmark_end: "2026-11-16" } }), NOW);
-  expect(result.notes).toContain("Current basket history: 2026-11-14 to 2026-11-15.");
-  expect(result.notes).toContain("Usable benchmark history: 2026-11-16 to 2026-11-16.");
-  expect(result.notes[0]).toContain("No benchmark close on or before");
 });

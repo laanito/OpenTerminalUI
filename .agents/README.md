@@ -221,6 +221,35 @@ The maintainer confirmed PR #274 merged and tested. Carry that acceptance
 forward. Checked Deep integration and reference-aware retention/deletion/cleanup
 remain open before v2.8 release preparation.
 
+Latest Home follow-up (2026-11-16): the maintainer explicitly chose **actual
+portfolio history**, permitting approximate ledger backfill for validation.
+The chart restored by #277 exposed the current-basket limitation (a new purchase
+reset the whole window). Home now uses a separate JWT owner-scoped
+`GET /api/portfolios/{portfolio_id}/analytics/history`, including `primary`.
+The read-only service replays dated buys/sells/deposits/withdrawals/dividends/fees
+and returns up to 30 UTC-day NAV/cash/holdings/external-flow values, native close
+dates and approximate end-of-day-flow-adjusted returns. A new purchase does not
+reset history; sold positions participate while held. Portfolio HQ's sparkline
+now uses reconstructed NAV, separately from the current quote-backed headline.
+The expandable daily table supports validation. Benchmark failures preserve NAV;
+non-positive/unfunded periods can prevent the return index independently.
+
+The approximation is explicit: opening cash applies from the earlier of creation
+and first recorded activity, cash uses the shared transaction-date FX accounting,
+securities use valuation-day FX, native prices carry at most seven days and never
+use later closes for earlier dates. There is no corporate-action replay, retained
+immutable NAV, intraday flow precision, database backfill, invented funding or
+inferred missing trades. Ledger quantities must reconcile to current holdings;
+unknown currency/FX/prices, invalid dates/amounts or oversells yield explicit gaps.
+New/short portfolios show only available history. Existing Manager risk/benchmark
+current-basket analytics remain separate. No migration or production DB action.
+Validation: 65 relevant backend checks (17 new history regressions), all 817
+frontend tests/131 files, production build and all 35 installed-Chrome smoke
+journeys pass. API generation/check, surface inventory (490 operations/87
+families), production-data and whitespace guards pass. No CI monitoring; the
+maintainer reviews/tests after the PR. Deployed-data validation remains pending.
+The following Home notes describe the preceding fixes, not this latest scope.
+
 A separate Home correctness fix follows maintainer feedback that the 30D graph
 looked unrelated to Portfolio. The audit found a hard-coded 24–26m fallback,
 retained old curves after failure, older-date substitution, independent ending
