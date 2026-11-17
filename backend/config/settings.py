@@ -34,6 +34,8 @@ class AppSettings(BaseModel):
     fmp_api_key: str | None = None
     finnhub_api_key: str | None = None
     coingecko_api_key: str | None = None
+    # Unreferenced bundles expire after 90 days; zero disables automatic expiry.
+    news_evidence_retention_days: int | None = Field(default=90, ge=1, le=3650)
     # Direct scraping of nseindia.com is opt-in. India workflows should prefer
     # configured Kite or provider suffixes (for example Yahoo's `.NS`).
     nse_public_enabled: bool = False
@@ -64,6 +66,15 @@ class AppSettings(BaseModel):
     llm_deep_structured_output: Literal["auto", "json_schema", "json", "none"] | None = None
     price_cache_ttl_seconds: int = 60
     fundamentals_cache_ttl_seconds: int = 1800
+
+    @field_validator("news_evidence_retention_days", mode="before")
+    @classmethod
+    def normalize_evidence_retention(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("Retention days must be a number, not a boolean")
+        if value is None or value == 0 or isinstance(value, str) and value.strip() in {"", "0"}:
+            return None
+        return value
 
     @field_validator("llm_deep_model", "llm_deep_base_url", "llm_deep_api_key", "llm_deep_timeout_seconds", "llm_deep_structured_output", mode="before")
     @classmethod
@@ -271,6 +282,10 @@ def get_settings() -> AppSettings:
             _env("OPENTERMINALUI_COINGECKO_API_KEY")
             or _env("COINGECKO_API_KEY")
             or app_cfg.get("coingecko_api_key")
+        ),
+        news_evidence_retention_days=(
+            _env("OPENTERMINALUI_NEWS_EVIDENCE_RETENTION_DAYS") or _env("NEWS_EVIDENCE_RETENTION_DAYS")
+            or app_cfg.get("news_evidence_retention_days", 90)
         ),
         nse_public_enabled=_as_bool(
             _env("OPENTERMINALUI_NSE_PUBLIC_ENABLED")

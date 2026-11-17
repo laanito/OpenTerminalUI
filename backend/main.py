@@ -123,7 +123,14 @@ async def lifespan(app: FastAPI):
     except Exception:
         logging.getLogger(__name__).exception("Scheduled-reports rehydrate failed")
 
+    from backend.services.news_evidence_cleanup import EvidenceCleanup
+    from backend.shared.db import SessionLocal
+    evidence_cleanup = EvidenceCleanup(SessionLocal, settings.news_evidence_retention_days)
+    evidence_cleanup.start()
+
     yield
+
+    await evidence_cleanup.stop()
 
     if _instrument_seed_task and not _instrument_seed_task.done():
         _instrument_seed_task.cancel()

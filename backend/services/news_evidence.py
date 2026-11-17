@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from backend.services.llm_profiles import LLMProfileIdentity
 from backend.models.news_evidence import NewsSentimentAssessmentORM, NewsTextSnapshotORM
+from backend.services.news_evidence_lifecycle import lock_owner
 
 
 class ComparisonNewsOrigin(BaseModel):
@@ -131,6 +132,8 @@ class RetainedHeadline(BaseModel):
 
 
 def capture_text(db: Session, *, user_id: str, evidence: NewsText) -> NewsTextSnapshotORM:
+    if not lock_owner(db, user_id):
+        raise LookupError("Owner not found")
     row = NewsTextSnapshotORM(
         id=str(uuid4()), user_id=user_id, captured_at=datetime.now(timezone.utc),
         content_hash=evidence.content_hash, payload=evidence.model_dump(mode="json"),
@@ -147,6 +150,8 @@ def get_text(db: Session, *, user_id: str, snapshot_id: str) -> NewsTextSnapshot
 
 
 def append_assessment(db: Session, *, user_id: str, snapshot_id: str, assessment: SentimentAssessment) -> NewsSentimentAssessmentORM:
+    if not lock_owner(db, user_id):
+        raise LookupError("Owner not found")
     if get_text(db, user_id=user_id, snapshot_id=snapshot_id) is None:
         raise LookupError("News snapshot not found")
     row = NewsSentimentAssessmentORM(

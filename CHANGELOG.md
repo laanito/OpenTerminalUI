@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Retained headline lifecycle** — standalone headline/assessment bundles default
+  to 90 days from their latest recording, with configurable expiry (`0` disables).
+  Saved runs protect referenced evidence until their last reference is removed.
+  History shows eligibility/protection and supports confirmed owner deletion of
+  unreferenced bundles. Bounded daily cleanup preserves saved briefings and checks
+  references under the writer lock; no migration or stored-payload rewrite.
 - **Deep interpretation of retained sentiment** — select up to five retained
   headline observations from a saved news briefing and save a separate linked
   interpretation using frozen market evidence. Inspect original text, independent

@@ -69,7 +69,7 @@ def test_selected_sentiment_uses_deep_and_freezes_originals_and_exact_scoring_in
     assert child["status"] == "complete" and child["id"] != saved["id"]
     assert child["lineage"]["kind"] == "retained_sentiment_interpretation"
     assert child["lineage"]["parent_content_hash"] == saved["content_hash"]
-    assert child["content"]["sentiment_sources"] == [RetainedHeadline.model_validate(row).model_dump(mode="json") for row in snapshots]
+    assert child["content"]["sentiment_sources"] == [RetainedHeadline.model_validate({**row, "retention": "retained_no_automatic_expiry"}).model_dump(mode="json") for row in snapshots]
     original, result = saved["content"]["result"]["evidence"], child["content"]["result"]["evidence"]
     assert result["schema_version"] == "3" and result["packet_id"] != original["packet_id"]
     for key in ("price", "sections", "requested", "caveats", "always_excluded"):
@@ -85,7 +85,10 @@ def test_selected_sentiment_uses_deep_and_freezes_originals_and_exact_scoring_in
     assert len(fast_calls) == 2 and len(preparations) == 1
     assert "PRIVATE-KEY" not in json.dumps(child) and "private.test" not in json.dumps(child)
     assert client.get(f"{URL}/{saved['id']}").json() == before
-    assert client.get(f"/api/news/evidence/{snapshots[0]['id']}").json() == snapshots[0]
+    current = client.get(f"/api/news/evidence/{snapshots[0]['id']}").json()
+    for key in ("id", "captured_at", "content_hash", "payload", "assessments"):
+        assert current[key] == snapshots[0][key]
+    assert current["lifecycle"]["state"] == "pinned"
 
 
 def test_interpretation_survives_parent_and_assessment_deletion_and_can_rerun_offline(store, monkeypatch):
@@ -118,7 +121,7 @@ def test_failure_keeps_selected_evidence_without_partial_prose(store, monkeypatc
     assert result["status"] == "unavailable" and result["failure"]["code"] == code
     assert result["possible_context"] == [] and len(result["evidence"]["sentiment"]) == 2
     assert len(calls) == count
-    assert child["content"]["sentiment_sources"] == [RetainedHeadline.model_validate(row).model_dump(mode="json") for row in snapshots]
+    assert child["content"]["sentiment_sources"] == [RetainedHeadline.model_validate({**row, "retention": "retained_no_automatic_expiry"}).model_dump(mode="json") for row in snapshots]
     if calls:
         assert "sentiment_coverage" in calls[-1]["messages"][-2]["content"]
         assert '"R1"' in calls[-1]["messages"][-2]["content"]
@@ -168,11 +171,11 @@ def test_duplicate_observations_are_rejected_and_exact_source_matching_is_requir
     first, second = capture(client, saved), capture(client, saved)
     evidence = ComparisonContextEvidence.model_validate(saved["content"]["result"]["evidence"])
     with pytest.raises(ValueError, match="repeated reports"):
-        build_sentiment_context(evidence, [RetainedHeadline.model_validate(row) for row in [*first, *second]], capture_id=saved["id"], content_hash=saved["content_hash"])
+        build_sentiment_context(evidence, [RetainedHeadline.model_validate({**row, "retention": "retained_no_automatic_expiry"}) for row in [*first, *second]], capture_id=saved["id"], content_hash=saved["content_hash"])
     changed = copy.deepcopy(first[0])
     changed["payload"]["publisher"] = "Different publisher"
     with pytest.raises(ValueError, match="differs"):
-        build_sentiment_context(evidence, [RetainedHeadline.model_validate(changed)], capture_id=saved["id"], content_hash=saved["content_hash"])
+        build_sentiment_context(evidence, [RetainedHeadline.model_validate({**changed, "retention": "retained_no_automatic_expiry"})], capture_id=saved["id"], content_hash=saved["content_hash"])
 
 
 @pytest.mark.asyncio

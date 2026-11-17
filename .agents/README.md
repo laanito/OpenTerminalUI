@@ -1,5 +1,35 @@
 # External-agent project context
 
+Current implementation **2026-11-17: v2.8 retention and deletion**. PR #282 is
+merged; preserve its checked Deep sentiment integration. The maintainer chose
+**90 days** for unreferenced headline evidence. This branch implements that
+default, `NEWS_EVIDENCE_RETENTION_DAYS=0` to disable expiry, Compose forwarding
+and a bounded daily cleanup worker (100 bundles, first sweep after one interval).
+Age uses latest capture/assessment recording, not original scoring time.
+Saved comparisons never automatically expire. Same-owner saved JSON references
+protect independent bundles until the last reference is removed, without resetting
+the age clock. Conservative JSON matching can overretain and scales with saved
+history; no migration/backfill or immutable payload rewrite is introduced.
+
+JWT owner DELETE removes an unreferenced text/assessment bundle atomically;
+404 hides unknown/foreign records and 409 protects new/shared references.
+Browser inspection shows concise eligibility/protection and confirmed deletion.
+Saved embedded copies remain self-contained. Capture/evidence writes, pruning
+and deletion use short owner locks (PostgreSQL READ COMMITTED, SQLite writer
+reservation); no provider/model call holds those locks. A new Deep save rechecks
+selected live IDs and reports a known unsaved outcome if they disappeared.
+Shutdown joins an in-progress bounded cleanup batch. Account deletion is unchanged.
+
+Validation: **1,914 backend tests passed, three PostgreSQL-only skipped**;
+**830 frontend tests**, production build and **39 installed-Chrome smoke journeys**
+passed. PostgreSQL lifecycle/reference/deletion/pruning checks are added to the
+existing guarded disposable CI lane; native PostgreSQL was not run locally.
+Generated API/surface/mock guards cover 492 operations/87 families. No production
+DB was queried or changed. User review/deployment acceptance and release
+validation/preparation remain; release publication is not yet authorized.
+#281 portfolio-history UX acceptance carries forward. Do not start v3 or add
+new v2 feature scope; v3 remains the Portfolio-first frontend overhaul.
+
 This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have
 previously existed only in a maintainer's chat or local agent memory.
@@ -101,8 +131,8 @@ On 2026-11-11 the maintainer required durability for news/sentiment references
 so analyses remain inspectable/repeatable. Plan immutable text snapshots,
 versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
-referenced evidence; unreferenced retention must be configurable, with its exact
-duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
+referenced evidence; unreferenced retention is configurable with the agreed
+90-day default (2026-11-17). Preserve owner boundaries and PostgreSQL/SQLite safety.
 The first storage foundation now adds owner-scoped exact-text snapshots and
 append-only assessments, with additive migration `0019_news_evidence`. News/scoring
 routes are not wired to those tables yet; no cleanup runs. PR #266 is merged.
@@ -219,7 +249,7 @@ attempt; rerunning with existing `/Users/lamigo/.hermes/node/bin` first in the
 process PATH passed. No host runtime or repo test configuration was changed.
 The maintainer confirmed PR #274 merged and tested. Carry that acceptance
 forward. The implemented Deep follow-up is described below; reference-aware
-retention/deletion/cleanup remains open before v2.8 release preparation.
+retention/deletion/cleanup is implemented in the current branch described above.
 
 Current v2.8 increment (2026-11-17): checked Deep interpretation of explicitly
 selected retained sentiment is implemented. In original saved-news review, open
@@ -260,13 +290,10 @@ backend/.venv). API generation/surface inventory (491 operations/87 families),
 production-data and whitespace guards pass. An earlier full coverage run caught
 fixture regeneration during execution; the subsequent full test run is clean.
 
-Maintainer review/model-quality acceptance is pending for this increment. The
-remaining v2.8 implementation is configurable unreferenced retention/expiry,
-reference-aware pruning and deletion/missing-source behavior. No retention
-period has been agreed and no cleanup runs. Do not start v3 or treat release
-publication as authorized by implementation approval. #281's portfolio UX is
-merged and accepted; do not request duplicate reconstruction testing. Earlier
-chronological notes below describe the steps before this Deep integration.
+The maintainer confirmed #282 merged. Retention/deletion/cleanup is now
+implemented as described in the current handoff above; the earlier slice notes
+record intermediate states. Release review/preparation remains. #281's portfolio
+UX is merged and accepted; do not request duplicate reconstruction testing.
 
 Home history UX follow-up: the maintainer confirmed #280 works and requested
 less verbosity. Legacy explanations, excluded transaction IDs/quantities and

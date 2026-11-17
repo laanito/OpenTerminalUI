@@ -71,6 +71,28 @@ The Portfolio Manager's existing benchmark/risk analytics keep their distinct
 current-open-holdings methodology and nullable short-history statistics. Home's
 new ledger history does not silently change those endpoints.
 
+## Retained headline lifetime and deletion
+
+Standalone retained headline/assessment bundles default to **90 days from their
+latest capture/recording**, including newly retained cache hits. Original scoring
+dates stay unchanged. Opening a record shows when it becomes cleanup-eligible,
+or whether saved runs protect it. Saved briefings and their embedded evidence
+stay retained until you delete them.
+
+Under **Review retained headline assessments**, inspect a record to delete an
+unreferenced bundle with explicit confirmation. Referenced records cannot be
+deleted until their referencing saved runs are removed. Multiple children/reruns
+can protect the same evidence. Deleting the last referencing run does not restart
+the retention clock; an old standalone record may become eligible immediately.
+Cleanup runs in bounded daily batches, so eligible records can remain available
+until the next sweep. A removed record returns a missing-source message; no model
+runs or URL fetches are used to replace it. Existing saved evidence copies remain
+inspectable independently.
+
+Operators can set `NEWS_EVIDENCE_RETENTION_DAYS` (default `90`, `0` disables expiry)
+and restart the backend. The policy does not expire Notes, Brain records, public
+legacy news or explicitly saved comparison runs.
+
 ## Interpret retained sentiment with Deep
 
 In **Review saved briefings**, open an original run containing news, then open

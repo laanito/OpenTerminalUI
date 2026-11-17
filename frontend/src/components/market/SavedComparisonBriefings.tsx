@@ -156,7 +156,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
           {!selected.content.generation.attempts.length && !selected.content.generation.prepared_request ? <p>No saved completion request is available to re-run. Refresh can collect new evidence and start a new run.</p> : null}
         </div>
         {confirmDelete ? <div role="group" aria-label="Confirm saved briefing deletion" className="space-y-2 rounded border border-terminal-warn p-3">
-          <p>Delete this saved briefing and its retained evidence and model inputs? Independent headline assessments remain in retained history.</p>
+          <p>Delete this saved briefing and its embedded evidence and model inputs? Standalone headline assessments follow retention; expired evidence becomes eligible for cleanup after its last referencing run is deleted.</p>
           <button type="button" disabled={deleting} className="mr-3 text-terminal-neg underline" onClick={() => void remove()}>{deleting ? "Deleting…" : "Confirm deletion"}</button>
           <button type="button" disabled={deleting} className="underline" onClick={() => setConfirmDelete(false)}>Keep saved briefing</button>
         </div> : null}
@@ -164,7 +164,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
         {selected.content.sentiment_sources?.length ? <details className="min-w-0 space-y-3 rounded border border-terminal-border p-3 text-xs">
           <summary className="cursor-pointer text-terminal-accent">Inspect retained sentiment inputs</summary>
           <p>Original selected text, methods, scoring dates and dispatched scoring inputs, embedded in this run. No providers are called when inspecting them.</p>
-          {selected.content.sentiment_sources.map(row => <RetainedEvidence key={row.id} row={row} />)}
+          {selected.content.sentiment_sources.map(row => <RetainedEvidence key={row.id} row={row} embedded />)}
         </details> : null}
         <details open={showInputs} onToggle={(event) => setShowInputs(event.currentTarget.open)} className="rounded border border-terminal-border p-3 text-xs">
           <summary className="cursor-pointer text-terminal-accent">Inspect saved model inputs</summary>

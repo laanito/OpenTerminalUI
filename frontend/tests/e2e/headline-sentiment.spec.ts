@@ -80,7 +80,7 @@ for (const width of [1440, 390]) {
     await expect(failed).not.toContainText("Neutral");
     const review = page.getByRole("region", { name: "Saved briefing review", exact: true });
     await review.getByRole("button", { name: "Delete saved briefing", exact: true }).click();
-    await expect(review.getByRole("group", { name: "Confirm saved briefing deletion" })).toContainText("Independent headline assessments remain in retained history");
+    await expect(review.getByRole("group", { name: "Confirm saved briefing deletion" })).toContainText("Standalone headline assessments follow retention");
     await review.getByRole("button", { name: "Confirm deletion", exact: true }).click();
     await expect(page.getByText("No saved briefings yet.", { exact: true })).toBeVisible();
     await page.reload();

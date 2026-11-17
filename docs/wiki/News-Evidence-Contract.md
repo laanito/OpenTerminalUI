@@ -7,7 +7,7 @@ separate keyword tone and Fast asset-implication assessments, and cache provenan
 Saved comparisons retain their original evidence/results; generation endpoints
 remain ephemeral. Browser sentiment selection, progress and retained history are
 available. Explicit selected retained observations can now inform a separate
-checked Deep interpretation. Configurable retention and cleanup remain future work. This contract supports repeatable evidence; it does not
+checked Deep interpretation. Configurable retention and reference-aware cleanup are implemented with a 90-day default. This contract supports repeatable evidence; it does not
 promise identical model prose.
 
 ## Existing paths and provenance gaps
@@ -67,7 +67,7 @@ Assessment writes first check snapshot ownership. A composite database foreign
 key also prevents linking another owner's snapshot by ID. Reads require an owner
 and never resolve by text hash. Rescoring inserts a new assessment. Ordinary ORM
 updates are rejected; this application contract is not a tamper-proof audit store
-against privileged SQL. There are no text/assessment update/delete HTTP surfaces yet.
+against privileged SQL. There are no text/assessment update surfaces. Owner-authorized standalone bundle deletion is described below.
 Deleting an account cascades its private records, with no other owner sharing them.
 
 ## Migration and retention
@@ -79,12 +79,64 @@ retain explicit offsets in JSON, including on SQLite. Existing news, portfolios
 and Brain records are not rewritten. Downgrade retains research tables, and
 re-upgrade is idempotent. Fresh metadata initialization includes both models.
 
-There is **no expiry job, retention default or implicit deletion**. Agree the
-configurable unreferenced retention duration before enabling cleanup. Saved
-comparison references must pin their dependencies before any pruning is added.
-Storage will grow once callers are wired; define bounded capture and lifecycle
-behavior in that integration. Shared-reference release, explicit evidence deletion
-and missing-source UX are still unimplemented, not implied by these tables.
+Standalone text/assessment bundles use the agreed **90-day unreferenced
+retention period** (2026-11-17). `NEWS_EVIDENCE_RETENTION_DAYS` configures 1–3650
+days; `0` disables automatic expiry. The environment variable is forwarded by
+Compose; restart the backend after changing it. Existing immutable records are
+not rewritten. Age is measured from the later of text capture and the latest
+assessment recording, not publication or original scoring time. A newly retained
+cache hit therefore receives its full retention period without backdating its
+original score.
+
+Saved comparison runs remain explicitly retained until deleted. A text snapshot
+is protected while any owned saved run contains its ID, including selected-source
+copies, reruns and saved request inputs. Protection survives deleting a source
+parent and lasts until the last referencing saved run is removed. An original
+comparison that merely supplied text to a later scorer does not pin that scorer's
+independent records unless it actually contains their IDs. Deleting the last pin
+does not restart the clock: an old bundle can immediately become cleanup-eligible.
+
+A bounded daily worker removes at most 100 eligible standalone bundles per sweep.
+It waits one interval before the first sweep; no deletion runs during startup.
+Eligible records stay readable/selectable until cleanup removes them. Protection
+and age are checked again under the writer lock. Protected candidates do not
+starve later unreferenced records. Multiple workers are safe; races are skipped
+or rechecked. Cleanup is best-effort, so eligibility is not an exact deletion time.
+It never deletes saved comparisons, public `news_articles`, Notes or Brain data.
+
+`DELETE /api/news/evidence/{snapshot_id}` deletes only the authenticated owner's
+unreferenced bundle and its assessments atomically. Unknown/other-owner IDs give
+404; references from saved runs give 409, including a reference added after the
+browser last read the record. It does not erase evidence copies inside retained
+saved inputs. Once a record is removed, reads return 404 without fetching its URL,
+rebuilding it from a cache or silently rescoring it. The child briefing's embedded
+copies remain independently inspectable.
+
+Live read/scoring receipts expose `lifecycle`: state (`pinned`, `unreferenced`,
+`expired`/cleanup-eligible or `expiry_disabled`), configured days, eligibility time
+and up to 20 owner-scoped referencing capture IDs with a truncation flag.
+`retention` distinguishes protected evidence, an unreferenced retention window
+and disabled automatic expiry. This mutable metadata is separate from unchanged
+stored payloads/hashes. Embedded copies retain their original evidence contract
+and live as long as the containing saved briefing. The browser shows a concise
+eligibility/protection line, requires confirmation for standalone deletion and
+keeps records visible if a newly protected deletion is rejected.
+
+Capture/evidence writes and lifecycle deletion serialize short critical sections
+per owner: PostgreSQL uses user-row locks under its default READ COMMITTED
+isolation; SQLite reserves its writer before checking references. Unsupported
+isolation fails closed. Provider/model calls hold no lifecycle writer lock.
+References are conservatively detected in saved JSON, avoiding a production
+schema migration/backfill and preserving unknown envelope extensions. This can
+retain extra bundles if an ID is merely mentioned; query cost scales with the
+owner's saved history. The global candidate batch and owner transactions are
+bounded. No production DB operation is performed during development.
+
+If standalone evidence disappears while a new Deep interpretation is running,
+saving rechecks availability under that lock and returns a known unsaved outcome
+instead of a false receipt. Existing self-contained reruns remain usable without
+live independent rows. Cancellation/shutdown waits for an in-progress bounded DB
+batch rather than leaving an unawaited cleanup transaction.
 
 ## Explicit comparison capture API
 
@@ -165,7 +217,7 @@ archive or historical-knowledge claim is introduced.
 
 Content hashes cover the complete serialized content, including generation/input
 times. They identify retained contents, not cross-run semantic equality. Saved
-captures have no automatic expiry. Future cleanup must preserve their embedded
+captures have no automatic expiry. Cleanup preserves their embedded
 inputs/results while retained; deleting a capture releases its own inline data.
 A 4,000,000-byte serialized UTF-8 cap rejects oversized captures with 413 before
 inserting; nothing is silently dropped. Storage errors return 503 without
@@ -181,7 +233,7 @@ restart/provider-edit, privacy, repair/dispatch and optional-source tests run
 locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
 explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
 
-Next: configurable reference-aware retention, expiry and deletion policy.
+Retention and deletion follow the policy above; release acceptance remains a maintainer review step.
 Browser save/review/deletion is implemented; it does not introduce a private Brain
 index or shared evidence-blob lifecycle. See [Roadmap](Roadmap.md).
 
@@ -315,12 +367,12 @@ Read without source/model work through:
 Reads return stored payload JSON without adding today's defaults. Optional JSON
 fields preserve existing records; no migration, old-row rewrite or new API-key
 scope is introduced. These routes remain experimental in `market-context`.
-There is no automatic expiry or delete endpoint yet; each call retains up to ten
-snapshots/twenty assessments. Account deletion still cascades private records.
+Each call retains up to ten snapshots/twenty assessments under the lifecycle
+policy above; unreferenced bundles can expire or be explicitly deleted. Account deletion still cascades private records.
 The browser now exposes explicit selection, progress and retained inspection;
 The explicit Deep follow-up below consumes selected observations in a new
-checked analysis; opening/scoring alone does not change a comparison. Future
-cleanup must preserve referenced evidence and define deletion/missing-source UX.
+checked analysis; opening/scoring alone does not change a comparison.
+Cleanup preserves referenced evidence; deletion and missing-source behavior are defined above.
 
 ## Browser assessment progress and retained history
 
@@ -356,10 +408,11 @@ agreement metric is invented. This is not a whole-market sentiment sample.
 Progress, disabled duplicate-submit controls, cancellation, owner-history paging,
 late-response guards and detail focus are covered at desktop/narrow sizes.
 Changing saved source or page scope aborts pending work and discards its late
-results. Source deletion confirmation explicitly preserves independent
-assessments in retained history. No migration/settings/provider/dependency or
-API-key scope changes are introduced. Individual assessment deletion, automatic
-expiry and reference-aware pruning remain open.
+results. Source deletion releases only that run’s references; independent
+assessments remain subject to the retention policy above. Deletion confirmation
+explains this boundary. There is no individual-assessment deletion: standalone
+deletion removes a complete text/assessment bundle. The lifecycle adds one
+retention setting without a migration, provider, dependency or API-key scope change.
 
 ## Checked Deep interpretation of selected retained observations
 
@@ -411,8 +464,8 @@ opinions to newly retrieved headlines. Such refreshed runs can be assessed again
 Unselected generation retains context versions 1/2 and its original shape. No
 migration, existing-row rewrite, dependency, provider, setting or API-key scope
 change is required. The 4 MB capture and 120k-character Deep evidence limits still
-apply. Automatic retention, expiry and pruning remain unimplemented; future
-cleanup must account for these explicit selected references before activation.
+apply. Standalone retention, expiry and pruning follow the 90-day policy above; these
+selected IDs remain protected while any saved run references them.
 
 Shared synthetic browser fixture regeneration/check:
 `PYTHONPATH=. backend/.venv/bin/python -m backend.tests.generate_sentiment_briefing_fixture [--check]`.

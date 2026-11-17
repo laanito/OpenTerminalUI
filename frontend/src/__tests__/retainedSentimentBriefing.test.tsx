@@ -92,3 +92,13 @@ it("selects retained observations explicitly and opens the saved child with offl
   expect(view.container.querySelector("script")).toBeNull(); expect(fetch).toHaveBeenCalledOnce();
   expect(review).toHaveTextContent(enriched.lineage!.parent_id);
 });
+
+it("explains missing evidence before generation and a known removal before saving", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 404 }));
+  await expect(streamSentimentBriefing(source(), [fixture.headlines[0].id])).rejects.toThrow("no longer available");
+  fetch.mockResolvedValue(new Response([
+    { type: "start", deadlines: { evidence_seconds: 45, context_seconds: 40, model_seconds: 240 } },
+    { type: "error", error: { code: "capture_evidence_unavailable", message: "untrusted text" } },
+  ].map(event => JSON.stringify(event)).join("\n"), { headers: { "Content-Type": "application/x-ndjson" } }));
+  await expect(streamSentimentBriefing(source(), [fixture.headlines[0].id])).rejects.toThrow("No new run was saved");
+});

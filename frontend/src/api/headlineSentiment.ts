@@ -19,7 +19,10 @@ export type RetainedAssessment = {
   };
 };
 export type RetainedHeadline = {
-  id: string; captured_at: string; content_hash: string; retention: "retained_no_automatic_expiry";
+  id: string; captured_at: string; content_hash: string;
+  retention: "retained_no_automatic_expiry" | "pinned_by_saved_analysis" | "unreferenced_retention_window";
+  lifecycle?: { state: "pinned" | "unreferenced" | "expired" | "expiry_disabled"; retention_days: number | null;
+    expires_at: string | null; referencing_capture_ids: string[]; references_truncated: boolean };
   payload: {
     schema_version: 1; origin?: { kind: "saved_comparison_headlines"; capture_id: string; capture_content_hash: string; citation_ids: string[] } | null;
     title: string; summary: string; source_url: string; publisher: string; published_at: string | null;
@@ -75,7 +78,7 @@ export function validAssessment(value: unknown, projected = false): boolean {
 }
 export function validateRetainedHeadline(value: unknown): RetainedHeadline {
   if (!v.record(value) || !id(value.id) || !v.timestamp(value.captured_at) || !hash(value.content_hash)
-    || value.retention !== "retained_no_automatic_expiry" || !v.record(value.payload) || !Array.isArray(value.assessments)
+    || !validLifecycle(value) || !v.record(value.payload) || !Array.isArray(value.assessments)
     || value.assessments.some((item) => !validAssessment(item))
     || new Set(value.assessments.map((item: Record<string, unknown>) => item.id)).size !== value.assessments.length) throw invalid();
   const p = value.payload;
@@ -91,6 +94,19 @@ export function validateRetainedHeadline(value: unknown): RetainedHeadline {
       || o.citation_ids.some((item) => !bounded(item, 64)) || new Set(o.citation_ids).size !== o.citation_ids.length) throw invalid();
   }
   return value as unknown as RetainedHeadline; // Keep retained JSON; do not invent current defaults.
+}
+function validLifecycle(value: Record<string, unknown>): boolean {
+  const status = value.lifecycle;
+  if (status === undefined) return value.retention === "retained_no_automatic_expiry";
+  if (!v.record(status) || !v.choice(status.state, ["pinned", "unreferenced", "expired", "expiry_disabled"])
+    || !(status.retention_days === null || (Number.isInteger(status.retention_days) && Number(status.retention_days) >= 1 && Number(status.retention_days) <= 3650))
+    || !(status.expires_at === null || v.timestamp(status.expires_at)) || typeof status.references_truncated !== "boolean"
+    || !Array.isArray(status.referencing_capture_ids) || status.referencing_capture_ids.length > 20
+    || status.referencing_capture_ids.some(item => !id(item)) || new Set(status.referencing_capture_ids).size !== status.referencing_capture_ids.length) return false;
+  if (status.state === "pinned") return value.retention === "pinned_by_saved_analysis" && status.referencing_capture_ids.length > 0 && status.expires_at === null;
+  if (status.referencing_capture_ids.length || status.references_truncated) return false;
+  if (status.state === "expiry_disabled") return value.retention === "retained_no_automatic_expiry" && status.retention_days === null && status.expires_at === null;
+  return value.retention === "unreferenced_retention_window" && status.retention_days !== null && status.expires_at !== null;
 }
 function validateRows(value: unknown, sourceId?: string): RetainedHeadline[] {
   if (!Array.isArray(value) || value.length > 20) throw invalid();
@@ -108,6 +124,9 @@ export async function getRetainedHeadline(snapshotId: string, signal?: AbortSign
   const row = validateRetainedHeadline(data);
   if (row.id !== snapshotId) throw invalid();
   return row;
+}
+export async function deleteRetainedHeadline(snapshotId: string, signal?: AbortSignal) {
+  await api.delete(`/news/evidence/${encodeURIComponent(snapshotId)}`, { signal });
 }
 export async function streamHeadlineAssessments(source: ComparisonCapture, selection: HeadlineSelection[],
   options: { signal?: AbortSignal; onProgress?: (phase: BriefingPhase) => void } = {}): Promise<RetainedHeadline[]> {

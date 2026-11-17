@@ -1,5 +1,35 @@
 # Current project state and backlog
 
+Current implementation **2026-11-17: v2.8 retention and deletion**. PR #282 is
+merged; preserve its checked Deep sentiment integration. The maintainer chose
+**90 days** for unreferenced headline evidence. This branch implements that
+default, `NEWS_EVIDENCE_RETENTION_DAYS=0` to disable expiry, Compose forwarding
+and a bounded daily cleanup worker (100 bundles, first sweep after one interval).
+Age uses latest capture/assessment recording, not original scoring time.
+Saved comparisons never automatically expire. Same-owner saved JSON references
+protect independent bundles until the last reference is removed, without resetting
+the age clock. Conservative JSON matching can overretain and scales with saved
+history; no migration/backfill or immutable payload rewrite is introduced.
+
+JWT owner DELETE removes an unreferenced text/assessment bundle atomically;
+404 hides unknown/foreign records and 409 protects new/shared references.
+Browser inspection shows concise eligibility/protection and confirmed deletion.
+Saved embedded copies remain self-contained. Capture/evidence writes, pruning
+and deletion use short owner locks (PostgreSQL READ COMMITTED, SQLite writer
+reservation); no provider/model call holds those locks. A new Deep save rechecks
+selected live IDs and reports a known unsaved outcome if they disappeared.
+Shutdown joins an in-progress bounded cleanup batch. Account deletion is unchanged.
+
+Validation: **1,914 backend tests passed, three PostgreSQL-only skipped**;
+**830 frontend tests**, production build and **39 installed-Chrome smoke journeys**
+passed. PostgreSQL lifecycle/reference/deletion/pruning checks are added to the
+existing guarded disposable CI lane; native PostgreSQL was not run locally.
+Generated API/surface/mock guards cover 492 operations/87 families. No production
+DB was queried or changed. User review/deployment acceptance and release
+validation/preparation remain; release publication is not yet authorized.
+#281 portfolio-history UX acceptance carries forward. Do not start v3 or add
+new v2 feature scope; v3 remains the Portfolio-first frontend overhaul.
+
 Current state **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
 is published from `4bc03cf`, the merge of release-prep PR #263. Implementation
 PRs #259–#262 are merged; the maintainer explicitly confirmed #262 as merged
@@ -90,9 +120,9 @@ On 2026-11-11 the maintainer required durability for news/sentiment references
 so analyses remain inspectable/repeatable. Plan immutable text snapshots,
 versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
-referenced evidence; unreferenced retention must be configurable, with its exact
-duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
-Capture/review/follow-up foundations are merged through #272. Durable headline scoring/review and checked Deep sentiment linkage are implemented; retention remains open; see the
+referenced evidence; unreferenced retention is configurable with the agreed
+90-day default (2026-11-17). Preserve owner boundaries and PostgreSQL/SQLite safety.
+Capture/review/follow-up foundations are merged through #272. Durable headline scoring/review, checked Deep sentiment linkage and retention are implemented; see the
 current v2.8 checklist below.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
@@ -1246,8 +1276,8 @@ v2 evidence ideas do not automatically become compulsory sub-releases.
 Maintainer requirement agreed 2026-11-11: news and sentiment used as references
 must remain durable for a retention period so an analysis can be revisited with
 its original evidence. The proposed headline-sentiment increment must include
-this foundation. Implementation now has a storage boundary; integration and the
-retention duration remain open. See `docs/wiki/Roadmap.md` and
+this foundation. Storage, scoring/review, Deep integration and the agreed
+90-day retention lifecycle are implemented; maintainer release review remains. See `docs/wiki/Roadmap.md` and
 `docs/wiki/News-Evidence-Contract.md` for the contract and boundaries.
 
 - [x] Audit existing ingestion/live/cache paths and baseline/Fast scoring. Record
@@ -1261,7 +1291,8 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       actual PostgreSQL round-trip/owner-FK coverage is added to the guarded CI lane.
       Foundation PR #266 is merged. Existing ingestion/scorers are not wired to
       those tables. No automatic cleanup runs.
-- [ ] Agree an explicit configurable unreferenced retention window. Keep evidence
+- [x] Agree an explicit configurable unreferenced retention window: 90 days
+      (maintainer decision 2026-11-17), with `0` disabling expiry. Keep evidence
       pinned while a saved analysis references it; define expiry, shared-reference
       release and owner-authorized deletion/missing-source behavior.
 - [x] Finish explicit text/assessment integration into comparison captures.
@@ -1377,15 +1408,23 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       API/surface (491 operations/87 families), mock and whitespace guards pass.
       Extend native PostgreSQL JSON/ownership coverage in the guarded CI lane;
       add deterministic server/browser fixture generation and parity checks.
-- [ ] Maintainer review and configured-model quality acceptance of the new Deep
-      sentiment interpretation before release preparation.
-- [ ] Finish configurable retention/expiry and reference-aware pruning, linked
-      sentiment lifecycle and their remaining restart/cache/provider-edit/parity
-      checks. Obtain maintainer acceptance of the saved browser workflow and
-      subsequent milestone slices before release preparation.
+- [x] Maintainer confirmed Deep sentiment integration PR #282 merged. Preserve
+      that acceptance; configured-model quality is not a calibrated benchmark.
+- [x] Implement configurable retention/expiry, shared-reference protection,
+      owner bundle deletion and missing-source UX with short writer locks.
+      Preserve saved runs and embedded evidence. No schema migration/backfill.
+- [x] Validate lifecycle age/cache recording, protected/shared/foreign references,
+      bounded cleanup, worker delay/shutdown, SQLite save/prune races and a Deep
+      selection removed during generation. Add native PostgreSQL coverage to the
+      guarded CI lane. Full suites: 1,914 backend passed/three skipped, 830 frontend
+      passed, build and 39 installed-Chrome journeys passed.
+- [ ] Obtain maintainer review/acceptance of retention and the final saved browser
+      workflow, then perform release validation, documentation/version preparation.
+      Tag/publication requires explicit release authorization; do not start v3.
 
 Replay means recovering original evidence/results and enabling a new run from
-those inputs, not promising identical LLM prose. The retention duration, expiry/deletion policy and cleanup remain open.
+those inputs, not promising identical LLM prose. The agreed 90-day retention,
+expiry/deletion policy and cleanup are implemented above.
 Explicit scoring/comparison integration is implemented above. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.

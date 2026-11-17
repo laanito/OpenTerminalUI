@@ -182,6 +182,9 @@ export async function streamSentimentBriefing(source: ComparisonCapture, snapsho
     });
   } catch (error) {
     if (options.signal?.aborted || error instanceof BriefingNotRetainedError) throw error;
+    if (error instanceof Error && /HTTP (404|410)/.test(error.message)) {
+      throw new BriefingNotRetainedError("The selected saved run or headline evidence is no longer available. Refresh retained history before retrying.");
+    }
     throw new Error("Interpretation saving could not be confirmed or displayed. Refresh saved briefings before retrying; the original is unchanged.");
   }
 }
