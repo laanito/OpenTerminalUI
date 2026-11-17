@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **490 operations** across **437 paths** and **87 families**.
-- Authentication: **445 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **491 operations** across **438 paths** and **87 families**.
+- Authentication: **446 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 35 |
+| `market-context` | `experimental` | 36 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -687,6 +687,7 @@ State: **experimental**
 | `POST` | `/api/market-context/briefing-captures/{capture_id}/rerun/stream` | Bearer token | Stream Rerun |
 | `GET` | `/api/market-context/briefing-captures/{capture_id}/sentiment` | Bearer token | List Headline Sentiment |
 | `POST` | `/api/market-context/briefing-captures/{capture_id}/sentiment` | Bearer token | Capture Headline Sentiment |
+| `POST` | `/api/market-context/briefing-captures/{capture_id}/sentiment-briefing/stream` | Bearer token | Stream Sentiment Briefing |
 | `POST` | `/api/market-context/briefing-captures/{capture_id}/sentiment/stream` | Bearer token | Stream Headline Sentiment |
 | `POST` | `/api/market-context/briefing-context` | Bearer token | Create Context Briefing |
 | `POST` | `/api/market-context/briefing-context-evidence` | Bearer token | Prepare Context Briefing Evidence |

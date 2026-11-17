@@ -155,5 +155,21 @@ def test_comparison_capture_json_ownership_and_delete_on_postgres() -> None:
                 delete_capture(capture_id, user, db)
                 assert db.get(ComparisonCaptureORM, capture_id) is None
                 assert json.loads(get_capture(child_id, user, db).body)["content"] == child
+                # Deep sentiment follow-ups embed exact retained methods/inputs
+                # in portable JSON, independent of parent/text-row lifetimes.
+                from backend.tests.generate_sentiment_briefing_fixture import fixture
+                retained = fixture()["child"]
+                sentiment_id = str(uuid4())
+                db.add(ComparisonCaptureORM(id=sentiment_id, user_id=owner, captured_at=datetime.now(timezone.utc),
+                    mode="context", status="complete", content_hash=retained["content_hash"], payload=retained["content"]))
+                db.flush(); db.expire_all()
+                opened = json.loads(get_capture(sentiment_id, user, db).body)
+                assert opened["content"] == retained["content"]
+                assert opened["content"]["sentiment_sources"][0]["assessments"][1]["payload"]["generation"]["attempts"]
+                summary = next(row for row in list_captures(limit=20, offset=0, user=user, db=db) if row.id == sentiment_id)
+                assert summary.lineage.kind == "retained_sentiment_interpretation"
+                with pytest.raises(HTTPException) as failure:
+                    get_capture(sentiment_id, SimpleNamespace(id=other), db)
+                assert failure.value.status_code == 404
         finally:
             transaction.rollback()

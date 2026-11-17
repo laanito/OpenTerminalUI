@@ -71,6 +71,26 @@ The Portfolio Manager's existing benchmark/risk analytics keep their distinct
 current-open-holdings methodology and nullable short-history statistics. Home's
 new ledger history does not silently change those endpoints.
 
+## Interpret retained sentiment with Deep
+
+In **Review saved briefings**, open an original run containing news, then open
+**Review retained headline assessments**. Select up to five observations from
+that run and choose **Interpret selected sentiment and save**. Keep one version
+per headline/target. Text tone and asset implication remain separate, with their
+original dates, failures and disagreements.
+
+This creates a new linked run using the original frozen market evidence and the
+current Deep model. It does not fetch news or rescore headlines. The original
+briefing stays unchanged. Inspect `R#` citations for the selected opinions, or
+expand **Inspect retained sentiment inputs** for original scoring requests.
+Opening, paging or inspecting records does not invoke a model.
+
+A saved-input rerun keeps these opinions frozen. **Refresh with current data**
+collects a new market context without reusing old sentiment against new headlines.
+Canceling stops unfinished work; if saving was interrupted, refresh saved history
+before retrying. A checked citation identifies inputs, not proof of causation or
+investment advice. These opinions do not measure whole-market investor sentiment.
+
 ## Fast tasks (v2.4)
 
 Headline sentiment, ticker emotion and natural-language query classification use
@@ -425,7 +445,7 @@ the confirmation explains. Individual assessment deletion/expiry remains later.
 The browser uses `POST /api/market-context/briefing-captures/{id}/sentiment/stream`
 for cancellable progress and a post-commit receipt, plus JWT-only
 `GET /api/news/evidence` for owner history. The synchronous POST remains available.
-Checked Deep sentiment interpretation is the next slice; current news pages and
+Selected retained observations can now inform a separate saved Deep interpretation; current news pages and
 briefing prompts remain unchanged. See the
 [assessment contract](News-Evidence-Contract.md#explicit-saved-headline-assessments-api)
 for requests, limits, provenance and retention boundaries.

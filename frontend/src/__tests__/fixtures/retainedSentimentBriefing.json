@@ -1,0 +1,1262 @@
+{
+  "source": {
+    "id": "sentiment-source",
+    "captured_at": "2026-11-17T10:00:00Z",
+    "mode": "context",
+    "status": "complete",
+    "anchor": "AAPL",
+    "comparisons": [
+      "SPY"
+    ],
+    "period": "1M",
+    "content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+    "retention": "retained_no_automatic_expiry",
+    "lineage": null,
+    "content": {
+      "schema_version": 1,
+      "lineage": null,
+      "mode": "context",
+      "selection": {
+        "anchor": "AAPL",
+        "comparisons": [
+          "SPY"
+        ],
+        "period": "1M",
+        "context": {
+          "news": true,
+          "macro_regions": [
+            "us",
+            "euro_area"
+          ],
+          "technical": false
+        }
+      },
+      "generation": {
+        "contract_version": "comparison-capture-v1",
+        "protocol": "openai_compatible_chat_completions",
+        "profile": {
+          "requested_profile": "deep",
+          "resolved_profile": "deep",
+          "model": "fixture-deep"
+        },
+        "enabled": true,
+        "timeout_seconds": 240.0,
+        "structured_output": "auto",
+        "attempts": [
+          {
+            "dispatched_at": "2026-11-17T10:00:00Z",
+            "body": {
+              "model": "fixture-deep",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Synthetic saved input"
+                }
+              ],
+              "stream": false,
+              "max_tokens": 6400,
+              "temperature": 0.2
+            }
+          }
+        ],
+        "prepared_request": null
+      },
+      "result": {
+        "status": "complete",
+        "engine": "llm",
+        "model": "fixture-deep",
+        "model_profile": {
+          "requested_profile": "deep",
+          "resolved_profile": "deep",
+          "model": "fixture-deep"
+        },
+        "generated_at": "2026-11-17T10:00:00Z",
+        "evidence": {
+          "schema_version": "1",
+          "evidence_kind": "comparison_with_optional_context",
+          "citation_scope": "packet_local",
+          "packet_id": "bf903313091035a498bdc8f10b72d10d463737e0f04351041b72bb3b7ddf6d5a",
+          "prepared_at": "2026-10-22T12:00:00Z",
+          "requested": {
+            "news": true,
+            "macro_regions": [
+              "us",
+              "euro_area"
+            ],
+            "technical": false
+          },
+          "price": {
+            "schema_version": "1",
+            "citation_scope": "packet_local",
+            "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+            "status": "available",
+            "anchor": "AAPL",
+            "period": "1M",
+            "retrieved_at": "2026-10-01T10:00:00Z",
+            "data_source": "unified_history",
+            "method": "same_utc_date_daily_closes",
+            "return_basis": "native_quote_currency_provider_closes",
+            "included_evidence": "shared_utc_provider_close_returns",
+            "not_included": [
+              "headlines",
+              "fundamentals",
+              "sec_filing_checks",
+              "macro",
+              "technical_measures",
+              "fx_views",
+              "adjusted_views",
+              "exchange_local_views",
+              "private_research"
+            ],
+            "comparisons": [
+              {
+                "citation_id": "P1",
+                "status": "available",
+                "reason": null,
+                "anchor": {
+                  "symbol": "AAPL",
+                  "history_adapter": "yahoo",
+                  "history_feed": "yahoo_chart",
+                  "latest_date": "2026-09-30",
+                  "quote_unit": "USD",
+                  "quote_unit_source": "yahoo_chart_meta",
+                  "reported_adjustment_basis": "unspecified",
+                  "withheld_provider_close_count": 0,
+                  "withheld_date_scope": "selected_history_payload"
+                },
+                "comparison": {
+                  "symbol": "SPY",
+                  "history_adapter": "alpaca",
+                  "history_feed": "alpaca_stocks_bars:iex:raw",
+                  "latest_date": "2026-09-30",
+                  "quote_unit": null,
+                  "quote_unit_source": "unavailable",
+                  "reported_adjustment_basis": "raw",
+                  "withheld_provider_close_count": 0,
+                  "withheld_date_scope": "selected_history_payload"
+                },
+                "pair_reported_basis_status": "unverified",
+                "returns": {
+                  "start_date": "2026-09-01",
+                  "end_date": "2026-09-30",
+                  "observations": 22,
+                  "anchor_return_pct": 12.3456,
+                  "comparison_return_pct": -2.3456,
+                  "relative_return_pp": 14.6912,
+                  "freshness": "current"
+                },
+                "caveats": [
+                  "native_quote_not_fx_normalized",
+                  "utc_dates_not_simultaneous_sessions",
+                  "no_causal_or_investment_conclusion",
+                  "unknown_quote_unit",
+                  "unverified_price_basis"
+                ]
+              }
+            ]
+          },
+          "sections": [
+            {
+              "citation_id": "C1",
+              "pair_citation_id": "P1",
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "retrieved_at": "2026-10-22T12:00:00Z",
+              "status": "available",
+              "reason": null,
+              "kind": "headlines",
+              "source": "current_keyless_feeds",
+              "fetch_limit_per_symbol": 50,
+              "groups": [
+                {
+                  "citation_id": "C1G1",
+                  "symbol": "AAPL",
+                  "status": "available",
+                  "examined_count": 10,
+                  "matched_count": 1,
+                  "upstream_display_limit": 10,
+                  "returned_headline_count": 1,
+                  "withheld_invalid_count": 0,
+                  "withheld_duplicate_count": 0,
+                  "headlines": [
+                    {
+                      "citation_id": "C1G1H1",
+                      "title": "A dated report for AAPL",
+                      "title_truncated": false,
+                      "url": "https://example.com/AAPL",
+                      "source": "Test source",
+                      "published_at": "2026-09-29T10:00:00Z"
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C1G2",
+                  "symbol": "SPY",
+                  "status": "available",
+                  "examined_count": 10,
+                  "matched_count": 1,
+                  "upstream_display_limit": 10,
+                  "returned_headline_count": 1,
+                  "withheld_invalid_count": 0,
+                  "withheld_duplicate_count": 0,
+                  "headlines": [
+                    {
+                      "citation_id": "C1G2H1",
+                      "title": "A dated report for SPY",
+                      "title_truncated": false,
+                      "url": "https://example.com/SPY",
+                      "source": "Test source",
+                      "published_at": "2026-09-29T10:00:00Z"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "citation_id": "C2",
+              "pair_citation_id": "P1",
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "retrieved_at": "2026-10-22T12:00:00Z",
+              "status": "available",
+              "reason": null,
+              "kind": "macro",
+              "region": "us",
+              "vintage_basis": "current_at_retrieval",
+              "realtime_date": "2026-10-22",
+              "series": [
+                {
+                  "citation_id": "C2S1",
+                  "series_id": "CPIAUCSL",
+                  "label": "CPIAUCSL",
+                  "source": "fred",
+                  "source_url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+                  "title": "Official CPIAUCSL",
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": 1,
+                  "withheld_conflict_count": 2,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 3.123456789,
+                      "flag": null
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C2S2",
+                  "series_id": "UNRATE",
+                  "label": "UNRATE",
+                  "source": "fred",
+                  "source_url": "https://fred.stlouisfed.org/series/UNRATE",
+                  "title": "Official UNRATE",
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": 1,
+                  "withheld_conflict_count": 2,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 3.123456789,
+                      "flag": null
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C2S3",
+                  "series_id": "FEDFUNDS",
+                  "label": "FEDFUNDS",
+                  "source": "fred",
+                  "source_url": "https://fred.stlouisfed.org/series/FEDFUNDS",
+                  "title": "Official FEDFUNDS",
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": 1,
+                  "withheld_conflict_count": 2,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 3.123456789,
+                      "flag": null
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "citation_id": "C3",
+              "pair_citation_id": "P1",
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "retrieved_at": "2026-10-22T12:00:00Z",
+              "status": "available",
+              "reason": null,
+              "kind": "macro",
+              "region": "euro_area",
+              "vintage_basis": "current_at_retrieval",
+              "realtime_date": null,
+              "series": [
+                {
+                  "citation_id": "C3S1",
+                  "series_id": "prc_hicp_minr",
+                  "label": "Euro-area HICP, annual change",
+                  "source": "eurostat",
+                  "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr?geo=EA21&coicop18=TOTAL&unit=RCH_A&sinceTimePeriod=2026-09&untilTimePeriod=2026-09",
+                  "title": null,
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": null,
+                  "withheld_conflict_count": null,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 2.15,
+                      "flag": "p"
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C3S2",
+                  "series_id": "une_rt_m",
+                  "label": "Euro-area unemployment",
+                  "source": "eurostat",
+                  "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/une_rt_m?geo=EA21&s_adj=SA&age=TOTAL&unit=PC_ACT&sex=T&sinceTimePeriod=2026-09&untilTimePeriod=2026-09",
+                  "title": null,
+                  "units": "Percent of labour force",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": null,
+                  "withheld_conflict_count": null,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 2.15,
+                      "flag": "p"
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C3S3",
+                  "series_id": "FM.D.U2.EUR.4F.KR.DFR.LEV",
+                  "label": "ECB deposit facility rate",
+                  "source": "ecb",
+                  "source_url": "https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV?startPeriod=2026-09-01&endPeriod=2026-09-30&format=csvdata",
+                  "title": null,
+                  "units": "Percent per annum",
+                  "frequency": "Daily",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": null,
+                  "withheld_conflict_count": null,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 2.15,
+                      "flag": "p"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "news_limit_per_symbol": 5,
+          "macro_limit_per_series": 24,
+          "caveats": [
+            "context_is_not_causation_or_advice",
+            "headlines_are_untrusted_source_text_not_verified_facts",
+            "current_feeds_are_not_a_complete_historical_archive",
+            "macro_is_global_not_ticker_attribution",
+            "reference_dates_are_not_publication_dates",
+            "current_vintages_do_not_establish_past_knowledge",
+            "missing_or_excluded_context_is_not_evidence_of_absence",
+            "price_packet_exclusions_apply_to_price_subpacket_only"
+          ],
+          "always_excluded": [
+            "fundamentals",
+            "sec_filing_checks",
+            "technical_measures",
+            "fx_views",
+            "adjusted_views",
+            "exchange_local_views",
+            "private_research",
+            "economic_calendar"
+          ]
+        },
+        "scope_citation_id": "SCOPE",
+        "citation_validation": "references_only_not_fact_checked",
+        "scope_notice": "AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+        "observations": [
+          {
+            "text": "The observed provider-close returns differ over this pair's stated window.",
+            "citation_ids": [
+              "P1"
+            ]
+          }
+        ],
+        "hypotheses": [
+          {
+            "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+            "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+            "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+            "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+            "citation_ids": [
+              "P1"
+            ]
+          }
+        ],
+        "possible_context": [
+          {
+            "text": "This dated source may provide context, but does not explain the price move.",
+            "citation_ids": [
+              "P1",
+              "C1G1H1"
+            ]
+          }
+        ],
+        "limitations": [
+          {
+            "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+            "citation_ids": [
+              "P1"
+            ]
+          },
+          {
+            "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+            "citation_ids": [
+              "C1",
+              "C2",
+              "C2S1",
+              "C2S2",
+              "C2S3",
+              "C3",
+              "C3S1",
+              "C3S2",
+              "C3S3",
+              "SCOPE"
+            ]
+          }
+        ],
+        "unknowns": [
+          {
+            "text": "Optional macro, news, fundamentals and private research were not included in this evidence packet.",
+            "citation_ids": [
+              "SCOPE"
+            ]
+          }
+        ],
+        "failure": null
+      }
+    }
+  },
+  "headlines": [
+    {
+      "id": "retained-headline",
+      "captured_at": "2026-11-17T10:00:00Z",
+      "content_hash": "bba21b869b0364b93b70a27eb597326e431068fb6798df6bbfab45a77101013f",
+      "retention": "retained_no_automatic_expiry",
+      "payload": {
+        "schema_version": 1,
+        "origin": {
+          "kind": "saved_comparison_headlines",
+          "capture_id": "sentiment-source",
+          "capture_content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+          "citation_ids": [
+            "C1G1H1"
+          ]
+        },
+        "title": "A dated report for AAPL",
+        "summary": "",
+        "source_url": "https://example.com/AAPL",
+        "publisher": "Test source",
+        "published_at": "2026-09-29T10:00:00Z",
+        "retrieved_at": "2026-10-22T12:00:00Z",
+        "text_scope": "headline_only",
+        "truncated": false,
+        "symbols": [
+          "AAPL"
+        ]
+      },
+      "assessments": [
+        {
+          "id": "retained-tone",
+          "recorded_at": "2026-11-17T10:00:00Z",
+          "payload": {
+            "schema_version": 1,
+            "generation": null,
+            "reused_from_cache": false,
+            "target_symbol": null,
+            "meaning": "text_tone",
+            "method": "lexical",
+            "method_version": "finance-keyword-tone-v1",
+            "provider": null,
+            "model": null,
+            "prompt_version": null,
+            "input_text": "A dated report for AAPL",
+            "scored_at": "2026-11-17T10:00:00Z",
+            "status": "complete",
+            "score": 0.0,
+            "label": "neutral",
+            "rationale": "Deterministic finance-keyword tone; not an asset-price implication or measured investor sentiment.",
+            "confidence": null,
+            "confidence_kind": "not_provided",
+            "failure_code": null
+          }
+        },
+        {
+          "id": "retained-asset",
+          "recorded_at": "2026-11-17T10:00:00Z",
+          "payload": {
+            "schema_version": 1,
+            "generation": {
+              "protocol": "openai_compatible_chat_completions",
+              "profile": {
+                "requested_profile": "fast",
+                "resolved_profile": "fast",
+                "model": "fixture-fast"
+              },
+              "context_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "attempts": [
+                {
+                  "dispatched_at": "2026-11-17T10:00:00Z",
+                  "body": {
+                    "model": "fixture-fast",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "<script>untrusted retained input</script>"
+                      }
+                    ],
+                    "stream": false,
+                    "max_tokens": 700
+                  }
+                }
+              ]
+            },
+            "reused_from_cache": false,
+            "target_symbol": "AAPL",
+            "meaning": "asset_implication",
+            "method": "llm",
+            "method_version": "saved-headline-asset-v1",
+            "provider": "openai_compatible",
+            "model": "fixture-fast",
+            "prompt_version": "saved-headline-asset-v1",
+            "input_text": "A dated report for AAPL",
+            "scored_at": "2026-11-17T10:00:00Z",
+            "status": "complete",
+            "score": -0.5,
+            "label": "bearish",
+            "rationale": "A limited adverse implication from the retained headline.",
+            "confidence": null,
+            "confidence_kind": "not_provided",
+            "failure_code": null
+          }
+        }
+      ]
+    }
+  ],
+  "child": {
+    "id": "sentiment-child",
+    "captured_at": "2026-11-17T10:00:00Z",
+    "mode": "context",
+    "status": "complete",
+    "anchor": "AAPL",
+    "comparisons": [
+      "SPY"
+    ],
+    "period": "1M",
+    "content_hash": "d708ac96bf9298f59d12294569fc431b61f884b4f90098ec64e950ea2fa19bd4",
+    "retention": "retained_no_automatic_expiry",
+    "lineage": {
+      "kind": "retained_sentiment_interpretation",
+      "parent_id": "sentiment-source",
+      "parent_content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+      "source_generated_at": "2026-11-17T10:00:00Z",
+      "replay_request_index": null,
+      "model_policy": "current_deep"
+    },
+    "content": {
+      "schema_version": 1,
+      "lineage": {
+        "kind": "retained_sentiment_interpretation",
+        "parent_id": "sentiment-source",
+        "parent_content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+        "source_generated_at": "2026-11-17T10:00:00Z",
+        "replay_request_index": null,
+        "model_policy": "current_deep"
+      },
+      "mode": "context",
+      "selection": {
+        "anchor": "AAPL",
+        "comparisons": [
+          "SPY"
+        ],
+        "period": "1M",
+        "context": {
+          "news": true,
+          "macro_regions": [
+            "us",
+            "euro_area"
+          ],
+          "technical": false
+        }
+      },
+      "generation": {
+        "contract_version": "comparison-capture-v1",
+        "protocol": "openai_compatible_chat_completions",
+        "profile": {
+          "requested_profile": "deep",
+          "resolved_profile": "deep",
+          "model": "fixture-deep"
+        },
+        "enabled": true,
+        "timeout_seconds": 240.0,
+        "structured_output": "auto",
+        "attempts": [
+          {
+            "dispatched_at": "2026-11-17T10:00:00Z",
+            "body": {
+              "model": "fixture-deep",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Synthetic saved input"
+                }
+              ],
+              "stream": false,
+              "max_tokens": 6400,
+              "temperature": 0.2
+            }
+          }
+        ],
+        "prepared_request": null
+      },
+      "result": {
+        "status": "complete",
+        "engine": "llm",
+        "model": "fixture-deep",
+        "model_profile": {
+          "requested_profile": "deep",
+          "resolved_profile": "deep",
+          "model": "fixture-deep"
+        },
+        "generated_at": "2026-11-17T10:00:00Z",
+        "evidence": {
+          "schema_version": "3",
+          "evidence_kind": "comparison_with_optional_context",
+          "citation_scope": "packet_local",
+          "packet_id": "cc8e19481152518822d47fb4f4d4a7ea60d96b3ae113571c298d76133c4b2e8a",
+          "prepared_at": "2026-11-17T10:00:00Z",
+          "requested": {
+            "news": true,
+            "macro_regions": [
+              "us",
+              "euro_area"
+            ],
+            "technical": false
+          },
+          "price": {
+            "schema_version": "1",
+            "citation_scope": "packet_local",
+            "packet_id": "d8fc0e81ef0b7f41a370e95e73aa30e63cc0e846b00261f26a53fb1ac636bb52",
+            "status": "available",
+            "anchor": "AAPL",
+            "period": "1M",
+            "retrieved_at": "2026-10-01T10:00:00Z",
+            "data_source": "unified_history",
+            "method": "same_utc_date_daily_closes",
+            "return_basis": "native_quote_currency_provider_closes",
+            "included_evidence": "shared_utc_provider_close_returns",
+            "not_included": [
+              "headlines",
+              "fundamentals",
+              "sec_filing_checks",
+              "macro",
+              "technical_measures",
+              "fx_views",
+              "adjusted_views",
+              "exchange_local_views",
+              "private_research"
+            ],
+            "comparisons": [
+              {
+                "citation_id": "P1",
+                "status": "available",
+                "reason": null,
+                "anchor": {
+                  "symbol": "AAPL",
+                  "history_adapter": "yahoo",
+                  "history_feed": "yahoo_chart",
+                  "latest_date": "2026-09-30",
+                  "quote_unit": "USD",
+                  "quote_unit_source": "yahoo_chart_meta",
+                  "reported_adjustment_basis": "unspecified",
+                  "withheld_provider_close_count": 0,
+                  "withheld_date_scope": "selected_history_payload"
+                },
+                "comparison": {
+                  "symbol": "SPY",
+                  "history_adapter": "alpaca",
+                  "history_feed": "alpaca_stocks_bars:iex:raw",
+                  "latest_date": "2026-09-30",
+                  "quote_unit": null,
+                  "quote_unit_source": "unavailable",
+                  "reported_adjustment_basis": "raw",
+                  "withheld_provider_close_count": 0,
+                  "withheld_date_scope": "selected_history_payload"
+                },
+                "pair_reported_basis_status": "unverified",
+                "returns": {
+                  "start_date": "2026-09-01",
+                  "end_date": "2026-09-30",
+                  "observations": 22,
+                  "anchor_return_pct": 12.3456,
+                  "comparison_return_pct": -2.3456,
+                  "relative_return_pp": 14.6912,
+                  "freshness": "current"
+                },
+                "caveats": [
+                  "native_quote_not_fx_normalized",
+                  "utc_dates_not_simultaneous_sessions",
+                  "no_causal_or_investment_conclusion",
+                  "unknown_quote_unit",
+                  "unverified_price_basis"
+                ]
+              }
+            ]
+          },
+          "sections": [
+            {
+              "citation_id": "C1",
+              "pair_citation_id": "P1",
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "retrieved_at": "2026-10-22T12:00:00Z",
+              "status": "available",
+              "reason": null,
+              "kind": "headlines",
+              "source": "current_keyless_feeds",
+              "fetch_limit_per_symbol": 50,
+              "groups": [
+                {
+                  "citation_id": "C1G1",
+                  "symbol": "AAPL",
+                  "status": "available",
+                  "examined_count": 10,
+                  "matched_count": 1,
+                  "upstream_display_limit": 10,
+                  "returned_headline_count": 1,
+                  "withheld_invalid_count": 0,
+                  "withheld_duplicate_count": 0,
+                  "headlines": [
+                    {
+                      "citation_id": "C1G1H1",
+                      "title": "A dated report for AAPL",
+                      "title_truncated": false,
+                      "url": "https://example.com/AAPL",
+                      "source": "Test source",
+                      "published_at": "2026-09-29T10:00:00Z"
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C1G2",
+                  "symbol": "SPY",
+                  "status": "available",
+                  "examined_count": 10,
+                  "matched_count": 1,
+                  "upstream_display_limit": 10,
+                  "returned_headline_count": 1,
+                  "withheld_invalid_count": 0,
+                  "withheld_duplicate_count": 0,
+                  "headlines": [
+                    {
+                      "citation_id": "C1G2H1",
+                      "title": "A dated report for SPY",
+                      "title_truncated": false,
+                      "url": "https://example.com/SPY",
+                      "source": "Test source",
+                      "published_at": "2026-09-29T10:00:00Z"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "citation_id": "C2",
+              "pair_citation_id": "P1",
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "retrieved_at": "2026-10-22T12:00:00Z",
+              "status": "available",
+              "reason": null,
+              "kind": "macro",
+              "region": "us",
+              "vintage_basis": "current_at_retrieval",
+              "realtime_date": "2026-10-22",
+              "series": [
+                {
+                  "citation_id": "C2S1",
+                  "series_id": "CPIAUCSL",
+                  "label": "CPIAUCSL",
+                  "source": "fred",
+                  "source_url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+                  "title": "Official CPIAUCSL",
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": 1,
+                  "withheld_conflict_count": 2,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 3.123456789,
+                      "flag": null
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C2S2",
+                  "series_id": "UNRATE",
+                  "label": "UNRATE",
+                  "source": "fred",
+                  "source_url": "https://fred.stlouisfed.org/series/UNRATE",
+                  "title": "Official UNRATE",
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": 1,
+                  "withheld_conflict_count": 2,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 3.123456789,
+                      "flag": null
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C2S3",
+                  "series_id": "FEDFUNDS",
+                  "label": "FEDFUNDS",
+                  "source": "fred",
+                  "source_url": "https://fred.stlouisfed.org/series/FEDFUNDS",
+                  "title": "Official FEDFUNDS",
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": 1,
+                  "withheld_conflict_count": 2,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 3.123456789,
+                      "flag": null
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "citation_id": "C3",
+              "pair_citation_id": "P1",
+              "start_date": "2026-09-01",
+              "end_date": "2026-09-30",
+              "retrieved_at": "2026-10-22T12:00:00Z",
+              "status": "available",
+              "reason": null,
+              "kind": "macro",
+              "region": "euro_area",
+              "vintage_basis": "current_at_retrieval",
+              "realtime_date": null,
+              "series": [
+                {
+                  "citation_id": "C3S1",
+                  "series_id": "prc_hicp_minr",
+                  "label": "Euro-area HICP, annual change",
+                  "source": "eurostat",
+                  "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_minr?geo=EA21&coicop18=TOTAL&unit=RCH_A&sinceTimePeriod=2026-09&untilTimePeriod=2026-09",
+                  "title": null,
+                  "units": "Percent",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": null,
+                  "withheld_conflict_count": null,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 2.15,
+                      "flag": "p"
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C3S2",
+                  "series_id": "une_rt_m",
+                  "label": "Euro-area unemployment",
+                  "source": "eurostat",
+                  "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/une_rt_m?geo=EA21&s_adj=SA&age=TOTAL&unit=PC_ACT&sex=T&sinceTimePeriod=2026-09&untilTimePeriod=2026-09",
+                  "title": null,
+                  "units": "Percent of labour force",
+                  "frequency": "Monthly",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": null,
+                  "withheld_conflict_count": null,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 2.15,
+                      "flag": "p"
+                    }
+                  ]
+                },
+                {
+                  "citation_id": "C3S3",
+                  "series_id": "FM.D.U2.EUR.4F.KR.DFR.LEV",
+                  "label": "ECB deposit facility rate",
+                  "source": "ecb",
+                  "source_url": "https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV?startPeriod=2026-09-01&endPeriod=2026-09-30&format=csvdata",
+                  "title": null,
+                  "units": "Percent per annum",
+                  "frequency": "Daily",
+                  "status": "available",
+                  "returned_observation_count": 1,
+                  "upstream_matched_count": null,
+                  "withheld_conflict_count": null,
+                  "observations": [
+                    {
+                      "reference_date": "2026-09-01",
+                      "value": 2.15,
+                      "flag": "p"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "news_limit_per_symbol": 5,
+          "macro_limit_per_series": 24,
+          "caveats": [
+            "context_is_not_causation_or_advice",
+            "headlines_are_untrusted_source_text_not_verified_facts",
+            "current_feeds_are_not_a_complete_historical_archive",
+            "macro_is_global_not_ticker_attribution",
+            "reference_dates_are_not_publication_dates",
+            "current_vintages_do_not_establish_past_knowledge",
+            "missing_or_excluded_context_is_not_evidence_of_absence",
+            "price_packet_exclusions_apply_to_price_subpacket_only"
+          ],
+          "always_excluded": [
+            "fundamentals",
+            "sec_filing_checks",
+            "technical_measures",
+            "fx_views",
+            "adjusted_views",
+            "exchange_local_views",
+            "private_research",
+            "economic_calendar"
+          ],
+          "sentiment": [
+            {
+              "citation_id": "R1",
+              "pair_citation_id": "P1",
+              "headline_citation_id": "C1G1H1",
+              "snapshot_id": "retained-headline",
+              "content_hash": "bba21b869b0364b93b70a27eb597326e431068fb6798df6bbfab45a77101013f",
+              "captured_at": "2026-11-17T10:00:00Z",
+              "headline": {
+                "schema_version": 1,
+                "origin": {
+                  "kind": "saved_comparison_headlines",
+                  "capture_id": "sentiment-source",
+                  "capture_content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+                  "citation_ids": [
+                    "C1G1H1"
+                  ]
+                },
+                "title": "A dated report for AAPL",
+                "summary": "",
+                "source_url": "https://example.com/AAPL",
+                "publisher": "Test source",
+                "published_at": "2026-09-29T10:00:00Z",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "text_scope": "headline_only",
+                "truncated": false,
+                "symbols": [
+                  "AAPL"
+                ]
+              },
+              "assessment_id": "retained-tone",
+              "recorded_at": "2026-11-17T10:00:00Z",
+              "assessment": {
+                "schema_version": 1,
+                "reused_from_cache": false,
+                "target_symbol": null,
+                "meaning": "text_tone",
+                "method": "lexical",
+                "method_version": "finance-keyword-tone-v1",
+                "provider": null,
+                "model": null,
+                "prompt_version": null,
+                "input_text": "A dated report for AAPL",
+                "scored_at": "2026-11-17T10:00:00Z",
+                "status": "complete",
+                "score": 0.0,
+                "label": "neutral",
+                "rationale": "Deterministic finance-keyword tone; not an asset-price implication or measured investor sentiment.",
+                "confidence": null,
+                "confidence_kind": "not_provided",
+                "failure_code": null
+              }
+            },
+            {
+              "citation_id": "R2",
+              "pair_citation_id": "P1",
+              "headline_citation_id": "C1G1H1",
+              "snapshot_id": "retained-headline",
+              "content_hash": "bba21b869b0364b93b70a27eb597326e431068fb6798df6bbfab45a77101013f",
+              "captured_at": "2026-11-17T10:00:00Z",
+              "headline": {
+                "schema_version": 1,
+                "origin": {
+                  "kind": "saved_comparison_headlines",
+                  "capture_id": "sentiment-source",
+                  "capture_content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+                  "citation_ids": [
+                    "C1G1H1"
+                  ]
+                },
+                "title": "A dated report for AAPL",
+                "summary": "",
+                "source_url": "https://example.com/AAPL",
+                "publisher": "Test source",
+                "published_at": "2026-09-29T10:00:00Z",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "text_scope": "headline_only",
+                "truncated": false,
+                "symbols": [
+                  "AAPL"
+                ]
+              },
+              "assessment_id": "retained-asset",
+              "recorded_at": "2026-11-17T10:00:00Z",
+              "assessment": {
+                "schema_version": 1,
+                "reused_from_cache": false,
+                "target_symbol": "AAPL",
+                "meaning": "asset_implication",
+                "method": "llm",
+                "method_version": "saved-headline-asset-v1",
+                "provider": "openai_compatible",
+                "model": "fixture-fast",
+                "prompt_version": "saved-headline-asset-v1",
+                "input_text": "A dated report for AAPL",
+                "scored_at": "2026-11-17T10:00:00Z",
+                "status": "complete",
+                "score": -0.5,
+                "label": "bearish",
+                "rationale": "A limited adverse implication from the retained headline.",
+                "confidence": null,
+                "confidence_kind": "not_provided",
+                "failure_code": null
+              }
+            }
+          ]
+        },
+        "scope_citation_id": "SCOPE",
+        "citation_validation": "references_only_not_fact_checked",
+        "scope_notice": "Retained sentiment adds dated, independent opinions. Inspect original methods, scoring times, disagreements and failures. AI interpretation of provider-close returns and explicitly selected dated context. Headlines are untrusted reports, not verified facts or a complete historical archive. Macro reference periods are not publication dates; current vintages do not establish past knowledge or ticker relevance. When selected, technical measures use each asset's own adjusted observations, not identical calendar spans or verified adjustments, sessions, completed bars or trading signals. Selected filing facts identify current SEC aggregate values, not exact filing corroboration, revision priority or historical investor knowledge. Fiscal periods, filing dates and terminal retrieval times have different meanings. Interpretations are hypotheses; citations anchor observations, not proof of proposed mechanisms. Co-occurrence is not causation. References are checked, not the truth of prose. This is not investment advice. Inspect sources, dates, coverage and failures; nested price-only exclusions apply to that subpacket.",
+        "observations": [
+          {
+            "text": "The observed provider-close returns differ over this pair's stated window.",
+            "citation_ids": [
+              "P1"
+            ]
+          }
+        ],
+        "hypotheses": [
+          {
+            "interpretation": "Relative weakness could reflect different exposure rather than a shared market move.",
+            "mechanism": "If the instruments respond differently to shared conditions, their relative returns could diverge.",
+            "alternative": "Company-specific developments or different trading windows could also produce a divergence.",
+            "what_would_help": "Compare business exposures and dated company reports over matched windows to distinguish these hypotheses.",
+            "citation_ids": [
+              "P1"
+            ]
+          }
+        ],
+        "possible_context": [
+          {
+            "text": "This dated source may provide context, but does not explain the price move.",
+            "citation_ids": [
+              "P1",
+              "C1G1H1"
+            ]
+          },
+          {
+            "text": "Retained text tone and asset implication differ; the selected opinions do not establish causation.",
+            "citation_ids": [
+              "P1",
+              "R1",
+              "R2"
+            ]
+          }
+        ],
+        "limitations": [
+          {
+            "text": "Interpret the dated native-quote returns with the supplied freshness, unit and price-basis caveats.",
+            "citation_ids": [
+              "P1"
+            ]
+          },
+          {
+            "text": "Selected context has dated coverage, flags and source limitations, not causal evidence.",
+            "citation_ids": [
+              "C1",
+              "C2",
+              "C2S1",
+              "C2S2",
+              "C2S3",
+              "C3",
+              "C3S1",
+              "C3S2",
+              "C3S3",
+              "R1",
+              "R2",
+              "SCOPE"
+            ]
+          }
+        ],
+        "unknowns": [
+          {
+            "text": "Optional macro, news, fundamentals and private research were not included in this evidence packet.",
+            "citation_ids": [
+              "SCOPE"
+            ]
+          }
+        ],
+        "failure": null
+      },
+      "sentiment_sources": [
+        {
+          "id": "retained-headline",
+          "captured_at": "2026-11-17T10:00:00Z",
+          "content_hash": "bba21b869b0364b93b70a27eb597326e431068fb6798df6bbfab45a77101013f",
+          "retention": "retained_no_automatic_expiry",
+          "payload": {
+            "schema_version": 1,
+            "origin": {
+              "kind": "saved_comparison_headlines",
+              "capture_id": "sentiment-source",
+              "capture_content_hash": "cdbb2d06766e2743492cf487501f49a92f41a03332f98312d09a07ac8ae62cad",
+              "citation_ids": [
+                "C1G1H1"
+              ]
+            },
+            "title": "A dated report for AAPL",
+            "summary": "",
+            "source_url": "https://example.com/AAPL",
+            "publisher": "Test source",
+            "published_at": "2026-09-29T10:00:00Z",
+            "retrieved_at": "2026-10-22T12:00:00Z",
+            "text_scope": "headline_only",
+            "truncated": false,
+            "symbols": [
+              "AAPL"
+            ]
+          },
+          "assessments": [
+            {
+              "id": "retained-tone",
+              "recorded_at": "2026-11-17T10:00:00Z",
+              "payload": {
+                "schema_version": 1,
+                "generation": null,
+                "reused_from_cache": false,
+                "target_symbol": null,
+                "meaning": "text_tone",
+                "method": "lexical",
+                "method_version": "finance-keyword-tone-v1",
+                "provider": null,
+                "model": null,
+                "prompt_version": null,
+                "input_text": "A dated report for AAPL",
+                "scored_at": "2026-11-17T10:00:00Z",
+                "status": "complete",
+                "score": 0.0,
+                "label": "neutral",
+                "rationale": "Deterministic finance-keyword tone; not an asset-price implication or measured investor sentiment.",
+                "confidence": null,
+                "confidence_kind": "not_provided",
+                "failure_code": null
+              }
+            },
+            {
+              "id": "retained-asset",
+              "recorded_at": "2026-11-17T10:00:00Z",
+              "payload": {
+                "schema_version": 1,
+                "generation": {
+                  "protocol": "openai_compatible_chat_completions",
+                  "profile": {
+                    "requested_profile": "fast",
+                    "resolved_profile": "fast",
+                    "model": "fixture-fast"
+                  },
+                  "context_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                  "attempts": [
+                    {
+                      "dispatched_at": "2026-11-17T10:00:00Z",
+                      "body": {
+                        "model": "fixture-fast",
+                        "messages": [
+                          {
+                            "role": "user",
+                            "content": "<script>untrusted retained input</script>"
+                          }
+                        ],
+                        "stream": false,
+                        "max_tokens": 700
+                      }
+                    }
+                  ]
+                },
+                "reused_from_cache": false,
+                "target_symbol": "AAPL",
+                "meaning": "asset_implication",
+                "method": "llm",
+                "method_version": "saved-headline-asset-v1",
+                "provider": "openai_compatible",
+                "model": "fixture-fast",
+                "prompt_version": "saved-headline-asset-v1",
+                "input_text": "A dated report for AAPL",
+                "scored_at": "2026-11-17T10:00:00Z",
+                "status": "complete",
+                "score": -0.5,
+                "label": "bearish",
+                "rationale": "A limited adverse implication from the retained headline.",
+                "confidence": null,
+                "confidence_kind": "not_provided",
+                "failure_code": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

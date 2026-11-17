@@ -4,6 +4,7 @@ import {
 } from "./comparisonBriefing";
 import { TECHNICAL_CAVEATS, validTechnicalSection, type ContextTechnicalSection } from "./technicalContext";
 import { FILING_CAVEATS, validFilingSection, type ContextFilingSection } from "./filingContext";
+import { validSentimentContext, type SentimentContextItem } from "./sentimentContext";
 
 export type MacroRegion = "us" | "euro_area";
 export type BriefingContextOptions = { news: boolean; macro_regions: MacroRegion[]; technical?: boolean; fundamentals?: boolean };
@@ -36,9 +37,10 @@ export interface ContextMacroSection extends ContextSectionBase {
 }
 export type ContextSection = ContextNewsSection | ContextMacroSection | ContextTechnicalSection | ContextFilingSection;
 export interface ContextEvidence {
-  schema_version: "1" | "2"; evidence_kind: "comparison_with_optional_context"; citation_scope: "packet_local";
+  schema_version: "1" | "2" | "3"; evidence_kind: "comparison_with_optional_context"; citation_scope: "packet_local";
   packet_id: string; prepared_at: string; requested: BriefingContextOptions; price: BriefingEvidence;
   sections: ContextSection[]; news_limit_per_symbol: 5; macro_limit_per_series: 24; caveats: string[]; always_excluded: string[];
+  sentiment?: SentimentContextItem[];
 }
 export interface ContextBriefingResult extends Omit<ComparisonBriefingResult, "evidence"> {
   evidence: ContextEvidence | null; possible_context: BriefingStatement[];
@@ -77,7 +79,7 @@ const boundedText = (value: unknown, max: number): value is string => v.text(val
 const sameSet = (value: unknown, expected: string[]) => v.strings(value) && v.unique(value) && value.length === expected.length && expected.every((key) => value.includes(key));
 
 function validPacket(value: unknown, selection: BriefingSelection, options: BriefingContextOptions): value is ContextEvidence {
-  if (!v.record(value) || value.schema_version !== (options.fundamentals ? "2" : "1") || value.evidence_kind !== "comparison_with_optional_context"
+  if (!v.record(value) || ![options.fundamentals ? "2" : "1", "3"].includes(String(value.schema_version)) || value.evidence_kind !== "comparison_with_optional_context"
     || value.citation_scope !== "packet_local" || !v.text(value.packet_id) || !/^[a-f0-9]{64}$/.test(value.packet_id)
     || !v.timestamp(value.prepared_at) || !v.validEvidence(value.price, selection) || !v.record(value.requested)
     || value.requested.news !== options.news || !sameSet(value.requested.macro_regions, options.macro_regions)
@@ -167,7 +169,7 @@ function validPacket(value: unknown, selection: BriefingSelection, options: Brie
       if (raw.kind === "macro" && raw.status !== "unavailable" && items.length !== 3) return false;
     }
   }
-  return true;
+  return validSentimentContext(value as unknown as ContextEvidence);
 }
 
 /** Check identity, transport shape and references, never semantic truth of prose. */
@@ -220,6 +222,11 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
       if (series.withheld_conflict_count || series.returned_observation_count > series.observations.length || series.observations.some((item) => item.flag)) material.add(series.citation_id);
     }
   }
+  for (const item of packet?.sentiment ?? []) {
+    known.add(item.citation_id); material.add(item.citation_id);
+    if (item.assessment.status === "complete") usable.set(item.citation_id, item.pair_citation_id);
+    else missing.add(item.citation_id);
+  }
   for (const name of ["observations", "possible_context", "limitations", "unknowns"]) {
     const points = value[name];
     if (!Array.isArray(points) || points.length > (name === "observations" ? 6 : name === "possible_context" ? 12 : 24)
@@ -240,6 +247,9 @@ export function validateContextBriefingResult(value: unknown, selection: Briefin
         || point.citation_ids.some((ref) => !inputs.includes(ref) && !inputs.some((input) => usable.get(input) === ref))) throw v.invalid();
     }
     const used = new Set([...result.possible_context, ...result.hypotheses].flatMap((item) => item.citation_ids));
+    for (const assessmentId of new Set(packet?.sentiment?.filter(item => usable.has(item.citation_id)).map(item => item.assessment_id))) {
+      if (!packet?.sentiment?.some(item => item.assessment_id === assessmentId && used.has(item.citation_id))) throw v.invalid();
+    }
     for (const section of packet?.sections ?? []) if (section.kind === "technical") for (const asset of section.assets) {
       const refs = asset.metrics.filter((metric) => usable.has(metric.citation_id)).map((metric) => metric.citation_id);
       if (refs.length && !refs.some((ref) => used.has(ref))) throw v.invalid();

@@ -12,7 +12,7 @@ from datetime import date, datetime, timezone
 from typing import Literal
 from urllib.parse import urlencode, urlsplit
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, field_validator, model_serializer
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, field_validator, model_serializer, model_validator
 
 from backend.api.routes.market_context import (
     EuroAreaMacroResponse, MarketHeadlinesResponse, MarketMacroObservationsResponse, MarketComparisonResponse,
@@ -21,6 +21,7 @@ from backend.services.euro_area_macro import ECB_URL, EUROSTAT_URL, SERIES
 from backend.services.market_briefing_evidence import ComparisonBriefingEvidence, build_comparison_evidence
 from backend.services.technical_indicators import TechnicalAssetIndicators, TechnicalMetric, calculate_technical_indicators
 from backend.services.filing_briefing_evidence import FilingBriefingEvidence
+from backend.services.sentiment_context_evidence import SentimentContextItem
 
 NEWS_LIMIT = 5
 MACRO_LIMIT = 24
@@ -167,7 +168,7 @@ class FilingContextSection(ContextSection):
 
 
 class ComparisonContextEvidence(BaseModel):
-    schema_version: Literal["1", "2"] = "1"
+    schema_version: Literal["1", "2", "3"] = "1"
     evidence_kind: Literal["comparison_with_optional_context"] = "comparison_with_optional_context"
     citation_scope: Literal["packet_local"] = "packet_local"
     packet_id: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -179,6 +180,20 @@ class ComparisonContextEvidence(BaseModel):
     macro_limit_per_series: int = MACRO_LIMIT
     caveats: list[str]
     always_excluded: list[str]
+    sentiment: list[SentimentContextItem] = Field(default_factory=list, max_length=100)
+
+    @model_serializer(mode="wrap")
+    def preserve_unselected_sentiment(self, handler):
+        result = handler(self)
+        if not self.sentiment:
+            result.pop("sentiment", None)
+        return result
+
+    @model_validator(mode="after")
+    def sentiment_version(self):
+        if (self.schema_version == "3") != bool(self.sentiment):
+            raise ValueError("Retained sentiment requires the version-3 envelope")
+        return self
 
 
 def _check_window(response, start: date, end: date) -> None:

@@ -218,8 +218,55 @@ Homebrew Node failed to load a missing simdutf library during the initial browse
 attempt; rerunning with existing `/Users/lamigo/.hermes/node/bin` first in the
 process PATH passed. No host runtime or repo test configuration was changed.
 The maintainer confirmed PR #274 merged and tested. Carry that acceptance
-forward. Checked Deep integration and reference-aware retention/deletion/cleanup
-remain open before v2.8 release preparation.
+forward. The implemented Deep follow-up is described below; reference-aware
+retention/deletion/cleanup remains open before v2.8 release preparation.
+
+Current v2.8 increment (2026-11-17): checked Deep interpretation of explicitly
+selected retained sentiment is implemented. In original saved-news review, open
+retained assessments, select one to five observations (one version per headline/
+target), then **Interpret selected sentiment and save**. This is JWT-only
+`POST /api/market-context/briefing-captures/{id}/sentiment-briefing/stream`, accepting
+only snapshot IDs. Preflight checks owner/source integrity, original observation
+ID/hash/text/source/dates/truncation, methods/targets and deduplication. Reject
+unsupported saved evidence extensions instead of silently dropping them.
+
+The current resolved Deep profile uses frozen original market context and dated
+retained methods; no market/source fetch or Fast rescore. Context envelope v3 adds
+packet-local R# references, paired to exact original headlines/P#; unselected v1/2
+shapes/hashes are preserved. Completed methods require contextual consideration;
+all selected methods require limitations coverage. Failed/fallback opinions are
+unavailable, never neutral evidence. Keep tone and asset implication independent,
+scoring/publication/retrieval/capture times distinct, cache provenance intact and
+repeated pair copies from becoming independent reports. Reference checks are not
+semantic fact checking or calibrated market-sentiment evidence.
+
+The separate child has `retained_sentiment_interpretation` lineage and complete
+`sentiment_sources` copies, including original scoring requests. Deep's projection
+omits bulky scoring request bodies, while offline inspection retains them. Shared
+stream lifecycle, deadline and bounded repair apply. Only a committed receipt
+claims saving; cancellation/ambiguous acknowledgement requires history review,
+not automatic retry. Source/assessment records stay unchanged. A child can reopen
+and rerun after its parent/independent rows disappear; saved-input reruns keep the
+opinions, while fresh refreshes omit them and collect new context. No migration,
+provider, setting, dependency or API-key changes. Capture/input byte limits remain.
+
+Validation: all 1,898 backend tests pass (three PostgreSQL-only skipped locally),
+all 825 frontend tests/132 files, production build and all 37 installed-Chrome
+smoke journeys pass. The guarded PostgreSQL lane now checks nested retained
+sentiment inputs, new lineage summaries and owner-only reads; native execution
+belongs to that CI lane. Shared deterministic fixture regeneration/check uses
+`python -m backend.tests.generate_sentiment_briefing_fixture` (PYTHONPATH=. and
+backend/.venv). API generation/surface inventory (491 operations/87 families),
+production-data and whitespace guards pass. An earlier full coverage run caught
+fixture regeneration during execution; the subsequent full test run is clean.
+
+Maintainer review/model-quality acceptance is pending for this increment. The
+remaining v2.8 implementation is configurable unreferenced retention/expiry,
+reference-aware pruning and deletion/missing-source behavior. No retention
+period has been agreed and no cleanup runs. Do not start v3 or treat release
+publication as authorized by implementation approval. #281's portfolio UX is
+merged and accepted; do not request duplicate reconstruction testing. Earlier
+chronological notes below describe the steps before this Deep integration.
 
 Home history UX follow-up: the maintainer confirmed #280 works and requested
 less verbosity. Legacy explanations, excluded transaction IDs/quantities and

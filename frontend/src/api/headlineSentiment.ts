@@ -26,6 +26,11 @@ export type RetainedHeadline = {
     retrieved_at: string; text_scope: "headline_only" | "headline_and_summary"; truncated: boolean; symbols: string[];
   }; assessments: RetainedAssessment[];
 };
+export function retainedObservationKey(row: RetainedHeadline): string {
+  const p = row.payload;
+  return JSON.stringify([p.title, p.summary, p.source_url, p.publisher, p.published_at ? Date.parse(p.published_at) : null,
+    Date.parse(p.retrieved_at), p.truncated, p.symbols]);
+}
 const captures = "/market-context/briefing-captures";
 const invalid = () => new Error("The retained headline assessments could not be displayed safely. Stored records have not been changed.");
 const bounded = (value: unknown, max: number, empty = false): value is string => typeof value === "string" && (empty || Boolean(value.trim())) && value.length <= max;
@@ -50,7 +55,7 @@ function validGeneration(value: unknown) {
     || !bounded(value.profile.model, 256) || !hash(value.context_hash) || !Array.isArray(value.attempts) || value.attempts.length > 12) return false;
   return value.attempts.every((item) => v.record(item) && v.timestamp(item.dispatched_at) && v.record(item.body));
 }
-function validAssessment(value: unknown): boolean {
+export function validAssessment(value: unknown, projected = false): boolean {
   if (!v.record(value) || !id(value.id) || !v.timestamp(value.recorded_at) || !v.record(value.payload)) return false;
   const p = value.payload;
   if (p.schema_version !== 1 || !validGeneration(p.generation) || (p.reused_from_cache !== undefined && typeof p.reused_from_cache !== "boolean")
@@ -62,7 +67,7 @@ function validAssessment(value: unknown): boolean {
     || !nullable(p.rationale, 16384) || !nullable(p.failure_code, 128)
     || !v.choice(p.confidence_kind, ["heuristic", "not_provided"])
     || (p.confidence === null ? p.confidence_kind !== "not_provided" : !v.finite(p.confidence) || p.confidence < 0 || p.confidence > 1 || p.confidence_kind !== "heuristic")) return false;
-  if (p.reused_from_cache === true && (p.status !== "complete" || !v.record(p.generation) || !Array.isArray(p.generation.attempts) || !p.generation.attempts.length)) return false;
+  if (p.reused_from_cache === true && (p.status !== "complete" || (!projected && (!v.record(p.generation) || !Array.isArray(p.generation.attempts) || !p.generation.attempts.length)))) return false;
   if (v.record(p.generation) && v.record(p.generation.profile) && p.model !== p.generation.profile.model) return false;
   if (p.status === "failed") return v.text(p.failure_code) && [p.score, p.label, p.rationale, p.confidence].every((item) => item === null);
   return score(p.score) && v.choice(p.label, ["bullish", "bearish", "neutral"])

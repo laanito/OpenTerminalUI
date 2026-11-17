@@ -92,7 +92,7 @@ versioned method/model/context-linked assessments and complete captured analysis
 inputs/results, with replay distinct from re-run or refresh. Saved analyses pin
 referenced evidence; unreferenced retention must be configurable, with its exact
 duration still undecided. Preserve owner boundaries and PostgreSQL/SQLite safety.
-Capture/review/follow-up foundations are merged through #272. Durable headline scoring and browser review are implemented; Deep sentiment linkage and retention remain open; see the
+Capture/review/follow-up foundations are merged through #272. Durable headline scoring/review and checked Deep sentiment linkage are implemented; retention remains open; see the
 current v2.8 checklist below.
 See
 `docs/wiki/Fundamentals-Briefing-Contract.md` for the audit and delivery sequence.
@@ -1264,11 +1264,10 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
 - [ ] Agree an explicit configurable unreferenced retention window. Keep evidence
       pinned while a saved analysis references it; define expiry, shared-reference
       release and owner-authorized deletion/missing-source behavior.
-- [ ] Finish text/assessment integration into comparison captures. Durable selected
-      scoring APIs are implemented below; browser selection and new checked Deep
-      analyses with explicit retained references remain open. Preserve method/model/
-      prompt/context identity and actual scoring times through cache hits. Label
-      legacy gaps; never overwrite history.
+- [x] Finish explicit text/assessment integration into comparison captures.
+      Durable scoring/review and selected retained Deep follow-ups are implemented
+      below. Preserve original methods/model/prompt/context and scoring times;
+      each new analysis embeds selected evidence, never overwrites the source.
 - [x] Add explicit JWT comparison capture/list/reopen/delete APIs (PR #267 merged). Retain complete
       bounded evidence/result or typed failure, normalized selectors, public model
       identity and exact dispatched JSON bodies including augmentation, client
@@ -1363,17 +1362,31 @@ retention duration remain open. See `docs/wiki/Roadmap.md` and
       local browser runs if the Homebrew node/simdutf installation is inconsistent;
       no repo/host runtime repair was needed. PR #274 is merged and tested; carry
       maintainer acceptance forward.
-- [ ] Integrate bounded, explicitly selected headline sentiment with checked Deep
-      interpretation and inspectable retained references. Preserve failures,
-      disagreements, deduplication and coverage; no market-wide sentiment claim.
+- [x] Integrate selected retained sentiment with checked Deep interpretation:
+      one to five snapshot observations, one version per headline/target, exact
+      source/owner/text/hash/method/target checks before streaming. Freeze original
+      market context; no provider collection or Fast scoring. Envelope v3 R# refs
+      require source/pair matching, completed-method consideration and limitations
+      for every selected method. Failures/disagreements stay independent; do not
+      pool scores, invent neutral verdicts or claim market-wide sentiment.
+      Save a separate linked child with complete original scoring inputs and
+      retained references, preserving originals. Reopen/rerun stays self-contained
+      after source deletion; fresh refresh omits old opinions. No migration.
+- [x] Verify all 1,898 backend tests (three PostgreSQL-only skipped), all 825
+      frontend tests, production build and all 37 installed-Chrome journeys;
+      API/surface (491 operations/87 families), mock and whitespace guards pass.
+      Extend native PostgreSQL JSON/ownership coverage in the guarded CI lane;
+      add deterministic server/browser fixture generation and parity checks.
+- [ ] Maintainer review and configured-model quality acceptance of the new Deep
+      sentiment interpretation before release preparation.
 - [ ] Finish configurable retention/expiry and reference-aware pruning, linked
       sentiment lifecycle and their remaining restart/cache/provider-edit/parity
       checks. Obtain maintainer acceptance of the saved browser workflow and
       subsequent milestone slices before release preparation.
 
 Replay means recovering original evidence/results and enabling a new run from
-those inputs, not promising identical LLM prose. The retention duration and
-scoring/comparison integration and cleanup remain open. The storage foundation
+those inputs, not promising identical LLM prose. The retention duration, expiry/deletion policy and cleanup remain open.
+Explicit scoring/comparison integration is implemented above. The storage foundation
 performs no production operations during development; normal upgrade applies its
 additive migration.
 

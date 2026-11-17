@@ -115,6 +115,21 @@ class SentimentAssessment(BaseModel):
         return self
 
 
+class RetainedAssessment(BaseModel):
+    id: str
+    recorded_at: AwareDatetime
+    payload: SentimentAssessment
+
+
+class RetainedHeadline(BaseModel):
+    id: str
+    captured_at: AwareDatetime
+    content_hash: str
+    retention: Literal["retained_no_automatic_expiry"] = "retained_no_automatic_expiry"
+    payload: NewsText
+    assessments: list[RetainedAssessment]
+
+
 def capture_text(db: Session, *, user_id: str, evidence: NewsText) -> NewsTextSnapshotORM:
     row = NewsTextSnapshotORM(
         id=str(uuid4()), user_id=user_id, captured_at=datetime.now(timezone.utc),

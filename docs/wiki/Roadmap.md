@@ -770,8 +770,12 @@ saved-headline assessment APIs now retain exact selected source text and separat
 keyword tone/Fast asset implication, including original scoring times across
 cache reuse and actual model inputs. Saved review now exposes explicit bounded
 headline selection, cancellable assessment progress, original text/model-input
-inspection and owner history that survives source deletion. Checked Deep
-sentiment integration remains open. See [News evidence contract](News-Evidence-Contract.md)
+inspection and owner history that survives source deletion. Explicit selection
+of up to five retained observations now creates a checked, linked Deep follow-up
+from frozen market context with independent methods/failures, original scoring
+provenance and inspectable retained references. Originals remain unchanged;
+unselected generation stays on its existing contract. Retention/cleanup remains
+open. See [News evidence contract](News-Evidence-Contract.md)
 for the provenance audit and precise boundary. The retention duration and remaining
 delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
 

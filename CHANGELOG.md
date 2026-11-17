@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Deep interpretation of retained sentiment** — select up to five retained
+  headline observations from a saved news briefing and save a separate linked
+  interpretation using frozen market evidence. Inspect original text, independent
+  methods, scoring dates/inputs and checked citations; failures remain failures.
+  No source refresh or rescoring runs. Retention cleanup remains subsequent work.
 - **Reconstructed portfolio history** — Home replays the primary portfolio's
   ledger across the last 30 UTC days, including cash, closed positions, fees and
   dividends. New purchases no longer reset the window. A daily inspection table

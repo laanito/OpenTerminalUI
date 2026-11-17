@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { extractApiErrorMessage } from "../../api/base";
 import type { BriefingPhase } from "../../api/comparisonBriefing";
 import type { ComparisonCapture } from "../../api/comparisonCaptures";
-import { getRetainedHeadline, listHeadlineAssessments, savedHeadlineChoices, streamHeadlineAssessments,
+import { getRetainedHeadline, listHeadlineAssessments, savedHeadlineChoices, streamHeadlineAssessments, retainedObservationKey,
   type RetainedAssessment, type RetainedHeadline } from "../../api/headlineSentiment";
 
 const when = (value: string | null) => value ? new Date(value).toLocaleString() : "Unknown";
@@ -14,7 +14,7 @@ function sourceUrl(value: string) {
   try { const url = new URL(value); return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : undefined; }
   catch { return undefined; }
 }
-function Assessment({ item }: { item: RetainedAssessment }) {
+export function Assessment({ item }: { item: RetainedAssessment }) {
   const [inputs, setInputs] = useState(false);
   const p = item.payload;
   const tone = p.meaning === "text_tone";
@@ -34,7 +34,7 @@ function Assessment({ item }: { item: RetainedAssessment }) {
     </details> : null}
   </article>;
 }
-function RetainedEvidence({ row }: { row: RetainedHeadline }) {
+export function RetainedEvidence({ row }: { row: RetainedHeadline }) {
   const p = row.payload;
   const href = sourceUrl(p.source_url);
   return <section aria-label={`Retained headline ${row.id}`} tabIndex={-1} className="min-w-0 space-y-3 rounded border border-terminal-accent p-3 text-xs [overflow-wrap:anywhere]">
@@ -51,11 +51,13 @@ function RetainedEvidence({ row }: { row: RetainedHeadline }) {
   </section>;
 }
 
-export function SavedHeadlineSentiment({ source, disabled = false, onBusyChange }: {
+export function SavedHeadlineSentiment({ source, disabled = false, onBusyChange, onInterpret }: {
   source: ComparisonCapture | null; disabled?: boolean; onBusyChange: (busy: boolean) => void;
+  onInterpret?: (snapshotIds: string[]) => void;
 }) {
   const choices = savedHeadlineChoices(source);
   const [picked, setPicked] = useState<string[]>([]);
+  const [interpretationIds, setInterpretationIds] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
   const [phase, setPhase] = useState<BriefingPhase>("queued");
   const [open, setOpen] = useState(false);
@@ -76,7 +78,7 @@ export function SavedHeadlineSentiment({ source, disabled = false, onBusyChange 
   async function refresh() {
     listing.current?.abort();
     const controller = new AbortController(); listing.current = controller;
-    setLoading(true); setRows([]); setError(null);
+    setLoading(true); setRows([]); setInterpretationIds([]); setError(null);
     try {
       const result = await listHeadlineAssessments(all ? undefined : source?.id, offset, controller.signal);
       if (!controller.signal.aborted) { setRows(result); setLoaded(true); }
@@ -153,10 +155,20 @@ export function SavedHeadlineSentiment({ source, disabled = false, onBusyChange 
       }} />Show all retained headline assessments</label> : null}
       <button type="button" className="underline disabled:opacity-50" disabled={loading || running} onClick={() => void refresh()}>Refresh retained assessments</button>
       {loading ? <p role="status">Loading retained assessments…</p> : loaded && !rows.length && !error ? <p>{offset ? "No more retained observations on this page." : "No retained headline assessments yet."}</p> : null}
+      {source && onInterpret && source.mode === "context" && source.content.result.evidence && !("sentiment" in source.content.result.evidence) ? <p>Select up to five retained observations, one per headline/target, for a new Deep interpretation. Original methods, dates, disagreements and failures are kept; no news is fetched or rescored.</p> : null}
       <ul className="space-y-2">{rows.map((row) => <li key={row.id}>
+        {source && onInterpret && source.mode === "context" && source.content.result.evidence && !("sentiment" in source.content.result.evidence)
+          && row.payload.origin?.capture_id === source.id && row.payload.origin.capture_content_hash === source.content_hash ? <label className="mb-1 flex items-center gap-2">
+          <input type="checkbox" aria-label={`Use ${row.payload.title || row.id} in Deep interpretation`} checked={interpretationIds.includes(row.id)}
+            disabled={disabled || running || (!interpretationIds.includes(row.id) && (interpretationIds.length >= 5 || rows.some(other => interpretationIds.includes(other.id) && retainedObservationKey(other) === retainedObservationKey(row))))}
+            onChange={(event) => setInterpretationIds(previous => event.target.checked ? [...previous, row.id] : previous.filter(id => id !== row.id))} />
+          Include in Deep interpretation
+        </label> : null}
         <button type="button" className="text-left text-terminal-accent underline disabled:opacity-50" disabled={running} aria-pressed={selected?.id === row.id}
           onClick={() => void inspect(row.id)}>Inspect retained headline {row.id} · {row.payload.symbols.join(", ") || "Unspecified symbols"} · {row.payload.title || "Summary-only source"} · captured {when(row.captured_at)}</button>
       </li>)}</ul>
+      {interpretationIds.length && onInterpret ? <button type="button" disabled={disabled || running || loading}
+        className="text-terminal-accent underline disabled:opacity-50" onClick={() => onInterpret(interpretationIds)}>Interpret selected sentiment and save ({interpretationIds.length}/5)</button> : null}
       <nav aria-label="Retained assessment pages" className="flex flex-wrap gap-3">
         <button type="button" className="underline disabled:opacity-50" disabled={!offset || loading || running} onClick={() => setOffset((value) => Math.max(0, value - 20))}>Previous retained assessments</button>
         <button type="button" className="underline disabled:opacity-50" disabled={offset >= 10000 || rows.length < 20 || loading || running} onClick={() => setOffset((value) => value + 20)}>Next retained assessments</button>

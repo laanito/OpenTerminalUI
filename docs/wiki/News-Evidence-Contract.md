@@ -1,13 +1,13 @@
 # Durable news evidence — v2.8 foundation
 
-Status: v2.8 capture/review/follow-ups and durable headline scoring/review,
-2026-11-15. Legacy news APIs/scorers still do not write text/assessment tables.
+Status: v2.8 capture/review/follow-ups, durable headline scoring/review and
+explicit checked Deep sentiment interpretation, 2026-11-17. Legacy news APIs/scorers still do not write text/assessment tables.
 The new explicit saved-headline endpoint does: it stores exact selected text,
 separate keyword tone and Fast asset-implication assessments, and cache provenance.
 Saved comparisons retain their original evidence/results; generation endpoints
 remain ephemeral. Browser sentiment selection, progress and retained history are
-available. Checked Deep sentiment integration, configurable retention and cleanup
-remain future work. This contract supports repeatable evidence; it does not
+available. Explicit selected retained observations can now inform a separate
+checked Deep interpretation. Configurable retention and cleanup remain future work. This contract supports repeatable evidence; it does not
 promise identical model prose.
 
 ## Existing paths and provenance gaps
@@ -159,8 +159,8 @@ not looked up through live URLs, public news IDs or mutable caches. There are no
 shared blobs or external evidence dependencies to expire underneath a capture.
 The explicit assessment API records the source capture ID/hash and selected
 headline citations in independent text snapshots. It does not rewrite the saved
-comparison or add assessments to its evidence/prompt; checked Deep integration
-will create a new analysis with explicit retained references. News is still headline-only where the packet says so; no full article
+comparison or add assessments to its evidence/prompt. The separate Deep follow-up
+below creates a new analysis with explicit retained references. News is still headline-only where the packet says so; no full article
 archive or historical-knowledge claim is introduced.
 
 Content hashes cover the complete serialized content, including generation/input
@@ -181,8 +181,7 @@ restart/provider-edit, privacy, repair/dispatch and optional-source tests run
 locally; migrated PostgreSQL JSON/ownership/deletion coverage runs in the existing
 explicit disposable CI lane. Local PostgreSQL DDL checks are not live execution.
 
-Next: checked Deep sentiment integration, then configurable reference-aware
-retention.
+Next: configurable reference-aware retention, expiry and deletion policy.
 Browser save/review/deletion is implemented; it does not introduce a private Brain
 index or shared evidence-blob lifecycle. See [Roadmap](Roadmap.md).
 
@@ -319,8 +318,8 @@ scope is introduced. These routes remain experimental in `market-context`.
 There is no automatic expiry or delete endpoint yet; each call retains up to ten
 snapshots/twenty assessments. Account deletion still cascades private records.
 The browser now exposes explicit selection, progress and retained inspection;
-Deep comparison prompts do not consume these records yet. The next slice adds
-new checked analyses with explicit retained references. Future
+The explicit Deep follow-up below consumes selected observations in a new
+checked analysis; opening/scoring alone does not change a comparison. Future
 cleanup must preserve referenced evidence and define deletion/missing-source UX.
 
 ## Browser assessment progress and retained history
@@ -360,4 +359,61 @@ Changing saved source or page scope aborts pending work and discards its late
 results. Source deletion confirmation explicitly preserves independent
 assessments in retained history. No migration/settings/provider/dependency or
 API-key scope changes are introduced. Individual assessment deletion, automatic
-expiry and checked Deep integration remain open.
+expiry and reference-aware pruning remain open.
+
+## Checked Deep interpretation of selected retained observations
+
+While reviewing an original saved news briefing, open **Review retained headline
+assessments**, explicitly select up to five observations (one version per
+headline/target), then choose **Interpret selected sentiment and save**. Both
+independent methods, including a failed asset judgment, are carried together;
+there is no hidden selection of the most favorable score. No model runs just
+because the list or original inputs are opened.
+
+JWT-only `POST /api/market-context/briefing-captures/{id}/sentiment-briefing/stream`
+accepts only `{"snapshot_ids":["owned-retained-observation-id"]}`. Source capture
+ownership/integrity, snapshot ownership, original source ID/hash, exact original
+text/publisher/URL/dates/truncation, method/input/target identity, bounds and
+observation deduplication are checked before streaming. Unknown/other-owner
+records return 404; unsupported or unrelated inputs return 422. Select observations
+from that source briefing, not the all-history pool of unrelated runs. Unsupported
+saved evidence extensions are rejected rather than silently discarded.
+
+The follow-up freezes the original price, headline, macro, technical and filing
+evidence. It fetches no source or URL, rescans no feed and invokes no Fast scorer.
+The current resolved Deep profile interprets those inputs using the normal shared
+model deadline, structured-output handling and one bounded reference repair.
+Progress and cancellation use the existing lifecycle; no unchecked prose is
+streamed. Only a committed new capture produces the final receipt. Ambiguous
+acknowledgement means refresh saved briefings before manually retrying.
+
+Version-3 context envelopes add packet-local `R1`–`R100` opinion references,
+each linked to its original headline and exact `P#` pair. Publication, retrieval,
+capture, original scoring and recording times stay separate, including cache reuse.
+Text tone is not an asset verdict; an asset opinion is not measured investor
+sentiment or independent corroboration. Repeated pair copies do not become new
+reports, scores are not pooled, and no confidence calibration is asserted.
+Completed methods must be considered through an exact source/pair citation;
+all selected methods require limitations coverage. Failed/fallback judgments can
+only be disclosed in limitations/unknowns, never used as completed neutral scores.
+Reference checking does not fact-check prose or certify model reasoning.
+
+The child records `retained_sentiment_interpretation` lineage. It embeds complete
+selected text/assessment/scoring-input copies in `sentiment_sources`, while the
+Deep evidence projection omits bulky scoring request bodies. Original inputs are
+available under **Inspect retained sentiment inputs** and `R#` citation buttons.
+Original captures and assessments are unchanged. Reopening is DB-only, and the
+child remains inspectable if the parent or independent records disappear.
+Saved-input reruns preserve the selected opinions and exact prompts; fresh-data
+refreshes deliberately collect current market context without attaching old
+opinions to newly retrieved headlines. Such refreshed runs can be assessed again.
+
+Unselected generation retains context versions 1/2 and its original shape. No
+migration, existing-row rewrite, dependency, provider, setting or API-key scope
+change is required. The 4 MB capture and 120k-character Deep evidence limits still
+apply. Automatic retention, expiry and pruning remain unimplemented; future
+cleanup must account for these explicit selected references before activation.
+
+Shared synthetic browser fixture regeneration/check:
+`PYTHONPATH=. backend/.venv/bin/python -m backend.tests.generate_sentiment_briefing_fixture [--check]`.
+It uses deterministic server projections and no live providers or models.
