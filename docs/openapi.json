@@ -2758,7 +2758,8 @@
           "kind": {
             "enum": [
               "saved_input_rerun",
-              "fresh_refresh"
+              "fresh_refresh",
+              "retained_sentiment_interpretation"
             ],
             "title": "Kind",
             "type": "string"
@@ -4572,7 +4573,8 @@
             "default": "1",
             "enum": [
               "1",
-              "2"
+              "2",
+              "3"
             ],
             "title": "Schema Version",
             "type": "string"
@@ -4596,6 +4598,14 @@
             },
             "maxItems": 30,
             "title": "Sections",
+            "type": "array"
+          },
+          "sentiment": {
+            "items": {
+              "$ref": "#/components/schemas/SentimentContextItem"
+            },
+            "maxItems": 100,
+            "title": "Sentiment",
             "type": "array"
           }
         },
@@ -4838,6 +4848,20 @@
           },
           "selection": {
             "$ref": "#/components/schemas/ComparisonCaptureRequest"
+          },
+          "sentiment_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RetainedHeadline"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentiment Sources"
           }
         },
         "required": [
@@ -18373,6 +18397,197 @@
         "title": "PrimaryPortfolioSummaryResponse",
         "type": "object"
       },
+      "ProjectedAssessment": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "confidence_kind": {
+            "default": "not_provided",
+            "enum": [
+              "heuristic",
+              "not_provided"
+            ],
+            "title": "Confidence Kind",
+            "type": "string"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "input_text": {
+            "maxLength": 131072,
+            "minLength": 1,
+            "title": "Input Text",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "enum": [
+                  "bullish",
+                  "bearish",
+                  "neutral"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "meaning": {
+            "enum": [
+              "text_tone",
+              "asset_implication"
+            ],
+            "title": "Meaning",
+            "type": "string"
+          },
+          "method": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Method",
+            "type": "string"
+          },
+          "method_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Method Version",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "maxLength": 16384,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "reused_from_cache": {
+            "default": false,
+            "title": "Reused From Cache",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": -1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "scored_at": {
+            "format": "date-time",
+            "title": "Scored At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "fallback",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_symbol": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Symbol"
+          }
+        },
+        "required": [
+          "meaning",
+          "method",
+          "method_version",
+          "input_text",
+          "scored_at",
+          "status"
+        ],
+        "title": "ProjectedAssessment",
+        "type": "object"
+      },
       "PromoteRequest": {
         "properties": {
           "metadata": {
@@ -21011,6 +21226,25 @@
         "title": "SelectedHeadlines",
         "type": "object"
       },
+      "SelectedSentiment": {
+        "additionalProperties": false,
+        "properties": {
+          "snapshot_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Snapshot Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshot_ids"
+        ],
+        "title": "SelectedSentiment",
+        "type": "object"
+      },
       "SentimentAssessment": {
         "additionalProperties": false,
         "properties": {
@@ -21210,6 +21444,65 @@
           "status"
         ],
         "title": "SentimentAssessment",
+        "type": "object"
+      },
+      "SentimentContextItem": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment": {
+            "$ref": "#/components/schemas/ProjectedAssessment"
+          },
+          "assessment_id": {
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "headline": {
+            "$ref": "#/components/schemas/NewsText"
+          },
+          "headline_citation_id": {
+            "title": "Headline Citation Id",
+            "type": "string"
+          },
+          "pair_citation_id": {
+            "title": "Pair Citation Id",
+            "type": "string"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "pair_citation_id",
+          "headline_citation_id",
+          "snapshot_id",
+          "content_hash",
+          "captured_at",
+          "headline",
+          "assessment_id",
+          "recorded_at",
+          "assessment"
+        ],
+        "title": "SentimentContextItem",
         "type": "object"
       },
       "SignalSummary": {
@@ -34873,6 +35166,72 @@
           }
         ],
         "summary": "Capture Headline Sentiment",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      }
+    },
+    "/api/market-context/briefing-captures/{capture_id}/sentiment-briefing/stream": {
+      "post": {
+        "description": "Save a new interpretation without fetching sources or rescoring headlines.\n\nSelect one to five retained headline observations from this owned source run.\nEmbed complete original text/assessments/scoring inputs, separate methods and\nfailures. Source and assessments remain unchanged; no automatic retry.",
+        "operationId": "stream_sentiment_briefing_api_market_context_briefing_captures__capture_id__sentiment_briefing_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedSentiment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "Checked Deep interpretation of explicitly selected retained assessments and frozen market context; final receipt only after saving a new linked run.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Sentiment Briefing",
         "tags": [
           "market-context"
         ],

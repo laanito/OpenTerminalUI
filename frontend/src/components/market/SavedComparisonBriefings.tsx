@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { deleteComparisonCapture, getComparisonCapture, listComparisonCaptures, streamCaptureFollowup,
+import { deleteComparisonCapture, getComparisonCapture, listComparisonCaptures, streamCaptureFollowup, streamSentimentBriefing,
   type CaptureSummary, type ComparisonCapture } from "../../api/comparisonCaptures";
 import type { BriefingPhase } from "../../api/comparisonBriefing";
 import { extractApiErrorMessage } from "../../api/base";
-import { SavedHeadlineSentiment } from "./SavedHeadlineSentiment";
+import { SavedHeadlineSentiment, RetainedEvidence } from "./SavedHeadlineSentiment";
 import { ComparisonBriefingResultView } from "./ComparisonBriefingResultView";
 
 export function SavedComparisonBriefings({ revision, onDeleted }: { revision: number; onDeleted?: (id: string) => void }) {
@@ -20,7 +20,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [scoring, setScoring] = useState(false);
-  const [following, setFollowing] = useState<"rerun" | "refresh" | null>(null);
+  const [following, setFollowing] = useState<"rerun" | "refresh" | "sentiment" | null>(null);
   const [followPhase, setFollowPhase] = useState<BriefingPhase>("queued");
   const followup = useRef<AbortController | null>(null);
   const list = useRef<AbortController | null>(null);
@@ -79,7 +79,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
       followup.current.abort(); followup.current = null; setFollowing(null);
     }
   }
-  async function follow(kind: "rerun" | "refresh") {
+  async function follow(kind: "rerun" | "refresh" | "sentiment", snapshotIds: string[] = []) {
     if (!selected) return;
     stopFollowup();
     detail.current?.abort(); setOpening(null);
@@ -87,9 +87,11 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
     const controller = new AbortController(); followup.current = controller;
     setFollowing(kind); setFollowPhase("queued"); setError(null); setConfirmDelete(false);
     try {
-      const child = await streamCaptureFollowup(source, kind, { signal: controller.signal, onProgress: (value) => {
+      const options = { signal: controller.signal, onProgress: (value: BriefingPhase) => {
         if (!controller.signal.aborted) setFollowPhase(value);
-      } });
+      } };
+      const child = kind === "sentiment" ? await streamSentimentBriefing(source, snapshotIds, options)
+        : await streamCaptureFollowup(source, kind, options);
       if (controller.signal.aborted) return;
       setSelected(child); setShowInputs(false);
       if (offset) setOffset(0); else await refresh();
@@ -135,7 +137,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
           <button type="button" disabled={Boolean(following) || scoring || Boolean(opening)} className="text-terminal-neg underline disabled:opacity-50" onClick={() => setConfirmDelete(true)}>Delete saved briefing</button>
         </div>
         {selected.lineage ? <div aria-label="Saved run lineage" className="space-y-1 rounded border border-terminal-border p-2 text-xs">
-          <p>{selected.lineage.kind === "saved_input_rerun" ? "Saved-input rerun" : "Fresh-data refresh"} of a run generated {new Date(selected.lineage.source_generated_at).toLocaleString()}.</p>
+          <p>{selected.lineage.kind === "saved_input_rerun" ? "Saved-input rerun" : selected.lineage.kind === "retained_sentiment_interpretation" ? "Retained-sentiment interpretation" : "Fresh-data refresh"} of a run generated {new Date(selected.lineage.source_generated_at).toLocaleString()}.</p>
           <p className="break-all">Source ID: {selected.lineage.parent_id} · source content hash: {selected.lineage.parent_content_hash}</p>
           <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting} className="text-terminal-accent underline" onClick={() => void inspect(selected.lineage!.parent_id, true)}>Open source saved run</button>
           <p>Each run retains its own evidence even if its source run is deleted.</p>
@@ -143,13 +145,14 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
         <div aria-label="Saved run follow-up" className="space-y-2 rounded border border-terminal-border p-3 text-xs">
           <p>Re-run sends the last saved prompts and generation settings to the current Deep model with frozen source data. Refresh fetches current evidence for this saved selection and uses current prompts. Both save a separate linked run and keep this original unchanged.</p>
           <p>Re-run makes one checked completion with the saved response format and token budget. Model aliases and provider behavior can change; identical wording is not guaranteed.</p>
+          {selected.content.sentiment_sources?.length ? <p>Re-run preserves these selected sentiment observations. Refresh collects fresh market context without carrying old sentiment assessments into the new run.</p> : null}
           <div className="flex flex-wrap gap-3">
             <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting || !selected.content.result.evidence || !(selected.content.generation.attempts.length || selected.content.generation.prepared_request)}
               className="text-terminal-accent underline disabled:opacity-50" onClick={() => void follow("rerun")}>Re-run saved inputs</button>
             <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting} className="text-terminal-accent underline disabled:opacity-50" onClick={() => void follow("refresh")}>Refresh with current data</button>
             {following ? <button type="button" className="underline" onClick={() => { stopFollowup(); setError("Request stopped. Refresh saved briefings to check whether saving completed."); }}>Cancel saved follow-up</button> : null}
           </div>
-          {following ? <p role="status">{following === "rerun" ? "Re-running saved inputs" : "Refreshing current evidence"} · {followPhase.replace(/_/g, " ")}…</p> : null}
+          {following ? <p role="status">{following === "rerun" ? "Re-running saved inputs" : following === "sentiment" ? "Interpreting retained sentiment" : "Refreshing current evidence"} · {followPhase.replace(/_/g, " ")}…</p> : null}
           {!selected.content.generation.attempts.length && !selected.content.generation.prepared_request ? <p>No saved completion request is available to re-run. Refresh can collect new evidence and start a new run.</p> : null}
         </div>
         {confirmDelete ? <div role="group" aria-label="Confirm saved briefing deletion" className="space-y-2 rounded border border-terminal-warn p-3">
@@ -158,6 +161,11 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
           <button type="button" disabled={deleting} className="underline" onClick={() => setConfirmDelete(false)}>Keep saved briefing</button>
         </div> : null}
         <ComparisonBriefingResultView key={selected.id} result={selected.content.result} />
+        {selected.content.sentiment_sources?.length ? <details className="min-w-0 space-y-3 rounded border border-terminal-border p-3 text-xs">
+          <summary className="cursor-pointer text-terminal-accent">Inspect retained sentiment inputs</summary>
+          <p>Original selected text, methods, scoring dates and dispatched scoring inputs, embedded in this run. No providers are called when inspecting them.</p>
+          {selected.content.sentiment_sources.map(row => <RetainedEvidence key={row.id} row={row} />)}
+        </details> : null}
         <details open={showInputs} onToggle={(event) => setShowInputs(event.currentTarget.open)} className="rounded border border-terminal-border p-3 text-xs">
           <summary className="cursor-pointer text-terminal-accent">Inspect saved model inputs</summary>
           <p className="mt-2">These are the original dispatched inputs, not a new model run. An empty attempt list means generation did not reach a completion request. Model aliases and provider behavior can change.</p>
@@ -166,7 +174,8 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
         </details>
       </section> : null}
       <SavedHeadlineSentiment key={selected?.id ?? "all-retained"} source={selected}
-        disabled={Boolean(following) || Boolean(opening) || deleting || confirmDelete} onBusyChange={setScoring} />
+        disabled={Boolean(following) || Boolean(opening) || deleting || confirmDelete} onBusyChange={setScoring}
+        onInterpret={ids => void follow("sentiment", ids)} />
     </> : null}
   </section>;
 }

@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_serializer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -33,6 +33,8 @@ from backend.services.news_evidence import capture_text, append_assessment
 from backend.api.routes.news_evidence import RetainedHeadline, retained_headlines
 from backend.services.comparison_rerun import checked_source, saved_request, rerun_saved_inputs
 from backend.services.market_briefing_context_evidence import BriefingContextOptions
+from backend.services.sentiment_context_evidence import SelectedSentiment, build_sentiment_context
+from backend.services.comparison_context_briefing import generate_context_briefing
 
 router = APIRouter(prefix="/api/market-context/briefing-captures", tags=["market-context"])
 logger = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ class CapturedModelRequest(BaseModel):
 
 class CaptureLineage(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    kind: Literal["saved_input_rerun", "fresh_refresh"]
+    kind: Literal["saved_input_rerun", "fresh_refresh", "retained_sentiment_interpretation"]
     parent_id: str = Field(min_length=1, max_length=36)
     parent_content_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     source_generated_at: AwareDatetime
@@ -109,6 +111,14 @@ class ContextCaptureContent(BaseModel):
     selection: ComparisonCaptureRequest
     generation: CapturedGeneration
     result: ComparisonContextBriefingResult
+    sentiment_sources: list[RetainedHeadline] | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_legacy_shape(self, handler):
+        result = handler(self)
+        if self.sentiment_sources is None:
+            result.pop("sentiment_sources", None)
+        return result
 
 
 CaptureContent = Annotated[PriceCaptureContent | ContextCaptureContent, Field(discriminator="mode")]
@@ -376,6 +386,55 @@ async def capture_headline_sentiment(
     texts = _selected_headlines(db, user.id, capture_id, selection)
     profile = resolve_llm_profile(get_settings(), "news_sentiment")
     return JSONResponse(await _capture_sentiment(texts, user, db, profile=profile), status_code=201)
+
+
+@router.post("/{capture_id}/sentiment-briefing/stream", response_class=StreamingResponse,
+             responses={200: {"content": {"application/x-ndjson": {"schema": {"type": "string", "description": "Checked Deep interpretation of explicitly selected retained assessments and frozen market context; final receipt only after saving a new linked run."}}}}})
+async def stream_sentiment_briefing(
+    capture_id: str, selection: SelectedSentiment, user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    """Save a new interpretation without fetching sources or rescoring headlines.
+
+    Select one to five retained headline observations from this owned source run.
+    Embed complete original text/assessments/scoring inputs, separate methods and
+    failures. Source and assessments remain unchanged; no automatic retry.
+    """
+    source_id, digest, source = _source_capture(db, user.id, capture_id)
+    snapshots = db.scalars(select(NewsTextSnapshotORM).where(
+        NewsTextSnapshotORM.user_id == user.id, NewsTextSnapshotORM.id.in_(selection.snapshot_ids),
+    )).all()
+    if len(snapshots) != len(selection.snapshot_ids):
+        raise HTTPException(status_code=404, detail="Retained headline observation not found")
+    by_id = {row.id: row for row in snapshots}
+    try:
+        original = checked_source(source)
+        if source["mode"] != "context":
+            raise ValueError("A saved news-context briefing is required")
+        if original.model_dump(mode="json") != source["result"]["evidence"]:
+            raise ValueError("Unsupported evidence extensions; do not silently discard saved context")
+        sources = [RetainedHeadline.model_validate(row) for row in retained_headlines(
+            db, user.id, [by_id[key] for key in selection.snapshot_ids],
+        )]
+        evidence = build_sentiment_context(original, sources, capture_id=source_id, content_hash=digest)
+        lineage = _lineage(source_id, digest, source, "retained_sentiment_interpretation")
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail="Choose distinct supported retained headlines from this saved news briefing") from exc
+    profile = resolve_llm_profile(get_settings(), "comparison_briefing")
+
+    async def run(phase):
+        attempts = []
+        def record(body):
+            attempts.append(CapturedModelRequest(dispatched_at=datetime.now(timezone.utc), body=body))
+        result = await generate_context_briefing(evidence, profile=profile, on_phase=phase, on_request=record)
+        content = ContextCaptureContent(
+            mode="context", selection=ComparisonCaptureRequest.model_validate(source["selection"]), lineage=lineage,
+            sentiment_sources=sources, result=result,
+            generation=CapturedGeneration(profile=LLMProfileIdentity(**profile.public_identity()), enabled=profile.enabled,
+                                           timeout_seconds=profile.timeout_seconds, structured_output=profile.structured_output,
+                                           attempts=attempts),
+        )
+        return _receipt(_store_content(db, user.id, content.model_dump(mode="json"), on_phase=phase))
+    return _stream_run(run, profile)
 
 
 def _selected_headlines(db, user_id, capture_id, selection):

@@ -2,34 +2,17 @@
 from __future__ import annotations
 
 from datetime import timezone
-from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import AwareDatetime, BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db
 from backend.auth.deps import get_current_user
 from backend.models import User, NewsTextSnapshotORM, NewsSentimentAssessmentORM
-from backend.services.news_evidence import NewsText, SentimentAssessment, get_text
+from backend.services.news_evidence import RetainedAssessment, RetainedHeadline, get_text
 
 router = APIRouter(prefix="/api/news/evidence", tags=["market-context"])
-
-
-class RetainedAssessment(BaseModel):
-    id: str
-    recorded_at: AwareDatetime
-    payload: SentimentAssessment
-
-
-class RetainedHeadline(BaseModel):
-    id: str
-    captured_at: AwareDatetime
-    content_hash: str
-    retention: Literal["retained_no_automatic_expiry"] = "retained_no_automatic_expiry"
-    payload: NewsText
-    assessments: list[RetainedAssessment]
 
 
 def _date(value):

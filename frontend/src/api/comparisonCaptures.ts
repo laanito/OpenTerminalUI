@@ -4,9 +4,11 @@ import {
   type BriefingModelProfile, type BriefingPhase, type BriefingSelection, type ComparisonBriefingResult,
 } from "./comparisonBriefing";
 import { validateContextBriefingResult, type BriefingContextOptions, type ContextBriefingResult } from "./comparisonContextBriefing";
+import { validateSentimentSources } from "./sentimentContext";
+import type { RetainedHeadline } from "./headlineSentiment";
 
 export type CaptureLineage = {
-  kind: "saved_input_rerun" | "fresh_refresh"; parent_id: string; parent_content_hash: string;
+  kind: "saved_input_rerun" | "fresh_refresh" | "retained_sentiment_interpretation"; parent_id: string; parent_content_hash: string;
   source_generated_at: string; replay_request_index: number | null; model_policy: "current_deep";
 };
 export type CaptureSummary = BriefingSelection & {
@@ -23,6 +25,7 @@ export type ComparisonCapture = CaptureSummary & {
       prepared_request?: Record<string, unknown> | null; attempts: Array<{ dispatched_at: string; body: Record<string, unknown> }>;
     };
     result: ComparisonBriefingResult | ContextBriefingResult;
+    sentiment_sources?: RetainedHeadline[] | null;
   };
 };
 const path = "/market-context/briefing-captures";
@@ -30,11 +33,11 @@ const invalid = () => new Error("This saved briefing could not be displayed safe
 
 function validLineage(value: unknown): boolean {
   return value === null || value === undefined || (v.record(value)
-    && v.choice(value.kind, ["saved_input_rerun", "fresh_refresh"]) && v.text(value.parent_id)
+    && v.choice(value.kind, ["saved_input_rerun", "fresh_refresh", "retained_sentiment_interpretation"]) && v.text(value.parent_id)
     && v.text(value.parent_content_hash) && /^[a-f0-9]{64}$/.test(value.parent_content_hash)
     && v.timestamp(value.source_generated_at) && value.model_policy === "current_deep"
     && (value.replay_request_index === null || (Number.isInteger(value.replay_request_index) && Number(value.replay_request_index) >= 0))
-    && (value.kind !== "fresh_refresh" || value.replay_request_index === null));
+    && (value.kind === "saved_input_rerun" || value.replay_request_index === null));
 }
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
@@ -79,6 +82,11 @@ export function validateComparisonCapture(value: unknown): ComparisonCapture {
     validateContextBriefingResult(content.result, summary, context as unknown as BriefingContextOptions);
   } else validateBriefingResult(content.result, summary);
   if (!v.record(content.result) || content.result.status !== summary.status) throw invalid();
+  const result = content.result as unknown as ContextBriefingResult;
+  if (summary.mode === "context" && result.evidence?.schema_version === "3") {
+    const origin = summary.lineage?.kind === "retained_sentiment_interpretation" ? summary.lineage : null;
+    validateSentimentSources(content.sentiment_sources, result.evidence, origin?.parent_id, origin?.parent_content_hash);
+  } else if (content.sentiment_sources !== undefined && content.sentiment_sources !== null) throw invalid();
   return value as unknown as ComparisonCapture; // Preserve the original JSON; do not hydrate new defaults.
 }
 
@@ -147,5 +155,33 @@ export async function streamCaptureFollowup(source: ComparisonCapture, kind: "re
   } catch (error) {
     if (options.signal?.aborted || error instanceof BriefingNotRetainedError) throw error;
     throw new Error("The follow-up could not be confirmed or displayed. Refresh saved briefings before retrying; the source run is unchanged.");
+  }
+}
+
+export async function streamSentimentBriefing(source: ComparisonCapture, snapshotIds: string[],
+  options: { signal?: AbortSignal; onProgress?: (phase: BriefingPhase) => void } = {}): Promise<ComparisonCapture> {
+  if (!snapshotIds.length || snapshotIds.length > 5 || new Set(snapshotIds).size !== snapshotIds.length) throw new Error("Choose one to five distinct retained headline observations.");
+  try {
+    return await streamBriefing(source.content.selection, options, {
+      path: `${path}/${encodeURIComponent(source.id)}/sentiment-briefing/stream`, context: true, capture: true,
+      body: () => ({ snapshot_ids: snapshotIds }),
+      validate: (value) => {
+        const child = validateComparisonCapture(value), lineage = child.lineage;
+        const evidence = child.content.result.evidence;
+        const original = source.content.result.evidence;
+        if (!lineage || lineage.kind !== "retained_sentiment_interpretation" || child.id === source.id
+          || lineage.parent_id !== source.id || lineage.parent_content_hash !== source.content_hash
+          || Date.parse(lineage.source_generated_at) !== Date.parse(source.content.result.generated_at)
+          || child.mode !== "context" || stableJson(child.content.selection) !== stableJson(source.content.selection)
+          || !evidence || !("sentiment" in evidence) || !original || !("price" in original)
+          || stableJson(evidence.price) !== stableJson(original.price) || stableJson(evidence.sections) !== stableJson(original.sections)
+          || stableJson(evidence.requested) !== stableJson(original.requested)
+          || stableJson(child.content.sentiment_sources?.map(row => row.id)) !== stableJson(snapshotIds)) throw invalid();
+        return child;
+      },
+    });
+  } catch (error) {
+    if (options.signal?.aborted || error instanceof BriefingNotRetainedError) throw error;
+    throw new Error("Interpretation saving could not be confirmed or displayed. Refresh saved briefings before retrying; the original is unchanged.");
   }
 }

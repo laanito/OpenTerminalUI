@@ -4,6 +4,7 @@ import {
 } from "../../api/comparisonContextBriefing";
 import { TechnicalBriefingEvidence } from "./TechnicalBriefingEvidence";
 import { FilingBriefingEvidence } from "./FilingBriefingEvidence";
+import { Assessment } from "./SavedHeadlineSentiment";
 
 const dateTime = (value: string) => new Date(value).toLocaleString();
 const number = (value: number) => new Intl.NumberFormat(undefined, { maximumSignificantDigits: 21 }).format(value);
@@ -29,6 +30,10 @@ export function ContextCoverage({ evidence, inspect }: { evidence: ContextEviden
         aria-label={`Inspect ${section.citation_id} coverage`}>[{section.citation_id}] {section.pair_citation_id} · {contextName(section)}</button>
       {" "}<SectionStatus section={section} />
     </p>)}
+    {evidence.sentiment?.length ? <p>
+      Selected retained headline opinions · {new Set(evidence.sentiment.map(item => item.snapshot_id)).size} observations.
+      Text tone and asset implication are separate; scoring dates are not historical investor knowledge. Failures and disagreements remain part of the evidence.
+    </p> : null}
   </section>;
 }
 export function ContextEvidenceSections({ evidence, id }: { evidence: ContextEvidence; id: string }) {
@@ -63,5 +68,12 @@ export function ContextEvidenceSections({ evidence, id }: { evidence: ContextEvi
         </ul> : <p>No values included; this is not a zero observation.</p>}
       </section>)}
     </>}
+  </section>)}{evidence.sentiment?.map(item => <section key={item.citation_id} {...target(item.citation_id)}>
+    <h3 className="font-semibold">{item.citation_id}: Retained {item.assessment.meaning === "text_tone" ? "text tone" : "asset implication"} · {item.pair_citation_id}</h3>
+    <p className="whitespace-pre-wrap">{item.headline.title}</p>
+    <p>Original headline {item.headline_citation_id} · snapshot {item.snapshot_id} · assessment {item.assessment_id}.</p>
+    <p>Published {item.headline.published_at ? dateTime(item.headline.published_at) : "unknown"} · originally retrieved {dateTime(item.headline.retrieved_at)} · captured {dateTime(item.captured_at)}.</p>
+    <p>Headline-only opinion, not measured investor sentiment or independent corroboration. Repeated pair references are the same assessment, not additional reports.</p>
+    <Assessment item={{ id: item.assessment_id, recorded_at: item.recorded_at, payload: { ...item.assessment, generation: null } }} />
   </section>)}</>;
 }
