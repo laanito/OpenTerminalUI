@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **491 operations** across **438 paths** and **87 families**.
-- Authentication: **446 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **492 operations** across **438 paths** and **87 families**.
+- Authentication: **447 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -80,7 +80,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `instruments` | `supported` | 1 |
 | `journal` | `supported` | 10 |
 | `kite` | `configuration-gated` | 6 |
-| `market-context` | `experimental` | 36 |
+| `market-context` | `experimental` | 37 |
 | `model-lab` | `hidden` | 12 |
 | `mutual-funds` | `supported` | 13 |
 | `news` | `supported` | 10 |
@@ -712,6 +712,7 @@ State: **experimental**
 | `POST` | `/api/market-context/sec-filing-fact-check` | Bearer token | Sec Filing Fact Check |
 | `POST` | `/api/market-context/sec-submission-crosscheck` | Bearer token | Sec Submission Crosscheck |
 | `GET` | `/api/news/evidence` | Bearer token | List Retained Headlines |
+| `DELETE` | `/api/news/evidence/{snapshot_id}` | Bearer token | Delete Headline |
 | `GET` | `/api/news/evidence/{snapshot_id}` | Bearer token | Read Headline |
 
 ### `model-lab`

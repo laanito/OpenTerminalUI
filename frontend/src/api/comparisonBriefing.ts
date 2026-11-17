@@ -253,6 +253,9 @@ export async function streamBriefing<T>(
         if (contract.capture && record(event.error) && event.error.code === "capture_too_large") {
           throw new BriefingNotRetainedError("The saved briefing exceeds the storage limit. Nothing was saved.");
         }
+        if (contract.capture && record(event.error) && event.error.code === "capture_evidence_unavailable") {
+          throw new BriefingNotRetainedError("Selected evidence was removed before saving. No new run was saved. Refresh retained history.");
+        }
         throw new Error(contract.capture ? "Saving could not be confirmed. Refresh saved briefings before retrying." : "The briefing failed before completion. No answer was kept; retry manually.");
       }
       else throw invalid(); // In particular, never render unchecked provider deltas.

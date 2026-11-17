@@ -98,6 +98,29 @@ def test_news_evidence_round_trip_and_owner_constraint_on_postgres() -> None:
                         id=str(uuid4()), user_id=other, snapshot_id=snapshot.id, recorded_at=now, payload={},
                     ))
                     db.flush()
+                from backend.models import ComparisonCaptureORM, NewsTextSnapshotORM
+                from backend.services.news_evidence_lifecycle import lifecycle, delete_unreferenced, EvidencePinned, prune_batch
+                capture_id = str(uuid4())
+                db.add(ComparisonCaptureORM(id=capture_id, user_id=owner, captured_at=now,
+                    mode="context", status="complete", content_hash="b" * 64,
+                    payload={"sentiment_sources": [{"id": snapshot.id}]}))
+                db.flush()
+                status = lifecycle(db, owner, [snapshot], 90)[snapshot.id]
+                assert status.state == "pinned" and status.referencing_capture_ids == [capture_id]
+                with pytest.raises(EvidencePinned):
+                    delete_unreferenced(db, owner, snapshot.id)
+                db.delete(db.get(ComparisonCaptureORM, capture_id)); db.flush()
+                assert lifecycle(db, owner, [snapshot], 90)[snapshot.id].state == "unreferenced"
+                delete_unreferenced(db, owner, snapshot.id); db.flush()
+                assert get_text(db, user_id=owner, snapshot_id=snapshot.id) is None
+                from datetime import timedelta
+                old_id = str(uuid4())
+                db.add(NewsTextSnapshotORM(id=old_id, user_id=owner, captured_at=now - timedelta(days=91),
+                    content_hash="c" * 64, payload={"title": "Old unreferenced test evidence"}))
+                db.flush()
+                result = prune_batch(lambda: Session(bind=connection, join_transaction_mode="create_savepoint"),
+                    90, now=now, user_id=owner)
+                assert result["deleted"] == 1
         finally:
             transaction.rollback()
 

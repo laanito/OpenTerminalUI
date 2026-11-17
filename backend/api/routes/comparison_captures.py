@@ -30,7 +30,8 @@ from backend.services.llm_profiles import LLMProfileIdentity, resolve_llm_profil
 from backend.services.insight_lifecycle import stream_insight_lifecycle
 from backend.services.captured_headline_sentiment import SelectedHeadlines, select_headlines, assess_headlines
 from backend.services.news_evidence import capture_text, append_assessment
-from backend.api.routes.news_evidence import RetainedHeadline, retained_headlines
+from backend.api.routes.news_evidence import RetainedHeadline, RetainedHeadlineRead, retained_headlines
+from backend.services.news_evidence_lifecycle import lock_owner, require_available, EvidenceMissing
 from backend.services.comparison_rerun import checked_source, saved_request, rerun_saved_inputs
 from backend.services.market_briefing_context_evidence import BriefingContextOptions
 from backend.services.sentiment_context_evidence import SelectedSentiment, build_sentiment_context
@@ -208,7 +209,7 @@ async def _capture_briefing(payload, user, db, fetcher, economic_service, sec_cl
     return CaptureDetail(**_summary(row).model_dump(), content=content)
 
 
-def _store_content(db, user_id, content, *, on_phase=None):
+def _store_content(db, user_id, content, *, on_phase=None, required_snapshot_ids=None):
     serialized = json.dumps(content, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     if len(serialized.encode("utf-8")) > MAX_CAPTURE_BYTES:
         raise HTTPException(status_code=413, detail="Comparison capture exceeds the storage limit; nothing was saved")
@@ -220,9 +221,16 @@ def _store_content(db, user_id, content, *, on_phase=None):
     if on_phase is not None:
         on_phase("saving_capture")
     try:
+        if not lock_owner(db, user_id):
+            raise EvidenceMissing("Owner is unavailable")
+        if required_snapshot_ids:
+            require_available(db, user_id, required_snapshot_ids)
         db.add(row)
         db.commit()
         db.refresh(row)
+    except EvidenceMissing as exc:
+        db.rollback()
+        raise HTTPException(status_code=410, detail="Selected retained evidence was removed before saving; no new run was saved") from exc
     except Exception as exc:
         db.rollback()
         logger.warning("Comparison capture storage failed (%s)", type(exc).__name__)
@@ -274,6 +282,8 @@ def _stream_run(run, profile):
                 failure = {"code": "capture_too_large", "message": "Capture exceeds the storage limit; nothing was saved."}
             elif exc.status_code == 503:
                 failure = {"code": "capture_not_confirmed", "message": "Saving could not be confirmed. Refresh saved briefings before retrying."}
+            elif exc.status_code == 410:
+                failure = {"code": "capture_evidence_unavailable", "message": "Selected evidence was removed before saving. No new run was saved. Refresh retained history."}
             raise
 
     async def events():
@@ -368,7 +378,7 @@ async def stream_refresh(
                                                        profile=profile, on_phase=phase, lineage=lineage), profile)
 
 
-@router.post("/{capture_id}/sentiment", response_model=list[RetainedHeadline], status_code=201)
+@router.post("/{capture_id}/sentiment", response_model=list[RetainedHeadlineRead], status_code=201)
 async def capture_headline_sentiment(
     capture_id: str, selection: SelectedHeadlines, user: User = Depends(get_current_user), db: Session = Depends(get_db),
 ):
@@ -413,7 +423,7 @@ async def stream_sentiment_briefing(
         if original.model_dump(mode="json") != source["result"]["evidence"]:
             raise ValueError("Unsupported evidence extensions; do not silently discard saved context")
         sources = [RetainedHeadline.model_validate(row) for row in retained_headlines(
-            db, user.id, [by_id[key] for key in selection.snapshot_ids],
+            db, user.id, [by_id[key] for key in selection.snapshot_ids], embedded=True,
         )]
         evidence = build_sentiment_context(original, sources, capture_id=source_id, content_hash=digest)
         lineage = _lineage(source_id, digest, source, "retained_sentiment_interpretation")
@@ -433,7 +443,8 @@ async def stream_sentiment_briefing(
                                            timeout_seconds=profile.timeout_seconds, structured_output=profile.structured_output,
                                            attempts=attempts),
         )
-        return _receipt(_store_content(db, user.id, content.model_dump(mode="json"), on_phase=phase))
+        return _receipt(_store_content(db, user.id, content.model_dump(mode="json"), on_phase=phase,
+                                       required_snapshot_ids=selection.snapshot_ids))
     return _stream_run(run, profile)
 
 
@@ -485,7 +496,7 @@ async def stream_headline_sentiment(
     return _stream_run(lambda phase: _capture_sentiment(texts, user, db, profile=profile, on_phase=phase), profile)
 
 
-@router.get("/{capture_id}/sentiment", response_model=list[RetainedHeadline])
+@router.get("/{capture_id}/sentiment", response_model=list[RetainedHeadlineRead])
 def list_headline_sentiment(
     capture_id: str, limit: int = Query(default=20, ge=1, le=100), offset: int = Query(default=0, ge=0, le=10000),
     user: User = Depends(get_current_user), db: Session = Depends(get_db),
@@ -535,6 +546,8 @@ def get_capture(capture_id: str, user: User = Depends(get_current_user), db: Ses
 @router.delete("/{capture_id}", status_code=204)
 def delete_capture(capture_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Explicitly delete the owner's self-contained capture and embedded evidence."""
+    if not lock_owner(db, user.id):
+        raise HTTPException(status_code=404, detail="Comparison capture not found")
     db.delete(_owned(db, user.id, capture_id))
     db.commit()
     return Response(status_code=204)

@@ -7395,6 +7395,63 @@
         "title": "EventsSummary",
         "type": "object"
       },
+      "EvidenceLifecycle": {
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "references_truncated": {
+            "title": "References Truncated",
+            "type": "boolean"
+          },
+          "referencing_capture_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Referencing Capture Ids",
+            "type": "array"
+          },
+          "retention_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retention Days"
+          },
+          "state": {
+            "enum": [
+              "pinned",
+              "unreferenced",
+              "expired",
+              "expiry_disabled"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "retention_days",
+          "expires_at",
+          "referencing_capture_ids",
+          "references_truncated"
+        ],
+        "title": "EvidenceLifecycle",
+        "type": "object"
+      },
       "ExperimentCompareRequest": {
         "properties": {
           "experiment_ids": {
@@ -19425,6 +19482,56 @@
           "assessments"
         ],
         "title": "RetainedHeadline",
+        "type": "object"
+      },
+      "RetainedHeadlineRead": {
+        "properties": {
+          "assessments": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedAssessment"
+            },
+            "title": "Assessments",
+            "type": "array"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/EvidenceLifecycle"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NewsText"
+          },
+          "retention": {
+            "enum": [
+              "retained_no_automatic_expiry",
+              "pinned_by_saved_analysis",
+              "unreferenced_retention_window"
+            ],
+            "title": "Retention",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "captured_at",
+          "content_hash",
+          "retention",
+          "payload",
+          "assessments",
+          "lifecycle"
+        ],
+        "title": "RetainedHeadlineRead",
         "type": "object"
       },
       "RiskInsightEnvelope": {
@@ -35073,7 +35180,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/RetainedHeadline"
+                    "$ref": "#/components/schemas/RetainedHeadlineRead"
                   },
                   "title": "Response List Headline Sentiment Api Market Context Briefing Captures  Capture Id  Sentiment Get",
                   "type": "array"
@@ -35140,7 +35247,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/RetainedHeadline"
+                    "$ref": "#/components/schemas/RetainedHeadlineRead"
                   },
                   "title": "Response Capture Headline Sentiment Api Market Context Briefing Captures  Capture Id  Sentiment Post",
                   "type": "array"
@@ -38351,7 +38458,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/RetainedHeadline"
+                    "$ref": "#/components/schemas/RetainedHeadlineRead"
                   },
                   "title": "Response List Retained Headlines Api News Evidence Get",
                   "type": "array"
@@ -38390,6 +38497,61 @@
       }
     },
     "/api/news/evidence/{snapshot_id}": {
+      "delete": {
+        "description": "Delete the owner's unreferenced text/assessment bundle, never a saved run.",
+        "operationId": "delete_headline_api_news_evidence__snapshot_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown or other-owner evidence."
+          },
+          "409": {
+            "description": "A saved briefing references this evidence; delete those runs first."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "Deletion could not be confirmed; refresh history before retrying."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Headline",
+        "tags": [
+          "market-context"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "market-context": "experimental"
+        }
+      },
       "get": {
         "description": "Read exact retained text and assessments, even after a source capture is deleted.\n\nNo providers or scoring. Another owner's ID is indistinguishable from unknown.",
         "operationId": "read_headline_api_news_evidence__snapshot_id__get",
@@ -38409,7 +38571,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RetainedHeadline"
+                  "$ref": "#/components/schemas/RetainedHeadlineRead"
                 }
               }
             },

@@ -774,10 +774,12 @@ inspection and owner history that survives source deletion. Explicit selection
 of up to five retained observations now creates a checked, linked Deep follow-up
 from frozen market context with independent methods/failures, original scoring
 provenance and inspectable retained references. Originals remain unchanged;
-unselected generation stays on its existing contract. Retention/cleanup remains
-open. See [News evidence contract](News-Evidence-Contract.md)
-for the provenance audit and precise boundary. The retention duration and remaining
-delivery sequence remain open. No automatic cleanup or fixed PR count is assigned.
+unselected generation stays on its existing contract. The agreed 90-day standalone retention policy, protected references, owner
+delete flow and bounded cleanup are now implemented; release review remains open. See [News evidence contract](News-Evidence-Contract.md)
+for the provenance audit and precise boundary. The maintainer chose 90 days on 2026-11-17, configurable with `0` disabling
+expiry. Saved comparison runs remain explicitly retained; their references
+protect independent evidence. A daily bounded worker prunes only eligible
+unreferenced bundles. No further feature scope is added before release review.
 
 ### Sentiment decision-model evaluation candidate
 
@@ -830,8 +832,9 @@ No model installation, runtime-version verification or adapter is implied here.
 
 Persist evidence used by an analysis independently of short-lived response/LLM
 caches. The retention window for unreferenced article/assessment/run snapshots
-must be explicit and configurable before cleanup is enabled. The exact duration
-is not yet agreed; volume/storage considerations should inform the default.
+must be explicit and configurable before cleanup is enabled. The agreed default is **90 days** from the latest capture/assessment recording;
+`NEWS_EVIDENCE_RETENTION_DAYS=0` disables expiry. Saved runs do not automatically
+expire. Protection does not restart the underlying recording-age clock.
 This plan does not prescribe a new expiry for the existing global news table.
 
 Saved analyses pin their referenced evidence for as long as those analyses are
@@ -840,7 +843,9 @@ remains until all retaining references are released. Unsaved/expired captures
 follow the agreed policy. Show retention/expiry status in the review flow.
 Explicit deletion must be owner-authorized; if a retained analysis can lose a
 source through such deletion, show that loss rather than silently replacing it
-from the network. Retention cleanup must be bounded and reference-aware.
+from the network. Retention cleanup is bounded and reference-aware; owner deletion rejects pinned
+records. Saved JSON references are checked under short owner writer locks without
+a schema migration or old-row rewrite.
 
 Saved analysis and assessment access must enforce ownership, including lookup
 by evidence/hash IDs. Existing installation-wide public news is not implicitly
