@@ -1,0 +1,57 @@
+{
+  "synthetic": true,
+  "applicationRegressionTest": false,
+  "results": [
+    {
+      "width": 1440,
+      "status": "passed",
+      "checks": [
+        "summary/scope",
+        "no page overflow",
+        "position/lot drill-down",
+        "dialog Escape/focus return",
+        "required target",
+        "separate fee currency legs",
+        "no persistence",
+        "oversell rejection",
+        "unknown-basis non-cash review",
+        "partial/empty/error states",
+        "section navigation"
+      ]
+    },
+    {
+      "width": 1024,
+      "status": "passed",
+      "checks": [
+        "summary/scope",
+        "no page overflow",
+        "position/lot drill-down",
+        "dialog Escape/focus return",
+        "required target",
+        "separate fee currency legs",
+        "no persistence",
+        "oversell rejection",
+        "unknown-basis non-cash review",
+        "partial/empty/error states",
+        "section navigation"
+      ]
+    },
+    {
+      "width": 390,
+      "status": "passed",
+      "checks": [
+        "summary/scope",
+        "no page overflow",
+        "position/lot drill-down",
+        "dialog Escape/focus return",
+        "required target",
+        "separate fee currency legs",
+        "no persistence",
+        "oversell rejection",
+        "unknown-basis non-cash review",
+        "partial/empty/error states",
+        "section navigation"
+      ]
+    }
+  ]
+}

@@ -878,15 +878,25 @@ or the journal/portfolio decision lifecycle.
 
 <a id="future-major-frontend-overhaul--layout-audit-as-discovery"></a>
 
-## v3 — UX and frontend overhaul (after v2)
+## v3 — UX and frontend overhaul (discovery)
 
 The maintainer reported inherited overflow and poor stacking on 2026-11-02 and
 initially requested a whole major frontend initiative. On 2026-11-14 the release
 priority became explicit: **finish v2 first; v3 is the UX overhaul before further
 feature expansion**. Finish the currently approved v2 scope and release close-out;
 optional evidence backlog items do not automatically justify more v2 minors.
-Implementation starts after v2 close-out, not alongside its remaining slices.
-Multi-dimensional/technical validation remains a later goal.
+v2.8.0 is now published and its post-release documentation/blog are merged.
+The maintainer authorized v3 discovery on 2026-11-18; production migration has
+not started. Multi-dimensional/technical validation remains a later goal.
+
+The [v3 discovery pack](../design/v3/README.md) contains a 27-view synthetic
+Chrome audit, before/after Portfolio screenshots and an interactive local study.
+Its proposed **v3.0 gate is the shared responsive foundation plus a complete
+Portfolio workflow**; redesigns of the other screens are explicit later v3.x
+scope proposals. Review the [acceptance criteria](../design/v3/SCOPE.md) before
+implementation. Non-cash receipts require accounting/history support, including
+capital contributions in kind distinct from cash and acquisition cost. The study
+does not change production behavior or establish those APIs.
 
 Portfolio is the first concrete workflow workstream:
 
