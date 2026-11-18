@@ -98,6 +98,20 @@ never silently faked.
   acceptance is not an exhaustive model benchmark. Failures
   retain evidence when available, never partial prose or an older answer. No automatic Brain Log
   saving or retrieval indexing is introduced.
+- **Durable evidence is explicitly selected and bounded.** v2.8 saves complete
+  comparison inputs/results only when requested. Reopening does not run models;
+  reruns use frozen inputs with the current Deep model, so prose need not match.
+  Refreshes collect new data as separate runs. Retained headline tone and asset
+  implication are independent judgments, not calibrated market-wide sentiment.
+  Failures stay missing. No full article archive, decision-model provider or
+  automatic private-memory ingestion is introduced. Standalone evidence defaults
+  to 90 days from latest recording (`NEWS_EVIDENCE_RETENTION_DAYS=0` disables);
+  saved runs protect referenced records and do not automatically expire.
+  Conservative JSON reference matching can overretain and scales with owner
+  history. Daily cleanup is bounded and begins after one full interval.
+  PostgreSQL lifecycle writes require default READ COMMITTED isolation.
+  Upgrade adds migrations 0019/0020; existing local installations must upgrade.
+  See the [news evidence contract](News-Evidence-Contract.md).
 - **Technical evidence across AI research is a bounded descriptive layer.**
   v2.6 reuses the same three daily measures in Investment Briefing, Interrogate,
   Brain and Portfolio risk. It does not add RSI/MACD, volume, accumulation or
