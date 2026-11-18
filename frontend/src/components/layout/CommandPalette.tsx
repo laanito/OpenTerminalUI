@@ -86,6 +86,7 @@ export function CommandPalette() {
   useEffect(() => {
     const onKeyDown = (ev: KeyboardEvent) => {
       const target = ev.target as HTMLElement | null;
+      if (ev.defaultPrevented || target?.closest?.("[data-terminal-modal]")) return;
       const isEditable = Boolean(
         target &&
           (target.tagName === "INPUT" ||

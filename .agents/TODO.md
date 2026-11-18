@@ -1,36 +1,42 @@
 # Current project state and backlog
 
-Current work **2026-11-18: v3 discovery/design proposal**. The maintainer
-confirmed post-release app docs #285 and bilingual blog chapter 24 (`praderasblog`
-#121) merged, then authorized discovery/design for v3. v2 close-out is complete.
-This branch adds `docs/design/v3/`: a synthetic Chrome audit of nine initial
-routes at 1440/1024/390, Portfolio before/after screenshots, an isolated interactive
-HTML study, workflow/accounting boundaries and proposed release acceptance.
-Production components/APIs/accounting/schemas remain unchanged; version stays 2.8.0.
+Current work **v3 shared-shell foundation** (2026-11-18). The maintainer
+confirmed discovery/design PR #286 merged at `2d707db`; its v3.0 scope is accepted:
+shared responsive foundation + complete Portfolio pilot, with other full page
+redesigns scheduled as later explicit v3.x scopes. Do not reopen design approval.
 
-Proposed v3.0 gate: shared responsive frontend foundation + complete Portfolio
-pilot. Other page redesigns are later v3.x scope proposals. Review `SCOPE.md`
-and the study before implementation; do not treat the HTML as shipped APIs.
-All-portfolios consolidation needs reporting-currency/identity/coverage contracts.
-Existing-position/external receipt entry needs audited non-cash ledger semantics,
-unknown cost basis and separate in-kind capital-flow valuation for performance;
-no fake buy/deposit/profit. Full internal transfer and Journal matching stay later.
+This first implementation slice adds a grouped Menu at every width, wrapping/
+collapsible market and workspace controls, a compact status bar with full status
+details, and reserved space above fixed mobile bottom navigation. Keep existing
+GO commands, icon navigation, URLs, configuration disclosures and theme controls.
+Only existing supported/gated primary destinations and current rail/TopBar links
+are advertised; contextual/experimental surfaces keep their existing entry paths.
+Status clocks/sessions remain inspectable; unknown sessions stay unavailable.
+Loop delay and JS heap are labelled browser diagnostics, not system CPU/health.
 
-Observed baseline issues include clipped shell controls despite a viewport-width
-root document, holdings below the initial viewport (y=958/1503/1908), fixed/stacked
-portfolio management forms and the source-confirmed array-indexed per-holding
-“Performance vs Benchmark” curve. Keep contained table/ticker scrolling distinct
-from defects. Initial unasked/empty research states are not a full generated-
-evidence audit; the pack explicitly records fixture limits and follow-up cases.
+TerminalModal portals above the shell, bounds height and scrolls internally,
+keeps editing focus across callback/busy updates and restores opener focus on
+close. Topmost shared dialogs own Tab/Escape; background GO/navigation/trading
+shortcuts respect them. Browser tests caught and verified the fix for a real
+mobile overlap: fixed bottom navigation previously covered the status controls.
 
-Validation: 27 fixture-only initial views with no captured JS runtime errors;
-prototype overview/scope/lot drill-down, buy review, oversell rejection,
-unknown-basis receipt, separate native fee cash legs, partial/empty/error states,
-section navigation and native-dialog keyboard containment/Escape/focus return
-pass at 1440/1024/390. Source/app regression suites are not rerun for a docs-only
-study; production migration must preserve populated research/evidence journeys.
-No private data, backend, database, provider or model calls used. Scripts block
-external traffic and writes. Deployment remains with the host agent.
+Validation: all **834 frontend tests / 135 files**, production build and **45
+installed-Chrome smoke journeys** pass. Six responsive cases cover 1920x1000,
+1440x1000, 1024x768, 390x800, 320x700 and 720x500; include menu route changes,
+modal focus/shortcut isolation, country/exchange/currency, theme and context-rail
+controls, status details and GO routing. Existing populated research, saved
+comparison/Brain evidence, promotion, retention and candle journeys pass.
+Reduced CSS viewport is not an independent physical 200% zoom/accessibility audit.
+No backend/API/schema/accounting/dependency/version change; backend tests were
+not rerun for this frontend slice. Do not monitor CI unless requested.
+
+Remaining foundation work includes reusable page/scope/data-state patterns and
+fuller zoom/accessibility review. Portfolio consolidated reporting, receipt/
+unknown-basis accounting, atomic/duplicate-safe operations and its page migration
+remain separate slices; do not implement a no-cash entry by calling today's buy
+endpoint. Preserve the original design audit as baseline evidence. v2.8 stays
+the published release until the explicit release-prep workflow. Deployment stays
+with the host agent. See `docs/design/v3/README.md` and `SCOPE.md`.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
@@ -80,8 +86,7 @@ passed. Local Python 3.12.16/Node 26.7.0 checks differ from CI Python 3.11/Node 
 See `docs/wiki/Releasing.md`. v3 remains the
 Portfolio-first frontend overhaul after v2 close-out. Do not start another v2
 feature minor. Post-release docs #285 and bilingual chapter 24 (blog #121) are merged per
-maintainer confirmation. v3 discovery is authorized; production migration has
-not started. Deployment stays with the host agent.
+maintainer confirmation. v3 discovery #286 is merged; shared-shell implementation is underway. Deployment stays with the host agent.
 
 Previous published baseline **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
 is published from `4bc03cf`, the merge of release-prep PR #263. Implementation
@@ -1940,7 +1945,7 @@ ordered v1.7 milestone above.
 - [ ] **v3 UX/frontend overhaul — Portfolio-first.** v2 close-out is complete.
       Maintainer authorized discovery/design on 2026-11-18. Proposed v3.0 gate:
       shared responsive foundation plus the complete Portfolio workflow; other
-      page redesigns are later v3.x scope proposals. No production migration yet.
+      page redesigns are later v3.x scope proposals. Shared-shell work is underway.
       See `docs/design/v3/README.md`, `AUDIT.md`, `PORTFOLIO.md` and `SCOPE.md`.
       - [x] Initial synthetic 27-view wide/intermediate/narrow audit, screenshots
             and source review; explicitly record unasked/empty research limits.
@@ -1948,9 +1953,13 @@ ordered v1.7 milestone above.
             responsive screenshots and browser interaction review at three widths.
       - [x] Propose shared patterns, accounting/receipt boundaries, delivery order
             and concrete release acceptance; preserve existing feature access.
-      - [ ] Maintainer review of discovery/design PR before implementation.
-      - [ ] Shared shell/overlay/data-state foundation with populated research,
-            keyboard/zoom, direct-link and saved-view regression coverage.
+      - [x] Maintainer confirmed discovery/design PR #286 merged; scope accepted.
+      - [x] First shared-shell slice: grouped navigation, responsive controls,
+            status details, mobile bottom-nav space and bounded/focus-safe shared
+            dialogs. 834 frontend tests, build and 45 browser journeys pass.
+      - [ ] Finish shared page/scope/data-state patterns and fuller keyboard/zoom/
+            accessibility review as required by Portfolio migration; keep populated
+            research/direct-link/saved-view regression coverage.
       - [ ] Owner-scoped consolidated reporting and audited opening/external
             receipts with unknown basis, separate capital-flow valuation and
             atomic/duplicate-safe operation semantics; additive migration review.

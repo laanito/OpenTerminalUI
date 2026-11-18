@@ -891,12 +891,19 @@ not started. Multi-dimensional/technical validation remains a later goal.
 
 The [v3 discovery pack](../design/v3/README.md) contains a 27-view synthetic
 Chrome audit, before/after Portfolio screenshots and an interactive local study.
-Its proposed **v3.0 gate is the shared responsive foundation plus a complete
+The merged design establishes the **v3.0 gate: shared responsive foundation plus a complete
 Portfolio workflow**; redesigns of the other screens are explicit later v3.x
-scope proposals. Review the [acceptance criteria](../design/v3/SCOPE.md) before
-implementation. Non-cash receipts require accounting/history support, including
+scope proposals. The reviewed [acceptance criteria](../design/v3/SCOPE.md)
+bound implementation. Non-cash receipts require accounting/history support, including
 capital contributions in kind distinct from cash and acquisition cost. The study
 does not change production behavior or establish those APIs.
+
+The first implementation slice adds the responsive shell Menu, bounded shared
+dialogs, wrapped/collapsible controls and status details, with reserved mobile
+navigation space. All 834 frontend tests and 45 browser smoke journeys pass.
+Shared page/scope/data-state primitives and the Portfolio domain/page migration
+remain later slices within the accepted v3.0 gate. See the design pack's
+[implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:
 

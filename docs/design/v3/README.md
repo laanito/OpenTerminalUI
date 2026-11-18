@@ -1,10 +1,10 @@
 # v3 discovery: a usable terminal, starting with Portfolio
 
-Status: **design proposal for review**, 2026-11-18. Production remains v2.8.0.
-This PR changes documentation and adds an isolated, synthetic HTML study. It does
-not change application routes, components, APIs, database schemas or accounting.
+Status: **discovery/design accepted through merged PR #286**, 2026-11-18.
+The standalone HTML study remains isolated and synthetic. Production shell work
+is tracked below; the study itself implements no APIs, schemas or accounting.
 
-The v3.0 proposal is **a shared frontend foundation plus a complete Portfolio
+The accepted v3.0 gate is **a shared frontend foundation plus a complete Portfolio
 workflow**. Other screen redesigns belong to explicit v3.x scopes. The shared
 shell must keep those screens reachable and functional during the transition.
 
@@ -98,6 +98,38 @@ full accessibility audit. No new CI lane is introduced for this disposable study
 - Establish the common shell across existing routes, then use Portfolio as the
   first complete page migration. Keep other screen redesigns outside v3.0.
 
-These defaults are reviewable in this PR. Any changes should update the scope
-and acceptance gate before implementation starts; a mockup is not evidence that
+These defaults were reviewed in PR #286. Any later changes should explicitly
+update the scope and acceptance gate; a mockup is not evidence that
 its proposed backend contracts already exist.
+
+## First implementation slice: responsive shared shell
+
+Discovery PR #286 is merged. The first production slice implements a grouped
+**Menu** in the GO bar at every width, collapsible market/workspace controls below
+1280px, bounded shared dialogs and an accessible status-detail view. Existing
+icon navigation, GO commands, bookmarks and configuration-gated disclosures
+remain available. Contextual/experimental surfaces are not promoted into primary
+navigation by this slice.
+
+The shell now reserves bottom-navigation space on mobile. The status summary
+keeps UTC, quote connection and alert count visible, with market sessions on
+wider screens. **Status details** exposes all clocks/sessions and labels loop
+lag/heap as browser diagnostics; missing session reports remain unavailable.
+This does not add provider data, new health measurements or system CPU telemetry.
+
+Shared dialogs are portalled above the shell, bounded to the viewport, scroll
+internally, retain focus during callback/busy updates and return focus on close.
+Only the top shared dialog handles Escape/Tab. Navigation/GO/trading shortcuts do
+not escape an active shared dialog. This is not a complete accessibility audit.
+
+Validation: 834 frontend tests and production build pass. All 45 installed-Chrome
+smoke journeys pass, including six shell cases at 1920×1000, 1440×1000,
+1024×768, 390×800, 320×700 and 720×500. These are CSS viewport checks, not a claim
+that physical 200% browser zoom or all mobile keyboards were independently tested.
+Existing generated/captured research and candle inspection cases remain green.
+
+Remaining foundation work includes common page/scope/data-state primitives,
+fuller zoom/accessibility review and any further shared layout changes justified
+by page migration. Consolidated reporting, non-cash receipts and the Portfolio
+page redesign are not implemented by this shell slice. Discovery evidence stays
+as its original baseline rather than being regenerated to hide the old findings.

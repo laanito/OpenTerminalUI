@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+- **Responsive shell foundation for v3** — a grouped Menu keeps existing tools
+  reachable at every width; market/workspace controls collapse and wrap, while
+  status details retain clocks, sessions and browser diagnostics. Mobile navigation
+  reserves space above its fixed bar. Shared dialogs fit the viewport, preserve
+  editing focus and return focus on close; background shortcuts respect them.
+  Portfolio workflow/accounting migration remains separate.
+
 ## [2.8.0] - 2026-11-18
 
 Comparison research can now be saved with its original evidence, checked answer

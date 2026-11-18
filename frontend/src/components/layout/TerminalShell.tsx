@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -11,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ErrorBoundary } from "../common/ErrorBoundary";
 import { InstallPromptBanner } from "./InstallPromptBanner";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { ShellNavigation } from "./ShellNavigation";
 import { IconRail } from "./IconRail";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
@@ -126,6 +128,7 @@ function WorkspaceControlBar({
 }: Pick<TerminalShellContextValue, "preset" | "setPreset" | "rightRailOpen" | "toggleRightRail"> & {
   rightRailEnabled: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const themeVariant = useSettingsStore((s) => s.themeVariant);
   const setThemeVariant = useSettingsStore((s) => s.setThemeVariant);
   const customAccentColor = useSettingsStore((s) => s.customAccentColor);
@@ -139,75 +142,80 @@ function WorkspaceControlBar({
   };
 
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-terminal-border bg-terminal-panel/90 px-3 py-1.5 backdrop-blur">
-      <div className="flex items-center gap-2">
-        <span className="ot-type-label text-terminal-muted">Workspace</span>
-        <div className="flex flex-wrap items-center gap-1">
-          {PRESET_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => applyPreset(option.id)}
-              className={`rounded-sm border px-2 py-1 ot-type-label ${
-                preset === option.id
-                  ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
-                  : "border-terminal-border text-terminal-muted hover:text-terminal-text"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+    <div className="shrink-0 border-b border-terminal-border bg-terminal-panel/90 px-3 py-1.5 backdrop-blur" aria-label="Workspace controls">
+      <button type="button" className="min-h-8 text-xs text-terminal-muted xl:hidden" aria-expanded={expanded} aria-controls="shell-workspace-controls" onClick={() => setExpanded(!expanded)}>
+        Workspace settings · {PRESET_OPTIONS.find(option => option.id === preset)?.label ?? preset}
+      </button>
+      <div id="shell-workspace-controls" className={`${expanded ? "flex" : "hidden"} min-w-0 flex-wrap items-center justify-between gap-2 xl:flex`}>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="ot-type-label text-terminal-muted">Workspace</span>
+          <div className="flex flex-wrap items-center gap-1">
+            {PRESET_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => applyPreset(option.id)}
+                className={`rounded-sm border px-2 py-1 ot-type-label ${
+                  preset === option.id
+                    ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
+                    : "border-terminal-border text-terminal-muted hover:text-terminal-text"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="inline-flex items-center gap-1 text-[11px] text-terminal-muted">
-          Theme
-          <TerminalSelect
-            size="sm"
-            tone="ui"
-            className="min-w-36"
-            value={themeVariant}
-            onChange={(e) => setThemeVariant(e.target.value as ThemeVariant)}
-          >
-            <option value="terminal-noir">Terminal Noir</option>
-            <option value="classic-bloomberg">Classic Bloomberg</option>
-            <option value="light-desk">Light Desk</option>
-            <option value="custom">Custom</option>
-          </TerminalSelect>
-        </label>
-        {themeVariant === "custom" ? (
-          <input
-            type="color"
-            className="h-6 w-8 cursor-pointer rounded-sm border border-terminal-border bg-transparent p-0"
-            aria-label="Custom accent color"
-            value={customAccentColor}
-            onChange={(e) => setCustomAccentColor(e.target.value)}
-          />
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setHudOverlayEnabled(!hudOverlayEnabled)}
-          className={`rounded-sm border px-2 py-1 ot-type-label ${
-            hudOverlayEnabled
-              ? "border-terminal-accent text-terminal-accent"
-              : "border-terminal-border text-terminal-muted hover:text-terminal-text"
-          }`}
-        >
-          {hudOverlayEnabled ? "HUD On" : "HUD Off"}
-        </button>
-        {rightRailEnabled ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <label className="inline-flex max-w-full items-center gap-1 text-[11px] text-terminal-muted">
+            Theme
+            <TerminalSelect
+              size="sm"
+              tone="ui"
+              className="min-w-36"
+              value={themeVariant}
+              onChange={(e) => setThemeVariant(e.target.value as ThemeVariant)}
+            >
+              <option value="terminal-noir">Terminal Noir</option>
+              <option value="classic-bloomberg">Classic Bloomberg</option>
+              <option value="light-desk">Light Desk</option>
+              <option value="custom">Custom</option>
+            </TerminalSelect>
+          </label>
+          {themeVariant === "custom" ? (
+            <input
+              type="color"
+              className="h-6 w-8 cursor-pointer rounded-sm border border-terminal-border bg-transparent p-0"
+              aria-label="Custom accent color"
+              value={customAccentColor}
+              onChange={(e) => setCustomAccentColor(e.target.value)}
+            />
+          ) : null}
           <button
             type="button"
-            onClick={toggleRightRail}
-            className={`hidden xl:inline-flex rounded-sm border px-2 py-1 ot-type-label ${
-              rightRailOpen
+            onClick={() => setHudOverlayEnabled(!hudOverlayEnabled)}
+            className={`rounded-sm border px-2 py-1 ot-type-label ${
+              hudOverlayEnabled
                 ? "border-terminal-accent text-terminal-accent"
                 : "border-terminal-border text-terminal-muted hover:text-terminal-text"
             }`}
           >
-            {rightRailOpen ? "Hide Context Rail" : "Show Context Rail"}
+            {hudOverlayEnabled ? "HUD On" : "HUD Off"}
           </button>
-        ) : null}
+          {rightRailEnabled ? (
+            <button
+              type="button"
+              onClick={toggleRightRail}
+              className={`hidden xl:inline-flex rounded-sm border px-2 py-1 ot-type-label ${
+                rightRailOpen
+                  ? "border-terminal-accent text-terminal-accent"
+                  : "border-terminal-border text-terminal-muted hover:text-terminal-text"
+              }`}
+            >
+              {rightRailOpen ? "Hide Context Rail" : "Show Context Rail"}
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -230,6 +238,8 @@ export function TerminalShell({
   rightRailStorageKey,
 }: Props) {
   const navigate = useNavigate();
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const closeNavigation = useCallback(() => setNavigationOpen(false), []);
   const location = useLocation();
   const [preset, setPreset] = usePersistedState<WorkspacePreset>(
     workspacePresetStorageKey ?? WORKSPACE_PRESET_STORAGE_KEY,
@@ -266,11 +276,12 @@ export function TerminalShell({
 
   return (
     <TerminalShellContext.Provider value={shellCtx}>
-      <div className="flex h-screen overflow-hidden bg-terminal-bg text-terminal-text">
+      <div className="flex h-dvh min-h-0 overflow-hidden bg-terminal-bg text-terminal-text">
         <IconRail />
 
-        <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+        <div className={`relative z-10 flex min-h-0 min-w-0 flex-1 flex-col ${showMobileBottomNav ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}>
           <CommandBar
+            navigation={<button type="button" className="min-h-8 shrink-0 rounded border border-terminal-border px-2 text-xs text-terminal-muted hover:text-terminal-text" aria-haspopup="dialog" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}>Menu</button>}
             onExecute={async (command) => {
               const parsed = parseCommand(command);
               return executeParsedCommand(parsed, navigate);
@@ -304,6 +315,7 @@ export function TerminalShell({
 
         {showInstallPrompt ? <InstallPromptBanner /> : null}
         {showMobileBottomNav ? <MobileBottomNav /> : null}
+        <ShellNavigation open={navigationOpen} onClose={closeNavigation} />
         <HotKeyPanelFloat />
         <CommandPalette />
         <HudOverlay />

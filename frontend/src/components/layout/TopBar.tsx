@@ -48,6 +48,7 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
   const { data: topBarTickers } = useTopBarTickers();
 
   const [query, setQuery] = useState(ticker);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [results, setResults] = useState<SearchSymbolItem[]>([]);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -162,6 +163,7 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
+      if (event.defaultPrevented || target?.closest?.('[role="dialog"]')) return;
       const tag = target?.tagName?.toLowerCase();
       const editing =
         tag === "input" || tag === "textarea" || tag === "select" || Boolean(target?.isContentEditable);
@@ -269,16 +271,16 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
   const safeTicker = (ticker || "AAPL").toUpperCase();
 
   return (
-    <div className="relative z-20 border-b border-terminal-border bg-terminal-panel">
-      <div className="relative flex items-center gap-2 px-3 py-1.5">
+    <div className="ot-shell-topbar relative z-20 shrink-0 border-b border-terminal-border bg-terminal-panel" aria-label="Instrument toolbar">
+      <div className="relative flex min-w-0 flex-wrap items-center gap-2 px-3 py-1.5">
         <Link
           to="/"
-          className="inline-flex h-7 items-center rounded border border-terminal-border bg-terminal-bg px-1.5"
+          className="hidden h-8 shrink-0 items-center rounded border border-terminal-border bg-terminal-bg px-1.5 2xl:inline-flex"
           aria-label="OpenTerminalUI Home"
         >
           <img src={BRAND_ICON_SRC} alt="OpenTerminalUI" className="h-5 w-5 object-contain" />
         </Link>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="hidden shrink-0 items-center gap-2 2xl:flex">
           <Link className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:text-terminal-text" to="/">
             HOME
           </Link>
@@ -296,10 +298,11 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
           </Link>
         </div>
         {!hideTickerLoader ? (
-          <div className="ml-2 flex min-w-[360px] flex-[1.4] items-center gap-1 xl:min-w-[460px]">
+          <div className="relative flex min-w-0 basis-40 flex-1 items-center gap-1">
             <input
               ref={searchInputRef}
-              className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs outline-none focus:border-terminal-accent"
+              className="min-h-9 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs outline-none focus:border-terminal-accent"
+              aria-label="Instrument symbol"
               placeholder={`Search ${selectedMarket} symbol ( / )`}
               value={query}
               onChange={(e) => {
@@ -331,88 +334,97 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
               }}
             />
             <button
-              className="rounded bg-terminal-accent px-2 py-1 text-xs font-medium text-black"
+              className="min-h-9 shrink-0 rounded bg-terminal-accent px-2 py-1 text-xs font-medium text-black"
               onClick={() => {
                 selectTicker(query);
               }}
             >
               Load
             </button>
+            {!hideTickerLoader && isSuggestionsOpen && results.length > 0 && (
+              <div className="absolute inset-x-0 top-full mt-1 z-10 max-h-72 overflow-auto rounded border border-terminal-border bg-terminal-panel">
+                {results.map((item) => (
+                  <button
+                    key={`${item.ticker}:${item.name}`}
+                    className="block w-full border-b border-terminal-border px-3 py-2 text-left text-sm hover:bg-terminal-bg"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      selectTicker(item);
+                    }}
+                    onClick={() => {
+                      selectTicker(item);
+                    }}
+                  >
+                    <span className="inline-flex min-w-0 flex-wrap items-center gap-2">
+                      <CountryFlag countryCode={item.country_code} flagEmoji={item.flag_emoji} size="sm" />
+                      <span>{item.ticker}</span>
+                      <span className="break-words text-terminal-muted">- {item.name}</span>
+                      {item.exchange ? <span className="text-terminal-muted">({item.exchange})</span> : null}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : null}
-        <div className="flex shrink-0 items-center gap-1 border-l border-terminal-border pl-2">
-          <select
-            className="w-[88px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"
-            value={selectedCountry}
-            onChange={(e) => setSelectedCountry(e.target.value as CountryCode)}
-          >
-            <option value="IN">{COUNTRY_FLAGS.IN} IN</option>
-            <option value="US">{COUNTRY_FLAGS.US} US</option>
-            <option value="EU">{COUNTRY_FLAGS.EU} EU</option>
-            <option value="CRYPTO">{COUNTRY_FLAGS.CRYPTO} CRYPTO</option>
-          </select>
-          <select
-            className="w-[86px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"
-            value={selectedMarket}
-            onChange={(e) => setSelectedMarket(e.target.value as MarketCode)}
-          >
-            {marketsForCountry.map((market) => (
-              <option key={market} value={market}>
-                {market}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex shrink-0 items-center gap-1 border-l border-terminal-border pl-2">
-          <select
-            className="w-[72px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"
-            value={displayCurrency}
-            onChange={(e) => setDisplayCurrency(e.target.value as DisplayCurrency)}
-            title="Display currency"
-            aria-label="Display currency"
-          >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="INR">INR</option>
-          </select>
-        </div>
-        <div className="inline-flex shrink-0 items-center gap-1 border-l border-terminal-border pl-2 text-[11px] uppercase tracking-wide text-terminal-muted">
-          <CountryFlag countryCode={selectedCountry} size="sm" />
-          <span>{selectedMarket}</span>
-        </div>
         <NotificationBell />
+        <button type="button" className="min-h-9 rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted xl:hidden"
+          aria-expanded={controlsOpen} aria-controls="shell-market-controls" onClick={() => setControlsOpen(!controlsOpen)}>
+          Market controls · {selectedCountry} / {selectedMarket} / {displayCurrency}
+        </button>
+        <div id="shell-market-controls" role="group" aria-label="Market controls"
+          className={`${controlsOpen ? "flex" : "hidden"} min-w-0 basis-full flex-wrap items-center gap-2 xl:flex xl:basis-auto`}>
+          <div className="flex shrink-0 items-center gap-1 border-l border-terminal-border pl-2">
+            <select
+              aria-label="Market region"
+              className="min-h-9 w-[88px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value as CountryCode)}
+            >
+              <option value="IN">{COUNTRY_FLAGS.IN} IN</option>
+              <option value="US">{COUNTRY_FLAGS.US} US</option>
+              <option value="EU">{COUNTRY_FLAGS.EU} EU</option>
+              <option value="CRYPTO">{COUNTRY_FLAGS.CRYPTO} CRYPTO</option>
+            </select>
+            <select
+              aria-label="Exchange"
+              className="min-h-9 w-[86px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"
+              value={selectedMarket}
+              onChange={(e) => setSelectedMarket(e.target.value as MarketCode)}
+            >
+              {marketsForCountry.map((market) => (
+                <option key={market} value={market}>
+                  {market}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 border-l border-terminal-border pl-2">
+            <select
+              className="min-h-9 w-[72px] rounded border border-terminal-border bg-terminal-bg px-1 py-1 text-[11px] uppercase text-terminal-text outline-none"
+              value={displayCurrency}
+              onChange={(e) => setDisplayCurrency(e.target.value as DisplayCurrency)}
+              title="Display currency"
+              aria-label="Display currency"
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="INR">INR</option>
+            </select>
+          </div>
+          <div className="hidden shrink-0 items-center gap-1 border-l border-terminal-border pl-2 text-[11px] uppercase tracking-wide text-terminal-muted 2xl:inline-flex">
+            <CountryFlag countryCode={selectedCountry} size="sm" />
+            <span>{selectedMarket}</span>
+          </div>
+        </div>
         <Link
           to="/"
-          className="inline-flex h-7 shrink-0 items-center border-l border-terminal-border pl-2"
+          className="hidden h-7 shrink-0 items-center border-l border-terminal-border pl-2 2xl:inline-flex"
           aria-label="OpenTerminalUI Home (Top Right)"
           title="OpenTerminalUI"
         >
           <img src={BRAND_ICON_SRC} alt="OpenTerminalUI" className="h-5 w-5 object-contain" />
         </Link>
-        {!hideTickerLoader && isSuggestionsOpen && results.length > 0 && (
-          <div className="absolute left-3 right-3 top-10 z-10 max-h-72 overflow-auto rounded border border-terminal-border bg-terminal-panel">
-            {results.map((item) => (
-              <button
-                key={`${item.ticker}:${item.name}`}
-                className="block w-full border-b border-terminal-border px-3 py-2 text-left text-sm hover:bg-terminal-bg"
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  selectTicker(item);
-                }}
-                onClick={() => {
-                  selectTicker(item);
-                }}
-              >
-                <span className="inline-flex items-center gap-2">
-                  <CountryFlag countryCode={item.country_code} flagEmoji={item.flag_emoji} size="sm" />
-                  <span>{item.ticker}</span>
-                  <span className="text-terminal-muted">- {item.name}</span>
-                  {item.exchange ? <span className="text-terminal-muted">({item.exchange})</span> : null}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
       <div className="border-t border-terminal-border/60 px-3 py-1">
         <div className="flex flex-wrap items-center gap-1 text-[10px] uppercase tracking-[0.12em]">
@@ -420,7 +432,7 @@ export function TopBar({ hideTickerLoader = false, hideMarketMarquee = false }: 
             const isCurrent = index === collapsedBreadcrumbs.length - 1;
             const isEllipsis = crumb.label === "...";
             return (
-              <span key={`${crumb.path}:${index}`} className="inline-flex items-center gap-1">
+              <span key={`${crumb.path}:${index}`} className="inline-flex min-w-0 items-center gap-1 break-words">
                 {isEllipsis ? (
                   <span className="text-terminal-muted/80">{crumb.label}</span>
                 ) : isCurrent ? (
