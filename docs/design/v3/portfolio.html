@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio · v3 design study</title>
+<link rel="stylesheet" href="portfolio.css">
+<script src="portfolio.js" defer>
+</script>
+</head>
+<body>
+<div class="study">V3 DESIGN STUDY <span>Synthetic data · local interactions only · nothing is saved</span>
+<a href="README.md">Design notes</a>
+</div>
+<div class="app">
+<nav class="rail" aria-label="Application navigation concept">
+<b class="brand">OT</b>
+<span>Home</span>
+<span>Markets</span>
+<strong aria-current="page">Portfolio</strong>
+<span>Research</span>
+<span>Workspace</span>
+<span class="rail-bottom">Settings</span>
+</nav>
+<main id="main">
+<header class="page-heading">
+<div>
+<div class="eyebrow">YOUR CAPITAL / PORTFOLIO</div>
+<h1>Portfolio</h1>
+<p class="muted">Positions, cash and the decisions behind them.</p>
+</div>
+<div class="heading-actions">
+<button id="scope-button" aria-haspopup="dialog">All portfolios <span aria-hidden="true">▾</span>
+</button>
+<button class="primary" id="record">＋ Record operation</button>
+</div>
+</header>
+<div class="context-line">
+<span id="scope-label">2 portfolios · reporting USD</span>
+<span>Fixture valuation · 18 Nov 2026, 14:00 UTC</span>
+<label>Review scenario <select id="scenario">
+<option value="complete">Complete</option>
+<option value="partial">Missing FX / basis</option>
+<option value="empty">Empty portfolio</option>
+<option value="error">Retrieval failed</option>
+</select>
+</label>
+</div>
+<div id="state-message" role="status">
+</div>
+<section class="metrics" aria-label="Portfolio summary" id="metrics">
+</section>
+<nav class="tabs" aria-label="Portfolio sections">
+<button data-tab="positions" aria-current="page">Positions</button>
+<button data-tab="activity">Activity</button>
+<button data-tab="research">Research</button>
+<button data-tab="analytics">Analytics</button>
+<button data-tab="manage">Manage</button>
+</nav>
+<section id="positions" class="tab-panel">
+<div class="section-heading">
+<div>
+<h2>Consolidated positions</h2>
+<p class="muted">One instrument, all its lots. Select a position to see the detail.</p>
+</div>
+<label class="search-label">Find a position<input id="filter" type="search" placeholder="Symbol or company">
+</label>
+</div>
+<div id="position-list">
+</div>
+<p class="footnote">Quote currency stays beside each price. Cost and P&amp;L use reporting-currency accounting. Different quote instruments stay separate.</p>
+</section>
+<section id="activity" class="tab-panel" hidden>
+<div class="section-heading">
+<div>
+<h2>Activity</h2>
+<p class="muted">Executions, cash movements and non-cash receipts remain distinct.</p>
+</div>
+<button data-operation="buy">Record an operation</button>
+</div>
+<div class="activity-item">
+<span class="type-tag">BUY</span>
+<div>
+<b>AAPL · 10 shares</b>
+<p>Core · 2 Oct 2026 · 170.00 USD per share</p>
+<p>Rationale: add after reviewing the demand assumptions.</p>
+</div>
+<span class="numeric">−1,702.00 USD<br>
+<small>including 2.00 USD fee</small>
+</span>
+</div>
+<div class="activity-item">
+<span class="type-tag">RECEIPT</span>
+<div>
+<b>SAP.DE · 5 shares</b>
+<p>Europe · position present on 1 Oct 2026</p>
+<p>Imported existing position; acquisition date and cost documented separately.</p>
+</div>
+<span class="numeric">No cash movement<br>
+<small>capital-flow treatment is separate</small>
+</span>
+</div>
+<p class="footnote">Illustrative operation cards, not a complete ledger. Portfolio filtering applies to positions/summary in this prototype; Activity, Research and Analytics illustrate their proposed structure only.</p>
+</section>
+<section id="research" class="tab-panel" hidden>
+<h2>Reasoning, with the right home</h2>
+<div class="research-grid">
+<article>
+<span class="eyebrow">PORTFOLIO MANDATE</span>
+<h3>Why this capital is here</h3>
+<p>Long-term allocation; maintain a cash reserve. Mandates belong to an individual portfolio.</p>
+</article>
+<article>
+<span class="eyebrow">POSITION THESIS</span>
+<h3>What we currently believe</h3>
+<p>AAPL: follow demand durability and valuation. Open the instrument detail for ongoing notes.</p>
+</article>
+<article>
+<span class="eyebrow">OPERATION RATIONALE</span>
+<h3>Why we acted then</h3>
+<p>Recorded with each buy or sell. Saving an execution does not automatically create a Journal trade.</p>
+</article>
+</div>
+<p class="footnote">Existing Notes, Brain and saved evidence remain separate. Later Journal matching is not part of v3.0.</p>
+</section>
+<section id="analytics" class="tab-panel" hidden>
+<h2>History with a stated method</h2>
+<article class="empty">
+<h3>Choose a single portfolio for existing analytics</h3>
+<p>Ledger reconstruction, current-open-basket benchmark metrics and AI risk analysis keep their own scope and methodology. This study does not invent consolidated historical returns.</p>
+<button id="analytics-scope">Choose portfolio</button>
+</article>
+<p class="footnote">No decorative performance curve. Production implementation must reuse dated history and expose coverage, or show an unavailable state.</p>
+</section>
+<section id="manage" class="tab-panel" hidden>
+<h2>Portfolio management</h2>
+<article class="empty">
+<h3>Structure and maintenance</h3>
+<p>Create/rename portfolios, change mandate and benchmark, repair legacy currencies, and access existing import/export controls here. These existing capabilities remain available as dedicated flows during migration.</p>
+<p>This design study does not execute management or import actions.</p>
+</article>
+</section>
+<footer>Design proposal / v3.0 <span>Existing backend contracts are not changed by this page.</span>
+</footer>
+</main>
+</div>
+<dialog id="scope-dialog" class="drawer" aria-labelledby="scope-title">
+<div class="dialog-heading">
+<div>
+<span class="eyebrow">VISIBLE SCOPE</span>
+<h2 id="scope-title">Your portfolios</h2>
+</div>
+<button data-close aria-label="Close portfolio selector">×</button>
+</div>
+<p class="muted">Switch the view without losing screen space.</p>
+<div class="scope-options">
+<button data-scope="all">
+<b>All portfolios</b>
+<span>Consolidated by instrument · USD reporting</span>
+</button>
+<button data-scope="core">
+<b>Core</b>
+<span>Long-term research · base USD</span>
+</button>
+<button data-scope="europe">
+<b>Europe</b>
+<span>European opportunities · base EUR</span>
+</button>
+</div>
+<p class="footnote">Reporting stays USD in this synthetic study. Production single-portfolio views default to that portfolio’s base currency; all-portfolios views require explicit reporting-currency accounting.</p>
+</dialog>
+<dialog id="position-dialog" aria-labelledby="position-title">
+<div class="dialog-heading">
+<div>
+<span class="eyebrow">POSITION → PORTFOLIO → LOT</span>
+<h2 id="position-title">
+</h2>
+</div>
+<button data-close aria-label="Close position detail">×</button>
+</div>
+<div id="position-detail">
+</div>
+</dialog>
+<dialog id="operation-dialog" aria-labelledby="operation-title">
+<div class="dialog-heading">
+<div>
+<span class="eyebrow">RECORD, REVIEW, CONFIRM</span>
+<h2 id="operation-title">Record operation</h2>
+</div>
+<button data-close aria-label="Close operation">×</button>
+</div>
+<p class="muted">Choose what happened. Review its effect before recording.</p>
+<div class="operation-types" role="group" aria-label="Operation type">
+<button data-kind="buy" aria-pressed="true">Buy</button>
+<button data-kind="sell" aria-pressed="false">Sell</button>
+<button data-kind="receipt" aria-pressed="false">Existing position</button>
+</div>
+<form id="operation-form">
+<div class="form-grid">
+<label>Portfolio<select id="target" required>
+<option value="">Choose a portfolio</option>
+<option value="core">Core · USD</option>
+<option value="europe">Europe · EUR</option>
+</select>
+</label>
+<label>Instrument<select id="instrument">
+<option>AAPL</option>
+<option>BTC-USD</option>
+<option>SAP.DE</option>
+</select>
+</label>
+<label>Quantity<input id="quantity" type="number" min="0.00000001" step="any" required value="1">
+</label>
+<label id="date-label">Operation date<input id="operation-date" type="date" required value="2026-11-18">
+</label>
+<label id="basis-label" hidden>Cost basis<select id="basis">
+<option value="known">Known and documented</option>
+<option value="unknown">Unknown</option>
+</select>
+</label>
+<label id="price-label">
+<span id="price-caption">Unit execution price</span>
+<input id="price" type="number" min="0.00000001" step="any" required value="200">
+</label>
+<label id="currency-label">Price / cost currency<select id="currency">
+<option>USD</option>
+<option>EUR</option>
+</select>
+</label>
+<label class="fee-field">Fees<input id="fees" type="number" min="0" step="any" required value="2">
+</label>
+<label class="fee-field">Fee currency<select id="fee-currency">
+<option>USD</option>
+<option>EUR</option>
+</select>
+</label>
+<label id="acquired-label" hidden>Original acquisition date (optional)<input id="acquired" type="date">
+</label>
+<label id="receipt-source-label" hidden>Source / provenance<input id="receipt-source" placeholder="Broker statement, external account…">
+</label>
+<label class="full">Rationale for this operation (optional)<textarea id="rationale" rows="3" placeholder="What changed? Why act now?">
+</textarea>
+</label>
+</div>
+<p id="operation-hint" class="notice">
+</p>
+<button class="primary" type="submit">Review operation</button>
+</form>
+<section id="review" aria-label="Operation review" hidden>
+<h3>Review the effect</h3>
+<div id="review-body">
+</div>
+<div class="review-actions">
+<button id="edit-operation">Back to edit</button>
+<button class="primary" id="confirm">Confirm in prototype</button>
+</div>
+</section>
+<p id="operation-result" role="status">
+</p>
+</dialog>
+</body>
+</html>

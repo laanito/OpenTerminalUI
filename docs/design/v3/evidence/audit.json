@@ -1,0 +1,2231 @@
+{
+  "baseline": "f8d9049c619bac96ab365912b3441954c83e839c",
+  "method": "Installed Chrome; synthetic API responses; provider/model/write requests blocked. Overflow candidates include intentional table/chart scroll. Only initial views; no claim of full populated research or accessibility audit.",
+  "cases": [
+    {
+      "name": "home",
+      "path": "/",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 822,
+          "scrollHeight": 3302,
+          "width": 1376
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/alerts/history",
+        "/api/earnings/calendar",
+        "/api/fno/chain/SPY/summary",
+        "/api/forex/cross-rates",
+        "/api/insider/recent",
+        "/api/notifications/unread-count",
+        "/api/quotes",
+        "/api/reports/market-status",
+        "/api/v1/backtest/presets",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "portfolio",
+      "path": "/equity/portfolio",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div [Dense data table].absolute.inset-0.overflow-auto",
+          "width": 1072,
+          "scrollWidth": 1092,
+          "overflowX": "auto",
+          "text": "SymbolSORTSharesSORTAvg CostSORTCurrentSORTMarket ValueSORTP&LSORTP&L%SORTAAPL10$170."
+        },
+        {
+          "element": "div.",
+          "width": 1088,
+          "scrollWidth": 1092,
+          "overflowX": "visible",
+          "text": "SymbolSORTSharesSORTAvg CostSORTCurrentSORTMarket ValueSORTP&LSORTP&L%SORTAAPL10$170."
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "AAPL10$170.00$200.00$ 2 K$ 30017.65%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "BTC-USD0.05$70,000.00$80,000.00$ 4 K$ 50014.29%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "SAP.DE3€200.00€250.00€ 750$ 16525%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "MSFT4$370.00$400.00$ 1.6 K$ 1208.11%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "BTC-USD0.03$68,000.00$80,000.00$ 2 K$ 30017.65%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "AAPL6$180.00$200.00$ 1.2 K$ 12011.11%Sell"
+        },
+        {
+          "element": "div [Dense data table].absolute.inset-0.overflow-auto",
+          "width": 1072,
+          "scrollWidth": 1080,
+          "overflowX": "auto",
+          "text": "DateSORTTypeSORTSymbolSORTSharesSORTPrice / AmtSORTFeesSORTCash ΔSORTNotes2026-10-01b"
+        },
+        {
+          "element": "div.",
+          "width": 1076,
+          "scrollWidth": 1080,
+          "overflowX": "visible",
+          "text": "DateSORTTypeSORTSymbolSORTSharesSORTPrice / AmtSORTFeesSORTCash ΔSORTNotes2026-10-01b"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyAAPL10$170.00$2.00-$1,702.00Synthetic research: durable demand and valua"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyBTC-USD0.05$70,000.00$2.00-$3,502.00Synthetic research: durable demand a"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buySAP.DE3€200.00$2.00-$662.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyMSFT4$370.00$2.00-$1,482.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyBTC-USD0.03$68,000.00$2.00-$1,702.00Synthetic research: durable demand a"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyAAPL6$180.00$2.00-$1,082.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 2944,
+          "width": 1376
+        },
+        {
+          "element": "textarea [Portfolio thesis].w-full.rounded-sm.border",
+          "height": 61,
+          "scrollHeight": 331,
+          "width": 423
+        }
+      ],
+      "holdingsTop": 958,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/events/portfolio/upcoming",
+        "/api/forex/cross-rates",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "market-context",
+      "path": "/equity/market-context",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.h-full.min-h-0.space-y-3",
+          "height": 777,
+          "scrollHeight": 821,
+          "width": 1376
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "security",
+      "path": "/equity/security/AAPL",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/chart/AAPL",
+        "/api/notifications/unread-count",
+        "/api/peers/AAPL",
+        "/api/reports/market-status",
+        "/api/stock-picking/conviction/AAPL",
+        "/api/stocks/AAPL",
+        "/api/stocks/AAPL/analyst-consensus",
+        "/api/stocks/AAPL/financials",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "brain",
+      "path": "/equity/brain",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "notes",
+      "path": "/equity/notes",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1299,
+          "width": 1376
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "journal",
+      "path": "/equity/journal",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1142,
+          "width": 1376
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "news",
+      "path": "/equity/news",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1114,
+          "width": 1376
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/stocks/AAPL",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "workstation",
+      "path": "/equity/chart-workstation",
+      "width": 1440,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1440,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 1376,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "width": 1376,
+          "scrollWidth": 1453,
+          "overflowX": "auto",
+          "text": "Chart ShellPane 11D CandlesComfort LayoutMain+ TabDATA: DISCONNECTED1/1 panesPane 14-"
+        },
+        {
+          "element": "div.chart-workstation.flex.h-full",
+          "width": 1376,
+          "scrollWidth": 1453,
+          "overflowX": "visible",
+          "text": "Chart ShellPane 11D CandlesComfort LayoutMain+ TabDATA: DISCONNECTED1/1 panesPane 14-"
+        },
+        {
+          "element": "div.border-b.border-terminal-border.bg-terminal-panel",
+          "width": 1376,
+          "scrollWidth": 1453,
+          "overflowX": "visible",
+          "text": "Chart ShellPane 11D CandlesComfort LayoutMain+ TabDATA: DISCONNECTED1/1 panesPane 14-"
+        },
+        {
+          "element": "div.rounded.border.border-terminal-border",
+          "width": 1350,
+          "scrollWidth": 1440,
+          "overflowX": "visible",
+          "text": "Chart ShellPane 11D CandlesComfort LayoutMain+ TabDATA: DISCONNECTED1/1 panesPane 14-"
+        },
+        {
+          "element": "div.flex.flex-col.gap-3",
+          "width": 1326,
+          "scrollWidth": 1428,
+          "overflowX": "visible",
+          "text": "Chart ShellPane 11D CandlesComfort LayoutMain+ TabDATA: DISCONNECTED1/1 panesPane 14-"
+        },
+        {
+          "element": "div.hidden.gap-2.md:grid",
+          "width": 1326,
+          "scrollWidth": 1428,
+          "overflowX": "visible",
+          "text": "FocusNo focusPane 1USLink ALink AvActive-pane context stays locked while you tab acro"
+        },
+        {
+          "element": "section.rounded.border.border-terminal-border",
+          "width": 335,
+          "scrollWidth": 438,
+          "overflowX": "visible",
+          "text": "Workspace1x1 layoutSave DefaultLoad DefaultDefaults persist the active tab’s layout, "
+        },
+        {
+          "element": "div.mt-2.grid.gap-2",
+          "width": 319,
+          "scrollWidth": 430,
+          "overflowX": "visible",
+          "text": "Save DefaultLoad DefaultDefaults persist the active tab’s layout, link matrix, compar"
+        },
+        {
+          "element": "div.grid.gap-2.md:grid-cols-[auto_auto_auto_minmax(0,1fr)]",
+          "width": 319,
+          "scrollWidth": 430,
+          "overflowX": "visible",
+          "text": "Save SnapshotCopy Share LinkExport JSONAutosave persists layout, chart setup, indicat"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1122,
+          "width": 1376
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/chart-templates",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/scripting/scripts",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "home",
+      "path": "/",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div [Market heat strip].ot-home-widget-strip",
+          "width": 902,
+          "scrollWidth": 942,
+          "overflowX": "auto",
+          "text": "S&P 500----NASDAQ----DOW----GOLD----SILVER----CRUDE OIL----"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 822,
+          "scrollHeight": 4073,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/alerts/history",
+        "/api/earnings/calendar",
+        "/api/fno/chain/SPY/summary",
+        "/api/forex/cross-rates",
+        "/api/insider/recent",
+        "/api/notifications/unread-count",
+        "/api/quotes",
+        "/api/reports/market-status",
+        "/api/v1/backtest/presets",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "portfolio",
+      "path": "/equity/portfolio",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div [Dense data table].absolute.inset-0.overflow-auto",
+          "width": 908,
+          "scrollWidth": 1092,
+          "overflowX": "auto",
+          "text": "SymbolSORTSharesSORTAvg CostSORTCurrentSORTMarket ValueSORTP&LSORTP&L%SORTAAPL10$170."
+        },
+        {
+          "element": "div.",
+          "width": 1088,
+          "scrollWidth": 1092,
+          "overflowX": "visible",
+          "text": "SymbolSORTSharesSORTAvg CostSORTCurrentSORTMarket ValueSORTP&LSORTP&L%SORTAAPL10$170."
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "AAPL10$170.00$200.00$ 2 K$ 30017.65%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "BTC-USD0.05$70,000.00$80,000.00$ 4 K$ 50014.29%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "SAP.DE3€200.00€250.00€ 750$ 16525%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "MSFT4$370.00$400.00$ 1.6 K$ 1208.11%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "BTC-USD0.03$68,000.00$80,000.00$ 2 K$ 30017.65%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "AAPL6$180.00$200.00$ 1.2 K$ 12011.11%Sell"
+        },
+        {
+          "element": "div [Dense data table].absolute.inset-0.overflow-auto",
+          "width": 908,
+          "scrollWidth": 1080,
+          "overflowX": "auto",
+          "text": "DateSORTTypeSORTSymbolSORTSharesSORTPrice / AmtSORTFeesSORTCash ΔSORTNotes2026-10-01b"
+        },
+        {
+          "element": "div.",
+          "width": 1076,
+          "scrollWidth": 1080,
+          "overflowX": "visible",
+          "text": "DateSORTTypeSORTSymbolSORTSharesSORTPrice / AmtSORTFeesSORTCash ΔSORTNotes2026-10-01b"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyAAPL10$170.00$2.00-$1,702.00Synthetic research: durable demand and valua"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyBTC-USD0.05$70,000.00$2.00-$3,502.00Synthetic research: durable demand a"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buySAP.DE3€200.00$2.00-$662.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyMSFT4$370.00$2.00-$1,482.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyBTC-USD0.03$68,000.00$2.00-$1,702.00Synthetic research: durable demand a"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 4036,
+          "width": 960
+        },
+        {
+          "element": "textarea [Portfolio thesis].w-full.rounded-sm.border",
+          "height": 61,
+          "scrollHeight": 166,
+          "width": 908
+        }
+      ],
+      "holdingsTop": 1503,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/events/portfolio/upcoming",
+        "/api/forex/cross-rates",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "market-context",
+      "path": "/equity/market-context",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 800,
+          "width": 960
+        },
+        {
+          "element": "div.h-full.min-h-0.space-y-3",
+          "height": 777,
+          "scrollHeight": 925,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "security",
+      "path": "/equity/security/AAPL",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.h-full.min-h-0.overflow-auto",
+          "height": 777,
+          "scrollHeight": 792,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/chart/AAPL",
+        "/api/notifications/unread-count",
+        "/api/peers/AAPL",
+        "/api/reports/market-status",
+        "/api/stock-picking/conviction/AAPL",
+        "/api/stocks/AAPL",
+        "/api/stocks/AAPL/analyst-consensus",
+        "/api/stocks/AAPL/financials",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "brain",
+      "path": "/equity/brain",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.ot-type-panel-subtitle.truncate.text-terminal-muted",
+          "width": 558,
+          "scrollWidth": 635,
+          "overflowX": "hidden",
+          "text": "Private research over your journal, theses & notes, with optional current technical e"
+        }
+      ],
+      "verticalScrollRegions": [],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "notes",
+      "path": "/equity/notes",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1620,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "journal",
+      "path": "/equity/journal",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1158,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "news",
+      "path": "/equity/news",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1234,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/stocks/AAPL",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "workstation",
+      "path": "/equity/chart-workstation",
+      "width": 1024,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "HM\nHome\nMK\nMarket\nWS\nWorkstation\nLP\nLaunchpad\nSC\nScreener\nPF\nPortfolio\nJN\nJournal\nBR\nBrain\nNT\nNotes\nSV\nViews\nWL\nWatchlist\nNW\nNews\nAL\nAlerts\nST\nSettings\nCMD\nAU\nTRADER\nGO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE ",
+      "documentWidth": 1024,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 1024,
+          "scrollWidth": 1261,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 960,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 960,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 777,
+          "scrollHeight": 1524,
+          "width": 960
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/chart-templates",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/scripting/scripts",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "home",
+      "path": "/",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 821,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 821,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 821,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINRNASD"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 821,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINRNASD"
+        },
+        {
+          "element": "div [Market heat strip].ot-home-widget-strip",
+          "width": 340,
+          "scrollWidth": 942,
+          "overflowX": "auto",
+          "text": "S&P 500----NASDAQ----DOW----GOLD----SILVER----CRUDE OIL----"
+        },
+        {
+          "element": "section [Launch Matrix].rounded-sm.border.border-terminal-border",
+          "width": 364,
+          "scrollWidth": 378,
+          "overflowX": "visible",
+          "text": "Launch MatrixDense function-key style routing into equity, derivatives, research, and"
+        },
+        {
+          "element": "div [Launch matrix].ot-home-widget-nav",
+          "width": 340,
+          "scrollWidth": 366,
+          "overflowX": "visible",
+          "text": "MARKETSEquityM1MARKETS desk accessF&OFOMARKETS desk access. Configuration: India live"
+        },
+        {
+          "element": "section.ot-home-widget-nav-section",
+          "width": 340,
+          "scrollWidth": 360,
+          "overflowX": "visible",
+          "text": "MARKETSEquityM1MARKETS desk accessF&OFOMARKETS desk access. Configuration: India live"
+        },
+        {
+          "element": "div.ot-home-widget-nav-grid",
+          "width": 340,
+          "scrollWidth": 360,
+          "overflowX": "visible",
+          "text": "EquityM1MARKETS desk accessF&OFOMARKETS desk access. Configuration: India live and hi"
+        },
+        {
+          "element": "section.ot-home-widget-nav-section",
+          "width": 340,
+          "scrollWidth": 347,
+          "overflowX": "visible",
+          "text": "DERIVATIVESOption ChainOCDERIVATIVES desk accessGreeksGRDERIVATIVES desk accessFuture"
+        },
+        {
+          "element": "div.ot-home-widget-nav-grid",
+          "width": 340,
+          "scrollWidth": 347,
+          "overflowX": "visible",
+          "text": "Option ChainOCDERIVATIVES desk accessGreeksGRDERIVATIVES desk accessFuturesFUTDERIVAT"
+        },
+        {
+          "element": "section.ot-home-widget-nav-section",
+          "width": 340,
+          "scrollWidth": 366,
+          "overflowX": "visible",
+          "text": "PORTFOLIOPaperPPPORTFOLIO desk accessHoldingsF3PORTFOLIO desk accessRisk DeskRSKPORTF"
+        },
+        {
+          "element": "div.ot-home-widget-nav-grid",
+          "width": 340,
+          "scrollWidth": 366,
+          "overflowX": "visible",
+          "text": "PaperPPPORTFOLIO desk accessHoldingsF3PORTFOLIO desk accessRisk DeskRSKPORTFOLIO desk"
+        },
+        {
+          "element": "section.ot-home-widget-nav-section",
+          "width": 340,
+          "scrollWidth": 345,
+          "overflowX": "visible",
+          "text": "WORKSPACEWorkstationWSWORKSPACE desk accessLaunchpadLPWORKSPACE desk accessSettingsF6"
+        },
+        {
+          "element": "div.ot-home-widget-nav-grid",
+          "width": 340,
+          "scrollWidth": 345,
+          "overflowX": "visible",
+          "text": "WorkstationWSWORKSPACE desk accessLaunchpadLPWORKSPACE desk accessSettingsF6WORKSPACE"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:23ET 15:47:23UTC 20:47:23NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 6MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:23ET 15:47:23UTC 20:47:23NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 6MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 822,
+          "scrollHeight": 6416,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/alerts/history",
+        "/api/earnings/calendar",
+        "/api/fno/chain/SPY/summary",
+        "/api/forex/cross-rates",
+        "/api/insider/recent",
+        "/api/notifications/unread-count",
+        "/api/quotes",
+        "/api/reports/market-status",
+        "/api/v1/backtest/presets",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "portfolio",
+      "path": "/equity/portfolio",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div [Dense data table].absolute.inset-0.overflow-auto",
+          "width": 338,
+          "scrollWidth": 1092,
+          "overflowX": "auto",
+          "text": "SymbolSORTSharesSORTAvg CostSORTCurrentSORTMarket ValueSORTP&LSORTP&L%SORTAAPL10$170."
+        },
+        {
+          "element": "div.",
+          "width": 1088,
+          "scrollWidth": 1092,
+          "overflowX": "visible",
+          "text": "SymbolSORTSharesSORTAvg CostSORTCurrentSORTMarket ValueSORTP&LSORTP&L%SORTAAPL10$170."
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "AAPL10$170.00$200.00$ 2 K$ 30017.65%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "BTC-USD0.05$70,000.00$80,000.00$ 4 K$ 50014.29%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "SAP.DE3€200.00€250.00€ 750$ 16525%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "MSFT4$370.00$400.00$ 1.6 K$ 1208.11%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "BTC-USD0.03$68,000.00$80,000.00$ 2 K$ 30017.65%Sell"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1086,
+          "scrollWidth": 1090,
+          "overflowX": "visible",
+          "text": "AAPL6$180.00$200.00$ 1.2 K$ 12011.11%Sell"
+        },
+        {
+          "element": "div [Dense data table].absolute.inset-0.overflow-auto",
+          "width": 338,
+          "scrollWidth": 1080,
+          "overflowX": "auto",
+          "text": "DateSORTTypeSORTSymbolSORTSharesSORTPrice / AmtSORTFeesSORTCash ΔSORTNotes2026-10-01b"
+        },
+        {
+          "element": "div.",
+          "width": 1076,
+          "scrollWidth": 1080,
+          "overflowX": "visible",
+          "text": "DateSORTTypeSORTSymbolSORTSharesSORTPrice / AmtSORTFeesSORTCash ΔSORTNotes2026-10-01b"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyAAPL10$170.00$2.00-$1,702.00Synthetic research: durable demand and valua"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyBTC-USD0.05$70,000.00$2.00-$3,502.00Synthetic research: durable demand a"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buySAP.DE3€200.00$2.00-$662.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        },
+        {
+          "element": "div.relative.flex.h-[26px]",
+          "width": 1074,
+          "scrollWidth": 1078,
+          "overflowX": "visible",
+          "text": "2026-10-01buyMSFT4$370.00$2.00-$1,482.00Synthetic research: durable demand and valuat"
+        },
+        {
+          "element": "div.min-w-0.truncate",
+          "width": 123,
+          "scrollWidth": 6474,
+          "overflowX": "hidden",
+          "text": "Synthetic research: durable demand and valuation assumptions require dated source rev"
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 5161,
+          "width": 390
+        },
+        {
+          "element": "textarea [Portfolio thesis].w-full.rounded-sm.border",
+          "height": 61,
+          "scrollHeight": 421,
+          "width": 338
+        }
+      ],
+      "holdingsTop": 1908,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/events/portfolio/upcoming",
+        "/api/forex/cross-rates",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "market-context",
+      "path": "/equity/market-context",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.ot-type-panel-subtitle.truncate.text-terminal-muted",
+          "width": 288,
+          "scrollWidth": 395,
+          "overflowX": "hidden",
+          "text": "On demand · citation references checked, not fact-checked"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:25ET 15:47:25UTC 20:47:25NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 7MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:25ET 15:47:25UTC 20:47:25NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 7MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 1441,
+          "width": 390
+        },
+        {
+          "element": "div.h-full.min-h-0.space-y-3",
+          "height": 624,
+          "scrollHeight": 1666,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "security",
+      "path": "/equity/security/AAPL",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:27ET 15:47:27UTC 20:47:27NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~6%MEM 8MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:27ET 15:47:27UTC 20:47:27NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~6%MEM 8MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 739,
+          "width": 390
+        },
+        {
+          "element": "div.h-full.min-h-0.overflow-auto",
+          "height": 624,
+          "scrollHeight": 1350,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/chart/AAPL",
+        "/api/notifications/unread-count",
+        "/api/peers/AAPL",
+        "/api/reports/market-status",
+        "/api/stock-picking/conviction/AAPL",
+        "/api/stocks/AAPL",
+        "/api/stocks/AAPL/analyst-consensus",
+        "/api/stocks/AAPL/financials",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "brain",
+      "path": "/equity/brain",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.ot-type-panel-subtitle.truncate.text-terminal-muted",
+          "width": 260,
+          "scrollWidth": 412,
+          "overflowX": "hidden",
+          "text": "Saved, dated answers — not automatically reused as evidence"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:28ET 15:47:28UTC 20:47:28NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 5MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:28ET 15:47:28UTC 20:47:28NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 5MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 858,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "notes",
+      "path": "/equity/notes",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.ot-type-panel-subtitle.truncate.text-terminal-muted",
+          "width": 280,
+          "scrollWidth": 516,
+          "overflowX": "hidden",
+          "text": "Capture a thought on anything — every note feeds your private Second Brain"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:29ET 15:47:29UTC 20:47:29NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 4MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:29ET 15:47:29UTC 20:47:29NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 4MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 3722,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "journal",
+      "path": "/equity/journal",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:30ET 15:47:30UTC 20:47:30NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 7MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:30ET 15:47:30UTC 20:47:30NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 7MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 2792,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "news",
+      "path": "/equity/news",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:32ET 15:47:32UTC 20:47:32NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 5MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:32ET 15:47:32UTC 20:47:32NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 5MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 1498,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/stocks/AAPL",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    },
+    {
+      "name": "workstation",
+      "path": "/equity/chart-workstation",
+      "width": 390,
+      "height": 1000,
+      "title": "OpenTerminalUI",
+      "bodyText": "GO\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\nNA\nNA\nNikkei 225\nNA\nNA\nNA\nGOLD\nNA\nNA\nNA\nSILVER\nNA\nNA\nNA\nCRUDE OIL\nNA\nNA\nNA\nS&P 500\nNA\nNA\nNA\nNASDAQ\nNA\nNA\nNA\nDOW\nNA\nNA\nNA\nFTSE 100\nNA\nNA\nNA\nDAX\nNA\n",
+      "documentWidth": 390,
+      "overflow": [
+        {
+          "element": "div.flex.h-screen.overflow-hidden",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "hidden",
+          "text": "HMHomeMKMarketWSWorkstationLPLaunchpadSCScreenerPFPortfolioJNJournalBRBrainNTNotesSVV"
+        },
+        {
+          "element": "div.relative.z-10.flex",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "GOS&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANA"
+        },
+        {
+          "element": "div.relative.z-30.h-8",
+          "width": 390,
+          "scrollWidth": 2475,
+          "overflowX": "hidden",
+          "text": "S&P 500NANANANASDAQNANANADOWNANANAFTSE 100NANANADAXNANANANikkei 225NANANAGOLDNANANASI"
+        },
+        {
+          "element": "div.relative.z-20.border-b",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.relative.flex.items-center",
+          "width": 390,
+          "scrollWidth": 1197,
+          "overflowX": "visible",
+          "text": "HOMESCREENERCOMPAREHEATMAPF&O ->Load🇮🇳 IN🇺🇸 US🇪🇺 EU🪙 CRYPTONYSENASDAQUSDEURINR"
+        },
+        {
+          "element": "div.flex.items-center.justify-between",
+          "width": 390,
+          "scrollWidth": 399,
+          "overflowX": "visible",
+          "text": "WorkspaceTraderQuantPMRiskSystemThemeTerminal NoirClassic BloombergLight DeskCustomvH"
+        },
+        {
+          "element": "div.border-t.border-terminal-border.bg-[#0D1117]",
+          "width": 390,
+          "scrollWidth": 575,
+          "overflowX": "visible",
+          "text": "IST 02:17:33ET 15:47:33UTC 20:47:33NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 7MB "
+        },
+        {
+          "element": "div.grid.h-5.grid-cols-[auto_1fr_auto]",
+          "width": 366,
+          "scrollWidth": 563,
+          "overflowX": "visible",
+          "text": "IST 02:17:33ET 15:47:33UTC 20:47:33NSE: CLOSEDNYSE: CLOSEDDISCONNECTED0CPU~5%MEM 7MB "
+        }
+      ],
+      "verticalScrollRegions": [
+        {
+          "element": "div.relative.z-0.min-h-0",
+          "height": 688,
+          "scrollHeight": 1434,
+          "width": 390
+        }
+      ],
+      "holdingsTop": null,
+      "pageErrors": [],
+      "blockedOrigins": [],
+      "genericFallbackPaths": [
+        "/api/chart-templates",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/scripting/scripts",
+        "/api/v1/equity/overview/top-tickers"
+      ]
+    }
+  ]
+}

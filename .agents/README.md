@@ -1,5 +1,37 @@
 # External-agent project context
 
+Current work **2026-11-18: v3 discovery/design proposal**. The maintainer
+confirmed post-release app docs #285 and bilingual blog chapter 24 (`praderasblog`
+#121) merged, then authorized discovery/design for v3. v2 close-out is complete.
+This branch adds `docs/design/v3/`: a synthetic Chrome audit of nine initial
+routes at 1440/1024/390, Portfolio before/after screenshots, an isolated interactive
+HTML study, workflow/accounting boundaries and proposed release acceptance.
+Production components/APIs/accounting/schemas remain unchanged; version stays 2.8.0.
+
+Proposed v3.0 gate: shared responsive frontend foundation + complete Portfolio
+pilot. Other page redesigns are later v3.x scope proposals. Review `SCOPE.md`
+and the study before implementation; do not treat the HTML as shipped APIs.
+All-portfolios consolidation needs reporting-currency/identity/coverage contracts.
+Existing-position/external receipt entry needs audited non-cash ledger semantics,
+unknown cost basis and separate in-kind capital-flow valuation for performance;
+no fake buy/deposit/profit. Full internal transfer and Journal matching stay later.
+
+Observed baseline issues include clipped shell controls despite a viewport-width
+root document, holdings below the initial viewport (y=958/1503/1908), fixed/stacked
+portfolio management forms and the source-confirmed array-indexed per-holding
+“Performance vs Benchmark” curve. Keep contained table/ticker scrolling distinct
+from defects. Initial unasked/empty research states are not a full generated-
+evidence audit; the pack explicitly records fixture limits and follow-up cases.
+
+Validation: 27 fixture-only initial views with no captured JS runtime errors;
+prototype overview/scope/lot drill-down, buy review, oversell rejection,
+unknown-basis receipt, separate native fee cash legs, partial/empty/error states,
+section navigation and native-dialog keyboard containment/Escape/focus return
+pass at 1440/1024/390. Source/app regression suites are not rerun for a docs-only
+study; production migration must preserve populated research/evidence journeys.
+No private data, backend, database, provider or model calls used. Scripts block
+external traffic and writes. Deployment remains with the host agent.
+
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
 The maintainer confirmed merge; carry forward earlier accepted portfolio/BTC
@@ -47,9 +79,9 @@ Compose configuration, both generated fixture checks and version consistency
 passed. Local Python 3.12.16/Node 26.7.0 checks differ from CI Python 3.11/Node 22.
 See `docs/wiki/Releasing.md`. v3 remains the
 Portfolio-first frontend overhaul after v2 close-out. Do not start another v2
-feature minor. Post-release documentation is reconciled in this branch; the
-established bilingual blog routine is in progress as chapter 24. v3 implementation
-is not started by this close-out. Deployment stays with the host agent.
+feature minor. Post-release docs #285 and bilingual chapter 24 (blog #121) are merged per
+maintainer confirmation. v3 discovery is authorized; production migration has
+not started. Deployment stays with the host agent.
 
 This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have

@@ -16,6 +16,7 @@ contract.
 | v2.4 model-profile configuration, audited task map and rollout status | [`wiki/Architecture.md#model-profiles-and-task-routing-v24-foundation`](wiki/Architecture.md#model-profiles-and-task-routing-v24-foundation) |
 | Configuration and provider limits | [`wiki/Limitations.md`](wiki/Limitations.md), [`.env.example`](../.env.example) |
 | Product roadmap and releases | [`wiki/Roadmap.md`](wiki/Roadmap.md), [`wiki/Releasing.md`](wiki/Releasing.md) |
+| v3 discovery, responsive audit and Portfolio design study (proposal) | [`design/v3/README.md`](design/v3/README.md) |
 | Private Second Brain retrieval evaluation | [`wiki/Brain-Retrieval-Evaluation.md`](wiki/Brain-Retrieval-Evaluation.md) |
 | Comparison briefing interpretation and usefulness evaluation | [`wiki/Briefing-Evaluation.md`](wiki/Briefing-Evaluation.md) |
 | Durable news/sentiment storage boundary and legacy provenance audit | [`wiki/News-Evidence-Contract.md`](wiki/News-Evidence-Contract.md) |
