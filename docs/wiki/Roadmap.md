@@ -748,11 +748,12 @@ assigned. New providers, broad regional expansion, complete historical archives,
 full technical thesis validation and frontend redesign are outside this scope.
 Other v2 evidence gaps remain candidates, not compulsory releases before v3.
 
-## v2.8.0 — Durable news and sentiment evidence (release preparation)
+## v2.8.0 — Durable news and sentiment evidence (released 2026-11-18)
 
 The approved final v2 increment is implemented through merged PR #283.
-Release metadata is being prepared for **2.8.0**; tagging/publication remains a
-separate authorized step after review. v3 follows v2 close-out and begins with
+Release-prep PR #284 passed all three CI jobs and merged at `61599bc`. The
+maintainer authorized publication; **v2.8.0** was tagged, published and verified
+on 2026-11-18. No v2.8 release gate remains. v3 follows v2 close-out and begins with
 Portfolio UX, without pulling optional backlog work into another v2 minor.
 
 The delivered workflow saves complete bounded comparison evidence/results and
@@ -769,7 +770,7 @@ their references; owner deletion rejects pinned evidence. Bounded daily cleanup
 waits one interval before its first sweep. Additive migrations 0019/0020 preserve
 legacy research. Home ledger-history and BTC candle fixes discovered during the
 milestone are included. See the [news evidence contract](News-Evidence-Contract.md)
-and [release ledger](Releasing.md#v280-verification-ledger-release-preparation).
+and [release ledger](Releasing.md#v280-verification-ledger-released).
 
 ### Sentiment decision-model evaluation candidate
 

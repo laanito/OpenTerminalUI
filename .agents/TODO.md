@@ -1,12 +1,15 @@
 # Current project state and backlog
 
-Release preparation **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
+Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
 The maintainer confirmed merge; carry forward earlier accepted portfolio/BTC
 fixes without requesting duplicate tests. Backend/frontend/lock/OpenAPI and
-README/site build labels now align to 2.8.0; the latest published release is
-still v2.7.0. No v2.8 tag/GitHub release has been published. Release publication
-requires the preparation PR to merge and explicit maintainer authorization.
+README/site labels align to 2.8.0. Release-prep PR #284 passed build-and-test,
+clean-install and postgres-contract and merged at `61599bc`. The maintainer
+explicitly authorized tagging/publication. The annotated tag and public,
+non-prerelease GitHub release were published and verified on 2026-11-18.
+Remote v2.8.0 resolves to `61599bcc510f38661757dbd419d4b502f5303f88`; do not move it.
+No v2.8 release gate remains; the approved v2 feature scope is closed.
 Deployment stays with the host agent; do not monitor CI unless requested.
 
 The milestone saves bounded comparison evidence/results and actual model inputs;
@@ -23,7 +26,8 @@ Upgrade adds additive Alembic `0019_news_evidence` and
 installations must upgrade their configured database. Downgrades preserve research
 tables; a disposable SQLite full-chain upgrade/downgrade to 0018/re-upgrade passed.
 No production database was accessed. No dependency, provider, indicator or
-embedding change. PostgreSQL/clean-install execution remains in guarded CI.
+embedding change. Guarded PostgreSQL and clean-install CI passed in #284; this
+does not claim a production deployment by the coding agent.
 
 The agreed unreferenced evidence default is 90 days from latest recording;
 `NEWS_EVIDENCE_RETENTION_DAYS=0` disables expiry. Compose forwards it; restart
@@ -43,10 +47,11 @@ Compose configuration, both generated fixture checks and version consistency
 passed. Local Python 3.12.16/Node 26.7.0 checks differ from CI Python 3.11/Node 22.
 See `docs/wiki/Releasing.md`. v3 remains the
 Portfolio-first frontend overhaul after v2 close-out. Do not start another v2
-feature minor or v3 implementation as part of release preparation. The established
-post-release documentation/blog routine follows authorized publication.
+feature minor. Post-release documentation is reconciled in this branch; the
+established bilingual blog routine is in progress as chapter 24. v3 implementation
+is not started by this close-out. Deployment stays with the host agent.
 
-Current state **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
+Previous published baseline **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
 is published from `4bc03cf`, the merge of release-prep PR #263. Implementation
 PRs #259–#262 are merged; the maintainer explicitly confirmed #262 as merged
 and tested. Carry that acceptance forward. Backend/frontend/lock/OpenAPI and
@@ -1436,9 +1441,12 @@ this foundation. Storage, scoring/review, Deep integration and the agreed
       passed, build and 39 installed-Chrome journeys passed.
 - [x] Maintainer confirmed retention PR #283 merged. Begin release validation and
       documentation/version preparation for 2.8.0; preserve prior host acceptance.
-- [ ] Merge the release-prep PR after CI and maintainer review; obtain explicit
-      release authorization before tagging/publication. Deployment stays with
-      the host agent. Follow with post-release docs/blog; do not start v3 here.
+- [x] Release-prep PR #284 passed all three CI jobs and merged at `61599bc`.
+      With explicit authorization, publish and verify annotated tag/public release
+      v2.8.0 on 2026-11-18. No v2 release gate remains.
+- [x] Reconcile post-release README/wiki/changelog and external-agent context.
+- [ ] Finish bilingual chapter-24 blog PR and maintainer publication review.
+      Deployment belongs to the host agent; v3 implementation starts separately.
 
 Replay means recovering original evidence/results and enabling a new run from
 those inputs, not promising identical LLM prose. The agreed 90-day retention,
