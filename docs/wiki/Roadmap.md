@@ -748,38 +748,28 @@ assigned. New providers, broad regional expansion, complete historical archives,
 full technical thesis validation and frontend redesign are outside this scope.
 Other v2 evidence gaps remain candidates, not compulsory releases before v3.
 
-## v2.8 planning — Durable news and sentiment evidence
+## v2.8.0 — Durable news and sentiment evidence (release preparation)
 
-The proposed next cross-market increment is selected-headline sentiment in
-comparison briefings. On 2026-11-11 the maintainer established a prerequisite:
-news and sentiment used as references must be durable for a retention period so
-an analysis can be revisited with the evidence it actually used. Durability and
-replay are part of this milestone's design, not a follow-up after integration.
-Implementation has begun with owner-scoped exact-text snapshots and append-only
-assessments, an additive migration and storage tests. This foundation is not yet
-wired to existing news/scoring routes. Explicit comparison capture now retains
-full bounded evidence/results and dispatched model inputs, with owner-scoped
-list/reopen/delete APIs and additive `0020_comparison_captures`; existing generation
-endpoints remain ephemeral. The browser now offers explicit generate-and-save,
-paginated saved review, original citation/input inspection and deletion, backed
-by a cancellable capture progress stream. Saved-input reruns and separately
-linked fresh-data refreshes now preserve the original while storing independent
-children with lineage. Reruns freeze prompts/evidence and use the current Deep
-model for one checked completion; refresh uses current collection/prompts. Explicit
-saved-headline assessment APIs now retain exact selected source text and separate
-keyword tone/Fast asset implication, including original scoring times across
-cache reuse and actual model inputs. Saved review now exposes explicit bounded
-headline selection, cancellable assessment progress, original text/model-input
-inspection and owner history that survives source deletion. Explicit selection
-of up to five retained observations now creates a checked, linked Deep follow-up
-from frozen market context with independent methods/failures, original scoring
-provenance and inspectable retained references. Originals remain unchanged;
-unselected generation stays on its existing contract. The agreed 90-day standalone retention policy, protected references, owner
-delete flow and bounded cleanup are now implemented; release review remains open. See [News evidence contract](News-Evidence-Contract.md)
-for the provenance audit and precise boundary. The maintainer chose 90 days on 2026-11-17, configurable with `0` disabling
-expiry. Saved comparison runs remain explicitly retained; their references
-protect independent evidence. A daily bounded worker prunes only eligible
-unreferenced bundles. No further feature scope is added before release review.
+The approved final v2 increment is implemented through merged PR #283.
+Release metadata is being prepared for **2.8.0**; tagging/publication remains a
+separate authorized step after review. v3 follows v2 close-out and begins with
+Portfolio UX, without pulling optional backlog work into another v2 minor.
+
+The delivered workflow saves complete bounded comparison evidence/results and
+actual dispatched model inputs. Owner history reopens without inference; frozen
+input reruns and current-source refreshes create separate linked children.
+Explicit headline assessment retains exact supplied text, independent keyword
+tone and Fast asset implication, original scoring/cache provenance and failures.
+Up to five selected retained observations can inform a new checked Deep run using
+frozen market context. Original captures remain unchanged.
+
+The maintainer chose a **90-day standalone retention default** on 2026-11-17,
+configurable via `NEWS_EVIDENCE_RETENTION_DAYS` (`0` disables). Saved runs protect
+their references; owner deletion rejects pinned evidence. Bounded daily cleanup
+waits one interval before its first sweep. Additive migrations 0019/0020 preserve
+legacy research. Home ledger-history and BTC candle fixes discovered during the
+milestone are included. See the [news evidence contract](News-Evidence-Contract.md)
+and [release ledger](Releasing.md#v280-verification-ledger-release-preparation).
 
 ### Sentiment decision-model evaluation candidate
 
@@ -853,7 +843,8 @@ made private; any shared immutable text storage must not expose another user's
 analyses, research selections or private annotations. Choose the storage/access
 boundary explicitly during the schema audit. Preserve PostgreSQL/SQLite parity;
 review additive migrations, legacy-row preservation and cleanup on disposable
-DBs before rollout. This is a planning entry; it changes no schema or stored data.
+DBs before rollout. Migrations 0019/0020 add owner-scoped research tables; lifecycle cleanup adds
+no further schema or old-row rewrite.
 
 ### Delivery and acceptance
 
@@ -879,7 +870,7 @@ DBs before rollout. This is a planning entry; it changes no schema or stored dat
 These are reviewable boundaries, not four compulsory PRs. Full web crawling,
 complete historical news archives, calibrated market-wide sentiment, automatic
 private-memory indexing, provider expansion, technical thesis validation and the
-major frontend overhaul are outside this proposed increment. Historical macro
+major frontend overhaul are outside this release. Historical macro
 vintages and economic-calendar reliability remain separate candidates.
 Capture is bounded to the comparison workflow; this does not redesign Brain Log
 or the journal/portfolio decision lifecycle.

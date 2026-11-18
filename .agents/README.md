@@ -1,34 +1,50 @@
 # External-agent project context
 
-Current implementation **2026-11-17: v2.8 retention and deletion**. PR #282 is
-merged; preserve its checked Deep sentiment integration. The maintainer chose
-**90 days** for unreferenced headline evidence. This branch implements that
-default, `NEWS_EVIDENCE_RETENTION_DAYS=0` to disable expiry, Compose forwarding
-and a bounded daily cleanup worker (100 bundles, first sweep after one interval).
-Age uses latest capture/assessment recording, not original scoring time.
-Saved comparisons never automatically expire. Same-owner saved JSON references
-protect independent bundles until the last reference is removed, without resetting
-the age clock. Conservative JSON matching can overretain and scales with saved
-history; no migration/backfill or immutable payload rewrite is introduced.
+Release preparation **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
+Implementation through retention/deletion PR #283 is merged at `0e7a383`.
+The maintainer confirmed merge; carry forward earlier accepted portfolio/BTC
+fixes without requesting duplicate tests. Backend/frontend/lock/OpenAPI and
+README/site build labels now align to 2.8.0; the latest published release is
+still v2.7.0. No v2.8 tag/GitHub release has been published. Release publication
+requires the preparation PR to merge and explicit maintainer authorization.
+Deployment stays with the host agent; do not monitor CI unless requested.
 
-JWT owner DELETE removes an unreferenced text/assessment bundle atomically;
-404 hides unknown/foreign records and 409 protects new/shared references.
-Browser inspection shows concise eligibility/protection and confirmed deletion.
-Saved embedded copies remain self-contained. Capture/evidence writes, pruning
-and deletion use short owner locks (PostgreSQL READ COMMITTED, SQLite writer
-reservation); no provider/model call holds those locks. A new Deep save rechecks
-selected live IDs and reports a known unsaved outcome if they disappeared.
-Shutdown joins an in-progress bounded cleanup batch. Account deletion is unchanged.
+The milestone saves bounded comparison evidence/results and actual model inputs;
+reopen is offline, rerun freezes inputs with current Deep, refresh collects new
+sources. Both follow-ups retain separate lineage. Selected exact headline text,
+independent keyword tone/Fast asset implication, scoring/cache provenance and
+failed methods are durable. Selected retained observations inform a new checked
+Deep run with frozen market context. No automatic Brain indexing or calibrated
+whole-market sentiment claim. Notes, Brain and public legacy news retain their
+existing lifecycle.
 
-Validation: **1,914 backend tests passed, three PostgreSQL-only skipped**;
-**830 frontend tests**, production build and **39 installed-Chrome smoke journeys**
-passed. PostgreSQL lifecycle/reference/deletion/pruning checks are added to the
-existing guarded disposable CI lane; native PostgreSQL was not run locally.
-Generated API/surface/mock guards cover 492 operations/87 families. No production
-DB was queried or changed. User review/deployment acceptance and release
-validation/preparation remain; release publication is not yet authorized.
-#281 portfolio-history UX acceptance carries forward. Do not start v3 or add
-new v2 feature scope; v3 remains the Portfolio-first frontend overhaul.
+Upgrade adds additive Alembic `0019_news_evidence` and
+`0020_comparison_captures`. Docker upgrades before startup; existing local
+installations must upgrade their configured database. Downgrades preserve research
+tables; a disposable SQLite full-chain upgrade/downgrade to 0018/re-upgrade passed.
+No production database was accessed. No dependency, provider, indicator or
+embedding change. PostgreSQL/clean-install execution remains in guarded CI.
+
+The agreed unreferenced evidence default is 90 days from latest recording;
+`NEWS_EVIDENCE_RETENTION_DAYS=0` disables expiry. Compose forwards it; restart
+backend after changing it. Saved runs never automatically expire and protect
+references until the final retaining run is deleted, without resetting age.
+Owner bundle DELETE gives 404 for unknown/foreign IDs, 409 for references.
+Cleanup is daily, bounded to 100 bundles and delayed one interval after startup.
+Short owner locks serialize writes/deletion (PostgreSQL READ COMMITTED/SQLite
+writer reservation); no model call holds the lock. Mid-generation source removal
+produces a known unsaved outcome. Conservative JSON matching can overretain and
+scales with owner history. No lifecycle migration/backfill is needed.
+
+Post-bump `make gate` passed compilation, API/surface/mock guards, 1,914 backend
+tests (three PostgreSQL-only skipped; 78.49% coverage), production build and all
+830 frontend tests/133 files. All 39 installed-Chrome smoke journeys passed.
+Compose configuration, both generated fixture checks and version consistency
+passed. Local Python 3.12.16/Node 26.7.0 checks differ from CI Python 3.11/Node 22.
+See `docs/wiki/Releasing.md`. v3 remains the
+Portfolio-first frontend overhaul after v2 close-out. Do not start another v2
+feature minor or v3 implementation as part of release preparation. The established
+post-release documentation/blog routine follows authorized publication.
 
 This directory is the repository-owned handoff for AI coding agents and new
 maintainers. Read it before making changes. It records decisions that may have

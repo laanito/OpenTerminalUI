@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.7.0-0f172a" alt="Version 2.7.0" />
+  <img src="https://img.shields.io/badge/version-2.8.0-0f172a" alt="Version 2.8.0" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="Node 22" />
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -42,7 +42,41 @@ failures must be visible. A route existing does not make it a supported product;
 the [surface inventory](docs/wiki/Surface-Inventory.md) and
 [limitations](docs/wiki/Limitations.md) define the retained contracts.
 
-## Current release
+## Release preparation
+
+**v2.8.0 — Durable news and sentiment evidence** is prepared for review;
+the latest published release remains v2.7.0 below. In Market Context, choose
+**Generate and save briefing**, then reopen the original evidence/result and
+actual model inputs without a source fetch or model call. **Re-run saved inputs**
+freezes the inputs and uses the current Deep model; **Refresh with current data**
+collects new evidence. Both create separate linked runs.
+
+Within saved review, explicitly assess selected headlines and use up to five
+retained observations in a new Deep interpretation. Keyword text tone and Fast
+asset implication remain distinct; failures are never neutral evidence. These
+are selected headline judgments, not measured whole-market sentiment. Standalone
+bundles default to **90 days from latest recording**; saved runs protect their
+references. `NEWS_EVIDENCE_RETENTION_DAYS=0` disables expiry. Inspect protection
+and confirm deletion of unreferenced bundles in retained history.
+
+Home now reconstructs approximate **30-day portfolio history** from recorded
+buys, sells, cash, fees and dividends, including closed positions. It is not an
+independently verified NAV series; missing inputs stay visible and development-era
+opening adjustments are disclosed on demand. BTC hourly candle inspection also
+uses the selected historical candle consistently.
+
+Upgrade adds Alembic `0019_news_evidence` and `0020_comparison_captures`. Docker
+runs migrations before startup. Existing local installations must run
+`PYTHONPATH=. backend/.venv/bin/python -m alembic -c backend/alembic.ini upgrade head`
+against their configured database before starting the new backend. No legacy
+news-score backfill, dependency, provider or embedding change is required.
+See [research workflows](docs/wiki/Research-Workflows.md), the
+[news evidence contract](docs/wiki/News-Evidence-Contract.md) and
+[release verification](docs/wiki/Releasing.md#v280-verification-ledger-release-preparation).
+Deployment remains with the host agent. v3's Portfolio-first frontend overhaul
+follows v2 close-out.
+
+## Previous release
 
 [v2.7.0 — Filing-grounded comparison briefings](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.7.0)
 was published on **2026-11-09** from `4bc03cf`. It adds opt-in **SEC filing facts** in
@@ -62,7 +96,7 @@ or embedding change is introduced. Filing data requires the existing host
 [filing contract](docs/wiki/Fundamentals-Briefing-Contract.md) and
 [release verification](docs/wiki/Releasing.md#v270-verification-ledger-released).
 
-## Previous release
+## Earlier release
 
 [v2.6.0 — Technical context across AI research](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.6.0)
 was published on **2026-11-05** from `fccb6b3`. The same three dated observations

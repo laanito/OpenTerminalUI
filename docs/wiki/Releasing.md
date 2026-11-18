@@ -480,6 +480,61 @@ were verified; the tag resolves to `4bc03cfd71febaa87169c62b977e739b6197aaaf`.
 No v2.7 release gate remains. Deployment belongs to the host agent. Post-release
 documentation reconciliation and the established bilingual blog routine follow.
 
+### v2.8.0 verification ledger (release preparation)
+
+The final approved v2 milestone delivers durable news/sentiment evidence in the
+comparison workflow. Implementation is merged through PR #283 at `0e7a383`.
+The maintainer confirmed the final retention PR merged; earlier portfolio-history
+and BTC chart fixes retain their recorded acceptance. Release preparation does
+not independently certify configured-model quality or live provider coverage.
+
+| Contract | Evidence |
+|---|---|
+| Immutable exact-text/assessment storage, recording/scoring dates and additive migration preservation | `backend/tests/test_news_evidence.py` |
+| Owner-scoped capture/review, actual dispatched inputs, bounded failures and cancellation | `backend/tests/test_comparison_captures.py`, saved comparison browser journeys |
+| Frozen-input rerun versus fresh-source refresh, separate lineage and deleted-parent independence | `backend/tests/test_comparison_captures.py`, saved comparison browser journeys |
+| Independent keyword tone/Fast asset implication, cache provenance and failed methods | retained headline/scoring backend tests, `frontend/tests/e2e/headline-sentiment.spec.ts` |
+| Selected retained Deep interpretation, exact linked references and self-contained saved evidence | `backend/tests/test_retained_sentiment_briefing.py`, shared fixture checks, retained-sentiment browser journeys |
+| Latest-recording age, shared-reference protection, owner deletion, bounded cleanup and save/prune serialization | `backend/tests/test_news_evidence_lifecycle.py`, `frontend/tests/e2e/headline-retention.spec.ts` |
+| Approximate ledger history, cash/closed holdings, honest missing inputs and compact legacy adjustments | portfolio ledger-history backend tests, `frontend/tests/e2e/home-portfolio-history.spec.ts` |
+| BTC hourly candle inspection, live tail normalization and latest-candle restoration | chart backend/frontend tests, `frontend/tests/e2e/crypto-stock-detail.spec.ts` |
+
+After the metadata bump to 2.8.0, consolidated `make gate` passed backend
+compilation, API/surface/mock guards (492 operations/87 families), **1,914 backend
+tests** (three skipped; **78.49% coverage** against the 45% gate), production build
+and **830 frontend tests across 133 files**. All **39 installed-Chrome smoke
+journeys** passed with one worker. Compose configuration, both shared generated
+fixture checks and backend/frontend/lock/OpenAPI/public version consistency passed.
+Local checks used Python 3.12.16 and Node 26.7.0; CI retains Python 3.11 / Node 22.
+
+Native PostgreSQL execution and the fresh Docker stack remain in the
+existing guarded CI lanes; local SQLite checks do not establish a PostgreSQL
+rollout. Deterministic fixtures establish contracts rather than live reasoning
+quality. Deployment belongs to the host agent.
+
+Upgrade applies additive migrations `0019_news_evidence` and
+`0020_comparison_captures`. Docker runs Alembic before startup; existing local
+installations must run their configured Alembic upgrade before starting the new
+backend. Downgrades retain captured research tables; re-upgrade is idempotent.
+A disposable SQLite full-chain upgrade, downgrade to 0018 and re-upgrade passed,
+including presence of retained research tables after rollback. Module tests
+exercise legacy-row/record preservation; native PostgreSQL parity remains in CI.
+No production database was accessed.
+
+`NEWS_EVIDENCE_RETENTION_DAYS` defaults to 90; `0` disables expiry. Compose forwards
+the setting and changing it requires backend restart. A daily sweep removes at
+most 100 eligible unreferenced bundles, starting after the first full interval.
+Age uses latest recording, not original scoring. Saved runs do not automatically
+expire; their references protect evidence until the last run is removed.
+PostgreSQL owner locks require default READ COMMITTED isolation. Conservative
+JSON reference matching can overretain and scales with owner history.
+
+No new provider, dependency, indicator or embedding behavior is introduced.
+Decision-model evaluation, full article archives, automatic private indexing and
+technical thesis validation remain outside this release. v3 is the Portfolio-first
+frontend overhaul after v2 close-out. Tagging/publication awaits release-prep
+merge and explicit maintainer authorization; no v2.8 tag/release is published yet.
+
 ## Cutting the release
 
 ```bash

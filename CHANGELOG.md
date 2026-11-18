@@ -6,6 +6,25 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-11-18
+
+Comparison research can now be saved with its original evidence, checked answer
+or failure and actual model inputs. Reopen without fetching data, rerun frozen
+inputs or refresh current sources as separate linked runs. Explicitly assess
+saved headlines and use selected retained opinions in a new Deep interpretation.
+Text tone and asset implication remain independent; failed methods stay failed.
+
+Standalone headline evidence defaults to 90 days from its latest recording;
+saved runs protect their referenced evidence. Set `NEWS_EVIDENCE_RETENTION_DAYS=0`
+to disable expiry. Home also reconstructs approximate 30-day portfolio history
+from the ledger, with legacy adjustments available in a compact disclosure.
+
+Implementation is merged through PR #283. Release preparation is in progress;
+the tag and GitHub release have not been published. Upgrade applies additive
+Alembic migrations `0019_news_evidence` and `0020_comparison_captures`; Docker
+runs Alembic before startup, while existing local installations must upgrade.
+No dependency, provider or embedding change is required.
+
 ### Added
 - **Retained headline lifecycle** — standalone headline/assessment bundles default
   to 90 days from their latest recording, with configurable expiry (`0` disables).
@@ -17,7 +36,7 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   headline observations from a saved news briefing and save a separate linked
   interpretation using frozen market evidence. Inspect original text, independent
   methods, scoring dates/inputs and checked citations; failures remain failures.
-  No source refresh or rescoring runs. Retention cleanup remains subsequent work.
+  No source refresh or rescoring runs.
 - **Reconstructed portfolio history** — Home replays the primary portfolio's
   ledger across the last 30 UTC days, including cash, closed positions, fees and
   dividends. New purchases no longer reset the window. A daily inspection table
@@ -30,13 +49,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   inspect original text, methods, scoring times and model inputs. Keyword tone
   and Fast asset implication stay separate; failed models are not shown as
   neutral. Paginated retained history works after source-briefing deletion.
-  Deep sentiment interpretation and retention cleanup remain subsequent work.
 - **Durable selected-headline assessments (API)** — explicitly score up to ten
   headlines from an owned saved comparison, retaining exact text and independent
   keyword tone/Fast asset-implication assessments. Model failures stay failed;
   cache hits preserve original scoring times and model inputs. Owner-only reads
   work after source-capture deletion. No migration or legacy-score backfill.
-  Checked Deep interpretation and retention cleanup remain subsequent work.
 - **Linked saved comparison follow-ups** — **Re-run saved inputs** reuses the last
   dispatched prompts, response format and generation settings with the current
   Deep model and frozen evidence, making one checked completion. **Refresh with
@@ -50,8 +67,7 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   citations and inputs, or explicitly delete them. Reopening performs no new
   market or model work. A cancellable progress endpoint acknowledges saving only
   after commit; interrupted acknowledgement can be checked in saved history.
-  Temporary generation remains available. Sentiment integration and retention
-  cleanup remain later work.
+  Temporary generation remains available.
 - **Explicit durable comparison captures (API)** — authenticated
   `POST /api/market-context/briefing-captures` generates from fresh server-fetched
   selections and retains the full bounded evidence, checked answer or typed
@@ -59,8 +75,7 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   and structured-format/token retries. Owner-scoped list/reopen/delete endpoints
   recover the original record without fetching sources or running inference.
   Additive migration `0020_comparison_captures` preserves existing research.
-  Existing generation endpoints stay ephemeral; sentiment integration and retention
-  cleanup remain open.
+  Existing generation endpoints stay ephemeral.
 
 ### Fixed
 - **Compact portfolio history notices** — show one collapsed legacy-adjustment
@@ -75,7 +90,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   displayed 30-day window, including their proceeds and fees, rather than blocking
   reconstruction. Warnings identify every excluded row and explain possible cash
   differences from current accounting. In-window oversells and remaining quantity
-  mismatches still fail explicitly; no stored transaction is changed.
+  mismatches outside the legacy opening adjustment still fail explicitly;
+  no stored transaction is changed.
 - **Benchmark prior close at a new holdings window** — retain earlier benchmark
   observations when the current basket starts after the last market session,
   such as a weekend. The response includes quote as-of dates and coverage bounds;
@@ -92,9 +108,9 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   ID, use only shared observations in the last 30 UTC calendar days, and rebase
   holdings/benchmark to 100 at the same first date on one shared vertical scale.
   Show the actual dates, base currency, history status and missing-input reasons.
-  Label this as current-open-holdings history, rather than ledger/NAV returns,
-  and remove the misleading net-liquidation sparkline. No backend/accounting
-  changes; overlapping polls and late prior-scope responses cannot replace data.
+  The initial current-open-holdings curve is superseded by the ledger history
+  described above; Portfolio HQ now uses its value history. Overlapping polls
+  and late prior-scope responses cannot replace data.
 - **BTC hourly candles and inspection** — fold Yahoo's off-boundary, zero-volume
   flat quote tail into an existing crypto period candle, preserving its open and
   volume while updating close/extremes. Omit a quote-only tail when its period is
