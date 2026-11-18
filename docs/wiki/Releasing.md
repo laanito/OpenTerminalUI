@@ -480,7 +480,7 @@ were verified; the tag resolves to `4bc03cfd71febaa87169c62b977e739b6197aaaf`.
 No v2.7 release gate remains. Deployment belongs to the host agent. Post-release
 documentation reconciliation and the established bilingual blog routine follow.
 
-### v2.8.0 verification ledger (release preparation)
+### v2.8.0 verification ledger (released)
 
 The final approved v2 milestone delivers durable news/sentiment evidence in the
 comparison workflow. Implementation is merged through PR #283 at `0e7a383`.
@@ -532,8 +532,17 @@ JSON reference matching can overretain and scales with owner history.
 No new provider, dependency, indicator or embedding behavior is introduced.
 Decision-model evaluation, full article archives, automatic private indexing and
 technical thesis validation remain outside this release. v3 is the Portfolio-first
-frontend overhaul after v2 close-out. Tagging/publication awaits release-prep
-merge and explicit maintainer authorization; no v2.8 tag/release is published yet.
+frontend overhaul after v2 close-out.
+
+Release-prep PR [#284](https://github.com/laanito/OpenTerminalUI/pull/284) passed
+build-and-test, clean-install and postgres-contract, then merged at `61599bc`.
+Following explicit maintainer authorization, the annotated tag and public,
+non-prerelease [GitHub release v2.8.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.8.0)
+were published and verified on 2026-11-18. The remote tag resolves to
+`61599bcc510f38661757dbd419d4b502f5303f88`; do not move it. Guarded PostgreSQL and
+fresh-stack CI passed; no production rollout was performed by the coding agent.
+No v2.8 release gate remains. This closes the approved v2 feature scope.
+Post-release documentation/blog close-out precedes the Portfolio-first v3 work.
 
 ## Cutting the release
 

@@ -42,10 +42,11 @@ failures must be visible. A route existing does not make it a supported product;
 the [surface inventory](docs/wiki/Surface-Inventory.md) and
 [limitations](docs/wiki/Limitations.md) define the retained contracts.
 
-## Release preparation
+## Current release
 
-**v2.8.0 — Durable news and sentiment evidence** is prepared for review;
-the latest published release remains v2.7.0 below. In Market Context, choose
+[v2.8.0 — Durable news and sentiment evidence](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.8.0)
+was published on **2026-11-18** from `61599bc`, after release-prep PR #284 passed
+all three CI jobs and merged. In Market Context, choose
 **Generate and save briefing**, then reopen the original evidence/result and
 actual model inputs without a source fetch or model call. **Re-run saved inputs**
 freezes the inputs and uses the current Deep model; **Refresh with current data**
@@ -72,7 +73,7 @@ against their configured database before starting the new backend. No legacy
 news-score backfill, dependency, provider or embedding change is required.
 See [research workflows](docs/wiki/Research-Workflows.md), the
 [news evidence contract](docs/wiki/News-Evidence-Contract.md) and
-[release verification](docs/wiki/Releasing.md#v280-verification-ledger-release-preparation).
+[release verification](docs/wiki/Releasing.md#v280-verification-ledger-released).
 Deployment remains with the host agent. v3's Portfolio-first frontend overhaul
 follows v2 close-out.
 

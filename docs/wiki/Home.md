@@ -2,9 +2,10 @@
 
 OpenTerminalUI is a self-hosted research terminal for US/EU equities and crypto,
 with intentional provider-gated NSE/BSE F&O support. **v2.8.0 — Durable news and
-sentiment evidence** is in release preparation; the latest published release is
-[v2.7.0](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.7.0), published
-on 2026-11-09 with filing-grounded comparison briefings.
+sentiment evidence** was published on 2026-11-18 from `61599bc` after release-prep
+PR #284 passed all three CI jobs and merged. See the
+[v2.8.0 release](https://github.com/laanito/OpenTerminalUI/releases/tag/v2.8.0).
+The previous v2.7 release added filing-grounded comparison briefings.
 
 v2.8 adds explicit saved comparison review, frozen-input reruns and current-data
 refreshes as linked runs. Selected saved headlines retain independent text-tone
@@ -12,7 +13,7 @@ and asset-implication judgments; selected observations can inform a new checked
 Deep interpretation. Standalone evidence defaults to 90 days, with saved-reference
 protection and confirmed owner deletion. Home reconstructs approximate 30-day
 ledger history. See [research workflows](Research-Workflows.md),
-[Roadmap](Roadmap.md) and [release verification](Releasing.md#v280-verification-ledger-release-preparation).
+[Roadmap](Roadmap.md) and [release verification](Releasing.md#v280-verification-ledger-released).
 
 Upgrade adds `0019_news_evidence` and `0020_comparison_captures`. Docker applies
 Alembic before startup; existing local databases must upgrade. Legacy research

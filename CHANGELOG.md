@@ -19,8 +19,10 @@ saved runs protect their referenced evidence. Set `NEWS_EVIDENCE_RETENTION_DAYS=
 to disable expiry. Home also reconstructs approximate 30-day portfolio history
 from the ledger, with legacy adjustments available in a compact disclosure.
 
-Implementation is merged through PR #283. Release preparation is in progress;
-the tag and GitHub release have not been published. Upgrade applies additive
+Implementation is merged through PR #283. Release-prep PR #284 passed all three
+CI jobs and merged at `61599bc`. Following maintainer authorization, the annotated
+tag and public GitHub release were published and verified on 2026-11-18.
+Upgrade applies additive
 Alembic migrations `0019_news_evidence` and `0020_comparison_captures`; Docker
 runs Alembic before startup, while existing local installations must upgrade.
 No dependency, provider or embedding change is required.
