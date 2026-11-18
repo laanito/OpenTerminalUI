@@ -28,6 +28,7 @@ import { useStockStore } from "../../store/stockStore";
 import { AIQueryResult } from "../../types";
 
 type Props = {
+  navigation?: import("react").ReactNode;
   onExecute: (command: string) => Promise<CommandExecutionResult> | CommandExecutionResult;
 };
 
@@ -127,7 +128,7 @@ function findSymbolMetadata(
   };
 }
 
-export function CommandBar({ onExecute }: Props) {
+export function CommandBar({ onExecute, navigation }: Props) {
   const navigate = useNavigate();
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   const activeTicker = useStockStore((s) => s.ticker);
@@ -188,6 +189,8 @@ export function CommandBar({ onExecute }: Props) {
     };
 
     const onKeyDown = (ev: KeyboardEvent) => {
+      const modal = (ev.target as HTMLElement | null)?.closest?.('[role="dialog"]');
+      if (modal && modal !== rootRef.current) return;
       const target = ev.target as HTMLElement | null;
       const isEditing = Boolean(
         target &&
@@ -697,7 +700,7 @@ export function CommandBar({ onExecute }: Props) {
     >
       <div
         className={[
-          "relative flex items-center gap-2 rounded-sm border bg-[#161B22] px-2 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]",
+          "relative flex min-w-0 items-center gap-2 rounded-sm border bg-[#161B22] px-2 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]",
           flashState === "success"
             ? "border-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.35)]"
             : flashState === "error"
@@ -707,6 +710,7 @@ export function CommandBar({ onExecute }: Props) {
                 : "border-terminal-border",
         ].join(" ")}
       >
+        {navigation}
         <Search className="h-4 w-4 shrink-0 text-terminal-muted" />
         <input
           ref={inputRef}

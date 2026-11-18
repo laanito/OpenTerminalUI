@@ -1,7 +1,7 @@
-# Proposed v3.0 scope and acceptance gate
+# v3.0 scope and acceptance gate
 
-Status: discovery/design proposal. Review this bounded gate before implementation;
-change it explicitly if priorities change. A whole frontend generation does not
+Status: accepted discovery/design through merged PR #286. Keep this bounded gate
+explicit if priorities change. A whole frontend generation does not
 require rewriting every page in the first release.
 
 ## v3.0 delivers

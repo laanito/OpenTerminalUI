@@ -52,6 +52,7 @@ export function HotKeyPanelFloat() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || (event.target as HTMLElement | null)?.closest?.("[data-terminal-modal]")) return;
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
       if (event.key.toLowerCase() !== "t") return;
       event.preventDefault();
