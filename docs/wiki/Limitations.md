@@ -379,6 +379,17 @@ never silently faked.
   Manager exposes an explicit row action and focused currency dialog for each
   unknown legacy holding cost, transaction amount, or nonzero fee so the owner
   can repair the evidence record by record without crowding monetary columns.
+- **Consolidated reporting is a current read model, not aggregate performance.**
+  The unreleased v3 `/api/portfolios/report` requires an explicit reporting
+  currency and bearer-authenticated ownership. It revalues native inputs per
+  portfolio and preserves metric gaps; it does not convert existing P&L at one
+  current FX rate. Foreign starting cash uses the portfolio creation UTC date
+  as an explicit recording boundary, not a verified deposit date. This retains
+  existing dated cash-ledger semantics rather than adding a multi-currency cash
+  wallet or cash FX gain. Exact symbol/exchange/unit grouping does not resolve
+  aliases; missing identity keeps lots separate and unsupported units such as
+  GBp are not silently treated as GBP. The consolidated UI, receipt accounting
+  and new operation writes remain upcoming. See [Portfolio Reporting](Portfolio-Reporting.md).
 - **Historical portfolio analytics describe current open holdings, not a full
   transaction-ledger performance record.** Portfolio list, detail, Manager,
   primary dashboard, and current allocation APIs normalize current marks and

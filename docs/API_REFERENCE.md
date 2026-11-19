@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **492 operations** across **438 paths** and **87 families**.
-- Authentication: **447 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **493 operations** across **439 paths** and **87 families**.
+- Authentication: **448 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -98,7 +98,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `portfolio-lab` | `hidden` | 9 |
 | `portfolio-optimizer` | `experimental` | 3 |
 | `portfolio_backtests` | `experimental` | 3 |
-| `portfolios` | `supported` | 20 |
+| `portfolios` | `supported` | 21 |
 | `public-api` | `supported` | 5 |
 | `quotes` | `supported` | 1 |
 | `reports` | `supported` | 9 |
@@ -933,6 +933,7 @@ State: **supported**
 | `GET` | `/api/portfolios` | Bearer token | List Portfolios |
 | `POST` | `/api/portfolios` | Bearer token | Create Portfolio |
 | `GET` | `/api/portfolios/primary` | Bearer token | Get Primary Portfolio Summary |
+| `GET` | `/api/portfolios/report` | Bearer token | Get Portfolio Report |
 | `DELETE` | `/api/portfolios/{portfolio_id}` | Bearer token | Delete Portfolio |
 | `GET` | `/api/portfolios/{portfolio_id}` | Bearer token | Get Portfolio |
 | `PATCH` | `/api/portfolios/{portfolio_id}` | Bearer token | Update Portfolio |

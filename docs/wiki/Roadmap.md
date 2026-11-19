@@ -905,9 +905,14 @@ The next slice adds shared page/scope/data-state patterns, consumed by Portfolio
 modes and manager. Selected name/currency/benchmark remain visible; loading and
 failed reads hide prior figures, retry preserves scope, and empty/partial states
 are explicit. All 838 frontend tests, build and 47 browser smoke journeys pass.
-Consolidated reporting, receipt/operation contracts and the position-first Portfolio
-migration remain within the accepted v3.0 gate, along with further shared-pattern
-adoption and zoom/accessibility review. See the design pack's
+Read-only consolidated reporting now adds `/api/portfolios/report` for all or
+selected owned portfolios in an explicit reporting currency, preserving native
+inputs, independent ledger replay, original lots and per-metric coverage. See the
+[reporting contract](Portfolio-Reporting.md), including its opening-cash date
+assumption and conservative identity grouping. The consolidated UI, non-cash
+receipt/unknown-basis accounting, atomic/duplicate-safe operation contracts and
+position-first Portfolio migration remain within the accepted v3.0 gate, along
+with further shared-pattern adoption and zoom/accessibility review. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:

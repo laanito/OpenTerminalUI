@@ -1,38 +1,52 @@
 # Current project state and backlog
 
-Current work **v3 Portfolio page/scope/state foundation** (2026-11-19).
-The maintainer confirmed shared-shell PR #287 merged at `f0a1b38` and authorized
-continuing. Discovery/design PR #286 remains accepted: v3.0 is the shared
-responsive foundation plus complete Portfolio pilot; other full page redesigns
-are explicit later v3.x scopes. Do not reopen design approval.
+Current work **v3 read-only consolidated Portfolio reporting** (2026-11-19).
+The maintainer confirmed page/scope/state PR #288 merged at `e2048be` and authorized continuing.
+Shared-shell #287 and accepted discovery/design #286 remain the baseline: v3.0 is
+shared responsive foundation plus the complete Portfolio pilot. Other full page
+redesigns are later explicit v3.x scopes; do not reopen design approval.
 
-This slice adds reusable TerminalPage, TerminalScopeBar and TerminalDataState
-components, consumed by both Portfolio modes and the equity manager. Portfolio
-has one page heading, wrapped mode/actions and visible selected name, persisted
-currency and benchmark. Existing mode URLs and saved-view filters are preserved.
-Loading, failed reads, empty portfolios, empty holdings and partial accounting
-have distinct states. Switching or refreshing clears previous figures/actions;
-retry targets the requested portfolio and late abandoned reads cannot replace
-current details. A missing requested portfolio is unavailable, not silently
-substituted. Deleting explicitly resets selection to a remaining portfolio.
-Mutation failures stay separate from read failures.
+This slice adds bearer-authenticated `GET /api/portfolios/report`. Required
+`reporting_currency` is explicit and supported; repeat `portfolio_id` for a
+selection or omit it for all owned portfolios. Unknown/foreign IDs share 404
+before market reads. Duplicates count once; max 100 explicit IDs. Empty ownership
+returns empty/zero without materializing a primary portfolio. The consolidated
+UI is not wired yet; existing single-portfolio screens/endpoints are preserved.
 
-Validation: all **838 frontend tests / 135 files**, production build and **47
-installed-Chrome smoke journeys** pass. New browser checks at 1440px and 390px
-cover loading/failure/retry, empty holdings with zero cash, partial accounting,
-mode URL restoration and document overflow. Existing shell/research/evidence/
-candle journeys pass. No backend/API/schema/accounting/dependency/version change;
-backend tests were not rerun for this frontend slice. Do not monitor CI unless
-requested. Physical zoom and a complete accessibility audit remain release checks.
+Each portfolio is independently recalculated in reporting currency from native
+holdings, transaction amounts and fees through existing dated-FX accounting.
+Do not pool account ledgers or convert computed P&L at today's FX. FX successes
+and failures are deduplicated across members; provider I/O is bounded. Complete
+metric totals remain separate from known subtotals and explicit coverage.
+Original portfolio/holding/lot IDs, recorded cost/date/currency/notes and native
+accounting/FX evidence remain inspectable. Combine only exact stored symbol,
+exchange and supported quote unit; preserve suffixes and crypto currency variants.
+Unresolved identity keeps lots separate. GBp stays GBp and is not valued as GBP.
 
-Next: owner-scoped consolidated reporting and audited opening/external receipts,
-unknown-basis accounting and atomic/duplicate-safe operations, followed by the
-position-first Portfolio workflow. Current Portfolio remains a single selected
-portfolio with its existing entry forms/analytics. Do not implement a no-cash
-entry by calling today's buy endpoint. Continue adopting shared patterns where
-page migration needs them; preserve populated/direct-link/saved-view coverage.
-Keep original design audit evidence. v2.8.0 stays published until release prep;
-deployment stays with the host agent. See `docs/design/v3/README.md` and `SCOPE.md`.
+Starting cash is in each persisted portfolio currency. Its reporting conversion
+uses the creation UTC date as a disclosed recording boundary, not a verified
+deposit date. Missing opening FX makes dependent cash/net totals incomplete.
+This retains existing dated ledger cash/weighted-average cost semantics, not a
+new multi-currency wallet, tax-lot engine, consolidated returns/risk/AI result.
+No backend accounting-write/schema/dependency/frontend/version change; no
+production DB access. Tests force disposable SQLite. See
+`docs/wiki/Portfolio-Reporting.md` and generated OpenAPI/API reference.
+
+Validation: full backend run **1,934 passed / 3 PostgreSQL-only skipped**,
+**78.69% coverage**. Final focused reporting run **22 passed**, including two
+additional cases for missing historical FX and UTC opening boundaries, after
+final read-path hardening. Backend compilation, surface inventory (87 families /
+493 operations), production-mock guard and generated API-reference check pass.
+No frontend/browser rerun for this backend-only slice; #288's 838 frontend tests
+and 47 browser journeys remain the prior frontend baseline.
+
+Next: audited opening/external receipts and explicit unknown basis, separate
+capital-flow valuation and atomic/duplicate-safe operations before the full
+position-first Portfolio workflow. Do not implement non-cash entries through
+today's buy endpoint or silently reinterpret old buys. Preserve existing mode
+URLs, saved views, repair and research access. Continue shared patterns and
+physical zoom/accessibility review as needed. v2.8.0 stays published until release
+prep; deployment stays with the host agent. Do not monitor CI unless requested.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
@@ -82,7 +96,7 @@ passed. Local Python 3.12.16/Node 26.7.0 checks differ from CI Python 3.11/Node 
 See `docs/wiki/Releasing.md`. v3 remains the
 Portfolio-first frontend overhaul after v2 close-out. Do not start another v2
 feature minor. Post-release docs #285 and bilingual chapter 24 (blog #121) are merged per
-maintainer confirmation. v3 discovery #286 is merged; shared-shell implementation is underway. Deployment stays with the host agent.
+maintainer confirmation. v3 discovery #286, shared shell #287 and Portfolio page states #288 are merged; consolidated read reporting is the current slice. Deployment stays with the host agent.
 
 Previous published baseline **2026-11-09:** **v2.7.0 — Filing-grounded comparison briefings**
 is published from `4bc03cf`, the merge of release-prep PR #263. Implementation
@@ -1959,9 +1973,12 @@ ordered v1.7 milestone above.
       - [ ] Continue shared-pattern adoption and fuller keyboard/zoom/accessibility
             review as required by Portfolio migration; keep populated research/
             direct-link/saved-view regression coverage.
-      - [ ] Owner-scoped consolidated reporting and audited opening/external
-            receipts with unknown basis, separate capital-flow valuation and
-            atomic/duplicate-safe operation semantics; additive migration review.
+      - [x] Read-only owner-scoped consolidated reporting API: explicit currency,
+            native dated FX, independent account replay, original lots, conservative
+            identity and per-metric coverage. No UI/write/schema migration yet.
+      - [ ] Audited opening/external receipts with unknown basis, separate capital-
+            flow valuation and atomic/duplicate-safe operation semantics; additive
+            migration review. Preserve existing stored rows and cash semantics.
       - [ ] Position-first Portfolio and reviewed Buy/Sell/receipt/cash flows;
             retain Research/Analytics/Manage/import/export/repair access. Remove
             misleading per-holding pseudo-performance presentation.

@@ -154,3 +154,30 @@ empty holdings with zero cash, partial accounting, mode URL restoration and over
 This is frontend state/layout work: consolidated reporting, receipts, operation
 contracts and the position-first workflow remain upcoming. Physical zoom and full
 accessibility review remain release checks; existing audit evidence is unchanged.
+
+## Read-only consolidated Portfolio reporting
+
+Page/scope/state PR #288 is merged. The next backend slice adds bearer-authenticated
+`GET /api/portfolios/report`: all owned portfolios or explicitly selected owned
+IDs, with a required supported reporting currency. It reads only and does not
+create a primary portfolio, change bases or write holdings/ledger rows.
+
+Native holding/transaction/fee inputs are recalculated in reporting currency,
+with dated FX and each portfolio's ledger replay kept separate. Original lots,
+portfolio membership, accounting methods and FX evidence remain inspectable.
+Complete totals and known subtotals are distinct per metric. Exact stored
+symbol/exchange/supported-unit grouping is conservative; unresolved identity
+keeps lots separate and currency/listing variants are not merged. Foreign
+starting cash uses an explicitly disclosed creation-date recording boundary,
+not an invented verified deposit date. See the [reporting contract](../../wiki/Portfolio-Reporting.md).
+
+There is no schema, dependency or UI change. Non-cash receipts, explicit unknown
+basis, atomic/duplicate-safe operations and the full position-first Portfolio
+workflow remain separate implementation slices within the accepted gate.
+
+Validation: full backend run 1,934 passed / three PostgreSQL-only skipped at
+78.69% coverage. The final focused reporting run passes all 22 cases, including
+two additional UTC-boundary/historical-FX cases after final read-path hardening.
+Compilation, surface inventory, mock guard and generated API-reference checks
+pass. No frontend/browser rerun for this backend-only slice; #288 remains the
+last frontend regression baseline.

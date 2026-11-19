@@ -47,6 +47,7 @@ Portfolio-first frontend overhaul after v2 close-out.
 - [Getting Started](Getting-Started)
 - [Features](Features)
 - [Research Workflows](Research-Workflows) — comparisons/SEC checks, dated notes, saved answers and external ingestion
+- [Portfolio Reporting](Portfolio-Reporting) — unreleased v3 read-only API, scope and accounting limits
 - [Architecture](Architecture)
 - [Data Providers](Data-Providers)
 - [Limitations](Limitations) — what works keyless vs. needs keys, and honest caveats
