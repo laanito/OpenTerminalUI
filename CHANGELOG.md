@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Portfolio keyboard and accessibility acceptance** — original-lot/activity
+  rows honor their height; virtual row navigation scrolls and focuses correctly.
+  Controls keep their native keys, evidence columns can be revealed/exported,
+  column menus/resizing work by keyboard and confirmed saves announce their result.
+  Tables follow theme tokens, light labels and focus contrast are stronger, and
+  modal disclosure traversal/reduced motion are respected. Populated desktop,
+  mobile and real 200% browser-zoom checks preserve existing research workflows.
 - **Unknown opening basis and evidence repair** — existing positions can retain
   unknown acquisition cost without a zero placeholder. Current value/cash remain
   usable while affected cost/P&L stays unavailable. Reviewed, revision-checked

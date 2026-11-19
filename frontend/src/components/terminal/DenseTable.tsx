@@ -76,12 +76,14 @@ type Props<T> = {
   contextMenuActions?: (row: T, index: number) => SymbolContextMenuAction[];
   csvFileName?: string;
   bufferRows?: number;
+  ariaLabel?: string;
 };
 
 type PersistedColumnState = {
   order: string[];
   widths: Record<string, number>;
   hidden: string[];
+  shown?: string[];
 };
 
 const DEFAULT_ROW_HEIGHT = 26;
@@ -159,9 +161,11 @@ export function DenseTable<T>({
   contextMenuActions,
   csvFileName = "dense-table-export.csv",
   bufferRows = 20,
+  ariaLabel = "Dense data table",
 }: Props<T>) {
   const storageKey = `dense-table:${id}:columns:v1`;
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const columnMenuTrigger = useRef<HTMLButtonElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [sort, setSort] = useState<SortState | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(() => new Set());
@@ -179,6 +183,7 @@ export function DenseTable<T>({
         order: Array.isArray(parsed.order) ? parsed.order : [],
         widths: parsed.widths && typeof parsed.widths === "object" ? parsed.widths : {},
         hidden: Array.isArray(parsed.hidden) ? parsed.hidden : [],
+        shown: Array.isArray(parsed.shown) ? parsed.shown : [],
       };
     } catch {
       return { order: [], widths: {}, hidden: [] };
@@ -234,11 +239,11 @@ export function DenseTable<T>({
       .map((col) => ({
         ...col,
         width: columnState.widths[col.key] ?? col.width ?? (col.type === "sparkline" ? 90 : 140),
-        hidden: columnState.hidden.includes(col.key) || col.hidden,
+        hidden: columnState.hidden.includes(col.key) || (col.hidden && !columnState.shown?.includes(col.key)),
         minWidth: col.minWidth ?? 72,
       }))
       .filter((col) => !col.hidden);
-  }, [columnState.hidden, columnState.order, columnState.widths, columns]);
+  }, [columnState.hidden, columnState.shown, columnState.order, columnState.widths, columns]);
 
   const sortedRows = useMemo(() => {
     if (!sort || sort.direction === "none") return rows.map((row, index) => ({ row, index }));
@@ -270,6 +275,7 @@ export function DenseTable<T>({
   const frozenColumns = orderedColumns.filter((c) => c.frozen);
   const normalColumns = orderedColumns.filter((c) => !c.frozen);
 
+  const hiddenColumnCount = columns.length - orderedColumns.length;
   const totalWidth = orderedColumns.reduce((sum, c) => sum + (c.width ?? 120), 0);
 
   const toggleSort = (col: DenseTableColumn<T>) => {
@@ -395,6 +401,11 @@ export function DenseTable<T>({
     openContextMenuForRow(row, originalIndex, { x, y });
   };
 
+  const closeColumnMenu = () => {
+    setColumnMenuKey(null);
+    requestAnimationFrame(() => (columnMenuTrigger.current?.isConnected ? columnMenuTrigger.current : hostRef.current)?.focus());
+  };
+
   const headerCells = (cols: DenseTableColumn<T>[]) =>
     cols.map((col) => {
       const width = (col as DenseTableColumn<T> & { width?: number }).width ?? 120;
@@ -405,8 +416,8 @@ export function DenseTable<T>({
           role="columnheader"
           aria-colindex={orderedColumns.findIndex((ordered) => ordered.key === col.key) + 1}
           aria-sort={isSorted === "asc" ? "ascending" : isSorted === "desc" ? "descending" : col.sortable ? "none" : undefined}
-          className="group relative flex h-7 shrink-0 items-center border-r border-[#242d3a] bg-[#1A2332]"
-          style={{ width }}
+          className="group relative flex shrink-0 items-center border-r border-terminal-border bg-terminal-panel"
+          style={{ width, height: headerHeight }}
           draggable
           onDragStart={(e) => {
             setDraggedColumnKey(col.key);
@@ -424,12 +435,14 @@ export function DenseTable<T>({
         >
           <button
             type="button"
-            className={`flex min-w-0 flex-1 items-center gap-1 px-2 ot-type-table-header uppercase ${col.align === "right" ? "justify-end text-right" : "text-left"} text-[#8B949E] hover:text-terminal-text`}
+            className={`flex min-w-0 flex-1 items-center gap-1 px-2 ot-type-table-header uppercase ${col.align === "right" ? "justify-end text-right" : "text-left"} text-terminal-muted hover:text-terminal-text`}
             onClick={() => toggleSort(col)}
             onContextMenu={(e) => {
               e.preventDefault();
+              columnMenuTrigger.current = e.currentTarget;
               setColumnMenuKey((prev) => (prev === col.key ? null : col.key));
             }}
+            disabled={!col.sortable}
             title={col.title}
           >
             <span className="truncate">{col.title}</span>
@@ -444,27 +457,41 @@ export function DenseTable<T>({
             className="mr-1 rounded p-0.5 text-terminal-muted hover:text-terminal-text"
             onClick={(e) => {
               e.stopPropagation();
+              columnMenuTrigger.current = e.currentTarget;
               setColumnMenuKey((prev) => (prev === col.key ? null : col.key));
             }}
+            aria-expanded={columnMenuKey === col.key}
             aria-label={`Column menu for ${col.title}`}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
-            className="absolute right-0 top-0 h-full w-1 cursor-col-resize opacity-0 group-hover:opacity-100"
+            className="absolute right-0 top-0 h-full w-1 cursor-col-resize opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:bg-terminal-accent"
             onPointerDown={(e) => {
               e.preventDefault();
               beginResize(col.key, width, e.clientX);
             }}
+            role="separator"
+            aria-orientation="vertical"
+            aria-valuemin={60}
+            aria-valuenow={width}
+            onKeyDown={event => {
+              if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+              event.preventDefault(); event.stopPropagation();
+              const delta = (event.key === "ArrowRight" ? 1 : -1) * (event.shiftKey ? 50 : 10);
+              setColumnState(prev => ({ ...prev, widths: { ...prev.widths, [col.key]: Math.max(60, width + delta) } }));
+            }}
             aria-label={`Resize column ${col.title}`}
           />
           {columnMenuKey === col.key ? (
-            <div className="absolute right-1 top-7 z-30 w-44 rounded-sm border border-terminal-border bg-[#0F141B] p-1 shadow-xl">
-              <button type="button" className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-xs hover:bg-terminal-panel" onClick={() => moveColumn(col.key, -1)}>
+            <div role="group" aria-label={`${col.title} column options`} onKeyDown={event => {
+              if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); closeColumnMenu(); }
+            }} className="absolute right-1 top-7 z-30 w-44 rounded-sm border border-terminal-border bg-terminal-bg p-1 shadow-xl">
+              <button type="button" className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-xs hover:bg-terminal-panel" autoFocus onClick={() => { moveColumn(col.key, -1); closeColumnMenu(); }}>
                 <GripVertical className="h-3.5 w-3.5" /> Move Left
               </button>
-              <button type="button" className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-xs hover:bg-terminal-panel" onClick={() => moveColumn(col.key, 1)}>
+              <button type="button" className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-xs hover:bg-terminal-panel" onClick={() => { moveColumn(col.key, 1); closeColumnMenu(); }}>
                 <GripVertical className="h-3.5 w-3.5" /> Move Right
               </button>
               <button
@@ -472,7 +499,7 @@ export function DenseTable<T>({
                 className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-xs hover:bg-terminal-panel"
                 onClick={() => {
                   setColumnState((prev) => ({ ...prev, hidden: [...new Set([...prev.hidden, col.key])] }));
-                  setColumnMenuKey(null);
+                  closeColumnMenu();
                 }}
               >
                 Hide Column
@@ -484,18 +511,18 @@ export function DenseTable<T>({
     });
 
   return (
-    <div className={`relative rounded-sm border border-terminal-border bg-[#0D1117] ${className}`.trim()}>
-      <div className="flex items-center justify-between border-b border-terminal-border bg-terminal-panel px-2 py-1">
-        <div className="inline-flex flex-wrap items-center gap-2 text-[11px] text-terminal-muted">
+    <div className={`relative rounded-sm border border-terminal-border bg-terminal-bg ${className}`.trim()}>
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-terminal-border bg-terminal-panel px-2 py-1">
+        <div className="inline-flex min-w-0 flex-wrap items-center gap-2 text-[11px] text-terminal-muted">
           <span className="ot-type-label text-terminal-accent">Dense Table</span>
           <span>{rows.length.toLocaleString()} rows</span>
-          {columnState.hidden.length ? (
+          {hiddenColumnCount ? (
             <button
               type="button"
               className="rounded border border-terminal-border px-1.5 py-0.5 hover:text-terminal-text"
-              onClick={() => setColumnState((prev) => ({ ...prev, hidden: [] }))}
+              onClick={() => setColumnState((prev) => ({ ...prev, hidden: [], shown: columns.filter(col => col.hidden).map(col => col.key) }))}
             >
-              Show Hidden ({columnState.hidden.length})
+              Show Hidden ({hiddenColumnCount})
             </button>
           ) : null}
         </div>
@@ -513,15 +540,28 @@ export function DenseTable<T>({
           className="absolute inset-0 overflow-auto"
           onScroll={(e: UIEvent<HTMLDivElement>) => setScrollTop(e.currentTarget.scrollTop)}
           onKeyDown={(event) => {
-            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            // Controls retain their native editing/activation keys. The grid
+            // handles navigation only from its viewport or a selected row.
+            if ((event.target as HTMLElement).closest("button, input, select, textarea, a, [contenteditable='true']")) return;
+            if (["ArrowDown", "ArrowUp", "Home", "End", "PageDown", "PageUp"].includes(event.key)) {
               event.preventDefault();
-              const direction = event.key === "ArrowDown" ? 1 : -1;
               const currentSortedIndex = selectedIndex >= 0 ? sortedRows.findIndex((entry) => entry.index === selectedIndex) : -1;
-              const nextSortedIndex = Math.max(0, Math.min(sortedRows.length - 1, currentSortedIndex + direction));
+              const step = event.key.startsWith("Page") ? Math.max(1, visibleCount - 1) : 1;
+              const offset = ["ArrowUp", "PageUp"].includes(event.key) ? -step : step;
+              const nextSortedIndex = event.key === "Home" ? 0 : event.key === "End" ? sortedRows.length - 1
+                : Math.max(0, Math.min(sortedRows.length - 1, currentSortedIndex + offset));
               const next = sortedRows[nextSortedIndex];
               if (next) {
                 setSelectedRows(new Set([next.index]));
                 setSelectionAnchor(next.index);
+                const host = hostRef.current;
+                if (host) {
+                  const top = nextSortedIndex * rowHeight, bottom = top + headerHeight + rowHeight;
+                  if (top < host.scrollTop) host.scrollTop = top;
+                  else if (bottom > host.scrollTop + height) host.scrollTop = bottom - height;
+                  setScrollTop(host.scrollTop);
+                  requestAnimationFrame(() => host.querySelector<HTMLElement>(`[data-row-index="${next.index}"]`)?.focus({ preventScroll: true }));
+                }
               }
               return;
             }
@@ -540,12 +580,12 @@ export function DenseTable<T>({
           role="grid"
           aria-rowcount={rows.length + 1}
           aria-colcount={orderedColumns.length}
-          aria-label="Dense data table"
+          aria-label={ariaLabel}
         >
           <div style={{ minWidth: totalWidth }}>
             <div role="row" aria-rowindex={1} className="sticky top-0 z-20 flex border-b border-terminal-border">
               {frozenColumns.length ? (
-                <div className="sticky left-0 z-30 flex bg-[#1A2332] shadow-[2px_0_0_0_rgba(0,0,0,0.18)]">{headerCells(frozenColumns)}</div>
+                <div className="sticky left-0 z-30 flex bg-terminal-panel shadow-[2px_0_0_0_rgba(0,0,0,0.18)]">{headerCells(frozenColumns)}</div>
               ) : null}
               <div className="flex">{headerCells(normalColumns)}</div>
             </div>
@@ -556,11 +596,11 @@ export function DenseTable<T>({
               const key = rowKey(row, originalIndex);
               const selected = selectedRows.has(originalIndex);
               const bgClass = selected
-                ? "bg-[#0D2137] border-l-[#FF6B00]"
+                ? "bg-terminal-accent/10 border-l-terminal-accent"
                 : (startIndex + visibleIdx) % 2 === 0
-                  ? "bg-[#0D1117]"
-                  : "bg-[#0F1319]";
-              const rowCls = `${bgClass} hover:bg-[#1A2332] border-l-2 border-l-transparent`;
+                  ? "bg-terminal-bg"
+                  : "bg-terminal-panel";
+              const rowCls = `${bgClass} hover:bg-terminal-panel border-l-2 border-l-transparent`;
               const renderRowCells = (cols: DenseTableColumn<T>[]) =>
                 cols.map((col) => {
                   const width = (col as DenseTableColumn<T> & { width?: number }).width ?? 120;
@@ -570,12 +610,13 @@ export function DenseTable<T>({
                     <div
                       key={`${key}:${col.key}`}
                       role="gridcell"
-                      aria-rowindex={originalIndex + 2}
+                      title={String((col.getValue ? col.getValue(row, originalIndex) : (row as Record<string, unknown>)[col.key]) ?? "")}
+                      aria-rowindex={startIndex + visibleIdx + 2}
                       aria-colindex={orderedColumns.findIndex((ordered) => ordered.key === col.key) + 1}
-                      className={`flex h-[26px] shrink-0 items-center border-r border-[#1b2230] px-2 ${cellAlignClass(col)} ${cellTypographyClass(col)} ${
+                      className={`flex shrink-0 items-center border-r border-terminal-border px-2 ${cellAlignClass(col)} ${cellTypographyClass(col)} ${
                         flash === "up" ? "bg-emerald-500/10" : flash === "down" ? "bg-rose-500/10" : ""
                       }`}
-                      style={{ width }}
+                      style={{ width, height: rowHeight }}
                     >
                       <div className="min-w-0 truncate">{renderCell(col, row, originalIndex)}</div>
                     </div>
@@ -586,12 +627,14 @@ export function DenseTable<T>({
                 <div
                   key={key}
                   role="row"
-                  aria-rowindex={originalIndex + 2}
+                  aria-rowindex={startIndex + visibleIdx + 2}
                   aria-selected={selected}
                   tabIndex={selected ? 0 : -1}
                   data-row-index={originalIndex}
-                  className={`relative flex h-[26px] border-b border-[#141b25] ${rowCls}`}
+                  style={{ height: rowHeight }}
+                  className={`relative flex border-b border-terminal-border ${rowCls}`}
                   onClick={(e) => {
+                    if ((e.target as HTMLElement).closest("button, input, select, textarea, a")) return;
                     if (e.shiftKey && selectionAnchor != null) {
                       setSelectedRows(rowSelectionRange(selectionAnchor, originalIndex));
                     } else if (e.ctrlKey || e.metaKey) {

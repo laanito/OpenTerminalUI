@@ -38,7 +38,7 @@ export function PortfolioMovements({ report, onRepair, onOpeningRepair }: { repo
       {error ? <TerminalDataState kind="error" title="Movements unavailable" action={<TerminalButton onClick={() => setRetry(value => value + 1)}>Retry movements</TerminalButton>}>{error}</TerminalDataState>
         : rows === null ? <TerminalDataState kind="loading" title="Loading movements">Reading the selected accounts.</TerminalDataState>
           : !rows.length ? <TerminalDataState kind="empty" title="No recorded movements">There are no recorded movements in this scope.</TerminalDataState>
-            : <section aria-label="All movements table" tabIndex={0} className="min-w-0"><DenseTable id="portfolio-all-movements" rows={rows} rowKey={row => `${row.portfolioId}:${row.id}`} rowHeight={40} height={320} columns={[
+            : <section aria-label="All movements table" tabIndex={0} className="min-w-0"><DenseTable id="portfolio-all-movements" ariaLabel="Selected portfolio movements" rows={rows} rowKey={row => `${row.portfolioId}:${row.id}`} rowHeight={40} height={320} columns={[
               { key: "date", title: "Date", frozen: true, width: 110, sortable: true, getValue: row => row.date },
               { key: "portfolio", title: "Portfolio", width: 130, sortable: true, getValue: row => row.portfolioName },
               { key: "type", title: "Type", width: 100, sortable: true, getValue: row => row.type === "opening" ? "Opening (no cash)" : row.type },

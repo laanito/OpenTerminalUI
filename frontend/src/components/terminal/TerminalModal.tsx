@@ -42,10 +42,11 @@ export function TerminalModal({
     if (!open) return;
     const previousFocus = document.activeElement as HTMLElement | null;
     const visibleControls = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'button:not([disabled]), summary, [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     )).filter(element => {
       for (let node: HTMLElement | null = element; node && node !== root; node = node.parentElement) {
-        if (node.hidden || getComputedStyle(node).display === "none" || getComputedStyle(node).visibility === "hidden") return false;
+        if (node instanceof HTMLDetailsElement && !node.open && !node.querySelector("summary")?.contains(element)) return false;
+        if (node.inert || node.hidden || getComputedStyle(node).display === "none" || getComputedStyle(node).visibility === "hidden") return false;
       }
       return true;
     });

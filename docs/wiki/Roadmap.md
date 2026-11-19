@@ -923,8 +923,10 @@ receipts and audited opening-evidence repair are now implemented: nullable cost,
 independent current value/cash, weighted-pool P&L coverage and repairable entry
 valuation/history without another movement. Repairs remain accessible after full
 sale and retain revision/retry identity. Migration 0022 preserves existing data.
-Final acceptance (including populated keyboard/zoom/accessibility review) remains
-within the accepted v3.0 gate. This does
+The populated keyboard/zoom/accessibility pass is complete locally, including
+80-lot navigation, hidden evidence export, theme/contrast, real 200% browser zoom
+and research editing regression coverage. See the [acceptance report](../design/v3/ACCEPTANCE.md).
+Maintainer acceptance and the current PR's CI checks remain before release prep. This does
 not mark the complete Portfolio pilot or v3 release ready. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 

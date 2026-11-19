@@ -26,3 +26,12 @@ describe("TerminalModal focus lifecycle", () => {
     fireEvent.keyDown(document.activeElement!, { key: "Escape" }); expect(innerClose).toHaveBeenCalledOnce(); expect(outerClose).not.toHaveBeenCalled();
   });
 });
+
+it("includes disclosure summaries in the trap and skips their closed contents", async () => {
+  render(<TerminalModal open title="Evidence" onClose={vi.fn()}><details><summary>Earlier evidence</summary><button>Hidden repair</button></details></TerminalModal>);
+  await settle();
+  const close = screen.getByRole("button", { name: "Close modal" });
+  close.focus(); fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+  expect(screen.getByText("Earlier evidence")).toHaveFocus();
+  fireEvent.keyDown(document.activeElement!, { key: "Tab" }); expect(close).toHaveFocus();
+});

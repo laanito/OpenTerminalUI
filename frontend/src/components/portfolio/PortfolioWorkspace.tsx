@@ -40,6 +40,7 @@ export function PortfolioWorkspace() {
   const [openingRepair, setOpeningRepair] = useState<OpeningEvidenceTarget | null>(null);
   const [notesSymbol, setNotesSymbol] = useState<string | null>(null);
   const [status, setStatus] = useState("");
+  const statusRef = useRef<HTMLParagraphElement>(null);
   const version = useRef(0);
   const selector = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -77,12 +78,18 @@ export function PortfolioWorkspace() {
   const money = (value: number | null | undefined, unit = currency) => portfolioMoney(value, unit);
   const metric = (value: PortfolioReportMetric) => <><span>{money(value.value)}</span>{value.value == null && <span className="mt-1 block text-[11px] text-terminal-muted">Known subtotal {money(value.known_value)} · {value.complete_items}/{value.total_items} {value.unit}s covered</span>}</>;
   const refresh = () => setRevision(value => value + 1);
+  const saved = (message: string) => {
+    setStatus(message); refresh();
+    // Refresh can unmount the originating lot/action. Return focus to the
+    // confirmation near the main entry actions rather than losing it to body.
+    requestAnimationFrame(() => statusRef.current?.focus());
+  };
   const openOperation = (type: "buy" | "opening") => setIntent({ type, portfolioId: scope === "all" ? "" : scope, currency: scope === "all" ? currency : members.find(p => p.portfolio_id === scope)?.portfolio_currency });
   return <div className="min-w-0 space-y-4">
     <TerminalScopeBar label="Portfolio scope" scope={scopeName} actions={<>
       <details ref={selector} className="relative" onKeyDown={event => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
         <summary className="cursor-pointer rounded border border-terminal-border px-3 py-1.5 text-xs text-terminal-text">Choose portfolio scope</summary>
-        <div className="absolute right-0 z-30 mt-2 max-h-72 w-64 max-w-[75vw] overflow-y-auto rounded border border-terminal-border bg-terminal-panel p-2 shadow-xl">
+        <div className="absolute left-0 z-30 mt-2 max-h-72 w-64 max-w-[75vw] overflow-y-auto rounded border border-terminal-border bg-terminal-panel p-2 shadow-xl">
           <button type="button" aria-pressed={scope === "all"} className="block w-full rounded p-2 text-left text-xs text-terminal-text hover:bg-terminal-accent/10" onClick={() => setScope("all")}>All owned portfolios</button>
           {catalog.map(p => <button disabled={catalogLoading} key={p.id} type="button" aria-pressed={scope === p.id} className="block w-full break-words rounded p-2 text-left text-xs text-terminal-text hover:bg-terminal-accent/10" onClick={() => setScope(p.id)}>{p.name}</button>)}
           {catalogLoading && <p className="p-2 text-xs text-terminal-muted">Updating portfolios…</p>}
@@ -94,7 +101,7 @@ export function PortfolioWorkspace() {
       <TerminalButton size="sm" disabled={loading || catalogLoading} onClick={refresh}>Refresh report</TerminalButton>
     </>} />
     {catalogError && <TerminalDataState kind="error" title="Portfolio list unavailable" action={<TerminalButton onClick={refresh}>Retry portfolio list</TerminalButton>}>{catalogError}</TerminalDataState>}
-    {status && <p role="status" className="text-xs text-terminal-pos">{status}</p>}
+    {status && <p ref={statusRef} tabIndex={-1} role="status" className="break-words text-sm text-terminal-pos">{status}</p>}
     <div className="flex min-w-0 flex-wrap gap-2">
       <TerminalButton variant="accent" disabled={!members.length || loading} onClick={() => openOperation("buy")}>Record operation</TerminalButton>
       <TerminalButton disabled={!members.length || loading} onClick={() => openOperation("opening")}>Add existing position</TerminalButton>
@@ -113,7 +120,7 @@ export function PortfolioWorkspace() {
               {!report.positions.length && <TerminalDataState kind="empty" title={members.length ? "No open positions" : "No portfolios yet"}>{members.length ? "Record a buy, or add an existing position without moving cash." : "Use New portfolio in the scope bar to create your first account."}</TerminalDataState>}
               <div className="grid min-w-0 items-start gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"><div className="min-w-0 space-y-2">
               {report.positions.map(position => <details key={`${position.symbol}:${position.exchange}:${position.quote_unit}:${position.lots[0]?.holding_id}`} className="min-w-0 rounded border border-terminal-border bg-terminal-panel p-3">
-                <summary className="cursor-pointer text-sm text-terminal-text">
+                <summary className="cursor-pointer break-words text-sm text-terminal-text">
                   <span className="font-semibold">{position.symbol}</span> · {position.shares.toLocaleString("en-US", { maximumFractionDigits: 9 })} units
                   <span className="ml-2 text-xs text-terminal-muted">{position.exchange || "Exchange unknown"} · quote {position.quote_unit || "unit unknown"} · {position.portfolio_ids.length} account{position.portfolio_ids.length === 1 ? "" : "s"}</span>
                   <span className="mt-2 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3"><span>Value {metric(position.metrics.market_value)}</span><span>Cost {metric(position.metrics.cost_basis)}</span><span>Unrealized {metric(position.metrics.unrealized_pnl)}</span></span>
@@ -121,7 +128,7 @@ export function PortfolioWorkspace() {
                 {position.identity_reason && <p className="mt-2 text-xs text-terminal-warn">{position.identity_reason}</p>}
                 <section aria-label={`${position.symbol} lots`} tabIndex={0} className="mt-3 min-w-0 space-y-2">
                   <p className="text-xs text-terminal-muted">Original lots · values and P&amp;L in {report.reporting_currency}; unit costs retain their recorded currencies.</p>
-                  <DenseTable id={`portfolio-lots-${position.symbol}-${position.lots[0]?.holding_id}`} rows={position.lots} rowKey={lot => lot.holding_id} rowHeight={44} height={Math.min(320, position.lots.length * 44 + 100)} columns={[
+                  <DenseTable id={`portfolio-lots-${position.symbol}-${position.lots[0]?.holding_id}`} ariaLabel={`${position.symbol} original lots`} rows={position.lots} rowKey={lot => lot.holding_id} rowHeight={44} height={Math.min(320, position.lots.length * 44 + 100)} columns={[
                     { key: "portfolio", title: "Portfolio", width: 140, frozen: true, sortable: true, getValue: lot => lot.portfolio_name },
                     { key: "actions", title: "Lot actions", width: 250, getValue: () => "", render: lot => <span className="inline-flex gap-1">
                       <TerminalButton size="sm" aria-label={`Sell ${lot.symbol} in ${lot.portfolio_name}`} onClick={() => setIntent({ portfolioId: lot.portfolio_id, type: "sell", symbol: lot.symbol, shares: lot.shares, price: lot.current_price ?? undefined, currency: lot.quote_unit || undefined, lotId: lot.lot_id })}>Sell</TerminalButton>
@@ -155,8 +162,8 @@ export function PortfolioWorkspace() {
         : <TerminalDataState kind={catalogLoading ? "loading" : "unavailable"} title="Portfolio analysis scope">{catalogLoading ? "Reading account details." : "Retry the portfolio list to load this account’s analysis."}</TerminalDataState>)}
     {createOpen && <PortfolioCreateDialog onClose={() => setCreateOpen(false)} onCreated={name => { setStatus(`Created ${name}. Viewing scope is unchanged.`); refresh(); }} />}
     {settings && <PortfolioSettingsDialog portfolio={settings} onClose={() => setSettings(null)} onChanged={refresh} onDeleted={() => { if (scope === settings.id) setScope("all"); refresh(); }} />}
-    {openingRepair && <PortfolioOpeningEvidenceDialog key={`${openingRepair.portfolioId}:${openingRepair.transactionId}`} target={openingRepair} onClose={() => setOpeningRepair(null)} onSaved={refresh} />}
-    {repair && <PortfolioCurrencyRepair target={repair} onClose={() => setRepair(null)} onSaved={refresh} />}
-    {intent && <PortfolioOperationDialog intent={intent} portfolios={catalog.length ? catalog : members.map(p => ({ id: p.portfolio_id, name: p.name, currency: p.portfolio_currency }))} onClose={() => setIntent(null)} onSaved={refresh} />}
+    {openingRepair && <PortfolioOpeningEvidenceDialog key={`${openingRepair.portfolioId}:${openingRepair.transactionId}`} target={openingRepair} onClose={() => setOpeningRepair(null)} onSaved={() => saved("Opening evidence updated. Refreshing the report.")} />}
+    {repair && <PortfolioCurrencyRepair target={repair} onClose={() => setRepair(null)} onSaved={() => saved("Currency updated. Refreshing the report.")} />}
+    {intent && <PortfolioOperationDialog intent={intent} portfolios={catalog.length ? catalog : members.map(p => ({ id: p.portfolio_id, name: p.name, currency: p.portfolio_currency }))} onClose={() => setIntent(null)} onSaved={() => saved("Operation recorded. Refreshing the report.")} />}
   </div>;
 }

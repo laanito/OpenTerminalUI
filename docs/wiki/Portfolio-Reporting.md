@@ -226,3 +226,21 @@ deposit or withdrawal flows exist. Compatibility stress/factor methods that stil
 require cost weights return an explicit unavailable response for unknown basis;
 price-history, symbol-only and current-value consumers can remain available.
 Position/report exports retain null costs rather than printing a false zero.
+
+
+## Keyboard and inspection
+
+Open the portfolio chooser or a holding with Enter/Space; Escape closes the
+chooser or an idle dialog and returns focus. Original-lot and activity grids have
+specific accessible names. Focus the grid and use Arrow keys, Home/End or Page
+Up/Down to select and reveal a row; Tab reaches its native controls. Keys inside
+inputs/selects/buttons retain their normal behavior. Confirmed operation/repair
+saves announce the result near the main actions when refresh removes the old lot.
+
+Column options close with Escape and return focus. Resize separators support
+Left/Right (Shift for larger steps). **Show Hidden** reveals optional evidence,
+including provenance, acquisition dates and recorded position research; the choice
+is retained with the table's order/width preferences. CSV exports the visible
+columns and full values, including long research text. Narrow displays retain
+local horizontal table scrolling; summaries and allocation legends wrap/scroll
+without hiding required controls. See the [v3 acceptance report](../design/v3/ACCEPTANCE.md).

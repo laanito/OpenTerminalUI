@@ -1,64 +1,66 @@
 # External-agent project context
 
-Current work **v3 unknown opening basis and auditable evidence repair**
-(2026-11-19), following accepted/merged unified Portfolio layout #291 (`706cd14`).
-Carry forward the maintainer's accepted transactions/layout; do not re-request
-unchanged acceptance or introduce another portfolio selector/global holdings table.
+Current work **v3 Portfolio local acceptance and accessibility follow-up**
+(2026-11-19), after maintainer-confirmed merged #292 (`fa91c7f`). Keep the accepted
+Portfolio hierarchy and financial contracts; no additional screen redesign or
+version bump. Published v2.8.0 remains unchanged until explicit release prep.
 
-Add existing position now offers explicit unknown cost (`basis_status: unknown`,
-null price/currency, optional acquisition date) while retaining required provenance.
-Known zero remains distinct. Nullable ORM values explicitly bind SQL NULL rather
-than firing the legacy zero default. No existing row is backfilled/reinterpreted.
-Current value and cash remain available independently; the existing per-account,
-per-symbol weighted-average pool makes cost/unrealized P&L unavailable while an
-unknown acquisition remains in the pool. Sales from it have unknown realized P&L;
-no sales means realized zero. Closing the pool allows later known current basis,
-without erasing unknown historical realized gains. Native documented lot amounts
-remain inspectable. This is not tax-lot accounting.
+The final populated local audit is documented in `docs/design/v3/ACCEPTANCE.md`.
+It exercises 25 instrument groups, 80 lots, two accounts, fractional quantities,
+long names/research URLs and 80 movements per account at 1440/1024/390px. A native
+Chrome profile zoom of 200% is measured as 1440 outer / 720 CSS px, DPR 2 and visual
+scale 1; it is not pinch/CSS emulation. The context rail is checked on/off after
+its chart resize observer settles. Fixtures are synthetic and no production data
+or provider/model writes are used. The original discovery audit remains historical.
 
-Opening evidence is accessible from a current lot and its All movements opening
-row, including after full sale. Reviewed repair replaces basis/acquisition/source
-and/or independent entry contribution valuation, with required reason, stable
-repair UUID, expected revision, prior snapshots and result checking/manual retry.
-Owner portfolio locks serialize SQL-only changes. Quantity, observation date,
-cash/fees and movement count never change. Original operation retries cannot undo
-later repairs. Generic currency repair cannot bypass this audit. Basis changes
-are refused for an exact lot merged with later buys, rather than overwriting its
-mixed cost; contribution/provenance-only correction remains supported.
+Corrected shared DenseTable row/cell heights to honor 40/44px Portfolio actions
+and match virtual geometry. Grid keys leave native controls alone; Arrow,
+Home/End and Page navigation scroll/focus the target row with correct sorted
+ARIA row indices. Column menus close with Escape/focus return; resize separators
+have keyboard/width semantics. Default-hidden evidence can now be shown and
+exported, with an additive persisted visibility choice preserving old order/width/
+hide settings. Full scalar text has native tooltips. Named grids distinguish lots
+and movements. Table surfaces/text/borders follow theme tokens instead of dark
+constants. Light label/accent/warning contrast and solid focus rings are improved;
+shared shell/modal CSS honors reduced motion. Allocation legends can be focused
+and scrolled. Long listing summaries wrap; narrow scope choices stay reachable.
 
-Missing entry valuation still blocks affected history; correcting it restores
-reconstruction when other inputs are complete, without using fair value as cost.
-Acquisition dates remain Unknown when undocumented, not the observation date.
-Primary report/export consumers preserve nulls; cost-weighted compatibility
-stress/factor methods return explicit unavailable for undocumented cost. Current
-price/symbol-only consumers remain usable. NAV/starting-cash annualization is
-suppressed for opening/deposit/withdrawal flows rather than calling funding gain.
-Research/Notes/Brain identities and CSV buy-import semantics remain unchanged.
+Modal focus wrapping includes disclosure summaries and excludes closed contents,
+hidden and inert controls. Existing busy/topmost rules remain. Confirmed Portfolio
+operations/repairs announce success and focus that confirmation if refreshing
+removes the lot opener. Cancellation returns to a surviving opener. Inline Notes
+retain explicit GO access and draft text; modal Journal editing blocks background
+shortcuts. New desktop/mobile browser cases cover Notes/Journal save/cancel without
+changing those pages' implementation or research identities.
 
-Migration **0022_unknown_opening_basis** follows 0021 and relaxes holding unit cost
-and transaction price to nullable. PostgreSQL only drops NOT NULL; SQLite batch
-copies the two unreferenced child tables, retaining rows, FKs, indexes and lot
-uniqueness. Rollback retains nullable evidence; pre-unknown-basis binaries are not
-safe writers once these rows exist. Docker migrates before startup; configured
-local installs must upgrade. No production database was accessed. Existing
-`test_portfolio_operations.py` remains in guarded migrated PostgreSQL CI and now
-covers null storage, repairs/concurrency/owner boundaries. Local validation does
-not claim live PostgreSQL execution.
+Validation: **852 frontend tests / 140 files**, production build and **65 installed-
+Chrome smoke journeys** pass. Focused sorting/virtual navigation, column visibility
+persistence, resize/menu and disclosure-trap tests pass. Sampled label/table/action
+sRGB contrast is >=4.5 in Terminal Noir, Light Desk and Classic Bloomberg; measured
+noir/light minima are approximately 5.01/5.38. This is not full assistive-technology
+user testing or a blanket certification of every legacy/custom theme. API/surface/
+mock/whitespace guards pass. Backend/API/schema/accounting/provider/dependencies
+are unchanged, so the backend suite was not rerun. Carry forward #292's 1,969 full
+backend passes / three PostgreSQL skips and final 182 Portfolio passes; actual
+migrated PostgreSQL stays in guarded CI. No deployment/production DB operations.
+Do not monitor CI unless asked. Selected screenshots and metrics are retained
+alongside the acceptance report; browser artifacts are also produced by the tests.
 
-Validation: full backend **1,969 passed / three PostgreSQL-only skipped**, 77.39%
-coverage; final Portfolio domain suite **182 passed**, including four
-additional edge cases after the full run. All **847 frontend tests / 139 files**,
-production build and **59 installed-Chrome smoke journeys** pass. New browser
-cases cover unknown entry, independent entry valuation, review, same-repair retry,
-lot/movement access and audit inspection at 1440/390px. Current screenshots reviewed.
-SQLite old/zero/NULL/constraint preservation, retaining downgrade/re-upgrade,
-PostgreSQL DDL and disposable full-chain SQLite upgrade pass. API reference,
-surface/mock/compile/whitespace guards pass. Do not monitor CI unless asked.
+The #292 opening contract remains: explicit unknown cost is SQL NULL; current
+value/cash and entry contribution valuation are independent of acquisition basis.
+Per-account/symbol weighted-average P&L stays unavailable when unknown cost affects
+the pool. Audited stable-ID/revision repairs remain accessible after full sale,
+change no quantity/observation/cash/fees, preserve original creation retries and
+refuse mixed-lot basis replacement pending reconciliation. Migration 0022 remains
+required; retaining downgrade must not turn unknowns into zero, and old binaries
+are unsafe writers once unknown costs exist. CSV import still records buys/cash.
+Notes/Brain/Journal/mandate identities and scope URLs/saved views stay preserved.
 
-Next: complete populated keyboard/physical zoom/accessibility and Portfolio
-acceptance review before maintainer release approval. This does not close v3.0,
-start another screen overhaul or bump the published v2.8.0. Deployment belongs to
-the host agent. See `docs/wiki/Portfolio-Reporting.md` and `docs/design/v3/SCOPE.md`.
+Next: maintainer/host acceptance and PR CI review, then explicitly authorized
+release prep. Local implementation/audit work for the bounded Portfolio pilot is
+complete; do not invent another v3.0 feature or move to another screen to avoid
+closing it. Full later-page redesigns remain v3.x scope proposals, with no assigned
+release count/dates. Deployment belongs to the host agent.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.

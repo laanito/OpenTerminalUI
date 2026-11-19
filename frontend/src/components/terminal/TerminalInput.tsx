@@ -44,7 +44,7 @@ function buildInputClass(
     baseClass,
     tone === "data" ? "ot-type-data" : "ot-type-ui",
     invalid ? "border-terminal-neg focus:border-terminal-neg" : "border-terminal-border focus:border-terminal-accent",
-    "focus-visible:ring-1 focus-visible:ring-terminal-accent/40",
+    "focus-visible:ring-1 focus-visible:ring-terminal-accent",
     loading ? "cursor-wait" : "",
     "disabled:cursor-not-allowed disabled:opacity-60",
     sizeClass[size],

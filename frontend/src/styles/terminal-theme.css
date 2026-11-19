@@ -204,9 +204,11 @@
   --ot-color-border-strong: #90a4bf;
   --ot-color-text-primary: #111a26;
   --ot-color-text-secondary: #314055;
-  --ot-color-text-muted: #5f7088;
-  --ot-color-accent-primary: #d95f00;
-  --ot-color-accent-primary-hover: #ee812c;
+  --ot-color-text-muted: #53647a;
+  --ot-color-system-warning: #8a4b00;
+  --ot-color-system-stale: #8a4b00;
+  --ot-color-accent-primary: #b54b00;
+  --ot-color-accent-primary-hover: #963e00;
   --ot-color-market-up: #087f5b;
   --ot-color-market-down: #d63a3a;
 }
@@ -2258,5 +2260,17 @@ button.ot-home-widget-strip-chip:hover {
 
   .ot-home-brand-text {
     display: none;
+  }
+}
+
+/* Shared shell and Portfolio honor reduced-motion preferences, including the
+   decorative ticker; JS financial calculations and chart data are unchanged. */
+@media (prefers-reduced-motion: reduce) {
+  .ot-app-shell *, .ot-app-shell *::before, .ot-app-shell *::after,
+  [data-terminal-modal] *, [data-terminal-modal] *::before, [data-terminal-modal] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
