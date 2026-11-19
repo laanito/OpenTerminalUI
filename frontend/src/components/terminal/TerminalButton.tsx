@@ -48,7 +48,7 @@ export function TerminalButton({
       aria-busy={loading || undefined}
       className={[
         "inline-flex items-center justify-center gap-1.5 rounded-sm border uppercase tracking-wide",
-        "ot-type-label transition-colors outline-none focus-visible:ring-1 focus-visible:ring-terminal-accent/40",
+        "ot-type-label transition-colors outline-none focus-visible:ring-1 focus-visible:ring-terminal-accent",
         "disabled:cursor-not-allowed disabled:opacity-60",
         sizes[size],
         variants[variant],

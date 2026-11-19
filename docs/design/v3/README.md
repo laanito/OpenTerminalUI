@@ -277,3 +277,17 @@ and concurrency tests run in the existing guarded operation CI lane.
 Remaining v3.0 work is the complete populated keyboard/physical zoom/accessibility
 and Portfolio acceptance review, then maintainer release approval. This slice
 does not start another screen overhaul or bump the published v2.8.0.
+
+
+## Portfolio acceptance pass
+
+Following merged #292, the populated keyboard/zoom/layout review fixes configured
+row heights, virtual row focus/scrolling, native control keys, keyboard column
+options/resizing, revealable default-hidden evidence and theme/contrast/focus.
+Disclosure summaries participate in modal focus wrapping; confirmed Portfolio
+writes return focus to an announced result if refreshing removes their opener.
+No backend/accounting/schema/dependency change. The
+[acceptance report](ACCEPTANCE.md) records cases, limitations and scope mapping.
+852 frontend tests, build and 65 Chrome smoke journeys pass, including native
+200% zoom and Notes/Journal edit/save/cancel regression cases. Maintainer review
+and CI still precede release prep; no additional screen redesign is started.

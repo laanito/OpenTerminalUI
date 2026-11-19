@@ -1,7 +1,8 @@
 # v3.0 scope and acceptance gate
 
 Status: accepted discovery/design through merged PR #286. Keep this bounded gate
-explicit if priorities change. A whole frontend generation does not
+explicit if priorities change. The [local acceptance report](ACCEPTANCE.md) records
+implementation evidence and the pending maintainer/CI release decision. A whole frontend generation does not
 require rewriting every page in the first release.
 
 ## v3.0 delivers

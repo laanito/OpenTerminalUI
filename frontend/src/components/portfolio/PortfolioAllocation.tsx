@@ -36,7 +36,7 @@ export function PortfolioAllocation({ report }: { report: ConsolidatedPortfolioR
     {!data ? <p role="status" className="mt-3 text-xs text-terminal-muted">Sector coverage is unavailable for this scope. No partial sector pie is shown.</p>
       : !data.length ? <p className="mt-3 text-xs text-terminal-muted">No positive holdings value to allocate.</p> : <>
         <div className="h-40 min-w-0" aria-hidden="true"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data} dataKey="value" nameKey="name" isAnimationActive={false} innerRadius={38} outerRadius={66}>{data.map((row, i) => <Cell key={`${row.name}:${i}`} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip formatter={value => portfolioMoney(Number(value), report.reporting_currency)} /></PieChart></ResponsiveContainer></div>
-        <ul className="max-h-44 space-y-1 overflow-y-auto text-xs text-terminal-muted" aria-label={`${title} values`}>
+        <ul tabIndex={0} className="max-h-44 space-y-1 overflow-y-auto text-xs text-terminal-muted" aria-label={`${title} values`}>
           {data.map((row, i) => <li key={`${row.name}:${i}`} className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2"><span className="min-w-0 break-words"><span aria-hidden="true" style={{ backgroundColor: COLORS[i % COLORS.length] }} className="mr-1 inline-block h-2 w-2 rounded-full" />{row.name}</span><span>{portfolioMoney(row.value, report.reporting_currency)} · {total && total > 0 ? (row.value / total * 100).toFixed(1) : "0.0"}%</span></li>)}
         </ul>
       </>}

@@ -1,0 +1,59 @@
+{
+  "reviewed": "2026-11-19",
+  "implementation_base": "fa91c7f",
+  "data": "synthetic only; no live backend/provider/model writes",
+  "viewports": [
+    1440,
+    1024,
+    390
+  ],
+  "rows": {
+    "instruments": 25,
+    "aapl_lots": 80,
+    "accounts": 2,
+    "movements_per_account": 80
+  },
+  "contrast": {
+    "1440": {
+      "dark_min": 5.010201699157481,
+      "light_min": 5.380470294758485,
+      "samples": {
+        "dark": 720,
+        "light": 720
+      }
+    },
+    "390": {
+      "dark_min": 5.010201699157481,
+      "light_min": 5.380470294758485,
+      "samples": {
+        "dark": 720,
+        "light": 720
+      }
+    },
+    "1024": {
+      "dark_min": 5.010201699157481,
+      "light_min": 5.380470294758485,
+      "samples": {
+        "dark": 720,
+        "light": 720
+      }
+    }
+  },
+  "validation": {
+    "frontend_tests": 852,
+    "frontend_test_files": 140,
+    "chrome_smoke_journeys": 65,
+    "production_build": "passed"
+  },
+  "limits": [
+    "Sampled label/action/table-cell contrast; not full assistive-technology testing",
+    "Financial/migration/backend contracts carried forward from merged #292",
+    "Maintainer/host and CI acceptance precede release prep"
+  ],
+  "browser_zoom": {
+    "cssWidth": 720,
+    "browserWidth": 1440,
+    "dpr": 2,
+    "visualScale": 1
+  }
+}
