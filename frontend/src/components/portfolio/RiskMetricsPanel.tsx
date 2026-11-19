@@ -24,7 +24,7 @@ export function RiskMetricsPanel({ metrics }: { metrics: PortfolioRiskMetrics | 
           <div key={row.label} className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
             <div className="text-terminal-muted">{row.label}</div>
             <div className="font-semibold text-terminal-text">
-              {row.pct ? `${fmt((row.value ?? 0) * 100)}%` : fmt(row.value)}
+              {row.pct ? (row.value == null ? "-" : `${fmt(row.value * 100)}%`) : fmt(row.value)}
             </div>
           </div>
         ))}

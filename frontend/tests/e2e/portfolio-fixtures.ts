@@ -1,3 +1,5 @@
+export const portfolioCatalog = [{ id: "p1", name: "Core", currency: "USD", description: "Core mandate", benchmark_symbol: "SPY" }, { id: "p2", name: "Europe", currency: "EUR", description: "European mandate", benchmark_symbol: "MSCIWI" }];
+
 export function portfolioReportFixture(scope = "all", currency = "USD") {
   const factor = currency === "EUR" ? .9 : 1;
   const metric = (value: number, unit = "lot") => ({ value, known_value: value, complete_items: scope === "all" ? 2 : 1, total_items: scope === "all" ? 2 : 1, unit, status: "complete" });
@@ -12,6 +14,6 @@ export function portfolioReportFixture(scope = "all", currency = "USD") {
   return {
     scope: scope === "all" ? "all_owned" : "selected", portfolio_ids: portfolios.map(p => p.portfolio_id), reporting_currency: currency, method: "native_dated_fx_by_portfolio_v1", as_of: "2026-11-19T10:00:00Z", status: "complete", assumptions: ["Quotes are retrieval observations.", "Starting cash uses its creation-date recording boundary."], degraded_reasons: [], metrics,
     positions: [{ symbol: "AAPL", exchange: "NASDAQ", quote_unit: "USD", identity_status: "exact_symbol_exchange_unit", identity_reason: null, shares, current_price: 200, portfolio_ids: portfolios.map(p => p.portfolio_id), metrics: { market_value: metrics.market_value, cost_basis: metrics.cost_basis, unrealized_pnl: metrics.unrealized_pnl }, lots }],
-    portfolios: portfolios.map(p => ({ ...p, accounting: { base_currency: currency, status: "complete", as_of: "2026-11-19T10:00:00Z", issues: [], degraded_reasons: [], fx_rates: [], known_totals: {}, holdings: [], transactions: [] } })),
+    portfolios: portfolios.map(p => ({ ...p, accounting: { base_currency: currency, status: "complete", as_of: "2026-11-19T10:00:00Z", issues: [], degraded_reasons: [], fx_rates: [], known_totals: {}, allocation_by_sector: [{ name: "Technology", value: (p.portfolio_id === "p1" ? 400 : 600) * factor }], holdings: [], transactions: [] } })),
   };
 }

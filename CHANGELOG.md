@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Unified Portfolio layout** — the top scope bar owns account selection,
+  creation and settings. Holdings expand into original-lot tables, with one
+  collapsed All movements table for the selected accounts. Sector and current-
+  value distribution pies share the holdings scope/reporting currency and exclude
+  cash; incomplete valuation never becomes a partial pie. Single-account analysis
+  follows the same selector, with the duplicate sidebar/summary tables removed.
 - **Consolidated Portfolio workflow** — all-owned positions are the default,
   with collapsible scope selection, explicit reporting currency and original-lot
   drill-down. Reviewed Buy/Sell/cash operations replace parallel entry forms.

@@ -2,15 +2,38 @@
 
 The unreleased v3 Portfolio screen starts with **consolidated positions across
 all owned portfolios**, backed by the read-only reporting API. Expand an instrument
-to inspect original portfolio lots or sell from a specific account. The floating
-scope selector and reporting currency are reflected in the URL and saved views;
-explicit direct-link scope wins over a restored preference.
+to inspect original portfolio lots or sell from a specific account. The top bar is the only portfolio scope selector, including while a single
+account is selected. It also owns New portfolio and the selected account's settings;
+there is no separate vertical portfolio list. Scope and reporting currency are
+reflected in the URL and saved views; explicit direct-link scope wins over a
+restored preference. Creating an account preserves the current scope.
 
 **Record operation** is the primary Buy/Sell/cash entry. **Add existing position**
-opens a separate non-cash dialog. Both require review before recording. Management,
-activity, existing thesis/notes, import/export, currency repair and single-portfolio
-analytics remain accessible through the secondary tools disclosure. The old
-parallel Add holding form and per-holding pseudo-performance line are removed.
+opens a separate non-cash dialog. Both require review before recording. Original lots use one dense table per expanded holding, with native cost/currency,
+reporting values, dates, provenance, column/sort/CSV controls, sale and currency
+repair actions. Position research remains available alongside those lots.
+
+All movements is a single table, collapsed by default like Valuation method and
+coverage. Its dated/native/rationale list is fetched only when opened, across the
+selected accounts, with portfolio identity and reporting-currency cash deltas.
+A failed account read shows an unavailable state instead of a partial list.
+
+Sector allocation and holdings distribution by current value share space with
+consolidated holdings. Both use complete current holdings value in the report's
+currency and exclude cash. Unknown sectors stay labelled Unknown. Missing sector
+coverage can hide only the sector pie while complete holdings distribution remains
+available; incomplete or invalid holdings valuations hide both pies. No native
+currency totals are added together or renormalized from incomplete known values.
+
+Risk/AI/benchmark/correlation/dividend/attribution/events/backtesting are directly
+below the collapsed movement/evidence rows when one account is selected. All-owned
+scope explicitly asks for a single account for those methods; it does not select
+a hidden primary account or invent consolidated risk. Showing analysis never
+automatically generates AI prose. Mandate/settings and import/export are in the
+top-bar Portfolio settings dialog, with currency repair on the affected lot or
+movement. Custom persisted benchmarks remain visible in settings. The old parallel
+Add holding form, duplicate account holdings table and per-holding pseudo-performance
+line are removed.
 New portfolios default to zero starting cash rather than a demonstration amount.
 
 ## Request and ownership

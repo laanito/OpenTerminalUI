@@ -209,3 +209,34 @@ preservation, retained metadata on rollback, idempotence and PostgreSQL DDL.
 Actual migrated PostgreSQL operation/concurrency coverage belongs to the guarded
 CI lane. API/surface/mock/compile/whitespace guards pass. Original design audit
 evidence is unchanged; current 1440px/390px workflow screenshots were reviewed.
+
+## One portfolio scope and a shorter analysis path
+
+The maintainer accepted #290 and requested a coherent layout follow-up. The top
+bar now owns selection, creation and settings; the former manager sidebar and
+its duplicate summary/holdings/activity presentation are removed. Selection can
+switch directly between accounts without returning through all-owned scope.
+Creation preserves the chosen scope and selector focus returns after selection.
+
+Expanded holdings have original-lot dense tables and position-research access.
+One All movements table is collapsed by default and fetches the selected accounts'
+activity only when opened. Currency repair remains available on the owning lot
+or movement. Sector and current-value distribution pies share the holdings area,
+using complete reporting-currency market values, excluding cash. Missing sector
+coverage and missing valuation are separate states, never partial pie charts.
+
+Advanced analysis follows the same single-account scope directly below the two
+collapsed movement/evidence rows. All-owned scope does not silently analyze a
+primary portfolio. Creation, mandate/settings, existing import/export and repairs
+use focused dialogs; operations retain the reviewed #290 workflow and financial
+contracts. This follow-up changes no backend API, schema, accounting or dependencies.
+Unknown-basis/entry-valuation repair and complete release accessibility/zoom
+acceptance remain open. The original discovery audit is preserved as baseline.
+
+Validation: all 844 frontend tests / 138 files, production build and 57 installed-
+Chrome smoke journeys pass. Desktop/mobile cases verify creation without changing
+scope, direct account switches, selector focus, both rendered pies, collapsed
+cross-account movements and visible single-account analysis. Unit tests cover
+missing valuation/sector currency gaps, custom benchmarks, repair ownership and
+late/failing movement reads. Current 1440px/390px screenshots reviewed. Whitespace
+passes; no backend suite rerun for this frontend-only follow-up.
