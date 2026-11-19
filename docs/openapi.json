@@ -17323,6 +17323,52 @@
         "title": "PortfolioNativeAmount",
         "type": "object"
       },
+      "PortfolioOpeningData": {
+        "properties": {
+          "acquisition_date": {
+            "description": "Documented acquisition date for cost FX; distinct from the opening observation date",
+            "format": "date",
+            "title": "Acquisition Date",
+            "type": "string"
+          },
+          "contribution_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contribution Currency"
+          },
+          "contribution_value": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Total external contribution value at entry, independent of cost basis",
+            "title": "Contribution Value"
+          },
+          "provenance": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Provenance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "acquisition_date",
+          "provenance"
+        ],
+        "title": "PortfolioOpeningData",
+        "type": "object"
+      },
       "PortfolioPositionMetrics": {
         "properties": {
           "cost_basis": {
@@ -17462,6 +17508,16 @@
           "notes": {
             "title": "Notes",
             "type": "string"
+          },
+          "opening": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioOpeningData"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "portfolio_id": {
             "title": "Portfolio Id",
@@ -18382,6 +18438,29 @@
             "title": "Notes",
             "type": "string"
           },
+          "opening": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioOpeningData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stable identity for a deliberate submission; retries return the same result",
+            "title": "Operation Id"
+          },
           "price": {
             "default": 0.0,
             "minimum": 0.0,
@@ -18400,7 +18479,7 @@
             "type": "string"
           },
           "type": {
-            "pattern": "^(buy|sell|dividend|deposit|withdrawal)$",
+            "pattern": "^(buy|sell|dividend|deposit|withdrawal|opening)$",
             "title": "Type",
             "type": "string"
           }
@@ -18487,6 +18566,18 @@
           "notes": {
             "title": "Notes",
             "type": "string"
+          },
+          "operation_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Data"
           },
           "price": {
             "title": "Price",
@@ -43882,6 +43973,72 @@
           }
         ],
         "summary": "Update Portfolio Holding Currency",
+        "tags": [
+          "portfolios"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "portfolios": "supported"
+        }
+      }
+    },
+    "/api/portfolios/{portfolio_id}/operations/{operation_id}": {
+      "get": {
+        "operationId": "get_portfolio_operation_api_portfolios__portfolio_id__operations__operation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portfolio_id",
+            "required": true,
+            "schema": {
+              "title": "Portfolio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "operation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Operation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Portfolio Operation Api Portfolios  Portfolio Id  Operations  Operation Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Portfolio Operation",
         "tags": [
           "portfolios"
         ],

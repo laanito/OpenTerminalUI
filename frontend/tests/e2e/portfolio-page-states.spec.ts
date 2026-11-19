@@ -24,9 +24,10 @@ for (const width of [1440, 390]) {
       await route.fulfill({ json: { items: [], quotes: [], results: [] } });
     });
     await page.goto("/equity/portfolio");
+    await page.getByText("Manage portfolios, activity, research and analytics", { exact: true }).click();
     await expect(page.getByRole("heading", { name: "Portfolio", exact: true, level: 1 })).toBeVisible();
     await expect(page.getByRole("region", { name: "Selected portfolio details", exact: true })).toBeVisible();
-    const scope = page.getByRole("region", { name: "Portfolio scope", exact: true });
+    const scope = page.getByText("Manage portfolios, activity, research and analytics", { exact: true }).locator("..").getByRole("region", { name: "Portfolio scope", exact: true });
     await expect(scope).toContainText("Core"); await expect(scope).toContainText("USD");
     await page.getByRole("button", { name: /^Europe ·/ }).click();
     await expect(scope).toContainText("Europe");

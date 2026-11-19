@@ -18,6 +18,7 @@ const date = (value: unknown): value is string => typeof value === "string" && /
   && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 const issueLabels: Record<string, string> = {
   ledger_price_or_fx_unavailable: "Historical price or FX unavailable",
+  ledger_opening_contribution_unavailable: "Opening position entry value or historical FX unavailable",
   ledger_fx_or_currency_unavailable: "Ledger currency or historical FX unavailable",
   ledger_holdings_mismatch: "Ledger quantities do not match current holdings",
   ledger_position_negative: "Ledger sells exceed recorded purchases",

@@ -65,7 +65,7 @@ export async function updatePortfolioHoldingCurrency(portfolioId: string, holdin
   );
 }
 
-export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: PortfolioTransactionType; shares?: number; price?: number; currency?: string; date: string; fees?: number; fees_currency?: string; lot_id?: string; notes?: string }): Promise<{ id: string; status: string }> {
+export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: PortfolioTransactionType; shares?: number; price?: number; currency?: string; date: string; fees?: number; fees_currency?: string; lot_id?: string; notes?: string; operation_id?: string; opening?: import("./types").PortfolioOpeningData }): Promise<{ id: string; status: string }> {
   const { data } = await api.post<{ id: string; status: string }>(`/portfolios/${encodeURIComponent(portfolioId)}/transactions`, payload);
   return data;
 }
@@ -277,5 +277,18 @@ export async function fetchCorrelationClusters(payload: {
   n_clusters?: number;
 }): Promise<CorrelationClustersResponse> {
   const { data } = await api.post<CorrelationClustersResponse>("/correlation/clusters", payload);
+  return data;
+}
+
+export async function fetchPortfolioReport(currency: string, portfolioId?: string): Promise<import("./types").ConsolidatedPortfolioReport> {
+  const params = new URLSearchParams({ reporting_currency: currency });
+  if (portfolioId) params.append("portfolio_id", portfolioId);
+  const { data } = await api.get<import("./types").ConsolidatedPortfolioReport>("/portfolios/report", { params });
+  if (!data || !Array.isArray(data.positions) || !Array.isArray(data.portfolios) || !data.metrics) throw new Error("Portfolio reporting contract is unavailable");
+  return data;
+}
+
+export async function fetchPortfolioOperation(portfolioId: string, operationId: string): Promise<{id: string; status: string; portfolio_id: string; type: string}> {
+  const { data } = await api.get(`/portfolios/${encodeURIComponent(portfolioId)}/operations/${encodeURIComponent(operationId)}`);
   return data;
 }

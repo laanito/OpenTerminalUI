@@ -1,52 +1,76 @@
 # Current project state and backlog
 
-Current work **v3 read-only consolidated Portfolio reporting** (2026-11-19).
-The maintainer confirmed page/scope/state PR #288 merged at `e2048be` and authorized continuing.
-Shared-shell #287 and accepted discovery/design #286 remain the baseline: v3.0 is
-shared responsive foundation plus the complete Portfolio pilot. Other full page
-redesigns are later explicit v3.x scopes; do not reopen design approval.
+Current work **v3 consolidated Portfolio screen and reviewed operations**
+(2026-11-19). Reporting PR #289 is merged at `2e19698`. The maintainer explicitly
+asked to finish the visible consolidation and make transactions primary, with
+non-cash existing-position entry secondary. Discovery #286, shell #287 and page
+states #288 remain accepted; no new design approval is needed.
 
-This slice adds bearer-authenticated `GET /api/portfolios/report`. Required
-`reporting_currency` is explicit and supported; repeat `portfolio_id` for a
-selection or omit it for all owned portfolios. Unknown/foreign IDs share 404
-before market reads. Duplicates count once; max 100 explicit IDs. Empty ownership
-returns empty/zero without materializing a primary portfolio. The consolidated
-UI is not wired yet; existing single-portfolio screens/endpoints are preserved.
+Portfolio now starts at all owned positions using `/api/portfolios/report`.
+A floating/collapsible selector supports one/all scope, an explicit supported
+reporting currency, and URL/saved-view restoration. Direct scope wins over restored
+preferences. Expand positions into their original portfolio lots; sell actions
+bind the owning portfolio/lot. Current quote/cost/reporting units remain distinct;
+unsupported/unknown sale quote units require explicit execution price/currency.
+Failed scope/currency refresh hides prior figures. No aggregate risk/AI/history
+is inferred from the consolidated grouping.
 
-Each portfolio is independently recalculated in reporting currency from native
-holdings, transaction amounts and fees through existing dated-FX accounting.
-Do not pool account ledgers or convert computed P&L at today's FX. FX successes
-and failures are deduplicated across members; provider I/O is bounded. Complete
-metric totals remain separate from known subtotals and explicit coverage.
-Original portfolio/holding/lot IDs, recorded cost/date/currency/notes and native
-accounting/FX evidence remain inspectable. Combine only exact stored symbol,
-exchange and supported quote unit; preserve suffixes and crypto currency variants.
-Unresolved identity keeps lots separate. GBp stays GBp and is not valued as GBP.
+Record operation is primary and opens one reviewed Buy/Sell/deposit/withdrawal/
+dividend dialog. Add existing position opens a secondary non-cash modal. The
+old parallel Add holding form is removed. Existing manager capabilities remain
+in a secondary disclosure: activity, mandate/position research, imports/exports,
+currency repair and single-portfolio analytics. This is an interim organization,
+not a permanent second application. The array-indexed pseudo-performance chart
+is removed. New portfolios default to zero cash, not demonstration capital.
 
-Starting cash is in each persisted portfolio currency. Its reporting conversion
-uses the creation UTC date as a disclosed recording boundary, not a verified
-deposit date. Missing opening FX makes dependent cash/net totals incomplete.
-This retains existing dated ledger cash/weighted-average cost semantics, not a
-new multi-currency wallet, tax-lot engine, consolidated returns/risk/AI result.
-No backend accounting-write/schema/dependency/frontend/version change; no
-production DB access. Tests force disposable SQLite. See
-`docs/wiki/Portfolio-Reporting.md` and generated OpenAPI/API reference.
+Opening is an explicit `opening` ledger event that moves no cash or fees. This
+first path requires documented cost/currency, acquisition date and provenance.
+Do not substitute zero for unknown basis; **unknown-basis support is still an
+open v3.0 gate**. Recorded observation date stays separate from the documented
+acquisition date; cost FX uses the latter and ownership history uses the former.
+Independent optional contribution value/currency is a capital flow in kind;
+missing entry value/FX makes affected history unavailable, not a guessed zero
+flow or profit. Partial/full sales preserve documented basis. Execution rationale
+stays on transaction notes and existing Brain indexing; it does not silently
+become a new position thesis or Journal execution.
 
-Validation: full backend run **1,934 passed / 3 PostgreSQL-only skipped**,
-**78.69% coverage**. Final focused reporting run **22 passed**, including two
-additional cases for missing historical FX and UTC opening boundaries, after
-final read-path hardening. Backend compilation, surface inventory (87 families /
-493 operations), production-mock guard and generated API-reference check pass.
-No frontend/browser rerun for this backend-only slice; #288's 838 frontend tests
-and 47 browser journeys remain the prior frontend baseline.
+Stable UUID operation IDs bind each submitted target/body. Duplicate clicks are
+blocked; uncertain acknowledgements retain the reviewed body and offer manual
+same-ID retry or owner-scoped GET result lookup. Validation rejection preserves
+input for correction. IDs are held in the active dialog, not a durable browser
+outbox across reloads. Server writes serialize on the owned portfolio row
+(PostgreSQL) / reserve SQLite writer; oversells and sales before a recorded
+position boundary fail before mutation. Holdings and ledger commit together.
+Legacy add-holding/currency-repair/manage writers share that short SQL-only lock.
+No provider/model request holds it. Compatibility clients may omit operation IDs;
+the new UI always supplies them. Old holdings/CSV writes still mean buys/cash.
 
-Next: audited opening/external receipts and explicit unknown basis, separate
-capital-flow valuation and atomic/duplicate-safe operations before the full
-position-first Portfolio workflow. Do not implement non-cash entries through
-today's buy endpoint or silently reinterpret old buys. Preserve existing mode
-URLs, saved views, repair and research access. Continue shared patterns and
-physical zoom/accessibility review as needed. v2.8.0 stays published until release
-prep; deployment stays with the host agent. Do not monitor CI unless requested.
+Additive **0021_portfolio_operations** adds nullable JSON `operation_data` to
+portfolio_transactions without default/backfill or old-row rewrites. Docker
+runs Alembic; existing local installations must upgrade before startup. Rollback
+retains metadata, but pre-opening code cannot interpret opening events safely:
+use a compatible rollback build or a forward fix once openings exist. Local
+checks used disposable SQLite only; no production database access. PostgreSQL
+DDL is checked locally and actual migrated operations/concurrent retry tests are
+added to the guarded PostgreSQL CI lane; do not claim local live PostgreSQL tests.
+
+Validation: full backend run **1,955 passed / 3 PostgreSQL-only skipped**, **77.40%
+coverage**. After final sale-date/P&L changes, all **166 Portfolio tests** pass.
+Final frontend run: **838 tests / 135 files**; production build and **55 installed-
+Chrome smoke journeys** pass. Browser checks at 1440px/390px cover consolidated
+lots, click-to-select scope, reporting-currency requests/reload, selected-lot sale,
+non-cash review, manual retry/result reconciliation, tiny fractional quantity,
+missing totals/failed refresh and unsupported quote units. Screenshots reviewed.
+Backend compilation, surface/API/mock guards and whitespace pass. SQLite
+full-chain Alembic upgrade and migration retention/idempotence/PostgreSQL DDL
+checks pass. Do not monitor CI unless asked; deployment stays with the host agent.
+
+Next: explicit unknown-basis receipt accounting and repair of missing opening
+contribution evidence, fuller secondary-section/consolidated-table controls,
+then physical zoom/accessibility and complete acceptance review. Preserve the
+accepted v3.0 gate; this PR does not close it. No later screen overhaul or v2
+feature minor is implied. v2.8.0 remains published until explicit release prep.
+See `docs/wiki/Portfolio-Reporting.md`, `docs/design/v3/README.md` and `SCOPE.md`.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
@@ -1976,12 +2000,15 @@ ordered v1.7 milestone above.
       - [x] Read-only owner-scoped consolidated reporting API: explicit currency,
             native dated FX, independent account replay, original lots, conservative
             identity and per-metric coverage. No UI/write/schema migration yet.
-      - [ ] Audited opening/external receipts with unknown basis, separate capital-
-            flow valuation and atomic/duplicate-safe operation semantics; additive
-            migration review. Preserve existing stored rows and cash semantics.
-      - [ ] Position-first Portfolio and reviewed Buy/Sell/receipt/cash flows;
-            retain Research/Analytics/Manage/import/export/repair access. Remove
-            misleading per-holding pseudo-performance presentation.
+      - [x] Default consolidated screen and reviewed transactions; secondary
+            documented-basis non-cash opening modal. Independent contribution
+            valuation/history, atomic quantity checks, stable-ID retry/result
+            lookup and additive nullable metadata migration; old rows preserved.
+      - [ ] Explicit unknown-basis receipt accounting and missing contribution
+            evidence repair. Never substitute zero basis or invented entry value.
+      - [ ] Finish Portfolio secondary-section organization and consolidated dense
+            inspection/filter/export controls. Research/Analytics/Manage/import/
+            export/repair remain reachable; pseudo-performance line is removed.
       - [ ] Full acceptance and maintainer release review; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
             operations during development or implicit expansion into later scope.

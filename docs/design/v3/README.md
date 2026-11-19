@@ -181,3 +181,31 @@ two additional UTC-boundary/historical-FX cases after final read-path hardening.
 Compilation, surface inventory, mock guard and generated API-reference checks
 pass. No frontend/browser rerun for this backend-only slice; #288 remains the
 last frontend regression baseline.
+
+## Consolidated screen and reviewed operations
+
+Reporting PR #289 is merged. The screen now consumes its one/all-owner report,
+with a floating selector, explicit currency, expandable original lots and reviewed
+Buy/Sell/cash entry. Existing positions use a separate modal and non-cash `opening`
+ledger event. This first entry path requires documented basis/acquisition date;
+unknown basis is still an open gate. Contribution market value is separate from
+cost and missing entry value does not become a guessed capital flow.
+
+Stable UUIDs freeze each submitted target/body and support manual replay/lookup
+without automatic retry. Portfolio locks serialize SQL-only writes, oversells
+fail before mutation, and the original ledger/holding changes commit together.
+Existing management, activity, repair, research, import/export and single-account
+analytics remain reachable in a secondary disclosure. The misleading per-holding
+pseudo-performance chart is removed. This is still an incremental migration:
+fuller secondary navigation, unknown basis and final accessibility/zoom/release
+acceptance remain. See the [current contract](../../wiki/Portfolio-Reporting.md)
+and additive migration `0021_portfolio_operations`.
+
+Validation: full backend run 1,955 passed / three PostgreSQL-only skipped at
+77.40% coverage, followed by all 166 Portfolio tests after final date/P&L changes.
+All 838 frontend tests, production build and 55 Chrome smoke journeys pass.
+Migration checks cover a disposable full-chain SQLite upgrade, legacy/NULL
+preservation, retained metadata on rollback, idempotence and PostgreSQL DDL.
+Actual migrated PostgreSQL operation/concurrency coverage belongs to the guarded
+CI lane. API/surface/mock/compile/whitespace guards pass. Original design audit
+evidence is unchanged; current 1440px/390px workflow screenshots were reviewed.

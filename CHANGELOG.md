@@ -7,6 +7,17 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Consolidated Portfolio workflow** — all-owned positions are the default,
+  with collapsible scope selection, explicit reporting currency and original-lot
+  drill-down. Reviewed Buy/Sell/cash operations replace parallel entry forms.
+  Existing-position entry is a secondary non-cash modal requiring documented
+  basis/provenance; separate entry value drives capital-flow-aware history.
+  Stable operation IDs support manual retry/result lookup. Additive migration
+  `0021_portfolio_operations` preserves metadata without rewriting old rows.
+- **Atomic portfolio sales and operation retries** — reject oversells before any
+  holdings/ledger changes, serialize writes and retain the reviewed target/lot.
+  Execution rationale no longer silently becomes a new holding thesis. Remove
+  the array-indexed per-holding pseudo-performance line; retain real analytics.
 - **Owner-scoped consolidated Portfolio reporting API** — read-only current
   positions across all or selected owned portfolios in an explicit reporting
   currency. Replays each portfolio separately from native amounts and dated FX;

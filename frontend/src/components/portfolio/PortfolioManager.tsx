@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import {
   addPortfolioHolding,
-  addPortfolioTransaction,
   createPortfolio,
   deletePortfolioById,
   fetchPortfolioAnalyticsV2,
@@ -21,7 +20,6 @@ import {
   type MultiPortfolioAnalytics,
   type MultiPortfolioHolding,
   type MultiPortfolioTransaction,
-  type PortfolioTransactionType,
 } from "../../api/client";
 import type {
   PortfolioRiskMetrics,
@@ -47,7 +45,8 @@ import { TerminalModal } from "../terminal/TerminalModal";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 import { useSettingsStore } from "../../store/settingsStore";
 import { asCurrencyCode, type CurrencyCode } from "../../lib/currency";
-import { TX_TYPES, TX_NEEDS_SYMBOL, TX_NEEDS_SHARES, cashDeltaPreview } from "../../utils/portfolioCash";
+import { TX_NEEDS_SHARES } from "../../utils/portfolioCash";
+import { PortfolioOperationDialog, type OperationIntent } from "./PortfolioOperationDialog";
 import {
   CSV_SYMBOL_COLUMNS,
   CSV_SHARES_COLUMNS,
@@ -76,7 +75,8 @@ type CurrencyRepairTarget =
   | { kind: "holding"; row: MultiPortfolioHolding }
   | { kind: "transaction"; row: MultiPortfolioTransaction };
 
-export function PortfolioManager() {
+export function PortfolioManager({ initialPortfolioId, onMutation }: { initialPortfolioId?: string; onMutation?: () => void } = {}) {
+  const [operationIntent, setOperationIntent] = useState<OperationIntent | null>(null);
   const { formatMoney, formatCompactMoney, nativeForInstrument } = useDisplayCurrency();
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
   // Each holding's price is in its instrument's native currency; convert to the
@@ -104,29 +104,15 @@ export function PortfolioManager() {
   const [newDescription, setNewDescription] = useState("");
   const [newBenchmark, setNewBenchmark] = useState(BENCHMARKS[0]);
   const [newCurrency, setNewCurrency] = useState<CurrencyCode>("USD");
-  const [newCash, setNewCash] = useState(100000);
+  const [newCash, setNewCash] = useState(0);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editBenchmark, setEditBenchmark] = useState(BENCHMARKS[0]);
   const [editCurrency, setEditCurrency] = useState<CurrencyCode>("USD");
 
-  const [addSymbol, setAddSymbol] = useState("AAPL");
-  const [addShares, setAddShares] = useState(10);
-  const [addCost, setAddCost] = useState(100);
   const [addCurrency, setAddCurrency] = useState<CurrencyCode>("USD");
-  const [addDate, setAddDate] = useState(new Date().toISOString().slice(0, 10));
 
   const [transactions, setTransactions] = useState<MultiPortfolioTransaction[]>([]);
-  const [txType, setTxType] = useState<PortfolioTransactionType>("buy");
-  const [txSymbol, setTxSymbol] = useState("AAPL");
-  const [txShares, setTxShares] = useState(10);
-  const [txPrice, setTxPrice] = useState(100);
-  const [txCurrency, setTxCurrency] = useState<CurrencyCode>("USD");
-  const [txFees, setTxFees] = useState(0);
-  const [txFeesCurrency, setTxFeesCurrency] = useState<CurrencyCode>("USD");
-  const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
-  const [txNotes, setTxNotes] = useState("");
-  const txFormRef = useRef<HTMLDivElement>(null);
   const [currencyRepairTarget, setCurrencyRepairTarget] = useState<CurrencyRepairTarget | null>(null);
   const [repairAmountCurrency, setRepairAmountCurrency] = useState<CurrencyCode>("USD");
   const [repairFeeCurrency, setRepairFeeCurrency] = useState<CurrencyCode>("USD");
@@ -176,8 +162,6 @@ export function PortfolioManager() {
           const baseCurrency = toCurrencyCode(selected.currency);
           setEditCurrency(baseCurrency);
           setAddCurrency(baseCurrency);
-          setTxCurrency(baseCurrency);
-          setTxFeesCurrency(baseCurrency);
         }
         // Deep analytics hit market data and are slower; load them in the
         // background (scoped to the selected portfolio) so the core view renders
@@ -212,7 +196,7 @@ export function PortfolioManager() {
   };
 
   useEffect(() => {
-    void loadAll();
+    void loadAll(initialPortfolioId);
     return () => { loadVersion.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -227,21 +211,6 @@ export function PortfolioManager() {
     () => new Map((analytics?.accounting?.transactions || []).map((row) => [row.id, row])),
     [analytics],
   );
-  const perfSeries = useMemo(() => {
-    if (!holdings.length || holdings.some((holding) => {
-      const evidence = accountingHoldings.get(holding.id);
-      return evidence?.cost_basis_base == null || evidence.market_value_base == null;
-    })) return [];
-    let cumulative = 100;
-    return holdings.map((h, idx) => {
-      const evidence = accountingHoldings.get(h.id)!;
-      const cost = Number(evidence.cost_basis_base || 0);
-      const ret = cost > 0 ? Number(evidence.unrealized_pnl_base || 0) / cost : 0;
-      cumulative *= 1 + ret / Math.max(1, holdings.length);
-      return { i: idx + 1, value: cumulative };
-    });
-  }, [accountingHoldings, holdings]);
-
   const formatBaseAggregate = (value: number | null | undefined) => {
     if (value === undefined) return "-";
     if (!analytics?.accounting) return "Needs accounting";
@@ -253,8 +222,6 @@ export function PortfolioManager() {
     return `${metricFmt(value)} (${currency?.toUpperCase() || "currency unknown"})`;
   };
   const portfolioSymbols = useMemo(() => Array.from(new Set(holdings.map((h) => h.symbol).filter(Boolean))), [holdings]);
-  const txCurrenciesCompatible = txFees <= 0 || txCurrency === txFeesCurrency;
-  const txPreview = cashDeltaPreview(txType, txShares, txPrice, txCurrenciesCompatible ? txFees : 0);
 
   const openCurrencyRepair = (target: CurrencyRepairTarget) => {
     setRepairAmountCurrency(cashCurrency);
@@ -283,6 +250,7 @@ export function PortfolioManager() {
       }
       setCurrencyRepairTarget(null);
       await loadAll(selectedId);
+      onMutation?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update legacy currency");
     } finally {
@@ -290,59 +258,10 @@ export function PortfolioManager() {
     }
   };
 
-  // Pre-fill the Record Transaction form to sell a specific position (full size
-  // at the current price by default; user can adjust before recording). Turns a
-  // generic "record a sale" into a sale attributed to the row you clicked.
   const sellFromPosition = (row: MultiPortfolioHolding) => {
-    setTxType("sell");
-    setTxSymbol(row.symbol);
-    setTxShares(row.shares);
-    setTxPrice(Number(row.current_price || row.cost_basis_per_share || 0));
-    const rowCurrency = toCurrencyCode(row.currency || row.cost_basis_currency);
-    setTxCurrency(rowCurrency);
-    setTxFeesCurrency(rowCurrency);
-    setError(null);
-    setStatus(`Selling ${row.symbol} — review shares/price, then Record`);
-    requestAnimationFrame(() => txFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
-  };
-
-  const handleRecordTransaction = async () => {
-    if (!selectedId) return;
-    setStatus(null);
-    setError(null);
-    const needsSymbol = TX_NEEDS_SYMBOL[txType];
-    const needsShares = TX_NEEDS_SHARES[txType];
-    const symbol = txSymbol.trim().toUpperCase();
-    if (needsSymbol && !symbol) {
-      setError(`${txType} needs a symbol`);
-      return;
-    }
-    if (needsShares && (!Number.isFinite(txShares) || txShares <= 0)) {
-      setError(`${txType} needs a positive share count`);
-      return;
-    }
-    if (!Number.isFinite(txPrice) || txPrice <= 0) {
-      setError(needsShares ? "Price must be positive" : "Amount must be positive");
-      return;
-    }
-    try {
-      await addPortfolioTransaction(selectedId, {
-        type: txType,
-        symbol: needsSymbol ? symbol : undefined,
-        shares: needsShares ? txShares : 0,
-        price: txPrice,
-        currency: txCurrency,
-        fees: txFees,
-        fees_currency: txFeesCurrency,
-        date: txDate,
-        notes: txNotes.trim() || undefined,
-      });
-      setStatus(`Recorded ${txType}${needsSymbol ? ` ${symbol}` : ""}`);
-      setTxNotes("");
-      await loadAll(selectedId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to record transaction");
-    }
+    setOperationIntent({ portfolioId: selectedId, type: "sell", symbol: row.symbol,
+      shares: row.shares, price: row.current_price, currency: row.currency || undefined,
+      lotId: row.lot_id });
   };
 
   const handleImportCsv = async (file: File | null) => {
@@ -393,6 +312,7 @@ export function PortfolioManager() {
       }
       setStatus(imported > 0 ? `Imported ${imported} holdings` : "No valid rows imported");
       await loadAll(selectedId);
+      onMutation?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to import CSV");
     }
@@ -458,6 +378,7 @@ export function PortfolioManager() {
                 setStatus(`Created ${created.name}`);
                 setNewDescription("");
                 await loadAll(created.id);
+                onMutation?.();
               } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to create portfolio");
               }
@@ -513,6 +434,7 @@ export function PortfolioManager() {
                   });
                   setStatus("Portfolio updated");
                   await loadAll(selectedPortfolio.id);
+                  onMutation?.();
                 } catch (err) {
                   setError(err instanceof Error ? err.message : "Failed to update portfolio");
                 }
@@ -531,6 +453,7 @@ export function PortfolioManager() {
                   await deletePortfolioById(selectedPortfolio.id);
                   setStatus("Portfolio deleted");
                   await loadAll("");
+                  onMutation?.();
                 } catch (err) {
                   setError(err instanceof Error ? err.message : "Failed to delete portfolio");
                 }
@@ -555,68 +478,14 @@ export function PortfolioManager() {
                 aria-label="Portfolio thesis"
               />
             </label>
-            <fieldset className="rounded border border-terminal-border/70 bg-terminal-bg/30 p-2">
-              <legend className="px-1 text-xs font-semibold text-terminal-muted">Add holding</legend>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                <label className="block text-[11px] text-terminal-muted">
-                  <span className="mb-1 block">Symbol</span>
-                  <TerminalInput className="w-full" value={addSymbol} onChange={(e) => setAddSymbol(e.target.value.toUpperCase())} placeholder="AAPL" />
-                </label>
-                <label className="block text-[11px] text-terminal-muted">
-                  <span className="mb-1 block">Quantity</span>
-                  <TerminalInput className="w-full" type="number" min="0" step="any" value={addShares} onChange={(e) => setAddShares(Number(e.target.value) || 0)} />
-                </label>
-                <label className="block text-[11px] text-terminal-muted">
-                  <span className="mb-1 block">Unit price</span>
-                  <TerminalInput className="w-full" type="number" min="0" step="any" value={addCost} onChange={(e) => setAddCost(Number(e.target.value) || 0)} />
-                </label>
-                <label className="block text-[11px] text-terminal-muted">
-                  <span className="mb-1 block">Purchase date</span>
-                  <TerminalInput className="w-full" type="date" value={addDate} onChange={(e) => setAddDate(e.target.value)} />
-                </label>
-                <label className="block text-[11px] text-terminal-muted">
-                  <span className="mb-1 block">Cost currency</span>
-                  <TerminalInput as="select" className="w-full" value={addCurrency} onChange={(e) => setAddCurrency(e.target.value as CurrencyCode)}>
-                    {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
-                  </TerminalInput>
-                </label>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <TerminalButton
-                  variant="default"
-                  onClick={async () => {
-                    if (!selectedId) return;
-                    try {
-                      setError(null);
-                      await addPortfolioHolding(selectedId, { symbol: addSymbol, shares: addShares, cost_basis_per_share: addCost, currency: addCurrency, purchase_date: addDate });
-                      setStatus(`Added ${addSymbol}`);
-                      await loadAll(selectedId);
-                    } catch (err) {
-                      setError(err instanceof Error ? err.message : "Failed to add holding");
-                    }
-                  }}
-                >
-                  Add
-                </TerminalButton>
-                <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent">
-                  Import CSV
-                  <input
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0] ?? null;
-                      void handleImportCsv(file);
-                      event.currentTarget.value = "";
-                    }}
-                  />
-                </label>
-                <ExportButton source="portfolio" data={holdings} disabled={!holdings.length} />
-                {loading ? <span className="text-terminal-muted">Loading...</span> : null}
-              </div>
-            </fieldset>
+            <div className="flex flex-wrap gap-2">
+              <TerminalButton variant="accent" onClick={() => setOperationIntent({ portfolioId: selectedId, type: "buy", currency: selectedPortfolio?.currency })}>Record operation</TerminalButton>
+              <TerminalButton onClick={() => setOperationIntent({ portfolioId: selectedId, type: "opening", currency: selectedPortfolio?.currency })}>Add existing position</TerminalButton>
+              <ExportButton source="portfolio" data={holdings} disabled={!holdings.length} />
+              <label className="text-xs text-terminal-muted">Import CSV (records buys and debits cash)<input aria-label="Import CSV" type="file" accept=".csv" onChange={e => void handleImportCsv(e.target.files?.[0] || null)} /></label>
+            </div>
           </div>
-          {holdings.length === 0 ? <TerminalDataState kind="empty" title="No holdings in this portfolio">Recorded cash and transactions can still exist. Use the existing entry controls to add a holding.</TerminalDataState> : <DenseTable
+          {holdings.length === 0 ? <TerminalDataState kind="empty" title="No holdings in this portfolio">Recorded cash and transactions can still exist. Record an operation or add an existing position without moving cash.</TerminalDataState> : <DenseTable
             id="portfolio-manager-holdings"
             rows={holdings}
             rowKey={(row) => row.id}
@@ -676,78 +545,8 @@ export function PortfolioManager() {
           />}
         </div>
 
-        <div ref={txFormRef} className="rounded border border-terminal-border bg-terminal-panel p-2">
-          <div className="mb-2 flex flex-wrap items-end gap-2 text-xs">
-            <span className="text-terminal-muted">Record Transaction</span>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">Type</span>
-              <TerminalInput as="select" className="w-28" value={txType} onChange={(e) => setTxType(e.target.value as PortfolioTransactionType)}>
-                {TX_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </TerminalInput>
-            </label>
-            {TX_NEEDS_SYMBOL[txType] ? (
-              <label className="flex flex-col gap-0.5">
-                <span className="text-[10px] text-terminal-muted">Symbol</span>
-                <TerminalInput className="w-24" value={txSymbol} onChange={(e) => setTxSymbol(e.target.value.toUpperCase())} />
-              </label>
-            ) : null}
-            {TX_NEEDS_SHARES[txType] ? (
-              <label className="flex flex-col gap-0.5">
-                <span className="text-[10px] text-terminal-muted">Shares</span>
-                <TerminalInput className="w-20" type="number" value={txShares} onChange={(e) => setTxShares(Number(e.target.value) || 0)} />
-              </label>
-            ) : null}
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">{TX_NEEDS_SHARES[txType] ? "Price" : "Amount"}</span>
-              <TerminalInput className="w-24" type="number" value={txPrice} onChange={(e) => setTxPrice(Number(e.target.value) || 0)} />
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">Currency</span>
-              <TerminalInput
-                as="select"
-                className="w-20"
-                value={txCurrency}
-                onChange={(e) => {
-                  const nextCurrency = e.target.value as CurrencyCode;
-                  setTxCurrency(nextCurrency);
-                  setTxFeesCurrency(nextCurrency);
-                }}
-              >
-                {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
-              </TerminalInput>
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">Fees</span>
-              <TerminalInput className="w-20" type="number" value={txFees} onChange={(e) => setTxFees(Number(e.target.value) || 0)} />
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">Fee currency</span>
-              <TerminalInput as="select" className="w-20" value={txFeesCurrency} onChange={(e) => setTxFeesCurrency(e.target.value as CurrencyCode)}>
-                {CURRENCY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
-              </TerminalInput>
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">Date</span>
-              <TerminalInput className="w-32" type="date" value={txDate} onChange={(e) => setTxDate(e.target.value)} />
-            </label>
-            <label className="flex flex-1 flex-col gap-0.5">
-              <span className="text-[10px] text-terminal-muted">Notes</span>
-              <TerminalInput value={txNotes} onChange={(e) => setTxNotes(e.target.value)} placeholder="optional" />
-            </label>
-            <TerminalButton variant="accent" disabled={!selectedId} onClick={() => void handleRecordTransaction()}>
-              Record
-            </TerminalButton>
-          </div>
-          <div className="mb-2 text-[11px] text-terminal-muted">
-            Cash impact:{" "}
-            <span className={txPreview >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
-              {txPreview >= 0 ? "+" : ""}{formatMoney(txPreview, txCurrency)}
-            </span>
-            {!txCurrenciesCompatible ? `; fees -${formatMoney(txFees, txFeesCurrency)}` : null}
-          </div>
-          {transactions.length === 0 ? (
-            <div className="mb-2 text-[11px] text-terminal-muted">No transactions yet — record a deposit to fund the portfolio, then buy/sell.</div>
-          ) : null}
+        <div className="rounded border border-terminal-border bg-terminal-panel p-2">
+          <h2 className="mb-2 text-xs text-terminal-muted">Recorded activity</h2>
           <DenseTable
             id="portfolio-manager-transactions"
             rows={transactions}
@@ -836,17 +635,7 @@ export function PortfolioManager() {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="rounded border border-terminal-border bg-terminal-panel p-2">
-            <div className="mb-1 text-xs text-terminal-muted">Performance vs Benchmark</div>
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={perfSeries}>
-                  <Line dataKey="value" stroke="#FF6B00" dot={false} strokeWidth={2} />
-                  <Tooltip />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+
         </div>
 
         {portfolioSymbols.length > 0 ? (
@@ -881,6 +670,9 @@ export function PortfolioManager() {
         ) : null}
       </section> : null}
       </div>
+
+      {operationIntent && <PortfolioOperationDialog intent={operationIntent} portfolios={portfolios}
+        onClose={() => setOperationIntent(null)} onSaved={() => { void loadAll(selectedId); onMutation?.(); }} />}
 
       <TerminalModal
         open={currencyRepairTarget !== null}

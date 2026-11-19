@@ -290,7 +290,7 @@ export type MultiPortfolioHolding = {
   currency?: string | null;
 };
 
-export type PortfolioTransactionType = "buy" | "sell" | "dividend" | "deposit" | "withdrawal";
+export type PortfolioTransactionType = "buy" | "sell" | "dividend" | "deposit" | "withdrawal" | "opening";
 
 export type MultiPortfolioTransaction = {
   id: string;
@@ -1058,4 +1058,35 @@ export type InsightData = {
     message: string;
     retryable: boolean;
   };
+};
+
+export type PortfolioReportMetric = {
+  value: number | null; known_value: number; complete_items: number; total_items: number;
+  unit: "lot" | "portfolio"; status: "complete" | "partial" | "unavailable";
+};
+export type PortfolioReportLot = {
+  portfolio_id: string; portfolio_name: string; holding_id: string; lot_id: string;
+  symbol: string; shares: number; purchase_date: string; cost_basis_per_share: number;
+  cost_basis_currency: string | null; notes: string; exchange: string | null;
+  quote_unit: string | null; current_price: number | null;
+  accounting: PortfolioAccounting["holdings"][number];
+  opening?: PortfolioOpeningData | null;
+};
+export type ConsolidatedPortfolioReport = {
+  scope: "all_owned" | "selected"; portfolio_ids: string[]; reporting_currency: string;
+  as_of: string; status: "complete" | "degraded" | "partial";
+  assumptions: string[]; degraded_reasons: string[];
+  metrics: Record<"market_value" | "cost_basis" | "unrealized_pnl" | "cash_balance" | "net_liquidation_value" | "realized_pnl" | "fees" | "dividend_income_ytd", PortfolioReportMetric>;
+  positions: Array<{
+    symbol: string; exchange: string | null; quote_unit: string | null;
+    identity_status: string; identity_reason: string | null; shares: number;
+    current_price: number | null; portfolio_ids: string[];
+    metrics: Record<"market_value" | "cost_basis" | "unrealized_pnl", PortfolioReportMetric>;
+    lots: PortfolioReportLot[];
+  }>;
+  portfolios: Array<{portfolio_id: string; name: string; portfolio_currency: string; accounting: PortfolioAccounting}>;
+};
+export type PortfolioOpeningData = {
+  acquisition_date: string; provenance: string; contribution_value?: number;
+  contribution_currency?: string;
 };

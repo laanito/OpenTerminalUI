@@ -186,3 +186,26 @@ projection, avoiding full multi-megabyte envelopes for each list item. SQLite
 API coverage passes locally; the existing migrated PostgreSQL owner/list/delete
 contract exercises this query in the guarded CI lane. Full stored JSON remains
 unchanged, and the stream reuses the same atomic capture transaction.
+
+
+## v3 Portfolio operation provenance
+
+`0021_portfolio_operations` follows `0020_comparison_captures` and adds nullable
+JSON `portfolio_transactions.operation_data`, using SQLAlchemy inspection and
+portable Alembic `add_column`. No default, backfill or old-row rewrite occurs.
+Metadata retains idempotent request fingerprints and documented-basis non-cash
+opening provenance, with original acquisition date separate from the observation
+boundary and independent contribution market value. Downgrade retains metadata.
+Older code cannot interpret new opening events correctly; once openings exist,
+use a compatible rollback build or forward fix, not pre-opening write code.
+
+Operation writers lock the owned portfolio row on PostgreSQL; SQLite reserves
+its writer before inspecting/mutating holdings. Quantity checks precede writes,
+and holdings/ledger commit together. The same lock covers legacy holding/repair/
+manage writes. No provider/model call runs under it. SQLite tests cover duplicate
+submission/concurrent retry, owner boundaries, no partial oversell, documented
+opening basis and sales. Local migration tests preserve old rows/NULL, retention
+and idempotence; PostgreSQL DDL compiles locally. A full disposable SQLite Alembic
+upgrade passes. Actual migrated PostgreSQL insertion/JSON/concurrent retry is
+included through `test_portfolio_operations.py` in the guarded CI lane; no local
+production/live PostgreSQL access is claimed.

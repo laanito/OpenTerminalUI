@@ -318,3 +318,25 @@ def test_multiple_legacy_symbols_with_unrecorded_adds_and_removals_keep_thirty_d
     assert result["equity_curve"][-1]["holdings_value"] == 410
     assert result["equity_curve"][-1]["cash_balance"] == 310
     assert "C" not in market
+
+
+def test_non_cash_opening_has_observation_boundary_and_independent_external_flow(market):
+    opening = tx('opening', '2026-11-10', 'A', shares=2, price=50)
+    opening.operation_data = {'opening': {'acquisition_date': '2026-01-02', 'provenance': 'Statement', 'contribution_value': 240, 'contribution_currency': 'USD'}}
+    result = run([opening], [NS(symbol='A', shares=2)], cash=1000)
+    curve = {point['date']: point for point in result['equity_curve']}
+    assert curve['2026-11-09']['holdings_value'] == 0
+    assert curve['2026-11-10']['holdings_value'] == 240
+    assert curve['2026-11-10']['cash_balance'] == 1000
+    assert curve['2026-11-10']['external_flow'] == 240  # market contribution, never original cost 100
+    assert curve['2026-11-10']['portfolio'] == 100
+    assert result['opening_position_adjustments'] == []
+
+
+def test_missing_entry_valuation_does_not_become_zero_contribution_or_profit(market):
+    opening = tx('opening', '2026-11-10', 'A', shares=2, price=50)
+    opening.operation_data = {'opening': {'acquisition_date': '2026-01-02', 'provenance': 'Statement'}}
+    result = run([opening], [NS(symbol='A', shares=2)])
+    assert result['status'] == 'partial'
+    assert result['equity_curve'] == []
+    assert result['issues'][0]['code'] == 'ledger_opening_contribution_unavailable'

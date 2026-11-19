@@ -14,7 +14,7 @@ from typing import Any, Awaitable, Callable, Iterable
 
 RateResolver = Callable[[str, str, date | None], Awaitable[dict[str, Any]]]
 
-_TRADE_TYPES = frozenset({"buy", "sell"})
+_TRADE_TYPES = frozenset({"buy", "sell", "opening"})
 _CASH_ONLY_TYPES = frozenset({"dividend", "deposit", "withdrawal"})
 
 
@@ -70,6 +70,15 @@ async def calculate_portfolio_accounting(
     holding_rows = list(holdings)
     transaction_rows = list(transactions)
     valued_at = as_of or datetime.now(timezone.utc)
+    opening_dates = {
+        (str(getattr(tx, "symbol", "")), str(getattr(tx, "lot_id", ""))): ((getattr(tx, "operation_data", None) or {}).get("opening") or {}).get("acquisition_date")
+        for tx in transaction_rows if str(getattr(tx, "type", "")) == "opening" and getattr(tx, "lot_id", "")
+    }
+
+    def cost_date(holding):
+        original = opening_dates.get((str(getattr(holding, "symbol", "")), str(getattr(holding, "lot_id", ""))))
+        return _historical_date(original or getattr(holding, "purchase_date", None))
+
     issues: list[dict[str, Any]] = []
     degraded_reasons: list[str] = []
     rate_evidence: dict[tuple[str, str, date | None], dict[str, Any]] = {}
@@ -84,7 +93,7 @@ async def calculate_portfolio_accounting(
         shares = _number(getattr(holding, "shares", 0.0))
         cost = shares * _number(getattr(holding, "cost_basis_per_share", 0.0))
         cost_currency = _currency(getattr(holding, "cost_basis_currency", None))
-        purchase_date = _historical_date(getattr(holding, "purchase_date", None))
+        purchase_date = cost_date(holding)
         if cost and cost_currency and (cost_currency == base or purchase_date is not None):
             require(cost_currency, purchase_date)
 
@@ -98,7 +107,7 @@ async def calculate_portfolio_accounting(
         shares = _number(getattr(tx, "shares", 0.0))
         price = _number(getattr(tx, "price", 0.0))
         amount = shares * price if tx_type in _TRADE_TYPES else price if tx_type in _CASH_ONLY_TYPES else 0.0
-        occurred_on = _historical_date(getattr(tx, "date", None))
+        occurred_on = _historical_date(((getattr(tx, "operation_data", None) or {}).get("opening") or {}).get("acquisition_date") if tx_type == "opening" else getattr(tx, "date", None))
         if amount and _currency(getattr(tx, "currency", None)) and (
             _currency(getattr(tx, "currency", None)) == base or occurred_on is not None
         ):
@@ -204,7 +213,7 @@ async def calculate_portfolio_accounting(
         unit_cost = _number(getattr(holding, "cost_basis_per_share", 0.0))
         cost_native = shares * unit_cost
         cost_currency = _currency(getattr(holding, "cost_basis_currency", None))
-        purchase_date = _historical_date(getattr(holding, "purchase_date", None))
+        purchase_date = cost_date(holding)
         cost_base, cost_rate = convert(
             cost_native,
             cost_currency,
@@ -272,7 +281,7 @@ async def calculate_portfolio_accounting(
         shares = _number(getattr(tx, "shares", 0.0))
         price = _number(getattr(tx, "price", 0.0))
         amount_native = shares * price if tx_type in _TRADE_TYPES else price if tx_type in _CASH_ONLY_TYPES else 0.0
-        occurred_on = _historical_date(getattr(tx, "date", None))
+        occurred_on = _historical_date(((getattr(tx, "operation_data", None) or {}).get("opening") or {}).get("acquisition_date") if tx_type == "opening" else getattr(tx, "date", None))
         tx_currency = _currency(getattr(tx, "currency", None))
         amount_base, amount_rate = convert(
             amount_native,
@@ -297,7 +306,9 @@ async def calculate_portfolio_accounting(
         else:
             known_fees += fees_base
 
-        if amount_base is None or fees_base is None:
+        if tx_type == "opening":
+            cash_delta_base = 0.0
+        elif amount_base is None or fees_base is None:
             cash_complete = False
             cash_delta_base = None
         elif tx_type == "buy":
@@ -360,7 +371,7 @@ async def calculate_portfolio_accounting(
             incomplete_trade_symbols.add(symbol)
             continue
         quantity, average = positions.get(symbol, [0.0, 0.0])
-        if tx_type == "buy":
+        if tx_type in {"buy", "opening"}:
             new_quantity = quantity + shares
             average = (quantity * average + shares * unit_price_base) / new_quantity if new_quantity > 0 else 0.0
             positions[symbol] = [new_quantity, average]

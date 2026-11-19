@@ -31,6 +31,7 @@ for (const width of [1440, 390]) {
       await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
     });
     await page.goto("/equity/portfolio");
+    await page.getByText("Manage portfolios, activity, research and analytics", { exact: true }).click();
     const scope = page.getByRole("group", { name: "Optional holding technical context · up to 3 symbols" });
     await expect(scope).toBeEnabled();
     const card = page.getByText("AI Risk Assessment", { exact: true }).locator("xpath=ancestor::section[1]");

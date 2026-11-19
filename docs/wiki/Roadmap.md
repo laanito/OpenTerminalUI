@@ -909,10 +909,14 @@ Read-only consolidated reporting now adds `/api/portfolios/report` for all or
 selected owned portfolios in an explicit reporting currency, preserving native
 inputs, independent ledger replay, original lots and per-metric coverage. See the
 [reporting contract](Portfolio-Reporting.md), including its opening-cash date
-assumption and conservative identity grouping. The consolidated UI, non-cash
-receipt/unknown-basis accounting, atomic/duplicate-safe operation contracts and
-position-first Portfolio migration remain within the accepted v3.0 gate, along
-with further shared-pattern adoption and zoom/accessibility review. See the design pack's
+assumption and conservative identity grouping. The screen now uses that report
+as its default, with original-lot expansion and a floating one/all selector.
+Reviewed transactions are primary; a secondary modal records documented-basis
+non-cash openings with independent contribution valuation. Operations are atomic,
+oversells are rejected and stable IDs support manual retry/result lookup.
+Unknown-basis receipts, fuller secondary-section organization and acceptance
+(including zoom/accessibility) remain within the accepted v3.0 gate. This does
+not mark the complete Portfolio pilot or v3 release ready. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:

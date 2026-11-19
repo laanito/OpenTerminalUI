@@ -9,6 +9,7 @@ export const TX_TYPES: PortfolioTransactionType[] = ["buy", "sell", "dividend", 
 // A row needs a security symbol only for trades; dividend/deposit/withdrawal are
 // cash-only. Shares matter only for trades.
 export const TX_NEEDS_SYMBOL: Record<PortfolioTransactionType, boolean> = {
+  opening: true,
   buy: true,
   sell: true,
   dividend: true,
@@ -17,6 +18,7 @@ export const TX_NEEDS_SYMBOL: Record<PortfolioTransactionType, boolean> = {
 };
 
 export const TX_NEEDS_SHARES: Record<PortfolioTransactionType, boolean> = {
+  opening: true,
   buy: true,
   sell: true,
   dividend: false,

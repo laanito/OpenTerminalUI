@@ -388,8 +388,10 @@ never silently faked.
   existing dated cash-ledger semantics rather than adding a multi-currency cash
   wallet or cash FX gain. Exact symbol/exchange/unit grouping does not resolve
   aliases; missing identity keeps lots separate and unsupported units such as
-  GBp are not silently treated as GBP. The consolidated UI, receipt accounting
-  and new operation writes remain upcoming. See [Portfolio Reporting](Portfolio-Reporting.md).
+  GBp are not silently treated as GBP. The v3 screen consumes this report and
+  offers reviewed operations and documented-basis non-cash openings. Unknown-basis
+  receipt entry remains upcoming. Missing entry value makes affected opening-period
+  history unavailable. See [Portfolio Reporting](Portfolio-Reporting.md).
 - **Historical portfolio analytics describe current open holdings, not a full
   transaction-ledger performance record.** Portfolio list, detail, Manager,
   primary dashboard, and current allocation APIs normalize current marks and

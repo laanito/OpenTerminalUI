@@ -191,52 +191,42 @@ describe("PortfolioManager thesis capture", () => {
     );
   });
 
-  it("labels holding-entry fields and submits their values", async () => {
+  it("uses the reviewed transaction dialog instead of a second holding form", async () => {
     render(<PortfolioManager />);
-
     await screen.findByRole("textbox", { name: "Portfolio thesis" });
-    const holdingForm = within(screen.getByRole("group", { name: "Add holding" }));
-    fireEvent.change(holdingForm.getByRole("textbox", { name: "Symbol" }), { target: { value: "msft" } });
-    fireEvent.change(holdingForm.getByRole("spinbutton", { name: "Quantity" }), { target: { value: "12" } });
-    fireEvent.change(holdingForm.getByRole("spinbutton", { name: "Unit price" }), { target: { value: "415.25" } });
-    fireEvent.change(holdingForm.getByLabelText("Purchase date"), { target: { value: "2026-09-05" } });
-    fireEvent.click(holdingForm.getByRole("button", { name: "Add" }));
-
-    await waitFor(() =>
-      expect(addPortfolioHoldingMock).toHaveBeenCalledWith("p1", {
-        symbol: "MSFT",
-        shares: 12,
-        cost_basis_per_share: 415.25,
-        currency: "USD",
-        purchase_date: "2026-09-05",
-      }),
-    );
+    expect(screen.queryByRole("group", { name: "Add holding" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Record operation" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Record operation" }));
+    fireEvent.change(dialog.getByLabelText("Symbol"), { target: { value: "MSFT" } });
+    fireEvent.change(dialog.getByLabelText("Quantity"), { target: { value: "12" } });
+    fireEvent.change(dialog.getByLabelText("Unit price"), { target: { value: "415.25" } });
+    fireEvent.change(dialog.getByLabelText("Operation date"), { target: { value: "2026-09-05" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Review operation" }));
+    expect(addPortfolioTransactionMock).not.toHaveBeenCalled();
+    fireEvent.click(dialog.getByRole("button", { name: "Confirm operation" }));
+    await waitFor(() => expect(addPortfolioTransactionMock).toHaveBeenCalledWith("p1", expect.objectContaining({
+      type: "buy", symbol: "MSFT", shares: 12, price: 415.25, currency: "USD", date: "2026-09-05", operation_id: expect.any(String),
+    })));
+    expect(addPortfolioHoldingMock).not.toHaveBeenCalled();
   });
 
   it("records amount and fee currencies explicitly", async () => {
     render(<PortfolioManager />);
-
     await screen.findByRole("textbox", { name: "Portfolio thesis" });
-    const transactionForm = within(screen.getByText("Record Transaction").parentElement as HTMLElement);
-    fireEvent.change(transactionForm.getByRole("combobox", { name: "Currency" }), { target: { value: "EUR" } });
-    fireEvent.change(transactionForm.getByRole("spinbutton", { name: "Fees" }), { target: { value: "2" } });
-    fireEvent.change(transactionForm.getByRole("combobox", { name: "Fee currency" }), { target: { value: "GBP" } });
-    fireEvent.change(transactionForm.getByLabelText("Date"), { target: { value: "2026-09-06" } });
-    fireEvent.click(transactionForm.getByRole("button", { name: "Record" }));
-
-    await waitFor(() =>
-      expect(addPortfolioTransactionMock).toHaveBeenCalledWith("p1", {
-        type: "buy",
-        symbol: "AAPL",
-        shares: 10,
-        price: 100,
-        currency: "EUR",
-        fees: 2,
-        fees_currency: "GBP",
-        date: "2026-09-06",
-        notes: undefined,
-      }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Record operation" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Record operation" }));
+    fireEvent.change(dialog.getByLabelText("Symbol"), { target: { value: "AAPL" } });
+    fireEvent.change(dialog.getByLabelText("Quantity"), { target: { value: "10" } });
+    fireEvent.change(dialog.getByLabelText("Unit price"), { target: { value: "100" } });
+    fireEvent.change(dialog.getByLabelText("Price / amount currency"), { target: { value: "EUR" } });
+    fireEvent.change(dialog.getByLabelText("Fees"), { target: { value: "2" } });
+    fireEvent.change(dialog.getByLabelText("Fee currency"), { target: { value: "GBP" } });
+    fireEvent.change(dialog.getByLabelText("Operation date"), { target: { value: "2026-09-06" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Review operation" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Confirm operation" }));
+    await waitFor(() => expect(addPortfolioTransactionMock).toHaveBeenCalledWith("p1", expect.objectContaining({
+      type: "buy", symbol: "AAPL", shares: 10, price: 100, currency: "EUR", fees: 2, fees_currency: "GBP", date: "2026-09-06", operation_id: expect.any(String),
+    })));
   });
 
   it("lets users repair unknown currencies on legacy holdings and transactions", async () => {

@@ -13,8 +13,8 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 
 ## Contract summary
 
-- **493 operations** across **439 paths** and **87 families**.
-- Authentication: **448 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
+- **494 operations** across **440 paths** and **87 families**.
+- Authentication: **449 bearer**, **5 read API-key**, **1 write API-key**, **39 unauthenticated** operations.
 - API keys are created and revoked by an authenticated user under `/api/settings/api-keys`.
 - `read_write` is required for `PUT /api/v1/notes/external`; market-data automation endpoints require `read` or `read_write`.
 
@@ -98,7 +98,7 @@ requirements are documented in [`wiki/Limitations.md`](wiki/Limitations.md).
 | `portfolio-lab` | `hidden` | 9 |
 | `portfolio-optimizer` | `experimental` | 3 |
 | `portfolio_backtests` | `experimental` | 3 |
-| `portfolios` | `supported` | 21 |
+| `portfolios` | `supported` | 22 |
 | `public-api` | `supported` | 5 |
 | `quotes` | `supported` | 1 |
 | `reports` | `supported` | 9 |
@@ -948,6 +948,7 @@ State: **supported**
 | `GET` | `/api/portfolios/{portfolio_id}/holdings` | Bearer token | List Portfolio Holdings |
 | `POST` | `/api/portfolios/{portfolio_id}/holdings` | Bearer token | Add Portfolio Holding |
 | `PATCH` | `/api/portfolios/{portfolio_id}/holdings/{holding_id}/currency` | Bearer token | Update Portfolio Holding Currency |
+| `GET` | `/api/portfolios/{portfolio_id}/operations/{operation_id}` | Bearer token | Get Portfolio Operation |
 | `GET` | `/api/portfolios/{portfolio_id}/transactions` | Bearer token | List Portfolio Transactions |
 | `POST` | `/api/portfolios/{portfolio_id}/transactions` | Bearer token | Add Portfolio Transaction |
 | `PATCH` | `/api/portfolios/{portfolio_id}/transactions/{transaction_id}/currency` | Bearer token | Update Portfolio Transaction Currency |

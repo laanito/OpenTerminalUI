@@ -23,7 +23,8 @@ from typing import Any, Iterable
 # Transaction types recognised by the cash ledger.
 TRADE_TYPES = frozenset({"buy", "sell"})
 CASH_ONLY_TYPES = frozenset({"dividend", "deposit", "withdrawal"})
-LEDGER_TYPES = TRADE_TYPES | CASH_ONLY_TYPES
+NON_CASH_TYPES = frozenset({"opening"})
+LEDGER_TYPES = TRADE_TYPES | CASH_ONLY_TYPES | NON_CASH_TYPES
 
 
 def cash_delta(tx_type: str, shares: float = 0.0, price: float = 0.0, fees: float = 0.0) -> float:
@@ -36,6 +37,8 @@ def cash_delta(tx_type: str, shares: float = 0.0, price: float = 0.0, fees: floa
     price = float(price or 0.0)
     fees = float(fees or 0.0)
 
+    if t == "opening":
+        return 0.0
     if t == "buy":
         return -(shares * price + fees)
     if t == "sell":
