@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Portfolio page and scope states** — shared headings, wrapping actions and
+  selected portfolio/currency/benchmark context. Loading and failed reads hide
+  prior figures and actions; retry preserves the requested portfolio. Empty
+  lists, empty holdings and partial accounting have distinct states, and late
+  responses cannot overwrite a newly selected portfolio.
 - **Responsive shell foundation for v3** — a grouped Menu keeps existing tools
   reachable at every width; market/workspace controls collapse and wrap, while
   status details retain clocks, sessions and browser diagnostics. Mobile navigation

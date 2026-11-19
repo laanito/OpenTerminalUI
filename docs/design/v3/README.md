@@ -133,3 +133,24 @@ fuller zoom/accessibility review and any further shared layout changes justified
 by page migration. Consolidated reporting, non-cash receipts and the Portfolio
 page redesign are not implemented by this shell slice. Discovery evidence stays
 as its original baseline rather than being regenerated to hide the old findings.
+
+## Portfolio page, scope and read states
+
+Shared-shell PR #287 is merged. The next slice introduces reusable page headings,
+wrapping actions, explicit scope facts and data-state presentation. Portfolio's
+equity and mutual-fund modes use the page pattern while preserving mode URLs and
+saved-view filters. The equity manager displays its selected portfolio, persisted
+currency and benchmark, independently of global market controls.
+
+Loading and failed reads hide prior details and actions. Retry reloads the selected
+scope; late abandoned responses cannot replace current data. A disappeared requested
+portfolio is reported as unavailable rather than silently substituted. A successful
+empty portfolio list, zero holdings and partial backend accounting are distinct
+states; mutation failures do not erase successfully loaded data.
+
+Validation: all 838 frontend tests, production build and 47 installed-Chrome smoke
+journeys pass. New 1440px/390px journeys exercise pending/failed/retried switches,
+empty holdings with zero cash, partial accounting, mode URL restoration and overflow.
+This is frontend state/layout work: consolidated reporting, receipts, operation
+contracts and the position-first workflow remain upcoming. Physical zoom and full
+accessibility review remain release checks; existing audit evidence is unchanged.

@@ -13,3 +13,5 @@ export { TerminalTooltip } from "./TerminalTooltip";
 export { StatusBar } from "./StatusBar";
 export { SentimentBadge } from "./SentimentBadge";
 export { SentimentChart } from "./SentimentChart";
+
+export { TerminalPage, TerminalScopeBar, TerminalDataState } from "./TerminalPage";

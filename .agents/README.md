@@ -1,42 +1,38 @@
 # External-agent project context
 
-Current work **v3 shared-shell foundation** (2026-11-18). The maintainer
-confirmed discovery/design PR #286 merged at `2d707db`; its v3.0 scope is accepted:
-shared responsive foundation + complete Portfolio pilot, with other full page
-redesigns scheduled as later explicit v3.x scopes. Do not reopen design approval.
+Current work **v3 Portfolio page/scope/state foundation** (2026-11-19).
+The maintainer confirmed shared-shell PR #287 merged at `f0a1b38` and authorized
+continuing. Discovery/design PR #286 remains accepted: v3.0 is the shared
+responsive foundation plus complete Portfolio pilot; other full page redesigns
+are explicit later v3.x scopes. Do not reopen design approval.
 
-This first implementation slice adds a grouped Menu at every width, wrapping/
-collapsible market and workspace controls, a compact status bar with full status
-details, and reserved space above fixed mobile bottom navigation. Keep existing
-GO commands, icon navigation, URLs, configuration disclosures and theme controls.
-Only existing supported/gated primary destinations and current rail/TopBar links
-are advertised; contextual/experimental surfaces keep their existing entry paths.
-Status clocks/sessions remain inspectable; unknown sessions stay unavailable.
-Loop delay and JS heap are labelled browser diagnostics, not system CPU/health.
+This slice adds reusable TerminalPage, TerminalScopeBar and TerminalDataState
+components, consumed by both Portfolio modes and the equity manager. Portfolio
+has one page heading, wrapped mode/actions and visible selected name, persisted
+currency and benchmark. Existing mode URLs and saved-view filters are preserved.
+Loading, failed reads, empty portfolios, empty holdings and partial accounting
+have distinct states. Switching or refreshing clears previous figures/actions;
+retry targets the requested portfolio and late abandoned reads cannot replace
+current details. A missing requested portfolio is unavailable, not silently
+substituted. Deleting explicitly resets selection to a remaining portfolio.
+Mutation failures stay separate from read failures.
 
-TerminalModal portals above the shell, bounds height and scrolls internally,
-keeps editing focus across callback/busy updates and restores opener focus on
-close. Topmost shared dialogs own Tab/Escape; background GO/navigation/trading
-shortcuts respect them. Browser tests caught and verified the fix for a real
-mobile overlap: fixed bottom navigation previously covered the status controls.
+Validation: all **838 frontend tests / 135 files**, production build and **47
+installed-Chrome smoke journeys** pass. New browser checks at 1440px and 390px
+cover loading/failure/retry, empty holdings with zero cash, partial accounting,
+mode URL restoration and document overflow. Existing shell/research/evidence/
+candle journeys pass. No backend/API/schema/accounting/dependency/version change;
+backend tests were not rerun for this frontend slice. Do not monitor CI unless
+requested. Physical zoom and a complete accessibility audit remain release checks.
 
-Validation: all **834 frontend tests / 135 files**, production build and **45
-installed-Chrome smoke journeys** pass. Six responsive cases cover 1920x1000,
-1440x1000, 1024x768, 390x800, 320x700 and 720x500; include menu route changes,
-modal focus/shortcut isolation, country/exchange/currency, theme and context-rail
-controls, status details and GO routing. Existing populated research, saved
-comparison/Brain evidence, promotion, retention and candle journeys pass.
-Reduced CSS viewport is not an independent physical 200% zoom/accessibility audit.
-No backend/API/schema/accounting/dependency/version change; backend tests were
-not rerun for this frontend slice. Do not monitor CI unless requested.
-
-Remaining foundation work includes reusable page/scope/data-state patterns and
-fuller zoom/accessibility review. Portfolio consolidated reporting, receipt/
-unknown-basis accounting, atomic/duplicate-safe operations and its page migration
-remain separate slices; do not implement a no-cash entry by calling today's buy
-endpoint. Preserve the original design audit as baseline evidence. v2.8 stays
-the published release until the explicit release-prep workflow. Deployment stays
-with the host agent. See `docs/design/v3/README.md` and `SCOPE.md`.
+Next: owner-scoped consolidated reporting and audited opening/external receipts,
+unknown-basis accounting and atomic/duplicate-safe operations, followed by the
+position-first Portfolio workflow. Current Portfolio remains a single selected
+portfolio with its existing entry forms/analytics. Do not implement a no-cash
+entry by calling today's buy endpoint. Continue adopting shared patterns where
+page migration needs them; preserve populated/direct-link/saved-view coverage.
+Keep original design audit evidence. v2.8.0 stays published until release prep;
+deployment stays with the host agent. See `docs/design/v3/README.md` and `SCOPE.md`.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
