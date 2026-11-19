@@ -49,7 +49,7 @@ def realized_pnl(transactions: Iterable[Any]) -> float:
         price = float(getattr(tx, "price", 0.0) or 0.0)
         fees = float(getattr(tx, "fees", 0.0) or 0.0)
 
-        if t == "buy" and shares > 0:
+        if t in {"buy", "opening"} and shares > 0:
             qty, avg = positions.get(symbol, [0.0, 0.0])
             new_qty = qty + shares
             # Fee-exclusive running average, matching the stored holding basis.

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 from datetime import date, datetime, timezone
 from typing import Any, Literal
 from types import SimpleNamespace
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator, model_validator
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -97,25 +100,65 @@ class PortfolioHoldingCurrencyUpdateRequest(BaseModel):
         return normalized
 
 
+class PortfolioOpeningData(BaseModel):
+    acquisition_date: date = Field(description="Documented acquisition date for cost FX; distinct from the opening observation date")
+    provenance: str = Field(min_length=1, max_length=2000)
+    contribution_value: float | None = Field(default=None, ge=0, allow_inf_nan=False, description="Total external contribution value at entry, independent of cost basis")
+    contribution_currency: str | None = None
+
+    @field_validator("contribution_currency", mode="before")
+    @classmethod
+    def normalize_currency(cls, value):
+        return _normalize_currency_code(value)
+
+
 class PortfolioTransactionCreateRequest(BaseModel):
     # Trades (buy/sell) carry a symbol + shares; cash-only rows (dividend/deposit/
     # withdrawal) carry the amount in `price` with shares = 0. See portfolio_cash.
     symbol: str = ""
-    type: str = Field(pattern="^(buy|sell|dividend|deposit|withdrawal)$")
-    shares: float = Field(default=0.0, ge=0)
-    price: float = Field(default=0.0, ge=0)
+    type: str = Field(pattern="^(buy|sell|dividend|deposit|withdrawal|opening)$")
+    shares: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    price: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     currency: str | None = Field(
         default=None,
         description="Currency of price or cash amount; omission is preserved as unknown",
     )
     date: str
-    fees: float = Field(default=0.0, ge=0)
+    fees: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     fees_currency: str | None = Field(
         default=None,
         description="Currency of fees; omission is preserved as unknown",
     )
     lot_id: str = ""
     notes: str = ""
+
+    operation_id: UUID | None = Field(default=None, description="Stable identity for a deliberate submission; retries return the same result")
+    opening: PortfolioOpeningData | None = None
+
+    @model_validator(mode="after")
+    def validate_operation(self):
+        if self.type in {"buy", "sell", "opening"} and (not self.symbol.strip() or self.shares <= 0):
+            raise ValueError("Security operations require a symbol and positive quantity")
+        if self.type == "opening":
+            if self.opening is None or self.operation_id is None or self.currency is None or "price" not in self.model_fields_set:
+                raise ValueError("Opening positions require an operation ID, documented unit cost/currency and acquisition provenance")
+            observed = date.fromisoformat(self.date)
+            if not self.opening.provenance.strip():
+                raise ValueError("Opening provenance is required")
+            if self.opening.acquisition_date > observed or observed > datetime.now(timezone.utc).date():
+                raise ValueError("Acquisition must precede the opening observation; future openings are not supported")
+            if self.fees != 0:
+                raise ValueError("An opening position moves no cash or fees")
+            if self.opening.contribution_value is not None and not self.opening.contribution_currency:
+                raise ValueError("Contribution currency is required with a contribution value")
+        elif self.opening is not None:
+            raise ValueError("Opening metadata is only valid for an opening position")
+        if self.operation_id is not None:
+            if date.fromisoformat(self.date) > datetime.now(timezone.utc).date():
+                raise ValueError("Future operations are not supported")
+            if self.type != "opening" and self.price <= 0:
+                raise ValueError("Operation price or amount must be positive")
+        return self
 
     @field_validator("currency", "fees_currency", mode="before")
     @classmethod
@@ -172,6 +215,7 @@ class PortfolioTransactionResponse(BaseModel):
     date: str
     fees: float
     fees_currency: str | None = Field(description="Persisted fee currency; null means legacy/unknown")
+    operation_data: dict[str, Any] | None = None
     lot_id: str
     notes: str
 
@@ -320,6 +364,7 @@ class PortfolioReportLot(BaseModel):
     quote_unit: str | None
     current_price: float | None
     identity_status: Literal["exact_symbol_exchange_unit", "unresolved"]
+    opening: PortfolioOpeningData | None = None
     accounting: PortfolioAccountingHolding
 
 
@@ -938,7 +983,7 @@ def update_portfolio(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    row = _portfolio_for_user(db, portfolio_id, current_user.id)
+    row = _lock_portfolio_writer(db, portfolio_id, current_user.id)
     if payload.name is not None:
         row.name = payload.name.strip() or row.name
     if payload.description is not None:
@@ -957,7 +1002,7 @@ def delete_portfolio(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    row = _portfolio_for_user(db, portfolio_id, current_user.id)
+    row = _lock_portfolio_writer(db, portfolio_id, current_user.id)
     db.delete(row)
     db.commit()
     return {"status": "deleted", "id": portfolio_id}
@@ -970,7 +1015,7 @@ def add_portfolio_holding(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    _portfolio_for_user(db, portfolio_id, current_user.id)
+    _lock_portfolio_writer(db, portfolio_id, current_user.id)
     symbol = payload.symbol.strip().upper()
     # Each holding is its own lot. The auto lot_id must be unique per row, or a
     # bulk add of the same symbol (e.g. Import from Legacy, or two lots bought the
@@ -1056,7 +1101,7 @@ def update_portfolio_holding_currency(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    _portfolio_for_user(db, portfolio_id, current_user.id)
+    _lock_portfolio_writer(db, portfolio_id, current_user.id)
     row = (
         db.query(PortfolioHoldingORM)
         .filter(
@@ -1072,108 +1117,107 @@ def update_portfolio_holding_currency(
     return {"status": "updated", "id": row.id, "currency": row.cost_basis_currency}
 
 
+def _lock_portfolio_writer(db: Session, portfolio_id: str, user_id: str) -> PortfolioORM:
+    # Short SQL-only section: reserve SQLite writer; serialize PostgreSQL on the
+    # owned portfolio row. Never hold this lock during a provider/model request.
+    connection = db.connection()
+    if connection.dialect.name == "sqlite" and not connection.connection.driver_connection.in_transaction:
+        connection.exec_driver_sql("BEGIN IMMEDIATE")
+    row = db.scalar(select(PortfolioORM).where(PortfolioORM.id == portfolio_id, PortfolioORM.user_id == user_id).with_for_update())
+    if row is None:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+    return row
+
+
+@router.get("/portfolios/{portfolio_id}/operations/{operation_id}")
+def get_portfolio_operation(portfolio_id: str, operation_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    _lock_portfolio_writer(db, portfolio_id, current_user.id)
+    row = db.query(PortfolioTransactionORM).filter_by(id=str(operation_id), portfolio_id=portfolio_id).first()
+    if row is None or not row.operation_data:
+        raise HTTPException(status_code=404, detail="Operation not found")
+    return {"id": row.id, "status": "created", "portfolio_id": portfolio_id, "type": row.type}
+
+
 @router.post("/portfolios/{portfolio_id}/transactions")
 def add_portfolio_transaction(
-    portfolio_id: str,
-    payload: PortfolioTransactionCreateRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    portfolio_id: str, payload: PortfolioTransactionCreateRequest,
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    _portfolio_for_user(db, portfolio_id, current_user.id)
+    _lock_portfolio_writer(db, portfolio_id, current_user.id)
+    fingerprint = hashlib.sha256(json.dumps(payload.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
+    if payload.operation_id:
+        existing = db.get(PortfolioTransactionORM, str(payload.operation_id))
+        if existing:
+            if existing.portfolio_id != portfolio_id or (existing.operation_data or {}).get("request_hash") != fingerprint:
+                raise HTTPException(status_code=409, detail="Operation identity already used for different data; check the original result")
+            return {"id": existing.id, "status": "created"}
     symbol = payload.symbol.strip().upper()
     if payload.type in {"deposit", "withdrawal"}:
-        # Cash-only movement: no security, amount lives in `price`.
         symbol = symbol or "CASH"
         if payload.price <= 0:
             raise HTTPException(status_code=422, detail=f"{payload.type} requires a positive amount")
     elif not symbol:
         raise HTTPException(status_code=422, detail=f"{payload.type} requires a symbol")
-    tx = PortfolioTransactionORM(
-        portfolio_id=portfolio_id,
-        symbol=symbol,
-        type=payload.type,
-        shares=float(payload.shares),
-        price=float(payload.price),
-        currency=payload.currency,
-        date=payload.date,
-        fees=float(payload.fees),
-        fees_currency=payload.fees_currency,
-        lot_id=payload.lot_id.strip(),
-        notes=payload.notes,
-    )
-    db.add(tx)
-
-    if payload.type == "buy" and payload.shares > 0:
-        # A buy either opens a new lot or adds to an existing one (weighted-avg cost).
-        lot_id = payload.lot_id.strip() or datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-        row = (
-            db.query(PortfolioHoldingORM)
-            .filter(
-                PortfolioHoldingORM.portfolio_id == portfolio_id,
-                PortfolioHoldingORM.symbol == symbol,
-                PortfolioHoldingORM.lot_id == lot_id,
-            )
-            .first()
-        )
+    lots = []
+    if payload.type == "sell":
+        query = db.query(PortfolioHoldingORM).filter_by(portfolio_id=portfolio_id, symbol=symbol)
+        if payload.lot_id.strip():
+            query = query.filter(PortfolioHoldingORM.lot_id == payload.lot_id.strip())
+        lots = query.order_by(PortfolioHoldingORM.created_at, PortfolioHoldingORM.id).all()
+        if sum(float(lot.shares) for lot in lots) + 1e-9 < payload.shares:
+            raise HTTPException(status_code=409, detail="Sale exceeds available quantity in the selected portfolio/lot")
+        remaining_to_check = float(payload.shares)
+        for lot in lots:
+            if remaining_to_check <= 1e-9:
+                break
+            try:
+                if date.fromisoformat(payload.date) < date.fromisoformat(lot.purchase_date):
+                    raise HTTPException(status_code=409, detail="Sale predates the recorded position observation or purchase date")
+            except ValueError:
+                pass  # Legacy unknown dates stay unknown; no date is invented.
+            remaining_to_check -= min(float(lot.shares), remaining_to_check)
+    lot_id = payload.lot_id.strip()
+    if payload.type in {"buy", "opening"}:
+        lot_id = lot_id or str(uuid4())
+        row = db.query(PortfolioHoldingORM).filter_by(portfolio_id=portfolio_id, symbol=symbol, lot_id=lot_id).first()
+        if row is not None and payload.type == "opening":
+            raise HTTPException(status_code=409, detail="Opening positions require a new lot")
+        if row is not None and row.cost_basis_currency != payload.currency:
+            raise HTTPException(status_code=409, detail="Cannot combine buys with different or unknown currencies in one lot; use a new lot_id")
         if row is None:
-            db.add(
-                PortfolioHoldingORM(
-                    portfolio_id=portfolio_id,
-                    symbol=symbol,
-                    shares=float(payload.shares),
-                    cost_basis_per_share=float(payload.price),
-                    cost_basis_currency=payload.currency,
-                    purchase_date=payload.date,
-                    notes=payload.notes,
-                    lot_id=lot_id,
-                )
-            )
+            db.add(PortfolioHoldingORM(
+                portfolio_id=portfolio_id, symbol=symbol, shares=float(payload.shares),
+                cost_basis_per_share=float(payload.price), cost_basis_currency=payload.currency,
+                purchase_date=payload.date,
+                notes="", lot_id=lot_id,
+            ))
         else:
-            if row.cost_basis_currency != payload.currency:
-                raise HTTPException(
-                    status_code=409,
-                    detail="Cannot combine buys with different or unknown currencies in one lot; use a new lot_id",
-                )
-            old_shares = float(row.shares)
-            add_shares = float(payload.shares)
-            new_shares = old_shares + add_shares
-            row.cost_basis_per_share = (
-                (old_shares * float(row.cost_basis_per_share) + add_shares * float(payload.price)) / max(new_shares, 1e-9)
-            )
+            new_shares = float(row.shares) + float(payload.shares)
+            row.cost_basis_per_share = (float(row.shares) * float(row.cost_basis_per_share) + float(payload.shares) * float(payload.price)) / new_shares
             row.shares = new_shares
-
-    elif payload.type == "sell" and payload.shares > 0:
-        # A sell reduces the position for this symbol. If an explicit lot_id is
-        # given it targets that lot; otherwise it consumes the symbol's lots
-        # oldest-first (FIFO) — the common case, since the "Sell" button and the
-        # plain sell form don't carry a lot_id. Matching on a synthetic "manual"
-        # lot_id (the old behaviour) never matched a real holding, so the sale was
-        # recorded (cash moved via the ledger) but the shares were never removed.
-        lot_filter = [
-            PortfolioHoldingORM.portfolio_id == portfolio_id,
-            PortfolioHoldingORM.symbol == symbol,
-        ]
-        explicit_lot = payload.lot_id.strip()
-        if explicit_lot:
-            lot_filter.append(PortfolioHoldingORM.lot_id == explicit_lot)
-        lots = (
-            db.query(PortfolioHoldingORM)
-            .filter(*lot_filter)
-            .order_by(PortfolioHoldingORM.created_at.asc())
-            .all()
-        )
+    elif payload.type == "sell":
         remaining = float(payload.shares)
         for lot in lots:
-            if remaining <= 1e-9:
-                break
             take = min(float(lot.shares), remaining)
-            lot.shares = float(lot.shares) - take
+            lot.shares -= take
             remaining -= take
             if lot.shares <= 1e-9:
                 db.delete(lot)
-
-    db.commit()
-    db.refresh(tx)
+            if remaining <= 1e-9:
+                break
+    data = {"request_hash": fingerprint, "opening": payload.opening.model_dump(mode="json") if payload.opening else None} if payload.operation_id else None
+    tx = PortfolioTransactionORM(
+        id=str(payload.operation_id or uuid4()), portfolio_id=portfolio_id, symbol=symbol,
+        type=payload.type, shares=float(payload.shares), price=float(payload.price), currency=payload.currency,
+        date=payload.date, fees=float(payload.fees), fees_currency=payload.fees_currency,
+        lot_id=lot_id, notes=payload.notes, operation_data=data,
+    )
+    db.add(tx)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Operation or lot already recorded; check its result before retrying")
     return {"id": tx.id, "status": "created"}
 
 
@@ -1203,6 +1247,7 @@ def list_portfolio_transactions(
                 "fees": r.fees,
                 "fees_currency": r.fees_currency,
                 "lot_id": r.lot_id,
+                "operation_data": r.operation_data,
                 "notes": r.notes,
             }
             for r in rows
@@ -1218,7 +1263,7 @@ def update_portfolio_transaction_currency(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    _portfolio_for_user(db, portfolio_id, current_user.id)
+    _lock_portfolio_writer(db, portfolio_id, current_user.id)
     row = (
         db.query(PortfolioTransactionORM)
         .filter(

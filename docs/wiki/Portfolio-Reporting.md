@@ -1,9 +1,17 @@
 # Consolidated Portfolio reporting
 
-The unreleased v3 foundation adds a **read-only API** for current positions in
-one or more owned portfolios. The Portfolio screen still uses its existing
-single-portfolio workflow; the consolidated UI follows the receipt/operation
-accounting work. Existing endpoints and stored portfolios are unchanged.
+The unreleased v3 Portfolio screen starts with **consolidated positions across
+all owned portfolios**, backed by the read-only reporting API. Expand an instrument
+to inspect original portfolio lots or sell from a specific account. The floating
+scope selector and reporting currency are reflected in the URL and saved views;
+explicit direct-link scope wins over a restored preference.
+
+**Record operation** is the primary Buy/Sell/cash entry. **Add existing position**
+opens a separate non-cash dialog. Both require review before recording. Management,
+activity, existing thesis/notes, import/export, currency repair and single-portfolio
+analytics remain accessible through the secondary tools disclosure. The old
+parallel Add holding form and per-holding pseudo-performance line are removed.
+New portfolios default to zero starting cash rather than a demonstration amount.
 
 ## Request and ownership
 
@@ -23,8 +31,10 @@ no fallback to the primary portfolio or substitution of another selection.
 
 Reporting currency is required, uppercase, and independent of persisted portfolio
 bases and global market controls. Supported codes are USD, EUR, GBP, JPY, CHF,
-AUD, CAD and INR. Invalid or omitted reporting currency returns 422. A future UI
-may choose an explicit initial currency, but the API never silently chooses one.
+AUD, CAD and INR. Invalid or omitted reporting currency returns 422. The UI initially uses a supported display currency for all portfolios and the
+configured base when selecting a single portfolio; the visible reporting control
+can override it. Unsupported defaults require a choice. The API itself never
+silently chooses a reporting currency.
 The complete schema is in [OpenAPI](../openapi.json), browsable at `/docs` on a
 running backend; the [API reference](../API_REFERENCE.md) indexes the endpoint.
 
@@ -81,5 +91,57 @@ replay may assign a reconciled average rather than historical per-lot tax cost.
 Per-portfolio blocks preserve native transaction amounts/fees, row IDs, dated FX,
 issues and opening cash evidence for inspection and repair.
 
-This endpoint writes no holdings, transactions, currencies or opening balances.
-There is no migration or automatic reinterpretation of legacy transactions.
+The reporting endpoint itself writes no holdings, transactions, currencies or
+opening balances. The operation workflow below adds separate write contracts.
+
+## Reviewed operations and non-cash openings
+
+`POST /api/portfolios/{id}/transactions` accepts an optional UUID `operation_id`.
+The UI generates one per deliberate submission, freezes the reviewed target/body
+on submission, blocks duplicate clicks and never automatically retries a failed
+acknowledgement. A manual retry sends the same ID/body. A repeated ID returns the
+original result; reuse for different data or a different portfolio returns 409.
+`GET /api/portfolios/{id}/operations/{operation_id}` reconciles an uncertain
+acknowledgement under the same ownership boundary. Pending IDs are held in the
+active dialog; this does not add a durable browser outbox across reloads.
+
+Server writes serialize on the owned portfolio row on PostgreSQL and reserve the
+SQLite writer. Ownership, lot currency and available sell quantity are checked
+before mutation; holdings and the ledger row commit together. A sale with a lot ID
+cannot consume another lot. Otherwise lots are consumed oldest first (stable ID
+tiebreak), while cost/P&L retains existing portfolio weighted-average accounting.
+A selected UI sale discloses that distinction. Legacy holdings/repair/manage writes
+share the same short lock. No provider/model request holds it.
+
+An existing position is a distinct ledger type `opening`, **not a buy or cash
+transaction**. It moves no cash/fees, creates a new lot, and records:
+
+- Observation date in `date` and the lot's `purchase_date`: when the security is
+  recorded as present in this portfolio. It does not establish earlier account
+  ownership, even if acquired earlier.
+- Documented unit cost/currency in `price`/`currency`, and an original
+  `opening.acquisition_date` and `opening.provenance`. Dated cost FX uses that
+  documented acquisition date. This first workflow **requires documented basis**;
+  unknown-basis entry remains a v3.0 accounting gate. Never enter zero to stand
+  in for unknown cost. An explicitly documented zero basis is allowed.
+- Optional total fair value and currency at entry in `opening.contribution_value`
+  and `opening.contribution_currency`. This is independent of acquisition cost.
+  In-window history counts that value as a capital contribution in kind, not
+  investment profit. Missing contribution value/FX makes the affected history
+  unavailable with an explicit issue; no zero flow or guessed cost value is used.
+- Operation rationale in transaction notes. It does not silently become a position
+  thesis, replace the portfolio mandate or create a Journal entry. Existing Brain
+  transaction-note indexing remains intact.
+
+`opening` metadata and an idempotent request fingerprint are retained in nullable
+`portfolio_transactions.operation_data`. Activity exposes that audit metadata;
+consolidated lots also expose opening provenance. Partial/full sales preserve
+recorded cost; cash and ledger history recognize openings together.
+
+Upgrade applies additive Alembic **0021_portfolio_operations** before startup:
+Docker performs Alembic automatically; existing local installations run
+`PYTHONPATH=. alembic -c backend/alembic.ini upgrade head` in their configured
+backend environment. Old rows remain unchanged/NULL; no historical buy is
+reinterpreted. Downgrade retains metadata. Older application code cannot interpret
+new opening events correctly; deployments containing them need a compatible
+rollback build or a forward fix, rather than writing with pre-opening code.

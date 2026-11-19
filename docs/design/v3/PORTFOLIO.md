@@ -1,9 +1,11 @@
 # Portfolio workflow and accounting proposal
 
 Status: accepted v3.0 design contract. The HTML study is not a backend implementation.
-The read-only consolidated reporting slice is implemented separately; see the
-[reporting contract](../../wiki/Portfolio-Reporting.md). Receipt/operation writes
-and the complete page migration remain upcoming. Existing ownership, accounting,
+Read-only reporting, its default consolidated screen and reviewed operations
+with documented-basis non-cash openings are implemented; see the
+[reporting/operations contract](../../wiki/Portfolio-Reporting.md). Unknown-basis
+receipt accounting and the complete secondary-section/acceptance work remain
+upcoming. Existing ownership, accounting,
 dated FX, ledger history and evidence contracts remain authoritative. Discovery
 changes no production schema/data.
 

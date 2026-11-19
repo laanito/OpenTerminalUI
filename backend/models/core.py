@@ -736,6 +736,7 @@ class PortfolioTransactionORM(Base):
     fees_currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     lot_id: Mapped[str] = mapped_column(String(64), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
+    operation_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 

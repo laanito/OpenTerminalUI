@@ -78,10 +78,10 @@ async def reconstruct_portfolio_history(
                 continue
             kind = str(tx.type).lower()
             shares, price, fees = _finite(tx.shares), _finite(tx.price), _finite(tx.fees)
-            if kind not in {"buy", "sell", "dividend", "deposit", "withdrawal"} or min(shares, price, fees) < 0:
+            if kind not in {"buy", "sell", "opening", "dividend", "deposit", "withdrawal"} or min(shares, price, fees) < 0:
                 return fail("ledger_value_invalid")
             symbol = str(tx.symbol or "").strip().upper()
-            if kind in {"buy", "sell"} and (not symbol or shares <= 0):
+            if kind in {"buy", "sell", "opening"} and (not symbol or shares <= 0):
                 return fail("ledger_value_invalid", symbol)
             rows.append((occurred, tx))
         rows.sort(key=lambda row: (row[0], str(getattr(row[1], "created_at", "")), str(getattr(row[1], "id", ""))))
@@ -93,8 +93,8 @@ async def reconstruct_portfolio_history(
     replay_rows = []
     for occurred, tx in rows:
         kind, symbol = str(tx.type).lower(), str(tx.symbol or "").strip().upper()
-        if kind in {"buy", "sell"}:
-            next_quantity = net[symbol] + float(tx.shares) * (1 if kind == "buy" else -1)
+        if kind in {"buy", "sell", "opening"}:
+            next_quantity = net[symbol] + float(tx.shares) * (1 if kind != "sell" else -1)
             if next_quantity < -1e-7 and occurred < window_start:
                 # Legacy add/remove portfolios can contain sales with no recorded
                 # acquisition. Ignore the whole old row, including proceeds and
@@ -132,16 +132,16 @@ async def reconstruct_portfolio_history(
         return fail("ledger_value_invalid")
     before: dict[str, float] = defaultdict(float)
     for occurred, tx in rows:
-        if occurred < window_start and str(tx.type).lower() in {"buy", "sell"}:
-            before[str(tx.symbol).strip().upper()] += float(tx.shares) * (1 if str(tx.type).lower() == "buy" else -1)
+        if occurred < window_start and str(tx.type).lower() in {"buy", "sell", "opening"}:
+            before[str(tx.symbol).strip().upper()] += float(tx.shares) * (1 if str(tx.type).lower() != "sell" else -1)
 
     def oversell(opening: dict[str, float], *, skip_legacy: bool = False) -> tuple[str, date] | None:
         inventory = dict(opening)
         for occurred, tx in rows:
             kind = str(tx.type).lower()
-            if occurred >= window_start and kind in {"buy", "sell"}:
+            if occurred >= window_start and kind in {"buy", "sell", "opening"}:
                 symbol = str(tx.symbol).strip().upper()
-                inventory[symbol] = inventory.get(symbol, 0) + float(tx.shares) * (1 if kind == "buy" else -1)
+                inventory[symbol] = inventory.get(symbol, 0) + float(tx.shares) * (1 if kind != "sell" else -1)
                 if inventory[symbol] < -1e-7 and not (skip_legacy and symbol in legacy_symbols):
                     return symbol, occurred
         return None
@@ -179,7 +179,7 @@ async def reconstruct_portfolio_history(
     # Only symbols held during this window need market history (including sales).
     needed = set()
     for occurred, tx in rows:
-        if str(tx.type).lower() in {"buy", "sell"}:
+        if str(tx.type).lower() in {"buy", "sell", "opening"}:
             symbol = str(tx.symbol).strip().upper()
             if occurred >= window_start:
                 needed.add(symbol)
@@ -207,8 +207,8 @@ async def reconstruct_portfolio_history(
     for (occurred, tx), detail in zip(rows, accounting["transactions"]):
         if occurred < start:
             cash += detail["cash_delta_base"]
-            if str(tx.type).lower() in {"buy", "sell"}:
-                positions[str(tx.symbol).strip().upper()] += float(tx.shares) * (1 if str(tx.type).lower() == "buy" else -1)
+            if str(tx.type).lower() in {"buy", "sell", "opening"}:
+                positions[str(tx.symbol).strip().upper()] += float(tx.shares) * (1 if str(tx.type).lower() != "sell" else -1)
         else:
             by_day[occurred].append((tx, detail))
 
@@ -274,8 +274,21 @@ async def reconstruct_portfolio_history(
             kind = str(tx.type).lower()
             if kind in {"deposit", "withdrawal"}:
                 external_flow += detail["amount_base"] * (1 if kind == "deposit" else -1)
-            elif kind in {"buy", "sell"}:
-                positions[str(tx.symbol).strip().upper()] += float(tx.shares) * (1 if kind == "buy" else -1)
+            elif kind in {"buy", "sell", "opening"}:
+                positions[str(tx.symbol).strip().upper()] += float(tx.shares) * (1 if kind != "sell" else -1)
+                if kind == "opening":
+                    opening = (getattr(tx, "operation_data", None) or {}).get("opening") or {}
+                    contribution = opening.get("contribution_value")
+                    currency = opening.get("contribution_currency")
+                    if contribution is None or not currency:
+                        return fail("ledger_opening_contribution_unavailable", str(tx.symbol), day.date())
+                    try:
+                        rate = await forex_service.get_valuation_rate(currency, base, day.date())
+                        external_flow += float(contribution) * float(rate["rate"])
+                        if rate.get("degraded"):
+                            reasons.append(str(rate.get("degraded_reason") or "Opening contribution FX degraded"))
+                    except Exception:
+                        return fail("ledger_opening_contribution_unavailable", str(tx.symbol), day.date())
         market_value = 0.0
         price_dates: dict[str, str] = {}
         for symbol, quantity in positions.items():

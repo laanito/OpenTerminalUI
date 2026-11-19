@@ -100,3 +100,10 @@ def test_analytics_realized_pnl_is_capital_gain() -> None:
     assert analytics.status_code == 200, analytics.text
     # 5 * (150 - 100) = 250 — a gain, not the 750 proceeds the old code reported.
     assert analytics.json()["realized_pnl"] == 250.0
+
+
+def test_documented_opening_basis_is_not_zero_cost_on_a_later_sale():
+    assert realized_pnl([
+        _tx('opening', 'AAPL', shares=10, price=100, date='2026-01-01'),
+        _tx('sell', 'AAPL', shares=4, price=150, fees=1, date='2026-02-01'),
+    ]) == 199

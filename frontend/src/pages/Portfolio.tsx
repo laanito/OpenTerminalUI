@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { addMutualFundHolding, searchMutualFunds } from "../api/client";
 import { MutualFundPortfolioSection } from "../components/mutualFunds/MutualFundPortfolioSection";
-import { PortfolioManager } from "../components/portfolio/PortfolioManager";
+import { PortfolioWorkspace } from "../components/portfolio/PortfolioWorkspace";
 import { SavedViewsControl } from "../components/savedViews/SavedViewsControl";
 import { TerminalButton } from "../components/terminal/TerminalButton";
 import { TerminalPage } from "../components/terminal/TerminalPage";
@@ -38,7 +38,14 @@ export function PortfolioPage() {
     const payload = consumePendingSavedView(window.location.pathname);
     if (!payload) return;
     const filters = payload.filters ?? {};
-    if (filters.portfolioMode === "equity" || filters.portfolioMode === "mutual_funds") setPortfolioMode(filters.portfolioMode);
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous);
+      if (filters.portfolioMode === "mutual_funds") next.set("mode", "mutual_funds");
+      else if (filters.portfolioMode === "equity") next.delete("mode");
+      if (!next.has("portfolio") && typeof filters.portfolioScope === "string") next.set("portfolio", filters.portfolioScope);
+      if (!next.has("reporting_currency") && typeof filters.reportingCurrency === "string") next.set("reporting_currency", filters.reportingCurrency);
+      return next;
+    }, { replace: true });
   }, []);
 
   useEffect(() => {
@@ -236,9 +243,9 @@ export function PortfolioPage() {
   }
 
   return (
-    <TerminalPage title="Portfolio" description="Your portfolios, holdings and recorded activity." context={modeControl}
-      actions={<SavedViewsControl pageLabel="Portfolio" capture={() => ({ filters: { portfolioMode }, activeTabs: {}, tableColumns: "portfolio-manager-default" })} />}>
-      <PortfolioManager />
+    <TerminalPage title="Portfolio" context={modeControl}
+      actions={<SavedViewsControl pageLabel="Portfolio" capture={() => ({ filters: { portfolioMode, portfolioScope: searchParams.get("portfolio") || "all", reportingCurrency: searchParams.get("reporting_currency") || undefined }, activeTabs: {}, tableColumns: "portfolio-manager-default" })} />}>
+      <PortfolioWorkspace />
     </TerminalPage>
   );
 }
