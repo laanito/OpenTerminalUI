@@ -17323,6 +17323,26 @@
         "title": "PortfolioNativeAmount",
         "type": "object"
       },
+      "PortfolioPositionMetrics": {
+        "properties": {
+          "cost_basis": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "market_value": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "unrealized_pnl": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          }
+        },
+        "required": [
+          "market_value",
+          "cost_basis",
+          "unrealized_pnl"
+        ],
+        "title": "PortfolioPositionMetrics",
+        "type": "object"
+      },
       "PortfolioReport": {
         "properties": {
           "blend_id": {
@@ -17379,6 +17399,479 @@
           "matrices"
         ],
         "title": "PortfolioReport",
+        "type": "object"
+      },
+      "PortfolioReportLot": {
+        "properties": {
+          "accounting": {
+            "$ref": "#/components/schemas/PortfolioAccountingHolding"
+          },
+          "cost_basis_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Basis Currency"
+          },
+          "cost_basis_per_share": {
+            "title": "Cost Basis Per Share",
+            "type": "number"
+          },
+          "current_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Price"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          },
+          "holding_id": {
+            "title": "Holding Id",
+            "type": "string"
+          },
+          "identity_status": {
+            "enum": [
+              "exact_symbol_exchange_unit",
+              "unresolved"
+            ],
+            "title": "Identity Status",
+            "type": "string"
+          },
+          "lot_id": {
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "portfolio_id": {
+            "title": "Portfolio Id",
+            "type": "string"
+          },
+          "portfolio_name": {
+            "title": "Portfolio Name",
+            "type": "string"
+          },
+          "purchase_date": {
+            "title": "Purchase Date",
+            "type": "string"
+          },
+          "quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Unit"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "portfolio_id",
+          "portfolio_name",
+          "holding_id",
+          "lot_id",
+          "symbol",
+          "shares",
+          "purchase_date",
+          "cost_basis_per_share",
+          "cost_basis_currency",
+          "notes",
+          "exchange",
+          "quote_unit",
+          "current_price",
+          "identity_status",
+          "accounting"
+        ],
+        "title": "PortfolioReportLot",
+        "type": "object"
+      },
+      "PortfolioReportMember": {
+        "properties": {
+          "accounting": {
+            "$ref": "#/components/schemas/PortfolioAccountingResponse"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "opening_cash": {
+            "$ref": "#/components/schemas/PortfolioReportOpeningCash"
+          },
+          "portfolio_currency": {
+            "title": "Portfolio Currency",
+            "type": "string"
+          },
+          "portfolio_id": {
+            "title": "Portfolio Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "portfolio_id",
+          "name",
+          "portfolio_currency",
+          "opening_cash",
+          "accounting"
+        ],
+        "title": "PortfolioReportMember",
+        "type": "object"
+      },
+      "PortfolioReportMetric": {
+        "properties": {
+          "complete_items": {
+            "title": "Complete Items",
+            "type": "integer"
+          },
+          "known_value": {
+            "description": "Known converted components only; never substitute for an incomplete total",
+            "title": "Known Value",
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_items": {
+            "title": "Total Items",
+            "type": "integer"
+          },
+          "unit": {
+            "description": "Unit counted by complete_items and total_items",
+            "enum": [
+              "lot",
+              "portfolio"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Complete total only; null if any contributor is unavailable",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "known_value",
+          "complete_items",
+          "total_items",
+          "unit",
+          "status"
+        ],
+        "title": "PortfolioReportMetric",
+        "type": "object"
+      },
+      "PortfolioReportMetrics": {
+        "properties": {
+          "cash_balance": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "cost_basis": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "dividend_income_ytd": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "fees": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "market_value": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "net_liquidation_value": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "realized_pnl": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          },
+          "unrealized_pnl": {
+            "$ref": "#/components/schemas/PortfolioReportMetric"
+          }
+        },
+        "required": [
+          "market_value",
+          "cost_basis",
+          "unrealized_pnl",
+          "cash_balance",
+          "net_liquidation_value",
+          "realized_pnl",
+          "fees",
+          "dividend_income_ytd"
+        ],
+        "title": "PortfolioReportMetrics",
+        "type": "object"
+      },
+      "PortfolioReportOpeningCash": {
+        "properties": {
+          "boundary_date": {
+            "format": "date",
+            "title": "Boundary Date",
+            "type": "string"
+          },
+          "fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortfolioFXRateEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "const": "portfolio_creation_boundary",
+            "title": "Method",
+            "type": "string"
+          },
+          "native": {
+            "$ref": "#/components/schemas/PortfolioNativeAmount"
+          },
+          "reporting_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporting Value"
+          }
+        },
+        "required": [
+          "native",
+          "reporting_value",
+          "fx",
+          "boundary_date",
+          "method"
+        ],
+        "title": "PortfolioReportOpeningCash",
+        "type": "object"
+      },
+      "PortfolioReportPosition": {
+        "properties": {
+          "current_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Price"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          },
+          "identity_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identity Reason"
+          },
+          "identity_status": {
+            "enum": [
+              "exact_symbol_exchange_unit",
+              "unresolved"
+            ],
+            "title": "Identity Status",
+            "type": "string"
+          },
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioReportLot"
+            },
+            "title": "Lots",
+            "type": "array"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PortfolioPositionMetrics"
+          },
+          "portfolio_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Portfolio Ids",
+            "type": "array"
+          },
+          "quote_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Unit"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "exchange",
+          "quote_unit",
+          "identity_status",
+          "identity_reason",
+          "shares",
+          "current_price",
+          "portfolio_ids",
+          "metrics",
+          "lots"
+        ],
+        "title": "PortfolioReportPosition",
+        "type": "object"
+      },
+      "PortfolioReportResponse": {
+        "properties": {
+          "as_of": {
+            "description": "Retrieval/valuation check, not a simultaneous live quote time",
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "degraded_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Degraded Reasons",
+            "type": "array"
+          },
+          "method": {
+            "const": "native_dated_fx_by_portfolio_v1",
+            "title": "Method",
+            "type": "string"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PortfolioReportMetrics"
+          },
+          "portfolio_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Portfolio Ids",
+            "type": "array"
+          },
+          "portfolios": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioReportMember"
+            },
+            "title": "Portfolios",
+            "type": "array"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioReportPosition"
+            },
+            "title": "Positions",
+            "type": "array"
+          },
+          "reporting_currency": {
+            "title": "Reporting Currency",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all_owned",
+              "selected"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "degraded",
+              "partial"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope",
+          "portfolio_ids",
+          "method",
+          "reporting_currency",
+          "as_of",
+          "status",
+          "assumptions",
+          "degraded_reasons",
+          "metrics",
+          "positions",
+          "portfolios"
+        ],
+        "title": "PortfolioReportResponse",
         "type": "object"
       },
       "PortfolioReturnAttribution": {
@@ -42413,6 +42906,86 @@
           }
         ],
         "summary": "Get Primary Portfolio Summary",
+        "tags": [
+          "portfolios"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "portfolios": "supported"
+        }
+      }
+    },
+    "/api/portfolios/report": {
+      "get": {
+        "description": "Read-only consolidated positions with original lots and dated FX evidence.\n\nNo default portfolio is created and no new historical-return/risk calculation\nis implied. A single selected portfolio still requires an explicit reporting\ncurrency; its configured base is returned separately.",
+        "operationId": "get_portfolio_report_api_portfolios_report_get",
+        "parameters": [
+          {
+            "description": "Explicit reporting currency: USD, EUR, GBP, JPY, CHF, AUD, CAD or INR",
+            "in": "query",
+            "name": "reporting_currency",
+            "required": true,
+            "schema": {
+              "description": "Explicit reporting currency: USD, EUR, GBP, JPY, CHF, AUD, CAD or INR",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Reporting Currency",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Repeat for selected owned portfolios; omission selects all owned portfolios. Unknown or foreign IDs return 404.",
+            "in": "query",
+            "name": "portfolio_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat for selected owned portfolios; omission selects all owned portfolios. Unknown or foreign IDs return 404.",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Portfolio Report",
         "tags": [
           "portfolios"
         ],

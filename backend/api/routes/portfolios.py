@@ -23,10 +23,11 @@ from backend.services.legacy_holdings import (
     manager_holdings_as_legacy,
     primary_portfolio,
 )
-from backend.services.forex_service import service as forex_service
+from backend.services.forex_service import SUPPORTED_CURRENCIES, service as forex_service
 from backend.services.portfolio_accounting import calculate_portfolio_accounting
 from backend.services.portfolio_analytics import portfolio_analytics_service
 from backend.services.portfolio_history import reconstruct_portfolio_history
+from backend.services.portfolio_reporting import consolidate_portfolios
 from backend.shared.market_classifier import is_crypto_symbol, market_classifier
 
 router = APIRouter()
@@ -279,6 +280,90 @@ class PortfolioAccountingResponse(PortfolioAccountingSummary):
     top_losers: list[dict[str, Any]]
     holdings: list[PortfolioAccountingHolding] = Field(description="Native and base-currency valuation evidence per holding")
     transactions: list[PortfolioAccountingTransaction] = Field(description="Native and base-currency valuation evidence per ledger row")
+
+
+class PortfolioReportMetric(BaseModel):
+    value: float | None = Field(description="Complete total only; null if any contributor is unavailable")
+    known_value: float = Field(description="Known converted components only; never substitute for an incomplete total")
+    complete_items: int
+    total_items: int
+    unit: Literal["lot", "portfolio"] = Field(description="Unit counted by complete_items and total_items")
+    status: Literal["complete", "partial", "unavailable"]
+
+
+class PortfolioPositionMetrics(BaseModel):
+    market_value: PortfolioReportMetric
+    cost_basis: PortfolioReportMetric
+    unrealized_pnl: PortfolioReportMetric
+
+
+class PortfolioReportMetrics(PortfolioPositionMetrics):
+    cash_balance: PortfolioReportMetric
+    net_liquidation_value: PortfolioReportMetric
+    realized_pnl: PortfolioReportMetric
+    fees: PortfolioReportMetric
+    dividend_income_ytd: PortfolioReportMetric
+
+
+class PortfolioReportLot(BaseModel):
+    portfolio_id: str
+    portfolio_name: str
+    holding_id: str
+    lot_id: str
+    symbol: str
+    shares: float
+    purchase_date: str
+    cost_basis_per_share: float
+    cost_basis_currency: str | None
+    notes: str
+    exchange: str | None
+    quote_unit: str | None
+    current_price: float | None
+    identity_status: Literal["exact_symbol_exchange_unit", "unresolved"]
+    accounting: PortfolioAccountingHolding
+
+
+class PortfolioReportPosition(BaseModel):
+    symbol: str
+    exchange: str | None
+    quote_unit: str | None
+    identity_status: Literal["exact_symbol_exchange_unit", "unresolved"]
+    identity_reason: str | None
+    shares: float
+    current_price: float | None
+    portfolio_ids: list[str]
+    metrics: PortfolioPositionMetrics
+    lots: list[PortfolioReportLot]
+
+
+class PortfolioReportOpeningCash(BaseModel):
+    native: PortfolioNativeAmount
+    reporting_value: float | None
+    fx: PortfolioFXRateEvidence | None
+    boundary_date: date
+    method: Literal["portfolio_creation_boundary"]
+
+
+class PortfolioReportMember(BaseModel):
+    portfolio_id: str
+    name: str
+    portfolio_currency: str
+    opening_cash: PortfolioReportOpeningCash
+    accounting: PortfolioAccountingResponse
+
+
+class PortfolioReportResponse(BaseModel):
+    scope: Literal["all_owned", "selected"]
+    portfolio_ids: list[str]
+    method: Literal["native_dated_fx_by_portfolio_v1"]
+    reporting_currency: str
+    as_of: datetime = Field(description="Retrieval/valuation check, not a simultaneous live quote time")
+    status: Literal["complete", "degraded", "partial"]
+    assumptions: list[str]
+    degraded_reasons: list[str]
+    metrics: PortfolioReportMetrics
+    positions: list[PortfolioReportPosition]
+    portfolios: list[PortfolioReportMember]
 
 
 class PortfolioListItemResponse(BaseModel):
@@ -776,6 +861,49 @@ async def get_primary_portfolio_summary(
     summary["portfolio_id"] = portfolio.id
     summary["portfolio_name"] = portfolio.name
     return summary
+
+
+@router.get("/portfolios/report", response_model=PortfolioReportResponse)
+async def get_portfolio_report(
+    reporting_currency: str = Query(description="Explicit reporting currency: USD, EUR, GBP, JPY, CHF, AUD, CAD or INR", pattern="^[A-Z]{3}$"),
+    portfolio_id: list[str] | None = Query(default=None, max_length=100, description="Repeat for selected owned portfolios; omission selects all owned portfolios. Unknown or foreign IDs return 404."),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Read-only consolidated positions with original lots and dated FX evidence.
+
+    No default portfolio is created and no new historical-return/risk calculation
+    is implied. A single selected portfolio still requires an explicit reporting
+    currency; its configured base is returned separately.
+    """
+    if reporting_currency not in SUPPORTED_CURRENCIES:
+        raise HTTPException(status_code=422, detail="Unsupported reporting currency")
+    query = db.query(PortfolioORM).filter(PortfolioORM.user_id == current_user.id)
+    ids = set(portfolio_id) if portfolio_id is not None else None
+    if ids is not None:
+        query = query.filter(PortfolioORM.id.in_(ids))
+    rows = query.order_by(PortfolioORM.created_at, PortfolioORM.id).all()
+    if ids is not None and {row.id for row in rows} != ids:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+    owned_ids = [row.id for row in rows]
+    holdings = db.query(PortfolioHoldingORM).filter(PortfolioHoldingORM.portfolio_id.in_(owned_ids)).order_by(PortfolioHoldingORM.id).all() if owned_ids else []
+    transactions = db.query(PortfolioTransactionORM).filter(PortfolioTransactionORM.portfolio_id.in_(owned_ids)).order_by(PortfolioTransactionORM.id).all() if owned_ids else []
+    limiter = asyncio.Semaphore(8)
+
+    async def snapshot(symbol: str) -> tuple[str, dict[str, Any]]:
+        async with limiter:
+            try:
+                value = await fetch_stock_snapshot_coalesced(symbol)
+                return symbol, value if isinstance(value, dict) else {}
+            except Exception:
+                return symbol, {}
+
+    quotes = dict(await asyncio.gather(*(snapshot(symbol) for symbol in sorted({row.symbol for row in holdings}))))
+    report = await consolidate_portfolios(
+        portfolios=rows, holdings=holdings, transactions=transactions, quotes=quotes,
+        reporting_currency=reporting_currency, resolve_rate=forex_service.get_valuation_rate,
+    )
+    return {"scope": "selected" if ids is not None else "all_owned", "portfolio_ids": owned_ids, **report}
 
 
 @router.get("/portfolios/{portfolio_id}", response_model=PortfolioDetailResponse)

@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Owner-scoped consolidated Portfolio reporting API** — read-only current
+  positions across all or selected owned portfolios in an explicit reporting
+  currency. Replays each portfolio separately from native amounts and dated FX;
+  retains original lots, membership and evidence. Coverage is explicit per metric,
+  and incomplete totals stay unavailable. Starting cash discloses its portfolio
+  creation-date boundary. No UI/accounting-write/schema change.
 - **Portfolio page and scope states** — shared headings, wrapping actions and
   selected portfolio/currency/benchmark context. Loading and failed reads hide
   prior figures and actions; retry preserves the requested portfolio. Empty
