@@ -6,6 +6,7 @@ import { MutualFundPortfolioSection } from "../components/mutualFunds/MutualFund
 import { PortfolioManager } from "../components/portfolio/PortfolioManager";
 import { SavedViewsControl } from "../components/savedViews/SavedViewsControl";
 import { TerminalButton } from "../components/terminal/TerminalButton";
+import { TerminalPage } from "../components/terminal/TerminalPage";
 import { TerminalInput } from "../components/terminal/TerminalInput";
 import type { MutualFund } from "../types";
 import { consumePendingSavedView } from "../workspace/savedViewRestore";
@@ -86,25 +87,15 @@ export function PortfolioPage() {
     setMfSuggestionsOpen(false);
   };
 
+  const modeControl = <div role="group" aria-label="Portfolio view" className="flex min-w-0 flex-wrap gap-2">
+    {(["equity", "mutual_funds"] as const).map(mode => <button key={mode} type="button" aria-pressed={portfolioMode === mode}
+      className={`min-h-9 rounded border px-3 py-1 text-sm ${portfolioMode === mode ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
+      onClick={() => switchPortfolioMode(mode)}>{mode === "equity" ? "Equity" : "Mutual Funds"}</button>)}
+  </div>;
+
   if (portfolioMode === "mutual_funds") {
     return (
-      <div className="space-y-3 p-4">
-        <div className="rounded border border-terminal-border bg-terminal-panel p-3">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm font-semibold uppercase tracking-wide text-terminal-accent">Portfolio</div>
-            <span className="rounded border border-terminal-border bg-terminal-bg px-2 py-0.5 text-[11px] text-terminal-muted">
-              Mode: Mutual Funds
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            <button className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted" onClick={() => switchPortfolioMode("equity")}>
-              Equity
-            </button>
-            <button className="rounded border border-terminal-accent px-2 py-1 text-xs text-terminal-accent">
-              Mutual Funds
-            </button>
-          </div>
-        </div>
+      <TerminalPage title="Portfolio" description="Your portfolios, holdings and recorded activity." context={modeControl}>
         <div className="rounded border border-terminal-border bg-terminal-panel p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-semibold uppercase tracking-wide text-terminal-accent">Add Mutual Fund Holding</div>
@@ -240,37 +231,14 @@ export function PortfolioPage() {
           {mfMessage && <div className="mt-2 text-xs text-terminal-pos">{mfMessage}</div>}
         </div>
         <MutualFundPortfolioSection refreshToken={mfRefreshToken} />
-      </div>
+      </TerminalPage>
     );
   }
 
   return (
-    <div className="space-y-3 p-4">
-      <div className="rounded border border-terminal-border bg-terminal-panel p-3">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-sm font-semibold uppercase tracking-wide text-terminal-accent">Portfolio</div>
-          <span className="rounded border border-terminal-border bg-terminal-bg px-2 py-0.5 text-[11px] text-terminal-muted">
-            Mode: Equity
-          </span>
-          <SavedViewsControl
-            pageLabel="Portfolio"
-            capture={() => ({
-              filters: { portfolioMode },
-              activeTabs: {},
-              tableColumns: "portfolio-manager-default",
-            })}
-          />
-        </div>
-        <div className="flex flex-wrap gap-1">
-          <button className="rounded border border-terminal-accent px-2 py-1 text-xs text-terminal-accent">
-            Equity
-          </button>
-          <button className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted" onClick={() => switchPortfolioMode("mutual_funds")}>
-            Mutual Funds
-          </button>
-        </div>
-      </div>
+    <TerminalPage title="Portfolio" description="Your portfolios, holdings and recorded activity." context={modeControl}
+      actions={<SavedViewsControl pageLabel="Portfolio" capture={() => ({ filters: { portfolioMode }, activeTabs: {}, tableColumns: "portfolio-manager-default" })} />}>
       <PortfolioManager />
-    </div>
+    </TerminalPage>
   );
 }

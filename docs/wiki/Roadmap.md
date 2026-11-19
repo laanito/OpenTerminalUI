@@ -901,8 +901,13 @@ does not change production behavior or establish those APIs.
 The first implementation slice adds the responsive shell Menu, bounded shared
 dialogs, wrapped/collapsible controls and status details, with reserved mobile
 navigation space. All 834 frontend tests and 45 browser smoke journeys pass.
-Shared page/scope/data-state primitives and the Portfolio domain/page migration
-remain later slices within the accepted v3.0 gate. See the design pack's
+The next slice adds shared page/scope/data-state patterns, consumed by Portfolio's
+modes and manager. Selected name/currency/benchmark remain visible; loading and
+failed reads hide prior figures, retry preserves scope, and empty/partial states
+are explicit. All 838 frontend tests, build and 47 browser smoke journeys pass.
+Consolidated reporting, receipt/operation contracts and the position-first Portfolio
+migration remain within the accepted v3.0 gate, along with further shared-pattern
+adoption and zoom/accessibility review. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:

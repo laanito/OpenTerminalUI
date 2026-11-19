@@ -177,6 +177,7 @@ describe("PortfolioManager thesis capture", () => {
     fetchPortfoliosMock.mockResolvedValue([]);
     createPortfolioMock.mockResolvedValue({ id: "p2", name: "Macro" });
     render(<PortfolioManager />);
+    await screen.findByRole("status", { name: "No portfolios yet" });
 
     fireEvent.change(screen.getByRole("textbox", { name: "New portfolio thesis" }), {
       target: { value: "  Diversify across inflation regimes.  " },
@@ -320,4 +321,64 @@ describe("PortfolioManager thesis capture", () => {
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
     await waitFor(() => expect(fetchAiRiskInsightsMock).toHaveBeenCalledWith(expect.objectContaining({ risk_metrics: { sharpe_ratio: 2 } }), "portfolio", expect.any(Object)));
   });
+  it("clears prior figures on a failed scope switch and retries the selected portfolio", async () => {
+    let rejectOther!: (reason: Error) => void;
+    fetchPortfoliosMock.mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]);
+    fetchPortfolioHoldingsMock.mockImplementation(id => id === "p1" ? Promise.resolve([{ id: "h1", symbol: "AAPL", shares: 1, cost_basis_per_share: 100, cost_basis_currency: "USD", currency: "USD", current_price: 110 }]) : new Promise((_resolve, reject) => { rejectOther = reject; }));
+    render(<PortfolioManager />);
+    await screen.findAllByText("AAPL");
+    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
+    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("Other");
+    expect(screen.queryByRole("region", { name: "Selected portfolio details" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Loading portfolio" })).toBeVisible();
+    await waitFor(() => expect(rejectOther).toBeTypeOf("function"));
+    await act(async () => rejectOther(new Error("Holdings feed unavailable")));
+    expect(screen.getByRole("alert", { name: "Portfolio unavailable" })).toHaveTextContent("No previous figures are shown");
+    expect(screen.queryByText("Net Liquidation")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "No holdings in this portfolio" })).not.toBeInTheDocument();
+    fetchPortfolioHoldingsMock.mockResolvedValue([]);
+    fireEvent.click(screen.getByRole("button", { name: "Retry portfolio load" }));
+    await screen.findByRole("region", { name: "Selected portfolio details" });
+    expect(fetchPortfolioHoldingsMock).toHaveBeenLastCalledWith("p2");
+    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("EUR");
+    expect(screen.getByRole("status", { name: "No holdings in this portfolio" })).toBeVisible();
+  });
+
+  it("ignores late holdings from an abandoned scope", async () => {
+    let resolveOther!: (value: unknown[]) => void;
+    fetchPortfoliosMock.mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]);
+    fetchPortfolioHoldingsMock.mockImplementation(id => id === "p2" ? new Promise(resolve => { resolveOther = resolve; }) : Promise.resolve([{ id: "h1", symbol: "AAPL", shares: 1, current_price: 100, cost_basis_per_share: 90, cost_basis_currency: "USD", currency: "USD" }]));
+    render(<PortfolioManager />);
+    await screen.findByRole("region", { name: "Selected portfolio details" });
+    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
+    await waitFor(() => expect(resolveOther).toBeTypeOf("function"));
+    fireEvent.click(screen.getByRole("button", { name: /^Core/ }));
+    await screen.findByRole("region", { name: "Selected portfolio details" });
+    await act(async () => resolveOther([{ id: "late", symbol: "STALE-SYMBOL", shares: 2, current_price: 100 }]));
+    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("Core");
+    expect(screen.queryByText("STALE-SYMBOL")).not.toBeInTheDocument();
+    expect(screen.getAllByText("AAPL").length).toBeGreaterThan(0);
+  });
+
+  it("distinguishes an unavailable list from an authoritative empty list", async () => {
+    fetchPortfoliosMock.mockRejectedValue(new Error("List unavailable"));
+    render(<PortfolioManager />);
+    await screen.findByRole("alert", { name: "Portfolio unavailable" });
+    expect(screen.queryByRole("status", { name: "No portfolios yet" })).not.toBeInTheDocument();
+    fetchPortfoliosMock.mockResolvedValue([]);
+    fireEvent.click(screen.getByRole("button", { name: "Retry portfolio load" }));
+    await screen.findByRole("status", { name: "No portfolios yet" });
+    expect(screen.queryByRole("region", { name: "Selected portfolio details" })).not.toBeInTheDocument();
+  });
+
+  it("does not silently substitute a different portfolio when the requested scope disappears", async () => {
+    fetchPortfoliosMock.mockResolvedValueOnce([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]).mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }]);
+    render(<PortfolioManager />);
+    await screen.findByRole("region", { name: "Selected portfolio details" });
+    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
+    expect(await screen.findByRole("alert", { name: "Portfolio unavailable" })).toHaveTextContent("no longer available");
+    expect(fetchPortfolioHoldingsMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("Unavailable portfolio");
+  });
+
 });

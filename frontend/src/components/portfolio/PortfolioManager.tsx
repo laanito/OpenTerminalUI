@@ -42,6 +42,7 @@ import { PortfolioRiskAssessment } from "./PortfolioRiskAssessment";
 import { ExportButton } from "../common/ExportButton";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
+import { TerminalDataState, TerminalScopeBar } from "../terminal/TerminalPage";
 import { TerminalModal } from "../terminal/TerminalModal";
 import { useDisplayCurrency } from "../../hooks/useDisplayCurrency";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -93,7 +94,8 @@ export function PortfolioManager() {
   const [correlation, setCorrelation] = useState<PortfolioCorrelationResponse | null>(null);
   const [dividends, setDividends] = useState<PortfolioDividendTracker | null>(null);
   const [benchmarkOverlay, setBenchmarkOverlay] = useState<PortfolioBenchmarkOverlay | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const loadVersion = useRef(0);
@@ -134,12 +136,27 @@ export function PortfolioManager() {
   const loadAll = async (nextId?: string) => {
     const version = ++loadVersion.current;
     setLoading(true);
+    setLoadError(null);
     setError(null);
+    if (nextId !== undefined) setSelectedId(nextId);
+    // A pending/failed scope must not display the previous scope's numbers or actions.
+    setHoldings([]);
+    setAnalytics(null);
+    setTransactions([]);
+    setRiskMetrics(null);
+    setCorrelation(null);
+    setDividends(null);
+    setBenchmarkOverlay(null);
+    setNotesSymbol(null);
     try {
       const pfs = await fetchPortfolios();
       if (version !== loadVersion.current) return;
       setPortfolios(pfs);
-      const activeId = nextId || selectedId || pfs[0]?.id || "";
+      const requestedId = nextId === undefined ? selectedId : nextId;
+      const activeId = pfs.length ? requestedId || pfs[0].id : "";
+      if (activeId && !pfs.some(portfolio => portfolio.id === activeId)) {
+        throw new Error("Selected portfolio is no longer available. Choose another portfolio or refresh.");
+      }
       if (activeId) {
         setSelectedId(activeId);
         const [h, a, t] = await Promise.all([
@@ -175,6 +192,7 @@ export function PortfolioManager() {
         void fetchPortfolioDividends({ days: 180 }, activeId).then((value) => { if (version === loadVersion.current) setDividends(value); }).catch(() => { if (version === loadVersion.current) setDividends(null); });
         void fetchPortfolioBenchmarkOverlay({ benchmark: bench }, activeId).then((value) => { if (version === loadVersion.current) setBenchmarkOverlay(value); }).catch(() => { if (version === loadVersion.current) setBenchmarkOverlay(null); });
       } else {
+        setSelectedId("");
         setHoldings([]);
         setAnalytics(null);
         setTransactions([]);
@@ -187,7 +205,7 @@ export function PortfolioManager() {
         setEditBenchmark(BENCHMARKS[0]);
       }
     } catch (err) {
-      if (version === loadVersion.current) setError(err instanceof Error ? err.message : "Failed to load portfolios");
+      if (version === loadVersion.current) setLoadError(err instanceof Error ? err.message : "Failed to load portfolios");
     } finally {
       if (version === loadVersion.current) setLoading(false);
     }
@@ -381,7 +399,16 @@ export function PortfolioManager() {
   };
 
   return (
-    <div className="grid gap-3 xl:grid-cols-[240px_1fr]">
+    <div className="min-w-0 space-y-3">
+      <TerminalScopeBar label="Portfolio scope" scope={selectedPortfolio?.name || (selectedId ? "Unavailable portfolio" : "No portfolio selected")}
+        facts={selectedPortfolio ? [{ label: "Accounting base", value: selectedPortfolio.currency || "Unknown" }, { label: "Benchmark", value: selectedPortfolio.benchmark_symbol || "Not set" }] : []}
+        actions={<TerminalButton size="sm" disabled={loading || repairSaving} onClick={() => { setStatus(null); void loadAll(); }}>Refresh portfolios</TerminalButton>} />
+      {loading ? <TerminalDataState kind="loading" title="Loading portfolio">Checking the selected portfolio. Previous figures and operation controls are hidden.</TerminalDataState>
+        : loadError ? <TerminalDataState kind="error" title="Portfolio unavailable" action={<TerminalButton size="sm" onClick={() => void loadAll()}>Retry portfolio load</TerminalButton>}>{loadError} No previous figures are shown.</TerminalDataState>
+          : !selectedPortfolio ? <TerminalDataState kind="empty" title="No portfolios yet">Create a portfolio to start recording holdings and activity.</TerminalDataState> : null}
+      {error ? <TerminalDataState kind="error" title="Portfolio action failed">{error}</TerminalDataState> : null}
+      {!loading && !loadError && status ? <p role="status" className="break-words text-sm text-terminal-pos">{status}</p> : null}
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="rounded border border-terminal-border bg-terminal-panel p-2">
         <div className="mb-2 text-xs font-semibold text-terminal-accent">Portfolios</div>
         <div className="space-y-1">
@@ -390,10 +417,11 @@ export function PortfolioManager() {
               key={p.id}
               type="button"
               className={`w-full rounded border px-2 py-1 text-left text-xs ${selectedId === p.id ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-text"}`}
-              onClick={() => void loadAll(p.id)}
+              disabled={repairSaving}
+              onClick={() => { setStatus(null); void loadAll(p.id); }}
             >
               <div>{p.name}</div>
-              <div className="text-[10px] text-terminal-muted">{metricFmt(p.total_value)}</div>
+              <div className="text-[10px] text-terminal-muted">{loading || loadError ? "—" : metricFmt(p.total_value)}</div>
             </button>
           ))}
         </div>
@@ -416,6 +444,7 @@ export function PortfolioManager() {
           <TerminalInput type="number" value={newCash} onChange={(e) => setNewCash(Number(e.target.value) || 0)} placeholder="Starting cash" />
           <TerminalButton
             variant="accent"
+            disabled={loading || repairSaving}
             onClick={async () => {
               try {
                 setError(null);
@@ -439,11 +468,11 @@ export function PortfolioManager() {
         </div>
       </aside>
 
-      <section className="space-y-2">
+      {!loading && !loadError && selectedPortfolio ? <section aria-label="Selected portfolio details" className="min-w-0 space-y-2">
         {analytics && analytics.accounting?.status !== "complete" ? (
-          <div className="rounded border border-terminal-warn/50 bg-terminal-warn/10 px-3 py-2 text-xs text-terminal-warn">
+          <TerminalDataState kind="partial" title="Portfolio accounting incomplete">
             Accounting is {analytics.accounting?.status || "unavailable"}: {analytics.accounting?.issues[0]?.message || analytics.accounting?.degraded_reasons[0] || "the backend accounting contract is unavailable"}. Affected totals remain unavailable; available values are accounted in {cashCurrency} before optional display conversion.
-          </div>
+          </TerminalDataState>
         ) : null}
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           <div className="rounded border border-terminal-border bg-terminal-panel p-2 text-xs"><div className="text-terminal-muted">Net Liquidation</div><div className="text-terminal-text">{formatBaseAggregate(analytics?.net_liquidation_value)}</div><div className="text-[10px] text-terminal-muted">holdings + cash · base {cashCurrency}</div></div>
@@ -501,7 +530,7 @@ export function PortfolioManager() {
                   setError(null);
                   await deletePortfolioById(selectedPortfolio.id);
                   setStatus("Portfolio deleted");
-                  await loadAll();
+                  await loadAll("");
                 } catch (err) {
                   setError(err instanceof Error ? err.message : "Failed to delete portfolio");
                 }
@@ -587,9 +616,7 @@ export function PortfolioManager() {
               </div>
             </fieldset>
           </div>
-          {error ? <div className="mb-2 rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{error}</div> : null}
-          {status ? <div className="mb-2 rounded-sm border border-terminal-pos/40 bg-terminal-pos/10 px-2 py-1 text-xs text-terminal-pos">{status}</div> : null}
-          <DenseTable
+          {holdings.length === 0 ? <TerminalDataState kind="empty" title="No holdings in this portfolio">Recorded cash and transactions can still exist. Use the existing entry controls to add a holding.</TerminalDataState> : <DenseTable
             id="portfolio-manager-holdings"
             rows={holdings}
             rowKey={(row) => row.id}
@@ -646,7 +673,7 @@ export function PortfolioManager() {
                 ),
               },
             ]}
-          />
+          />}
         </div>
 
         <div ref={txFormRef} className="rounded border border-terminal-border bg-terminal-panel p-2">
@@ -852,7 +879,8 @@ export function PortfolioManager() {
             <BacktestResults initialTickers={portfolioSymbols} />
           </>
         ) : null}
-      </section>
+      </section> : null}
+      </div>
 
       <TerminalModal
         open={currencyRepairTarget !== null}
