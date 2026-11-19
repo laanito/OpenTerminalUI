@@ -210,18 +210,18 @@ async def calculate_portfolio_accounting(
         row_id = getattr(holding, "id", None)
         symbol = str(getattr(holding, "symbol", "") or "").strip().upper()
         shares = _number(getattr(holding, "shares", 0.0))
-        unit_cost = _number(getattr(holding, "cost_basis_per_share", 0.0))
-        cost_native = shares * unit_cost
+        raw_cost = getattr(holding, "cost_basis_per_share", None)
+        cost_native = shares * _number(raw_cost) if raw_cost is not None else (0.0 if shares == 0 else None)
         cost_currency = _currency(getattr(holding, "cost_basis_currency", None))
         purchase_date = cost_date(holding)
-        cost_base, cost_rate = convert(
-            cost_native,
-            cost_currency,
-            purchase_date,
-            scope="holding_cost",
-            row_id=row_id,
-            needs_historical_date=True,
-        )
+        if cost_native is None:
+            cost_base, cost_rate = None, None
+            issue("basis_unknown", "holding_cost", row_id, cost_currency, purchase_date, "Acquisition cost is unknown; zero was not assumed")
+        else:
+            cost_base, cost_rate = convert(
+                cost_native, cost_currency, purchase_date,
+                scope="holding_cost", row_id=row_id, needs_historical_date=True,
+            )
         quote = quotes.get(symbol, {}) or {}
         raw_price = quote.get("current_price")
         market_currency = _currency(quote.get("currency"))
@@ -280,17 +280,17 @@ async def calculate_portfolio_accounting(
         tx_type = str(getattr(tx, "type", "") or "").strip().lower()
         shares = _number(getattr(tx, "shares", 0.0))
         price = _number(getattr(tx, "price", 0.0))
-        amount_native = shares * price if tx_type in _TRADE_TYPES else price if tx_type in _CASH_ONLY_TYPES else 0.0
+        amount_native = (shares * price if tx_type in _TRADE_TYPES else price if tx_type in _CASH_ONLY_TYPES else 0.0) if getattr(tx, "price", None) is not None else None
         occurred_on = _historical_date(((getattr(tx, "operation_data", None) or {}).get("opening") or {}).get("acquisition_date") if tx_type == "opening" else getattr(tx, "date", None))
         tx_currency = _currency(getattr(tx, "currency", None))
-        amount_base, amount_rate = convert(
-            amount_native,
-            tx_currency,
-            occurred_on,
-            scope="transaction_amount",
-            row_id=row_id,
-            needs_historical_date=True,
-        )
+        if amount_native is None:
+            amount_base, amount_rate = None, None
+            issue("basis_unknown", "transaction_amount", row_id, tx_currency, occurred_on, "Opening acquisition basis is unknown; this is not a cash amount")
+        else:
+            amount_base, amount_rate = convert(
+                amount_native, tx_currency, occurred_on,
+                scope="transaction_amount", row_id=row_id, needs_historical_date=True,
+            )
         fees_native = _number(getattr(tx, "fees", 0.0))
         fees_currency = _currency(getattr(tx, "fees_currency", None))
         fees_base, fees_rate = convert(
@@ -349,9 +349,10 @@ async def calculate_portfolio_accounting(
 
     realized = 0.0
     realized_complete = True
-    positions: dict[str, list[float]] = {}
+    positions: dict[str, tuple[float, float | None]] = {}
     trade_symbols: set[str] = set()
     incomplete_trade_symbols: set[str] = set()
+    unknown_basis_symbols: set[str] = set()
     for tx, unit_price_base, fees_base in sorted(converted_transactions, key=lambda row: _tx_sort_key(row[0])):
         tx_type = str(getattr(tx, "type", "") or "").strip().lower()
         if tx_type not in _TRADE_TYPES:
@@ -361,24 +362,31 @@ async def calculate_portfolio_accounting(
         if shares <= 0:
             continue
         trade_symbols.add(symbol)
-        if _historical_date(getattr(tx, "date", None)) is None:
-            realized_complete = False
+        valid_date = _historical_date(getattr(tx, "date", None)) is not None
+        if not valid_date:
             incomplete_trade_symbols.add(symbol)
-            issue("date_invalid", "realized_pnl", getattr(tx, "id", None), _currency(getattr(tx, "currency", None)), None, "A valid date is required to replay realized P&L")
-            continue
-        if unit_price_base is None or fees_base is None:
-            realized_complete = False
-            incomplete_trade_symbols.add(symbol)
-            continue
-        quantity, average = positions.get(symbol, [0.0, 0.0])
+            issue("date_invalid", "realized_pnl", getattr(tx, "id", None), _currency(getattr(tx, "currency", None)), None, "A valid date is required to replay cost and realized P&L")
+        quantity, average = positions.get(symbol, (0.0, 0.0))
         if tx_type in {"buy", "opening"}:
             new_quantity = quantity + shares
-            average = (quantity * average + shares * unit_price_base) / new_quantity if new_quantity > 0 else 0.0
-            positions[symbol] = [new_quantity, average]
+            if tx_type == "opening" and getattr(tx, "price", None) is None:
+                unknown_basis_symbols.add(symbol)
+            if unit_price_base is None or not valid_date:
+                average = None
+                incomplete_trade_symbols.add(symbol)
+            elif average is not None:
+                average = (quantity * average + shares * unit_price_base) / new_quantity
+            positions[symbol] = (new_quantity, average)
         else:
-            realized += shares * (unit_price_base - average) - fees_base
+            if not valid_date or average is None or unit_price_base is None or fees_base is None or shares > quantity + 1e-7:
+                realized_complete = False
+                issue("realized_basis_unavailable", "realized_pnl", getattr(tx, "id", None), None, None, "Realized P&L is unavailable because sale cost, proceeds, fees or acquisition coverage is incomplete")
+            else:
+                realized += shares * (unit_price_base - average) - fees_base
             remaining = quantity - shares
-            positions[symbol] = [remaining, average] if remaining > 1e-9 else [0.0, 0.0]
+            positions[symbol] = (remaining, average) if remaining > 1e-9 else (0.0, 0.0)
+            if remaining <= 1e-9:
+                incomplete_trade_symbols.discard(symbol)
 
     # A holding's native weighted average is insufficient when one foreign lot
     # was enlarged on multiple dates. Prefer the dated ledger replay whenever
@@ -388,8 +396,20 @@ async def calculate_portfolio_accounting(
     for detail in holding_details:
         symbol = str(detail["symbol"])
         holding_shares_by_symbol[symbol] = holding_shares_by_symbol.get(symbol, 0.0) + _number(detail["_shares"])
-    for symbol in trade_symbols - incomplete_trade_symbols:
+    for symbol in trade_symbols:
         ledger_quantity, ledger_average = positions.get(symbol, [0.0, 0.0])
+        if ledger_average is None and symbol in unknown_basis_symbols:
+            # Existing accounting pools cost by symbol. Do not spread a known
+            # subtotal across an unknown acquisition as if its basis were zero.
+            for detail in holding_details:
+                if detail["symbol"] == symbol:
+                    detail["cost_basis_base"] = None
+                    detail["cost_basis_fx"] = None
+                    detail["cost_basis_method"] = "ledger_replay"
+                    issue("basis_unknown_pool", "holding_cost", detail["id"], None, None, "Weighted-average basis includes an unknown acquisition; repair that opening or close the pool before cost-dependent P&L can be calculated")
+            continue
+        if symbol in incomplete_trade_symbols:
+            continue
         holding_quantity = holding_shares_by_symbol.get(symbol, 0.0)
         if abs(ledger_quantity - holding_quantity) > 1e-7:
             issue(

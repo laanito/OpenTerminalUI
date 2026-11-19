@@ -240,3 +240,40 @@ cross-account movements and visible single-account analysis. Unit tests cover
 missing valuation/sector currency gaps, custom benchmarks, repair ownership and
 late/failing movement reads. Current 1440px/390px screenshots reviewed. Whitespace
 passes; no backend suite rerun for this frontend-only follow-up.
+
+## Unknown opening basis and evidence repair
+
+The maintainer confirmed #291 merged. Existing positions can now explicitly
+retain unknown acquisition cost (SQL NULL, distinct from documented zero), while
+current market value and cash remain independently available. The existing
+per-symbol/per-account weighted-average pool keeps affected cost/unrealized P&L
+and subsequent realized gains unavailable until evidence is repaired. No-sale
+realized P&L stays zero. Closing a pool permits later known current basis without
+erasing earlier unknown gains. Native documented lot amounts remain inspectable.
+
+Opening evidence is reachable from a current lot and its All movements row,
+including after full sale. Reviewed, owner-locked repairs use stable IDs and
+expected revisions, preserve prior evidence, and change no quantity, observation
+date, cash or fees. Contribution value remains independent of acquisition cost;
+missing entry value can be repaired without another movement. Exact lots merged
+with later buys refuse basis replacement pending reconciliation. Generic legacy
+currency repair cannot bypass the opening audit. See the
+[current contract](../../wiki/Portfolio-Reporting.md#unknown-basis-and-evidence-repair).
+
+Migration `0022_unknown_opening_basis` drops the two cost-column NOT NULL
+constraints without old-row rewrites. SQLite preserves data and constraints via
+batch copy; rollback retains nullable evidence. Pre-unknown-basis binaries are
+unsafe writers once such rows exist. No production DB was accessed.
+
+Validation: full backend 1,969 passed / three PostgreSQL-only skipped, 77.39%
+coverage; final 182-test Portfolio domain run includes four added edge cases.
+All 847 frontend tests / 139 files, build and 59 installed-Chrome smoke journeys
+pass. New desktop/mobile journeys cover unknown entry, independent contribution,
+review/retry and lot/movement audit inspection; screenshots reviewed. Disposable
+SQLite full-chain and preserving downgrade/re-upgrade checks, PostgreSQL DDL,
+API/surface/mock/compile/whitespace guards pass. Actual migrated PostgreSQL repair
+and concurrency tests run in the existing guarded operation CI lane.
+
+Remaining v3.0 work is the complete populated keyboard/physical zoom/accessibility
+and Portfolio acceptance review, then maintainer release approval. This slice
+does not start another screen overhaul or bump the published v2.8.0.

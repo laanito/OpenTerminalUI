@@ -7,8 +7,10 @@ import { TerminalDataState } from "../terminal/TerminalPage";
 import { portfolioMoney, portfolioQuantity } from "./portfolioPresentation";
 import type { PortfolioRepairTarget } from "./PortfolioCurrencyRepair";
 
+import type { OpeningEvidenceTarget } from "./PortfolioOpeningEvidenceDialog";
+
 type Movement = MultiPortfolioTransaction & { portfolioId: string; portfolioName: string; cashDelta: number | null };
-export function PortfolioMovements({ report, onRepair }: { report: ConsolidatedPortfolioReport; onRepair: (target: PortfolioRepairTarget) => void }) {
+export function PortfolioMovements({ report, onRepair, onOpeningRepair }: { report: ConsolidatedPortfolioReport; onRepair: (target: PortfolioRepairTarget) => void; onOpeningRepair?: (target: OpeningEvidenceTarget) => void }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<{ report: ConsolidatedPortfolioReport; rows: Movement[] } | null>(null);
   const [error, setError] = useState("");
@@ -48,7 +50,7 @@ export function PortfolioMovements({ report, onRepair }: { report: ConsolidatedP
               { key: "feeCurrency", title: "Fee currency", width: 110, getValue: row => row.fees_currency || "Unknown" },
               { key: "cash", title: `Cash Δ (${report.reporting_currency})`, width: 150, sortable: true, getValue: row => row.cashDelta, render: row => portfolioMoney(row.cashDelta, report.reporting_currency) },
               { key: "notes", title: "Operation rationale", width: 220, getValue: row => row.notes || "" },
-              { key: "repair", title: "Currency repair", width: 140, getValue: () => "", render: row => !asCurrencyCode(row.currency) || (row.fees > 0 && !asCurrencyCode(row.fees_currency)) ? <TerminalButton size="sm" onClick={() => onRepair({ kind: "transaction", portfolioId: row.portfolioId, portfolioName: row.portfolioName, id: row.id, symbol: row.symbol, currency: row.currency, fees: row.fees, fees_currency: row.fees_currency })}>Set currency</TerminalButton> : null },
+              { key: "repair", title: "Evidence / currency", width: 170, getValue: () => "", render: row => row.type === "opening" ? <TerminalButton size="sm" onClick={() => onOpeningRepair?.({ portfolioId: row.portfolioId, transactionId: row.id })}>Opening evidence</TerminalButton> : !asCurrencyCode(row.currency) || (row.fees > 0 && !asCurrencyCode(row.fees_currency)) ? <TerminalButton size="sm" onClick={() => onRepair({ kind: "transaction", portfolioId: row.portfolioId, portfolioName: row.portfolioName, id: row.id, symbol: row.symbol, currency: row.currency, fees: row.fees, fees_currency: row.fees_currency })}>Set currency</TerminalButton> : null },
             ]} /></section>}
     </div>}
   </details>;

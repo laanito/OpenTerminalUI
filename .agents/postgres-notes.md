@@ -209,3 +209,29 @@ and idempotence; PostgreSQL DDL compiles locally. A full disposable SQLite Alemb
 upgrade passes. Actual migrated PostgreSQL insertion/JSON/concurrent retry is
 included through `test_portfolio_operations.py` in the guarded CI lane; no local
 production/live PostgreSQL access is claimed.
+
+
+## v3 nullable opening basis and audited repair
+
+`0022_unknown_opening_basis` relaxes NOT NULL on
+`portfolio_holdings.cost_basis_per_share` and `portfolio_transactions.price`.
+No UPDATE/default/backfill changes stored amounts. PostgreSQL emits only ALTER
+COLUMN DROP NOT NULL; SQLite batch copies these two unreferenced child tables,
+retaining primary/FK/lot-unique constraints and indexes. ORM Float.evaluates_none()
+preserves explicit NULL instead of applying the compatibility zero default.
+Downgrade deliberately retains nullable data and audit metadata: once unknown
+basis exists, pre-unknown-basis application binaries are unsafe writers.
+
+Opening evidence repair uses the same owner portfolio lock as operations. Stable
+repair IDs and expected revisions prevent duplicate/replaced audit writes; the
+entire JSON metadata is assigned afresh and commits with the remaining lot cost.
+No external provider call occurs while locked. Quantity, observation date,
+cash/fees and original creation retry fingerprint remain unchanged. Repairs after
+full sale update ledger evidence without recreating lots. Mixed opening/buy lots
+reject basis replacement pending reconciliation; entry valuation remains editable.
+
+Local tests cover SQLite old/known-zero/NULL preservation, FKs/index/lot uniqueness,
+idempotent migration and retaining downgrade/re-upgrade, plus PostgreSQL DDL and
+a disposable full-chain SQLite migration. Expanded null/repair/ownership/concurrent
+revision tests run in the existing guarded PostgreSQL operation CI lane after
+Alembic head. No live/production PostgreSQL database was accessed locally.

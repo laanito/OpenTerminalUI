@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from backend.api.deps import get_db, get_unified_fetcher
 from backend.auth.deps import get_current_user
 from backend.models import User
-from backend.services.legacy_holdings import resolve_user_holdings
+from backend.services.legacy_holdings import require_documented_cost, resolve_user_holdings
 from backend.services.sector_rotation import fetch_sector_rotation
 from backend.risk_engine.scenario_engine import scenario_engine
 from backend.api.routes.chart import _parse_yahoo_chart
@@ -67,6 +67,7 @@ async def run_stress_test(
     # 1. Resolve Holdings — the caller's own primary portfolio (was a global,
     # shared-across-users query).
     holdings = resolve_user_holdings(db, user.id)
+    require_documented_cost(holdings)
     if not holdings:
         raise HTTPException(status_code=404, detail="No holdings found")
 

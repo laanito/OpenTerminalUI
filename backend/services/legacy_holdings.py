@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from fastapi import HTTPException
+
 from backend.models import PortfolioHoldingORM, PortfolioORM
 from sqlalchemy.orm import Session
 
@@ -30,7 +32,7 @@ class LegacyHolding:
 
     ticker: str
     quantity: float
-    avg_buy_price: float
+    avg_buy_price: float | None
     buy_date: str = ""
 
 
@@ -73,7 +75,7 @@ def manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[Lega
             continue
         b = agg.setdefault(sym, {"shares": 0.0, "cost": 0.0, "buy_date": ""})
         b["shares"] = float(b["shares"]) + float(h.shares)
-        b["cost"] = float(b["cost"]) + float(h.shares) * float(h.cost_basis_per_share)
+        b["cost"] = (float(b["cost"]) + float(h.shares) * float(h.cost_basis_per_share)) if b["cost"] is not None and h.cost_basis_per_share is not None else None
         pdate = (h.purchase_date or "").strip()
         if pdate and (not b["buy_date"] or pdate < str(b["buy_date"])):
             b["buy_date"] = pdate
@@ -84,7 +86,7 @@ def manager_holdings_as_legacy(holdings: list[PortfolioHoldingORM]) -> list[Lega
             LegacyHolding(
                 ticker=sym,
                 quantity=shares,
-                avg_buy_price=(float(b["cost"]) / shares if shares else 0.0),
+                avg_buy_price=(float(b["cost"]) / shares if shares else 0.0) if b["cost"] is not None else None,
                 buy_date=str(b["buy_date"]),
             )
         )
@@ -116,3 +118,9 @@ def all_held_symbols(db: Session, limit: int | None = None) -> list[str]:
     rows = db.query(PortfolioHoldingORM.symbol).all()
     symbols = sorted({str(r[0]).strip().upper() for r in rows if r and r[0]})
     return symbols[:limit] if limit else symbols
+
+
+def require_documented_cost(holdings: list[LegacyHolding]) -> None:
+    """Legacy cost-weighted methods cannot price unknown cost as zero."""
+    if any(row.avg_buy_price is None for row in holdings):
+        raise HTTPException(status_code=503, detail="This cost-weighted analysis requires documented acquisition basis. Current Portfolio values and price-history analysis remain available.")

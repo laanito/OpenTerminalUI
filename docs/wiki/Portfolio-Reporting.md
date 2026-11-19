@@ -144,9 +144,12 @@ transaction**. It moves no cash/fees, creates a new lot, and records:
   ownership, even if acquired earlier.
 - Documented unit cost/currency in `price`/`currency`, and an original
   `opening.acquisition_date` and `opening.provenance`. Dated cost FX uses that
-  documented acquisition date. This first workflow **requires documented basis**;
-  unknown-basis entry remains a v3.0 accounting gate. Never enter zero to stand
-  in for unknown cost. An explicitly documented zero basis is allowed.
+  documented acquisition date. `opening.basis_status` defaults to `known` for
+  compatibility and requires cost, currency and acquisition date. Choose **Cost
+  basis unknown** (`basis_status: "unknown"`, explicit `price: null`, `currency:
+  null`) when those records are missing; acquisition date may then be null.
+  Provenance is always required. Unknown is stored as SQL NULL, never a zero
+  substitute. An explicitly documented zero basis remains allowed.
 - Optional total fair value and currency at entry in `opening.contribution_value`
   and `opening.contribution_currency`. This is independent of acquisition cost.
   In-window history counts that value as a capital contribution in kind, not
@@ -161,10 +164,65 @@ transaction**. It moves no cash/fees, creates a new lot, and records:
 consolidated lots also expose opening provenance. Partial/full sales preserve
 recorded cost; cash and ledger history recognize openings together.
 
-Upgrade applies additive Alembic **0021_portfolio_operations** before startup:
+Upgrade applies Alembic **0021_portfolio_operations** and
+**0022_unknown_opening_basis** before startup:
 Docker performs Alembic automatically; existing local installations run
 `PYTHONPATH=. alembic -c backend/alembic.ini upgrade head` in their configured
-backend environment. Old rows remain unchanged/NULL; no historical buy is
-reinterpreted. Downgrade retains metadata. Older application code cannot interpret
+backend environment. 0021 adds nullable receipt metadata; 0022 relaxes the
+holding unit-cost and transaction-price columns to permit explicit unknowns.
+Existing amounts, quantities, currencies, lot constraints and foreign keys are
+preserved. PostgreSQL drops NOT NULL without rewriting rows; SQLite uses a batch
+copy of the two child tables. Downgrade retains nullable columns and evidence;
+it never converts unknown cost to zero. No historical buy is reinterpreted. Older application code cannot interpret
 new opening events correctly; deployments containing them need a compatible
 rollback build or a forward fix, rather than writing with pre-opening code.
+
+
+## Unknown basis and evidence repair
+
+Unknown acquisition cost does not hide independently known current market value,
+cash, sale proceeds, fees or capital-flow valuation. Cost and unrealized P&L remain
+unavailable for the affected weighted-average symbol pool within that portfolio;
+known native lot amounts are still inspectable. A sale involving that pool has
+unknown realized P&L, rather than treating the sale proceeds as profit. No sales
+means realized P&L is zero. Fully closing the pool permits a later documented buy
+to establish a new current basis, while past unknown realized P&L stays unknown
+until its opening evidence is repaired. Accounting remains weighted-average by
+symbol, not a tax-lot method. Accounts never share basis pools.
+
+**Opening evidence** is available on an original lot and on its opening row in
+**All movements**, including after full disposal. The dialog shows the fixed
+quantity and observation date; review can replace basis, acquisition date,
+provenance and/or independent entry contribution value, with a required repair
+reason. Earlier revisions are collapsed by default. Generic legacy currency
+repair cannot bypass this audit for an opening.
+
+Authenticated bearer routes (same owner checks as Portfolio writes):
+
+- `GET /api/portfolios/{portfolio_id}/transactions/{transaction_id}/opening-evidence`
+  returns current evidence, revision, prior snapshots and applied repair IDs.
+- `PATCH` on the same path requires a stable UUID `repair_id`, `expected_revision`,
+  `price`, `currency`, complete `opening` metadata and a nonblank `reason`.
+  Same ID/body replay returns the original successful revision; changed reuse or
+  a stale revision returns 409. Reload before reviewing a changed revision.
+  Foreign/non-opening receipts return 404. No provider runs under the write lock.
+
+A repair appends audit metadata and atomically updates the opening transaction's
+basis and any remaining lot's documented unit cost. It changes no quantity,
+observation date, cash, fees or movement count. A fully sold receipt remains
+repairable and recalculates realized P&L. If later buys were explicitly merged
+into that exact lot, basis changes return 409 pending reconciliation; entry-value
+or provenance-only repairs remain possible. No mixed lot basis is overwritten.
+Original operation retries retain their original fingerprint and cannot undo a
+later evidence repair. Uncertain writes offer manual same-repair retry or a
+result check, with no automatic resubmission.
+
+Missing in-window contribution valuation still makes the affected historical
+curve unavailable. Repairing that value restores reconstruction when other inputs
+are complete, without turning fair value into acquisition cost. Reconstruction
+uses current corrected ledger evidence; this is not a retained historical vintage.
+The legacy NAV/starting-cash annualized-return shortcut is unavailable when opening,
+deposit or withdrawal flows exist. Compatibility stress/factor methods that still
+require cost weights return an explicit unavailable response for unknown basis;
+price-history, symbol-only and current-value consumers can remain available.
+Position/report exports retain null costs rather than printing a false zero.

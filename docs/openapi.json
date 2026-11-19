@@ -17011,8 +17011,15 @@
             "title": "Cost Basis Currency"
           },
           "cost_basis_per_share": {
-            "title": "Cost Basis Per Share",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Basis Per Share"
           },
           "currency": {
             "anyOf": [
@@ -17326,9 +17333,25 @@
       "PortfolioOpeningData": {
         "properties": {
           "acquisition_date": {
-            "description": "Documented acquisition date for cost FX; distinct from the opening observation date",
-            "format": "date",
-            "title": "Acquisition Date",
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Documented acquisition date; may be unknown for an unknown-basis opening",
+            "title": "Acquisition Date"
+          },
+          "basis_status": {
+            "default": "known",
+            "enum": [
+              "known",
+              "unknown"
+            ],
+            "title": "Basis Status",
             "type": "string"
           },
           "contribution_currency": {
@@ -17363,10 +17386,150 @@
           }
         },
         "required": [
-          "acquisition_date",
           "provenance"
         ],
         "title": "PortfolioOpeningData",
+        "type": "object"
+      },
+      "PortfolioOpeningEvidenceResponse": {
+        "properties": {
+          "applied_repairs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Applied Repairs",
+            "type": "array"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "evidence_history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Evidence History",
+            "type": "array"
+          },
+          "evidence_revision": {
+            "title": "Evidence Revision",
+            "type": "integer"
+          },
+          "observed_date": {
+            "title": "Observed Date",
+            "type": "string"
+          },
+          "opening": {
+            "$ref": "#/components/schemas/PortfolioOpeningData"
+          },
+          "portfolio_id": {
+            "title": "Portfolio Id",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "number"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "transaction_id": {
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "portfolio_id",
+          "symbol",
+          "shares",
+          "observed_date",
+          "price",
+          "currency",
+          "opening",
+          "evidence_revision",
+          "evidence_history",
+          "applied_repairs"
+        ],
+        "title": "PortfolioOpeningEvidenceResponse",
+        "type": "object"
+      },
+      "PortfolioOpeningRepairRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "opening": {
+            "$ref": "#/components/schemas/PortfolioOpeningData"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "repair_id": {
+            "format": "uuid",
+            "title": "Repair Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "repair_id",
+          "expected_revision",
+          "price",
+          "currency",
+          "opening",
+          "reason"
+        ],
+        "title": "PortfolioOpeningRepairRequest",
         "type": "object"
       },
       "PortfolioPositionMetrics": {
@@ -17464,8 +17627,15 @@
             "title": "Cost Basis Currency"
           },
           "cost_basis_per_share": {
-            "title": "Cost Basis Per Share",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Basis Per Share"
           },
           "current_price": {
             "anyOf": [
@@ -17518,6 +17688,17 @@
                 "type": "null"
               }
             ]
+          },
+          "opening_transaction_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Transaction Id"
           },
           "portfolio_id": {
             "title": "Portfolio Id",
@@ -18462,10 +18643,17 @@
             "title": "Operation Id"
           },
           "price": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "default": 0.0,
-            "minimum": 0.0,
-            "title": "Price",
-            "type": "number"
+            "title": "Price"
           },
           "shares": {
             "default": 0.0,
@@ -18580,8 +18768,15 @@
             "title": "Operation Data"
           },
           "price": {
-            "title": "Price",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
           },
           "shares": {
             "title": "Shares",
@@ -44232,6 +44427,142 @@
           }
         ],
         "summary": "Update Portfolio Transaction Currency",
+        "tags": [
+          "portfolios"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "portfolios": "supported"
+        }
+      }
+    },
+    "/api/portfolios/{portfolio_id}/transactions/{transaction_id}/opening-evidence": {
+      "get": {
+        "operationId": "get_opening_evidence_api_portfolios__portfolio_id__transactions__transaction_id__opening_evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portfolio_id",
+            "required": true,
+            "schema": {
+              "title": "Portfolio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioOpeningEvidenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Opening Evidence",
+        "tags": [
+          "portfolios"
+        ],
+        "x-openterminalui-auth": {
+          "permission": "user",
+          "scheme": "bearer"
+        },
+        "x-openterminalui-feature-state": {
+          "portfolios": "supported"
+        }
+      },
+      "patch": {
+        "operationId": "repair_opening_evidence_api_portfolios__portfolio_id__transactions__transaction_id__opening_evidence_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portfolio_id",
+            "required": true,
+            "schema": {
+              "title": "Portfolio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioOpeningRepairRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Repair Opening Evidence Api Portfolios  Portfolio Id  Transactions  Transaction Id  Opening Evidence Patch",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Repair Opening Evidence",
         "tags": [
           "portfolios"
         ],

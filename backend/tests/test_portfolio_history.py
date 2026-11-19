@@ -340,3 +340,18 @@ def test_missing_entry_valuation_does_not_become_zero_contribution_or_profit(mar
     assert result['status'] == 'partial'
     assert result['equity_curve'] == []
     assert result['issues'][0]['code'] == 'ledger_opening_contribution_unavailable'
+
+
+def test_unknown_cost_history_uses_independent_entry_valuation_and_repair(market):
+    row = tx('opening', '2026-11-10', 'A', 2, None, None)
+    row.operation_data = {'opening': {'basis_status': 'unknown', 'acquisition_date': None, 'provenance': 'Transfer'}}
+    holdings = [NS(symbol='A', shares=2)]
+    missing = run([row], holdings)
+    assert missing['equity_curve'] == []
+    assert any(issue['code'] == 'ledger_opening_contribution_unavailable' for issue in missing['issues'])
+    row.operation_data['opening'].update(contribution_value=240, contribution_currency='USD')
+    repaired = run([row], holdings)
+    assert len(repaired['equity_curve']) == 30
+    assert repaired['equity_curve'][-1]['cash_balance'] == 1000
+    assert repaired['equity_curve'][-1]['portfolio'] == 100
+    assert row.price is None  # entry valuation never becomes cost

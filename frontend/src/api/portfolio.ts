@@ -65,7 +65,7 @@ export async function updatePortfolioHoldingCurrency(portfolioId: string, holdin
   );
 }
 
-export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: PortfolioTransactionType; shares?: number; price?: number; currency?: string; date: string; fees?: number; fees_currency?: string; lot_id?: string; notes?: string; operation_id?: string; opening?: import("./types").PortfolioOpeningData }): Promise<{ id: string; status: string }> {
+export async function addPortfolioTransaction(portfolioId: string, payload: { symbol?: string; type: PortfolioTransactionType; shares?: number; price?: number | null; currency?: string | null; date: string; fees?: number; fees_currency?: string; lot_id?: string; notes?: string; operation_id?: string; opening?: import("./types").PortfolioOpeningData }): Promise<{ id: string; status: string }> {
   const { data } = await api.post<{ id: string; status: string }>(`/portfolios/${encodeURIComponent(portfolioId)}/transactions`, payload);
   return data;
 }
@@ -290,5 +290,14 @@ export async function fetchPortfolioReport(currency: string, portfolioId?: strin
 
 export async function fetchPortfolioOperation(portfolioId: string, operationId: string): Promise<{id: string; status: string; portfolio_id: string; type: string}> {
   const { data } = await api.get(`/portfolios/${encodeURIComponent(portfolioId)}/operations/${encodeURIComponent(operationId)}`);
+  return data;
+}
+
+export async function fetchPortfolioOpeningEvidence(portfolioId: string, transactionId: string): Promise<import("./types").PortfolioOpeningEvidence> {
+  const { data } = await api.get(`/portfolios/${encodeURIComponent(portfolioId)}/transactions/${encodeURIComponent(transactionId)}/opening-evidence`);
+  return data;
+}
+export async function repairPortfolioOpeningEvidence(portfolioId: string, transactionId: string, payload: import("./types").PortfolioOpeningRepair): Promise<{ evidence_revision: number }> {
+  const { data } = await api.patch(`/portfolios/${encodeURIComponent(portfolioId)}/transactions/${encodeURIComponent(transactionId)}/opening-evidence`, payload);
   return data;
 }

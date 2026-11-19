@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -101,7 +101,8 @@ class PortfolioHoldingCurrencyUpdateRequest(BaseModel):
 
 
 class PortfolioOpeningData(BaseModel):
-    acquisition_date: date = Field(description="Documented acquisition date for cost FX; distinct from the opening observation date")
+    basis_status: Literal["known", "unknown"] = "known"
+    acquisition_date: date | None = Field(default=None, description="Documented acquisition date; may be unknown for an unknown-basis opening")
     provenance: str = Field(min_length=1, max_length=2000)
     contribution_value: float | None = Field(default=None, ge=0, allow_inf_nan=False, description="Total external contribution value at entry, independent of cost basis")
     contribution_currency: str | None = None
@@ -112,13 +113,59 @@ class PortfolioOpeningData(BaseModel):
         return _normalize_currency_code(value)
 
 
+def _validate_opening_basis(price: float | None, currency: str | None, opening: PortfolioOpeningData) -> None:
+    if opening.basis_status == "unknown":
+        if price is not None or currency is not None:
+            raise ValueError("Unknown basis requires null price and currency; do not substitute zero")
+    elif price is None or currency is None or opening.acquisition_date is None:
+        raise ValueError("Known basis requires documented cost, currency and acquisition date")
+
+
+class PortfolioOpeningRepairRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    repair_id: UUID
+    expected_revision: int = Field(ge=0)
+    price: float | None = Field(ge=0, allow_inf_nan=False)
+    currency: str | None
+    opening: PortfolioOpeningData
+    reason: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def normalize_currency(cls, value):
+        return _normalize_currency_code(value)
+
+    @model_validator(mode="after")
+    def validate_repair(self):
+        _validate_opening_basis(self.price, self.currency, self.opening)
+        if not self.reason.strip() or not self.opening.provenance.strip():
+            raise ValueError("Repair reason and opening provenance are required")
+        if self.opening.contribution_value is not None and not self.opening.contribution_currency:
+            raise ValueError("Contribution currency is required with a contribution value")
+        return self
+
+
+class PortfolioOpeningEvidenceResponse(BaseModel):
+    transaction_id: str
+    portfolio_id: str
+    symbol: str
+    shares: float
+    observed_date: str
+    price: float | None
+    currency: str | None
+    opening: PortfolioOpeningData
+    evidence_revision: int
+    evidence_history: list[dict[str, Any]]
+    applied_repairs: list[dict[str, Any]]
+
+
 class PortfolioTransactionCreateRequest(BaseModel):
     # Trades (buy/sell) carry a symbol + shares; cash-only rows (dividend/deposit/
     # withdrawal) carry the amount in `price` with shares = 0. See portfolio_cash.
     symbol: str = ""
     type: str = Field(pattern="^(buy|sell|dividend|deposit|withdrawal|opening)$")
     shares: float = Field(default=0.0, ge=0, allow_inf_nan=False)
-    price: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    price: float | None = Field(default=0.0, ge=0, allow_inf_nan=False)
     currency: str | None = Field(
         default=None,
         description="Currency of price or cash amount; omission is preserved as unknown",
@@ -140,12 +187,15 @@ class PortfolioTransactionCreateRequest(BaseModel):
         if self.type in {"buy", "sell", "opening"} and (not self.symbol.strip() or self.shares <= 0):
             raise ValueError("Security operations require a symbol and positive quantity")
         if self.type == "opening":
-            if self.opening is None or self.operation_id is None or self.currency is None or "price" not in self.model_fields_set:
-                raise ValueError("Opening positions require an operation ID, documented unit cost/currency and acquisition provenance")
+            if self.opening is None or self.operation_id is None:
+                raise ValueError("Opening positions require an operation ID and provenance")
+            _validate_opening_basis(self.price, self.currency, self.opening)
+            if "price" not in self.model_fields_set:
+                raise ValueError("Opening price must be explicit: a documented cost or null for unknown basis")
             observed = date.fromisoformat(self.date)
             if not self.opening.provenance.strip():
                 raise ValueError("Opening provenance is required")
-            if self.opening.acquisition_date > observed or observed > datetime.now(timezone.utc).date():
+            if (self.opening.acquisition_date is not None and self.opening.acquisition_date > observed) or observed > datetime.now(timezone.utc).date():
                 raise ValueError("Acquisition must precede the opening observation; future openings are not supported")
             if self.fees != 0:
                 raise ValueError("An opening position moves no cash or fees")
@@ -153,6 +203,8 @@ class PortfolioTransactionCreateRequest(BaseModel):
                 raise ValueError("Contribution currency is required with a contribution value")
         elif self.opening is not None:
             raise ValueError("Opening metadata is only valid for an opening position")
+        elif self.price is None:
+            raise ValueError("Only an unknown-basis opening can have a null price")
         if self.operation_id is not None:
             if date.fromisoformat(self.date) > datetime.now(timezone.utc).date():
                 raise ValueError("Future operations are not supported")
@@ -190,7 +242,7 @@ class PortfolioHoldingResponse(BaseModel):
     id: str
     symbol: str
     shares: float
-    cost_basis_per_share: float
+    cost_basis_per_share: float | None
     cost_basis_currency: str | None = Field(
         description="Persisted currency of the recorded cost basis; null means legacy/unknown",
     )
@@ -210,7 +262,7 @@ class PortfolioTransactionResponse(BaseModel):
     symbol: str
     type: str
     shares: float
-    price: float
+    price: float | None
     currency: str | None = Field(description="Persisted price/amount currency; null means legacy/unknown")
     date: str
     fees: float
@@ -357,7 +409,7 @@ class PortfolioReportLot(BaseModel):
     symbol: str
     shares: float
     purchase_date: str
-    cost_basis_per_share: float
+    cost_basis_per_share: float | None
     cost_basis_currency: str | None
     notes: str
     exchange: str | None
@@ -365,6 +417,7 @@ class PortfolioReportLot(BaseModel):
     current_price: float | None
     identity_status: Literal["exact_symbol_exchange_unit", "unresolved"]
     opening: PortfolioOpeningData | None = None
+    opening_transaction_id: str | None = None
     accounting: PortfolioAccountingHolding
 
 
@@ -1112,6 +1165,8 @@ def update_portfolio_holding_currency(
     )
     if row is None:
         raise HTTPException(status_code=404, detail="Holding not found")
+    if db.query(PortfolioTransactionORM).filter_by(portfolio_id=portfolio_id, lot_id=row.lot_id, symbol=row.symbol, type="opening").first():
+        raise HTTPException(status_code=409, detail="Use opening evidence repair for this position")
     row.cost_basis_currency = payload.currency
     db.commit()
     return {"status": "updated", "id": row.id, "currency": row.cost_basis_currency}
@@ -1145,10 +1200,15 @@ def add_portfolio_transaction(
 ) -> dict[str, Any]:
     _lock_portfolio_writer(db, portfolio_id, current_user.id)
     fingerprint = hashlib.sha256(json.dumps(payload.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
+    compatible_fingerprints = {fingerprint}
+    if payload.opening and payload.opening.basis_status == "known":
+        legacy_body = payload.model_dump(mode="json")
+        legacy_body["opening"].pop("basis_status", None)
+        compatible_fingerprints.add(hashlib.sha256(json.dumps(legacy_body, sort_keys=True).encode()).hexdigest())
     if payload.operation_id:
         existing = db.get(PortfolioTransactionORM, str(payload.operation_id))
         if existing:
-            if existing.portfolio_id != portfolio_id or (existing.operation_data or {}).get("request_hash") != fingerprint:
+            if existing.portfolio_id != portfolio_id or (existing.operation_data or {}).get("request_hash") not in compatible_fingerprints:
                 raise HTTPException(status_code=409, detail="Operation identity already used for different data; check the original result")
             return {"id": existing.id, "status": "created"}
     symbol = payload.symbol.strip().upper()
@@ -1182,12 +1242,12 @@ def add_portfolio_transaction(
         row = db.query(PortfolioHoldingORM).filter_by(portfolio_id=portfolio_id, symbol=symbol, lot_id=lot_id).first()
         if row is not None and payload.type == "opening":
             raise HTTPException(status_code=409, detail="Opening positions require a new lot")
-        if row is not None and row.cost_basis_currency != payload.currency:
+        if row is not None and (row.cost_basis_per_share is None or row.cost_basis_currency != payload.currency):
             raise HTTPException(status_code=409, detail="Cannot combine buys with different or unknown currencies in one lot; use a new lot_id")
         if row is None:
             db.add(PortfolioHoldingORM(
                 portfolio_id=portfolio_id, symbol=symbol, shares=float(payload.shares),
-                cost_basis_per_share=float(payload.price), cost_basis_currency=payload.currency,
+                cost_basis_per_share=payload.price, cost_basis_currency=payload.currency,
                 purchase_date=payload.date,
                 notes="", lot_id=lot_id,
             ))
@@ -1208,7 +1268,7 @@ def add_portfolio_transaction(
     data = {"request_hash": fingerprint, "opening": payload.opening.model_dump(mode="json") if payload.opening else None} if payload.operation_id else None
     tx = PortfolioTransactionORM(
         id=str(payload.operation_id or uuid4()), portfolio_id=portfolio_id, symbol=symbol,
-        type=payload.type, shares=float(payload.shares), price=float(payload.price), currency=payload.currency,
+        type=payload.type, shares=float(payload.shares), price=payload.price, currency=payload.currency,
         date=payload.date, fees=float(payload.fees), fees_currency=payload.fees_currency,
         lot_id=lot_id, notes=payload.notes, operation_data=data,
     )
@@ -1219,6 +1279,64 @@ def add_portfolio_transaction(
         db.rollback()
         raise HTTPException(status_code=409, detail="Operation or lot already recorded; check its result before retrying")
     return {"id": tx.id, "status": "created"}
+
+
+def _opening_receipt(db: Session, portfolio_id: str, transaction_id: str) -> PortfolioTransactionORM:
+    row = db.query(PortfolioTransactionORM).filter_by(id=transaction_id, portfolio_id=portfolio_id).one_or_none()
+    if row is None or row.type != "opening" or not (row.operation_data or {}).get("opening"):
+        raise HTTPException(status_code=404, detail="Opening evidence not found")
+    return row
+
+
+@router.get("/portfolios/{portfolio_id}/transactions/{transaction_id}/opening-evidence", response_model=PortfolioOpeningEvidenceResponse)
+def get_opening_evidence(portfolio_id: str, transaction_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    _portfolio_for_user(db, portfolio_id, current_user.id)
+    row = _opening_receipt(db, portfolio_id, transaction_id)
+    data = row.operation_data or {}
+    return {"transaction_id": row.id, "portfolio_id": portfolio_id, "symbol": row.symbol,
+            "shares": row.shares, "observed_date": row.date, "price": row.price, "currency": row.currency,
+            "opening": data["opening"], "evidence_revision": data.get("evidence_revision", 0),
+            "evidence_history": data.get("evidence_history", []),
+            "applied_repairs": [{k: entry[k] for k in ("repair_id", "revision", "recorded_at")} for entry in data.get("applied_repairs", [])]}
+
+
+@router.patch("/portfolios/{portfolio_id}/transactions/{transaction_id}/opening-evidence")
+def repair_opening_evidence(portfolio_id: str, transaction_id: str, payload: PortfolioOpeningRepairRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    _lock_portfolio_writer(db, portfolio_id, current_user.id)
+    row = _opening_receipt(db, portfolio_id, transaction_id)
+    data = dict(row.operation_data or {})
+    fingerprint = hashlib.sha256(json.dumps(payload.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
+    repairs = list(data.get("applied_repairs", []))
+    for repair in repairs:
+        if repair["repair_id"] == str(payload.repair_id):
+            if repair["request_hash"] != fingerprint:
+                raise HTTPException(status_code=409, detail="Repair identity already used for different evidence")
+            return {"id": row.id, "status": "updated", "evidence_revision": repair["revision"]}
+    revision = data.get("evidence_revision", 0)
+    if payload.expected_revision != revision:
+        raise HTTPException(status_code=409, detail="Opening evidence changed; reload before reviewing a new repair")
+    if payload.opening.acquisition_date and payload.opening.acquisition_date > date.fromisoformat(row.date):
+        raise HTTPException(status_code=422, detail="Acquisition cannot follow the recorded observation date")
+    previous = PortfolioOpeningData.model_validate(data["opening"]).model_dump(mode="json")
+    updated = payload.opening.model_dump(mode="json")
+    basis_changed = (row.price, row.currency, previous["basis_status"], previous["acquisition_date"]) != (payload.price, payload.currency, updated["basis_status"], updated["acquisition_date"])
+    if basis_changed:
+        merged_buy = db.query(PortfolioTransactionORM).filter_by(portfolio_id=portfolio_id, symbol=row.symbol, lot_id=row.lot_id, type="buy").first()
+        if merged_buy:
+            raise HTTPException(status_code=409, detail="This opening lot includes later buys; its mixed basis requires reconciliation before a basis repair")
+        holding = db.query(PortfolioHoldingORM).filter_by(portfolio_id=portfolio_id, symbol=row.symbol, lot_id=row.lot_id).one_or_none()
+        if holding:
+            holding.cost_basis_per_share = payload.price
+            holding.cost_basis_currency = payload.currency
+    recorded_at = datetime.now(timezone.utc).isoformat()
+    history = list(data.get("evidence_history", []))
+    history.append({"price": row.price, "currency": row.currency, "opening": previous, "revision": revision, "repaired_at": recorded_at, "reason": payload.reason.strip()})
+    repairs.append({"repair_id": str(payload.repair_id), "request_hash": fingerprint, "revision": revision + 1, "recorded_at": recorded_at})
+    data.update(opening=updated, evidence_revision=revision + 1, evidence_history=history, applied_repairs=repairs)
+    row.operation_data = data  # Replace JSON so the ORM records the audit atomically.
+    row.price, row.currency = payload.price, payload.currency
+    db.commit()
+    return {"id": row.id, "status": "updated", "evidence_revision": revision + 1}
 
 
 @router.get("/portfolios/{portfolio_id}/transactions", response_model=PortfolioTransactionsResponse)
@@ -1274,6 +1392,8 @@ def update_portfolio_transaction_currency(
     )
     if row is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
+    if row.type == "opening":
+        raise HTTPException(status_code=409, detail="Use opening evidence repair for this transaction")
     if "currency" in payload.model_fields_set:
         row.currency = payload.currency
     if "fees_currency" in payload.model_fields_set:
@@ -1306,7 +1426,7 @@ async def get_portfolio_analytics(
             SimpleNamespace(
                 ticker=h.symbol,
                 quantity=float(h.shares),
-                avg_buy_price=float(h.cost_basis_per_share),
+                avg_buy_price=h.cost_basis_per_share,
             )
         )
 
@@ -1337,7 +1457,7 @@ async def get_portfolio_analytics(
     # Current equity is available only when every required ledger and mark
     # conversion succeeded; a partial result must not become a return figure.
     final_equity = totals["net_liquidation_value"]
-    if initial_capital > 0 and final_equity is not None and final_equity > 0:
+    if initial_capital > 0 and final_equity is not None and final_equity > 0 and not any(tx.type in {"opening", "deposit", "withdrawal"} for tx in transactions):
         annualized_return = ((final_equity / initial_capital) ** (1 / years) - 1.0) * 100.0
     else:
         annualized_return = None

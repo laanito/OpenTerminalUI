@@ -1,70 +1,64 @@
 # External-agent project context
 
-Current work **v3 unified Portfolio scope, holdings and analysis layout**
-(2026-11-19). The maintainer confirmed #290 works (merged at `437531e`) and
-requested one coherent scope/creation bar, fewer duplicate tables, collapsed
-movements and allocation charts alongside holdings. Carry forward #290's tested
-operations; do not request duplicate acceptance for those unchanged paths.
+Current work **v3 unknown opening basis and auditable evidence repair**
+(2026-11-19), following accepted/merged unified Portfolio layout #291 (`706cd14`).
+Carry forward the maintainer's accepted transactions/layout; do not re-request
+unchanged acceptance or introduce another portfolio selector/global holdings table.
 
-The top bar now owns the only page-level portfolio selector, New portfolio and
-selected-account Portfolio settings. It keeps the full owned-account catalog
-available while viewing one account, so switching does not require returning
-through All owned portfolios. Creation preserves the existing viewing scope;
-settings/mandate/import/export use a captured account dialog. Custom persisted
-benchmarks remain selectable. The old vertical portfolio list, duplicate account
-summary/holdings table and nested tools wrapper are removed.
+Add existing position now offers explicit unknown cost (`basis_status: unknown`,
+null price/currency, optional acquisition date) while retaining required provenance.
+Known zero remains distinct. Nullable ORM values explicitly bind SQL NULL rather
+than firing the legacy zero default. No existing row is backfilled/reinterpreted.
+Current value and cash remain available independently; the existing per-account,
+per-symbol weighted-average pool makes cost/unrealized P&L unavailable while an
+unknown acquisition remains in the pool. Sales from it have unknown realized P&L;
+no sales means realized zero. Closing the pool allows later known current basis,
+without erasing unknown historical realized gains. Native documented lot amounts
+remain inspectable. This is not tax-lot accounting.
 
-Each expanded holding has its original-lot dense table (native cost/currency,
-reporting values, dates/provenance, sale/currency repair, sort/columns/CSV) and
-position research access. One **All movements** table is collapsed by default,
-like Valuation method and coverage, and reads dated/native activity only when
-opened across the selected accounts. Failed account reads hide the whole list;
-late prior-scope results are ignored. Known zero cash deltas stay zero, missing
-accounting stays unavailable. Currency repair remains bound to the owning lot
-or movement, never a separate hidden account selection.
+Opening evidence is accessible from a current lot and its All movements opening
+row, including after full sale. Reviewed repair replaces basis/acquisition/source
+and/or independent entry contribution valuation, with required reason, stable
+repair UUID, expected revision, prior snapshots and result checking/manual retry.
+Owner portfolio locks serialize SQL-only changes. Quantity, observation date,
+cash/fees and movement count never change. Original operation retries cannot undo
+later repairs. Generic currency repair cannot bypass this audit. Basis changes
+are refused for an exact lot merged with later buys, rather than overwriting its
+mixed cost; contribution/provenance-only correction remains supported.
 
-Sector allocation and holdings distribution by current value share space with
-consolidated holdings. They consume complete reporting-currency market values,
-exclude cash and never normalize incomplete known subtotals into full pies.
-Sector data must cover that currency/total; missing sector coverage hides only
-that pie when current holdings values are otherwise complete. Unknown sectors
-stay Unknown. Percentages are value weights, not quantities. Charts are static
-with accessible amount/percentage legends, not a new provider/classifier.
+Missing entry valuation still blocks affected history; correcting it restores
+reconstruction when other inputs are complete, without using fair value as cost.
+Acquisition dates remain Unknown when undocumented, not the observation date.
+Primary report/export consumers preserve nulls; cost-weighted compatibility
+stress/factor methods return explicit unavailable for undocumented cost. Current
+price/symbol-only consumers remain usable. NAV/starting-cash annualization is
+suppressed for opening/deposit/withdrawal flows rather than calling funding gain.
+Research/Notes/Brain identities and CSV buy-import semantics remain unchanged.
 
-Single-account risk/AI/benchmark/correlation/dividend/attribution/events/backtest
-analysis is directly below the collapsed movement/evidence rows and follows the
-same top selector. All-owned scope explicitly requests a single account for
-those methods; no primary account or consolidated historic/risk/AI result is
-inferred. Showing analysis does not auto-run an LLM. Existing held-symbol technical
-scope and late-response protection remain. Missing risk percentages show unavailable
-placeholders rather than false zero percentages.
+Migration **0022_unknown_opening_basis** follows 0021 and relaxes holding unit cost
+and transaction price to nullable. PostgreSQL only drops NOT NULL; SQLite batch
+copies the two unreferenced child tables, retaining rows, FKs, indexes and lot
+uniqueness. Rollback retains nullable evidence; pre-unknown-basis binaries are not
+safe writers once these rows exist. Docker migrates before startup; configured
+local installs must upgrade. No production database was accessed. Existing
+`test_portfolio_operations.py` remains in guarded migrated PostgreSQL CI and now
+covers null storage, repairs/concurrency/owner boundaries. Local validation does
+not claim live PostgreSQL execution.
 
-#290's financial contracts are unchanged: reviewed target/body, stable UUID
-retry/result lookup, atomic holdings/ledger writes and quantity/date checks;
-non-cash openings require documented basis/acquisition provenance with separate
-observation date and independent contribution valuation. Unknown basis and repair
-of missing entry valuations remain open v3.0 gates. Preserve current notes/Brain
-identities; rationale does not silently become a mandate/position thesis/Journal
-entry. CSV import still records buys/debits cash and says so. Migration 0021 from
-#290 remains required; this follow-up adds no backend/API/schema/accounting,
-provider/dependency/version change and touches no production database.
+Validation: full backend **1,969 passed / three PostgreSQL-only skipped**, 77.39%
+coverage; final Portfolio domain suite **182 passed**, including four
+additional edge cases after the full run. All **847 frontend tests / 139 files**,
+production build and **59 installed-Chrome smoke journeys** pass. New browser
+cases cover unknown entry, independent entry valuation, review, same-repair retry,
+lot/movement access and audit inspection at 1440/390px. Current screenshots reviewed.
+SQLite old/zero/NULL/constraint preservation, retaining downgrade/re-upgrade,
+PostgreSQL DDL and disposable full-chain SQLite upgrade pass. API reference,
+surface/mock/compile/whitespace guards pass. Do not monitor CI unless asked.
 
-Validation: all **844 frontend tests / 138 files**, production build and **57
-installed-Chrome smoke journeys** pass. New/refactored tests cover one/owned scope,
-creation without retargeting, direct account switches and selector focus, lazy
-all-movements aggregation/failure/late reads, repair ownership, pie coverage,
-custom benchmark persistence, per-holding lot sale and visible analysis on desktop
-and mobile. Existing research, saved evidence, operations/retry and shell cases
-pass. 1440px/390px screenshots were reviewed. Staged whitespace passes. Backend
-suite was not rerun for this frontend-only slice; PostgreSQL CI/migration contracts
-from #290 remain unchanged. Do not monitor CI unless asked.
-
-Next: explicit unknown-basis receipt accounting and missing entry-valuation repair,
-then complete keyboard/physical zoom/accessibility and Portfolio acceptance review.
-Do not reintroduce a global duplicate holdings table or a second scope selector.
-This does not close v3.0 or start another screen overhaul. v2.8.0 remains published
-until explicit release prep; deployment stays with the host agent. See
-`docs/wiki/Portfolio-Reporting.md` and `docs/design/v3/SCOPE.md`.
+Next: complete populated keyboard/physical zoom/accessibility and Portfolio
+acceptance review before maintainer release approval. This does not close v3.0,
+start another screen overhaul or bump the published v2.8.0. Deployment belongs to
+the host agent. See `docs/wiki/Portfolio-Reporting.md` and `docs/design/v3/SCOPE.md`.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.

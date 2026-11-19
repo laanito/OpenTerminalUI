@@ -107,3 +107,12 @@ def test_documented_opening_basis_is_not_zero_cost_on_a_later_sale():
         _tx('opening', 'AAPL', shares=10, price=100, date='2026-01-01'),
         _tx('sell', 'AAPL', shares=4, price=150, fees=1, date='2026-02-01'),
     ]) == 199
+
+
+def test_unknown_opening_does_not_turn_proceeds_into_profit():
+    opening = _tx('opening', 'AAPL', shares=2, price=None)
+    assert realized_pnl([opening]) == 0
+    sale = _tx('sell', 'AAPL', shares=2, price=150, date='2026-01-02')
+    assert realized_pnl([opening, sale]) is None
+    opening.price = 100  # recovered acquisition evidence
+    assert realized_pnl([opening, sale]) == 100

@@ -12,7 +12,7 @@ from backend.api.deps import get_db
 from backend.auth.deps import get_current_user
 from backend.models import PortfolioDefinition, User
 from backend.risk_engine.scenario_engine import scenario_engine
-from backend.services.legacy_holdings import resolve_user_holdings
+from backend.services.legacy_holdings import require_documented_cost, resolve_user_holdings
 
 router = APIRouter()
 
@@ -52,6 +52,7 @@ def _infer_sector(ticker: str) -> str:
 def _load_holdings(db: Session, portfolio_id: str, user_id: str) -> list[dict[str, Any]]:
     _validate_portfolio_id(db, portfolio_id)
     rows = resolve_user_holdings(db, user_id)
+    require_documented_cost(rows)
     if not rows:
         raise HTTPException(status_code=404, detail="No holdings available")
     holdings: list[dict[str, Any]] = []

@@ -148,7 +148,7 @@ async def consolidate_portfolios(
                              "boundary_date": opening_day, "method": "portfolio_creation_boundary"},
             "accounting": accounting,
         })
-        openings = {tx.lot_id: (getattr(tx, "operation_data", None) or {}).get("opening") for tx in transactions_by_portfolio[portfolio.id] if tx.type == "opening" and getattr(tx, "lot_id", "")}
+        openings = {(tx.symbol, tx.lot_id): tx for tx in transactions_by_portfolio[portfolio.id] if tx.type == "opening" and getattr(tx, "lot_id", "")}
         details = {detail["id"]: detail for detail in accounting["holdings"]}
         for row in rows:
             quote = clean_quotes.get(row.symbol, {})
@@ -167,7 +167,9 @@ async def consolidate_portfolios(
                 "notes": row.notes, "exchange": exchange or None, "quote_unit": unit,
                 "current_price": quote.get("current_price"),
                 "identity_status": "exact_symbol_exchange_unit" if compatible else "unresolved",
-                "accounting": details[row.id], "opening": openings.get(row.lot_id),
+                "accounting": details[row.id],
+                "opening": (openings[(row.symbol, row.lot_id)].operation_data or {}).get("opening") if (row.symbol, row.lot_id) in openings else None,
+                "opening_transaction_id": openings[(row.symbol, row.lot_id)].id if (row.symbol, row.lot_id) in openings else None,
             })
 
     positions = []
