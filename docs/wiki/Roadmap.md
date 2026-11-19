@@ -911,7 +911,7 @@ inputs, independent ledger replay, original lots and per-metric coverage. See th
 [reporting contract](Portfolio-Reporting.md), including its opening-cash date
 assumption and conservative identity grouping. The screen now uses that report
 as its default, with original-lot expansion and a floating one/all selector.
-Reviewed transactions are primary; a secondary modal records documented-basis
+Reviewed transactions are primary; a secondary modal records known/unknown-basis
 non-cash openings with independent contribution valuation. Operations are atomic,
 oversells are rejected and stable IDs support manual retry/result lookup.
 The layout follow-up makes the top bar the single selection/creation/settings
@@ -919,8 +919,12 @@ entry, with original-lot tables per holding and one collapsed All movements tabl
 Sector/current-value allocation share the holdings area and complete reporting-
 currency values. Advanced analysis follows that same selector directly below,
 without a second portfolio list or duplicate holdings table. Unknown-basis
-receipts, missing entry-valuation repair and acceptance (including zoom/accessibility)
-remain within the accepted v3.0 gate. This does
+receipts and audited opening-evidence repair are now implemented: nullable cost,
+independent current value/cash, weighted-pool P&L coverage and repairable entry
+valuation/history without another movement. Repairs remain accessible after full
+sale and retain revision/retry identity. Migration 0022 preserves existing data.
+Final acceptance (including populated keyboard/zoom/accessibility review) remains
+within the accepted v3.0 gate. This does
 not mark the complete Portfolio pilot or v3 release ready. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 

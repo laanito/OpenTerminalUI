@@ -258,7 +258,7 @@ export type PortfolioAccounting = PortfolioAccountingSummary & {
   holdings: Array<{
     id: string;
     symbol: string;
-    cost_basis_native: { amount: number; currency: string | null };
+    cost_basis_native: { amount: number | null; currency: string | null };
     cost_basis_base: number | null;
     cost_basis_method: "ledger_replay" | "holding_record";
     market_value_native: { amount: number | null; currency: string | null };
@@ -269,7 +269,7 @@ export type PortfolioAccounting = PortfolioAccountingSummary & {
     id: string;
     type: string;
     symbol: string;
-    amount_native: { amount: number; currency: string | null };
+    amount_native: { amount: number | null; currency: string | null };
     amount_base: number | null;
     fees_native: { amount: number; currency: string | null };
     fees_base: number | null;
@@ -281,7 +281,7 @@ export type MultiPortfolioHolding = {
   id: string;
   symbol: string;
   shares: number;
-  cost_basis_per_share: number;
+  cost_basis_per_share: number | null;
   cost_basis_currency?: string | null;
   purchase_date: string;
   notes?: string;
@@ -297,13 +297,14 @@ export type MultiPortfolioTransaction = {
   symbol: string;
   type: PortfolioTransactionType;
   shares: number;
-  price: number;
+  price: number | null;
   currency?: string | null;
   date: string;
   fees: number;
   fees_currency?: string | null;
   lot_id?: string;
   notes?: string;
+  operation_data?: { opening?: PortfolioOpeningData | null } | null;
 };
 
 export type MultiPortfolioAnalytics = {
@@ -1066,11 +1067,12 @@ export type PortfolioReportMetric = {
 };
 export type PortfolioReportLot = {
   portfolio_id: string; portfolio_name: string; holding_id: string; lot_id: string;
-  symbol: string; shares: number; purchase_date: string; cost_basis_per_share: number;
+  symbol: string; shares: number; purchase_date: string; cost_basis_per_share: number | null;
   cost_basis_currency: string | null; notes: string; exchange: string | null;
   quote_unit: string | null; current_price: number | null;
   accounting: PortfolioAccounting["holdings"][number];
   opening?: PortfolioOpeningData | null;
+  opening_transaction_id?: string | null;
 };
 export type ConsolidatedPortfolioReport = {
   scope: "all_owned" | "selected"; portfolio_ids: string[]; reporting_currency: string;
@@ -1087,6 +1089,15 @@ export type ConsolidatedPortfolioReport = {
   portfolios: Array<{portfolio_id: string; name: string; portfolio_currency: string; accounting: PortfolioAccounting}>;
 };
 export type PortfolioOpeningData = {
-  acquisition_date: string; provenance: string; contribution_value?: number;
-  contribution_currency?: string;
+  basis_status?: "known" | "unknown";
+  acquisition_date?: string | null; provenance: string; contribution_value?: number | null;
+  contribution_currency?: string | null;
 };
+
+export type PortfolioOpeningEvidence = {
+  transaction_id: string; portfolio_id: string; symbol: string; shares: number; observed_date: string;
+  price: number | null; currency: string | null; opening: PortfolioOpeningData; evidence_revision: number;
+  evidence_history: Array<{ price: number | null; currency: string | null; opening: PortfolioOpeningData; revision: number; repaired_at: string; reason: string }>;
+  applied_repairs: Array<{ repair_id: string; revision: number; recorded_at: string }>;
+};
+export type PortfolioOpeningRepair = { repair_id: string; expected_revision: number; price: number | null; currency: string | null; opening: PortfolioOpeningData; reason: string };

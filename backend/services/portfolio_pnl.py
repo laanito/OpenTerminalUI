@@ -36,30 +36,35 @@ def _sort_key(tx: Any) -> tuple[datetime, datetime]:
     return (d, created)
 
 
-def realized_pnl(transactions: Iterable[Any]) -> float:
+def realized_pnl(transactions: Iterable[Any]) -> float | None:
     """Total realized capital gains across all sells (dividends excluded)."""
     # symbol -> [quantity, average_cost_per_share]
-    positions: dict[str, list[float]] = {}
+    positions: dict[str, list[float | None]] = {}
     realized = 0.0
+    complete = True
 
     for tx in sorted(transactions, key=_sort_key):
         t = (getattr(tx, "type", "") or "").strip().lower()
         symbol = (getattr(tx, "symbol", "") or "").strip().upper()
         shares = float(getattr(tx, "shares", 0.0) or 0.0)
-        price = float(getattr(tx, "price", 0.0) or 0.0)
+        raw_price = getattr(tx, "price", None)
+        price = float(raw_price) if raw_price is not None else None
         fees = float(getattr(tx, "fees", 0.0) or 0.0)
 
         if t in {"buy", "opening"} and shares > 0:
             qty, avg = positions.get(symbol, [0.0, 0.0])
             new_qty = qty + shares
             # Fee-exclusive running average, matching the stored holding basis.
-            avg = (qty * avg + shares * price) / new_qty if new_qty > 0 else 0.0
+            avg = (qty * avg + shares * price) / new_qty if new_qty > 0 and avg is not None and price is not None else None
             positions[symbol] = [new_qty, avg]
         elif t == "sell" and shares > 0:
             qty, avg = positions.get(symbol, [0.0, 0.0])
-            realized += shares * (price - avg) - fees
+            if price is None or avg is None or shares > qty + 1e-7:
+                complete = False
+            else:
+                realized += shares * (price - avg) - fees
             remaining = qty - shares
             # Average cost is unchanged by a sell; drop the lot once flat/short.
             positions[symbol] = [remaining, avg] if remaining > 1e-9 else [0.0, 0.0]
 
-    return realized
+    return realized if complete else None

@@ -713,7 +713,7 @@ class PortfolioHoldingORM(Base):
     portfolio_id: Mapped[str] = mapped_column(String(36), ForeignKey("portfolios.id", ondelete="CASCADE"), index=True)
     symbol: Mapped[str] = mapped_column(String(64), index=True)
     shares: Mapped[float] = mapped_column(Float, default=0.0)
-    cost_basis_per_share: Mapped[float] = mapped_column(Float, default=0.0)
+    cost_basis_per_share: Mapped[float | None] = mapped_column(Float().evaluates_none(), default=0.0, nullable=True)
     cost_basis_currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     purchase_date: Mapped[str] = mapped_column(String(16), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
@@ -729,7 +729,7 @@ class PortfolioTransactionORM(Base):
     symbol: Mapped[str] = mapped_column(String(64), index=True)
     type: Mapped[str] = mapped_column(String(16), index=True)  # buy|sell|dividend
     shares: Mapped[float] = mapped_column(Float, default=0.0)
-    price: Mapped[float] = mapped_column(Float, default=0.0)
+    price: Mapped[float | None] = mapped_column(Float().evaluates_none(), default=0.0, nullable=True)
     currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     date: Mapped[str] = mapped_column(String(16), index=True)
     fees: Mapped[float] = mapped_column(Float, default=0.0)

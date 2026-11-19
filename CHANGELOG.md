@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Unknown opening basis and evidence repair** — existing positions can retain
+  unknown acquisition cost without a zero placeholder. Current value/cash remain
+  usable while affected cost/P&L stays unavailable. Reviewed, revision-checked
+  repairs preserve prior evidence and correct basis or independent entry valuation
+  without another movement, including after full sale. Migration
+  `0022_unknown_opening_basis` permits nullable costs and preserves legacy data.
 - **Unified Portfolio layout** — the top scope bar owns account selection,
   creation and settings. Holdings expand into original-lot tables, with one
   collapsed All movements table for the selected accounts. Sector and current-

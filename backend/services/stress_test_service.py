@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from backend.models import PortfolioDefinition
-from backend.services.legacy_holdings import LegacyHolding, resolve_user_holdings
+from backend.services.legacy_holdings import LegacyHolding, require_documented_cost, resolve_user_holdings
 
 
 @dataclass(frozen=True)
@@ -201,6 +201,7 @@ class StressTestService:
             if portfolio is None:
                 raise LookupError("Portfolio not found")
         holdings = resolve_user_holdings(db, user_id)
+        require_documented_cost(holdings)
         if not holdings:
             raise LookupError("No holdings available")
         return holdings, normalized or "current"

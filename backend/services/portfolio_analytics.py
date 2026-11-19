@@ -370,6 +370,8 @@ class PortfolioAnalyticsService:
             sector = _sector_for(snap, str(h.ticker))
             industry = str(snap.get("industry") or "").strip() or sector
             price = snap.get("current_price")
+            if not isinstance(price, (int, float)) and h.avg_buy_price is None:
+                raise ValueError("Current valuation unavailable; unknown cost cannot replace a market quote")
             current = float(h.quantity) * float(price) if isinstance(price, (int, float)) else float(h.quantity) * float(h.avg_buy_price)
             total += current
             rows.append({"ticker": h.ticker, "sector": sector, "industry": industry, "value": current})

@@ -9,6 +9,7 @@ import { PortfolioManager } from "./PortfolioManager";
 import { PortfolioCreateDialog } from "./PortfolioCreateDialog";
 import { PortfolioSettingsDialog } from "./PortfolioSettingsDialog";
 import { PortfolioCurrencyRepair, type PortfolioRepairTarget } from "./PortfolioCurrencyRepair";
+import { PortfolioOpeningEvidenceDialog, type OpeningEvidenceTarget } from "./PortfolioOpeningEvidenceDialog";
 import { PortfolioAllocation } from "./PortfolioAllocation";
 import { PortfolioMovements } from "./PortfolioMovements";
 import { DenseTable } from "../terminal/DenseTable";
@@ -36,6 +37,7 @@ export function PortfolioWorkspace() {
   const [createOpen, setCreateOpen] = useState(false);
   const [settings, setSettings] = useState<MultiPortfolio | null>(null);
   const [repair, setRepair] = useState<PortfolioRepairTarget | null>(null);
+  const [openingRepair, setOpeningRepair] = useState<OpeningEvidenceTarget | null>(null);
   const [notesSymbol, setNotesSymbol] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const version = useRef(0);
@@ -121,15 +123,16 @@ export function PortfolioWorkspace() {
                   <p className="text-xs text-terminal-muted">Original lots · values and P&amp;L in {report.reporting_currency}; unit costs retain their recorded currencies.</p>
                   <DenseTable id={`portfolio-lots-${position.symbol}-${position.lots[0]?.holding_id}`} rows={position.lots} rowKey={lot => lot.holding_id} rowHeight={44} height={Math.min(320, position.lots.length * 44 + 100)} columns={[
                     { key: "portfolio", title: "Portfolio", width: 140, frozen: true, sortable: true, getValue: lot => lot.portfolio_name },
-                    { key: "actions", title: "Lot actions", width: 150, getValue: () => "", render: lot => <span className="inline-flex gap-1">
+                    { key: "actions", title: "Lot actions", width: 250, getValue: () => "", render: lot => <span className="inline-flex gap-1">
                       <TerminalButton size="sm" aria-label={`Sell ${lot.symbol} in ${lot.portfolio_name}`} onClick={() => setIntent({ portfolioId: lot.portfolio_id, type: "sell", symbol: lot.symbol, shares: lot.shares, price: lot.current_price ?? undefined, currency: lot.quote_unit || undefined, lotId: lot.lot_id })}>Sell</TerminalButton>
-                      {!asCurrencyCode(lot.cost_basis_currency) && <TerminalButton size="sm" aria-label={`Set cost currency for ${lot.symbol} in ${lot.portfolio_name}`} onClick={() => setRepair({ kind: "holding", portfolioId: lot.portfolio_id, portfolioName: lot.portfolio_name, id: lot.holding_id, symbol: lot.symbol })}>Currency</TerminalButton>}
+                      {lot.opening_transaction_id && <TerminalButton size="sm" onClick={() => setOpeningRepair({ portfolioId: lot.portfolio_id, transactionId: lot.opening_transaction_id! })}>Opening evidence</TerminalButton>}
+                      {!lot.opening && !asCurrencyCode(lot.cost_basis_currency) && <TerminalButton size="sm" aria-label={`Set cost currency for ${lot.symbol} in ${lot.portfolio_name}`} onClick={() => setRepair({ kind: "holding", portfolioId: lot.portfolio_id, portfolioName: lot.portfolio_name, id: lot.holding_id, symbol: lot.symbol })}>Currency</TerminalButton>}
                     </span> },
                     { key: "shares", title: "Quantity", width: 100, sortable: true, getValue: lot => lot.shares, render: lot => portfolioQuantity(lot.shares) },
                     { key: "cost", title: "Unit cost (native)", width: 160, sortable: true, getValue: lot => lot.cost_basis_per_share, render: lot => portfolioMoney(lot.cost_basis_per_share, lot.cost_basis_currency) },
                     { key: "costCurrency", title: "Cost currency", width: 110, getValue: lot => lot.cost_basis_currency || "Unknown" },
                     { key: "recorded", title: "Recorded date", width: 110, sortable: true, getValue: lot => lot.purchase_date || "Unknown" },
-                    { key: "acquired", hidden: true, title: "Acquisition date", width: 130, getValue: lot => lot.opening?.acquisition_date || lot.purchase_date || "Unknown" },
+                    { key: "acquired", hidden: true, title: "Acquisition date", width: 130, getValue: lot => lot.opening ? lot.opening.acquisition_date || "Unknown" : lot.purchase_date || "Unknown" },
                     { key: "lot", title: "Lot", width: 150, getValue: lot => lot.lot_id || lot.holding_id },
                     { key: "value", title: `Value (${report.reporting_currency})`, width: 150, sortable: true, getValue: lot => lot.accounting.market_value_base, render: lot => money(lot.accounting.market_value_base) },
                     { key: "basis", title: `Cost (${report.reporting_currency})`, width: 150, sortable: true, getValue: lot => lot.accounting.cost_basis_base, render: lot => money(lot.accounting.cost_basis_base) },
@@ -144,7 +147,7 @@ export function PortfolioWorkspace() {
               </details>)}
               </div><PortfolioAllocation report={report} /></div>
             </section>
-            <PortfolioMovements report={report} onRepair={setRepair} />
+            <PortfolioMovements report={report} onRepair={setRepair} onOpeningRepair={setOpeningRepair} />
             <details className="rounded border border-terminal-border p-3 text-xs text-terminal-muted"><summary className="cursor-pointer">Valuation method and coverage</summary><p className="mt-2">Checked {new Date(report.as_of).toLocaleString()}; a retrieval check, not simultaneous live quotes.</p>{report.assumptions.map(text => <p key={text} className="mt-2">{text}</p>)}{report.portfolios.map(p => <details key={p.portfolio_id} className="mt-3"><summary>{p.name} · base {p.portfolio_currency} · {p.accounting.status}</summary>{p.accounting.issues.map((issue, i) => <p key={i}>{issue.message}</p>)}{p.accounting.degraded_reasons.map(reason => <p key={reason}>{reason}</p>)}</details>)}</details>
           </> : null}
     {report && (scope === "all" ? <TerminalDataState kind="unavailable" title="Single-portfolio analysis">Select one portfolio in the scope bar for risk, AI, benchmark, historical and event analysis.</TerminalDataState>
@@ -152,6 +155,7 @@ export function PortfolioWorkspace() {
         : <TerminalDataState kind={catalogLoading ? "loading" : "unavailable"} title="Portfolio analysis scope">{catalogLoading ? "Reading account details." : "Retry the portfolio list to load this account’s analysis."}</TerminalDataState>)}
     {createOpen && <PortfolioCreateDialog onClose={() => setCreateOpen(false)} onCreated={name => { setStatus(`Created ${name}. Viewing scope is unchanged.`); refresh(); }} />}
     {settings && <PortfolioSettingsDialog portfolio={settings} onClose={() => setSettings(null)} onChanged={refresh} onDeleted={() => { if (scope === settings.id) setScope("all"); refresh(); }} />}
+    {openingRepair && <PortfolioOpeningEvidenceDialog key={`${openingRepair.portfolioId}:${openingRepair.transactionId}`} target={openingRepair} onClose={() => setOpeningRepair(null)} onSaved={refresh} />}
     {repair && <PortfolioCurrencyRepair target={repair} onClose={() => setRepair(null)} onSaved={refresh} />}
     {intent && <PortfolioOperationDialog intent={intent} portfolios={catalog.length ? catalog : members.map(p => ({ id: p.portfolio_id, name: p.name, currency: p.portfolio_currency }))} onClose={() => setIntent(null)} onSaved={refresh} />}
   </div>;

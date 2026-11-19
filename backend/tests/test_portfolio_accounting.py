@@ -333,3 +333,26 @@ async def test_foreign_withdrawal_and_separate_fee_currency_keep_debit_signs() -
     assert result["transactions"][0]["cash_delta_base"] == pytest.approx(-122.8)
     assert result["totals"]["cash_balance"] == pytest.approx(877.2)
     assert result["totals"]["fees"] == pytest.approx(2.8)
+
+
+@pytest.mark.asyncio
+async def test_unknown_acquisition_pools_basis_until_flat_without_hiding_market_or_cash():
+    async def calc(rows, holding):
+        return await calculate_portfolio_accounting(base_currency='USD', starting_cash=1000,
+            holdings=holding, transactions=rows, quotes={'A': {'current_price': 150, 'currency': 'USD'}}, resolve_rate=_resolver({}))
+    rows = [_tx('opening', symbol='A', shares=2, price=None, currency=None),
+            _tx('buy', symbol='A', shares=2, price=100, currency='USD', occurred_on='2026-01-03')]
+    holding = [_holding('A', 2, None, None), _holding('A', 2, 100, 'USD', row_id='h2')]
+    result = await calc(rows, holding)
+    assert result['totals']['total_cost'] is None and result['totals']['realized_pnl'] == 0
+    assert all(row['cost_basis_base'] is None for row in result['holdings'])
+    assert result['holdings'][1]['cost_basis_native']['amount'] == 200
+    assert result['totals']['total_value'] == 600 and result['totals']['cash_balance'] == 800
+    rows.append(_tx('sell', symbol='A', shares=1, price=150, currency='USD', occurred_on='2026-01-04'))
+    assert (await calc(rows, [_holding('A', 3, None, None)]))['totals']['realized_pnl'] is None
+    rows.append(_tx('sell', symbol='A', shares=3, price=150, currency='USD', occurred_on='2026-01-05'))
+    rows.append(_tx('buy', symbol='A', shares=1, price=120, currency='USD', occurred_on='2026-01-06'))
+    result = await calc(rows, [_holding('A', 1, 120, 'USD')])
+    assert result['totals']['total_cost'] == 120 and result['totals']['unrealized_pnl'] == 30
+    assert result['totals']['realized_pnl'] is None  # closed unknown history is not erased
+    assert result['totals']['cash_balance'] == 1280

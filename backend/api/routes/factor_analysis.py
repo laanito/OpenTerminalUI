@@ -12,7 +12,7 @@ from backend.api.routes.chart import _parse_yahoo_chart
 from backend.auth.deps import get_current_user
 from backend.models import PortfolioDefinition, User
 from backend.risk_engine.factor_attribution import FactorAttributionEngine
-from backend.services.legacy_holdings import resolve_user_holdings
+from backend.services.legacy_holdings import require_documented_cost, resolve_user_holdings
 
 router = APIRouter()
 
@@ -42,6 +42,7 @@ def _validate_portfolio_id(db: Session, portfolio_id: str) -> None:
 async def _load_factor_context(db: Session, portfolio_id: str, period: str, user_id: str) -> dict[str, Any]:
     _validate_portfolio_id(db, portfolio_id)
     holdings = resolve_user_holdings(db, user_id)
+    require_documented_cost(holdings)
     if not holdings:
         raise HTTPException(status_code=404, detail="No holdings available")
 

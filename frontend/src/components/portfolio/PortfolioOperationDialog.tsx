@@ -8,7 +8,7 @@ import { TerminalInput } from "../terminal/TerminalInput";
 export const REPORTING_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "INR"];
 export type OperationIntent = { portfolioId: string; type: PortfolioTransactionType; symbol?: string; shares?: number; price?: number; currency?: string; lotId?: string };
 
-function newOperationId(): string {
+export function newOperationId(): string {
   if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
   // getRandomValues also works on self-hosted HTTP origins where randomUUID
   // is unavailable. Keep an RFC 4122 v4 identity rather than a timestamp key.
@@ -36,6 +36,7 @@ export function PortfolioOperationDialog({ intent, portfolios, onClose, onSaved 
   const [feeCurrency, setFeeCurrency] = useState(currency);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
+  const [unknownBasis, setUnknownBasis] = useState(false);
   const [acquisitionDate, setAcquisitionDate] = useState("");
   const [provenance, setProvenance] = useState("");
   const [contribution, setContribution] = useState("");
@@ -60,10 +61,10 @@ export function PortfolioOperationDialog({ intent, portfolios, onClose, onSaved 
         operation.current.target = target;
         operation.current.payload = {
           operation_id: operation.current.id, type, symbol: needsSymbol ? symbol.trim().toUpperCase() : undefined,
-          shares: trade || opening ? Number(shares) : 0, price: Number(price), currency, date,
+          shares: trade || opening ? Number(shares) : 0, price: opening && unknownBasis ? null : Number(price), currency: opening && unknownBasis ? null : currency, date,
           fees: opening ? 0 : Number(fees), fees_currency: feeCurrency, notes,
           lot_id: type === "sell" ? intent.lotId : undefined,
-          opening: opening ? { acquisition_date: acquisitionDate, provenance,
+          opening: opening ? { basis_status: unknownBasis ? "unknown" : "known", acquisition_date: acquisitionDate || null, provenance,
             contribution_value: contribution === "" ? undefined : Number(contribution),
             contribution_currency: contributionCurrency } : undefined,
         };
@@ -105,34 +106,35 @@ export function PortfolioOperationDialog({ intent, portfolios, onClose, onSaved 
     {error && <p role="alert" className="mb-3 text-sm text-terminal-neg">{error}</p>}
     {review ? <section aria-label="Operation review" className="space-y-3 text-sm text-terminal-text">
       <p><strong>{targetName}</strong> · {type === "opening" ? "Existing position" : type} {needsSymbol ? symbol.toUpperCase() : ""}</p>
-      <p>{trade || opening ? `${shares} units × ${price}` : price} {currency}{!opening ? ` · fees ${fees} ${feeCurrency}` : " · cash movement: 0"}</p>
+      <p>{opening && unknownBasis ? `${shares} units · Cost basis unknown; cost/P&L unavailable` : `${trade || opening ? `${shares} units × ${price}` : price} ${currency}`}{!opening ? ` · fees ${fees} ${feeCurrency}` : " · cash movement: 0"}</p>
       <p>{opening ? "Observed in portfolio" : "Operation date"}: {date}</p>
       {trade && <p>{type === "sell" ? intent.lotId ? "Sale targets the selected lot. Cost/P&L uses existing portfolio weighted-average accounting." : "Sale consumes this portfolio’s lots oldest first. Cost/P&L uses weighted-average accounting." : "A buy adds a new lot and debits cash. Fees use their own currency."}</p>}
-      {opening && <><p>Documented acquisition: {acquisitionDate}. Source: {provenance}.</p><p>Contribution at entry: {contribution === "" ? "Unknown; affected historical returns will be unavailable" : `${contribution} ${contributionCurrency}`}. Cost basis is separate.</p></>}
+      {opening && <><p>Documented acquisition: {acquisitionDate || "Unknown"}. Source: {provenance}.</p><p>Contribution at entry: {contribution === "" ? "Unknown; affected historical returns will be unavailable" : `${contribution} ${contributionCurrency}`}. Cost basis is separate.</p></>}
       {notes && <p>Operation rationale: {notes}</p>}
       {attempted && <p className="text-xs text-terminal-muted">Operation {operation.current.id}. Target and submitted details are fixed until the outcome is confirmed.</p>}
     </section> : <form className="space-y-3" onSubmit={event => { event.preventDefault(); setError("");
       if ((needsSymbol && !symbol.trim()) || ((trade || opening) && (!Number.isFinite(Number(shares)) || Number(shares) <= 0))) { setError("Enter a symbol and a positive quantity."); return; }
-      if (!Number.isFinite(Number(price)) || (opening ? Number(price) < 0 : Number(price) <= 0)) { setError("Enter a valid price or amount."); return; }
+      if (!(opening && unknownBasis) && (price === "" || !Number.isFinite(Number(price)) || (opening ? Number(price) < 0 : Number(price) <= 0))) { setError("Enter a valid price or amount."); return; }
       setReview(true); }}>
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         {label("Target portfolio", <TerminalInput as="select" required value={target} onChange={e => setTarget(e.target.value)}><option value="">Choose portfolio</option>{portfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</TerminalInput>)}
         {!opening && label("Operation type", <TerminalInput as="select" value={type} onChange={e => setType(e.target.value as PortfolioTransactionType)}>{["buy", "sell", "deposit", "withdrawal", "dividend"].map(t => <option key={t} value={t}>{t}</option>)}</TerminalInput>)}
         {needsSymbol && label("Symbol", <TerminalInput required value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} />)}
         {(trade || opening) && label("Quantity", <TerminalInput required type="number" step="any" min="0" value={shares} onChange={e => setShares(e.target.value)} />)}
-        {label(opening ? "Documented cost per unit" : trade ? "Unit price" : "Amount", <TerminalInput required type="number" step="any" min="0" value={price} onChange={e => setPrice(e.target.value)} />)}
-        {label(opening ? "Cost currency" : "Price / amount currency", <TerminalInput required as="select" value={currency} onChange={e => setCurrency(e.target.value)}><option value="">Choose currency</option>{REPORTING_CURRENCIES.map(c => <option key={c}>{c}</option>)}</TerminalInput>)}
+        {opening && <label className="flex items-center gap-2 text-sm text-terminal-text"><input type="checkbox" checked={unknownBasis} onChange={e => setUnknownBasis(e.target.checked)} />Cost basis unknown</label>}
+        {!(opening && unknownBasis) && label(opening ? "Documented cost per unit" : trade ? "Unit price" : "Amount", <TerminalInput required type="number" step="any" min="0" value={price} onChange={e => setPrice(e.target.value)} />)}
+        {!(opening && unknownBasis) && label(opening ? "Cost currency" : "Price / amount currency", <TerminalInput required as="select" value={currency} onChange={e => setCurrency(e.target.value)}><option value="">Choose currency</option>{REPORTING_CURRENCIES.map(c => <option key={c}>{c}</option>)}</TerminalInput>)}
         {label(opening ? "Present in portfolio as of" : "Operation date", <TerminalInput required type="date" max={new Date().toISOString().slice(0, 10)} value={date} onChange={e => setDate(e.target.value)} />)}
         {!opening && <>{label("Fees", <TerminalInput required type="number" min="0" step="any" value={fees} onChange={e => setFees(e.target.value)} />)}{label("Fee currency", <TerminalInput required={Number(fees) > 0} as="select" value={feeCurrency} onChange={e => setFeeCurrency(e.target.value)}><option value="">Choose currency</option>{REPORTING_CURRENCIES.map(c => <option key={c}>{c}</option>)}</TerminalInput>)}</>}
         {opening && <>
-          {label("Documented acquisition date", <TerminalInput required type="date" max={date} value={acquisitionDate} onChange={e => setAcquisitionDate(e.target.value)} />)}
+          {label("Documented acquisition date", <TerminalInput required={!unknownBasis} type="date" max={date} value={acquisitionDate} onChange={e => setAcquisitionDate(e.target.value)} />)}
           {label("Acquisition source / provenance", <TerminalInput required value={provenance} onChange={e => setProvenance(e.target.value)} />)}
           {label("Total contribution value at entry (optional)", <TerminalInput type="number" min="0" step="any" value={contribution} onChange={e => setContribution(e.target.value)} />)}
           {label("Contribution currency", <TerminalInput required={contribution !== ""} as="select" value={contributionCurrency} onChange={e => setContributionCurrency(e.target.value)}><option value="">Choose currency</option>{REPORTING_CURRENCIES.map(c => <option key={c}>{c}</option>)}</TerminalInput>)}
         </>}
       </div>
       {label("Operation rationale (optional)", <TerminalInput as="textarea" rows={3} value={notes} onChange={e => setNotes(e.target.value)} />)}
-      {opening && <p className="text-xs text-terminal-muted">Use documented cost and acquisition date. Entry market value is separate; omitting it prevents return calculations across this opening.</p>}
+      {opening && <p className="text-xs text-terminal-muted">Record documented cost or mark it unknown. Entry market value is separate; omitting it prevents return calculations across this opening.</p>}
       <TerminalButton type="submit" variant="accent">Review operation</TerminalButton>
     </form>}
   </TerminalModal>;

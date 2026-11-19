@@ -2,10 +2,9 @@
 
 Status: accepted v3.0 design contract. The HTML study is not a backend implementation.
 Read-only reporting, its default consolidated screen and reviewed operations
-with documented-basis non-cash openings are implemented; see the
-[reporting/operations contract](../../wiki/Portfolio-Reporting.md). Unknown-basis
-receipt accounting and the complete secondary-section/acceptance work remain
-upcoming. Existing ownership, accounting,
+with known/unknown-basis non-cash openings and audited evidence repair are implemented; see the
+[reporting/operations contract](../../wiki/Portfolio-Reporting.md). Unified secondary sections are implemented; the complete acceptance review
+remains upcoming. Existing ownership, accounting,
 dated FX, ledger history and evidence contracts remain authoritative. Discovery
 changes no production schema/data.
 

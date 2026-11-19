@@ -77,8 +77,10 @@ async def reconstruct_portfolio_history(
             if occurred > end:
                 continue
             kind = str(tx.type).lower()
-            shares, price, fees = _finite(tx.shares), _finite(tx.price), _finite(tx.fees)
-            if kind not in {"buy", "sell", "opening", "dividend", "deposit", "withdrawal"} or min(shares, price, fees) < 0:
+            shares, fees = _finite(tx.shares), _finite(tx.fees)
+            # Cost is independent of the opening's contribution valuation.
+            price = None if kind == "opening" and tx.price is None else _finite(tx.price)
+            if kind not in {"buy", "sell", "opening", "dividend", "deposit", "withdrawal"} or min(shares, fees) < 0 or (price is not None and price < 0):
                 return fail("ledger_value_invalid")
             symbol = str(tx.symbol or "").strip().upper()
             if kind in {"buy", "sell", "opening"} and (not symbol or shares <= 0):
