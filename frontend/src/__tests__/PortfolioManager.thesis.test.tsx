@@ -1,374 +1,71 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
 import { PortfolioManager } from "../components/portfolio/PortfolioManager";
 
-const fetchPortfoliosMock = vi.fn();
-const addPortfolioHoldingMock = vi.fn();
-const addPortfolioTransactionMock = vi.fn();
-const fetchPortfolioHoldingsMock = vi.fn();
-const fetchPortfolioTransactionsMock = vi.fn();
-const createPortfolioMock = vi.fn();
-const updatePortfolioMock = vi.fn();
-const updatePortfolioHoldingCurrencyMock = vi.fn();
-const updatePortfolioTransactionCurrenciesMock = vi.fn();
-const fetchAiRiskInsightsMock = vi.fn();
-const fetchPortfolioAnalyticsMock = vi.fn();
-const fetchPortfolioCorrelationMock = vi.fn();
-const fetchPortfolioRiskMetricsMock = vi.fn();
-
-vi.mock("../api/client", () => ({
-  addPortfolioHolding: (...args: unknown[]) => addPortfolioHoldingMock(...args),
-  addPortfolioTransaction: (...args: unknown[]) => addPortfolioTransactionMock(...args),
-  createPortfolio: (...args: unknown[]) => createPortfolioMock(...args),
-  deletePortfolioById: vi.fn(),
-  fetchAiRiskInsights: (...args: unknown[]) => fetchAiRiskInsightsMock(...args),
-  fetchPortfolioAnalyticsV2: (...args: unknown[]) => fetchPortfolioAnalyticsMock(...args),
-  fetchPortfolioBenchmarkOverlay: vi.fn(async () => null),
-  fetchPortfolioCorrelation: (...args: unknown[]) => fetchPortfolioCorrelationMock(...args),
-  fetchPortfolioDividends: vi.fn(async () => null),
-  fetchPortfolioHoldings: (...args: unknown[]) => fetchPortfolioHoldingsMock(...args),
-  fetchPortfolioRiskMetrics: (...args: unknown[]) => fetchPortfolioRiskMetricsMock(...args),
-  fetchPortfolioTransactions: (...args: unknown[]) => fetchPortfolioTransactionsMock(...args),
-  fetchPortfolios: (...args: unknown[]) => fetchPortfoliosMock(...args),
-  updatePortfolioById: (...args: unknown[]) => updatePortfolioMock(...args),
-  updatePortfolioHoldingCurrency: (...args: unknown[]) => updatePortfolioHoldingCurrencyMock(...args),
-  updatePortfolioTransactionCurrencies: (...args: unknown[]) => updatePortfolioTransactionCurrenciesMock(...args),
-}));
-
-vi.mock("../hooks/useDisplayCurrency", () => ({
-  useDisplayCurrency: () => ({
-    formatMoney: (value: number | null | undefined) => String(value ?? "-"),
-    formatCompactMoney: (value: number | null | undefined) => String(value ?? "-"),
-    nativeFor: () => "USD",
-    nativeForInstrument: (currency?: string | null) => currency || "USD",
-  }),
-}));
-
-vi.mock("../components/PortfolioEventsCalendar", () => ({ PortfolioEventsCalendar: () => null }));
-vi.mock("../components/portfolio/RiskMetricsPanel", () => ({ RiskMetricsPanel: () => null }));
+const api = vi.hoisted(() => ({ holdings: vi.fn(), analytics: vi.fn(), risk: vi.fn(), correlation: vi.fn(), dividends: vi.fn(), benchmark: vi.fn() }));
+vi.mock("../api/client", () => ({ fetchPortfolioHoldings: api.holdings, fetchPortfolioAnalyticsV2: api.analytics, fetchPortfolioRiskMetrics: api.risk, fetchPortfolioCorrelation: api.correlation, fetchPortfolioDividends: api.dividends, fetchPortfolioBenchmarkOverlay: api.benchmark }));
+vi.mock("../components/PortfolioEventsCalendar", () => ({ PortfolioEventsCalendar: () => <div>Portfolio events</div> }));
+vi.mock("../components/portfolio/RiskMetricsPanel", () => ({ RiskMetricsPanel: ({ metrics }: any) => <div data-testid="risk">{JSON.stringify(metrics)}</div> }));
+vi.mock("../components/portfolio/PortfolioRiskAssessment", () => ({ PortfolioRiskAssessment: (props: any) => <div data-testid="ai-scope">{JSON.stringify(props)}</div> }));
 vi.mock("../components/portfolio/CorrelationHeatmap", () => ({ CorrelationHeatmap: () => null }));
 vi.mock("../components/portfolio/DividendTracker", () => ({ DividendTracker: () => null }));
 vi.mock("../components/portfolio/BenchmarkOverlayChart", () => ({ BenchmarkOverlayChart: () => null }));
 vi.mock("../components/portfolio/BacktestResults", () => ({ BacktestResults: () => null }));
 vi.mock("../components/portfolio/AttributionPanel", () => ({ AttributionPanel: () => null }));
-vi.mock("recharts", () => ({
-  Line: () => null,
-  LineChart: ({ children }: { children?: unknown }) => <>{children}</>,
-  Pie: () => null,
-  PieChart: ({ children }: { children?: unknown }) => <>{children}</>,
-  ResponsiveContainer: ({ children }: { children?: unknown }) => <>{children}</>,
-  Tooltip: () => null,
-}));
+const core = { id: "p1", name: "Core", currency: "USD", benchmark_symbol: "SPY" };
+const other = { id: "p2", name: "Europe", currency: "EUR", benchmark_symbol: "MSCIWI" };
+beforeEach(() => {
+  vi.resetAllMocks();
+  api.holdings.mockResolvedValue([{ id: "h", symbol: "AAPL", shares: 2 }]);
+  api.analytics.mockResolvedValue({ allocation_by_sector: [{ name: "Technology", value: 100 }], annualized_return: null });
+  api.risk.mockResolvedValue({ sharpe_ratio: .8 }); api.correlation.mockResolvedValue({ matrix: [[1]] });
+  api.dividends.mockResolvedValue(null); api.benchmark.mockResolvedValue(null);
+});
 
-describe("PortfolioManager thesis capture", () => {
-  beforeEach(() => {
-    for (const mock of [
-      fetchPortfoliosMock,
-      addPortfolioHoldingMock,
-      addPortfolioTransactionMock,
-      fetchPortfolioHoldingsMock,
-      fetchPortfolioTransactionsMock,
-      createPortfolioMock,
-      updatePortfolioMock,
-      updatePortfolioHoldingCurrencyMock,
-      updatePortfolioTransactionCurrenciesMock,
-      fetchAiRiskInsightsMock,
-      fetchPortfolioAnalyticsMock,
-      fetchPortfolioCorrelationMock,
-      fetchPortfolioRiskMetricsMock,
-    ]) {
-      mock.mockReset();
-    }
-    fetchPortfoliosMock.mockResolvedValue([
-      {
-        id: "p1",
-        name: "Core",
-        description: "Own durable compounders while margins expand.",
-        benchmark_symbol: "S&P500",
-        currency: "USD",
-      },
-    ]);
-    updatePortfolioMock.mockResolvedValue(undefined);
-    updatePortfolioHoldingCurrencyMock.mockResolvedValue(undefined);
-    updatePortfolioTransactionCurrenciesMock.mockResolvedValue(undefined);
-    addPortfolioHoldingMock.mockResolvedValue(undefined);
-    addPortfolioTransactionMock.mockResolvedValue(undefined);
-    fetchPortfolioHoldingsMock.mockResolvedValue([]);
-    fetchPortfolioTransactionsMock.mockResolvedValue([]);
-    fetchPortfolioAnalyticsMock.mockResolvedValue({
-      total_value: 288,
-      total_cost: 220,
-      cash_balance: 1430,
-      net_liquidation_value: 1718,
-      unrealized_pnl: 68,
-      unrealized_pnl_pct: 30.91,
-      realized_pnl: 0,
-      day_change: 6.24,
-      day_change_pct: 2,
-      dividend_income_ytd: 0,
-      annualized_return: 4,
-      sharpe_ratio: 1.1,
-      max_drawdown: -0.12,
-      allocation_by_sector: [{ name: "Technology", value: 75 }],
-      allocation_by_market: [],
-      top_gainers: [],
-      top_losers: [],
-      accounting: {
-        base_currency: "USD",
-        status: "complete",
-        issues: [],
-        degraded_reasons: [],
-        holdings: [],
-        transactions: [],
-      },
-    });
-    fetchPortfolioCorrelationMock.mockResolvedValue({
-      symbols: ["AAPL", "MSFT"],
-      matrix: [[{ x: "AAPL", y: "MSFT", value: 0.8 }]],
-      rolling: [],
-    });
-    fetchPortfolioRiskMetricsMock.mockResolvedValue({
-      sharpe_ratio: 1.1,
-      sortino_ratio: 1.4,
-      max_drawdown: -0.12,
-      beta: 0.9,
-      alpha: 0.03,
-      information_ratio: 0.4,
-    });
-    fetchAiRiskInsightsMock.mockResolvedValue({
-      engine: "llm",
-      model: "test",
-      summary: "Grounded risk assessment.",
-      sections: [],
-    });
-  });
+it("uses only the page-selected account without another selector, holdings table or creation form", async () => {
+  render(<PortfolioManager portfolio={other} />);
+  await screen.findByTestId("ai-scope");
+  expect(api.holdings).toHaveBeenCalledWith("p2");
+  expect(api.risk).toHaveBeenCalledWith({ benchmark: "MSCIWI", risk_free_rate: .04 }, "p2");
+  expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Add Portfolio|Create portfolio/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Analysis · Europe" })).toBeInTheDocument();
+});
 
-  it("loads and saves the selected portfolio thesis", async () => {
-    render(<PortfolioManager />);
+it("keeps held-symbol and backend exposure inputs available to explicit AI assessment", async () => {
+  render(<PortfolioManager portfolio={core} />);
+  await waitFor(() => expect(screen.getByTestId("ai-scope")).toHaveTextContent('"metricsAvailable":true'));
+  const props = JSON.parse(screen.getByTestId("ai-scope").textContent!);
+  expect(props).toMatchObject({ portfolioId: "p1", holdings: [{ symbol: "AAPL" }], metrics: { risk_metrics: { sharpe_ratio: .8 }, allocation_by_sector: [{ name: "Technology", value: 100 }], correlation: [[1]] } });
+});
 
-    const thesis = await screen.findByRole("textbox", { name: "Portfolio thesis" });
-    expect(thesis).toHaveValue("Own durable compounders while margins expand.");
+it("ignores late analytics for a scope the user has left", async () => {
+  let finishRisk!: (value: unknown) => void;
+  api.risk.mockImplementation((_params, id) => id === "p1" ? new Promise(resolve => { finishRisk = resolve; }) : Promise.resolve({ sharpe_ratio: 2 }));
+  const { rerender } = render(<PortfolioManager portfolio={core} />);
+  await waitFor(() => expect(finishRisk).toBeTypeOf("function"));
+  rerender(<PortfolioManager portfolio={other} />);
+  await waitFor(() => expect(screen.getByTestId("risk")).toHaveTextContent('"sharpe_ratio":2'));
+  await act(async () => finishRisk({ sharpe_ratio: 99 }));
+  expect(screen.getByTestId("risk")).toHaveTextContent('"sharpe_ratio":2');
+  expect(screen.getByTestId("ai-scope")).toHaveTextContent('"portfolioId":"p2"');
+});
 
-    fireEvent.change(thesis, { target: { value: "Reduce exposure if margin leadership breaks." } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+it("hides prior data on a failed account switch and retries the selected account", async () => {
+  const { rerender } = render(<PortfolioManager portfolio={core} />);
+  await screen.findByTestId("ai-scope");
+  api.holdings.mockRejectedValueOnce(new Error("offline"));
+  rerender(<PortfolioManager portfolio={other} />);
+  await screen.findByRole("alert", { name: "Portfolio analysis unavailable" });
+  expect(screen.queryByTestId("ai-scope")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Retry analysis" }));
+  await waitFor(() => expect(screen.getByTestId("ai-scope")).toHaveTextContent('"portfolioId":"p2"'));
+  expect(api.holdings.mock.calls.slice(-2)).toEqual([["p2"], ["p2"]]);
+});
 
-    await waitFor(() =>
-      expect(updatePortfolioMock).toHaveBeenCalledWith("p1", {
-        name: "Core",
-        description: "Reduce exposure if margin leadership breaks.",
-        benchmark_symbol: "S&P500",
-        currency: "USD",
-      }),
-    );
-  });
-
-  it("renders normalized aggregates from the backend accounting contract", async () => {
-    render(<PortfolioManager />);
-
-    expect(await screen.findByText("1718")).toBeInTheDocument();
-    expect(screen.getByText("1430")).toBeInTheDocument();
-    expect(screen.queryByText("Mixed currencies")).not.toBeInTheDocument();
-    expect(screen.queryByText(/Accounting is/)).not.toBeInTheDocument();
-  });
-
-  it("captures a thesis when creating a portfolio", async () => {
-    fetchPortfoliosMock.mockReset();
-    fetchPortfoliosMock.mockResolvedValue([]);
-    createPortfolioMock.mockResolvedValue({ id: "p2", name: "Macro" });
-    render(<PortfolioManager />);
-    await screen.findByRole("status", { name: "No portfolios yet" });
-
-    fireEvent.change(screen.getByRole("textbox", { name: "New portfolio thesis" }), {
-      target: { value: "  Diversify across inflation regimes.  " },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add Portfolio" }));
-
-    await waitFor(() =>
-      expect(createPortfolioMock).toHaveBeenCalledWith(
-        expect.objectContaining({ description: "Diversify across inflation regimes." }),
-      ),
-    );
-  });
-
-  it("uses the reviewed transaction dialog instead of a second holding form", async () => {
-    render(<PortfolioManager />);
-    await screen.findByRole("textbox", { name: "Portfolio thesis" });
-    expect(screen.queryByRole("group", { name: "Add holding" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Record operation" }));
-    const dialog = within(screen.getByRole("dialog", { name: "Record operation" }));
-    fireEvent.change(dialog.getByLabelText("Symbol"), { target: { value: "MSFT" } });
-    fireEvent.change(dialog.getByLabelText("Quantity"), { target: { value: "12" } });
-    fireEvent.change(dialog.getByLabelText("Unit price"), { target: { value: "415.25" } });
-    fireEvent.change(dialog.getByLabelText("Operation date"), { target: { value: "2026-09-05" } });
-    fireEvent.click(dialog.getByRole("button", { name: "Review operation" }));
-    expect(addPortfolioTransactionMock).not.toHaveBeenCalled();
-    fireEvent.click(dialog.getByRole("button", { name: "Confirm operation" }));
-    await waitFor(() => expect(addPortfolioTransactionMock).toHaveBeenCalledWith("p1", expect.objectContaining({
-      type: "buy", symbol: "MSFT", shares: 12, price: 415.25, currency: "USD", date: "2026-09-05", operation_id: expect.any(String),
-    })));
-    expect(addPortfolioHoldingMock).not.toHaveBeenCalled();
-  });
-
-  it("records amount and fee currencies explicitly", async () => {
-    render(<PortfolioManager />);
-    await screen.findByRole("textbox", { name: "Portfolio thesis" });
-    fireEvent.click(screen.getByRole("button", { name: "Record operation" }));
-    const dialog = within(screen.getByRole("dialog", { name: "Record operation" }));
-    fireEvent.change(dialog.getByLabelText("Symbol"), { target: { value: "AAPL" } });
-    fireEvent.change(dialog.getByLabelText("Quantity"), { target: { value: "10" } });
-    fireEvent.change(dialog.getByLabelText("Unit price"), { target: { value: "100" } });
-    fireEvent.change(dialog.getByLabelText("Price / amount currency"), { target: { value: "EUR" } });
-    fireEvent.change(dialog.getByLabelText("Fees"), { target: { value: "2" } });
-    fireEvent.change(dialog.getByLabelText("Fee currency"), { target: { value: "GBP" } });
-    fireEvent.change(dialog.getByLabelText("Operation date"), { target: { value: "2026-09-06" } });
-    fireEvent.click(dialog.getByRole("button", { name: "Review operation" }));
-    fireEvent.click(dialog.getByRole("button", { name: "Confirm operation" }));
-    await waitFor(() => expect(addPortfolioTransactionMock).toHaveBeenCalledWith("p1", expect.objectContaining({
-      type: "buy", symbol: "AAPL", shares: 10, price: 100, currency: "EUR", fees: 2, fees_currency: "GBP", date: "2026-09-06", operation_id: expect.any(String),
-    })));
-  });
-
-  it("lets users repair unknown currencies on legacy holdings and transactions", async () => {
-    fetchPortfolioHoldingsMock.mockResolvedValue([
-      {
-        id: "h-legacy",
-        symbol: "SAP.DE",
-        shares: 2,
-        cost_basis_per_share: 180,
-        cost_basis_currency: null,
-        purchase_date: "2025-01-02",
-        current_price: 190,
-        currency: "EUR",
-      },
-    ]);
-    fetchPortfolioTransactionsMock.mockResolvedValue([
-      {
-        id: "t-legacy",
-        symbol: "SAP.DE",
-        type: "buy",
-        shares: 2,
-        price: 180,
-        currency: null,
-        date: "2025-01-02",
-        fees: 2,
-        fees_currency: null,
-      },
-    ]);
-    render(<PortfolioManager />);
-
-    await screen.findAllByText("SAP.DE");
-    fireEvent.click(screen.getAllByRole("button", { name: "Set currency" })[0]);
-    const holdingDialog = screen.getByRole("dialog", { name: "Repair legacy currency" });
-    const holdingCurrency = within(holdingDialog).getByRole("combobox", { name: "Cost currency" });
-    fireEvent.change(holdingCurrency, { target: { value: "EUR" } });
-    fireEvent.click(within(holdingDialog).getByRole("button", { name: "Save currency" }));
-
-    await waitFor(() => expect(updatePortfolioHoldingCurrencyMock).toHaveBeenCalledWith("p1", "h-legacy", "EUR"));
-
-    fireEvent.click(screen.getAllByRole("button", { name: "Set currency" })[1]);
-    const transactionDialog = screen.getByRole("dialog", { name: "Repair legacy currency" });
-    const transactionCurrency = within(transactionDialog).getByRole("combobox", { name: "Price currency" });
-    fireEvent.change(transactionCurrency, { target: { value: "EUR" } });
-    const feeCurrency = within(transactionDialog).getByRole("combobox", { name: "Fee currency" });
-    fireEvent.change(feeCurrency, { target: { value: "GBP" } });
-    fireEvent.click(within(transactionDialog).getByRole("button", { name: "Save currency" }));
-
-    await waitFor(() => expect(updatePortfolioTransactionCurrenciesMock).toHaveBeenCalledWith("p1", "t-legacy", {
-      currency: "EUR",
-      fees_currency: "GBP",
-    }));
-  });
-
-  it("sends available risk and exposure evidence to the assessment", async () => {
-    render(<PortfolioManager />);
-
-    await screen.findByRole("button", { name: "Generate" });
-    await waitFor(() => expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled());
-    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
-
-    await waitFor(() =>
-      expect(fetchAiRiskInsightsMock).toHaveBeenCalledWith(
-        {
-          risk_metrics: expect.objectContaining({ sharpe_ratio: 1.1, max_drawdown: -0.12 }),
-          allocation_by_sector: [{ name: "Technology", value: 75 }],
-          correlation: [[{ x: "AAPL", y: "MSFT", value: 0.8 }]],
-        },
-        "portfolio",
-        expect.objectContaining({ signal: expect.any(AbortSignal) }),
-      ),
-    );
-  });
-  it("ignores late risk metrics from a previously selected portfolio", async () => {
-    let resolveOld!: (value: unknown) => void;
-    fetchPortfoliosMock.mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]);
-    fetchPortfolioRiskMetricsMock.mockImplementation((_params, id) => id === "p1" ? new Promise((resolve) => { resolveOld = resolve; }) : Promise.resolve({ sharpe_ratio: 2 }));
-    render(<PortfolioManager />);
-    await waitFor(() => expect(fetchPortfolioRiskMetricsMock).toHaveBeenCalledWith(expect.any(Object), "p1"));
-    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled());
-    await act(async () => resolveOld({ sharpe_ratio: -9 }));
-    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
-    await waitFor(() => expect(fetchAiRiskInsightsMock).toHaveBeenCalledWith(expect.objectContaining({ risk_metrics: { sharpe_ratio: 2 } }), "portfolio", expect.any(Object)));
-  });
-  it("clears prior figures on a failed scope switch and retries the selected portfolio", async () => {
-    let rejectOther!: (reason: Error) => void;
-    fetchPortfoliosMock.mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]);
-    fetchPortfolioHoldingsMock.mockImplementation(id => id === "p1" ? Promise.resolve([{ id: "h1", symbol: "AAPL", shares: 1, cost_basis_per_share: 100, cost_basis_currency: "USD", currency: "USD", current_price: 110 }]) : new Promise((_resolve, reject) => { rejectOther = reject; }));
-    render(<PortfolioManager />);
-    await screen.findAllByText("AAPL");
-    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
-    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("Other");
-    expect(screen.queryByRole("region", { name: "Selected portfolio details" })).not.toBeInTheDocument();
-    expect(screen.getByRole("status", { name: "Loading portfolio" })).toBeVisible();
-    await waitFor(() => expect(rejectOther).toBeTypeOf("function"));
-    await act(async () => rejectOther(new Error("Holdings feed unavailable")));
-    expect(screen.getByRole("alert", { name: "Portfolio unavailable" })).toHaveTextContent("No previous figures are shown");
-    expect(screen.queryByText("Net Liquidation")).not.toBeInTheDocument();
-    expect(screen.queryByRole("status", { name: "No holdings in this portfolio" })).not.toBeInTheDocument();
-    fetchPortfolioHoldingsMock.mockResolvedValue([]);
-    fireEvent.click(screen.getByRole("button", { name: "Retry portfolio load" }));
-    await screen.findByRole("region", { name: "Selected portfolio details" });
-    expect(fetchPortfolioHoldingsMock).toHaveBeenLastCalledWith("p2");
-    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("EUR");
-    expect(screen.getByRole("status", { name: "No holdings in this portfolio" })).toBeVisible();
-  });
-
-  it("ignores late holdings from an abandoned scope", async () => {
-    let resolveOther!: (value: unknown[]) => void;
-    fetchPortfoliosMock.mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]);
-    fetchPortfolioHoldingsMock.mockImplementation(id => id === "p2" ? new Promise(resolve => { resolveOther = resolve; }) : Promise.resolve([{ id: "h1", symbol: "AAPL", shares: 1, current_price: 100, cost_basis_per_share: 90, cost_basis_currency: "USD", currency: "USD" }]));
-    render(<PortfolioManager />);
-    await screen.findByRole("region", { name: "Selected portfolio details" });
-    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
-    await waitFor(() => expect(resolveOther).toBeTypeOf("function"));
-    fireEvent.click(screen.getByRole("button", { name: /^Core/ }));
-    await screen.findByRole("region", { name: "Selected portfolio details" });
-    await act(async () => resolveOther([{ id: "late", symbol: "STALE-SYMBOL", shares: 2, current_price: 100 }]));
-    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("Core");
-    expect(screen.queryByText("STALE-SYMBOL")).not.toBeInTheDocument();
-    expect(screen.getAllByText("AAPL").length).toBeGreaterThan(0);
-  });
-
-  it("distinguishes an unavailable list from an authoritative empty list", async () => {
-    fetchPortfoliosMock.mockRejectedValue(new Error("List unavailable"));
-    render(<PortfolioManager />);
-    await screen.findByRole("alert", { name: "Portfolio unavailable" });
-    expect(screen.queryByRole("status", { name: "No portfolios yet" })).not.toBeInTheDocument();
-    fetchPortfoliosMock.mockResolvedValue([]);
-    fireEvent.click(screen.getByRole("button", { name: "Retry portfolio load" }));
-    await screen.findByRole("status", { name: "No portfolios yet" });
-    expect(screen.queryByRole("region", { name: "Selected portfolio details" })).not.toBeInTheDocument();
-  });
-
-  it("does not silently substitute a different portfolio when the requested scope disappears", async () => {
-    fetchPortfoliosMock.mockResolvedValueOnce([{ id: "p1", name: "Core", currency: "USD" }, { id: "p2", name: "Other", currency: "EUR" }]).mockResolvedValue([{ id: "p1", name: "Core", currency: "USD" }]);
-    render(<PortfolioManager />);
-    await screen.findByRole("region", { name: "Selected portfolio details" });
-    fireEvent.click(screen.getByRole("button", { name: /^Other/ }));
-    expect(await screen.findByRole("alert", { name: "Portfolio unavailable" })).toHaveTextContent("no longer available");
-    expect(fetchPortfolioHoldingsMock).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("region", { name: "Portfolio scope" })).toHaveTextContent("Unavailable portfolio");
-  });
-
+it("retains manual AI technical context when optional risk providers fail", async () => {
+  api.risk.mockRejectedValue(new Error("unavailable"));
+  render(<PortfolioManager portfolio={core} />);
+  await waitFor(() => expect(screen.getByTestId("ai-scope")).toHaveTextContent('"metricsAvailable":false'));
+  expect(screen.getByTestId("ai-scope")).toHaveTextContent('"symbol":"AAPL"');
 });

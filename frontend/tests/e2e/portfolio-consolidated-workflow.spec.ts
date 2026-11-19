@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { portfolioReportFixture } from "./portfolio-fixtures";
+import { portfolioReportFixture, portfolioCatalog } from "./portfolio-fixtures";
 
 for (const width of [1440, 390]) {
   test(`@smoke consolidated holdings, scope currency, lot sale and safe retry at ${width}px`, async ({ page }, testInfo) => {
@@ -8,6 +8,8 @@ for (const width of [1440, 390]) {
     const reports: string[] = [], writes: Record<string, any>[] = [];
     await page.route("**/api/**", async route => {
       const url = new URL(route.request().url());
+      if (url.pathname === "/api/portfolios") return route.fulfill({ json: { items: portfolioCatalog } });
+      if (url.pathname.includes("/analytics/") || url.pathname.endsWith("/attribution")) return route.fulfill({ status: 503, json: { detail: "Optional analytics unavailable in this fixture" } });
       if (url.pathname === "/api/portfolios/report") {
         reports.push(url.search);
         return route.fulfill({ json: portfolioReportFixture(url.searchParams.get("portfolio_id") || "all", url.searchParams.get("reporting_currency") || "USD") });
@@ -29,7 +31,7 @@ for (const width of [1440, 390]) {
     await expect(page.getByRole("group", { name: "Add holding", exact: true })).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath("consolidated-positions.png"), fullPage: true });
     await holdings.locator("summary").click();
-    await expect(page.getByRole("region", { name: "AAPL lot in Core" })).toContainText("lot-p1");
+    await expect(page.getByRole("region", { name: "AAPL lots", exact: true })).toContainText("lot-p1");
     await page.getByRole("button", { name: "Sell AAPL in Europe" }).click();
     const dialog = page.getByRole("dialog", { name: "Record operation", exact: true });
     await expect(dialog.getByLabel("Target portfolio")).toHaveValue("p2");
@@ -63,6 +65,8 @@ for (const width of [1440, 390]) {
     const writes: Record<string, any>[] = [];
     await page.route("**/api/**", async route => {
       const url = new URL(route.request().url());
+      if (url.pathname === "/api/portfolios") return route.fulfill({ json: { items: portfolioCatalog } });
+      if (url.pathname.includes("/analytics/") || url.pathname.endsWith("/attribution")) return route.fulfill({ status: 503, json: { detail: "Optional analytics unavailable in this fixture" } });
       if (url.pathname === "/api/portfolios/report") return route.fulfill({ json: portfolioReportFixture() });
       if (url.pathname.endsWith("/transactions") && route.request().method() === "POST") { writes.push(route.request().postDataJSON()); return route.fulfill({ json: { id: writes[0].operation_id, status: "created" } }); }
       return route.fulfill({ json: { items: [], results: [] } });
@@ -95,6 +99,8 @@ for (const width of [1440, 390]) {
     let failed = true, savedId = "", writes = 0;
     await page.route("**/api/**", async route => {
       const url = new URL(route.request().url());
+      if (url.pathname === "/api/portfolios") return route.fulfill({ json: { items: portfolioCatalog } });
+      if (url.pathname.includes("/analytics/") || url.pathname.endsWith("/attribution")) return route.fulfill({ status: 503, json: { detail: "Optional analytics unavailable in this fixture" } });
       if (url.pathname === "/api/portfolios/report") {
         const currency = url.searchParams.get("reporting_currency") || "USD";
         if (currency === "EUR" && failed) return route.fulfill({ status: 503, json: { detail: "unavailable" } });
@@ -136,6 +142,7 @@ for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     let writes = 0;
     await page.route("**/api/**", async route => {
+      if (new URL(route.request().url()).pathname === "/api/portfolios") return route.fulfill({ json: { items: portfolioCatalog } });
       if (new URL(route.request().url()).pathname === "/api/portfolios/report") {
         const report = portfolioReportFixture("p1");
         report.positions[0].symbol = "VOD.L"; report.positions[0].quote_unit = "GBp";

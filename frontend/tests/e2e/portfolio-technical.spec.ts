@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { portfolioReportFixture } from "./portfolio-fixtures";
 import { portfolioInsight } from "../../src/__tests__/fixtures/portfolioTechnicalContext";
 
 for (const width of [1440, 390]) {
@@ -24,14 +25,14 @@ for (const width of [1440, 390]) {
           { type: "start", model_profile: result.model_profile, deadlines: { operation_seconds: 300 } }, { type: "result", result },
         ].map((event) => JSON.stringify(event)).join("\n") + "\n" }); return;
       }
+      if (path === "/api/portfolios/report") { const url = new URL(route.request().url()); data = portfolioReportFixture(url.searchParams.get("portfolio_id") || "all", url.searchParams.get("reporting_currency") || "USD"); }
       if (path === "/api/portfolios") data = { items: portfolios };
       if (/\/portfolios\/p[12]\/holdings$/.test(path)) data = { items: path.includes("/p1/") ? holdings : [holdings[2]] };
       if (/\/portfolios\/p[12]\/analytics$/.test(path)) data = { allocation_by_sector: [], total_value: 1000 };
       if (path.endsWith("/analytics/risk-metrics")) data = { sharpe_ratio: .8, max_drawdown: -.1 };
       await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
     });
-    await page.goto("/equity/portfolio");
-    await page.getByText("Manage portfolios, activity, research and analytics", { exact: true }).click();
+    await page.goto("/equity/portfolio?portfolio=p1&reporting_currency=USD");
     const scope = page.getByRole("group", { name: "Optional holding technical context · up to 3 symbols" });
     await expect(scope).toBeEnabled();
     const card = page.getByText("AI Risk Assessment", { exact: true }).locator("xpath=ancestor::section[1]");
@@ -57,7 +58,8 @@ for (const width of [1440, 390]) {
     await expect(evidence).toContainText("Selected holdings · 2 of 4 held symbols · available");
     await scope.getByRole("button", { name: "BTC-USD", exact: true }).click();
     await expect(evidence).toHaveCount(0); expect(calls).toBe(4);
-    await page.getByRole("button", { name: /^Other/ }).click();
+    await page.getByText("Choose portfolio scope", { exact: true }).click();
+    await page.getByRole("button", { name: "Other", exact: true }).click();
     await expect(scope).toContainText("0 of 1 held symbols selected");
     await expect(scope.getByRole("button", { name: "AAPL", exact: true })).toHaveCount(0);
     await expect(card.getByRole("button", { name: "Generate", exact: true })).toBeDisabled();

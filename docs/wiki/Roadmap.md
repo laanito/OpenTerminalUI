@@ -914,8 +914,13 @@ as its default, with original-lot expansion and a floating one/all selector.
 Reviewed transactions are primary; a secondary modal records documented-basis
 non-cash openings with independent contribution valuation. Operations are atomic,
 oversells are rejected and stable IDs support manual retry/result lookup.
-Unknown-basis receipts, fuller secondary-section organization and acceptance
-(including zoom/accessibility) remain within the accepted v3.0 gate. This does
+The layout follow-up makes the top bar the single selection/creation/settings
+entry, with original-lot tables per holding and one collapsed All movements table.
+Sector/current-value allocation share the holdings area and complete reporting-
+currency values. Advanced analysis follows that same selector directly below,
+without a second portfolio list or duplicate holdings table. Unknown-basis
+receipts, missing entry-valuation repair and acceptance (including zoom/accessibility)
+remain within the accepted v3.0 gate. This does
 not mark the complete Portfolio pilot or v3 release ready. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
