@@ -131,7 +131,8 @@ export function PortfolioMiniChart({
           }
         }}
         onMouseMove={(event) => {
-          const rect = event.currentTarget.getBoundingClientRect();
+          // Plot bounds exclude the readable value axis and frame padding.
+          const rect = event.currentTarget.querySelector("svg")!.getBoundingClientRect();
           setActiveIndex(getNearestPointIndex(geometry.points, event.clientX, rect.left, rect.width));
         }}
       >

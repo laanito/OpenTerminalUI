@@ -882,10 +882,16 @@
 }
 
 .ot-home-widget-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   border: 1px solid var(--ot-color-home-widget-border);
   background: var(--ot-color-home-widget-surface);
   border-radius: var(--ot-radius-md);
   padding: var(--ot-space-3);
+}
+
+.ot-home-widget-card-header > div {
+  min-width: 0;
 }
 
 .ot-home-widget-card-header {
@@ -899,9 +905,9 @@
   margin: 0;
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
@@ -934,6 +940,8 @@
 }
 
 .ot-home-widget-delta {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   display: inline-flex;
   align-items: center;
   min-height: 24px;
@@ -946,7 +954,7 @@
   font-family: var(--ot-font-data);
   font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  line-height: 1;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 
@@ -971,6 +979,14 @@
   margin-top: var(--ot-space-3);
 }
 
+.ot-home-widget-card-sparkline .ot-home-widget-sparkline-svg {
+  height: 64px;
+}
+
+.ot-home-widget-card-sparkline path {
+  vector-effect: non-scaling-stroke;
+}
+
 .ot-home-widget-card-body,
 .ot-home-widget-card-footer {
   margin-top: var(--ot-space-3);
@@ -990,9 +1006,9 @@
 .ot-home-widget-metric-detail-label {
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
@@ -1077,21 +1093,20 @@
 }
 
 .ot-home-widget-strip {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: thin;
 }
 
 .ot-home-widget-strip-chip {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  flex: 0 0 auto;
-  min-width: 152px;
-  min-height: 34px;
-  padding: 0 var(--ot-space-3);
+  gap: 4px 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--ot-space-2) var(--ot-space-3);
   border: 1px solid var(--ot-color-home-widget-border);
   border-radius: var(--ot-radius-sm);
   background: var(--ot-color-home-widget-surface);
@@ -1133,11 +1148,13 @@ button.ot-home-widget-strip-chip:hover {
 }
 
 .ot-home-widget-strip-label {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
   color: var(--ot-color-text-secondary);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
@@ -1177,18 +1194,21 @@ button.ot-home-widget-strip-chip:hover {
   margin: 0;
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-semibold);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
 .ot-home-widget-nav-grid {
   display: grid;
+  grid-template-columns: repeat(var(--ot-home-nav-columns, 4), minmax(0, 1fr));
   gap: 10px;
 }
 
 .ot-home-widget-nav-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: grid;
   align-content: start;
   gap: 6px;
@@ -1236,7 +1256,7 @@ button.ot-home-widget-strip-chip:hover {
 .ot-home-widget-nav-description {
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-xs);
+  font-size: var(--ot-type-size-sm);
   line-height: var(--ot-line-height-ui);
 }
 
@@ -1253,9 +1273,9 @@ button.ot-home-widget-strip-chip:hover {
   background: var(--ot-color-canvas-elevated);
   color: var(--ot-color-accent-primary);
   font-family: var(--ot-font-data);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
 }
 
 .ot-home-widget-status-bar {
@@ -1275,17 +1295,20 @@ button.ot-home-widget-strip-chip:hover {
 }
 
 .ot-home-widget-status-item {
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 28px;
-  padding: 0 10px;
+  padding: 4px 10px;
   border: 1px solid var(--ot-color-home-widget-border);
   border-radius: 999px;
   background: var(--ot-color-canvas-elevated);
 }
 
 .ot-home-widget-status-copy {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1295,20 +1318,21 @@ button.ot-home-widget-strip-chip:hover {
 .ot-home-widget-status-label {
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
 .ot-home-widget-status-value {
   color: var(--ot-color-text-primary);
   font-family: var(--ot-font-data);
-  font-size: var(--ot-type-size-xs);
+  font-size: var(--ot-type-size-sm);
   font-variant-numeric: tabular-nums;
 }
 
 .ot-home-widget-status-dot {
+  flex-shrink: 0;
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -1347,7 +1371,10 @@ button.ot-home-widget-strip-chip:hover {
 .ot-home-widget-chart-frame {
   position: relative;
   min-height: 196px;
-  padding-left: 42px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px;
+  padding: 12px 8px;
   border: 1px solid var(--ot-color-home-widget-border);
   border-radius: var(--ot-radius-md);
   background: var(--ot-color-home-widget-surface);
@@ -1362,16 +1389,14 @@ button.ot-home-widget-strip-chip:hover {
   display: flex;
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
 .ot-home-widget-chart-axis-y {
-  position: absolute;
-  inset: var(--ot-space-3) auto var(--ot-space-3) 0;
-  width: 36px;
+  white-space: nowrap;
   flex-direction: column;
   justify-content: space-between;
 }
@@ -1383,7 +1408,7 @@ button.ot-home-widget-strip-chip:hover {
 .ot-home-widget-chart-svg {
   display: block;
   width: 100%;
-  height: auto;
+  height: 220px;
   min-height: 196px;
 }
 
@@ -1457,16 +1482,16 @@ button.ot-home-widget-strip-chip:hover {
 .ot-home-widget-clock-label {
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-medium);
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
   text-transform: uppercase;
 }
 
 .ot-home-widget-clock-value {
   color: var(--ot-color-text-primary);
   font-family: var(--ot-font-data);
-  font-size: var(--ot-type-size-xs);
+  font-size: var(--ot-type-size-sm);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1507,16 +1532,16 @@ button.ot-home-widget-strip-chip:hover {
 .ot-home-widget-ring-label {
   color: var(--ot-color-text-primary);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-xs);
+  font-size: var(--ot-type-size-sm);
   font-weight: var(--ot-font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: normal;
 }
 
 .ot-home-widget-ring-summary {
   color: var(--ot-color-text-muted);
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-xs);
+  font-size: var(--ot-type-size-sm);
   line-height: var(--ot-line-height-ui);
 }
 
@@ -2272,5 +2297,41 @@ button.ot-home-widget-strip-chip:hover {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Home has independent columns: secondary panels cannot reserve blank rows
+   between the primary portfolio, history and exposure work. */
+.ot-home-overview {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ot-home-desk-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.ot-home-dashboard {
+  overflow-wrap: anywhere;
+}
+
+.ot-home-dashboard .ot-home-widget-metric-details {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
+}
+
+@media (min-width: 1280px) {
+  .ot-home-overview {
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+  .ot-home-widget-nav-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

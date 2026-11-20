@@ -8,8 +8,22 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Equity layout and shared label readability** (2026-11-20),
-after maintainer-confirmed merged #293 (`dc030e1`). **Scope correction: v3 is the
+Current work **v3 Home hierarchy and readable dashboard labels** (2026-11-20),
+after maintainer-confirmed merged #295. Equity #294 is accepted and is the layout
+reference. Home now places portfolio value/history before the small desk metrics,
+with independent market-outlook/status/news context; desk details/clocks and long
+valuation methodology use native disclosures. The market strip wraps, Launch
+Matrix reflows with matching keyboard row movement, and long sector/source names
+remain readable. History axes fit their values and hover uses actual plot bounds.
+No provider, model, accounting, schema or dependency change. Home, shared widget,
+dashboard and AI labels use at least 12px; keep other page reviews open.
+See `docs/design/v3/HOME_REVIEW.md` for evidence and validation.
+Home verification: 854 frontend tests / 141 files and build pass; 73 full smoke
+journeys pass, then six Home checks pass after the final preview adjustment and
+the additional native Home 200% zoom check passes separately. Synthetic screenshot
+evidence is in the review. No backend rerun for this frontend-only slice.
+
+Completed Equity slice and standing scope correction: **v3 is the
 frontend overhaul, not a Portfolio-only release.** The maintainer reported Equity
 context pushing the chart below the fold, unreadable indicator management and
 unreadable name labels generally. This supersedes earlier instructions that put
@@ -67,7 +81,8 @@ boundaries, no invented cash/profit, and migration 0022 retaining old/unknown da
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
 Next: continue populated retained-page hierarchy/readability reviews, prioritizing
-Home/Market/Security, comparison/Brain/Notes/Journal, News and Workstation/Screener.
+Market/Security beyond accepted Stock Detail/Home, comparison/Brain/Notes/Journal,
+News and Workstation/Screener.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend

@@ -126,16 +126,16 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
       : "LLM unavailable";
 
   return (
-    <section className="rounded border border-terminal-border bg-terminal-panel p-3">
+    <section className="min-w-0 break-words rounded border border-terminal-border bg-terminal-panel p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="text-sm font-semibold">{title}</div>
-          {description && <div className="text-[11px] text-terminal-muted">{description}</div>}
+          {description && <div className="text-xs text-terminal-muted">{description}</div>}
         </div>
         <div className="flex items-center gap-2">
           {status === "done" && (
             <span
-              className="rounded border px-1.5 py-0.5 text-[10px] font-semibold"
+              className="rounded border px-1.5 py-0.5 text-xs font-semibold"
               style={{
                 borderColor: engineLive ? terminalColors.accent : terminalColors.border,
                 color: engineLive ? terminalColors.accent : terminalColors.muted,
@@ -145,7 +145,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
             </span>
           )}
           <button
-            className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-text hover:border-terminal-accent disabled:opacity-50"
+            className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-text hover:border-terminal-accent disabled:opacity-50"
             onClick={status === "loading" ? cancel : run}
             disabled={disabled && status !== "loading"}
           >
@@ -155,14 +155,14 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
       </div>
 
       {(data?.model_profile ?? modelProfile) && (
-        <p className="mt-2 text-[11px] text-terminal-muted">
+        <p className="mt-2 text-xs text-terminal-muted">
           {(data?.model_profile ?? modelProfile)?.resolved_profile === "deep" ? "Deep profile" : "Default profile (Deep not configured)"}
           {" · "}{(data?.model_profile ?? modelProfile)?.model}
         </p>
       )}
 
       {status === "idle" && (
-        <div className="mt-2 text-[11px] text-terminal-muted">
+        <div className="mt-2 text-xs text-terminal-muted">
           {disabled
             ? disabledMessage ?? "Required terminal data is not available yet."
             : "Uses your configured LLM endpoint — analysis can take a minute."}
@@ -171,7 +171,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
 
       {status === "loading" && (
         <div className="mt-3 space-y-2">
-          <div className="text-[11px] text-terminal-muted" aria-live="polite">
+          <div className="text-xs text-terminal-muted" aria-live="polite">
             {progress?.phase === "queued" ? "Preparing analysis…" : "Generating analysis with the configured model…"}
             {progress?.elapsed ? ` ${Math.round(progress.elapsed)}s` : ""}
             {progress?.receivedCharacters
@@ -204,7 +204,7 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
           {data.sections.map((section, idx) => (
             <div key={`${section.title}-${idx}`}>
               <div
-                className="mb-1 text-[11px] font-semibold uppercase tracking-wide"
+                className="mb-1 text-xs font-semibold uppercase tracking-normal"
                 style={{ color: toneColor(section.tone) }}
               >
                 {format(section.title)}
@@ -220,12 +220,12 @@ export function AiInsightCard({ title, description, disabled = false, disabledMe
             </div>
           ))}
           {data.engine !== "llm" && !data.sections.length && (
-            <div className="text-[11px] text-terminal-muted">
+            <div className="text-xs text-terminal-muted">
               {unavailableMessage(data)}
             </div>
           )}
           {data.note_count !== undefined && (
-            <div className="text-[10px] text-terminal-muted">
+            <div className="text-xs text-terminal-muted">
               {data.note_count > 0
                 ? `Grounded in ${data.note_count} of your note${data.note_count === 1 ? "" : "s"} on this ticker`
                 : "No notes recorded on this ticker yet — add your thesis to ground the interrogation"}
