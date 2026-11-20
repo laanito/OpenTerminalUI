@@ -9,6 +9,8 @@ export type TerminalTabItem = {
 };
 
 type Props = {
+  ariaLabel?: string;
+  panelId?: string;
   items?: TerminalTabItem[];
   tabs?: TerminalTabItem[];
   value?: string;
@@ -32,6 +34,8 @@ function moveToEnabled(items: TerminalTabItem[], activeIndex: number, direction:
 }
 
 export function TerminalTabs({
+  ariaLabel,
+  panelId,
   items,
   tabs,
   value,
@@ -51,6 +55,7 @@ export function TerminalTabs({
   return (
     <div
       role="tablist"
+      aria-label={ariaLabel}
       aria-orientation="horizontal"
       aria-busy={loading || undefined}
       className={`inline-flex flex-wrap items-center gap-1 rounded-sm border border-terminal-border bg-terminal-panel p-1 ${fullWidth ? "w-full" : ""} ${className}`.trim()}
@@ -72,7 +77,10 @@ export function TerminalTabs({
           }
         }
         const next = actualItems[nextIndex];
-        if (next && !next.disabled) onChange(next.id);
+        if (next && !next.disabled) {
+          event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
+          onChange(next.id);
+        }
       }}
     >
       {actualItems.map((item) => {
@@ -83,7 +91,7 @@ export function TerminalTabs({
             id={`${baseId}-tab-${item.id}`}
             role="tab"
             aria-selected={active}
-            aria-controls={`${baseId}-panel-${item.id}`}
+            aria-controls={panelId ?? `${baseId}-panel-${item.id}`}
             tabIndex={active ? 0 : -1}
             disabled={item.disabled || loading}
             className={[

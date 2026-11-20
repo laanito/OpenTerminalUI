@@ -22,7 +22,7 @@ export function SentimentBadge({ score = 0, label, confidence }: Props) {
       : "border-slate-500/50 bg-slate-500/15 text-slate-300";
 
   return (
-    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold ${color}`}>
+    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-semibold ${color}`}>
       {resolvedLabel} {Number.isFinite(resolvedConfidence) ? resolvedConfidence.toFixed(2) : Math.abs(resolvedScore).toFixed(2)}
     </span>
   );

@@ -58,13 +58,13 @@ export function CatalystConvictionPanel({
   const catalysts = (data?.upcoming_catalysts || data?.catalysts || []).slice(0, 5);
 
   return (
-    <div className="rounded-sm border border-terminal-border bg-terminal-bg/70 p-3">
+    <div className="min-w-0 break-words rounded-sm border border-terminal-border bg-terminal-bg/70 p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">AI Catalyst Conviction</h3>
+          <h3 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">AI Catalyst Conviction</h3>
           <p className="mt-1 text-xs text-terminal-muted">{symbol} / {market || data?.market || "GLOBAL"} stock-picking catalyst score.</p>
         </div>
-        <span className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${
+        <span className={`rounded-sm border px-2 py-0.5 text-xs uppercase tracking-normal ${
           String(label).toLowerCase().includes("bear")
             ? "border-terminal-neg/50 text-terminal-neg"
             : String(label).toLowerCase().includes("bull")
@@ -90,10 +90,10 @@ export function CatalystConvictionPanel({
           actions={onOpenScreener ? [{ label: "Open Screener", onClick: onOpenScreener }] : []}
         />
       ) : (
-        <div className="grid gap-3 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="grid min-w-0 gap-3">
           <div className="space-y-3">
             <div>
-              <div className="mb-1 flex justify-between text-[11px] text-terminal-muted">
+              <div className="mb-1 flex justify-between text-xs text-terminal-muted">
                 <span>Bullish</span>
                 <span>{bullish == null ? "--" : `${bullish.toFixed(0)}%`}</span>
               </div>
@@ -102,7 +102,7 @@ export function CatalystConvictionPanel({
               </div>
             </div>
             <div>
-              <div className="mb-1 flex justify-between text-[11px] text-terminal-muted">
+              <div className="mb-1 flex justify-between text-xs text-terminal-muted">
                 <span>Bearish</span>
                 <span>{bearish == null ? "--" : `${bearish.toFixed(0)}%`}</span>
               </div>
@@ -118,11 +118,11 @@ export function CatalystConvictionPanel({
               catalysts.map((catalyst, index) => (
                 <div key={`${catalyst.title || "catalyst"}-${index}`} className="rounded-sm border border-terminal-border bg-terminal-panel/70 px-2 py-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] uppercase text-terminal-accent">{formatDate(catalyst.date || catalyst.expected_date)}</span>
-                    {catalyst.impact ? <span className="text-[11px] uppercase text-terminal-muted">{catalyst.impact}</span> : null}
+                    <span className="text-xs uppercase text-terminal-accent">{formatDate(catalyst.date || catalyst.expected_date)}</span>
+                    {catalyst.impact ? <span className="text-xs uppercase text-terminal-muted">{catalyst.impact}</span> : null}
                   </div>
                   <div className="mt-1 text-sm text-terminal-text">{catalyst.title || catalyst.description || "Upcoming catalyst"}</div>
-                  {catalyst.source ? <div className="mt-1 text-[11px] text-terminal-muted">{catalyst.source}</div> : null}
+                  {catalyst.source ? <div className="mt-1 text-xs text-terminal-muted">{catalyst.source}</div> : null}
                 </div>
               ))
             ) : (

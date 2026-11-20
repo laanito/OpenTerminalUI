@@ -7,8 +7,9 @@ is tracked below; the study itself implements no APIs, schemas or accounting.
 **Scope correction, 2026-11-20:** v3 is the frontend overhaul, not a Portfolio-only
 release. Portfolio is a completed pilot; populated page hierarchy and readable
 names/controls remain in v3.0. The maintainer's Equity feedback starts the next
-slice, now accepted through #294. See the [Home review](HOME_REVIEW.md) for the
-next populated-page slice. See [current scope](SCOPE.md); do not propose release prep merely because
+slice, now accepted through #294. The [Home review](HOME_REVIEW.md) is accepted
+through #296; see the [Security Hub review](SECURITY_REVIEW.md) for the next
+populated-page slice. See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 
 ## Review the proposal
