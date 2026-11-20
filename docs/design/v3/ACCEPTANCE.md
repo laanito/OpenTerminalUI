@@ -19,6 +19,11 @@ rail both open and closed on desktop. Actual browser zoom uses a disposable
 profile's native 200% zoom preference: the 1440px window has a 720px CSS viewport,
 with visual viewport scale 1. This is not a CSS transform, mobile pinch or a claim
 based only on resizing the viewport. The test asserts those measured bounds.
+Its persistent context explicitly uses
+`channel: "chromium"` so CI runs the full browser's new headless mode rather than
+Playwright's separate headless shell, which does not apply Chrome profile zoom
+preferences. The existing installed-Chrome executable override remains supported;
+CI's normal `playwright install chromium` already installs the full binary.
 
 Automated checks inspect DOM focus, ARIA names/indices, disclosure traversal,
 local scroll visibility, CSV contents, layout bounds, console exceptions and

@@ -44,6 +44,13 @@ reviewed. API-reference, surface/mock and whitespace guards pass. All fixtures
 are synthetic; no deployment/production DB or real model/provider writes. The
 unchanged backend suite is not rerun. Do not monitor CI unless asked.
 
+PR #294 CI follow-up: the native 200% zoom test must launch the full browser with
+`channel: "chromium"`; Playwright's default separate headless shell does not apply
+the profile zoom preference. Keep the actual browser/CSS-width ratio and visual
+scale assertions. Installed-Chrome verification passes; bundled-browser local
+verification was blocked by a stalled installer extraction. CI installs the full
+browser already. Failed zoom runs attach measured viewport/browser metrics.
+
 `docs/design/v3/SCOPE.md`, design README, Portfolio acceptance report and wiki
 roadmap now reflect the maintainer's 2026-11-20 correction. Portfolio's financial
 and migration contracts remain accepted: independent native/datetime FX accounting,

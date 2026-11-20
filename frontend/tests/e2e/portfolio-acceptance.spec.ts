@@ -98,7 +98,10 @@ test("@smoke Portfolio reflows under actual 200% Chrome browser zoom", async ({ 
   await mkdir(join(profile, "Default"));
   // Chromium's native browser zoom preference, not CSS zoom or pinch emulation.
   await writeFile(join(profile, "Default", "Preferences"), JSON.stringify({ partition: { default_zoom_level: { x: Math.log(2) / Math.log(1.2) } }, profile: { default_zoom_level: Math.log(2) / Math.log(1.2) } }));
-  const context = await playwright.chromium.launchPersistentContext(profile, { headless: true, viewport: null, deviceScaleFactor: undefined, isMobile: undefined,
+  // Native profile zoom needs the full browser. Playwright's default headless
+  // shell (used in CI without an executable override) does not apply this pref.
+  // https://playwright.dev/docs/browsers#chromium-new-headless-mode
+  const context = await playwright.chromium.launchPersistentContext(profile, { channel: "chromium", headless: true, viewport: null, deviceScaleFactor: undefined, isMobile: undefined,
     executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined, args: ["--window-size=1440,1000", "--disable-gpu"], reducedMotion: "reduce" });
   try {
     await context.addInitScript(() => { const jwt = `x.${btoa(JSON.stringify({ sub: "zoom-audit", email: "zoom@example.test", exp: 4102444800, role: "trader" }))}.y`; localStorage.setItem("ot-access-token", jwt); localStorage.setItem("ot-refresh-token", jwt); });
@@ -106,6 +109,7 @@ test("@smoke Portfolio reflows under actual 200% Chrome browser zoom", async ({ 
     await page.goto(`${baseURL}/equity/portfolio?reporting_currency=USD`);
     await expect(page.getByRole("region", { name: "Consolidated holdings", exact: true })).toBeVisible();
     const metrics = await page.evaluate(() => ({ cssWidth: innerWidth, browserWidth: outerWidth, dpr: devicePixelRatio, visualScale: visualViewport?.scale }));
+    await testInfo.attach("native-zoom-observation", { body: JSON.stringify({ ...metrics, browserVersion: context.browser()?.version() }), contentType: "application/json" });
     expect(metrics.browserWidth / metrics.cssWidth).toBeCloseTo(2, 1); expect(metrics.visualScale).toBe(1);
     expect(await bounded(page, '[aria-label="Portfolio scope"], [aria-label="Consolidated holdings"]')).toBe(true);
     await keyboardReview(page);
