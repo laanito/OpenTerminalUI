@@ -1,5 +1,13 @@
 # External-agent project context
 
+Maintainer confirmed #294 merged and working. The v3 release north star is
+**no wasted blank spaces and no unreadable labels**, with the accepted Equity
+layout as the reference. Keep the primary task visible, related context together
+and secondary controls discoverable. Preserve useful breathing room; do not
+fill space with new features or compress labels. Review populated remaining
+pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
+Broader v3 acceptance remains open.
+
 Current work **v3 Equity layout and shared label readability** (2026-11-20),
 after maintainer-confirmed merged #293 (`dc030e1`). **Scope correction: v3 is the
 frontend overhaul, not a Portfolio-only release.** The maintainer reported Equity

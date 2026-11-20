@@ -6,6 +6,17 @@ slices, not acceptance of the entire frontend overhaul. v3.0 remains open for
 page-level hierarchy, usable controls and readable labels across retained screens.
 The [Portfolio report](ACCEPTANCE.md) is historical evidence for that workflow.
 
+## Release north star
+
+**No wasted blank spaces and no unreadable labels.** The maintainer accepted
+the Equity layout in merged #294 as the reference for the remaining v3 work.
+Use available space to keep the primary task visible, place related context
+together and disclose secondary controls when needed. Preserve intentional
+spacing for readability; do not fill gaps with extra features or squeeze text
+to fit more panels. Names and actions must remain readable with long content,
+narrow screens and 200% browser zoom. Review populated layouts, not just empty
+screens or navigation smoke tests.
+
 ## v3.0 delivers
 
 - A shared responsive application shell and reusable layout/state patterns,
