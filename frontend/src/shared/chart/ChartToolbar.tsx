@@ -42,6 +42,7 @@ type Props = {
   onExtendedChange?: (v: boolean) => void;
   liveStatus?: "live" | "delayed" | "disconnected";
   currency?: CurrencyCode;
+  showMarketData?: boolean;
 };
 
 export function SharedChartToolbar({
@@ -60,6 +61,7 @@ export function SharedChartToolbar({
   onExtendedChange,
   liveStatus,
   currency,
+  showMarketData = true,
 }: Props) {
   const { formatDisplayMoney } = useDisplayCurrency();
   const [altParams, setAltParams] = useState<AlternativeChartParams>(DEFAULT_ALT_CHART_PARAMS);
@@ -105,10 +107,10 @@ export function SharedChartToolbar({
     chartType === "line_break";
 
   return (
-    <div className="rounded border border-terminal-border bg-terminal-panel px-3 py-1.5 text-xs">
-      <div className="flex items-center gap-4">
+    <div aria-label="Chart controls" className="min-w-0 rounded border border-terminal-border bg-terminal-panel px-3 py-2 text-sm">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
         {/* Market Data Strip */}
-        <div className="flex items-center gap-3 border-r border-terminal-border pr-4">
+        {showMarketData && <div className="flex min-w-0 flex-wrap items-center gap-3">
           <TerminalBadge variant="accent" size="sm">
             {symbol}
           </TerminalBadge>
@@ -121,30 +123,30 @@ export function SharedChartToolbar({
             {changePct === null ? "-" : `${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%`}
           </TerminalBadge>
           {liveStatus && (
-            <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${liveStatusClass}`}>
+            <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs ${liveStatusClass}`}>
               <span className={`inline-block h-1.5 w-1.5 rounded-full ${liveStatus === "live" ? "animate-pulse bg-current" : "bg-current"}`} />
               {liveStatus.toUpperCase()}
             </span>
           )}
 
-          <div role="group" aria-label="Candle values" className="hidden tabular-nums text-terminal-muted xl:block">
+          <div role="group" aria-label="Candle values" className="flex flex-wrap gap-1 tabular-nums text-terminal-muted">
             <span className="mr-2">O:{(ohlcv ?? ohlc)?.open?.toFixed(2) ?? "-"}</span>
             <span className="mr-2">H:{(ohlcv ?? ohlc)?.high?.toFixed(2) ?? "-"}</span>
             <span className="mr-2">L:{(ohlcv ?? ohlc)?.low?.toFixed(2) ?? "-"}</span>
             <span className="mr-2">C:{(ohlcv ?? ohlc)?.close?.toFixed(2) ?? "-"}</span>
             <span>V:{typeof ohlcv?.volume === "number" && Number.isFinite(ohlcv.volume) ? ohlcv.volume.toLocaleString() : "-"}</span>
           </div>
-        </div>
+        </div>}
 
-        {/* Controls Strip (Horizontal) */}
-        <div className="flex flex-1 items-center justify-between">
-          <div className="flex items-center gap-1">
-            <span className="mr-2 text-[10px] font-bold text-terminal-muted uppercase tracking-wider">Timing</span>
+        {/* Controls wrap within their chart column. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
+            <span className="mr-2 text-xs font-bold text-terminal-muted uppercase tracking-wider">Timing</span>
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf.value}
                 type="button"
-                className={`min-w-8 px-1.5 py-0.5 rounded-sm border text-[10px] font-bold transition-colors ${
+                className={`min-w-8 px-1.5 py-0.5 rounded-sm border text-xs font-bold transition-colors ${
                   timeframe === tf.value
                     ? "bg-terminal-accent/20 border-terminal-accent text-terminal-accent"
                     : "bg-transparent border-terminal-border text-terminal-muted hover:text-terminal-text"
@@ -156,13 +158,13 @@ export function SharedChartToolbar({
             ))}
           </div>
 
-          <div className="h-4 w-px bg-terminal-border" />
+          <div className="hidden h-4 w-px bg-terminal-border sm:block" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <button
               type="button"
               disabled={isDailyPlus}
-              className={`px-2 py-0.5 rounded-sm border text-[10px] font-bold uppercase transition-colors ${
+              className={`px-2 py-0.5 rounded-sm border text-xs font-bold uppercase transition-colors ${
                 extended
                   ? "bg-blue-600/20 border-blue-500 text-blue-400"
                   : "bg-transparent border-terminal-border text-terminal-muted hover:text-terminal-text"
@@ -174,14 +176,15 @@ export function SharedChartToolbar({
             </button>
           </div>
 
-          <div className="h-4 w-px bg-terminal-border" />
+          <div className="hidden h-4 w-px bg-terminal-border sm:block" />
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-terminal-muted uppercase tracking-wider">Type</span>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-terminal-muted uppercase tracking-wider">Type</span>
             <select
+              aria-label="Chart type"
               value={chartType}
               onChange={(e) => onChartTypeChange(e.target.value as ChartKind)}
-              className="bg-terminal-bg border border-terminal-border rounded-sm px-2 py-0.5 text-[10px] font-bold text-terminal-text focus:outline-none focus:border-terminal-accent"
+              className="bg-terminal-bg border border-terminal-border rounded-sm px-2 py-0.5 text-xs font-bold text-terminal-text focus:outline-none focus:border-terminal-accent"
             >
               <option value="candle">Candlestick</option>
               <option value="line">Line</option>
@@ -196,14 +199,14 @@ export function SharedChartToolbar({
 
           {showAltChartParams ? (
             <>
-              <div className="h-4 w-px bg-terminal-border" />
-              <div className="flex items-center gap-1">
+              <div className="hidden h-4 w-px bg-terminal-border sm:block" />
+              <div className="flex min-w-0 flex-wrap items-center gap-1">
                 {chartType === "renko" ? (
                   <TerminalInput
                     as="input"
                     value={String(altParams.renkoBrickSize)}
                     onChange={(e) => updateAltParams({ renkoBrickSize: Number(e.target.value) })}
-                    className="h-6 w-16 text-[10px]"
+                    className="h-6 w-16 text-xs"
                     size="sm"
                     tone="ui"
                     aria-label="Renko brick size"
@@ -214,7 +217,7 @@ export function SharedChartToolbar({
                     as="input"
                     value={String(altParams.kagiReversal)}
                     onChange={(e) => updateAltParams({ kagiReversal: Number(e.target.value) })}
-                    className="h-6 w-16 text-[10px]"
+                    className="h-6 w-16 text-xs"
                     size="sm"
                     tone="ui"
                     aria-label="Kagi reversal amount"
@@ -226,7 +229,7 @@ export function SharedChartToolbar({
                       as="input"
                       value={String(altParams.pointFigureBoxSize)}
                       onChange={(e) => updateAltParams({ pointFigureBoxSize: Number(e.target.value) })}
-                      className="h-6 w-14 text-[10px]"
+                      className="h-6 w-14 text-xs"
                       size="sm"
                       tone="ui"
                       aria-label="Point and figure box size"
@@ -235,7 +238,7 @@ export function SharedChartToolbar({
                       as="input"
                       value={String(altParams.pointFigureReversalBoxes)}
                       onChange={(e) => updateAltParams({ pointFigureReversalBoxes: Number(e.target.value) })}
-                      className="h-6 w-14 text-[10px]"
+                      className="h-6 w-14 text-xs"
                       size="sm"
                       tone="ui"
                       aria-label="Point and figure reversal boxes"
@@ -247,7 +250,7 @@ export function SharedChartToolbar({
                     as="input"
                     value={String(altParams.lineBreakCount)}
                     onChange={(e) => updateAltParams({ lineBreakCount: Number(e.target.value) })}
-                    className="h-6 w-14 text-[10px]"
+                    className="h-6 w-14 text-xs"
                     size="sm"
                     tone="ui"
                     aria-label="Line break count"
@@ -257,16 +260,17 @@ export function SharedChartToolbar({
             </>
           ) : null}
 
-          <div className="h-4 w-px bg-terminal-border" />
+          <div className="hidden h-4 w-px bg-terminal-border sm:block" />
 
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             <button
               type="button"
-              className={`px-3 py-0.5 rounded-sm border text-[10px] font-bold uppercase transition-colors ${
+              className={`px-3 py-0.5 rounded-sm border text-xs font-bold uppercase transition-colors ${
                 showIndicators
                   ? "bg-terminal-accent/20 border-terminal-accent text-terminal-accent"
                   : "bg-transparent border-terminal-border text-terminal-muted hover:text-terminal-text"
               }`}
+              aria-expanded={showIndicators}
               onClick={onToggleIndicators}
             >
               Indicators
@@ -274,6 +278,11 @@ export function SharedChartToolbar({
           </div>
         </div>
       </div>
+      {!showMarketData && <div role="group" aria-label="Candle values" className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-terminal-border pt-2 text-xs tabular-nums text-terminal-muted">
+        <span>O:{(ohlcv ?? ohlc)?.open?.toFixed(2) ?? "-"}</span><span>H:{(ohlcv ?? ohlc)?.high?.toFixed(2) ?? "-"}</span>
+        <span>L:{(ohlcv ?? ohlc)?.low?.toFixed(2) ?? "-"}</span><span>C:{(ohlcv ?? ohlc)?.close?.toFixed(2) ?? "-"}</span>
+        <span>V:{typeof ohlcv?.volume === "number" && Number.isFinite(ohlcv.volume) ? ohlcv.volume.toLocaleString() : "-"}</span>
+      </div>}
     </div>
   );
 }

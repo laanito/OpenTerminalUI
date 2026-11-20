@@ -38,6 +38,8 @@ import { useQuotesStore, useQuotesStream } from "../realtime/useQuotesStream";
 import { ChartEngine } from "../shared/chart/ChartEngine";
 import { SharedChartToolbar } from "../shared/chart/ChartToolbar";
 import { IndicatorPanel } from "../shared/chart/IndicatorPanel";
+import { ActiveIndicatorsPanel } from "../components/analysis/ActiveIndicatorsPanel";
+import { TerminalModal } from "../components/terminal/TerminalModal";
 import { shouldDefaultExtendedHoursOn } from "../shared/chart/candlePresentation";
 import { chartPointsToBars, sameChartBars } from "../shared/chart/chartUtils";
 import { normalizeIndicatorConfigs } from "../shared/chart/indicatorCatalog";
@@ -105,7 +107,7 @@ export function StockDetailPage() {
   const ticksByToken = useQuotesStore((s) => s.ticksByToken);
 
   const [chartType, setChartType] = useState<ChartKind>("candle");
-  const [showIndicators, setShowIndicators] = useState(true);
+  const [showIndicators, setShowIndicators] = useState(false);
   const [selectedIndicators, setSelectedIndicators] = useState<IndicatorConfig[]>([]);
   const [crosshair, setCrosshair] = useState<{ open: number; high: number; low: number; close: number; time: number; volume?: number } | null>(null);
   const [realtimeTick, setRealtimeTick] = useState<{ ltp: number; change_pct: number } | null>(null);
@@ -264,6 +266,7 @@ export function StockDetailPage() {
         tagName === "textarea" ||
         tagName === "select" ||
         Boolean(target?.isContentEditable);
+      if (document.querySelector("[data-terminal-modal]")) return;
       if (editing || event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.key.toLowerCase() !== "b") return;
       event.preventDefault();
@@ -398,30 +401,12 @@ export function StockDetailPage() {
   };
 
   return (
-    <div className="relative h-full space-y-3 overflow-y-auto px-3 py-2">
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_220px]">
+    <div className="relative min-w-0 space-y-3 px-3 py-2">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
         <div className="min-w-0 space-y-3">
-          <div className="inline-flex items-center gap-2 rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs">
-            <CountryFlag
-              countryCode={stockClassification?.country_code || stockForOverview?.country_code}
-              flagEmoji={stockClassification?.flag_emoji}
-            />
-            <span className="font-semibold">{ticker.toUpperCase()}</span>
-            <InstrumentBadges
-              exchange={stockClassification?.exchange || stockForOverview?.exchange}
-              hasFutures={stockClassification?.has_futures}
-              hasOptions={stockClassification?.has_options}
-            />
-            <EarningsDateBadge event={nextEarnings} />
-            <Link
-              to={`/equity/market-context?symbol=${encodeURIComponent(ticker.toUpperCase())}`}
-              className="rounded border border-terminal-border px-2 py-1 text-terminal-accent hover:border-terminal-accent"
-            >
-              Cross-market context
-            </Link>
-          </div>
           <SharedChartToolbar
             symbol={ticker}
+            showMarketData={false}
             currency={instrumentCurrency}
             ltp={displayedLatestPrice}
             changePct={displayedChangePct}
@@ -443,8 +428,9 @@ export function StockDetailPage() {
             liveStatus={effectiveChartLiveStatus}
           />
           <div
+            role="region" aria-label={`${ticker} price chart`}
             ref={chartFullscreenRef}
-            className={`${isFullscreen ? "h-screen w-screen bg-terminal-bg p-2" : "h-[calc(100vh-280px)] min-h-[350px] rounded border border-terminal-border bg-terminal-panel p-1"}`}
+            className={`${isFullscreen ? "h-screen w-screen bg-terminal-bg p-2" : "h-[clamp(300px,60dvh,680px)] min-w-0 rounded border border-terminal-border bg-terminal-panel p-1"}`}
           >
             {isChartLoading ? (
               <div className="flex h-full items-center justify-center text-terminal-muted">Loading chart...</div>
@@ -484,7 +470,7 @@ export function StockDetailPage() {
                 const value = performanceData?.period_changes_pct?.[key];
                 return (
                   <div key={key} className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
-                    <div className="text-[10px] uppercase tracking-wide text-terminal-muted">{key}</div>
+                    <div className="text-xs uppercase tracking-wide text-terminal-muted">{key}</div>
                     <div className={`mt-1 font-semibold tabular-nums ${pctColor(value)}`}>{formatPct(value)}</div>
                   </div>
                 );
@@ -492,7 +478,7 @@ export function StockDetailPage() {
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2">
               <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Day Range</div>
+                <div className="text-xs uppercase tracking-wide text-terminal-muted">Day Range</div>
                 <div className="mt-1 flex items-center justify-between tabular-nums">
                   <span>{formatPrice(performanceData?.day_range?.low)}</span>
                   <span className="text-terminal-muted">to</span>
@@ -500,7 +486,7 @@ export function StockDetailPage() {
                 </div>
               </div>
               <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-terminal-muted">52W Range</div>
+                <div className="text-xs uppercase tracking-wide text-terminal-muted">52W Range</div>
                 <div className="mt-1 flex items-center justify-between tabular-nums">
                   <span>{formatPrice(performanceData?.range_52w?.low)}</span>
                   <span className="text-terminal-muted">to</span>
@@ -512,16 +498,16 @@ export function StockDetailPage() {
           )}
         </div>
 
-        <div className="space-y-4">
+        <aside aria-label="Instrument context" className="min-w-0 space-y-4">
           <TerminalPanel title="Latest Price" className="rounded-sm">
             <div className="mt-1 text-xl font-bold text-terminal-accent tabular-nums">
               {displayedLatestPrice !== null ? formatDisplayMoney(displayedLatestPrice, instrumentCurrency) : "-"}
             </div>
             <div className={`mt-1 text-sm font-semibold tabular-nums ${moveClass}`}>{changeText}</div>
             <div className={`mt-1 text-sm font-semibold tabular-nums ${moveClass}`}>{changePctText}</div>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
-                className={`rounded border px-2 py-0.5 text-[11px] ${
+                className={`min-h-8 rounded border px-2 py-1 text-xs ${
                   effectiveChartLiveStatus === "live"
                     ? "border-terminal-pos text-terminal-pos"
                     : effectiveChartLiveStatus === "delayed"
@@ -533,25 +519,25 @@ export function StockDetailPage() {
               </span>
               <TerminalBadge variant={isConnected ? "live" : "mock"}>{connectionState.toUpperCase()}</TerminalBadge>
               <button
-                className={`rounded border px-2 py-0.5 text-[11px] ${showVolume ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
+                className={`min-h-8 rounded border px-2 py-1 text-xs ${showVolume ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
                 onClick={() => setShowVolume((v) => !v)}
               >
                 VOLUME
               </button>
               <button
-                className={`rounded border px-2 py-0.5 text-[11px] ${showDeliveryOverlay ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
+                className={`min-h-8 rounded border px-2 py-1 text-xs ${showDeliveryOverlay ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
                 onClick={() => setShowDeliveryOverlay((v) => !v)}
               >
                 DELIVERY %
               </button>
               <button
-                className={`rounded border px-2 py-0.5 text-[11px] ${showSessionShading ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
+                className={`min-h-8 rounded border px-2 py-1 text-xs ${showSessionShading ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}
                 onClick={() => setShowSessionShading((v) => !v)}
               >
                 SESSIONS
               </button>
               <button
-                className={`rounded border px-2 py-0.5 text-[11px] ${isFullscreen ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"} ${fullscreenSupported ? "" : "cursor-not-allowed opacity-60"}`}
+                className={`min-h-8 rounded border px-2 py-1 text-xs ${isFullscreen ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"} ${fullscreenSupported ? "" : "cursor-not-allowed opacity-60"}`}
                 onClick={() => {
                   void toggleFullscreen();
                 }}
@@ -561,10 +547,34 @@ export function StockDetailPage() {
               </button>
             </div>
           </TerminalPanel>
-          {showIndicators && <IndicatorPanel symbol={ticker} activeIndicators={selectedIndicators} onChange={setSelectedIndicators} templateScope="equity" />}
-          <FuturesPanel />
-        </div>
+          <TerminalPanel title="Market and context">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs">
+            <CountryFlag
+              countryCode={stockClassification?.country_code || stockForOverview?.country_code}
+              flagEmoji={stockClassification?.flag_emoji}
+            />
+            <span className="break-all font-semibold">{ticker.toUpperCase()}</span>
+            <InstrumentBadges
+              exchange={stockClassification?.exchange || stockForOverview?.exchange}
+              hasFutures={stockClassification?.has_futures}
+              hasOptions={stockClassification?.has_options}
+            />
+            <EarningsDateBadge event={nextEarnings} />
+            <Link
+              to={`/equity/market-context?symbol=${encodeURIComponent(ticker.toUpperCase())}`}
+              className="rounded border border-terminal-border px-2 py-2 text-sm text-terminal-accent hover:border-terminal-accent"
+            >
+              Cross-market context
+            </Link>
+          </div>
+          </TerminalPanel>
+          <ActiveIndicatorsPanel indicators={selectedIndicators} onChange={setSelectedIndicators} onManage={() => setShowIndicators(true)} />
+          {isIndian && <FuturesPanel />}
+        </aside>
       </div>
+      {showIndicators && <TerminalModal open placement="right" size="lg" title="Manage indicators" subtitle={`${ticker} · Add studies, configure parameters and manage templates`} onClose={() => setShowIndicators(false)}>
+        <IndicatorPanel symbol={ticker} activeIndicators={selectedIndicators} onChange={setSelectedIndicators} templateScope="equity" initialCategory={selectedIndicators.length ? "active" : "all"} layout="manager" />
+      </TerminalModal>}
 
       {chart?.meta?.warnings?.map((w, i) => (
         <div key={i} className="rounded border border-terminal-warn bg-terminal-warn/10 p-3 text-sm text-terminal-warn">
@@ -573,7 +583,7 @@ export function StockDetailPage() {
       ))}
 
       <div className="border-b border-terminal-border">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+        <nav className="-mb-px flex min-w-0 flex-wrap gap-x-4 gap-y-2" aria-label="Tabs">
           {visibleTabs.map((t) => (
             <button
               key={t}
@@ -731,7 +741,7 @@ export function StockDetailPage() {
       </div>
       <Link
         to="/equity/stocks/about"
-        className="fixed bottom-12 left-2 z-20 rounded-sm border border-terminal-border bg-terminal-panel px-2 py-1 text-[11px] uppercase tracking-wide text-terminal-muted hover:text-terminal-accent md:left-52"
+        className="fixed bottom-12 left-2 z-20 rounded-sm border border-terminal-border bg-terminal-panel px-2 py-1 text-xs uppercase tracking-wide text-terminal-muted hover:text-terminal-accent md:left-52"
       >
         About
       </Link>

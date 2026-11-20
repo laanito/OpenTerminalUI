@@ -1,8 +1,9 @@
 # Portfolio pilot acceptance
 
 Local review: 2026-11-19, after merged #292 (`fa91c7f`). This closes the planned
-local keyboard/zoom/layout audit; maintainer acceptance and the PR's CI checks
-still precede release prep. Published version remains 2.8.0.
+local keyboard/zoom/layout audit for Portfolio. **Scope correction, 2026-11-20:**
+this is not acceptance of the whole frontend overhaul. Retained-page usability
+work remains in [v3.0 scope](SCOPE.md) before maintainer release acceptance. Published version remains 2.8.0.
 
 ## Method and limits
 
@@ -18,6 +19,11 @@ rail both open and closed on desktop. Actual browser zoom uses a disposable
 profile's native 200% zoom preference: the 1440px window has a 720px CSS viewport,
 with visual viewport scale 1. This is not a CSS transform, mobile pinch or a claim
 based only on resizing the viewport. The test asserts those measured bounds.
+Its persistent context explicitly uses
+`channel: "chromium"` so CI runs the full browser's new headless mode rather than
+Playwright's separate headless shell, which does not apply Chrome profile zoom
+preferences. The existing installed-Chrome executable override remains supported;
+CI's normal `playwright install chromium` already installs the full binary.
 
 Automated checks inspect DOM focus, ARIA names/indices, disclosure traversal,
 local scroll visibility, CSV contents, layout bounds, console exceptions and
@@ -60,7 +66,7 @@ rule is added to conceal an overflowing required control.
 | 5–7: reviewed atomic operations, known/unknown openings, repair and retry | Existing consolidated-workflow/opening-evidence browser journeys and #292's 182-test Portfolio domain run. No financial code changes in this follow-up. |
 | 9, 13: retain research identities/editing and shared-shell journeys | New Notes/Journal edit/save/cancel and shortcut cases at desktop/mobile; existing Brain/Log/promotion, saved comparison/citations, Stock Detail and BTC candle smoke journeys. |
 | 14: backend/migration parity and regression gate | Carry forward #292's disposable SQLite/full-chain/retaining downgrade checks, PostgreSQL DDL and guarded migrated PostgreSQL lane. This frontend-only follow-up reruns frontend/build/browser checks, not production DB operations or the unchanged backend suite. |
-| 15: maintainer acceptance before release | Pending maintainer review of this PR and deployed pilot; release prep, version bump, tag and article require the usual subsequent instruction. |
+| 15: maintainer acceptance before release | Portfolio slice merged as #293; broader retained-page usability review remains before release prep, version bump, tag and article. |
 
 All 852 frontend tests (140 files), production build and 65 Chrome smoke journeys
 pass locally. No new dependency, backend API, schema, provider or accounting change.

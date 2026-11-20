@@ -14,6 +14,7 @@ type Props = {
   size?: "sm" | "md" | "lg";
   busy?: boolean;
   closeLabel?: string;
+  placement?: "center" | "right";
 };
 
 export function TerminalModal({
@@ -28,6 +29,7 @@ export function TerminalModal({
   size = "md",
   busy = false,
   closeLabel = "Close",
+  placement = "center",
 }: Props) {
   const titleId = useId();
   const subtitleId = useId();
@@ -89,7 +91,7 @@ export function TerminalModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-black/55 p-3"
+      className={`fixed inset-0 z-[100] grid ${placement === "right" ? "justify-items-end items-stretch" : "place-items-center"} bg-black/55 p-3`}
       onMouseDown={(event) => {
         if (!closeOnOverlayClick || busy) return;
         if (event.target === event.currentTarget) onClose();
@@ -104,7 +106,7 @@ export function TerminalModal({
         aria-describedby={subtitle ? subtitleId : undefined}
         aria-busy={busy || undefined}
         tabIndex={-1}
-        className={`flex max-h-[calc(100dvh-1.5rem)] min-w-0 w-full flex-col ${
+        className={`${placement === "right" ? "h-full" : ""} flex max-h-[calc(100dvh-1.5rem)] min-w-0 w-full flex-col ${
           size === "sm" ? "max-w-md" : size === "lg" ? "max-w-3xl" : "max-w-xl"
         } rounded-sm border border-terminal-border bg-terminal-panel shadow-2xl ${className}`.trim()}
       >

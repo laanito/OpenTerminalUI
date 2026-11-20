@@ -4,9 +4,11 @@ Status: **discovery/design accepted through merged PR #286**, 2026-11-18.
 The standalone HTML study remains isolated and synthetic. Production shell work
 is tracked below; the study itself implements no APIs, schemas or accounting.
 
-The accepted v3.0 gate is **a shared frontend foundation plus a complete Portfolio
-workflow**. Other screen redesigns belong to explicit v3.x scopes. The shared
-shell must keep those screens reachable and functional during the transition.
+**Scope correction, 2026-11-20:** v3 is the frontend overhaul, not a Portfolio-only
+release. Portfolio is a completed pilot; populated page hierarchy and readable
+names/controls remain in v3.0. The maintainer's Equity feedback starts the next
+slice. See [current scope](SCOPE.md); do not propose release prep merely because
+the pilot's automated acceptance checks pass.
 
 ## Review the proposal
 
@@ -291,3 +293,38 @@ No backend/accounting/schema/dependency change. The
 852 frontend tests, build and 65 Chrome smoke journeys pass, including native
 200% zoom and Notes/Journal edit/save/cancel regression cases. Maintainer review
 and CI still precede release prep; no additional screen redesign is started.
+
+
+## Equity chart-first layout and shared label readability
+
+Following #293, maintainer testing identified the remaining page-level gap.
+Stock Detail now keeps its chart/controls first, with latest price, instrument/
+market identity, cross-market context and active studies in a readable right
+column at desktop/tablet widths. Narrow layouts keep the chart first and context
+below it. Indicator search, configuration, favorites, templates and custom JS use
+a wide hideable side drawer; templates/custom tools have a separate disclosure.
+Parameters use a bounded nested dialog with independent Save/Cancel and focus.
+Existing instance, pane/scale, template and persistence contracts remain intact.
+The NFO-only futures search is retained for Indian instruments and no longer
+clutters US/crypto context.
+
+Shared panel headings wrap at 14px, descriptions at 12px, and action/badge labels
+use readable 12px defaults without extreme tracking. This improves retained
+screens but is not proof that every page has been overhauled. Chart quote/candle,
+AI evidence, navigation and financial contracts remain unchanged. Continue with
+populated Home/Market/Security, research (comparison, Brain, Notes/Journal),
+News and Workstation/Screener page reviews, fixing real hierarchy/readability
+issues rather than beginning new features. Release prep remains on hold.
+
+
+Validation for this slice: 854 frontend tests / 141 files, production build and
+69 installed-Chrome smoke journeys pass. Four new journeys cover BTC layout and
+indicator operations at 1440/1024/390px plus populated AAPL chart/performance.
+Existing candle hover, quote routing, evidence, Portfolio/native zoom and editing
+regressions pass. No backend/API/accounting/schema/dependency change; unchanged
+backend suite not rerun. API-reference/mock/surface/whitespace guards pass.
+
+Reviewed synthetic captures: [chart-first desktop](evidence/equity-chart-first-1440.png),
+[wide indicator library](evidence/equity-indicators-1440.png),
+[mobile library](evidence/equity-indicators-390.png). These support the Equity
+slice only; the broader page reviews remain open in the scope/backlog.
