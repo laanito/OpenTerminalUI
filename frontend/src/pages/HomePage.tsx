@@ -537,7 +537,7 @@ export function HomePage() {
       <div className="relative min-h-full bg-terminal-bg">
         {initializing ? (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-terminal-bg/95" role="status" aria-live="polite">
-            <p className="ot-type-panel-title uppercase tracking-[0.18em] text-terminal-accent">Initializing Mission Control</p>
+            <p className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">Initializing Mission Control</p>
             <div className="h-1.5 w-64 overflow-hidden rounded-full border border-terminal-border bg-terminal-panel/80">
               <span className="block h-full w-2/3 animate-pulse bg-terminal-accent/80" />
             </div>
@@ -545,16 +545,55 @@ export function HomePage() {
         ) : null}
 
         {!initializing ? (
-          <main className="flex min-h-full flex-col gap-3 p-3 md:p-4" aria-label="Mission Control Dashboard">
+          <main className="ot-home-dashboard flex min-h-full min-w-0 flex-col gap-3 p-3 md:p-4" aria-label="Mission Control Dashboard">
             <section className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3" aria-label="Home Header">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="space-y-2">
-                  <p className="ot-type-panel-title uppercase tracking-[0.18em] text-terminal-accent">Mission Control</p>
-                  <h1 className="text-2xl font-semibold uppercase tracking-[0.12em] text-terminal-text">{presetConfig.landing.headline}</h1>
+                  <h1 className="text-xl font-semibold text-terminal-text">{presetConfig.landing.headline}</h1>
+                  <p className="text-xs text-terminal-muted">{selectedMarket} · {displayCurrency} · {presetConfig.label} preset</p>
+                </div>
+
+                <div className="flex flex-col gap-3 xl:items-end">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-sm border border-terminal-border px-3 py-1.5 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                      onClick={() => navigate("/equity/portfolio")}
+                    >
+                      Portfolio HQ
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-sm border border-terminal-accent px-3 py-1.5 text-xs uppercase tracking-normal text-terminal-accent hover:bg-terminal-accent/10"
+                      onClick={() => navigate(presetConfig.landing.primaryRoute)}
+                    >
+                      {presetConfig.landing.primaryLabel}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-sm border border-terminal-border px-3 py-1.5 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                      onClick={() => navigate("/equity/launchpad")}
+                    >
+                      Launchpad
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-sm border border-terminal-border px-3 py-1.5 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                      onClick={() => navigate("/equity/news")}
+                    >
+                      Intel Wire
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <details className="mt-3 text-xs text-terminal-muted">
+                <summary className="w-fit cursor-pointer">Desk details and clocks</summary>
                   <p className="max-w-3xl text-sm text-terminal-muted">
                     {presetConfig.landing.description}
                   </p>
-                  <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.12em] text-terminal-muted">
+                <div className="mt-2 flex flex-wrap items-start gap-3">
+                  <div className="flex flex-wrap gap-2 text-xs uppercase tracking-normal text-terminal-muted">
                     <span className="rounded-sm border border-terminal-border px-2 py-1">
                       Desk {(user?.email || "unknown").toUpperCase()}
                     </span>
@@ -571,42 +610,9 @@ export function HomePage() {
                       Refresh {newsAutoRefresh ? `${newsRefreshSec}s` : "Manual"}
                     </span>
                   </div>
-                </div>
-
-                <div className="flex flex-col gap-3 xl:items-end">
                   <LiveClockStrip />
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-sm border border-terminal-border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
-                      onClick={() => navigate("/equity/portfolio")}
-                    >
-                      Portfolio HQ
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-sm border border-terminal-accent px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-terminal-accent hover:bg-terminal-accent/10"
-                      onClick={() => navigate(presetConfig.landing.primaryRoute)}
-                    >
-                      {presetConfig.landing.primaryLabel}
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-sm border border-terminal-border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
-                      onClick={() => navigate("/equity/launchpad")}
-                    >
-                      Launchpad
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-sm border border-terminal-border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
-                      onClick={() => navigate("/equity/news")}
-                    >
-                      Intel Wire
-                    </button>
-                  </div>
                 </div>
-              </div>
+              </details>
 
               <div className="mt-3">
                 <MarketHeatStrip
@@ -619,40 +625,16 @@ export function HomePage() {
               </div>
             </section>
 
-            <div className="grid grid-cols-1">
-              <AiInsightCard
-                title="AI Market Outlook"
-                description="Provider-agnostic interpretation of the displayed cross-asset snapshot"
-                disabled={!marketRows.some((row) => row.ltp > 0)}
-                disabledMessage="Live market observations are unavailable; an outlook cannot be grounded yet."
-                fetcher={(_, options) =>
-                  fetchCollectionBriefing(
-                    MARKET_PULSE_SYMBOLS,
-                    "global markets",
-                    marketRows
-                      .filter((row) => row.ltp > 0)
-                      .map((row) => ({
-                        symbol: row.symbol,
-                        label: row.label,
-                        price: row.ltp,
-                        change: row.chg,
-                        change_pct: row.chgPct,
-                      })),
-                    options,
-                  )
-                }
-              />
-            </div>
 
-            {showHomeSection("portfolio") || showHomeSection("health") || showHomeSection("news") ? (
-            <section className="grid gap-3 xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]" aria-label="Portfolio HQ">
+            <div className="ot-home-overview">
+              <div className="grid min-w-0 content-start gap-3">
               {showHomeSection("portfolio") ? (
-              <div className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3">
+              <section className="min-w-0 rounded-sm border border-terminal-border bg-terminal-panel/80 p-3" aria-label="Portfolio HQ">
                 <div className="flex flex-col gap-3 border-b border-terminal-border pb-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <h2 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">Portfolio HQ</h2>
+                    <h2 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">Portfolio HQ</h2>
                     <p className="mt-1 text-sm text-terminal-muted">
-                      Equity valuation, derivatives posture, and performance telemetry anchored to the current home snapshot.
+                      Primary portfolio value and reconstructed history.
                     </p>
                   </div>
                   <ProfileCompletionRing
@@ -662,7 +644,7 @@ export function HomePage() {
                   />
                 </div>
 
-                <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+                <div className="mt-3">
                   <MetricCard
                     label="Net Liquidation"
                     value={formatMoney(snapshot.equityValue, portfolioCurrency ?? undefined)}
@@ -696,14 +678,14 @@ export function HomePage() {
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                          className="rounded-sm border border-terminal-border px-2 py-1 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
                           onClick={() => navigate("/equity/portfolio")}
                         >
                           Open Portfolio
                         </button>
                         <button
                           type="button"
-                          className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                          className="rounded-sm border border-terminal-border px-2 py-1 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
                           onClick={() => navigate("/backtesting")}
                         >
                           Run Backtests
@@ -713,7 +695,63 @@ export function HomePage() {
                     }
                   />
 
-                  <div className="grid gap-3 sm:grid-cols-2">
+                </div>
+
+                <section aria-label="Primary portfolio historical comparison" className="mt-3 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">30-day portfolio history</h3>
+                      <p className="mt-1 text-xs text-terminal-muted">
+                        Primary portfolio{primaryName ? ` · ${primaryName}` : ""}. Approximate daily reconstruction of recorded buys, sells, cash, fees and dividends. Includes closed positions while they were held.
+                      </p>
+                    </div>
+                    <span className="rounded-sm border border-terminal-border px-2 py-1 text-xs uppercase tracking-normal text-terminal-muted">
+                      {performance.status === "loading" ? "Loading history" : performance.status === "unavailable" ? "History unavailable" : "Approximate history"}
+                    </span>
+                  </div>
+                  <PortfolioMiniChart
+                    points={performance.points}
+                    benchmarkPoints={performance.benchmarkPoints}
+                    ariaLabel="Primary portfolio flow-adjusted comparison"
+                    emptyLabel={performance.message}
+                    seriesLabel="Portfolio (flow-adjusted)"
+                    benchmarkLabel={performance.benchmark ? `Benchmark (${performance.benchmark})` : "Benchmark"}
+                    valueFormatter={(value) => `${value.toFixed(2)} index`}
+                  />
+                  {performance.start && performance.end ? <>
+                    <p className="mt-2 text-xs text-terminal-muted">
+                      {performance.start} to {performance.end} · {performance.navPoints.length} daily valuations · {performance.baseCurrency}.
+                      {performance.benchmarkAsOf ? ` Benchmark close used: ${performance.benchmarkAsOf}.` : ""}
+                    </p>
+                    <details className="mt-2 text-xs text-terminal-muted">
+                      <summary className="w-fit cursor-pointer">Valuation method and coverage</summary>
+                      <p className="mt-2">Return indices start at 100 on the first comparable funded date. Deposits/withdrawals are treated as end-of-day flows; intraday timing is unknown.
+                        Daily UTC labels do not imply simultaneous quotes; non-trading dates can carry a prior close for up to 7 days. No corporate-action replay; provider adjustments or missing trades may distort reconstruction.</p>
+                    </details>
+                  </> : null}
+                  {performance.checkedAt !== null ? <p className="mt-1 text-xs text-terminal-muted">History checked {new Date(performance.checkedAt).toLocaleTimeString()}; this is a retrieval check, not a live quote.</p> : null}
+                  {performance.notes.length ? <ul className="mt-2 text-xs text-terminal-warn">{performance.notes.map((note, index) => <li key={index}>{note}</li>)}</ul> : null}
+                  {performance.adjustmentDetails.length ? <details className="mt-2 text-xs text-terminal-muted">
+                    <summary className="cursor-pointer">Legacy data adjusted for this estimate · Details</summary>
+                    <ul className="mt-2 break-words">{performance.adjustmentDetails.map((detail, index) => <li key={index}>{detail}</li>)}</ul>
+                  </details> : null}
+                  {performance.valuations.length ? <details className="mt-3 text-xs text-terminal-muted">
+                    <summary className="cursor-pointer text-terminal-accent">Inspect reconstructed daily values</summary>
+                    <p className="my-2">Opening cash applies from the earliest ledger activity or portfolio creation. Cash uses transaction-date FX; securities use each valuation day’s FX. Legacy adjustments can be inspected separately; unrecorded add/remove dates are unknown. No missing trade or deposit is created. Values are recalculated from the current ledger and provider history, not preserved account snapshots.</p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left" aria-label="Reconstructed daily portfolio values">
+                        <thead><tr>{["UTC date", "Value", "Cash", "Holdings", "External flow", "Native close dates"].map((heading) => <th className="p-2" key={heading}>{heading}</th>)}</tr></thead>
+                        <tbody>{performance.valuations.map((day) => <tr key={day.label} className="border-t border-terminal-border">
+                          <th className="whitespace-nowrap p-2 font-normal">{day.label}</th>
+                          {[day.value, day.cash, day.holdings, day.flow].map((value, i) => <td className="whitespace-nowrap p-2" key={i}>{formatMoney(value, asCurrencyCode(performance.baseCurrency) ?? undefined)}</td>)}
+                          <td className="p-2">{Object.entries(day.priceDates).map(([symbol, date]) => `${symbol}: ${date}`).join("; ") || "Cash only"}</td>
+                        </tr>)}</tbody>
+                      </table>
+                    </div>
+                  </details> : null}
+                </section>
+                <section aria-label="Desk snapshot" className="mt-3">
+                  <div className="ot-home-desk-metrics">
                     <MetricCard
                       label="Market Focus"
                       value={focusedMarket?.ltp && focusedMarket.ltp > 0 ? formatPrice(focusedMarket.ltp) : "--"}
@@ -780,77 +818,72 @@ export function HomePage() {
                       ]}
                     />
                   </div>
-                </div>
-
-                <section aria-label="Primary portfolio historical comparison" className="mt-3 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">30-day portfolio history</h3>
-                      <p className="mt-1 text-xs text-terminal-muted">
-                        Primary portfolio{primaryName ? ` · ${primaryName}` : ""}. Approximate daily reconstruction of recorded buys, sells, cash, fees and dividends. Includes closed positions while they were held.
-                      </p>
-                    </div>
-                    <span className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted">
-                      {performance.status === "loading" ? "Loading history" : performance.status === "unavailable" ? "History unavailable" : "Approximate history"}
-                    </span>
-                  </div>
-                  <PortfolioMiniChart
-                    points={performance.points}
-                    benchmarkPoints={performance.benchmarkPoints}
-                    ariaLabel="Primary portfolio flow-adjusted comparison"
-                    emptyLabel={performance.message}
-                    seriesLabel="Portfolio (flow-adjusted)"
-                    benchmarkLabel={performance.benchmark ? `Benchmark (${performance.benchmark})` : "Benchmark"}
-                    valueFormatter={(value) => `${value.toFixed(2)} index`}
-                  />
-                  {performance.start && performance.end ? <p className="mt-2 text-xs text-terminal-muted">
-                    {performance.start} to {performance.end} · {performance.navPoints.length} daily valuations · history valued in {performance.baseCurrency}.
-                    Return indices start at 100 on the first comparable funded date. Deposits/withdrawals are treated as end-of-day flows; intraday timing is unknown.
-                    Daily UTC labels do not imply simultaneous quotes; non-trading dates can carry a prior close for up to 7 days. No corporate-action replay; provider adjustments or missing trades may distort reconstruction.
-                    {performance.benchmarkAsOf ? ` Benchmark close used: ${performance.benchmarkAsOf}.` : ""}
-                  </p> : null}
-                  {performance.checkedAt !== null ? <p className="mt-1 text-xs text-terminal-muted">History checked {new Date(performance.checkedAt).toLocaleTimeString()}; this is a retrieval check, not a live quote.</p> : null}
-                  {performance.notes.length ? <ul className="mt-2 text-xs text-terminal-warn">{performance.notes.map((note, index) => <li key={index}>{note}</li>)}</ul> : null}
-                  {performance.adjustmentDetails.length ? <details className="mt-2 text-xs text-terminal-muted">
-                    <summary className="cursor-pointer">Legacy data adjusted for this estimate · Details</summary>
-                    <ul className="mt-2 break-words">{performance.adjustmentDetails.map((detail, index) => <li key={index}>{detail}</li>)}</ul>
-                  </details> : null}
-                  {performance.valuations.length ? <details className="mt-3 text-xs text-terminal-muted">
-                    <summary className="cursor-pointer text-terminal-accent">Inspect reconstructed daily values</summary>
-                    <p className="my-2">Opening cash applies from the earliest ledger activity or portfolio creation. Cash uses transaction-date FX; securities use each valuation day’s FX. Legacy adjustments can be inspected separately; unrecorded add/remove dates are unknown. No missing trade or deposit is created. Values are recalculated from the current ledger and provider history, not preserved account snapshots.</p>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left" aria-label="Reconstructed daily portfolio values">
-                        <thead><tr>{["UTC date", "Value", "Cash", "Holdings", "External flow", "Native close dates"].map((heading) => <th className="p-2" key={heading}>{heading}</th>)}</tr></thead>
-                        <tbody>{performance.valuations.map((day) => <tr key={day.label} className="border-t border-terminal-border">
-                          <th className="whitespace-nowrap p-2 font-normal">{day.label}</th>
-                          {[day.value, day.cash, day.holdings, day.flow].map((value, i) => <td className="whitespace-nowrap p-2" key={i}>{formatMoney(value, asCurrencyCode(performance.baseCurrency) ?? undefined)}</td>)}
-                          <td className="p-2">{Object.entries(day.priceDates).map(([symbol, date]) => `${symbol}: ${date}`).join("; ") || "Cash only"}</td>
-                        </tr>)}</tbody>
-                      </table>
-                    </div>
-                  </details> : null}
                 </section>
-              </div>
+              </section>
               ) : null}
+            {showHomeSection("heatmap") || showHomeSection("timeline") ? (
+            <section className="grid min-w-0 gap-3" aria-label="Dashboard Intelligence">
+                {showHomeSection("heatmap") ? <ExposureHeatmap
+                  title="Portfolio Exposure Heatmap"
+                  market={selectedMarket}
+                  items={portfolioItems}
+                  defaultMode="sector"
+                  onCreateWatchlist={() => navigate("/equity/watchlist")}
+                  onOpenRisk={() => navigate("/equity/risk")}
+                /> : null}
+              {showHomeSection("timeline") ? <IntelligenceTimeline
+                market={selectedMarket}
+                symbols={portfolioItems.map((item) => item.ticker)}
+                limit={10}
+                title="Home Intelligence Timeline"
+                onAddAlert={() => navigate("/equity/alerts")}
+                onOpenScreener={() => navigate("/equity/screener")}
+              /> : null}
+            </section>
+            ) : null}
+              </div>
+              <aside className="grid min-w-0 content-start gap-3" aria-label="Market outlook and desk context">
+            <div className="grid grid-cols-1">
+              <AiInsightCard
+                title="AI Market Outlook"
+                description="Provider-agnostic interpretation of the displayed cross-asset snapshot"
+                disabled={!marketRows.some((row) => row.ltp > 0)}
+                disabledMessage="Live market observations are unavailable; an outlook cannot be grounded yet."
+                fetcher={(_, options) =>
+                  fetchCollectionBriefing(
+                    MARKET_PULSE_SYMBOLS,
+                    "global markets",
+                    marketRows
+                      .filter((row) => row.ltp > 0)
+                      .map((row) => ({
+                        symbol: row.symbol,
+                        label: row.label,
+                        price: row.ltp,
+                        change: row.chg,
+                        change_pct: row.chgPct,
+                      })),
+                    options,
+                  )
+                }
+              />
+            </div>
 
-              {showHomeSection("health") || showHomeSection("news") ? (
-              <div className="space-y-3">
                 {showHomeSection("health") ? (
                 <section className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3" aria-label="System Health">
                   <div className="mb-3">
-                    <h2 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">System Health</h2>
+                    <h2 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">System Health</h2>
                     <p className="mt-1 text-sm text-terminal-muted">
-                      Auth, relay mode, news cadence, and derivatives signal surfaced as a single mission-control rail.
+                      Connection, refresh and derivatives status.
                     </p>
                   </div>
                   <SystemHealthBar ariaLabel="System health indicators" items={systemHealthItems} />
                   <div className="mt-3 grid gap-2 text-xs text-terminal-muted sm:grid-cols-2">
                     <div className="rounded-sm border border-terminal-border bg-terminal-bg/40 px-2 py-2">
-                      <span className="block text-[11px] uppercase tracking-[0.12em]">Focus Asset</span>
+                      <span className="block text-xs uppercase tracking-normal">Focus Asset</span>
                       <span className="mt-1 block text-sm text-terminal-text">{focusedMarket?.label || "--"}</span>
                     </div>
                     <div className="rounded-sm border border-terminal-border bg-terminal-bg/40 px-2 py-2">
-                      <span className="block text-[11px] uppercase tracking-[0.12em]">Desk Mode</span>
+                      <span className="block text-xs uppercase tracking-normal">Desk Mode</span>
                       <span className="mt-1 block text-sm text-terminal-text">
                         {selectedMarket} / {displayCurrency}
                       </span>
@@ -863,14 +896,14 @@ export function HomePage() {
                 <section className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3" aria-label="Intel Wire">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h2 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">Intel Wire</h2>
+                      <h2 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">Intel Wire</h2>
                       <p className="mt-1 text-sm text-terminal-muted">
-                        Latest headlines from the existing news polling loop with sentiment carried through from the API payload.
+                        Latest headlines and available sentiment.
                       </p>
                     </div>
                     <button
                       type="button"
-                      className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                      className="rounded-sm border border-terminal-border px-2 py-1 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
                       onClick={() => navigate("/equity/news")}
                     >
                       Open News
@@ -887,9 +920,9 @@ export function HomePage() {
                             rel="noreferrer"
                             className="block focus-visible:outline-none focus-visible:text-terminal-accent hover:text-terminal-accent"
                           >
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
                               <div>
-                                <p className="text-[11px] uppercase tracking-[0.12em] text-terminal-muted">
+                                <p className="text-xs uppercase tracking-normal text-terminal-muted">
                                   {entry.source}
                                   {entry.published_at
                                     ? ` • ${new Date(entry.published_at).toLocaleTimeString("en-US", {
@@ -902,7 +935,7 @@ export function HomePage() {
                                 <p className="mt-1 text-sm font-medium text-terminal-text">{entry.title}</p>
                               </div>
                               {entry.sentiment ? (
-                                <span className={`shrink-0 text-[11px] font-medium uppercase tracking-[0.12em] ${getSentimentClass(entry.sentiment.label)}`}>
+                                <span className={`shrink-0 text-xs font-medium uppercase tracking-normal ${getSentimentClass(entry.sentiment.label)}`}>
                                   {entry.sentiment.label} {Math.round(entry.sentiment.confidence * 100)}%
                                 </span>
                               ) : null}
@@ -924,54 +957,31 @@ export function HomePage() {
                   )}
                 </section>
                 ) : null}
-              </div>
-              ) : null}
-            </section>
-            ) : null}
+              </aside>
+            </div>
 
-            {showHomeSection("heatmap") || showHomeSection("timeline") ? (
-            <section className="grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]" aria-label="Dashboard Intelligence">
-              <div className="space-y-3">
-                {showHomeSection("heatmap") ? <ExposureHeatmap
-                  title="Portfolio Exposure Heatmap"
-                  market={selectedMarket}
-                  items={portfolioItems}
-                  defaultMode="sector"
-                  onCreateWatchlist={() => navigate("/equity/watchlist")}
-                  onOpenRisk={() => navigate("/equity/risk")}
-                /> : null}
-              </div>
-              {showHomeSection("timeline") ? <IntelligenceTimeline
-                market={selectedMarket}
-                symbols={portfolioItems.map((item) => item.ticker)}
-                limit={10}
-                title="Home Intelligence Timeline"
-                onAddAlert={() => navigate("/equity/alerts")}
-                onOpenScreener={() => navigate("/equity/screener")}
-              /> : null}
-            </section>
-            ) : null}
+
 
             {showHomeSection("launch") ? (
             <section className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3" aria-label="Launch Matrix">
               <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">Launch Matrix</h2>
+                  <h2 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">Launch Matrix</h2>
                   <p className="mt-1 text-sm text-terminal-muted">
-                    Dense function-key style routing into equity, derivatives, research, and settings workspaces.
+                    Open a market, research or workspace tool.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                    className="rounded-sm border border-terminal-border px-2 py-1 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
                     onClick={() => navigate("/equity/chart-workstation")}
                   >
                     Open Workstation
                   </button>
                   <button
                     type="button"
-                    className="rounded-sm border border-terminal-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                    className="rounded-sm border border-terminal-border px-2 py-1 text-xs uppercase tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
                     onClick={() => navigate("/equity/screener")}
                   >
                     Open Screener

@@ -131,14 +131,14 @@ export function ExposureHeatmap({
     <div className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">{title}</h3>
+          <h3 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">{title}</h3>
           <p className="mt-1 text-xs text-terminal-muted">Sector, factor, currency, and correlation concentration for the {market} context.</p>
         </div>
         <div className="flex flex-wrap gap-1">
           {modes.map((mode) => (
             <span
               key={mode}
-              className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${
+              className={`rounded-sm border px-2 py-0.5 text-xs uppercase tracking-normal ${
                 mode === activeMode ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
               }`}
             >
@@ -148,17 +148,17 @@ export function ExposureHeatmap({
         </div>
       </div>
       {cells.length ? (
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] gap-2">
           {cells.map((cell) => {
             const magnitude = Math.min(100, Math.max(10, Math.abs(cell.value)));
             return (
               <div key={`${activeMode}-${cell.label}`} className={`rounded-sm border p-2 ${toneClass(cell)}`}>
-                <div className="truncate text-[11px] uppercase tracking-[0.1em]">{cell.label}</div>
+                <div className="break-words text-xs uppercase tracking-normal">{cell.label}</div>
                 <div className="mt-2 text-lg font-semibold tabular-nums">{pct(cell.value)}</div>
                 <div className="mt-2 h-1.5 rounded bg-terminal-bg/80">
                   <div className="h-1.5 rounded bg-current opacity-70" style={{ width: `${magnitude}%` }} />
                 </div>
-                <div className="mt-1 text-[10px] uppercase tracking-[0.1em] opacity-75">{cell.context || activeMode}</div>
+                <div className="mt-1 text-xs uppercase tracking-normal opacity-75">{cell.context || activeMode}</div>
               </div>
             );
           })}

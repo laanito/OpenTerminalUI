@@ -69,12 +69,12 @@ export function IntelligenceTimeline({
     <div className="rounded-sm border border-terminal-border bg-terminal-panel/80 p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="ot-type-panel-title uppercase tracking-[0.14em] text-terminal-accent">{title}</h3>
+          <h3 className="ot-type-panel-title uppercase tracking-normal text-terminal-accent">{title}</h3>
           <p className="mt-1 text-xs text-terminal-muted">
             News, alerts, events, insider activity, earnings, corporate actions, model signals, and backtest runs.
           </p>
         </div>
-        {fetching ? <span className="text-[11px] uppercase tracking-[0.12em] text-terminal-muted">Syncing...</span> : null}
+        {fetching ? <span className="text-xs uppercase tracking-normal text-terminal-muted">Syncing...</span> : null}
       </div>
       {rows.length ? (
         <ol className="space-y-2" role="list">
@@ -82,12 +82,12 @@ export function IntelligenceTimeline({
             const content = (
               <div className="grid gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${toneClass(item)}`}>
+                  <span className={`rounded-sm border px-2 py-0.5 text-xs uppercase tracking-normal ${toneClass(item)}`}>
                     {kindLabel(item.kind)}
                   </span>
-                  {item.symbol ? <span className="text-[11px] uppercase text-terminal-accent">{item.symbol}</span> : null}
-                  <span className="text-[11px] text-terminal-muted">{formatTime(item.timestamp)}</span>
-                  {item.source ? <span className="text-[11px] text-terminal-muted">/ {item.source}</span> : null}
+                  {item.symbol ? <span className="text-xs uppercase text-terminal-accent">{item.symbol}</span> : null}
+                  <span className="text-xs text-terminal-muted">{formatTime(item.timestamp)}</span>
+                  {item.source ? <span className="text-xs text-terminal-muted">/ {item.source}</span> : null}
                 </div>
                 <div className="text-sm text-terminal-text">{item.title}</div>
               </div>

@@ -7,7 +7,8 @@ is tracked below; the study itself implements no APIs, schemas or accounting.
 **Scope correction, 2026-11-20:** v3 is the frontend overhaul, not a Portfolio-only
 release. Portfolio is a completed pilot; populated page hierarchy and readable
 names/controls remain in v3.0. The maintainer's Equity feedback starts the next
-slice. See [current scope](SCOPE.md); do not propose release prep merely because
+slice, now accepted through #294. See the [Home review](HOME_REVIEW.md) for the
+next populated-page slice. See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 
 ## Review the proposal
@@ -98,7 +99,8 @@ full accessibility audit. No new CI lane is introduced for this disposable study
 - Make Buy/Sell the primary entry. Existing-position/external-receipt entry is a
   distinct no-cash flow with explicit accounting support, not a relabelled buy.
 - Establish the common shell across existing routes, then use Portfolio as the
-  first complete page migration. Keep other screen redesigns outside v3.0.
+  first complete page migration. The original proposal deferred other pages;
+  the maintainer's corrected scope above brings retained-page usability into v3.0.
 
 These defaults were reviewed in PR #286. Any later changes should explicitly
 update the scope and acceptance gate; a mockup is not evidence that

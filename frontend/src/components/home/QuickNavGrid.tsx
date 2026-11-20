@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 
 export type QuickNavItem = {
   id: string;
@@ -67,7 +67,7 @@ export function QuickNavGrid({
             </header>
             <div
               className="ot-home-widget-nav-grid"
-              style={{ gridTemplateColumns: `repeat(${Math.max(1, columnCount)}, minmax(0, 1fr))` }}
+              style={{ "--ot-home-nav-columns": Math.max(1, columnCount) } as CSSProperties}
             >
               {section.items.map((item, itemIndex) => {
                 const globalIndex = sectionStartIndex + itemIndex;
@@ -105,13 +105,17 @@ export function QuickNavGrid({
                         event.preventDefault();
                         focusItem(globalIndex - 1);
                       }
+                      // Match the responsive rendered grid, including zoom/narrow layouts.
+                      const columns = event.currentTarget.parentElement
+                        ? getComputedStyle(event.currentTarget.parentElement).gridTemplateColumns.split(" ").filter(Boolean).length || Math.max(1, columnCount)
+                        : Math.max(1, columnCount);
                       if (event.key === "ArrowDown") {
                         event.preventDefault();
-                        focusItem(globalIndex + Math.max(1, columnCount));
+                        focusItem(globalIndex + columns);
                       }
                       if (event.key === "ArrowUp") {
                         event.preventDefault();
-                        focusItem(globalIndex - Math.max(1, columnCount));
+                        focusItem(globalIndex - columns);
                       }
                       if (event.key === "Home") {
                         event.preventDefault();

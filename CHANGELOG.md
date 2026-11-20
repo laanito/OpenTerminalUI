@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Home puts portfolio history first** — supporting market outlook, status and
+  news occupy an independent column. Smaller desk metrics follow the history;
+  desk details and valuation methodology stay available through disclosures.
+  Market chips wrap, Launch Matrix reflows with matching keyboard navigation,
+  and widget/AI labels, long sector names and chart axes remain readable.
 - **Chart-first Equity and readable labels** — move instrument/market/cross-market
   context beside latest price; keep the chart above secondary content. Show active
   indicators separately from a wide hideable library/configuration drawer, with
