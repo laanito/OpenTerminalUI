@@ -1,9 +1,10 @@
 # v3.0 scope and acceptance gate
 
-Status: accepted discovery/design through merged PR #286. Keep this bounded gate
-explicit if priorities change. The [local acceptance report](ACCEPTANCE.md) records
-implementation evidence and the pending maintainer/CI release decision. A whole frontend generation does not
-require rewriting every page in the first release.
+Status: discovery accepted through #286, **scope corrected by maintainer feedback
+on 2026-11-20**. The Portfolio pilot and its local acceptance report are completed
+slices, not acceptance of the entire frontend overhaul. v3.0 remains open for
+page-level hierarchy, usable controls and readable labels across retained screens.
+The [Portfolio report](ACCEPTANCE.md) is historical evidence for that workflow.
 
 ## v3.0 delivers
 
@@ -17,6 +18,11 @@ require rewriting every page in the first release.
   owner boundaries, historical FX, unknown-basis and migration safety.
 - Existing Portfolio capabilities organized into discoverable secondary sections,
   with the misleading per-holding “performance” curve removed/replaced.
+- Equity/Stock Detail puts the chart first: quote/market/cross-market context in
+  the price column, an active-study summary and a wide hideable indicator manager.
+- Retained pages receive a populated hierarchy/readability pass. Small or clipped
+  name labels, controls that overflow and secondary content obscuring the primary
+  task are release issues, not automatically deferred because Portfolio passed.
 
 No framework rewrite, new UI framework, broad dependency replacement or permanent
 parallel old/new application is proposed. Reuse/evolve TerminalShell, TerminalPanel,
@@ -30,7 +36,7 @@ by workflow rather than replacing the application with one new giant component.
 | Page frame | One title, visible current scope, one primary action. Flexible children use `min-width:0`; content owns predictable vertical scrolling. |
 | Scope bar | Distinguish instrument/market, portfolio selection, reporting currency and captured evidence scope. Do not let a global ticker silently retarget a Portfolio operation or saved research. |
 | Navigation | Keep existing URLs and direct links. Group Home, Markets, Portfolio, Research and Workspace conceptually; preserve access to all retained tools via navigation/GO. Distinguish chart Compare from Market Context. Configuration-gated tools keep their disclosures. Final labels/mapping are reviewable, not route deletions. |
-| Typography | Proposed 14px body/form text, 12px secondary metadata, restrained 10–11px decorative overlines. Monospace for numbers/identities where useful; full text/dates remain available. Reuse theme tokens with verified contrast. |
+| Typography | Readable panel names (14px), descriptions and control/badge labels (12px or larger), with normal tracking/wrapping. Dense numerical tables can retain deliberate compact typography; primary names cannot depend on clipping or tooltips. Monospace for numbers/identities where useful; full text/dates remain available. Reuse theme tokens with verified contrast. |
 | Adaptive data | Summary positions/cards on narrow screens; original lots use per-holding dense tables, with one collapsed All movements table for the selected accounts. Put intentional horizontal scrolling inside named, focusable table/chart regions. Preserve sort/filter/columns/export/keyboard behavior where supported. |
 | Overlays | Drawer/modal fits available height, scrolls internally, has a name, close action, Escape policy, focus trap/restoration and busy/uncertain-state behavior. No permanently reserved portfolio column. |
 | Progressive disclosure | Positions before data-entry forms. Keep detailed evidence, FX/basis issues and legacy diagnostics inspectable; active failures stay visible. |
@@ -51,12 +57,14 @@ study and remain required in the shared-shell slice.
 | Portfolio domain contracts | Owner-scoped consolidated reporting and auditable receipts/unknown basis; atomic and duplicate-safe operations; accounting/history/export consumer coverage and additive migration plan. | Accepted PORTFOLIO contract. |
 | Position-first Portfolio | Consolidated overview, drawer, instrument→portfolio→lot detail, partial/empty/error states. | Shared foundation + reporting contract. |
 | Operations and secondary sections | Reviewed Buy/Sell/receipt, retained cash operations, Research/Analytics/Manage paths, existing feature access and honest chart replacement. | Domain support + position drill-down. |
+| Equity and retained-page usability | Chart-first Equity, split indicator summary/library, readable shared names; inspect Home, research, news, market and workspace layouts in populated states. | Shared foundation and completed Portfolio work. |
 | Release acceptance | Populated responsive/keyboard workflows, accounting/migration/ownership parity, regression gates, user review and explicit release prep. | All above. |
 
 These are delivery boundaries, not a mandatory PR count. Domain and shell work can
 be reviewed independently where useful, but non-cash entry cannot ship before its
-accounting/history support. Do not begin later screen redesigns to avoid closing
-this gate.
+accounting/history support. Sequence the retained-page usability work into
+reviewable PRs without adding new product features. The maintainer explicitly reopened it on
+2026-11-20; complete those reviews before proposing release prep.
 
 ## Concrete release acceptance
 
@@ -100,8 +108,9 @@ this gate.
     Verify contrast, reduced motion and meaningful screen-reader structure.
 13. Shared-shell regression cases preserve populated Stock Detail candle inspection,
     comparison citations/saved runs, Brain answers/Log/promotion and Notes/Journal
-    editing, including cancelled/late/failed async work. Their full page redesigns
-    are not prerequisites, but shell changes cannot break their contracts.
+    editing, including cancelled/late/failed async work. Inspect their own layout,
+    label readability and primary-task hierarchy with populated data; passing
+    shared-shell tests alone does not complete the frontend overhaul.
 14. Relevant backend/frontend/browser gates pass; migrations/legacy preservation,
     ownership and currency/receipt parity pass disposable SQLite and guarded
     PostgreSQL/fresh-stack lanes. Do not touch production data during development.
@@ -110,9 +119,11 @@ this gate.
 
 ## Explicitly outside v3.0
 
-Full redesigns of Home, Market/Security, comparison research, Brain/Notes/Journal,
-News and Workstation are later **v3.x scope proposals**. Existing routes remain
-usable inside the new shared shell. Broader technical thesis validation, decision
+A framework rewrite, new research algorithms or new product features are not
+required to correct the retained frontend. Page/layout/readability improvements
+for Home, Market/Security, comparison research, Brain/Notes/Journal, News and
+Workstation are no longer categorically deferred to a later version.
+Broader technical thesis validation, decision
 model adoption, new market providers/instruments, broker execution, leverage/short
 accounting, full internal transfer engine and Journal/transaction matching remain
 separate priorities. No dates or mandatory additional minor releases are assigned.

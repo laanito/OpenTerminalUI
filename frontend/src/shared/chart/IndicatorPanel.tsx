@@ -13,7 +13,6 @@ import {
   INDICATOR_LIBRARY_UPDATED_EVENT,
   cloneIndicatorConfig,
   deleteIndicatorTemplate,
-  getIndicatorTemplateStorageKey,
   makeIndicatorInstanceId,
   readIndicatorFavorites,
   readIndicatorTemplates,
@@ -32,6 +31,8 @@ type Props = {
   activeIndicators: IndicatorConfig[];
   onChange: (next: IndicatorConfig[]) => void;
   templateScope?: "equity" | "fno";
+  initialCategory?: string;
+  layout?: "panel" | "manager";
   onCreateAlert?: (config: IndicatorConfig) => void;
 };
 
@@ -109,13 +110,13 @@ function buildPaneOptions(
   return out;
 }
 
-export function IndicatorPanel({ symbol, activeIndicators, onChange, templateScope = "equity", onCreateAlert }: Props) {
+export function IndicatorPanel({ symbol, activeIndicators, onChange, templateScope = "equity", onCreateAlert, initialCategory = "favorites", layout = "panel" }: Props) {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [catalogVersion, setCatalogVersion] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<string>("favorites");
+  const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readIndicatorFavorites());
   const [templates, setTemplates] = useState<IndicatorTemplateRecord[]>(() => readIndicatorTemplates(templateScope));
   const [customName, setCustomName] = useState("");
@@ -315,22 +316,113 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
     setCatalogVersion((version) => version + 1);
   };
 
+  const savedTools = (
+<div className="mt-3 space-y-2 rounded border border-terminal-border p-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm uppercase tracking-wide text-terminal-muted">Templates</div>
+          <div className="text-xs text-terminal-muted">{templates.length} saved</div>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            value={templateName}
+            onChange={(event) => setTemplateName(event.target.value)}
+            aria-label="Template name"
+            placeholder="Template name"
+            className="min-w-0 flex-1 rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
+          />
+          <button
+            type="button"
+            className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-accent disabled:opacity-50"
+            onClick={saveTemplate}
+            disabled={!templateName.trim() || !activeIndicators.length}
+          >
+            Save
+          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          <select
+            className="min-w-0 flex-1 rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none"
+            value={selectedTemplateId}
+            onChange={(event) => setSelectedTemplateId(event.target.value)}
+            aria-label="Saved indicator template"
+            data-testid="indicator-template-select"
+          >
+            <option value="">Select template</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-accent disabled:opacity-50"
+            onClick={loadTemplate}
+            disabled={!selectedTemplateId}
+          >
+            Load
+          </button>
+          <button
+            type="button"
+            className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted disabled:opacity-50"
+            onClick={deleteTemplate}
+            disabled={!selectedTemplateId}
+            data-testid="indicator-template-delete"
+          >
+            Del
+          </button>
+        </div>
+
+        <div className="rounded border border-terminal-border p-2">
+          <div className="mb-1 text-sm uppercase tracking-wide text-terminal-muted">Custom JS</div>
+          <input
+            value={customName}
+            onChange={(event) => setCustomName(event.target.value)}
+            aria-label="Custom indicator name"
+            placeholder="Custom indicator name"
+            className="mb-1 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
+          />
+          <label className="mb-1 flex items-center gap-2 text-sm text-terminal-muted">
+            <input type="checkbox" checked={customOverlay} onChange={(event) => setCustomOverlay(event.target.checked)} />
+            Overlay on main chart
+          </label>
+          <textarea
+            aria-label="Custom indicator JavaScript"
+            value={customScript}
+            onChange={(event) => setCustomScript(event.target.value)}
+            className="h-28 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
+            spellCheck={false}
+          />
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-accent"
+              onClick={saveCustomScript}
+            >
+              Save JS
+            </button>
+            {customError ? <span className="text-xs text-terminal-neg">{customError}</span> : null}
+          </div>
+        </div>
+      </div>
+  );
+
   return (
-    <div className="relative rounded border border-terminal-border bg-terminal-panel p-3">
-      <div className="mb-3 flex items-start justify-between gap-3">
+    <div className={`relative min-w-0 rounded bg-terminal-panel ${layout === "manager" ? "" : "border border-terminal-border p-3"}`}>
+      <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide text-terminal-accent">Indicators</div>
-          <div className="mt-1 text-[11px] text-terminal-muted">
+          <div className="mt-1 text-sm text-terminal-muted">
             {activeIndicators.length}/{MAX_ACTIVE} active | {favoriteIds.length} favorites | {symbol.toUpperCase()}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-[11px] text-terminal-muted">
-            Templates in <span className="text-terminal-text">{getIndicatorTemplateStorageKey(templateScope)}</span>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="text-sm text-terminal-muted">
+            {templateScope === "equity" ? "Equity templates" : "Derivatives templates"}
           </div>
           <button
             type="button"
-            className="rounded border border-terminal-border px-2 py-1 text-[10px] text-terminal-muted hover:text-terminal-text"
+            className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted hover:text-terminal-text"
             onClick={resetAllParams}
             disabled={!activeIndicators.length}
             data-testid="indicator-reset-all"
@@ -343,6 +435,7 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
       <input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
+        aria-label="Search indicators"
         placeholder="Search indicators, aliases, or categories"
         className="mb-2 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
       />
@@ -355,7 +448,7 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
             <button
               key={category}
               type="button"
-              className={`rounded border px-2 py-1 text-[10px] uppercase tracking-[0.14em] ${
+              className={`rounded border px-2 py-1 text-xs uppercase tracking-normal ${
                 isActive
                   ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
                   : "border-terminal-border text-terminal-muted"
@@ -369,12 +462,16 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
         })}
       </div>
 
-      <div className="max-h-80 space-y-3 overflow-auto pr-1">
+      {layout === "manager" && <details className="mb-3 rounded border border-terminal-border p-3">
+        <summary className="cursor-pointer text-sm text-terminal-text">Templates and custom indicators</summary>
+        {savedTools}
+      </details>}
+      <div className={layout === "manager" ? "space-y-3" : "max-h-80 space-y-3 overflow-auto pr-1"}>
         {groupedCatalog.length ? (
           groupedCatalog.map(([category, items]) => (
             <section key={category}>
               {(activeCategory === "all" || activeCategory === "favorites" || activeCategory === "active") ? (
-                <div className="mb-2 text-[11px] uppercase tracking-[0.18em] text-terminal-muted">{category}</div>
+                <div className="mb-2 text-sm uppercase tracking-normal text-terminal-muted">{category}</div>
               ) : null}
               <div className="space-y-2">
                 {items.map((item) => {
@@ -393,7 +490,7 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                       <div className="flex items-start gap-2">
                         <button
                           type="button"
-                          className={`rounded border px-1.5 py-1 text-[10px] ${
+                          className={`rounded border px-1.5 py-1 text-xs ${
                             favoriteSet.has(normalizeFavoriteId(item.id))
                               ? "border-terminal-accent text-terminal-accent"
                               : "border-terminal-border text-terminal-muted"
@@ -415,23 +512,23 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                           title={item.id}
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="truncate">
+                            <span className="min-w-0 break-words">
                               {active ? (instances.length > 1 ? `[x${instances.length}]` : "[x]") : "[ ]"} {item.name}
                             </span>
-                            <span className="rounded border border-terminal-border px-1 py-0.5 text-[9px] uppercase tracking-[0.14em] text-terminal-muted">
+                            <span className="rounded border border-terminal-border px-1 py-0.5 text-xs uppercase tracking-normal text-terminal-muted">
                               {item.overlay ? "Overlay" : "Pane"}
                             </span>
                           </div>
-                          <div className="mt-1 truncate text-[10px] text-terminal-muted">{item.id}</div>
+                          <div className="mt-1 break-words text-xs text-terminal-muted">{item.id}</div>
                         </button>
                         {!active && item.isCustom ? (
                           <button
                             type="button"
-                            className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+                            className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted"
                             onClick={() => deleteCustomScript(item.id)}
                             title="Delete custom script"
                           >
-                            rm
+                            Remove
                           </button>
                         ) : null}
                       </div>
@@ -445,7 +542,7 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                                 className="mt-2 rounded border border-terminal-border/60 bg-terminal-bg/40 px-2 py-2"
                               >
                                 <div
-                                  className="text-[10px] text-terminal-muted"
+                                  className="text-xs text-terminal-muted"
                                   data-testid={`indicator-route-summary-${testSuffix}`}
                                 >
                                   {instances.length > 1 ? `Instance ${instanceIndex + 1} | ` : ""}
@@ -454,14 +551,14 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                                 <div className="mt-2 flex flex-wrap items-center gap-1">
                                   <button
                                     type="button"
-                                    className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+                                    className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted"
                                     onClick={() => setEditingId(current.instanceId)}
                                   >
-                                    cfg
+                                    Configure
                                   </button>
                                   <button
                                     type="button"
-                                    className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+                                    className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted"
                                     onClick={() => toggleVisibility(current.instanceId)}
                                     data-testid={`indicator-visibility-${testSuffix}`}
                                   >
@@ -469,7 +566,7 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                                   </button>
                                   <button
                                     type="button"
-                                    className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+                                    className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted"
                                     onClick={() => resetIndicatorParams(current.instanceId, item.id)}
                                     data-testid={`indicator-reset-${testSuffix}`}
                                   >
@@ -478,7 +575,7 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                                   {onCreateAlert ? (
                                     <button
                                       type="button"
-                                      className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+                                      className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted"
                                       onClick={() => onCreateAlert(current)}
                                       data-testid={`indicator-alert-${testSuffix}`}
                                     >
@@ -487,16 +584,16 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
                                   ) : null}
                                   <button
                                     type="button"
-                                    className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+                                    className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted"
                                     onClick={() =>
                                       onChange(activeIndicators.filter((indicator) => indicator.instanceId !== current.instanceId))
                                     }
                                   >
-                                    del
+                                    Remove
                                   </button>
                                 </div>
                                 {Object.keys(current.params || {}).length ? (
-                                  <div className="mt-2 truncate text-[10px] text-terminal-muted">
+                                  <div className="mt-2 break-words text-xs text-terminal-muted">
                                     {Object.entries(current.params)
                                       .filter(([key]) => !key.startsWith("__otui"))
                                       .slice(0, 4)
@@ -516,100 +613,17 @@ export function IndicatorPanel({ symbol, activeIndicators, onChange, templateSco
             </section>
           ))
         ) : (
-          <div className="rounded border border-dashed border-terminal-border px-3 py-4 text-center text-[11px] text-terminal-muted">
+          <div className="rounded border border-dashed border-terminal-border px-3 py-4 text-center text-sm text-terminal-muted">
             No indicators match this view.
           </div>
         )}
       </div>
 
-      <div className="mt-3 space-y-2 rounded border border-terminal-border p-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-[11px] uppercase tracking-wide text-terminal-muted">Templates</div>
-          <div className="text-[10px] text-terminal-muted">{templates.length} saved</div>
-        </div>
-        <div className="flex items-center gap-1">
-          <input
-            value={templateName}
-            onChange={(event) => setTemplateName(event.target.value)}
-            placeholder="Template name"
-            className="min-w-0 flex-1 rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
-          />
-          <button
-            type="button"
-            className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-accent disabled:opacity-50"
-            onClick={saveTemplate}
-            disabled={!templateName.trim() || !activeIndicators.length}
-          >
-            Save
-          </button>
-        </div>
-        <div className="flex items-center gap-1">
-          <select
-            className="min-w-0 flex-1 rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none"
-            value={selectedTemplateId}
-            onChange={(event) => setSelectedTemplateId(event.target.value)}
-            data-testid="indicator-template-select"
-          >
-            <option value="">Select template</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-accent disabled:opacity-50"
-            onClick={loadTemplate}
-            disabled={!selectedTemplateId}
-          >
-            Load
-          </button>
-          <button
-            type="button"
-            className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted disabled:opacity-50"
-            onClick={deleteTemplate}
-            disabled={!selectedTemplateId}
-            data-testid="indicator-template-delete"
-          >
-            Del
-          </button>
-        </div>
-
-        <div className="rounded border border-terminal-border p-2">
-          <div className="mb-1 text-[11px] uppercase tracking-wide text-terminal-muted">Custom JS</div>
-          <input
-            value={customName}
-            onChange={(event) => setCustomName(event.target.value)}
-            placeholder="Custom indicator name"
-            className="mb-1 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
-          />
-          <label className="mb-1 flex items-center gap-2 text-[11px] text-terminal-muted">
-            <input type="checkbox" checked={customOverlay} onChange={(event) => setCustomOverlay(event.target.checked)} />
-            Overlay on main chart
-          </label>
-          <textarea
-            value={customScript}
-            onChange={(event) => setCustomScript(event.target.value)}
-            className="h-28 w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent"
-            spellCheck={false}
-          />
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-accent"
-              onClick={saveCustomScript}
-            >
-              Save JS
-            </button>
-            {customError ? <span className="text-[10px] text-terminal-neg">{customError}</span> : null}
-          </div>
-        </div>
-      </div>
+      {layout === "panel" && savedTools}
 
       <div className="mt-2 flex items-center justify-between">
-        <div className="text-[11px] text-terminal-muted">{symbol.toUpperCase()}</div>
-        <button type="button" className="text-[11px] text-terminal-accent" onClick={() => onChange([])}>
+        <div className="text-sm text-terminal-muted">{symbol.toUpperCase()}</div>
+        <button type="button" className="text-sm text-terminal-accent" onClick={() => onChange([])}>
           Clear all
         </button>
       </div>

@@ -1,66 +1,63 @@
 # Current project state and backlog
 
-Current work **v3 Portfolio local acceptance and accessibility follow-up**
-(2026-11-19), after maintainer-confirmed merged #292 (`fa91c7f`). Keep the accepted
-Portfolio hierarchy and financial contracts; no additional screen redesign or
-version bump. Published v2.8.0 remains unchanged until explicit release prep.
+Current work **v3 Equity layout and shared label readability** (2026-11-20),
+after maintainer-confirmed merged #293 (`dc030e1`). **Scope correction: v3 is the
+frontend overhaul, not a Portfolio-only release.** The maintainer reported Equity
+context pushing the chart below the fold, unreadable indicator management and
+unreadable name labels generally. This supersedes earlier instructions that put
+all other page redesigns outside v3.0. Do not propose release prep on the strength
+of Portfolio's completed pilot/automated acceptance alone.
 
-The final populated local audit is documented in `docs/design/v3/ACCEPTANCE.md`.
-It exercises 25 instrument groups, 80 lots, two accounts, fractional quantities,
-long names/research URLs and 80 movements per account at 1440/1024/390px. A native
-Chrome profile zoom of 200% is measured as 1440 outer / 720 CSS px, DPR 2 and visual
-scale 1; it is not pinch/CSS emulation. The context rail is checked on/off after
-its chart resize observer settles. Fixtures are synthetic and no production data
-or provider/model writes are used. The original discovery audit remains historical.
+Stock Detail now keeps its real chart/controls first, with latest price,
+instrument/market identity and cross-market context in a 280–320px right column
+at desktop/tablet widths. Mobile keeps chart first and context below. The toolbar
+wraps, keeps candle OHLCV visible and avoids another quote/context strip above the
+chart. Fullscreen/volume/session controls and quote/indicator data paths are
+preserved. The NFO-only FuturesPanel is scoped to Indian instruments instead of
+showing an unrelated NSE futures search on US/crypto pages.
 
-Corrected shared DenseTable row/cell heights to honor 40/44px Portfolio actions
-and match virtual geometry. Grid keys leave native controls alone; Arrow,
-Home/End and Page navigation scroll/focus the target row with correct sorted
-ARIA row indices. Column menus close with Escape/focus return; resize separators
-have keyboard/width semantics. Default-hidden evidence can now be shown and
-exported, with an additive persisted visibility choice preserving old order/width/
-hide settings. Full scalar text has native tooltips. Named grids distinguish lots
-and movements. Table surfaces/text/borders follow theme tokens instead of dark
-constants. Light label/accent/warning contrast and solid focus rings are improved;
-shared shell/modal CSS honors reduced motion. Allocation legends can be focused
-and scrolled. Long listing summaries wrap; narrow scope choices stay reachable.
+Active indicators have a compact, readable summary with independent per-instance
+show/hide/remove controls. The wide hideable right drawer owns searchable full
+indicator names, categories/favorites, template tools and custom JS. Templates/
+custom tools have their own disclosure near the search; they are not buried below
+the whole catalogue. Parameter editing uses a bounded nested TerminalModal with
+Save/Cancel, native form submission and separate Escape/focus behavior. Existing
+instance/pane/scale metadata, favorites, template scope and per-symbol storage keys
+are preserved. Names are memoized so crosshair/tick renders do not rebuild the
+catalogue. No indicator algorithm/model/provider/backend/schema/dependency change.
 
-Modal focus wrapping includes disclosure summaries and excludes closed contents,
-hidden and inert controls. Existing busy/topmost rules remain. Confirmed Portfolio
-operations/repairs announce success and focus that confirmation if refreshing
-removes the lot opener. Cancellation returns to a surviving opener. Inline Notes
-retain explicit GO access and draft text; modal Journal editing blocks background
-shortcuts. New desktop/mobile browser cases cover Notes/Journal save/cancel without
-changing those pages' implementation or research identities.
+Shared panel names are 14px and descriptions 12px with normal tracking/wrapping;
+headers/actions can wrap instead of truncating. Action and badge labels have 12px
+readable defaults. These are shared improvements, not a claim that every literal
+9–11px legacy label or every page hierarchy has been fixed. Dense numerical tables
+can stay deliberately compact; meaningful names cannot rely on clipping/tooltips.
 
-Validation: **852 frontend tests / 140 files**, production build and **65 installed-
-Chrome smoke journeys** pass. Focused sorting/virtual navigation, column visibility
-persistence, resize/menu and disclosure-trap tests pass. Sampled label/table/action
-sRGB contrast is >=4.5 in Terminal Noir, Light Desk and Classic Bloomberg; measured
-noir/light minima are approximately 5.01/5.38. This is not full assistive-technology
-user testing or a blanket certification of every legacy/custom theme. API/surface/
-mock/whitespace guards pass. Backend/API/schema/accounting/provider/dependencies
-are unchanged, so the backend suite was not rerun. Carry forward #292's 1,969 full
-backend passes / three PostgreSQL skips and final 182 Portfolio passes; actual
-migrated PostgreSQL stays in guarded CI. No deployment/production DB operations.
-Do not monitor CI unless asked. Selected screenshots and metrics are retained
-alongside the acceptance report; browser artifacts are also produced by the tests.
+Validation: all **854 frontend tests / 141 files**, production build and **69
+installed-Chrome smoke journeys** pass. New BTC desktop/tablet/mobile journeys
+exercise chart-before-fold, side context, library width, full labels, nested
+configuration cancel/save, templates, focus return, summary hide/remove and reload
+persistence. An AAPL case exercises equity chart/performance context with typed
+synthetic fundamentals. Existing BTC OHLCV hover/live quote, Portfolio/native
+200% zoom, Brain, comparison/evidence and Notes/Journal editing cases pass. New
+summary tests cover duplicate instance independence and metadata hiding. Screenshots
+reviewed. API-reference, surface/mock and whitespace guards pass. All fixtures
+are synthetic; no deployment/production DB or real model/provider writes. The
+unchanged backend suite is not rerun. Do not monitor CI unless asked.
 
-The #292 opening contract remains: explicit unknown cost is SQL NULL; current
-value/cash and entry contribution valuation are independent of acquisition basis.
-Per-account/symbol weighted-average P&L stays unavailable when unknown cost affects
-the pool. Audited stable-ID/revision repairs remain accessible after full sale,
-change no quantity/observation/cash/fees, preserve original creation retries and
-refuse mixed-lot basis replacement pending reconciliation. Migration 0022 remains
-required; retaining downgrade must not turn unknowns into zero, and old binaries
-are unsafe writers once unknown costs exist. CSV import still records buys/cash.
-Notes/Brain/Journal/mandate identities and scope URLs/saved views stay preserved.
+`docs/design/v3/SCOPE.md`, design README, Portfolio acceptance report and wiki
+roadmap now reflect the maintainer's 2026-11-20 correction. Portfolio's financial
+and migration contracts remain accepted: independent native/datetime FX accounting,
+unknown basis as SQL NULL, stable operation and audited repair identities, owner
+boundaries, no invented cash/profit, and migration 0022 retaining old/unknown data.
+Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
-Next: maintainer/host acceptance and PR CI review, then explicitly authorized
-release prep. Local implementation/audit work for the bounded Portfolio pilot is
-complete; do not invent another v3.0 feature or move to another screen to avoid
-closing it. Full later-page redesigns remain v3.x scope proposals, with no assigned
-release count/dates. Deployment belongs to the host agent.
+Next: continue populated retained-page hierarchy/readability reviews, prioritizing
+Home/Market/Security, comparison/Brain/Notes/Journal, News and Workstation/Screener.
+Correct clipped names/controls and secondary content dominating the main task;
+do not only rerun shell navigation tests and call those pages redesigned. Work
+in reviewable PRs and retain evidence/failure/async contracts. The broader frontend
+acceptance gate and host review remain open. No release prep/version bump yet;
+v2.8.0 remains published and deployment stays with the host agent.
 
 Published **2026-11-18: v2.8.0 — Durable news and sentiment evidence**.
 Implementation through retention/deletion PR #283 is merged at `0e7a383`.
@@ -1966,10 +1963,10 @@ These are the clearest remaining items from the current roadmap and code state.
 They are demand-pulled or later-generation inputs, not a substitute for the
 ordered v1.7 milestone above.
 
-- [ ] **v3 UX/frontend overhaul — Portfolio-first.** v2 close-out is complete.
-      Maintainer authorized discovery/design on 2026-11-18. Proposed v3.0 gate:
-      shared responsive foundation plus the complete Portfolio workflow; other
-      page redesigns are later v3.x scope proposals. Shared-shell work is underway.
+- [ ] **v3 UX/frontend overhaul.** v2 close-out is complete. Discovery started
+      with Portfolio on 2026-11-18. Maintainer correction on 2026-11-20 keeps
+      retained-page hierarchy/readability in v3.0; Portfolio acceptance alone does
+      not authorize release prep. Shared improvements are not a whole-page audit.
       See `docs/design/v3/README.md`, `AUDIT.md`, `PORTFOLIO.md` and `SCOPE.md`.
       - [x] Initial synthetic 27-view wide/intermediate/narrow audit, screenshots
             and source review; explicitly record unasked/empty research limits.
@@ -2004,8 +2001,14 @@ ordered v1.7 milestone above.
             single-account analysis driven by the same scope. Research/import/
             export/repair remain accessible. 844 frontend tests/build/57 browser
             journeys pass; original design audit remains baseline evidence.
-      - [ ] Maintainer/host acceptance, PR CI and release review after completed local
-            populated keyboard/zoom audit; keep PostgreSQL/SQLite
+      - [x] Equity chart-first/right-context layout, active-study summary and wide
+            indicator drawer with preserved settings/templates; readable shared
+            panel/action/badge labels and wrapping headers.
+      - [ ] Populated Home/Market/Security hierarchy/readability review.
+      - [ ] Populated comparison/Brain/Notes/Journal hierarchy/readability review.
+      - [ ] Populated News and Workstation/Screener hierarchy/readability review.
+      - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
+            review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
             operations during development or implicit expansion into later scope.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer

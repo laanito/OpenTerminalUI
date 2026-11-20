@@ -9,6 +9,7 @@ import {
   upsertIndicatorRouting,
 } from "./indicatorCatalog";
 import type { IndicatorConfig } from "./types";
+import { TerminalModal } from "../../components/terminal/TerminalModal";
 import { terminalColors } from "../../theme/terminal";
 
 type PaneOption = {
@@ -71,26 +72,13 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
     onSave(next);
   };
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      } else if (event.key === "Enter") {
-        event.preventDefault();
-        saveDraft();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [draft, onClose, saveDraft]);
-
   return (
-    <div className="absolute right-2 top-10 z-40 w-80 rounded border border-terminal-border bg-terminal-panel p-3 shadow-xl">
+    <TerminalModal open title={`Configure ${info?.name || config.id}`} onClose={onClose}>
+      <form onSubmit={event => { event.preventDefault(); saveDraft(); }}>
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-terminal-accent">{info?.name || config.id}</div>
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-[11px] text-terminal-muted">
+          <label className="text-sm text-terminal-muted">
             <span className="mb-1 block">Pane</span>
             <select
               value={paneTarget}
@@ -116,7 +104,7 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
               <option value="existing" disabled={!canUseExistingPane}>Existing pane</option>
             </select>
           </label>
-          <label className="text-[11px] text-terminal-muted">
+          <label className="text-sm text-terminal-muted">
             <span className="mb-1 block">Scale</span>
             <select
               value={scaleBehavior}
@@ -130,7 +118,7 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
           </label>
         </div>
         {paneTarget === "existing" ? (
-          <label className="block text-[11px] text-terminal-muted">
+          <label className="block text-sm text-terminal-muted">
             <span className="mb-1 block">Join pane</span>
             <select
               value={paneId}
@@ -151,7 +139,7 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
           </label>
         ) : null}
         {entries.map(([key, value]) => (
-          <label key={key} className="block text-[11px] text-terminal-muted">
+          <label key={key} className="block text-sm text-terminal-muted">
             <span className="mb-1 block">{key}</span>
             <input
               type={typeof value === "number" ? "number" : "text"}
@@ -173,7 +161,7 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
         ))}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <label className="text-[11px] text-terminal-muted">
+        <label className="text-sm text-terminal-muted">
           <span className="mb-1 block">Color</span>
           <input
             type="color"
@@ -182,7 +170,7 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
             onChange={(e) => setDraft((prev) => ({ ...prev, color: e.target.value }))}
           />
         </label>
-        <label className="text-[11px] text-terminal-muted">
+        <label className="text-sm text-terminal-muted">
           <span className="mb-1 block">Line Width</span>
           <input
             type="number"
@@ -194,24 +182,26 @@ export function IndicatorParamEditor({ config, defaultOverlay, paneOptions, onCl
           />
         </label>
       </div>
-      <div className="mt-3 flex items-center justify-end gap-2">
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
         <button
           className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted"
+          type="button"
           onClick={() => setDraft((prev) => replaceIndicatorEditableParams(prev, { ...defaultParams }))}
           data-testid="indicator-editor-reset-params"
         >
           Reset params
         </button>
-        <button className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted" onClick={onClose}>
+        <button type="button" className="rounded border border-terminal-border px-2 py-1 text-sm text-terminal-muted" onClick={onClose}>
           Cancel
         </button>
         <button
           className="rounded border border-terminal-accent bg-terminal-accent/20 px-2 py-1 text-xs text-terminal-accent"
-          onClick={saveDraft}
+          type="submit"
         >
           Save
         </button>
       </div>
-    </div>
+      </form>
+    </TerminalModal>
   );
 }

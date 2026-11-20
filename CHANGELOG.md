@@ -7,6 +7,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Chart-first Equity and readable labels** — move instrument/market/cross-market
+  context beside latest price; keep the chart above secondary content. Show active
+  indicators separately from a wide hideable library/configuration drawer, with
+  preserved instance/pane/template behavior. Shared panel titles/descriptions and
+  action/badge labels are larger and wrap. v3.0 remains open for the broader
+  retained-page frontend overhaul, following maintainer scope correction.
 - **Portfolio keyboard and accessibility acceptance** — original-lot/activity
   rows honor their height; virtual row navigation scrolls and focuses correctly.
   Controls keep their native keys, evidence columns can be revealed/exported,

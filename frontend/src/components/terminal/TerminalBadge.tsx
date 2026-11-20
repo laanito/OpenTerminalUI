@@ -23,15 +23,15 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "px-1.5 py-0.5 text-[10px]",
-  md: "px-2 py-0.5 text-[11px]",
+  sm: "px-1.5 py-0.5 text-xs",
+  md: "px-2 py-0.5 text-sm",
 };
 
 export function TerminalBadge({ children, variant = "neutral", size = "sm", className = "", dot = false }: Props) {
   return (
     <span
       className={[
-        "inline-flex items-center rounded-sm border ot-type-badge",
+        "inline-flex max-w-full flex-wrap items-center break-words rounded-sm border ot-type-badge",
         dot ? "gap-1" : "",
         sizes[size],
         variants[variant],

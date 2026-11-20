@@ -36,11 +36,11 @@
   */
   --ot-type-heading-xl-size: var(--ot-type-size-3xl);
   --ot-type-heading-lg-size: var(--ot-type-size-2xl);
-  --ot-type-panel-title-size: var(--ot-type-size-xs);
-  --ot-type-panel-subtitle-size: var(--ot-type-size-2xs);
+  --ot-type-panel-title-size: var(--ot-type-size-lg);
+  --ot-type-panel-subtitle-size: var(--ot-type-size-sm);
   --ot-type-table-cell-size: var(--ot-type-size-xs);
   --ot-type-table-header-size: var(--ot-type-size-2xs);
-  --ot-type-badge-size: var(--ot-type-size-2xs);
+  --ot-type-badge-size: var(--ot-type-size-sm);
   --ot-type-status-size: var(--ot-type-size-xs);
   --ot-type-status-line-height: var(--ot-line-height-tight);
   --ot-type-data-line-height: var(--ot-line-height-data);
@@ -245,11 +245,11 @@
 
 .ot-type-label {
   font-family: var(--ot-font-ui);
-  font-size: var(--ot-type-size-2xs);
-  line-height: var(--ot-line-height-tight);
+  font-size: var(--ot-type-size-sm);
+  line-height: var(--ot-line-height-ui);
   font-weight: var(--ot-font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: var(--ot-letter-spacing-normal);
 }
 
 .ot-type-status {
@@ -265,28 +265,28 @@
 .ot-type-badge {
   font-family: var(--ot-font-ui);
   font-size: var(--ot-type-badge-size);
-  line-height: var(--ot-type-status-line-height);
+  line-height: var(--ot-line-height-ui);
   font-weight: var(--ot-font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: var(--ot-letter-spacing-wide);
+  letter-spacing: var(--ot-letter-spacing-normal);
 }
 
 .ot-type-panel-title {
   font-family: var(--ot-font-ui);
   font-size: var(--ot-type-panel-title-size);
-  line-height: var(--ot-type-status-line-height);
+  line-height: var(--ot-line-height-ui);
   font-weight: var(--ot-font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--ot-letter-spacing-wide);
+  text-transform: none;
+  letter-spacing: var(--ot-letter-spacing-normal);
 }
 
 .ot-type-panel-subtitle {
   font-family: var(--ot-font-ui);
   font-size: var(--ot-type-panel-subtitle-size);
-  line-height: var(--ot-type-status-line-height);
+  line-height: var(--ot-line-height-ui);
   font-weight: var(--ot-font-weight-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--ot-letter-spacing-wide);
+  text-transform: none;
+  letter-spacing: var(--ot-letter-spacing-normal);
 }
 
 .ot-type-table-cell {
@@ -334,7 +334,7 @@
   --ot-type-table-cell-size: var(--ot-type-size-2xs);
   --ot-type-table-header-size: var(--ot-type-size-2xs);
   --ot-type-status-size: var(--ot-type-size-2xs);
-  --ot-type-badge-size: var(--ot-type-size-2xs);
+  --ot-type-badge-size: var(--ot-type-size-sm);
   --ot-type-data-line-height: 1.2;
 }
 

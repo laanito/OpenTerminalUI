@@ -886,14 +886,17 @@ priority became explicit: **finish v2 first; v3 is the UX overhaul before furthe
 feature expansion**. Finish the currently approved v2 scope and release close-out;
 optional evidence backlog items do not automatically justify more v2 minors.
 v2.8.0 is now published and its post-release documentation/blog are merged.
-The maintainer authorized v3 discovery on 2026-11-18; production migration has
-not started. Multi-dimensional/technical validation remains a later goal.
+The maintainer authorized v3 discovery on 2026-11-18. Shared shell and Portfolio
+slices have since merged; broader page migration remains open. Multi-dimensional/
+technical validation remains a later goal.
 
 The [v3 discovery pack](../design/v3/README.md) contains a 27-view synthetic
 Chrome audit, before/after Portfolio screenshots and an interactive local study.
-The merged design establishes the **v3.0 gate: shared responsive foundation plus a complete
-Portfolio workflow**; redesigns of the other screens are explicit later v3.x
-scope proposals. The reviewed [acceptance criteria](../design/v3/SCOPE.md)
+The initial implementation bounded v3.0 to a shared foundation and Portfolio.
+**Maintainer correction, 2026-11-20: v3 is the frontend overhaul.** Portfolio's
+completed pilot is not a release gate for the whole frontend. Populated page
+hierarchy, readable names/control labels, and usable secondary tools across
+retained screens remain in v3.0; they are not automatically deferred to v3.x. The reviewed [acceptance criteria](../design/v3/SCOPE.md)
 bound implementation. Non-cash receipts require accounting/history support, including
 capital contributions in kind distinct from cash and acquisition cost. The study
 does not change production behavior or establish those APIs.
@@ -926,8 +929,12 @@ sale and retain revision/retry identity. Migration 0022 preserves existing data.
 The populated keyboard/zoom/accessibility pass is complete locally, including
 80-lot navigation, hidden evidence export, theme/contrast, real 200% browser zoom
 and research editing regression coverage. See the [acceptance report](../design/v3/ACCEPTANCE.md).
-Maintainer acceptance and the current PR's CI checks remain before release prep. This does
-not mark the complete Portfolio pilot or v3 release ready. See the design pack's
+Portfolio acceptance #293 is merged. The next slice moves Equity's context
+beside latest price, keeps the chart above the fold, splits active studies from
+a wide indicator-management drawer and improves shared panel/label readability.
+Next review Home/Market/Security, comparison/Brain/Notes/Journal, News and
+Workstation/Screener in populated states. No new feature backlog is added to
+that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:

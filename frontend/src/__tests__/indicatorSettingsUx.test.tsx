@@ -99,7 +99,7 @@ describe("indicator settings UX", () => {
         templateScope="fno"
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "cfg" }));
+    fireEvent.click(screen.getByRole("button", { name: "Configure" }));
     fireEvent.change(screen.getByTestId("indicator-editor-pane-target"), { target: { value: "new" } });
     fireEvent.change(screen.getByTestId("indicator-editor-scale-behavior"), { target: { value: "separate" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Save" }).at(-1)!);
