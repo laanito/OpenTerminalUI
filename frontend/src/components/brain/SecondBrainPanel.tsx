@@ -62,26 +62,26 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
   saveError?: string | null;
 }) {
   return (
-    <div className="space-y-2 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
-      <p className="flex items-center gap-1.5 text-[11px] font-semibold text-terminal-text">
-        <Brain className="h-3.5 w-3.5 text-terminal-accent" />
+    <article aria-label="Brain answer" className="min-w-0 space-y-3 rounded-sm border border-terminal-border bg-terminal-bg/40 p-3 [overflow-wrap:anywhere]">
+      <h3 className="flex min-w-0 items-start gap-2 text-sm font-semibold text-terminal-text">
+        <Brain className="h-3.5 w-3.5 shrink-0 text-terminal-accent" />
         {exchange.question}
-      </p>
+      </h3>
       <BrainTechnicalAnswer answer={exchange.answer} context={exchange.technical_context} privateCitationCount={exchange.citations.length} />
-      <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+      <p className="text-xs uppercase tracking-normal text-terminal-muted">
         {exchange.technical_context && !exchange.citations.length ? "Private search scope" : "Evidence scope"} · {scopeLabel(exchange.sources)}
       </p>
-      {exchange.model_profile ? <p className="break-words text-[11px] text-terminal-muted">
+      {exchange.model_profile ? <p className="break-words text-xs text-terminal-muted">
         {exchange.model_profile.resolved_profile === "deep" ? "Deep profile" : "Default profile (Deep not configured)"}
         {" · "}{exchange.llm_model}
       </p> : null}
       {exchange.error ? (
-        <p className="text-[10px] uppercase tracking-wide text-terminal-neg">
+        <p className="text-xs uppercase tracking-normal text-terminal-neg">
           degraded: {exchange.error}
         </p>
       ) : null}
       {onSave ? (
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <TerminalButton
             type="button"
             size="sm"
@@ -92,13 +92,13 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
           >
             {exchange.savedMemoId ? "Saved to Brain Log" : "Save answer"}
           </TerminalButton>
-          {exchange.savedMemoId ? <a href="#brain-log" className="text-[11px] text-terminal-accent hover:underline">View log</a> : null}
-          {saveError ? <span role="alert" className="text-[11px] text-terminal-neg">{saveError}</span> : null}
+          {exchange.savedMemoId ? <a href="#brain-log" className="text-xs text-terminal-accent hover:underline">View log</a> : null}
+          {saveError ? <span role="alert" className="text-xs text-terminal-neg">{saveError}</span> : null}
         </div>
       ) : null}
       {exchange.citations.length ? (
         <div className="space-y-1.5 pt-1">
-          <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+          <p className="text-xs uppercase tracking-normal text-terminal-muted">
             Sources from your private record
           </p>
           {exchange.citations.map((citation) => (
@@ -106,7 +106,7 @@ function ExchangeCard({ exchange, onSave, saving, saveDisabled, saveError }: {
           ))}
         </div>
       ) : null}
-    </div>
+    </article>
   );
 }
 
@@ -221,13 +221,13 @@ export function SecondBrainPanel() {
 
   return (
     <TerminalPanel
-      title="Second Brain"
+      title="Ask your research"
       subtitle="Private research over your journal, theses & notes, with optional current technical evidence"
       actions={
-        <div className="flex items-center gap-2 text-[10px] text-terminal-muted">
-          {status ? (
-            <span className="uppercase tracking-wide">
-              {status.indexed_chunks} indexed · {status.backend} · {status.embed_model}
+        <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-terminal-muted">
+          {status && !statusQuery.isError ? (
+            <span className="uppercase tracking-normal">
+              {status.indexed_chunks} indexed
             </span>
           ) : null}
           <TerminalButton
@@ -242,41 +242,28 @@ export function SecondBrainPanel() {
         </div>
       }
     >
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         {reindexMutation.isPending ? (
-          <p role="status" className="flex items-center gap-1.5 text-[11px] text-terminal-muted">
+          <p role="status" className="flex items-center gap-1.5 text-xs text-terminal-muted">
             <RefreshCw className="h-3 w-3 animate-spin text-terminal-accent" />
             Reindexing private memory… Notes remain available while embeddings are refreshed.
           </p>
         ) : reindexMutation.isSuccess ? (
-          <p role="status" className="text-[11px] text-terminal-pos">
+          <p role="status" className="text-xs text-terminal-pos">
             Reindex complete · {reindexMutation.data.total} chunks · {reindexMutation.data.indexed} refreshed · {reindexMutation.data.removed} removed
           </p>
         ) : null}
-        <div className="flex flex-wrap gap-2 text-[11px]">
-          <Link
-            to="/equity/journal"
-            className="rounded-sm border border-terminal-border px-2 py-1 text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
-          >
-            Add journal entry
-          </Link>
-          <Link
-            to="/equity/portfolio"
-            className="rounded-sm border border-terminal-border px-2 py-1 text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
-          >
-            Edit portfolio theses
-          </Link>
-        </div>
-        <BrainTechnicalSymbols symbols={technicalSymbols} onChange={setTechnicalSymbols} disabled={askMutation.isPending} />
         <form
-          className="flex items-end gap-2"
+          className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-end"
           onSubmit={(e) => {
             e.preventDefault();
             submit(question);
           }}
         >
+          <label className="min-w-0 flex-1 space-y-1 text-xs text-terminal-muted">Your question
           <TerminalInput
             as="textarea"
+            className="!text-sm"
             rows={2}
             value={question}
             placeholder="Ask your second brain about your trades, theses, or notes…"
@@ -288,8 +275,11 @@ export function SecondBrainPanel() {
               }
             }}
           />
+          </label>
+          <div className="flex shrink-0 flex-wrap gap-2">
           <TerminalButton
             type="submit"
+            disabled={!question.trim() || !selectedSources.length}
             variant="accent"
             loading={askMutation.isPending}
             leftIcon={<Send className="h-3.5 w-3.5" />}
@@ -299,18 +289,20 @@ export function SecondBrainPanel() {
           {askMutation.isPending ? <TerminalButton type="button" onClick={() => askController.current?.abort()}>
             Cancel
           </TerminalButton> : null}
+          </div>
         </form>
+        <p className="text-xs text-terminal-muted">Ctrl/Cmd+Enter to ask.</p>
 
         <div className="space-y-1.5 rounded-sm border border-terminal-border/70 bg-terminal-bg/30 p-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[10px] uppercase tracking-wide text-terminal-muted">
+            <p className="text-xs uppercase tracking-normal text-terminal-muted">
               Evidence scope · {scopeLabel(selectedSources)}
             </p>
             <button
               type="button"
               aria-pressed={selectedSources.length === sourceOptions.length}
               onClick={() => setSelectedSources(allSources)}
-              className="text-[10px] text-terminal-accent hover:underline"
+              className="text-xs text-terminal-accent hover:underline"
             >
               Select all
             </button>
@@ -318,7 +310,7 @@ export function SecondBrainPanel() {
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Private evidence sources">
             {sourceOptions.map((option) => {
               const selected = selectedSources.includes(option.value);
-              const count = status?.source_counts[option.value] ?? 0;
+              const count = statusQuery.isError ? null : status?.source_counts?.[option.value];
               return (
                 <button
                   key={option.value}
@@ -333,18 +325,40 @@ export function SecondBrainPanel() {
                         : [...current, option.value];
                     })
                   }
-                  className={`rounded-sm border px-2 py-1 text-[10px] transition-colors ${
+                  className={`rounded-sm border px-2 py-1 text-xs transition-colors ${
                     selected
                       ? "border-terminal-accent/60 bg-terminal-accent/10 text-terminal-accent"
                       : "border-terminal-border text-terminal-muted hover:border-terminal-accent/30"
                   }`}
                 >
-                  {option.label} · {count}
+                  {option.label} · {count ?? "—"}
                 </button>
               );
             })}
           </div>
         </div>
+
+        <div className="flex flex-wrap gap-2 text-xs">
+          <Link
+            to="/equity/journal"
+            className="rounded-sm border border-terminal-border px-2 py-1 text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+          >
+            Add journal entry
+          </Link>
+          <Link
+            to="/equity/portfolio"
+            className="rounded-sm border border-terminal-border px-2 py-1 text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+          >
+            Edit portfolio theses
+          </Link>
+        </div>
+        <BrainTechnicalSymbols symbols={technicalSymbols} onChange={setTechnicalSymbols} disabled={askMutation.isPending} />
+        <details className="text-xs text-terminal-muted">
+          <summary className="w-fit cursor-pointer">Memory index details</summary>
+          {status ? <p className="mt-2 break-words">Backend: {status.backend} · Embedding model: {status.embed_model}</p> : null}
+          {statusQuery.isPending ? <p role="status">Loading index status…</p> : null}
+        </details>
+        {statusQuery.isError ? <p role="alert" className="text-xs text-terminal-neg">Private index status is unavailable. Source counts are unknown; existing answers are unchanged.</p> : null}
 
         {history.length === 0 && !askMutation.isPending ? (
           <div className="flex flex-wrap gap-2">
@@ -353,7 +367,7 @@ export function SecondBrainPanel() {
                 key={s}
                 type="button"
                 onClick={() => submit(s)}
-                className="rounded-sm border border-terminal-border bg-terminal-bg/60 px-2 py-1 text-[11px] text-terminal-muted transition-colors hover:border-terminal-accent/40 hover:text-terminal-text"
+                className="rounded-sm border border-terminal-border bg-terminal-bg/60 px-2 py-1 text-xs text-terminal-muted transition-colors hover:border-terminal-accent/40 hover:text-terminal-text"
               >
                 {s}
               </button>
@@ -361,10 +375,10 @@ export function SecondBrainPanel() {
           </div>
         ) : null}
 
-        {error ? <p className="text-[11px] text-terminal-neg">{error}</p> : null}
+        {error ? <p role="alert" className="text-xs text-terminal-neg">{error}</p> : null}
 
         {askMutation.isPending ? (
-          <p className="flex items-center gap-2 text-[11px] text-terminal-muted">
+          <p role="status" className="flex items-center gap-2 text-xs text-terminal-muted">
             <Sparkles className="h-3.5 w-3.5 animate-pulse text-terminal-accent" />
             Searching selected private sources and synthesizing…
           </p>

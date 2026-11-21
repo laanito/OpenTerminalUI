@@ -56,36 +56,36 @@ export function BrainMemoPromotionModal({ memo, evidenceStatus, onClose, onPromo
     <TerminalModal open onClose={onClose} title="Promote to Note" subtitle="Review the text before making it Second Brain evidence" size="lg" busy={promote.isPending}
       footer={<div className="flex justify-end gap-2"><TerminalButton size="sm" onClick={onClose} disabled={promote.isPending}>Cancel</TerminalButton><TerminalButton size="sm" variant="accent" loading={promote.isPending} disabled={!confirmed || invalid} onClick={() => promote.mutate()}>Create reviewed Note</TerminalButton></div>}>
       <div className="space-y-3">
-        <p className="text-[11px] text-terminal-muted">
+        <p className="text-xs text-terminal-muted">
           This is a dated model synthesis, not a verified fact. Review and edit it for accuracy and current relevance. The original memo stays unchanged; the new Note will enter Second Brain indexing.
         </p>
-        {evidenceStatus === "stale" ? <p role="alert" className="text-[11px] text-terminal-neg">Some cited evidence changed or is unavailable. Check current sources before confirming this Note.</p> : null}
-        {evidenceStatus === "unverifiable" || evidenceStatus === "unknown" ? <p role="alert" className="text-[11px] text-terminal-muted">Current evidence could not be fully verified. Check the cited sources before confirming this Note.</p> : null}
+        {evidenceStatus === "stale" ? <p role="alert" className="text-xs text-terminal-neg">Some cited evidence changed or is unavailable. Check current sources before confirming this Note.</p> : null}
+        {evidenceStatus === "unverifiable" || evidenceStatus === "unknown" ? <p role="alert" className="text-xs text-terminal-muted">Current evidence could not be fully verified. Check the cited sources before confirming this Note.</p> : null}
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="space-y-1 text-[11px] text-terminal-muted">Note title
+          <label className="space-y-1 text-xs text-terminal-muted">Note title
             <TerminalInput value={title} maxLength={256} onChange={(event) => setTitle(event.target.value)} />
           </label>
-          <label className="space-y-1 text-[11px] text-terminal-muted">Symbol (optional)
+          <label className="space-y-1 text-xs text-terminal-muted">Symbol (optional)
             <TerminalInput value={symbol} maxLength={64} onChange={(event) => setSymbol(event.target.value)} />
           </label>
         </div>
-        <label className="block space-y-1 text-[11px] text-terminal-muted">Reviewed note text
+        <label className="block space-y-1 text-xs text-terminal-muted">Reviewed note text
           <TerminalInput as="textarea" rows={9} value={body} onChange={(event) => setBody(event.target.value)} />
-          <span className={`block text-[10px] ${body.length > 10000 ? "text-terminal-neg" : "text-terminal-muted"}`}>{body.length}/10,000 characters</span>
+          <span className={`block text-xs ${body.length > 10000 ? "text-terminal-neg" : "text-terminal-muted"}`}>{body.length}/10,000 characters</span>
         </label>
-        <label className="block space-y-1 text-[11px] text-terminal-muted">Tags (comma-separated)
+        <label className="block space-y-1 text-xs text-terminal-muted">Tags (comma-separated)
           <TerminalInput value={tags} onChange={(event) => setTags(event.target.value)} />
         </label>
-        <label className="block space-y-1 text-[11px] text-terminal-muted">Effective date and time
+        <label className="block space-y-1 text-xs text-terminal-muted">Effective date and time
           <TerminalInput type="datetime-local" value={effectiveAt} onChange={(event) => setEffectiveAt(event.target.value)} />
-          <span className="block text-[10px]">Defaults to the memo generation time. Change it if the reviewed information applies at another time.</span>
+          <span className="block text-xs">Defaults to the memo generation time. Change it if the reviewed information applies at another time.</span>
         </label>
-        {invalid ? <p role="alert" className="text-[11px] text-terminal-neg">Note text must be 1–10,000 characters; use at most 32 tags of 64 characters each.</p> : null}
-        <label className="flex items-start gap-2 text-[11px] text-terminal-text">
+        {invalid ? <p role="alert" className="text-xs text-terminal-neg">Note text must be 1–10,000 characters; use at most 32 tags of 64 characters each.</p> : null}
+        <label className="flex items-start gap-2 text-xs text-terminal-text">
           <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
           I reviewed this text and want it added to my Notes as evidence.
         </label>
-        {error ? <p role="alert" className="text-[11px] text-terminal-neg">{error}</p> : null}
+        {error ? <p role="alert" className="text-xs text-terminal-neg">{error}</p> : null}
       </div>
     </TerminalModal>
   );

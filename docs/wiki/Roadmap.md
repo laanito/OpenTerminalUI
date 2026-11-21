@@ -938,10 +938,13 @@ readable widgets/axes and responsive launch controls; see the
 independent research/context stacks, wrapping identity/actions, explicit missing
 history and content-sized named tables; see the
 [Security review](../design/v3/SECURITY_REVIEW.md).
-The current comparison pass puts observed paths first and uses full-width
+The accepted comparison pass #298 puts observed paths first and uses full-width
 briefing/saved-evidence reading with bounded lists and citation/focus preservation;
 see the [comparison review](../design/v3/COMPARISON_REVIEW.md).
-Continue Brain/Notes/Journal, News and
+The current Brain pass puts the question first, improves dated citations and
+uses a bounded log list/full-width memo reader while preserving evidence checks
+and reviewed promotion; see the [Brain review](../design/v3/BRAIN_REVIEW.md).
+Continue Notes/Journal, News and
 Workstation/Screener in populated states. No new feature backlog is added to
 that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).

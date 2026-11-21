@@ -8,7 +8,23 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 comparison research hierarchy and saved-evidence readability**
+Current work **v3 Second Brain question and saved-research readability**
+(2026-11-21), after maintainer-confirmed merged #298. Labelled question first;
+explicit private scope and optional technical selection follow, with readable
+controls/citation titles/dates and inspectable embedding metadata. Brain hides
+the unrelated global ticker loader. Index-status failure shows unknown counts.
+Brain Log has a bounded list and full-width reader with open/close focus; memo
+organization is secondary, but recheck/stale warnings, promotion/deletion and
+update errors remain visible. Same-memo updates do not reset reading/edit focus.
+See `docs/design/v3/BRAIN_REVIEW.md`: 854 frontend tests / 141 files, build and all
+88 installed-Chrome smoke journeys pass, including five new populated/narrow/
+native-200%-zoom/index-failure cases. Mock/surface/whitespace guards pass.
+No retrieval/recency/prompt/model/provider/indexing/API/schema/dependency change;
+captured evidence, stream completion, save, recheck and reviewed promotion retain
+their contracts. No production access or deployment. Next: Notes/Journal, then
+News and Workstation/Screener. Broader v3 acceptance stays open; no release prep.
+
+Completed comparison slice **v3 comparison research hierarchy and saved-evidence readability**
 (2026-11-21), after maintainer-confirmed merged #297. Observed comparisons now
 precede briefing setup, with the first aligned path open and source/FX/technical
 data still distinct. Jump links reach observations or briefing/saved research.
@@ -120,8 +136,8 @@ boundaries, no invented cash/profit, and migration 0022 retaining old/unknown da
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
 Next: continue populated retained-page hierarchy/readability reviews, prioritizing
-Brain/Notes/Journal, then News and Workstation/Screener, following accepted
-Stock Detail/Home/Security work and the current populated comparison pass.
+Notes/Journal, then News and Workstation/Screener, following accepted Stock
+Detail/Home/Security/comparison work and the current populated Brain pass.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend
