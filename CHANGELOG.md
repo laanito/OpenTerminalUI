@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Readable Second Brain research** — labelled question first, readable dated
+  citations and source controls, and full-width Brain Log reading with a bounded
+  list and open/close focus. Memo organization is disclosed; evidence checks,
+  stale warnings and reviewed promotion remain visible. Index-status failures
+  show unknown counts, and the unrelated ticker loader is hidden on Brain.
 - **Comparison research reading flow** — observed paths precede model setup;
   the first aligned plot opens by default, with jump links and disclosed proxy/
   provenance helpers. Full-width briefing and saved-evidence reading avoids empty

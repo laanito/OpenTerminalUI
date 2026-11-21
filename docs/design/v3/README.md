@@ -9,8 +9,10 @@ release. Portfolio is a completed pilot; populated page hierarchy and readable
 names/controls remain in v3.0. The maintainer's Equity feedback starts the next
 slice, now accepted through #294. The [Home review](HOME_REVIEW.md) is accepted
 through #296 and [Security Hub](SECURITY_REVIEW.md) through #297. The current
-[comparison research review](COMPARISON_REVIEW.md) keeps long evidence reading
-full width. See [current scope](SCOPE.md); do not propose release prep merely because
+[comparison research review](COMPARISON_REVIEW.md), accepted through #298, keeps
+long evidence reading full width. The current [Brain review](BRAIN_REVIEW.md)
+applies that reading pattern to dated private/captured research.
+See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 
 ## Review the proposal

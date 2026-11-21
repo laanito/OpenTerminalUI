@@ -187,6 +187,7 @@ describe("Brain Log browser flow", () => {
     fireEvent.click(await screen.findByRole("button", { name: /What changed\?/ }));
     expect(await screen.findByRole("region", { name: "Saved research memo" })).toBeInTheDocument();
     expect(screen.getByText("Current thesis")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Organize this memo", { exact: true }));
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "New title" } });
     fireEvent.change(screen.getByLabelText("Tags (comma-separated)"), { target: { value: "research, macro" } });
     fireEvent.change(screen.getByLabelText("Your annotation"), { target: { value: "Review quarterly" } });
