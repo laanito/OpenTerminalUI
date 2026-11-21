@@ -2335,3 +2335,42 @@ button.ot-home-widget-strip-chip:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Security Hub: independent research and context stacks, with readable metrics
+   that adapt to the available column rather than the window alone. */
+.ot-security-hub {
+  overflow-wrap: anywhere;
+}
+
+.ot-security-overview {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ot-security-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+@media (min-width: 1280px) {
+  .ot-security-overview {
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  }
+}
+
+.ot-security-hub .ot-type-table-header {
+  font-size: 12px;
+  letter-spacing: normal;
+}
+
+.ot-security-hub .ot-type-table-header > span:first-child {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}

@@ -8,7 +8,26 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Home hierarchy and readable dashboard labels** (2026-11-20),
+Current work **v3 Security Hub hierarchy and research readability** (2026-11-20),
+after maintainer-confirmed merged and tested #296. Security overview/catalysts and
+price/classification context now have independent stacks; the shell owns page
+scrolling, avoiding mobile bottom gaps. Identity/actions/tabs wrap, metrics use
+readable definition lists and history has explicit loading/empty/error states.
+Research tables have headings, named local scrolling, content-sized viewports and
+readable wrapping headers. Stable table IDs/column tools/exports and compatibility
+tabs remain. Missing metrics stay unavailable and genuine zero fields survive
+fallback selection. Tab keyboard focus now follows selection; the Hub connects
+tabs to a named panel. Comparison add/remove controls have visible/named actions.
+Filing extraction/model provenance remains unchanged. See
+`docs/design/v3/SECURITY_REVIEW.md` for fixtures, evidence and validation.
+No backend/API/schema/provider/model/dependency change; no production access.
+Security verification: all 854 frontend tests / 141 files, production build and
+all 79 installed-Chrome smoke journeys pass, including five new populated Hub
+cases/native 200% zoom and existing filing provenance/lexical fallback checks.
+Production-mock, surface-inventory and whitespace guards pass. Native zoom uses
+full Chromium; fixtures and screenshots do not establish live provider correctness.
+
+Completed Home slice **v3 Home hierarchy and readable dashboard labels** (2026-11-20),
 after maintainer-confirmed merged #295. Equity #294 is accepted and is the layout
 reference. Home now places portfolio value/history before the small desk metrics,
 with independent market-outlook/status/news context; desk details/clocks and long
@@ -81,8 +100,8 @@ boundaries, no invented cash/profit, and migration 0022 retaining old/unknown da
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
 Next: continue populated retained-page hierarchy/readability reviews, prioritizing
-Market/Security beyond accepted Stock Detail/Home, comparison/Brain/Notes/Journal,
-News and Workstation/Screener.
+comparison/Brain/Notes/Journal, then News and Workstation/Screener, following the
+accepted Stock Detail/Home work and the current populated Security Hub pass.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend
@@ -2037,8 +2056,9 @@ ordered v1.7 milestone above.
       - [x] Home portfolio/history-first layout, independent supporting rail,
             readable populated widgets/axes, wrapping market strip and responsive
             Launch Matrix with matching keyboard movement; preserve history failures.
-      - [ ] Continue Market/Security hierarchy/readability review beyond accepted
-            Stock Detail, including populated Security Hub.
+      - [x] Populated Security Hub hierarchy/readability pass beyond Stock Detail:
+            independent overview/context, wrapping identity/actions, explicit
+            history/table states, content-sized tables and keyboard tab focus.
       - [ ] Populated comparison/Brain/Notes/Journal hierarchy/readability review.
       - [ ] Populated News and Workstation/Screener hierarchy/readability review.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release

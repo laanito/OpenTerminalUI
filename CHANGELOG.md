@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Readable Security Hub research** — overview/catalysts and supporting context
+  use independent columns with one page scroller. Identity, actions and tabs wrap;
+  metrics distinguish missing values from zero. Named research tables size to
+  their content with readable headers, and missing history has an explicit state.
+  Keyboard tab focus follows selection; chart comparison controls are named.
 - **Home puts portfolio history first** — supporting market outlook, status and
   news occupy an independent column. Smaller desk metrics follow the history;
   desk details and valuation methodology stay available through disclosures.

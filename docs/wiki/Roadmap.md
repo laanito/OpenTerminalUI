@@ -932,10 +932,13 @@ and research editing regression coverage. See the [acceptance report](../design/
 Portfolio acceptance #293 is merged. The accepted Equity slice #294 moves context
 beside latest price, keeps the chart above the fold, splits active studies from
 a wide indicator-management drawer and improves shared panel/label readability.
-The next Home slice puts portfolio value/history first, with independent context,
+The accepted Home slice #296 puts portfolio value/history first, with independent context,
 readable widgets/axes and responsive launch controls; see the
-[Home review](../design/v3/HOME_REVIEW.md). Continue Market/Security beyond Stock
-Detail, comparison/Brain/Notes/Journal, News and
+[Home review](../design/v3/HOME_REVIEW.md). The current Security Hub pass adds
+independent research/context stacks, wrapping identity/actions, explicit missing
+history and content-sized named tables; see the
+[Security review](../design/v3/SECURITY_REVIEW.md).
+Continue comparison/Brain/Notes/Journal, News and
 Workstation/Screener in populated states. No new feature backlog is added to
 that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
