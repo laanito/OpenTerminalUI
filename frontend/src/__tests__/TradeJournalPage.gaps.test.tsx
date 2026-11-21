@@ -73,6 +73,7 @@ describe("TradeJournalPage gap review", () => {
       </QueryClientProvider>,
     );
 
+    fireEvent.click(screen.getByText("Journal completeness review", { selector: "summary" }));
     const reviewButton = await screen.findByRole("button", { name: "Review journal gaps" });
     expect(fetchJournalGapReviewMock).not.toHaveBeenCalled();
     fireEvent.click(reviewButton);

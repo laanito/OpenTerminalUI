@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Pencil, Plus, RefreshCw, StickyNote, Trash2, X } from "lucide-react";
+import { Plus, RefreshCw, StickyNote, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import {
@@ -153,7 +153,7 @@ export function NotesPanel({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex items-center gap-1 rounded-sm border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted transition-colors hover:border-terminal-accent/40 hover:text-terminal-text ${className}`}
+        className={`inline-flex items-center gap-1 rounded-sm border border-terminal-border px-1.5 py-0.5 text-xs text-terminal-muted transition-colors hover:border-terminal-accent/40 hover:text-terminal-text ${className}`}
         title="Notes"
       >
         <StickyNote className="h-3 w-3" />
@@ -163,62 +163,76 @@ export function NotesPanel({
   }
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`min-w-0 space-y-4 [&_button]:!text-xs [&_button]:tracking-normal ${className}`}>
       {compact ? (
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-terminal-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex flex-wrap items-center gap-1.5 text-xs tracking-normal text-terminal-muted">
             <StickyNote className="h-3 w-3" /> Notes{normalizedSymbol ? ` · ${normalizedSymbol}` : ""}
           </span>
-          <button type="button" onClick={() => setOpen(false)} className="text-terminal-muted hover:text-terminal-text">
+          <button type="button" aria-label="Close notes" onClick={() => setOpen(false)} className="min-h-8 px-2 text-xs text-terminal-muted hover:text-terminal-text focus-visible:outline">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : null}
 
-      <div className="space-y-1.5">
-        {allowSymbolInput && !normalizedSymbol ? (
+      <div className="space-y-3">
+        <div className="space-y-1 text-xs text-terminal-muted">
+          <label htmlFor={`${effectiveAtId}-body`}>New note</label>
           <TerminalInput
-            size="sm"
-            value={freeSymbol}
-            placeholder="Symbol (optional, e.g. AAPL)"
-            onChange={(e) => setFreeSymbol(e.target.value)}
+            id={`${effectiveAtId}-body`}
+            className="!text-sm"
+            as="textarea"
+            rows={compact ? 2 : 3}
+            value={body}
+            placeholder={normalizedSymbol ? `Jot a note on ${normalizedSymbol}…` : "Jot a note…"}
+            onChange={(e) => setBody(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                submit();
+              }
+            }}
           />
-        ) : null}
-        <TerminalInput
-          as="textarea"
-          rows={compact ? 2 : 3}
-          value={body}
-          placeholder={normalizedSymbol ? `Jot a note on ${normalizedSymbol}…` : "Jot a note…"}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-        />
-        <label htmlFor={effectiveAtId} className="block space-y-1">
-          <span className="text-[10px] uppercase tracking-wide text-terminal-muted">
-            Effective date and time <span className="normal-case">(optional)</span>
-          </span>
-          <TerminalInput
-            id={effectiveAtId}
-            type="datetime-local"
-            size="sm"
-            value={effectiveAt}
-            onChange={(e) => setEffectiveAt(e.target.value)}
-          />
-          {!compact ? (
-            <span className="block text-[9px] text-terminal-muted">
-              When this information applied. Leave blank to use the save time.
-            </span>
+        </div>
+        <div className={allowSymbolInput && !normalizedSymbol ? "grid items-start gap-3 sm:grid-cols-2" : "min-w-0"}>
+          {allowSymbolInput && !normalizedSymbol ? (
+            <label className="block space-y-1 text-xs text-terminal-muted">
+              <span>Symbol (optional)</span>
+              <TerminalInput
+                size="sm"
+                className="!text-sm"
+                value={freeSymbol}
+                placeholder="Symbol (optional, e.g. AAPL)"
+                onChange={(e) => setFreeSymbol(e.target.value)}
+              />
+            </label>
           ) : null}
-        </label>
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] text-terminal-muted">⌘/Ctrl+Enter to save</span>
+          <label htmlFor={effectiveAtId} className="block space-y-1">
+            <span className="text-xs tracking-normal text-terminal-muted">
+              Effective date and time <span className="normal-case">(optional)</span>
+            </span>
+            <TerminalInput
+              id={effectiveAtId}
+              className="min-w-0 !text-sm"
+              type="datetime-local"
+              size="sm"
+              value={effectiveAt}
+              onChange={(e) => setEffectiveAt(e.target.value)}
+            />
+            {!compact ? (
+              <span className="block text-xs text-terminal-muted">
+                When this information applied. Leave blank to use the save time.
+              </span>
+            ) : null}
+          </label>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs text-terminal-muted">⌘/Ctrl+Enter to save</span>
           <TerminalButton
             size="sm"
             variant="accent"
+            disabled={!body.trim()}
+            className="!text-xs tracking-normal"
             loading={addMutation.isPending}
             leftIcon={<Plus className="h-3 w-3" />}
             onClick={submit}
@@ -228,17 +242,17 @@ export function NotesPanel({
         </div>
       </div>
 
-      {error ? <p role="alert" className="text-[11px] text-terminal-neg">{error}</p> : null}
-      {notice ? <p role="status" className="text-[11px] text-terminal-pos">{notice}</p> : null}
+      {error ? <p role="alert" className="text-xs text-terminal-neg">{error}</p> : null}
+      {notice ? <p role="status" className="text-xs text-terminal-pos">{notice}</p> : null}
 
-      <div className="space-y-1.5">
+      <div className="space-y-3">
         {notesQuery.isPending ? (
-          <p role="status" className="flex items-center gap-1.5 text-[11px] text-terminal-muted">
+          <p role="status" className="flex flex-wrap items-center gap-1.5 text-xs text-terminal-muted">
             <RefreshCw className="h-3 w-3 animate-spin" /> Loading notes…
           </p>
         ) : null}
         {notesQuery.isError ? (
-          <div role="alert" className="flex flex-wrap items-center gap-2 text-[11px] text-terminal-neg">
+          <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-terminal-neg">
             <span>{extractApiErrorMessage(notesQuery.error, "Failed to load notes.")}</span>
             <TerminalButton size="sm" variant="ghost" onClick={() => void notesQuery.refetch()}>
               Retry
@@ -246,9 +260,9 @@ export function NotesPanel({
           </div>
         ) : null}
         {notes.map((note: Note) => (
-          <div key={note.id} className="rounded-sm border border-terminal-border bg-terminal-bg/50 p-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-wide text-terminal-muted">
+          <article key={note.id} aria-label={`${note.symbol || "General"} ${contextBadge[note.context]}`} className="min-w-0 rounded-sm border border-terminal-border bg-terminal-bg/50 p-3 [overflow-wrap:anywhere]">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <span className="flex flex-wrap items-center gap-1.5 text-xs tracking-normal text-terminal-muted">
                 <span className="rounded-sm border border-terminal-border px-1 text-terminal-accent">
                   {contextBadge[note.context]}
                 </span>
@@ -269,26 +283,26 @@ export function NotesPanel({
                   <>
                     <button
                       type="button"
-                      className="text-terminal-pos hover:opacity-80"
+                      className="min-h-8 px-2 text-xs text-terminal-pos hover:opacity-80 focus-visible:outline" disabled={editMutation.isPending || !editBody.trim()}
                       onClick={() => editMutation.mutate(note.id)}
                       title="Save"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      Save
                     </button>
                     <button
                       type="button"
-                      className="text-terminal-muted hover:text-terminal-text"
+                      className="min-h-8 px-2 text-xs text-terminal-muted hover:text-terminal-text focus-visible:outline"
                       onClick={() => setEditingId(null)}
                       title="Cancel"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      Cancel
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       type="button"
-                      className="text-terminal-muted hover:text-terminal-text"
+                      className="min-h-8 px-2 text-xs text-terminal-muted hover:text-terminal-text focus-visible:outline"
                       onClick={() => {
                         setEditingId(note.id);
                         setEditBody(note.body);
@@ -298,15 +312,15 @@ export function NotesPanel({
                       }}
                       title="Edit"
                     >
-                      <Pencil className="h-3 w-3" />
+                      Edit
                     </button>
                     <button
                       type="button"
-                      className="text-terminal-muted hover:text-terminal-neg"
+                      className="min-h-8 px-2 text-xs text-terminal-muted hover:text-terminal-neg focus-visible:outline" disabled={removeMutation.isPending}
                       onClick={() => removeMutation.mutate(note.id)}
                       title="Delete"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      Delete
                     </button>
                   </>
                 )}
@@ -316,16 +330,19 @@ export function NotesPanel({
               <div className="mt-1.5 space-y-1.5">
                 <TerminalInput
                   as="textarea"
+                  aria-label="Edit note"
+                  className="!text-sm"
                   rows={3}
                   value={editBody}
                   onChange={(e) => setEditBody(e.target.value)}
                 />
                 <label className="block space-y-1">
-                  <span className="text-[9px] uppercase tracking-wide text-terminal-muted">
+                  <span className="text-xs tracking-normal text-terminal-muted">
                     Effective date and time (optional)
                   </span>
                   <TerminalInput
                     type="datetime-local"
+                    className="min-w-0 !text-sm"
                     size="sm"
                     value={editEffectiveAt}
                     onChange={(e) => setEditEffectiveAt(e.target.value)}
@@ -333,12 +350,12 @@ export function NotesPanel({
                 </label>
               </div>
             ) : (
-              <p className="mt-1 whitespace-pre-wrap text-[11px] leading-relaxed text-terminal-text">{note.body}</p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-terminal-text">{note.body}</p>
             )}
-          </div>
+          </article>
         ))}
         {count === 0 && !notesQuery.isPending && !notesQuery.isError ? (
-          <p className="text-[11px] text-terminal-muted">No notes yet.</p>
+          <p className="text-xs text-terminal-muted">No notes yet.</p>
         ) : null}
       </div>
     </div>

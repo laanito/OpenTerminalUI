@@ -8,7 +8,26 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Second Brain question and saved-research readability**
+Current work **v3 Notes and Journal readable capture and review** (2026-11-21),
+after maintainer-confirmed merged #299. Notes put labelled prose first, with
+symbol/effective-time fields alongside each other when space permits, readable
+source/date badges and visible editing actions. Dated payloads, queued-index
+notices and Brain Log source links retain their contracts. Journal places Add
+Trade in the header, labels filters and separates native entry expansion from
+edit/delete controls. Full notes read across the page; completeness review is
+secondary. Form groups/ratings are named and failed saves retain drafts with an
+explicit retry message. Analytics distinguish retrieval failure from empty data;
+strategy names wrap and the calendar scrolls locally. Both routes hide the
+unrelated ticker loader. See `docs/design/v3/NOTES_JOURNAL_REVIEW.md` for evidence
+and validation. No backend/API/schema/accounting/model/dependency changes or
+production access; Journal/Portfolio transaction integration remains deferred.
+Validation: 854 frontend tests / 141 files, production build, all 93 Chrome
+smoke journeys and final affected checks pass. Review includes synthetic
+1440/1024/390px and measured native 200% zoom evidence. Mock/surface guards pass.
+Next: News and Workstation/Screener, then broader populated/host acceptance.
+No release preparation yet.
+
+Completed **v3 Second Brain question and saved-research readability** (#299)
 (2026-11-21), after maintainer-confirmed merged #298. Labelled question first;
 explicit private scope and optional technical selection follow, with readable
 controls/citation titles/dates and inspectable embedding metadata. Brain hides
@@ -135,9 +154,9 @@ unknown basis as SQL NULL, stable operation and audited repair identities, owner
 boundaries, no invented cash/profit, and migration 0022 retaining old/unknown data.
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
-Next: continue populated retained-page hierarchy/readability reviews, prioritizing
-Notes/Journal, then News and Workstation/Screener, following accepted Stock
-Detail/Home/Security/comparison work and the current populated Brain pass.
+Next: continue populated retained-page hierarchy/readability reviews with News
+and Workstation/Screener, following Stock Detail/Home/Security/comparison,
+accepted Brain #299 and the Notes/Journal pass described above.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend
@@ -2102,7 +2121,10 @@ ordered v1.7 milestone above.
       - [x] Populated Brain question/citation/technical-evidence readability and
             full-width saved-memo reading, bounded list and focus, with reviewed
             promotion/stale checks and immutable answers preserved.
-      - [ ] Populated Notes/Journal hierarchy/readability review.
+      - [x] Populated Notes/Journal hierarchy/readability review: labelled dated
+            capture, readable sources, full-width journal notes, distinct review
+            and editing controls, named forms and explicit save/load failures.
+            See `docs/design/v3/NOTES_JOURNAL_REVIEW.md`; host acceptance remains open.
       - [ ] Populated News and Workstation/Screener hierarchy/readability review.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite

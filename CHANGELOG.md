@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Readable Notes and Trade Journal** — labelled dated-note capture, wrapping
+  source metadata and visible editing actions. Journal puts trade creation in the
+  header, labels filters and separates entry expansion from editing controls;
+  full notes read across the page and completeness review is disclosed. Long
+  strategy names remain readable, calendars are bounded and analytics retrieval
+  failures stay distinct from empty results. Failed saves retain the draft with
+  a retry message. Both routes hide the unrelated single-ticker loader.
 - **Readable Second Brain research** — labelled question first, readable dated
   citations and source controls, and full-width Brain Log reading with a bounded
   list and open/close focus. Memo organization is disclosed; evidence checks,
