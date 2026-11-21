@@ -20,12 +20,12 @@ export function BrainTechnicalAnswer({ answer, context, saved = false, privateCi
     preparation_timeout: "Preparation reached its deadline before technical evidence was available.",
   };
   return <>
-    <p className="whitespace-pre-wrap text-xs leading-relaxed text-terminal-text">{formatted}</p>
-    {context && <section aria-label="Brain technical evidence" className="space-y-2 rounded border border-terminal-border p-2">
-      <p className="text-[11px] text-terminal-muted">Technical scope · {context.requested_symbols.join(", ")} · {context.status}</p>
-      {privateCitationCount === 0 && context.status !== "skipped" && <p className="text-[11px] text-terminal-warn">No private evidence was retrieved for this answer. Selected technical observations cover a short window and cannot establish a long-term investment case.</p>}
-      {saved ? <p className="text-[11px] text-terminal-warn">Saved market snapshots are shown as captured. Rechecking private citations does not refresh these market observations.</p>
-        : <p className="text-[11px] text-terminal-muted">Current technical observations are separate from your dated private research; they are not automatically indexed.</p>}
+    <p className="whitespace-pre-wrap text-sm leading-relaxed text-terminal-text">{formatted}</p>
+    {context && <section aria-label="Brain technical evidence" className="min-w-0 space-y-2 rounded border border-terminal-border p-2">
+      <p className="text-xs text-terminal-muted">Technical scope · {context.requested_symbols.join(", ")} · {context.status}</p>
+      {privateCitationCount === 0 && context.status !== "skipped" && <p className="text-xs text-terminal-warn">No private evidence was retrieved for this answer. Selected technical observations cover a short window and cannot establish a long-term investment case.</p>}
+      {saved ? <p className="text-xs text-terminal-warn">Saved market snapshots are shown as captured. Rechecking private citations does not refresh these market observations.</p>
+        : <p className="text-xs text-terminal-muted">Current technical observations are separate from your dated private research; they are not automatically indexed.</p>}
       {context.status === "skipped" ? <p className="text-xs text-terminal-muted">{skipped[context.reason ?? ""]}</p> : context.groups.map((group) => (
         <ResearchTechnicalEvidence key={group.symbol} evidence={group}
           inspection={inspection && group.metrics.some((metric) => metric.citation_id === inspection.id) ? inspection : null} />

@@ -2392,3 +2392,9 @@ button.ot-home-widget-strip-chip:hover {
 .ot-saved-comparisons h3 {
   font-size: 14px;
 }
+
+/* Research answers and saved evidence keep the full reading width. Short lists
+   never reserve a permanent empty column beside long private/technical sources. */
+.ot-brain-research {
+  overflow-wrap: anywhere;
+}

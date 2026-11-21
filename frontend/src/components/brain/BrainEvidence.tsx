@@ -28,22 +28,22 @@ export function CitationCard({ citation, evidenceStatus }: { citation: BrainCita
     ? new Date(evidenceTime).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : null;
   const body = (
-    <div className="rounded-sm border border-terminal-border bg-terminal-bg/60 p-2.5 transition-colors hover:border-terminal-accent/40">
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-terminal-text">
-          <span className="flex h-4 w-4 items-center justify-center rounded-sm border border-terminal-accent/50 text-[9px] text-terminal-accent">
+    <div className="min-w-0 break-words rounded-sm border border-terminal-border bg-terminal-bg/60 p-2.5 transition-colors hover:border-terminal-accent/40">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+        <span className="flex min-w-0 items-start gap-2 text-sm font-semibold text-terminal-text">
+          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-sm border border-terminal-accent/50 text-xs text-terminal-accent">
             {citation.n}
           </span>
           {citation.title}
         </span>
-        <span className="shrink-0 text-[9px] uppercase tracking-wide text-terminal-muted">
+        <span className="text-xs uppercase tracking-normal text-terminal-muted">
           {sourceLabels[citation.source as BrainSource] ?? citation.source}
           {evidenceDate ? ` · ${evidenceDate}` : ""}
-          {citation.score ? ` · ${(citation.score * 100).toFixed(0)}%` : ""}
+          {typeof citation.score === "number" && Number.isFinite(citation.score) ? ` · ${(citation.score * 100).toFixed(0)}%` : ""}
         </span>
       </div>
-      {evidenceStatus ? <p className={`mt-1 text-[10px] uppercase tracking-wide ${evidenceStatus === "current" ? "text-terminal-pos" : evidenceStatus === "changed" || evidenceStatus === "unavailable" ? "text-terminal-neg" : "text-terminal-muted"}`}>{evidenceLabels[evidenceStatus]}</p> : null}
-      <p className="mt-1 text-[11px] leading-relaxed text-terminal-muted">{citation.snippet}</p>
+      {evidenceStatus ? <p className={`mt-1 text-xs uppercase tracking-normal ${evidenceStatus === "current" ? "text-terminal-pos" : evidenceStatus === "changed" || evidenceStatus === "unavailable" ? "text-terminal-neg" : "text-terminal-muted"}`}>{evidenceLabels[evidenceStatus]}</p> : null}
+      <p className="mt-1 text-xs leading-relaxed text-terminal-muted">{citation.snippet}</p>
     </div>
   );
   return citation.route ? <Link to={citation.route} className="block">{body}</Link> : body;
