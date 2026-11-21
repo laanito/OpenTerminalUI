@@ -8,7 +8,27 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Security Hub hierarchy and research readability** (2026-11-20),
+Current work **v3 comparison research hierarchy and saved-evidence readability**
+(2026-11-21), after maintainer-confirmed merged #297. Observed comparisons now
+precede briefing setup, with the first aligned path open and source/FX/technical
+data still distinct. Jump links reach observations or briefing/saved research.
+Use one full-width reading flow here: long evidence/model inputs beside a short
+price column leave a large blank area. Do not restore that split merely to mimic
+Equity's useful short context rail. Proxy search/suggestions and detailed source
+alignment are disclosed; freshness, conflicts, quote-unit differences, price-basis
+warnings, explicit briefing exclusions and coverage failures stay visible.
+Saved lists are bounded; opening a run focuses its full-width review and closing
+returns to its list entry. Fresh generation, frozen reruns, refresh, retention,
+deletion and all source/model provenance keep their existing contracts. See
+`docs/design/v3/COMPARISON_REVIEW.md`. Brain/Notes/Journal and News/Workspace reviews
+remain open; no release prep, backend/provider/model/schema/dependency changes.
+Comparison verification: 854 frontend tests / 141 files and build pass; all 83
+Chrome smoke journeys pass, with all 12 comparison/citation/saved-run journeys
+passing again after the final full-width adjustment. Four new cases cover three
+widths and actual native 200% zoom. Source/mock/whitespace guards pass; screenshots
+are synthetic, not live provider/model acceptance. Do not monitor CI unless asked.
+
+Completed Security slice **v3 Security Hub hierarchy and research readability** (2026-11-20),
 after maintainer-confirmed merged and tested #296. Security overview/catalysts and
 price/classification context now have independent stacks; the shell owns page
 scrolling, avoiding mobile bottom gaps. Identity/actions/tabs wrap, metrics use
@@ -100,8 +120,8 @@ boundaries, no invented cash/profit, and migration 0022 retaining old/unknown da
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
 Next: continue populated retained-page hierarchy/readability reviews, prioritizing
-comparison/Brain/Notes/Journal, then News and Workstation/Screener, following the
-accepted Stock Detail/Home work and the current populated Security Hub pass.
+Brain/Notes/Journal, then News and Workstation/Screener, following accepted
+Stock Detail/Home/Security work and the current populated comparison pass.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend
@@ -2059,7 +2079,11 @@ ordered v1.7 milestone above.
       - [x] Populated Security Hub hierarchy/readability pass beyond Stock Detail:
             independent overview/context, wrapping identity/actions, explicit
             history/table states, content-sized tables and keyboard tab focus.
-      - [ ] Populated comparison/Brain/Notes/Journal hierarchy/readability review.
+      - [x] Populated comparison research: observed paths first, full-width
+            evidence/saved-answer reading, inspectable source disclosures and
+            bounded saved lists with focus movement/return. Preserve citations,
+            explicit scope, coverage warnings and saved-run lifecycle.
+      - [ ] Populated Brain/Notes/Journal hierarchy/readability review.
       - [ ] Populated News and Workstation/Screener hierarchy/readability review.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite

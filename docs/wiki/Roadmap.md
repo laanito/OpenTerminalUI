@@ -934,11 +934,14 @@ beside latest price, keeps the chart above the fold, splits active studies from
 a wide indicator-management drawer and improves shared panel/label readability.
 The accepted Home slice #296 puts portfolio value/history first, with independent context,
 readable widgets/axes and responsive launch controls; see the
-[Home review](../design/v3/HOME_REVIEW.md). The current Security Hub pass adds
+[Home review](../design/v3/HOME_REVIEW.md). The accepted Security Hub pass #297 adds
 independent research/context stacks, wrapping identity/actions, explicit missing
 history and content-sized named tables; see the
 [Security review](../design/v3/SECURITY_REVIEW.md).
-Continue comparison/Brain/Notes/Journal, News and
+The current comparison pass puts observed paths first and uses full-width
+briefing/saved-evidence reading with bounded lists and citation/focus preservation;
+see the [comparison review](../design/v3/COMPARISON_REVIEW.md).
+Continue Brain/Notes/Journal, News and
 Workstation/Screener in populated states. No new feature backlog is added to
 that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).

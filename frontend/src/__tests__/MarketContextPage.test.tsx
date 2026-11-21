@@ -279,7 +279,9 @@ describe("MarketContextPage", () => {
     expect(screen.getByText(/QQQ raw requested \(provider-reported\)/)).toBeInTheDocument();
     expect(screen.getByText(/History provider failed; no comparison was calculated/)).toBeInTheDocument();
     expect(screen.getByText(/SAP.DE no usable history/)).toBeInTheDocument();
-    expect(screen.getByText(/not FX-normalized/)).toBeInTheDocument();
+    expect(screen.getByText(/Shared UTC daily closes in native quote units, not FX-normalized/)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Indexed daily-close paths for BTC-USD and SPY/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Hide aligned price paths for BTC-USD vs SPY" }));
     expect(screen.queryByRole("img", { name: /Indexed daily-close paths/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show aligned price paths for BTC-USD vs SPY" }));
     expect(screen.getByRole("img", { name: /Indexed daily-close paths for BTC-USD and SPY/ })).toBeInTheDocument();
@@ -465,6 +467,7 @@ describe("MarketContextPage", () => {
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY");
     await waitFor(() => expect(compareMock).toHaveBeenCalledTimes(1));
 
+    fireEvent.click(screen.getByText("Find and add comparison symbols", { exact: true }));
     fireEvent.click(screen.getByRole("button", { name: "Add BTC-USD" }));
     expect(screen.getByRole("textbox", { name: "Comparison symbols" })).toHaveValue("SPY, BTC-USD");
     expect(compareMock).toHaveBeenCalledTimes(1);
@@ -493,6 +496,7 @@ describe("MarketContextPage", () => {
     renderPage("/equity/market-context?symbol=AAPL&proxies=SPY,QQQ,BTC-USD,SAP.DE,MSFT,GOOG");
     await waitFor(() => expect(compareMock).toHaveBeenCalledTimes(1));
 
+    fireEvent.click(screen.getByText("Find and add comparison symbols", { exact: true }));
     fireEvent.click(screen.getByRole("button", { name: "Add ETH-USD" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Choose no more than six comparison symbols.");
     expect(screen.getByRole("textbox", { name: "Comparison symbols" })).toHaveValue("SPY,QQQ,BTC-USD,SAP.DE,MSFT,GOOG");

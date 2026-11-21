@@ -217,9 +217,9 @@ function FXSharedPath({ anchor, row }: { anchor: string; row: MarketComparisonRo
         <div className="h-56 w-full" role="img" aria-label={`FX-converted shared-date paths for ${anchor} and ${row.symbol} in ${path.reporting_currency}`}>
           <ResponsiveContainer width="100%" height="100%"><LineChart data={path.points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
-            <XAxis dataKey="date" tickFormatter={(value: string) => value.slice(5)} stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} minTickGap={25} />
-            <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} domain={["auto", "auto"]} />
-            <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }} formatter={(value) => typeof value === "number" ? value.toFixed(2) : value} />
+            <XAxis dataKey="date" tickFormatter={(value: string) => value.slice(5)} stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} minTickGap={25} />
+            <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} domain={["auto", "auto"]} />
+            <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "12px" }} formatter={(value) => typeof value === "number" ? value.toFixed(2) : value} />
             <Line type="linear" dataKey="anchor_index" name={anchor} stroke="var(--ot-color-accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
             <Line type="linear" dataKey="comparison_index" name={row.symbol} stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
           </LineChart></ResponsiveContainer>
@@ -237,8 +237,8 @@ function FXSharedPath({ anchor, row }: { anchor: string; row: MarketComparisonRo
   );
 }
 
-function AlignedPaths({ anchor, row }: { anchor: string; row: MarketComparisonRow }) {
-  const [open, setOpen] = useState(false);
+function AlignedPaths({ anchor, row, initiallyOpen = false }: { anchor: string; row: MarketComparisonRow; initiallyOpen?: boolean }) {
+  const [open, setOpen] = useState(initiallyOpen);
   if (!row.points || row.points.length < 2) return null;
 
   return (
@@ -248,26 +248,26 @@ function AlignedPaths({ anchor, row }: { anchor: string; row: MarketComparisonRo
       </button>
       {open ? (
         <div className="mt-2 space-y-2">
-          <p className="text-xs text-terminal-muted">
-            Both paths start at 100 on the first shared close. Only observed shared UTC dates are plotted; no dates are filled in.
-            Values remain in each symbol’s native quote currency, not FX-normalized. Timing alone does not show causation.
-          </p>
           <div className="h-56 w-full" role="img" aria-label={`Indexed daily-close paths for ${anchor} and ${row.symbol} from ${row.start_date} to ${row.end_date}`}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={row.points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
-                <XAxis dataKey="date" tickFormatter={(date: string) => date.slice(5)} stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} minTickGap={25} />
-                <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} domain={["auto", "auto"]} />
-                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }} formatter={(value) => typeof value === "number" ? value.toFixed(2) : value} />
+                <XAxis dataKey="date" tickFormatter={(date: string) => date.slice(5)} stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} minTickGap={25} />
+                <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} domain={["auto", "auto"]} />
+                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "12px" }} formatter={(value) => typeof value === "number" ? value.toFixed(2) : value} />
                 <Line type="linear" dataKey="anchor_index" name={anchor} stroke="var(--ot-color-accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
                 <Line type="linear" dataKey="comparison_index" name={row.symbol} stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-xs text-terminal-muted">
+            Both paths start at 100 on the first shared close. Only observed shared UTC dates are plotted; no dates are filled in.
+            Values remain in each symbol’s native quote currency, not FX-normalized. Timing alone does not show causation.
+          </p>
           <p className="text-xs text-terminal-muted">{anchor}: accent line · {row.symbol}: amber line · {row.points.length} shared closes.</p>
           <details className="text-xs text-terminal-muted">
             <summary className="cursor-pointer text-terminal-accent">View exact aligned observations</summary>
-            <div className="mt-2 max-h-56 overflow-auto">
+            <div role="region" tabIndex={0} aria-label={`Exact shared UTC observations for ${anchor} and ${row.symbol}`} className="mt-2 max-h-56 overflow-auto">
               <table className="w-full text-left">
                 <thead><tr><th className="py-1 pr-3">UTC date</th><th className="py-1 pr-3">{anchor} index</th><th className="py-1">{row.symbol} index</th></tr></thead>
                 <tbody>{row.points.map((point) => (
@@ -1247,7 +1247,7 @@ export function MarketContextPage() {
   }
 
   return (
-    <div className="h-full min-h-0 space-y-3 overflow-auto p-3">
+    <main aria-label="Cross-market research" className="ot-market-context min-h-full min-w-0 space-y-3 p-3 md:p-4">
       <div>
         <h1 className="ot-type-heading-lg text-terminal-text">Cross-market context</h1>
         <p className="mt-1 text-sm text-terminal-muted">
@@ -1255,9 +1255,13 @@ export function MarketContextPage() {
         </p>
       </div>
 
+      <nav aria-label="Comparison sections" className="flex flex-wrap gap-3 text-xs text-terminal-accent">
+        <a href="#observed-comparison" className="underline">Observed comparison</a>
+        <a href="#comparison-briefing" className="underline">Briefing and saved runs</a>
+      </nav>
       <TerminalPanel title="Select evidence" subtitle="One anchor · up to six comparison symbols">
         <form onSubmit={applySelection} className="flex flex-wrap items-end gap-3">
-          <div className="min-w-[130px] flex-1">
+          <div className="min-w-0 basis-40 flex-1">
             <SymbolSuggestions
               label="Anchor symbol"
               value={anchorInput}
@@ -1266,7 +1270,7 @@ export function MarketContextPage() {
               placeholder="AAPL, SAP.DE, BTC-USD…"
             />
           </div>
-          <label className="min-w-[220px] flex-[2] text-xs text-terminal-muted">
+          <label className="min-w-0 basis-60 flex-[2] text-xs text-terminal-muted">
             Comparison symbols (comma separated)
             <input
               value={proxiesInput}
@@ -1297,6 +1301,8 @@ export function MarketContextPage() {
             Compare dated moves
           </button>
         </form>
+        <details className="mt-3 min-w-0 text-xs">
+          <summary className="w-fit cursor-pointer text-terminal-accent">Find and add comparison symbols</summary>
         <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           <SymbolSuggestions
             label="Find a proxy to add"
@@ -1328,23 +1334,15 @@ export function MarketContextPage() {
           </div>
         </div>
         <p className="mt-2 text-xs text-terminal-muted">Suggestions identify symbols; daily-history availability is checked when you compare.</p>
+        </details>
         {formError || selection.error ? <p role="alert" className="mt-2 text-xs text-terminal-neg">{formError || selection.error}</p> : null}
       </TerminalPanel>
 
-      <ComparisonBriefingPanel
-        key={JSON.stringify([selection.anchor, selection.comparisons, appliedPeriod, appliedCurrency, anchorInput, proxiesInput, periodInput, currencyInput])}
-        selection={{ anchor: selection.anchor, comparisons: selection.comparisons, period: appliedPeriod }}
-        disabledReason={selection.error || (anchorInput.trim().toUpperCase() !== selection.anchor
-          || JSON.stringify(selectedProxies) !== JSON.stringify(selection.comparisons)
-          || periodInput !== appliedPeriod || (currencyInput || null) !== appliedCurrency
-          ? "Apply your selection before generating a briefing." : undefined)}
-      />
-
+      <div className="ot-comparison-workspace">
+        <section id="observed-comparison" aria-label="Observed comparison" tabIndex={-1} className="min-w-0 scroll-mt-3">
       <TerminalPanel title="Observed comparison" subtitle={`${selection.anchor} · ${appliedPeriod} requested window`}>
         <p className="mb-3 text-xs text-terminal-muted">
-          Daily closes are paired only when both symbols have an observation on the same UTC date. Returns are in each
-          symbol’s native quote currency, not FX-normalized. The identified price-history source is shown per symbol;
-          it may differ across the pair or be unavailable. Adjustment policy is not verified for every feed.
+          Shared UTC daily closes in native quote units, not FX-normalized. Same date does not mean simultaneous closes; price adjustments may differ.
         </p>
         {query.isPending && !selection.error ? <p role="status" className="text-sm text-terminal-muted">Loading dated market history…</p> : null}
         {query.isError ? (
@@ -1356,8 +1354,8 @@ export function MarketContextPage() {
         {query.data ? (
           <div className="space-y-2">
             <p className="text-xs text-terminal-muted">Requested {query.data.period}; retrieved {new Date(query.data.retrieved_at).toLocaleString()}.</p>
-            {query.data.comparisons.map((row) => (
-              <div key={row.symbol} className="rounded border border-terminal-border bg-terminal-bg p-3">
+            {query.data.comparisons.map((row, index) => (
+              <article key={row.symbol} aria-label={`${selection.anchor} vs ${row.symbol} comparison`} className="min-w-0 rounded border border-terminal-border bg-terminal-bg p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-sm font-semibold text-terminal-text">{selection.anchor} vs {row.symbol}</h2>
                   <span className={`text-xs ${row.status === "unavailable" || row.freshness === "stale" ? "text-terminal-warn" : "text-terminal-pos"}`}>
@@ -1365,10 +1363,8 @@ export function MarketContextPage() {
                   </span>
                 </div>
                 <CloseDateConflicts anchor={selection.anchor} row={row} />
-                <p className="mt-1 text-xs text-terminal-muted">
-                  Quote units: {selection.anchor} {quoteUnitLabel(row.anchor_quote_unit)} · {row.symbol} {quoteUnitLabel(row.comparison_quote_unit)}. These are provider-reported units, not FX conversions or verified price denominations.
-                </p>
                 {row.anchor_quote_unit?.unit && row.comparison_quote_unit?.unit && row.anchor_quote_unit.unit !== row.comparison_quote_unit.unit ? <p className="mt-1 text-xs text-terminal-warn">Different reported quote units; native returns are not base-currency performance.</p> : null}
+                <p className="mt-1 text-xs text-terminal-muted">Native quote units: {selection.anchor} {row.anchor_quote_unit?.unit || "unknown"} · {row.symbol} {row.comparison_quote_unit?.unit || "unknown"}.</p>
                 {row.status === "available" ? (
                   <>
                     <div className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
@@ -1380,18 +1376,24 @@ export function MarketContextPage() {
                       Shared closes: {row.start_date} to {row.end_date} · {row.observations} observations.
                       Latest source dates: {selection.anchor} {row.anchor_latest_date}, {row.symbol} {row.comparison_latest_date}.
                     </p>
+                    {pairBasisMessage(row.pair_reported_basis_status) ? <p className={`mt-1 text-xs ${row.pair_reported_basis_status === "matching_reported" ? "text-terminal-muted" : "text-terminal-warn"}`}>{pairBasisMessage(row.pair_reported_basis_status)}</p> : null}
+                    <AlignedPaths anchor={selection.anchor} row={row} initiallyOpen={index === 0} />
                     <FXEndpointComparison anchor={selection.anchor} row={row} />
                     <FXSharedPath anchor={selection.anchor} row={row} />
+                    <details className="mt-3 min-w-0 rounded border border-terminal-border p-2 text-xs">
+                      <summary className="cursor-pointer text-terminal-accent">Price sources, quote units and alignment</summary>
+                <p className="mt-1 text-xs text-terminal-muted">
+                  Quote units: {selection.anchor} {quoteUnitLabel(row.anchor_quote_unit)} · {row.symbol} {quoteUnitLabel(row.comparison_quote_unit)}. These are provider-reported units, not FX conversions or verified price denominations.
+                </p>
                     <p className="mt-1 text-xs text-terminal-muted">
                       Price-history paths: {selection.anchor} {historyPathLabel(row.anchor_history_source, row.anchor_history_feed)} · {row.symbol} {historyPathLabel(row.comparison_history_source, row.comparison_history_feed)}.
                     </p>
                     <ExchangeDateDisclosure anchor={selection.anchor} row={row} />
-                    <ExchangeLocalPair anchor={selection.anchor} row={row} />
                     <p className="mt-1 text-xs text-terminal-muted">
                       Reported price basis: {selection.anchor} {adjustmentBasisLabel(row.anchor_reported_adjustment_basis)} · {row.symbol} {adjustmentBasisLabel(row.comparison_reported_adjustment_basis)}. These labels describe feed requests, not an audit of returned values.
                     </p>
-                    {pairBasisMessage(row.pair_reported_basis_status) ? <p className={`mt-1 text-xs ${row.pair_reported_basis_status === "matching_reported" ? "text-terminal-muted" : "text-terminal-warn"}`}>{pairBasisMessage(row.pair_reported_basis_status)}</p> : null}
-                    <AlignedPaths anchor={selection.anchor} row={row} />
+                    </details>
+                    <ExchangeLocalPair anchor={selection.anchor} row={row} />
                     <TechnicalObservations anchor={selection.anchor} row={row} />
                     <DatedHeadlines anchor={selection.anchor} row={row} />
                     <DatedMacroEvents anchor={selection.anchor} row={row} />
@@ -1408,11 +1410,24 @@ export function MarketContextPage() {
                     {row.exchange_local_pair?.status === "available" ? <ExchangeLocalPair anchor={selection.anchor} row={row} /> : null}
                   </>
                 )}
-              </div>
+              </article>
             ))}
           </div>
         ) : null}
       </TerminalPanel>
-    </div>
+        </section>
+        <aside id="comparison-briefing" aria-label="Briefing and saved research" tabIndex={-1} className="min-w-0 scroll-mt-3">
+      <ComparisonBriefingPanel
+        key={JSON.stringify([selection.anchor, selection.comparisons, appliedPeriod, appliedCurrency, anchorInput, proxiesInput, periodInput, currencyInput])}
+        selection={{ anchor: selection.anchor, comparisons: selection.comparisons, period: appliedPeriod }}
+        disabledReason={selection.error || (anchorInput.trim().toUpperCase() !== selection.anchor
+          || JSON.stringify(selectedProxies) !== JSON.stringify(selection.comparisons)
+          || periodInput !== appliedPeriod || (currencyInput || null) !== appliedCurrency
+          ? "Apply your selection before generating a briefing." : undefined)}
+      />
+
+        </aside>
+      </div>
+    </main>
   );
 }
