@@ -62,7 +62,7 @@ export function ComparisonBriefingResultView({ result }: { result: ComparisonBri
   const packet = contextPacket?.price ?? (result && !("possible_context" in result) ? result.evidence : null);
   const warnings = packet?.comparisons.filter((pair) => pair.caveats.some((caveat) => !GENERAL.has(caveat))) ?? [];
 
-  return <div className="space-y-3">
+  return <div className="ot-comparison-result min-w-0 space-y-3 text-sm [overflow-wrap:anywhere]">
         <p className="text-xs text-terminal-muted">
           {result.status === "complete" ? "Generated interpretation" : "Briefing unavailable"} · {new Date(result.generated_at).toLocaleString()}
           {result.model ? ` · model ${result.model}` : ""}

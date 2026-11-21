@@ -2374,3 +2374,21 @@ button.ot-home-widget-strip-chip:hover {
   overflow-wrap: anywhere;
   line-height: 1.2;
 }
+
+/* Comparison research follows one full-width reading flow. The shell owns
+   page scrolling; long evidence never sits beside an empty price column. */
+.ot-market-context {
+  overflow-wrap: anywhere;
+}
+
+.ot-comparison-workspace {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ot-comparison-result h3,
+.ot-saved-comparisons h3 {
+  font-size: 14px;
+}

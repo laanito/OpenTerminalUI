@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Comparison research reading flow** — observed paths precede model setup;
+  the first aligned plot opens by default, with jump links and disclosed proxy/
+  provenance helpers. Full-width briefing and saved-evidence reading avoids empty
+  side columns. Saved lists are bounded, and opening/closing a run moves focus
+  to its review and back. Scope warnings, citations and saved-run behavior remain.
 - **Readable Security Hub research** — overview/catalysts and supporting context
   use independent columns with one page scroller. Identity, actions and tabs wrap;
   metrics distinguish missing values from zero. Named research tables size to

@@ -15,6 +15,11 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
   const [loading, setLoading] = useState(false);
   const [opening, setOpening] = useState<string | null>(null);
   const [selected, setSelected] = useState<ComparisonCapture | null>(null);
+  const review = useRef<HTMLElement | null>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (selected) { review.current?.focus(); review.current?.scrollIntoView?.({ block: "start" }); }
+  }, [selected?.id]);
   const [error, setError] = useState<string | null>(null);
   const [showInputs, setShowInputs] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -107,7 +112,7 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
     setSelected(null); setOpening(null); setConfirmDelete(false); setDeleting(false);
   }
 
-  return <section aria-label="Saved comparison briefings" className="space-y-3 rounded border border-terminal-border p-3">
+  return <section aria-label="Saved comparison briefings" className="ot-saved-comparisons min-w-0 space-y-3 rounded border border-terminal-border p-3 [overflow-wrap:anywhere]">
     <button type="button" className="text-terminal-accent underline" aria-expanded={open} onClick={() => {
       if (open) { list.current?.abort(); close(); }
       setOpen(!open);
@@ -117,9 +122,9 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
       <button type="button" className="underline disabled:opacity-50" disabled={loading || deleting} onClick={() => void refresh()}>Refresh saved briefings</button>
       {loading ? <p role="status">Loading saved briefings…</p> : loaded && !error && !rows.length ? <p>{offset ? "No more saved briefings on this page." : "No saved briefings yet."}</p> : null}
       {error ? <p role="alert" className="text-terminal-warn">{error}</p> : null}
-      <ul className="space-y-2">{rows.map((row) => <li key={row.id}>
-        <button type="button" className="text-terminal-accent underline disabled:opacity-50" disabled={deleting || Boolean(following) || scoring}
-          onClick={() => void inspect(row.id)} aria-pressed={selected?.id === row.id}>
+      <ul aria-label="Saved briefing list" tabIndex={0} className="max-h-72 space-y-2 overflow-auto p-1">{rows.map((row) => <li key={row.id}>
+        <button type="button" className="w-full rounded border border-terminal-border p-2 text-left text-sm text-terminal-accent hover:border-terminal-accent aria-pressed:border-terminal-accent aria-pressed:bg-terminal-accent/10 disabled:opacity-50" disabled={deleting || Boolean(following) || scoring}
+          onClick={(event) => { opener.current = event.currentTarget; void inspect(row.id); }} aria-pressed={selected?.id === row.id}>
           Open saved {row.anchor} vs {row.comparisons.join(", ")} · {row.period} · {new Date(row.captured_at).toLocaleString()} · {row.status}
         </button>
       </li>)}</ul>
@@ -129,11 +134,11 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
         {rows.length ? <span>Showing {offset + 1}–{offset + rows.length}</span> : null}
       </nav>
       {opening ? <p role="status">Opening the original saved briefing…</p> : null}
-      {selected ? <section aria-label="Saved briefing review" className="space-y-3 border-t border-terminal-border pt-3">
+      {selected ? <section ref={review} tabIndex={-1} aria-label="Saved briefing review" className="min-w-0 space-y-3 scroll-mt-3 focus:outline focus:outline-terminal-accent border-t border-terminal-border pt-3">
         <h3 className="font-semibold">Saved scope: {selected.anchor} vs {selected.comparisons.join(", ")} · {selected.period}</h3>
         <p className="text-xs text-terminal-muted">Saved {new Date(selected.captured_at).toLocaleString()}. Evidence and generation dates below belong to this original run, independently of the page’s current selection. Retained until deleted.</p>
         <div className="flex flex-wrap gap-3">
-          <button type="button" className="underline" onClick={close}>Close saved briefing</button>
+          <button type="button" className="underline" onClick={() => { close(); opener.current?.focus(); }}>Close saved briefing</button>
           <button type="button" disabled={Boolean(following) || scoring || Boolean(opening)} className="text-terminal-neg underline disabled:opacity-50" onClick={() => setConfirmDelete(true)}>Delete saved briefing</button>
         </div>
         {selected.lineage ? <div aria-label="Saved run lineage" className="space-y-1 rounded border border-terminal-border p-2 text-xs">
@@ -143,8 +148,12 @@ export function SavedComparisonBriefings({ revision, onDeleted }: { revision: nu
           <p>Each run retains its own evidence even if its source run is deleted.</p>
         </div> : null}
         <div aria-label="Saved run follow-up" className="space-y-2 rounded border border-terminal-border p-3 text-xs">
-          <p>Re-run sends the last saved prompts and generation settings to the current Deep model with frozen source data. Refresh fetches current evidence for this saved selection and uses current prompts. Both save a separate linked run and keep this original unchanged.</p>
+          <p>Re-run keeps saved inputs; refresh fetches current evidence. Each action saves a separate linked run.</p>
+          <details>
+            <summary className="cursor-pointer text-terminal-accent">How saved follow-ups work</summary>
+          <p className="mt-2">Re-run sends the last saved prompts and generation settings to the current Deep model with frozen source data. Refresh fetches current evidence for this saved selection and uses current prompts. Both save a separate linked run and keep this original unchanged.</p>
           <p>Re-run makes one checked completion with the saved response format and token budget. Model aliases and provider behavior can change; identical wording is not guaranteed.</p>
+          </details>
           {selected.content.sentiment_sources?.length ? <p>Re-run preserves these selected sentiment observations. Refresh collects fresh market context without carrying old sentiment assessments into the new run.</p> : null}
           <div className="flex flex-wrap gap-3">
             <button type="button" disabled={Boolean(following) || scoring || Boolean(opening) || deleting || !selected.content.result.evidence || !(selected.content.generation.attempts.length || selected.content.generation.prepared_request)}

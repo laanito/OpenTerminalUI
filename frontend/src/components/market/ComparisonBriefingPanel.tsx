@@ -88,25 +88,29 @@ function BriefingPanelContent({ selection, disabledReason }: Props) {
     setSaved(null); setContext(next); setStatus("idle"); setResult(null); setError(null);
   }
   return <TerminalPanel title="Comparison briefing" subtitle="On demand · citation references checked, not fact-checked">
-    <div className="space-y-3 text-sm">
-      <p className="text-terminal-muted">
-        Applied selection: {selection.anchor} vs {selection.comparisons.join(", ")} · {selection.period}.
-        {" "}This fetches a fresh shared-UTC, native-quote return snapshot, which may differ from the comparison below.
+    <div className="min-w-0 space-y-3 text-sm [overflow-wrap:anywhere]">
+      <p className="text-terminal-text">Applied selection: {selection.anchor} vs {selection.comparisons.join(", ")} · {selection.period}.</p>
+      <details className="min-w-0 text-xs text-terminal-muted">
+        <summary className="cursor-pointer">How briefing evidence differs from the page</summary>
+        <p className="mt-2">This fetches a fresh shared-UTC, native-quote return snapshot, which may differ from the comparison below.
+        </p>
+      </details>
+      <p className="text-xs text-terminal-warn">
         {hasContext ? " Only context explicitly selected below will be included. Other page panels never imply inclusion. Exact SEC filing checks, separate FX/adjusted/local-date comparison views, private research and economic-calendar events remain excluded."
           : " Optional news, fundamentals, SEC, macro, technical, FX/adjusted/local-date views and private research are not included—even if open elsewhere on this page."}
       </p>
       <fieldset className="space-y-2 rounded border border-terminal-border p-3">
         <legend className="px-1 font-semibold">Briefing evidence scope</legend>
         <p className="text-xs text-terminal-muted">Price returns are always included when available. Context is opt-in; macro regions are not inferred from tickers. Changing scope clears the answer and cancels any running request.</p>
-        <div className="flex flex-wrap gap-x-5 gap-y-3">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={context.news}
+        <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-3">
+          <label className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={context.news}
             onChange={(event) => changeContext({ ...context, news: event.target.checked })} />Dated news headlines</label>
-          {(["us", "euro_area"] as const).map((region) => <label key={region} className="flex items-center gap-2"><input type="checkbox" checked={context.macro_regions.includes(region)}
+          {(["us", "euro_area"] as const).map((region) => <label key={region} className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={context.macro_regions.includes(region)}
             onChange={(event) => changeContext({ ...context, macro_regions: (["us", "euro_area"] as const).filter((item) => item === region ? event.target.checked : context.macro_regions.includes(item)) })} />
             {region === "us" ? "US macro (FRED)" : "Euro-area macro (Eurostat/ECB)"}</label>)}
-          <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(context.technical)}
+          <label className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={Boolean(context.technical)}
             onChange={(event) => changeContext({ ...context, technical: event.target.checked })} />Technical observations</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(context.fundamentals)}
+          <label className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={Boolean(context.fundamentals)}
             onChange={(event) => changeContext({ ...context, fundamentals: event.target.checked })} />SEC filing facts</label>
         </div>
         {context.news || context.macro_regions.length ? <p className="text-xs text-terminal-warn">Headlines are unverified source text from incomplete current feeds. Macro is global reference-period context, not publication-day evidence or ticker relevance; current vintages do not establish past knowledge.</p> : null}
