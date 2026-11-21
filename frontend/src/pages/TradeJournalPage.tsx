@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDownRight, ArrowUpRight, ClipboardCheck, Pencil, Plus, Trash2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -161,6 +161,13 @@ export function TradeJournalPage() {
     return cells;
   }, [calendarQuery.data]);
 
+  const calendarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (activeTab === "analytics" && calendarRef.current) {
+      calendarRef.current.scrollTop = calendarRef.current.scrollHeight;
+    }
+  }, [activeTab, calendarHeatmap]);
+
   async function refreshJournal() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["journal", "entries"] }),
@@ -244,19 +251,146 @@ export function TradeJournalPage() {
   }
 
   return (
-    <div className="space-y-4 p-4" data-testid="trade-journal-page">
+    <main aria-label="Trade Journal" className="min-w-0 space-y-4 p-3 sm:p-4 [&_input]:min-w-0 [&_input]:!text-sm [&_select]:!text-sm [&_button]:!text-xs [&_button]:tracking-normal" data-testid="trade-journal-page">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-lg font-semibold text-terminal-text">Trade Journal</h1>
+        <TerminalButton type="button" variant="accent" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setIsCreateOpen(true)} data-testid="add-trade-button">Add Trade</TerminalButton>
+      </header>
       <TerminalPanel
-        title="Trade Journal"
+        title="Entries and review"
         subtitle="Execution review, PnL diagnostics, and behavioral pattern tracking."
         actions={<TerminalTabs items={tabs} value={activeTab} onChange={setActiveTab} variant="accent" />}
       >
         {activeTab === "journal" ? (
           <div className="space-y-4">
-            <div className="rounded-sm border border-terminal-border bg-terminal-bg/50 p-3">
+            <div role="group" aria-label="Filter journal entries" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span>Symbol</span><TerminalInput value={symbolFilter} onChange={(event) => setSymbolFilter(event.target.value)} placeholder="Filter symbol" /></label>
+              <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span>Strategy</span><TerminalInput as="select" value={strategyFilter} onChange={(event) => setStrategyFilter(event.target.value)}>
+                <option value="">All strategies</option>
+                {strategies.map((strategy) => (
+                  <option key={strategy} value={strategy}>
+                    {strategy}
+                  </option>
+                ))}
+              </TerminalInput></label>
+              <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span>Emotion</span><TerminalInput as="select" value={emotionFilter} onChange={(event) => setEmotionFilter(event.target.value)}>
+                <option value="">All emotions</option>
+                {Object.keys(emotionMeta).map((emotion) => (
+                  <option key={emotion} value={emotion}>
+                    {emotion}
+                  </option>
+                ))}
+              </TerminalInput></label>
+              <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span>From date</span><TerminalInput type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
+              <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span>Through date</span><TerminalInput type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label>
+            </div>
+
+            <div className="space-y-3">
+              {entries.map((entry) => {
+                const expanded = expandedId === entry.id;
+                const positive = (entry.pnl ?? 0) >= 0;
+                return (
+                  <article
+                    key={entry.id}
+                    aria-label={`${entry.symbol} journal entry`}
+                    data-testid="journal-card"
+                    className="w-full rounded-sm border border-terminal-border bg-terminal-bg/60 p-4 text-left transition-colors hover:border-terminal-accent/40"
+                  >
+                    <div className="grid min-w-0 gap-4 [overflow-wrap:anywhere] md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={entry.direction === "LONG" ? "text-terminal-pos" : "text-terminal-neg"}>
+                            {entry.direction === "LONG" ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
+                          </span>
+                          <span className="text-lg font-semibold text-terminal-text">{entry.symbol}</span>
+                          {entry.strategy ? (
+                            <span className="rounded-sm border border-terminal-accent/30 bg-terminal-accent/10 px-2 py-1 text-xs tracking-normal text-terminal-accent">
+                              {entry.strategy}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="text-xs text-terminal-muted">{formatDate(entry.entry_date)}</div>
+                        <div className="flex flex-wrap gap-2">
+                          {entry.tags.map((tag) => (
+                            <span key={tag} className="rounded-sm border border-terminal-border px-2 py-1 text-xs text-terminal-muted">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 text-sm text-terminal-muted">
+                        <div>
+                          {formatMoney(entry.entry_price, nativeCurrencyForSymbol(entry.symbol))} <span className="text-terminal-text">→</span> {entry.exit_price != null ? formatMoney(entry.exit_price, nativeCurrencyForSymbol(entry.symbol)) : "Open"}
+                        </div>
+                        <div>Qty {entry.quantity}</div>
+                        <div>
+                          {emotionMeta[entry.emotion || ""] ?? "•"} {entry.emotion || "untracked"}
+                        </div>
+                        <div>{Array.from({ length: entry.rating ?? 0 }).map((_, index) => "★").join("") || "No rating"}</div>
+                      </div>
+
+                      <div className="space-y-1 md:text-right">
+                        <div className={`text-2xl font-semibold ${positive ? "text-terminal-pos" : "text-terminal-neg"}`} data-testid="journal-pnl">
+                          {entry.pnl != null ? `${entry.pnl >= 0 ? "+" : ""}${formatMoney(entry.pnl, nativeCurrencyForSymbol(entry.symbol))}` : "OPEN"}
+                        </div>
+                        <div className={positive ? "text-terminal-pos" : "text-terminal-neg"}>{formatPct(entry.pnl_pct)}</div>
+                        <div className="text-xs text-terminal-muted">{truncate(entry.notes, 68) || "No notes"}</div>
+                      </div>
+                    </div>
+
+                    <button type="button" aria-expanded={expanded} aria-controls={`journal-detail-${entry.id}`} className="mt-3 min-h-8 rounded-sm px-2 text-xs text-terminal-accent focus-visible:outline" onClick={() => setExpandedId(expanded ? null : entry.id)}>
+                      {expanded ? "Hide" : "Review"} {entry.symbol} entry
+                    </button>
+                    {expanded ? (
+                      <div id={`journal-detail-${entry.id}`} className="mt-3 space-y-3 border-t border-terminal-border pt-3 text-sm text-terminal-muted [overflow-wrap:anywhere]">
+                        <div className="space-y-2">
+                          <div>Setup: <span className="text-terminal-text">{entry.setup || "--"}</span></div>
+                          <div>Fees: <span className="text-terminal-text">{formatMoney(entry.fees, nativeCurrencyForSymbol(entry.symbol))}</span></div>
+                          <div>Exit: <span className="text-terminal-text">{formatDate(entry.exit_date)}</span></div>
+                          <div className="whitespace-pre-wrap leading-relaxed text-terminal-text">{entry.notes || "No journal notes recorded."}</div>
+                        </div>
+                        <div className="flex flex-wrap items-start gap-2">
+                          <TerminalButton
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            leftIcon={<Pencil className="h-3.5 w-3.5" />}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setEditingEntry(entry);
+                            }}
+                          >
+                            Edit
+                          </TerminalButton>
+                          <TerminalButton
+                            type="button"
+                            size="sm"
+                            variant="danger"
+                            leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void deleteMutation.mutateAsync(entry.id);
+                            }}
+                          >
+                            Delete
+                          </TerminalButton>
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+              {entriesQuery.isPending ? <p role="status" className="text-sm text-terminal-muted">Loading journal entries…</p> : null}
+              {entriesQuery.isError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-terminal-neg">Journal entries unavailable.<TerminalButton onClick={() => void entriesQuery.refetch()}>Retry entries</TerminalButton></div> : null}
+              {!entries.length && !entriesQuery.isPending && !entriesQuery.isError ? <div className="rounded-sm border border-dashed border-terminal-border p-6 text-sm text-terminal-muted">No trades match the current filters.</div> : null}
+            </div>
+            <details className="rounded-sm border border-terminal-border bg-terminal-bg/50 p-3">
+              <summary className="cursor-pointer text-sm text-terminal-text focus-visible:outline">Journal completeness review</summary>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <div className="text-xs font-semibold text-terminal-text">Journal completeness review</div>
-                  <div className="mt-1 text-[11px] text-terminal-muted">
+
+                  <div className="mt-1 text-xs text-terminal-muted">
                     On demand only · reports missing facts and stale open theses without inventing answers.
                   </div>
                 </div>
@@ -294,12 +428,12 @@ export function TradeJournalPage() {
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {item.missing.map((gap) => (
-                          <span key={gap} className="rounded-sm border border-terminal-warn/40 px-1.5 py-0.5 text-[10px] text-terminal-warn">
+                          <span key={gap} className="rounded-sm border border-terminal-warn/40 px-1.5 py-0.5 text-xs text-terminal-warn">
                             {gap.replace("_", " ")}
                           </span>
                         ))}
                       </div>
-                      <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] text-terminal-muted">
+                      <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-terminal-muted">
                         {item.prompts.map((prompt) => <li key={prompt}>{prompt}</li>)}
                       </ul>
                     </div>
@@ -309,135 +443,8 @@ export function TradeJournalPage() {
                   ) : null}
                 </div>
               ) : null}
-            </div>
+            </details>
 
-            <div className="grid gap-3 md:grid-cols-4">
-              <TerminalInput value={symbolFilter} onChange={(event) => setSymbolFilter(event.target.value)} placeholder="Filter symbol" />
-              <TerminalInput as="select" value={strategyFilter} onChange={(event) => setStrategyFilter(event.target.value)}>
-                <option value="">All strategies</option>
-                {strategies.map((strategy) => (
-                  <option key={strategy} value={strategy}>
-                    {strategy}
-                  </option>
-                ))}
-              </TerminalInput>
-              <TerminalInput as="select" value={emotionFilter} onChange={(event) => setEmotionFilter(event.target.value)}>
-                <option value="">All emotions</option>
-                {Object.keys(emotionMeta).map((emotion) => (
-                  <option key={emotion} value={emotion}>
-                    {emotion}
-                  </option>
-                ))}
-              </TerminalInput>
-              <div className="grid grid-cols-2 gap-2">
-                <TerminalInput type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-                <TerminalInput type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {entries.map((entry) => {
-                const expanded = expandedId === entry.id;
-                const positive = (entry.pnl ?? 0) >= 0;
-                return (
-                  <div
-                    key={entry.id}
-                    data-testid="journal-card"
-                    className="w-full rounded-sm border border-terminal-border bg-terminal-bg/60 p-4 text-left transition-colors hover:border-terminal-accent/40"
-                    onClick={() => setExpandedId(expanded ? null : entry.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setExpandedId(expanded ? null : entry.id);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <div className="grid gap-4 md:grid-cols-[1.25fr_1fr_0.8fr]">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className={entry.direction === "LONG" ? "text-terminal-pos" : "text-terminal-neg"}>
-                            {entry.direction === "LONG" ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
-                          </span>
-                          <span className="text-lg font-semibold text-terminal-text">{entry.symbol}</span>
-                          {entry.strategy ? (
-                            <span className="rounded-sm border border-terminal-accent/30 bg-terminal-accent/10 px-2 py-1 text-[10px] uppercase tracking-[0.22em] text-terminal-accent">
-                              {entry.strategy}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div className="text-xs text-terminal-muted">{formatDate(entry.entry_date)}</div>
-                        <div className="flex flex-wrap gap-2">
-                          {entry.tags.map((tag) => (
-                            <span key={tag} className="rounded-sm border border-terminal-border px-2 py-1 text-[10px] text-terminal-muted">
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 text-sm text-terminal-muted">
-                        <div>
-                          {formatMoney(entry.entry_price, nativeCurrencyForSymbol(entry.symbol))} <span className="text-terminal-text">→</span> {entry.exit_price != null ? formatMoney(entry.exit_price, nativeCurrencyForSymbol(entry.symbol)) : "Open"}
-                        </div>
-                        <div>Qty {entry.quantity}</div>
-                        <div>
-                          {emotionMeta[entry.emotion || ""] ?? "•"} {entry.emotion || "untracked"}
-                        </div>
-                        <div>{Array.from({ length: entry.rating ?? 0 }).map((_, index) => "★").join("") || "No rating"}</div>
-                      </div>
-
-                      <div className="space-y-1 text-right">
-                        <div className={`text-2xl font-semibold ${positive ? "text-terminal-pos" : "text-terminal-neg"}`} data-testid="journal-pnl">
-                          {entry.pnl != null ? `${entry.pnl >= 0 ? "+" : ""}${formatMoney(entry.pnl, nativeCurrencyForSymbol(entry.symbol))}` : "OPEN"}
-                        </div>
-                        <div className={positive ? "text-terminal-pos" : "text-terminal-neg"}>{formatPct(entry.pnl_pct)}</div>
-                        <div className="text-xs text-terminal-muted">{truncate(entry.notes, 68) || "No notes"}</div>
-                      </div>
-                    </div>
-
-                    {expanded ? (
-                      <div className="mt-4 grid gap-3 border-t border-terminal-border pt-4 text-sm text-terminal-muted md:grid-cols-2">
-                        <div className="space-y-2">
-                          <div>Setup: <span className="text-terminal-text">{entry.setup || "--"}</span></div>
-                          <div>Fees: <span className="text-terminal-text">{formatMoney(entry.fees, nativeCurrencyForSymbol(entry.symbol))}</span></div>
-                          <div>Exit: <span className="text-terminal-text">{formatDate(entry.exit_date)}</span></div>
-                          <div className="leading-relaxed text-terminal-text">{entry.notes || "No journal notes recorded."}</div>
-                        </div>
-                        <div className="flex items-start justify-end gap-2">
-                          <TerminalButton
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            leftIcon={<Pencil className="h-3.5 w-3.5" />}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setEditingEntry(entry);
-                            }}
-                          >
-                            Edit
-                          </TerminalButton>
-                          <TerminalButton
-                            type="button"
-                            size="sm"
-                            variant="danger"
-                            leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void deleteMutation.mutateAsync(entry.id);
-                            }}
-                          >
-                            Delete
-                          </TerminalButton>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-              {!entries.length ? <div className="rounded-sm border border-dashed border-terminal-border p-6 text-sm text-terminal-muted">No trades match the current filters.</div> : null}
-            </div>
           </div>
         ) : null}
 
@@ -448,7 +455,9 @@ export function TradeJournalPage() {
                 Monetary totals combine trades in different native currencies. They remain unlabelled until journal analytics can normalize them through FX rates.
               </div>
             ) : null}
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {statsQuery.isError ? <p role="alert" className="text-sm text-terminal-neg">Journal statistics unavailable. <TerminalButton onClick={() => void statsQuery.refetch()}>Retry statistics</TerminalButton></p> : null}
+            {statsQuery.isPending ? <p role="status" className="text-sm text-terminal-muted">Loading statistics…</p> : null}
+            {stats ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 { label: "Total Trades", value: stats?.total_trades ?? 0, tone: "text-terminal-text" },
                 { label: "Win Rate", value: `${(stats?.win_rate ?? 0).toFixed(1)}%`, tone: (stats?.win_rate ?? 0) >= 50 ? "text-terminal-pos" : "text-terminal-neg" },
@@ -460,32 +469,45 @@ export function TradeJournalPage() {
                 { label: "Avg PnL", value: formatAggregateMoney(stats?.avg_pnl ?? 0), tone: (stats?.avg_pnl ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg" },
               ].map((card) => (
                 <div key={card.label} className="rounded-sm border border-terminal-border bg-terminal-bg/60 p-3">
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-terminal-muted">{card.label}</div>
+                  <div className="text-xs tracking-normal text-terminal-muted">{card.label}</div>
                   <div className={`mt-2 text-2xl font-semibold ${card.tone}`}>{card.value}</div>
                 </div>
               ))}
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-2">
-              <TerminalPanel title="Equity Curve" bodyClassName="h-[320px]" className="bg-terminal-bg/30">
+            : null}
+            <div className="grid items-start gap-4 xl:grid-cols-2">
+              <div className="min-w-0 space-y-4">
+              <TerminalPanel title="Equity Curve" bodyClassName={equityCurveQuery.data?.length && !equityCurveQuery.isError ? "h-[320px]" : ""} className="bg-terminal-bg/30">
                 <div className="h-full" data-testid="journal-equity-curve">
-                  <ResponsiveContainer width="100%" height="100%">
+                  {equityCurveQuery.isError ? <p role="alert" className="text-sm text-terminal-neg">Equity history unavailable.</p> : equityCurveQuery.isPending ? <p role="status" className="text-sm text-terminal-muted">Loading equity history…</p> : !equityCurveQuery.data?.length ? <p className="text-sm text-terminal-muted">No equity history recorded yet.</p> : <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={equityCurveQuery.data ?? []}>
                       <CartesianGrid stroke="rgba(148,163,184,0.15)" vertical={false} />
-                      <XAxis dataKey="date" stroke="#7f8ea3" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#7f8ea3" tick={{ fontSize: 11 }} />
+                      <XAxis dataKey="date" stroke="#7f8ea3" tick={{ fontSize: 12 }} />
+                      <YAxis stroke="#7f8ea3" tick={{ fontSize: 12 }} />
                       <Tooltip
                         contentStyle={{ background: "#0b1220", border: "1px solid rgba(148,163,184,0.2)" }}
                         formatter={(value: number | string | undefined) => [formatAggregateMoney(value == null ? null : Number(value)), "Cumulative PnL"]}
                       />
-                      <Line type="monotone" dataKey="cumulative_pnl" stroke={(stats?.total_pnl ?? 0) >= 0 ? "#22c55e" : "#ef4444"} strokeWidth={2.5} dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="cumulative_pnl" stroke={(stats?.total_pnl ?? 0) >= 0 ? "#22c55e" : "#ef4444"} strokeWidth={2.5} dot={false} />
                     </LineChart>
-                  </ResponsiveContainer>
+                  </ResponsiveContainer>}
                 </div>
               </TerminalPanel>
-
-              <TerminalPanel title="Calendar Heatmap" bodyClassName="space-y-3" className="bg-terminal-bg/30">
-                <div className="grid grid-cols-7 gap-2">
+              <TerminalPanel title="Performance by Strategy" className="bg-terminal-bg/30">
+                <dl className="space-y-3 text-sm">
+                  {(stats?.by_strategy ?? []).map(row => <div key={row.strategy} className="flex flex-wrap items-start justify-between gap-2 border-b border-terminal-border pb-2 [overflow-wrap:anywhere]">
+                    <dt className="min-w-0 flex-1">{row.strategy}</dt>
+                    <dd className="text-right text-terminal-muted">{formatAggregateMoney(row.avg_pnl)} average PnL<br />{row.count} trades</dd>
+                  </div>)}
+                </dl>
+                {!stats ? <p className="text-sm text-terminal-muted">Statistics not available.</p> : !stats.by_strategy?.length ? <p className="text-sm text-terminal-muted">No strategy performance recorded yet.</p> : null}
+              </TerminalPanel>
+              </div>
+              <div className="min-w-0 space-y-4">
+              <TerminalPanel title="Calendar Heatmap" bodyClassName="space-y-3" className="self-start bg-terminal-bg/30">
+                <p className="text-xs text-terminal-muted">Last 84 calendar days · newest dates below. Values use each trade’s native currency.</p>
+                {calendarQuery.isError ? <p role="alert" className="text-sm text-terminal-neg">Calendar unavailable.</p> : calendarQuery.isPending ? <p role="status" className="text-sm text-terminal-muted">Loading calendar…</p> : <div ref={calendarRef} role="region" aria-label="Daily journal results" tabIndex={0} className="grid max-h-80 grid-cols-7 gap-1 overflow-y-auto focus-visible:outline">
                   {calendarHeatmap.map((day) => {
                     const intensity = Math.min(1, Math.abs(day.pnl) / 1000);
                     const background =
@@ -495,52 +517,38 @@ export function TradeJournalPage() {
                           ? `rgba(34, 197, 94, ${0.2 + intensity * 0.6})`
                           : `rgba(239, 68, 68, ${0.2 + intensity * 0.6})`;
                     return (
-                      <div key={day.date} className="aspect-square rounded-sm border border-terminal-border/40 p-1 text-[10px]" style={{ backgroundColor: background }}>
-                        <div>{day.date.slice(8)}</div>
-                        <div className="mt-3 text-[9px] text-terminal-text">{day.tradeCount ? `${day.pnl >= 0 ? "+" : ""}${Math.round(day.pnl)}` : ""}</div>
+                      <div key={day.date} aria-label={`${day.date}: ${day.tradeCount} trades, ${day.pnl} PnL`} className="min-h-12 rounded-sm border border-terminal-border/40 p-1 text-xs" style={{ backgroundColor: background }}>
+                        <div>{day.date.slice(5)}</div>
+                        <div className="mt-1 break-all text-xs text-terminal-text">{day.tradeCount ? `${day.pnl >= 0 ? "+" : ""}${Math.round(day.pnl)}` : ""}</div>
                       </div>
                     );
                   })}
-                </div>
+                </div>}
               </TerminalPanel>
-            </div>
-
-            <div className="grid gap-4 xl:grid-cols-2">
-              <TerminalPanel title="Performance by Strategy" bodyClassName="h-[300px]" className="bg-terminal-bg/30">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.by_strategy ?? []} layout="vertical" margin={{ top: 8, right: 12, left: 12, bottom: 8 }}>
-                    <CartesianGrid stroke="rgba(148,163,184,0.15)" horizontal={false} />
-                    <XAxis type="number" stroke="#7f8ea3" tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="strategy" width={110} stroke="#7f8ea3" tick={{ fontSize: 11 }} />
-                    <Tooltip contentStyle={{ background: "#0b1220", border: "1px solid rgba(148,163,184,0.2)" }} />
-                    <Bar dataKey="avg_pnl" fill="#22c55e" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </TerminalPanel>
-
-              <TerminalPanel title="Performance by Day" bodyClassName="h-[300px]" className="bg-terminal-bg/30">
-                <ResponsiveContainer width="100%" height="100%">
+              <TerminalPanel title="Performance by Day" bodyClassName={stats?.by_day_of_week?.length ? "h-[300px]" : ""} className="bg-terminal-bg/30">
+                {!stats ? <p className="text-sm text-terminal-muted">Statistics not available.</p> : !stats.by_day_of_week?.length ? <p className="text-sm text-terminal-muted">No daily performance recorded yet.</p> : <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats?.by_day_of_week ?? []}>
                     <CartesianGrid stroke="rgba(148,163,184,0.15)" vertical={false} />
-                    <XAxis dataKey="day" stroke="#7f8ea3" tick={{ fontSize: 11 }} />
-                    <YAxis stroke="#7f8ea3" tick={{ fontSize: 11 }} />
+                    <XAxis dataKey="day" stroke="#7f8ea3" tick={{ fontSize: 12 }} />
+                    <YAxis stroke="#7f8ea3" tick={{ fontSize: 12 }} />
                     <Tooltip contentStyle={{ background: "#0b1220", border: "1px solid rgba(148,163,184,0.2)" }} />
-                    <Bar dataKey="avg_pnl" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+                    <Bar isAnimationActive={false} dataKey="avg_pnl" fill="#38bdf8" radius={[4, 4, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer>}
               </TerminalPanel>
+              </div>
             </div>
           </div>
         ) : null}
 
         {activeTab === "tags" ? (
-          <div className="grid gap-4 xl:grid-cols-[1fr_1fr_1.2fr]">
+          <div className="space-y-4">
             <TerminalPanel title="Strategies" className="bg-terminal-bg/30">
               <div className="space-y-2">
                 {strategyRows.map((row) => (
                   <div key={row.name} className="rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-terminal-text">{row.name}</div>
+                      <div className="break-words text-sm font-medium text-terminal-text">{row.name}</div>
                       <div className="text-xs text-terminal-muted">{row.count} trades</div>
                     </div>
                     <div className="mt-1 text-xs text-terminal-muted">Win rate {row.winRate.toFixed(1)}%</div>
@@ -554,7 +562,7 @@ export function TradeJournalPage() {
                 {setupRows.map((row) => (
                   <div key={row.name} className="rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-terminal-text">{row.name}</div>
+                      <div className="break-words text-sm font-medium text-terminal-text">{row.name}</div>
                       <div className="text-xs text-terminal-muted">{row.count} trades</div>
                     </div>
                     <div className="mt-1 text-xs text-terminal-muted">Win rate {row.winRate.toFixed(1)}%</div>
@@ -566,7 +574,7 @@ export function TradeJournalPage() {
             <TerminalPanel title="Free-Form Tags" className="bg-terminal-bg/30">
               <div className="space-y-4">
                 <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
-                  <TerminalInput as="select" value={tagTargetId} onChange={(event) => setTagTargetId(event.target.value)}>
+                  <TerminalInput aria-label="Trade to tag" as="select" value={tagTargetId} onChange={(event) => setTagTargetId(event.target.value)}>
                     <option value="">Select trade</option>
                     {entries.map((entry) => (
                       <option key={entry.id} value={entry.id}>
@@ -574,7 +582,7 @@ export function TradeJournalPage() {
                       </option>
                     ))}
                   </TerminalInput>
-                  <TerminalInput value={newTag} onChange={(event) => setNewTag(event.target.value)} placeholder="Add tag to selected trade" />
+                  <TerminalInput aria-label="New tag" value={newTag} onChange={(event) => setNewTag(event.target.value)} placeholder="Add tag to selected trade" />
                   <TerminalButton type="button" variant="accent" onClick={() => void handleAddTag()}>
                     Add
                   </TerminalButton>
@@ -583,14 +591,15 @@ export function TradeJournalPage() {
                 <div className="space-y-2">
                   {tagSummary.map((row) => (
                     <div key={row.tag} className="rounded-sm border border-terminal-border bg-terminal-bg/40 p-3">
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <div className="text-sm font-medium text-terminal-text">#{row.tag}</div>
+                          <div className="break-words text-sm font-medium text-terminal-text">#{row.tag}</div>
                           <div className="text-xs text-terminal-muted">{row.count} tagged trades</div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <TerminalInput
                             size="sm"
+                            aria-label={`Rename tag ${row.tag}`}
                             value={tagRenameDraft[row.tag] ?? ""}
                             onChange={(event) => setTagRenameDraft((current) => ({ ...current, [row.tag]: event.target.value }))}
                             placeholder="Rename"
@@ -613,19 +622,6 @@ export function TradeJournalPage() {
         ) : null}
       </TerminalPanel>
 
-      <div className="fixed bottom-6 right-6 z-20">
-        <TerminalButton
-          type="button"
-          variant="accent"
-          size="lg"
-          leftIcon={<Plus className="h-4 w-4" />}
-          onClick={() => setIsCreateOpen(true)}
-          data-testid="add-trade-button"
-        >
-          Add Trade
-        </TerminalButton>
-      </div>
-
       <JournalEntryForm
         open={isCreateOpen}
         mode="create"
@@ -645,6 +641,6 @@ export function TradeJournalPage() {
         onClose={() => setEditingEntry(null)}
         onSubmit={handleUpdate}
       />
-    </div>
+    </main>
   );
 }

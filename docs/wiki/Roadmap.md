@@ -941,11 +941,14 @@ history and content-sized named tables; see the
 The accepted comparison pass #298 puts observed paths first and uses full-width
 briefing/saved-evidence reading with bounded lists and citation/focus preservation;
 see the [comparison review](../design/v3/COMPARISON_REVIEW.md).
-The current Brain pass puts the question first, improves dated citations and
+The accepted Brain pass #299 puts the question first, improves dated citations and
 uses a bounded log list/full-width memo reader while preserving evidence checks
 and reviewed promotion; see the [Brain review](../design/v3/BRAIN_REVIEW.md).
-Continue Notes/Journal, News and
-Workstation/Screener in populated states. No new feature backlog is added to
+The Notes/Journal pass makes dated capture, source metadata and editing readable,
+puts trade creation beside the page title, and gives full-width entry review its
+own keyboard control. Completeness review is secondary; analytics failures and
+save errors remain explicit. See the [Notes/Journal review](../design/v3/NOTES_JOURNAL_REVIEW.md).
+Continue News and Workstation/Screener in populated states. No new feature backlog is added to
 that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 

@@ -31,7 +31,7 @@ for (const width of [1440, 390]) {
     await page.getByRole("button", { name: "Menu", exact: true }).click();
     await page.getByRole("dialog", { name: "Navigate", exact: true }).getByRole("link", { name: "Journal", exact: true }).click();
     const card = page.getByTestId("journal-card");
-    await card.focus(); await page.keyboard.press("Enter");
+    await card.getByRole("button", { name: "Review AAPL entry", exact: true }).focus(); await page.keyboard.press("Enter");
     await card.getByRole("button", { name: "Edit", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Edit AAPL", exact: true });
     await dialog.locator("textarea").last().fill("Revised journal rationale.");

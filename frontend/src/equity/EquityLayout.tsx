@@ -501,7 +501,7 @@ export function EquityLayout() {
       contentClassName="pb-16 md:pb-0"
       showInstallPrompt
       showMobileBottomNav
-      hideTickerLoader={location.pathname === "/equity/brain"}
+      hideTickerLoader={["/equity/brain", "/equity/notes", "/equity/journal"].includes(location.pathname)}
       workspacePresetStorageKey="ot:shell:equity:preset"
       rightRailStorageKey="ot:shell:equity:right-rail"
       rightRailContent={<EquityRightRail />}
