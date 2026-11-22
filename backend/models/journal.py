@@ -19,7 +19,7 @@ class JournalEntry(Base):
     entry_price: Mapped[float] = mapped_column(Float)
     exit_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
     exit_price: Mapped[float | None] = mapped_column(Float, nullable=True)
-    quantity: Mapped[int] = mapped_column(Integer)
+    quantity: Mapped[float] = mapped_column(Float)
     pnl: Mapped[float | None] = mapped_column(Float, nullable=True)
     pnl_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
     fees: Mapped[float] = mapped_column(Float, default=0.0)

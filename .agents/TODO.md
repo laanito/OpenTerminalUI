@@ -2173,6 +2173,11 @@ ordered v1.7 milestone above.
             capture, readable sources, full-width journal notes, distinct review
             and editing controls, named forms and explicit save/load failures.
             See `docs/design/v3/NOTES_JOURNAL_REVIEW.md`; host acceptance remains open.
+      - [x] Journal save follow-up: cash amount divided by entry price by default,
+            separate labelled cash fees, optional asset-unit input, fractional
+            API/model/CSV quantities and actionable 422 errors retaining drafts.
+            Migration 0023 widens quantity; downgrade retains fractions. Verify
+            on host after upgrade; no production database changed during development.
       - [x] Populated News hierarchy/readability review: headlines first, readable
             sources/prose/dates and distinct original/AI/context/private scopes;
             preserved on-demand scoring and explicit failure/empty states.

@@ -131,7 +131,7 @@ test("@smoke Notes and Journal reflow under actual 200% browser zoom", async ({ 
     expect(metrics.browserWidth / metrics.cssWidth).toBeCloseTo(2, 1); expect(metrics.visualScale).toBe(1);
     await page.goto(`${baseURL}/equity/journal`); await page.getByRole("button", { name: "Review AAPL entry", exact: true }).click();
     await bounded(page); await page.getByRole("button", { name: "Edit", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Edit AAPL", exact: true }); await expect(dialog.getByLabel("Entry Price", { exact: true })).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "Edit AAPL", exact: true }); await expect(dialog.getByLabel(/^Entry Price \(/)).toBeVisible();
     expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
     const dismiss = page.getByRole("button", { name: "Dismiss", exact: true }); if (await dismiss.isVisible()) await dismiss.click();
     const cdp = await context.newCDPSession(page), shot = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });

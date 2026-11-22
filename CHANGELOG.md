@@ -6,6 +6,14 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 
 ## [Unreleased]
 
+### Fixed
+- **Journal cash entry and fractional quantities** — new trades accept a cash
+  amount and calculate asset units from the entry price, with fees entered
+  separately in the symbol's quote currency. Existing trades open in units;
+  decimal quantities survive saves, edits and CSV imports. Field validation
+  errors identify what needs correcting and retain the draft. Migration 0023
+  widens stored quantities without truncating existing records.
+
 ### Added
 - **Readable chart-first Workstation** — larger workspace setup and chart controls
   are disclosed, leaving useful plots visible. Narrow panes stack without changing
