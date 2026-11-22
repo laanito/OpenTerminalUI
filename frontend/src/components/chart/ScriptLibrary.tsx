@@ -52,15 +52,15 @@ export function ScriptLibrary({
   return (
     <div className="flex h-full min-h-0 flex-col bg-terminal-bg/75 text-terminal-text">
       <div className="border-b border-terminal-border px-3 py-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terminal-accent">My Scripts</div>
+        <div className="text-xs font-semibold tracking-normal text-terminal-accent">My Scripts</div>
         <div className="mt-2 flex flex-wrap gap-2">
-          <button type="button" className="rounded border border-terminal-accent bg-terminal-accent/15 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-accent" onClick={onNewScript}>New</button>
-          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted" onClick={onSave} disabled={loading}>Save</button>
-          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted" onClick={onSaveAs} disabled={loading}>Save As</button>
-          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted" onClick={onTogglePublic} disabled={loading}>Share</button>
-          <button type="button" className="rounded border border-terminal-neg/80 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-neg" onClick={onDelete} disabled={loading}>Delete</button>
+          <button type="button" className="rounded border border-terminal-accent bg-terminal-accent/15 px-2 py-1 text-xs tracking-normal text-terminal-accent" onClick={onNewScript}>New</button>
+          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted" onClick={onSave} disabled={loading}>Save</button>
+          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted" onClick={onSaveAs} disabled={loading}>Save As</button>
+          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted" onClick={onTogglePublic} disabled={loading}>Share</button>
+          <button type="button" className="rounded border border-terminal-neg/80 px-2 py-1 text-xs tracking-normal text-terminal-neg" onClick={onDelete} disabled={loading}>Delete</button>
         </div>
-        <label className="mt-3 block text-[11px] uppercase tracking-[0.14em] text-terminal-muted">
+        <label className="mt-3 block text-xs tracking-normal text-terminal-muted">
           Search
           <input
             value={query}
@@ -85,15 +85,15 @@ export function ScriptLibrary({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="truncate text-xs font-semibold text-terminal-text">{script.name}</div>
-                      <div className="mt-0.5 line-clamp-2 text-[10px] text-terminal-muted">{script.description || "No description"}</div>
+                      <div className="break-words text-xs font-semibold text-terminal-text">{script.name}</div>
+                      <div className="mt-0.5 break-words text-xs text-terminal-muted">{script.description || "No description"}</div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {script.is_public ? <TerminalBadge variant="accent" size="sm">PUBLIC</TerminalBadge> : null}
                       {active ? <TerminalBadge variant="neutral" size="sm">ACTIVE</TerminalBadge> : null}
                     </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-terminal-muted">
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-terminal-muted">
                     <span>{formatUpdatedAt(script.updated_at)}</span>
                     <span>{script.source.length.toLocaleString()} chars</span>
                   </div>
@@ -102,19 +102,19 @@ export function ScriptLibrary({
             })}
           </div>
         ) : (
-          <div className="rounded border border-dashed border-terminal-border px-3 py-4 text-[11px] text-terminal-muted">
+          <div className="rounded border border-dashed border-terminal-border px-3 py-4 text-xs text-terminal-muted">
             {loading ? "Loading scripts..." : "No scripts match the current filter."}
           </div>
         )}
       </div>
 
       {selected ? (
-        <div className="border-t border-terminal-border px-3 py-2 text-[10px] text-terminal-muted">
-          <div className="flex items-center justify-between gap-2">
-            <span className="uppercase tracking-[0.14em] text-terminal-accent">Selected</span>
+        <div className="border-t border-terminal-border px-3 py-2 text-xs text-terminal-muted">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="tracking-normal text-terminal-accent">Selected</span>
             <span>{selected.is_public ? "Shared" : "Private"}</span>
           </div>
-          <div className="mt-1 truncate text-terminal-text">{selected.name}</div>
+          <div className="mt-1 break-words text-terminal-text">{selected.name}</div>
         </div>
       ) : null}
     </div>

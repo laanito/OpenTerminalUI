@@ -279,7 +279,7 @@ export function TerminalShell({
       <div className="flex h-dvh min-h-0 overflow-hidden bg-terminal-bg text-terminal-text">
         <IconRail />
 
-        <div className={`relative z-10 flex min-h-0 min-w-0 flex-1 flex-col ${showMobileBottomNav ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}>
+        <div className={`terminal-workspace relative z-10 flex min-h-0 min-w-0 flex-1 flex-col ${showMobileBottomNav ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}>
           <CommandBar
             navigation={<button type="button" className="min-h-8 shrink-0 rounded border border-terminal-border px-2 text-xs text-terminal-muted hover:text-terminal-text" aria-haspopup="dialog" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}>Menu</button>}
             onExecute={async (command) => {
@@ -300,7 +300,7 @@ export function TerminalShell({
           ) : null}
           <div className="min-h-0 flex flex-1 overflow-hidden">
             <ErrorBoundary>
-              <div className={`relative z-0 min-h-0 min-w-0 flex-1 overflow-auto ${contentClassName}`.trim()}>
+              <div className={`terminal-content relative z-0 min-h-0 min-w-0 flex-1 overflow-auto ${contentClassName}`.trim()}>
                 {children}
               </div>
             </ErrorBoundary>

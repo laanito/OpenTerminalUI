@@ -13,9 +13,12 @@ through #296 and [Security Hub](SECURITY_REVIEW.md) through #297. The current
 long evidence reading full width. The [Brain review](BRAIN_REVIEW.md), accepted through #299, applies that reading
 pattern to dated private/captured research. The [Notes and Journal
 review](NOTES_JOURNAL_REVIEW.md), accepted through #300, extends readable capture,
-editing and full-width entry review to the private record. The current
-[News review](NEWS_REVIEW.md) puts headlines first, with readable source names,
-prose and separately scoped sentiment/research context.
+editing and full-width entry review to the private record. The [News review](NEWS_REVIEW.md),
+accepted through #301, puts headlines first, with readable source names, prose
+and separately scoped sentiment/research context. The current [Workstation
+review](WORKSTATION_REVIEW.md) keeps real plots visible and pane controls readable,
+with disclosed workspace/chart tools and visual reflow that preserves saved layouts.
+Screener and broader retained-page acceptance remain open.
 See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 

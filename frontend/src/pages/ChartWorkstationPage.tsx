@@ -2070,6 +2070,7 @@ export function ChartWorkstationPage() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || document.querySelector("[data-terminal-modal]")) return;
       if (isEditableTarget(event.target)) return;
       if (isMenuTarget(event.target)) return;
       const chartPaneFocused =
@@ -2216,8 +2217,8 @@ export function ChartWorkstationPage() {
 
   return (
     <CrosshairSyncProvider enabled={linkSettings.crosshair}>
-      <div className="chart-workstation flex h-full flex-col bg-terminal-canvas text-terminal-text" data-testid="chart-workstation">
-        <div className="border-b border-terminal-border bg-terminal-panel px-3 py-3">
+      <main aria-label="Chart Workstation" className="chart-workstation flex min-h-full min-w-0 flex-col bg-terminal-canvas text-terminal-text" data-testid="chart-workstation">
+        <div className="border-b border-terminal-border bg-terminal-panel px-2 py-2">
           <ChartShellToolbar
             dense={denseShell}
             visiblePaneCount={visibleSlots.length}
@@ -2309,7 +2310,7 @@ export function ChartWorkstationPage() {
             onSaveCurrentTemplate={handleSaveCurrentTemplate}
             onDrillInto={drillInto}
           />
-          <div className="mt-2 flex items-center justify-end gap-2">
+          <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
             <SavedViewsControl
               pageLabel="Chart Workstation"
               capture={() => ({
@@ -2321,7 +2322,7 @@ export function ChartWorkstationPage() {
             />
             <button
               type="button"
-              className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={toggleScriptPanel}
             >
               {scriptPanelOpen ? "Hide OpenScript" : "Open OpenScript"}
@@ -2378,12 +2379,12 @@ export function ChartWorkstationPage() {
         </div>
 
         {scriptOverlayTarget && scriptOverlayOutputs.length ? createPortal(
-          <div className="pointer-events-none absolute left-2 top-2 z-20 max-w-[min(22rem,calc(100%-1rem))] rounded border border-terminal-accent/50 bg-terminal-panel/95 px-2 py-2 text-[10px] shadow-xl backdrop-blur">
+          <div className="pointer-events-none absolute left-2 top-2 z-20 max-w-[min(22rem,calc(100%-1rem))] rounded border border-terminal-accent/50 bg-terminal-panel/95 px-2 py-2 text-xs shadow-xl backdrop-blur">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold uppercase tracking-[0.18em] text-terminal-accent">OpenScript</span>
+              <span className="font-semibold tracking-normal text-terminal-accent">OpenScript</span>
               <span className="text-terminal-muted">{scriptRunResult?.row_count ?? 0} rows</span>
             </div>
-            <div className="mt-1 truncate text-terminal-text">{scriptRunResult?.script_name ?? scriptTitle}</div>
+            <div className="mt-1 break-words text-terminal-text">{scriptRunResult?.script_name ?? scriptTitle}</div>
             <div className="mt-1 text-terminal-muted">{scriptOverlayOutputs.length} output(s)</div>
             {scriptOverlaySeries.length ? (
               <div className="mt-2">
@@ -2402,10 +2403,10 @@ export function ChartWorkstationPage() {
               {scriptOverlayOutputs.slice(0, 3).map((output, index) => (
                 <div key={`${output.kind}-${index}`} className="rounded border border-terminal-border/70 bg-terminal-bg/40 px-2 py-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-terminal-text">{output.title || output.kind.toUpperCase()}</span>
+                    <span className="break-words text-terminal-text">{output.title || output.kind.toUpperCase()}</span>
                     <span className="text-terminal-muted">{output.kind}</span>
                   </div>
-                  <div className="truncate text-terminal-muted">
+                  <div className="break-words text-terminal-muted">
                     {output.message || `${output.series.length} row(s)`}
                   </div>
                 </div>
@@ -2430,7 +2431,7 @@ export function ChartWorkstationPage() {
                 actions={
                   <button
                     type="button"
-                    className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+                    className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
                     onClick={() => setScriptPanelOpen(false)}
                   >
                     Close
@@ -2513,7 +2514,7 @@ export function ChartWorkstationPage() {
             />
           ) : null}
         </TerminalToastViewport>
-      </div>
+      </main>
     </CrosshairSyncProvider>
   );
 }

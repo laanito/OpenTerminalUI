@@ -85,7 +85,7 @@ export function ChartPanelHeader({
       data-testid={`cw-panel-header-${slot.id}`}
       data-density={dense ? "dense" : "comfortable"}
     >
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <TerminalBadge variant={isActive ? "accent" : "neutral"} size="sm" className="font-bold">
           {`P${panelIndex}/${visiblePanelCount}`}
         </TerminalBadge>
@@ -94,14 +94,8 @@ export function ChartPanelHeader({
           value={slot.ticker}
           market={slot.market}
           onChange={onTickerChange}
-          inputClassName={dense ? "w-24" : "w-28"}
+          inputClassName="!w-28 !text-sm"
         />
-
-        {!dense && slot.companyName ? (
-          <span className="hidden max-w-40 truncate text-[10px] text-terminal-muted lg:inline" title={slot.companyName}>
-            {slot.companyName}
-          </span>
-        ) : null}
 
         <TerminalBadge variant="neutral" size="sm" className="font-bold">
           {slot.market}
@@ -112,10 +106,16 @@ export function ChartPanelHeader({
             {isActive ? "ACTIVE" : "READY"}
           </TerminalBadge>
         </div>
+        {slot.companyName ? (
+          <span className="min-w-0 basis-full break-words text-xs text-terminal-muted" title={slot.companyName}>
+            {slot.companyName}
+          </span>
+        ) : null}
+
       </div>
 
-      <div className="flex min-w-0 items-center gap-1 overflow-x-auto md:flex-1 md:justify-between md:overflow-visible">
-        <div className="flex min-w-0 items-center gap-1">
+      <div className="flex min-w-0 flex-wrap items-center gap-1 md:flex-1 md:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
           <TerminalDropdown
             label={`L-${linkGroup === "off" ? "OFF" : linkGroup}`}
             aria-label="Change link group"
@@ -191,7 +191,7 @@ export function ChartPanelHeader({
               onClick={onToggleFullscreen}
               aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen chart"}
             >
-              {isFullscreen ? "Exit" : "FS"}
+              {isFullscreen ? "Exit" : "Full"}
             </TerminalButton>
           </span>
         </TerminalTooltip>

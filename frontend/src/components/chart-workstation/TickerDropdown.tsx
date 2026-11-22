@@ -96,9 +96,10 @@ export function TickerDropdown({
     <div ref={containerRef} className={`ticker-dropdown ${className}`.trim()}>
       <TerminalCombobox
         className=""
-        inputClassName={`w-24 min-h-7 px-1 py-0.5 text-[11px] ${loading ? "cursor-wait" : ""} ${inputClassName}`.trim()}
+        inputClassName={`w-24 min-h-7 px-1 py-0.5 text-xs ${loading ? "cursor-wait" : ""} ${inputClassName}`.trim()}
         listClassName="ticker-dropdown-results"
         itemClassName=""
+        aria-label="Chart symbol"
         value={query}
         placeholder={placeholder}
         onChange={(nextValue) => {
@@ -116,7 +117,7 @@ export function TickerDropdown({
         onSelect={pick}
         renderItem={(item, meta) => (
           <div className={`ticker-dropdown-item ${meta.selected ? "selected" : ""}`}>
-            <span className="inline-flex min-w-0 items-center gap-2">
+            <span className="inline-flex min-w-0 flex-wrap items-center gap-2">
               <span>{item.ticker}</span>
               <TerminalBadge
                 variant={item.country_code === "US" ? "info" : "neutral"}
@@ -126,7 +127,7 @@ export function TickerDropdown({
                 {item.country_code === "US" ? "US" : "IN"}
               </TerminalBadge>
             </span>
-            <span className="truncate text-[10px] opacity-60">{(item.name ?? "").slice(0, 20)}</span>
+            <span className="min-w-0 break-words text-xs text-terminal-muted">{item.name ?? ""}</span>
           </div>
         )}
       />

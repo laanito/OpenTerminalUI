@@ -100,11 +100,13 @@ function makeSlot(id: string, ticker: string): ChartSlot {
 }
 
 function renderPage(initialEntries = ["/equity/chart-workstation"]) {
-  return render(
+  const rendered = render(
     <MemoryRouter initialEntries={initialEntries}>
       <ChartWorkstationPage />
     </MemoryRouter>,
   );
+  fireEvent.click(screen.getByText("Workspace tools · symbol, comparison, replay and saved layouts", { selector: "summary" }));
+  return rendered;
 }
 
 describe("ChartWorkstationPage shell workflow", () => {

@@ -8,7 +8,27 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 News headline-first reading and sentiment context** (2026-11-22),
+Current work **v3 Workstation chart visibility and readable controls** (2026-11-22),
+after maintainer-confirmed merged and tested #301. Workspace setup is disclosed;
+tabs, status, active pane and layout controls remain visible. Plots retain useful
+height and narrow matrices reflow without rewriting saved desktop layouts.
+Company names, symbols, grouped OHLC/quote metadata and script labels are readable.
+Pane tools have their own row; existing replay/export/surface tools and market/
+session metadata remain inspectable in Chart tools. Other TradingChart callers
+keep their default presentation. Symbol fields keep focus and full search names.
+Per-pane indicators reuse the wide manager/shared modal; pane shortcuts pause
+inside shared modals. Fullscreen clears shell chrome but stays below dialogs.
+Resize restoration, snapshots, capacity/add/remove, comparisons and per-pane
+indicator identity retain their contracts. The unrelated global loader is hidden.
+See `docs/design/v3/WORKSTATION_REVIEW.md`: 854 frontend tests / 141 files, build,
+all 104 installed-Chrome smoke journeys and final affected checks pass, including
+six new populated/narrow/six-pane/failure/native-200%-zoom cases. Mock/surface/
+whitespace guards pass. No backend/API/schema/dependency, calculation, acquisition
+or persistence-format changes; no production access or deployment.
+Screener is a separate next PR, followed by broader retained-page and maintainer/
+host acceptance. Do not prepare a v3 release on these local checks alone.
+
+Completed **v3 News headline-first reading and sentiment context** (#301, 2026-11-22),
 after maintainer-confirmed merged and tested #300. Headlines lead; desktop has
 an independent context rail and narrow views have context jump links. Search and
 scope remain visible, with sort/period/markets in a labelled native disclosure.
@@ -173,9 +193,9 @@ unknown basis as SQL NULL, stable operation and audited repair identities, owner
 boundaries, no invented cash/profit, and migration 0022 retaining old/unknown data.
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
-Next: continue populated retained-page hierarchy/readability reviews with
-Workstation/Screener, following Stock Detail/Home/Security/comparison, Brain
-#299, accepted Notes/Journal #300 and the News pass described above.
+Next: continue with populated Screener hierarchy/results, following Stock
+Detail/Home/Security/comparison, Brain #299, Notes/Journal #300, News #301 and
+the Workstation pass described above; broader retained-page acceptance stays open.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend

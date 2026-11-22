@@ -13,28 +13,15 @@ export function ChartPanelFooter({ ticker, lastBar, liveLtp = null, liveChangePc
   const pct = lastBar.o > 0 ? (((lastBar.c - lastBar.o) / lastBar.o) * 100).toFixed(2) : null;
   const isUp = lastBar.c >= lastBar.o;
   return (
-    <div className="chart-panel-footer" data-testid="chart-panel-footer">
-      <span className="text-terminal-muted">O</span>
-      <span>{lastBar.o.toFixed(2)}</span>
-      <span className="text-terminal-muted">H</span>
-      <span>{lastBar.h.toFixed(2)}</span>
-      <span className="text-terminal-muted">L</span>
-      <span>{lastBar.l.toFixed(2)}</span>
-      <span className="text-terminal-muted">C</span>
-      <span className={isUp ? "text-terminal-pos" : "text-terminal-neg"}>{lastBar.c.toFixed(2)}</span>
-      {pct !== null && (
-        <span className={`ml-1 ${isUp ? "text-terminal-pos" : "text-terminal-neg"}`}>
-          {isUp ? "+" : ""}{pct}%
-        </span>
-      )}
-      {liveLtp !== null && Number.isFinite(liveLtp) ? (
-        <>
-          <span className="ml-auto text-terminal-muted">RT</span>
-          <span className={liveChangePct !== null && liveChangePct < 0 ? "text-terminal-neg" : "text-terminal-pos"}>
-            {liveLtp.toFixed(2)}
-          </span>
-        </>
-      ) : null}
-    </div>
+    <dl className="chart-panel-footer" aria-label={`${ticker} latest candle`} data-testid="chart-panel-footer">
+      {[["O", "Open", lastBar.o], ["H", "High", lastBar.h], ["L", "Low", lastBar.l], ["C", "Close", lastBar.c]].map(([short, label, value]) => (
+        <div key={String(short)} className="flex items-center gap-1 whitespace-nowrap">
+          <dt aria-label={String(label)} className="text-terminal-muted">{short}</dt>
+          <dd className={short === "C" ? (isUp ? "text-terminal-pos" : "text-terminal-neg") : undefined}>{Number(value).toFixed(2)}</dd>
+        </div>
+      ))}
+      {pct !== null && <div className={`flex items-center gap-1 ${isUp ? "text-terminal-pos" : "text-terminal-neg"}`}><dt className="text-terminal-muted">Bar</dt><dd>{isUp ? "+" : ""}{pct}%</dd></div>}
+      {liveLtp !== null && Number.isFinite(liveLtp) ? <div className="flex items-center gap-1 whitespace-nowrap"><dt className="text-terminal-muted">Quote</dt><dd className={liveChangePct !== null && liveChangePct < 0 ? "text-terminal-neg" : "text-terminal-pos"}>{liveLtp.toFixed(2)}</dd></div> : null}
+    </dl>
   );
 }
