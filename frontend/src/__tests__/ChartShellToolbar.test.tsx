@@ -134,6 +134,7 @@ function renderToolbar(dense = false) {
     />,
   );
 
+  fireEvent.click(screen.getByText("Workspace tools · symbol, comparison, replay and saved layouts", { selector: "summary" }));
   return {
     onLayoutChange,
     onTimeframeChange,

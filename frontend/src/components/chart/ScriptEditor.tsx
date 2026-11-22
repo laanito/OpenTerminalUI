@@ -233,51 +233,51 @@ export function ScriptEditor({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-terminal-panel text-terminal-text">
-      <div className="flex items-center justify-between gap-2 border-b border-terminal-border px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-terminal-border px-3 py-2">
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terminal-accent">OpenScript Editor</div>
-          <div className="truncate text-[10px] text-terminal-muted">
+          <div className="text-xs font-semibold tracking-normal text-terminal-accent">OpenScript Editor</div>
+          <div className="break-words text-xs text-terminal-muted">
             {selectedScriptId ? title : "Draft"} | {chartSymbol || "No symbol"} | {chartMarket || "MKT"} | {dirty ? "Unsaved" : "Saved"}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted" onClick={onClose}>Close</button>
-          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted disabled:opacity-50" onClick={onSave} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
-          <button type="button" className="rounded border border-terminal-accent bg-terminal-accent/15 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-accent disabled:opacity-50" onClick={onRun} disabled={running}>{running ? "Running..." : "Run"}</button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted" onClick={onClose}>Close</button>
+          <button type="button" className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted disabled:opacity-50" onClick={onSave} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+          <button type="button" className="rounded border border-terminal-accent bg-terminal-accent/15 px-2 py-1 text-xs tracking-normal text-terminal-accent disabled:opacity-50" onClick={onRun} disabled={running}>{running ? "Running..." : "Run"}</button>
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]">
+      <div className="grid min-h-0 flex-1 gap-0 overflow-y-auto lg:overflow-hidden lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]">
         <div className="flex min-h-0 flex-col border-r border-terminal-border bg-terminal-bg/70 px-3 py-3">
-          <label className="block text-[11px] uppercase tracking-[0.14em] text-terminal-muted">
+          <label className="block text-xs tracking-normal text-terminal-muted">
             Name
             <input value={title} onChange={(event) => onTitleChange(event.target.value)} className="mt-1 w-full rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent" />
           </label>
-          <label className="mt-3 block text-[11px] uppercase tracking-[0.14em] text-terminal-muted">
+          <label className="mt-3 block text-xs tracking-normal text-terminal-muted">
             Description
             <textarea value={description} onChange={(event) => onDescriptionChange(event.target.value)} className="mt-1 h-20 w-full resize-none rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs text-terminal-text outline-none focus:border-terminal-accent" />
           </label>
-          <label className="mt-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-terminal-muted">
+          <label className="mt-3 flex flex-wrap items-center gap-2 text-xs tracking-normal text-terminal-muted">
             <input type="checkbox" checked={isPublic} onChange={(event) => onPublicChange(event.target.checked)} className="h-3.5 w-3.5 rounded border-terminal-border bg-terminal-panel text-terminal-accent" />
             Public script
           </label>
 
-          <div className="mt-4 rounded border border-terminal-border bg-terminal-panel/60 p-2 text-[11px]">
-            <div className="uppercase tracking-[0.16em] text-terminal-muted">Context</div>
+          <div className="mt-4 rounded border border-terminal-border bg-terminal-panel/60 p-2 text-xs">
+            <div className="tracking-normal text-terminal-muted">Context</div>
             <div className="mt-1 text-terminal-text">{chartSymbol || "No active symbol"}</div>
             <div className="text-terminal-muted">{chartMarket || "Unknown market"}</div>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {SNIPPETS.map((snippet) => (
-              <button key={snippet.label} type="button" className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-terminal-muted" onClick={() => insertText(`${snippet.value}\n`)}>
+              <button key={snippet.label} type="button" className="rounded border border-terminal-border px-2 py-1 text-xs tracking-normal text-terminal-muted" onClick={() => insertText(`${snippet.value}\n`)}>
                 {snippet.label}
               </button>
             ))}
           </div>
 
-          <div className="mt-4 min-h-0 flex-1 rounded border border-terminal-border bg-terminal-panel/50 p-2 text-[11px]">
-            <div className="flex items-center justify-between uppercase tracking-[0.16em] text-terminal-muted">
+          <div className="mt-4 min-h-0 flex-1 rounded border border-terminal-border bg-terminal-panel/50 p-2 text-xs">
+            <div className="flex items-center justify-between tracking-normal text-terminal-muted">
               <span>Compiler</span>
               <span>{compileResult?.success ? "Ready" : "Diagnostics"}</span>
             </div>
@@ -300,7 +300,7 @@ export function ScriptEditor({
         <div className="flex min-h-0 flex-col">
           <div className="relative flex min-h-0 flex-1 bg-terminal-canvas">
             <div className="pointer-events-none absolute inset-0 flex">
-              <div className="w-12 border-r border-terminal-border bg-terminal-bg/85 px-2 py-2 text-right font-mono text-[10px] leading-5 text-terminal-muted">
+              <div className="w-12 border-r border-terminal-border bg-terminal-bg/85 px-2 py-2 text-right font-mono text-xs leading-5 text-terminal-muted">
                 {source.split("\n").map((_, index) => (
                   <div key={index + 1} className={index + 1 === activeLine ? "text-terminal-accent" : ""}>{index + 1}</div>
                 ))}
@@ -336,7 +336,7 @@ export function ScriptEditor({
 
             {showCompletions && completionItems.length ? (
               <div className="absolute right-3 top-3 z-20 w-64 rounded border border-terminal-accent/50 bg-terminal-panel/95 p-2 shadow-xl">
-                <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Autocomplete</div>
+                <div className="text-xs tracking-normal text-terminal-muted">Autocomplete</div>
                 <div className="mt-2 space-y-1">
                   {completionItems.map((item, index) => (
                     <button
@@ -349,11 +349,11 @@ export function ScriptEditor({
                         setShowCompletions(false);
                       }}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-semibold">{item[0]}</span>
-                        <span className="text-[10px] text-terminal-muted">{item[1]}</span>
+                        <span className="text-xs text-terminal-muted">{item[1]}</span>
                       </div>
-                      <div className="text-[10px] text-terminal-muted">{item[2]}</div>
+                      <div className="text-xs text-terminal-muted">{item[2]}</div>
                     </button>
                   ))}
                 </div>
@@ -362,19 +362,19 @@ export function ScriptEditor({
           </div>
 
           <div className="border-t border-terminal-border bg-terminal-panel">
-            <div className="flex items-center gap-2 border-b border-terminal-border/70 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-terminal-muted">
+            <div className="flex flex-wrap items-center gap-2 border-b border-terminal-border/70 px-3 py-2 text-xs tracking-normal text-terminal-muted">
               <button type="button" className={`rounded px-2 py-1 ${tab === "errors" ? "bg-terminal-accent/15 text-terminal-accent" : ""}`} onClick={() => setTab("errors")}>Errors ({errors.length})</button>
               <button type="button" className={`rounded px-2 py-1 ${tab === "output" ? "bg-terminal-accent/15 text-terminal-accent" : ""}`} onClick={() => setTab("output")}>Output ({runResult?.outputs.length ?? 0})</button>
-              <div className="ml-auto truncate text-terminal-muted">{selectedScriptId ? runResult?.script_name ?? title : "Draft editor"}</div>
+              <div className="ml-auto break-words text-terminal-muted">{selectedScriptId ? runResult?.script_name ?? title : "Draft editor"}</div>
             </div>
 
             {tab === "errors" ? (
-              <div className="max-h-40 overflow-auto px-3 py-2 text-[11px]">
+              <div className="max-h-40 overflow-auto px-3 py-2 text-xs">
                 {errors.length ? (
                   <div className="space-y-1">
                     {errors.map((error, index) => (
                       <button key={`${error.message}-${index}`} type="button" className="block w-full rounded border border-terminal-border/70 bg-terminal-bg/50 px-2 py-1 text-left" onClick={() => jumpToLine(error.line, error.col)}>
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-semibold text-terminal-neg">{error.message}</span>
                           <span className="text-terminal-muted">L{error.line ?? "-"}:{error.col ?? "-"}</span>
                         </div>
@@ -386,14 +386,14 @@ export function ScriptEditor({
                 )}
               </div>
             ) : (
-              <div className="max-h-40 overflow-auto px-3 py-2 text-[11px]">
+              <div className="max-h-40 overflow-auto px-3 py-2 text-xs">
                 {runResult?.outputs.length ? (
                   <div className="space-y-3">
                     {runResult.outputs.map((output, index) => {
                       const values = numericSeries(output.series);
                       return (
                         <div key={`${output.kind}-${index}`} className="rounded border border-terminal-border/70 bg-terminal-bg/50 p-2">
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <div>
                               <div className="font-semibold text-terminal-accent">{output.title || output.kind.toUpperCase()}</div>
                               <div className="text-terminal-muted">{output.kind} | {output.series.length} row(s)</div>

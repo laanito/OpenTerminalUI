@@ -25,6 +25,7 @@ import { IndicatorPanel } from "../../shared/chart/IndicatorPanel";
 import { normalizeIndicatorConfigs } from "../../shared/chart/indicatorCatalog";
 import type { IndicatorConfig } from "../../shared/chart/types";
 import type { ReplayCommand } from "../../shared/chart/replay";
+import { TerminalModal } from "../terminal/TerminalModal";
 import { ChartPanelHeader } from "./ChartPanelHeader";
 import { ChartPanelFooter } from "./ChartPanelFooter";
 import type { QuoteTick } from "../../realtime/useQuotesStream";
@@ -393,9 +394,12 @@ export function ChartPanel({
     <div
       ref={panelRef}
       className={`chart-panel${isActive ? " active" : ""}${isFullscreen ? " fullscreen" : ""}`}
-      onClick={() => {
+      role="region"
+      aria-label={`Chart pane ${panelIndex}: ${slot.ticker || "empty"}`}
+      onClick={(event) => {
         onActivate();
-        panelRef.current?.focus();
+        const target = event.target instanceof Element ? event.target : null;
+        if (target && event.currentTarget.contains(target) && !target.closest("button, input, select, textarea, a, summary, [role='menu'], [role='combobox']")) panelRef.current?.focus();
       }}
       onFocus={onActivate}
       tabIndex={-1}
@@ -422,14 +426,13 @@ export function ChartPanel({
 
       <div className="chart-panel-body">
         {slot.ticker && (
-          <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
+          <div role="toolbar" aria-label="Pane tools" className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-b border-terminal-border px-2 py-1">
             <button
               type="button"
-              className={`rounded border px-2 py-0.5 text-[10px] ${
-                showVolumeProfile
+              className={`rounded border px-2 py-0.5 text-xs ${showVolumeProfile
                   ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
                   : "border-terminal-border bg-terminal-panel/90 text-terminal-muted"
-              }`}
+                }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setShowVolumeProfile((v) => !v);
@@ -440,11 +443,10 @@ export function ChartPanel({
             </button>
             <button
               type="button"
-              className={`rounded border px-2 py-0.5 text-[10px] ${
-                showDrawingTools
+              className={`rounded border px-2 py-0.5 text-xs ${showDrawingTools
                   ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
                   : "border-terminal-border bg-terminal-panel/90 text-terminal-muted"
-              }`}
+                }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDrawingTools((v) => {
@@ -462,11 +464,10 @@ export function ChartPanel({
             </button>
             <button
               type="button"
-              className={`rounded border px-2 py-0.5 text-[10px] ${
-                showIndicators
+              className={`rounded border px-2 py-0.5 text-xs ${showIndicators
                   ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
                   : "border-terminal-border bg-terminal-panel/90 text-terminal-muted"
-              }`}
+                }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setShowIndicators((v) => !v);
@@ -479,7 +480,7 @@ export function ChartPanel({
         )}
         {slot.ticker && activeAlertPreviews.length ? (
           <div
-            className="pointer-events-none absolute left-2 top-10 z-10 max-w-[min(18rem,calc(100%-6rem))] rounded border border-terminal-border bg-terminal-panel/95 px-2 py-2 text-[10px] text-terminal-text"
+            className="pointer-events-none absolute left-2 top-10 z-10 max-w-[min(18rem,calc(100%-6rem))] rounded border border-terminal-border bg-terminal-panel/95 px-2 py-2 text-xs text-terminal-text"
             data-testid="chart-active-alerts"
           >
             <div className="flex items-center justify-between gap-2">
@@ -490,10 +491,10 @@ export function ChartPanel({
               {activeAlertPreviews.slice(0, 4).map((preview) => (
                 <div key={preview.id} className="rounded border border-terminal-border/70 bg-terminal-bg/40 px-2 py-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate">{preview.sourceLabel}</span>
+                    <span className="break-words">{preview.sourceLabel}</span>
                     <span className="text-terminal-muted">{preview.thresholdLabel}</span>
                   </div>
-                  <div className="truncate text-terminal-muted">
+                  <div className="break-words text-terminal-muted">
                     {preview.conditionLabel}
                     {preview.subtitle ? ` | ${preview.subtitle}` : ""}
                   </div>
@@ -507,11 +508,10 @@ export function ChartPanel({
         ) : null}
         {alertNotice ? (
           <div
-            className={`absolute left-1/2 top-10 z-20 -translate-x-1/2 rounded border px-3 py-1 text-[11px] ${
-              alertNotice.tone === "success"
+            className={`absolute left-1/2 top-10 z-20 -translate-x-1/2 rounded border px-3 py-1 text-xs ${alertNotice.tone === "success"
                 ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
                 : "border-terminal-warn bg-terminal-warn/10 text-terminal-warn"
-            }`}
+              }`}
             data-testid="chart-alert-notice"
           >
             {alertNotice.message}
@@ -523,19 +523,21 @@ export function ChartPanel({
           </div>
         )}
         {slot.ticker && loading && (
-          <div className="flex h-full items-center justify-center text-xs text-terminal-muted">
+          <div role="status" className="flex h-full items-center justify-center text-xs text-terminal-muted">
             Loading {slot.ticker}...
           </div>
         )}
         {slot.ticker && error && (
-          <div className="flex h-full items-center justify-center text-xs text-terminal-neg">
+          <div role="alert" className="flex h-full items-center justify-center p-3 text-xs text-terminal-neg">
             {error}
           </div>
         )}
+        {slot.ticker && !loading && !error && renderChartData.length === 0 ? <p role="status" className="p-3 text-sm text-terminal-muted">No chart history available for {slot.ticker} at {slot.timeframe}.</p> : null}
         {slot.ticker && !loading && !error && renderChartData.length > 0 && (
           <>
             <TradingChart
               ticker={slot.ticker}
+              collapsibleTools
               data={renderChartData}
               mode={CHART_MODE_MAP[slot.chartType]}
               timeframe={slot.timeframe}
@@ -575,10 +577,10 @@ export function ChartPanel({
           </>
         )}
         {showVolumeProfile && slot.ticker ? (
-          <div className="absolute right-2 top-10 z-10 flex items-center gap-1 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-muted">
+          <div className="absolute right-2 top-10 z-10 flex items-center gap-1 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-xs text-terminal-muted">
             <span>VP</span>
             <select
-              className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-[10px]"
+              className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-xs"
               value={vpMode}
               onChange={(e) => setVpMode(e.target.value as "fixed" | "session" | "visible")}
             >
@@ -587,7 +589,7 @@ export function ChartPanel({
               <option value="visible">Visible</option>
             </select>
             <select
-              className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-[10px]"
+              className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-xs"
               value={vpPeriod}
               onChange={(e) => setVpPeriod(e.target.value)}
               disabled={vpMode !== "fixed"}
@@ -599,7 +601,7 @@ export function ChartPanel({
             </select>
             {vpMode === "visible" ? (
               <select
-                className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-[10px]"
+                className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-xs"
                 value={vpLookbackBars}
                 onChange={(e) => setVpLookbackBars(Number(e.target.value))}
               >
@@ -609,7 +611,7 @@ export function ChartPanel({
               </select>
             ) : null}
             <select
-              className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-[10px]"
+              className="rounded border border-terminal-border bg-terminal-bg px-1 py-0.5 text-xs"
               value={vpBins}
               onChange={(e) => setVpBins(Number(e.target.value))}
             >
@@ -621,30 +623,17 @@ export function ChartPanel({
           </div>
         ) : null}
         {slot.ticker && showIndicators && (
-          <div
-            className="absolute inset-y-2 right-2 z-20 w-[320px] max-w-[calc(100%-1rem)] overflow-hidden rounded border border-terminal-border bg-terminal-panel shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-terminal-border px-3 py-2 text-[11px]">
-              <span className="font-semibold text-terminal-accent">Indicators</span>
-              <button
-                type="button"
-                className="rounded border border-terminal-border px-2 py-0.5 text-terminal-muted"
-                onClick={() => setShowIndicators(false)}
-              >
-                Close
-              </button>
-            </div>
-            <div className="max-h-full overflow-auto p-2">
-              <IndicatorPanel
-                symbol={slot.ticker}
-                activeIndicators={indicatorConfigs}
-                onChange={onIndicatorsChange}
-                templateScope="equity"
-                onCreateAlert={handleIndicatorAlertRequest}
-              />
-            </div>
-          </div>
+          <TerminalModal open placement="right" size="lg" title={`Manage indicators · ${slot.ticker}`} subtitle="Studies and templates for this chart pane" onClose={() => setShowIndicators(false)}>
+            <IndicatorPanel
+              symbol={slot.ticker}
+              activeIndicators={indicatorConfigs}
+              onChange={onIndicatorsChange}
+              templateScope="equity"
+              onCreateAlert={handleIndicatorAlertRequest}
+              layout="manager"
+              initialCategory={indicatorConfigs.length ? "active" : "all"}
+            />
+          </TerminalModal>
         )}
         {alertDraft ? (
           <div
@@ -671,7 +660,7 @@ export function ChartPanel({
             className="absolute bottom-2 left-2 z-20 w-[260px] max-w-[calc(100%-1rem)] overflow-hidden rounded border border-terminal-border bg-terminal-panel shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-terminal-border px-3 py-2 text-[11px]">
+            <div className="flex items-center justify-between border-b border-terminal-border px-3 py-2 text-xs">
               <span className="font-semibold text-terminal-accent">Drawings</span>
               <button
                 type="button"

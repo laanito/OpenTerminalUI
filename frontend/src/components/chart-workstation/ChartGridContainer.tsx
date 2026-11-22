@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Children, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { GridTemplate } from "../../store/chartWorkstationStore";
 import "./ChartWorkstation.css";
 
@@ -12,16 +12,16 @@ function computeGridCSS(count: number, template: GridTemplate): CSSProperties {
   if (template.arrangement === "custom" && template.customAreas) {
     return {
       gridTemplateAreas: template.customAreas,
-      gridTemplateColumns: `repeat(${template.cols}, 1fr)`,
-      gridTemplateRows: `repeat(${template.rows}, 1fr)`,
+      gridTemplateColumns: `repeat(${template.cols}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${template.rows}, minmax(min-content, 1fr))`,
     };
   }
 
   // Use explicit template if set (user picked from LayoutSelector)
   if (template.cols > 0 && template.rows > 0) {
     return {
-      gridTemplateColumns: `repeat(${template.cols}, 1fr)`,
-      gridTemplateRows: `repeat(${template.rows}, 1fr)`,
+      gridTemplateColumns: `repeat(${template.cols}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${template.rows}, minmax(min-content, 1fr))`,
     };
   }
 
@@ -36,8 +36,8 @@ function computeGridCSS(count: number, template: GridTemplate): CSSProperties {
   };
   const { c, r } = auto[Math.min(count, 6)] ?? { c: 3, r: 2 };
   return {
-    gridTemplateColumns: `repeat(${c}, 1fr)`,
-    gridTemplateRows: `repeat(${r}, 1fr)`,
+    gridTemplateColumns: `repeat(${c}, minmax(0, 1fr))`,
+    gridTemplateRows: `repeat(${r}, minmax(min-content, 1fr))`,
   };
 }
 
@@ -52,18 +52,18 @@ export function ChartGridContainer({ slotCount, template, children }: Props) {
       const entry = entries[0];
       if (!entry) return;
       const { width, height } = entry.contentRect;
-      setSize({ width, height });
+      setSize(previous => previous.width === width ? previous : { width, height });
     });
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
+  const childCount = Children.toArray(children).length;
   const effectiveTemplate = useMemo(() => {
-    if (template.arrangement === "custom") return template;
-    const isSixPaneMatrix = template.cols * template.rows === 6 && slotCount >= 5;
-    if (!isSixPaneMatrix || size.width <= 0 || size.height <= 0) return template;
-    return size.width >= size.height ? { ...template, cols: 3, rows: 2 } : { ...template, cols: 2, rows: 3 };
-  }, [size.height, size.width, slotCount, template]);
+    if (size.width > 0 && size.width < 680) return { cols: 1, rows: childCount, arrangement: "grid" as const };
+    if (size.width >= 680 && size.width < 1000 && template.cols > 2) return { cols: 2, rows: Math.ceil(childCount / 2), arrangement: "grid" as const };
+    return template;
+  }, [childCount, size.width, template]);
 
   const gridCss = useMemo(() => computeGridCSS(slotCount, effectiveTemplate), [effectiveTemplate, slotCount]);
 
@@ -71,7 +71,7 @@ export function ChartGridContainer({ slotCount, template, children }: Props) {
     <div
       ref={containerRef}
       className="chart-grid"
-      style={gridCss}
+      style={{ ...gridCss, minHeight: `${Math.max(1, effectiveTemplate.rows) * 440}px` }}
       data-slot-count={slotCount}
       data-grid-cols={effectiveTemplate.cols}
       data-grid-rows={effectiveTemplate.rows}

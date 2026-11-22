@@ -17,7 +17,7 @@ interface Props {
 
 export function LayoutSelector({ current, onChange }: Props) {
   return (
-    <div className="layout-selector" aria-label="Chart layout selector">
+    <div role="group" className="layout-selector" aria-label="Chart layout selector">
       {LAYOUTS.map((l) => {
         const isActive = current.cols === l.cols && current.rows === l.rows;
         return (
@@ -28,15 +28,17 @@ export function LayoutSelector({ current, onChange }: Props) {
               aria-label={`Layout ${l.label}`}
               aria-pressed={isActive}
               className={`layout-btn ${isActive ? "active" : ""}`}
-              style={{
-                gridTemplateColumns: `repeat(${l.cols}, 6px)`,
-                gridTemplateRows: `repeat(${l.rows}, 6px)`,
-              }}
               onClick={() => onChange({ cols: l.cols, rows: l.rows, arrangement: "grid" })}
             >
-              {Array.from({ length: l.cols * l.rows }).map((_, i) => (
-                <div key={i} className="layout-btn-cell" />
-              ))}
+              <span aria-hidden="true" className="grid gap-px"
+                style={{
+                  gridTemplateColumns: `repeat(${l.cols}, 6px)`,
+                  gridTemplateRows: `repeat(${l.rows}, 6px)`,
+                }}
+              >
+                {Array.from({ length: l.cols * l.rows }).map((_, i) => <span key={i} className="layout-btn-cell" />)}
+              </span>
+              <span className="text-xs">{l.label}</span>
             </button>
           </TerminalTooltip>
         );

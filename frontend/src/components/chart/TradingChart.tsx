@@ -452,6 +452,8 @@ type Props = {
   onAddToPortfolio?: (symbol: string, priceHint?: number) => void;
   /** Hide the heavy overlay toolbars (replay/export/context controls) for small embeds like Launchpad panels. */
   compact?: boolean;
+  /** Disclose the existing surface controls inside narrow workstation panes. */
+  collapsibleTools?: boolean;
 };
 
 export function TradingChart({
@@ -473,6 +475,7 @@ export function TradingChart({
   market = "US",
   panelId,
   compact = false,
+  collapsibleTools = false,
   crosshairSyncGroupId = "chart-workstation",
   comparisonSeries = [],
   comparisonMode: comparisonModeProp,
@@ -2220,46 +2223,32 @@ export function TradingChart({
     });
   })();
 
-  return (
+  const chartContext = (!compact && (surfaceSettings.marketStatusVisible || surfaceSettings.sessionOverlayVisible) &&
+    (marketContext || sessionContext) ? (
     <div
-      className="relative z-0 h-full w-full rounded border border-terminal-border"
-      role="region"
-      aria-label={`${ticker} ${timeframe} trading chart`}
-      onContextMenu={(e) => {
-        if (!onAddToPortfolio && !onRequestCreateAlert) return;
-        e.preventDefault();
-        const host = chartRef.current;
-        const chart = apiRef.current;
-        const candles = candleRef.current;
-        const rect = host?.getBoundingClientRect();
-        const relativeX = rect ? e.clientX - rect.left : NaN;
-        const relativeY = rect ? e.clientY - rect.top : NaN;
-        const price =
-          rect && candles
-            ? candles.coordinateToPrice(relativeY)
-            : null;
-        const chartTime =
-          rect && chart
-            ? toUnixTime(chart.timeScale().coordinateToTime(relativeX) ?? undefined)
-            : null;
-        setContextMenu({
-          x: e.clientX,
-          y: e.clientY,
-          price: typeof price === "number" && Number.isFinite(price) ? price : null,
-          time: chartTime,
-        });
-      }}
+      className={collapsibleTools ? "flex flex-wrap items-center gap-2 border-b border-terminal-border px-2 py-2 text-xs text-terminal-text" : "pointer-events-none absolute left-1/2 top-12 z-[6] flex -translate-x-1/2 items-center gap-2 rounded border border-terminal-border bg-terminal-panel/95 px-3 py-1 text-[10px] text-terminal-text"}
+      data-testid="chart-context-summary"
     >
-      <ChartCanvas ref={chartRef} />
-      <ChartAccessibilityLayer summary={accessibleOhlcSummary} rows={accessibleRows} formatTime={formatInspectorTime} />
-      {!compact && (
-      <>
-      <div className="absolute left-2 top-2 z-[6] flex max-h-20 max-w-[calc(100%-1rem)] flex-wrap items-center gap-1 overflow-auto rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-text sm:max-h-none">
+      {surfaceSettings.marketStatusVisible ? (
+        <span className={`rounded border px-2 py-0.5 ${overlayToneClass(marketContext.tone)}`} data-testid="chart-market-status">
+          MKT {marketContext.label}
+        </span>
+      ) : null}
+      {surfaceSettings.sessionOverlayVisible && sessionContext ? (
+        <span className={`rounded border px-2 py-0.5 ${overlayToneClass(sessionContext.tone)}`} data-testid="chart-session-status">
+          SESS {sessionContext.label}
+        </span>
+      ) : null}
+    </div>
+  ) : null);
+
+  const chartTools = (
+    <>
+      <div className={collapsibleTools ? "flex min-w-0 max-w-full flex-wrap items-center gap-2 p-2 text-xs text-terminal-text" : "absolute left-2 top-2 z-[6] flex max-h-20 max-w-[calc(100%-1rem)] flex-wrap items-center gap-1 overflow-auto rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-text sm:max-h-none"}>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            replayEnabled ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${replayEnabled ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => dispatchReplayCommand({ type: "toggle", revision: Date.now() })}
           aria-label={replayEnabled ? "Disable replay mode" : "Enable replay mode"}
         >
@@ -2353,11 +2342,10 @@ export function TradingChart({
           <>
             <button
               type="button"
-              className={`rounded border px-1.5 py-0.5 ${
-                effectiveComparisonMode === "normalized"
+              className={`rounded border px-1.5 py-0.5 ${effectiveComparisonMode === "normalized"
                   ? "border-terminal-accent text-terminal-accent"
                   : "border-terminal-border text-terminal-muted"
-              }`}
+                }`}
               onClick={() => setComparisonMode("normalized")}
               aria-label="Comparison normalized mode"
             >
@@ -2365,11 +2353,10 @@ export function TradingChart({
             </button>
             <button
               type="button"
-              className={`rounded border px-1.5 py-0.5 ${
-                effectiveComparisonMode === "price"
+              className={`rounded border px-1.5 py-0.5 ${effectiveComparisonMode === "price"
                   ? "border-terminal-accent text-terminal-accent"
                   : "border-terminal-border text-terminal-muted"
-              }`}
+                }`}
               onClick={() => setComparisonMode("price")}
               aria-label="Comparison price mode"
             >
@@ -2381,11 +2368,10 @@ export function TradingChart({
           <>
             <button
               type="button"
-              className={`rounded border px-1.5 py-0.5 ${
-                drawingPanelTab === "objects"
+              className={`rounded border px-1.5 py-0.5 ${drawingPanelTab === "objects"
                   ? "border-terminal-accent text-terminal-accent"
                   : "border-terminal-border text-terminal-muted"
-              }`}
+                }`}
               onClick={() => setDrawingPanelTab((prev) => (prev === "objects" ? null : "objects"))}
               data-testid="drawing-objects-toggle"
             >
@@ -2393,11 +2379,10 @@ export function TradingChart({
             </button>
             <button
               type="button"
-              className={`rounded border px-1.5 py-0.5 ${
-                drawingPanelTab === "templates"
+              className={`rounded border px-1.5 py-0.5 ${drawingPanelTab === "templates"
                   ? "border-terminal-accent text-terminal-accent"
                   : "border-terminal-border text-terminal-muted"
-              }`}
+                }`}
               onClick={() => setDrawingPanelTab((prev) => (prev === "templates" ? null : "templates"))}
               data-testid="drawing-templates-toggle"
             >
@@ -2407,7 +2392,7 @@ export function TradingChart({
         ) : null}
       </div>
       <div
-        className="absolute right-2 top-12 z-[8] flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-1 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-text sm:top-2"
+        className={collapsibleTools ? "flex min-w-0 max-w-full flex-wrap items-center gap-2 border-t border-terminal-border p-2 text-xs text-terminal-text" : "absolute right-2 top-12 z-[8] flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-1 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-text sm:top-2"}
         data-testid="chart-context-controls"
       >
         <button
@@ -2430,9 +2415,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.legendVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.legendVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, legendVisible: !prev.legendVisible }))}
           aria-label={surfaceSettings.legendVisible ? "Hide chart legend" : "Show chart legend"}
           data-testid="chart-legend-toggle"
@@ -2441,9 +2425,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.statusLineVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.statusLineVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, statusLineVisible: !prev.statusLineVisible }))}
           aria-label={surfaceSettings.statusLineVisible ? "Hide chart status line" : "Show chart status line"}
         >
@@ -2451,9 +2434,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.dataWindowVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.dataWindowVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, dataWindowVisible: !prev.dataWindowVisible }))}
           aria-label={surfaceSettings.dataWindowVisible ? "Hide chart data window" : "Show chart data window"}
           data-testid="chart-data-window-toggle"
@@ -2462,9 +2444,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.sessionOverlayVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.sessionOverlayVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, sessionOverlayVisible: !prev.sessionOverlayVisible }))}
           aria-label={surfaceSettings.sessionOverlayVisible ? "Hide session overlay" : "Show session overlay"}
           data-testid="chart-session-overlay-toggle"
@@ -2473,9 +2454,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.eventOverlayVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.eventOverlayVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, eventOverlayVisible: !prev.eventOverlayVisible }))}
           aria-label={surfaceSettings.eventOverlayVisible ? "Hide event overlays" : "Show event overlays"}
           data-testid="chart-event-overlay-toggle"
@@ -2484,9 +2464,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.actionOverlayVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.actionOverlayVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, actionOverlayVisible: !prev.actionOverlayVisible }))}
           aria-label={surfaceSettings.actionOverlayVisible ? "Hide corporate action overlays" : "Show corporate action overlays"}
           data-testid="chart-action-overlay-toggle"
@@ -2495,9 +2474,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.marketStatusVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.marketStatusVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, marketStatusVisible: !prev.marketStatusVisible }))}
           aria-label={surfaceSettings.marketStatusVisible ? "Hide market status overlay" : "Show market status overlay"}
           data-testid="chart-market-overlay-toggle"
@@ -2506,9 +2484,8 @@ export function TradingChart({
         </button>
         <button
           type="button"
-          className={`rounded border px-1.5 py-0.5 ${
-            surfaceSettings.fundamentalsVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
-          }`}
+          className={`rounded border px-1.5 py-0.5 ${surfaceSettings.fundamentalsVisible ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"
+            }`}
           onClick={() => setSurfaceSettings((prev) => ({ ...prev, fundamentalsVisible: !prev.fundamentalsVisible }))}
           aria-label={surfaceSettings.fundamentalsVisible ? "Hide fundamentals overlay" : "Show fundamentals overlay"}
           data-testid="chart-fundamentals-overlay-toggle"
@@ -2553,26 +2530,50 @@ export function TradingChart({
           <option value="indexedTo100">Index 100</option>
         </select>
       </div>
+    </>
+  );
+
+  return (
+    <div
+      className="relative z-0 h-full w-full rounded border border-terminal-border"
+      role="region"
+      aria-label={`${ticker} ${timeframe} trading chart`}
+      onContextMenu={(e) => {
+        if (!onAddToPortfolio && !onRequestCreateAlert) return;
+        e.preventDefault();
+        const host = chartRef.current;
+        const chart = apiRef.current;
+        const candles = candleRef.current;
+        const rect = host?.getBoundingClientRect();
+        const relativeX = rect ? e.clientX - rect.left : NaN;
+        const relativeY = rect ? e.clientY - rect.top : NaN;
+        const price =
+          rect && candles
+            ? candles.coordinateToPrice(relativeY)
+            : null;
+        const chartTime =
+          rect && chart
+            ? toUnixTime(chart.timeScale().coordinateToTime(relativeX) ?? undefined)
+            : null;
+        setContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          price: typeof price === "number" && Number.isFinite(price) ? price : null,
+          time: chartTime,
+        });
+      }}
+    >
+      <ChartCanvas ref={chartRef} />
+      <ChartAccessibilityLayer summary={accessibleOhlcSummary} rows={accessibleRows} formatTime={formatInspectorTime} />
+      {!compact && (
+      <>
+      {collapsibleTools ? <details className="absolute left-2 top-2 z-[8] max-w-[calc(100%-1rem)] rounded border border-terminal-border bg-terminal-panel/95">
+        <summary className="cursor-pointer px-2 py-1 text-xs text-terminal-text focus-visible:outline">Chart tools</summary>
+        <div role="group" aria-label="Chart tools" className="max-h-[min(50dvh,20rem)] overflow-y-auto">{chartContext}{chartTools}</div>
+      </details> : chartTools}
       </>
       )}
-      {!compact && (surfaceSettings.marketStatusVisible || surfaceSettings.sessionOverlayVisible) &&
-      (marketContext || sessionContext) ? (
-        <div
-          className="pointer-events-none absolute left-1/2 top-12 z-[6] flex -translate-x-1/2 items-center gap-2 rounded border border-terminal-border bg-terminal-panel/95 px-3 py-1 text-[10px] text-terminal-text"
-          data-testid="chart-context-summary"
-        >
-          {surfaceSettings.marketStatusVisible ? (
-            <span className={`rounded border px-2 py-0.5 ${overlayToneClass(marketContext.tone)}`} data-testid="chart-market-status">
-              MKT {marketContext.label}
-            </span>
-          ) : null}
-          {surfaceSettings.sessionOverlayVisible && sessionContext ? (
-            <span className={`rounded border px-2 py-0.5 ${overlayToneClass(sessionContext.tone)}`} data-testid="chart-session-status">
-              SESS {sessionContext.label}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
+      {!collapsibleTools ? chartContext : null}
       {surfaceSettings.fundamentalsVisible && fundamentalContext.length ? (
         <div
           className="pointer-events-none absolute right-2 z-[6] max-w-[min(26rem,calc(100%-1rem))] rounded border border-terminal-border bg-terminal-panel/95 px-3 py-2 text-[10px] text-terminal-text"
@@ -3013,7 +3014,7 @@ export function TradingChart({
       )}
       {surfaceSettings.statusLineVisible ? (
         <div
-          className="pointer-events-none absolute bottom-2 left-2 right-24 z-[6] truncate rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-text"
+          className={collapsibleTools ? "pointer-events-none absolute bottom-9 left-2 right-2 z-[6] break-words rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-xs text-terminal-text" : "pointer-events-none absolute bottom-2 left-2 right-24 z-[6] truncate rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-text"}
           data-testid="chart-status-line"
         >
           {statusLine}

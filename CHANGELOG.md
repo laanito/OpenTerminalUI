@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Readable chart-first Workstation** — larger workspace setup and chart controls
+  are disclosed, leaving useful plots visible. Narrow panes stack without changing
+  saved desktop layouts; company names, controls and grouped candle/quote values
+  remain readable. Per-pane indicators use the wide manager, symbol searches keep
+  input focus, layout buttons show dimensions and chart errors remain explicit.
 - **Headline-first News and readable sentiment context** — visible search/scope,
   disclosed feed filters and independent sentiment/research context with jump
   links. Headlines, full summaries and rationales remain readable alongside long

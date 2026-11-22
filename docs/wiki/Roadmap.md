@@ -948,11 +948,14 @@ The accepted Notes/Journal pass #300 makes dated capture, source metadata and ed
 puts trade creation beside the page title, and gives full-width entry review its
 own keyboard control. Completeness review is secondary; analytics failures and
 save errors remain explicit. See the [Notes/Journal review](../design/v3/NOTES_JOURNAL_REVIEW.md).
-The News pass puts readable headlines before secondary setup, with independent
+The accepted News pass #301 puts readable headlines before secondary setup, with independent
 sentiment/research context, explicit original-versus-AI labels, disclosed helpers
 and honest failure/empty states. See the [News review](../design/v3/NEWS_REVIEW.md).
-Continue Workstation/Screener in populated states, then broader retained-page
-acceptance. No new feature backlog is added to that usability work. v3.0 is not release-ready yet. See the design pack's
+The Workstation pass discloses larger setup tools, preserves readable plot height
+and per-pane controls, and reflows narrow matrices without rewriting saved layouts.
+It reuses the wide indicator manager for each pane; existing replay, comparison,
+persistence and chart tools remain available. See the [Workstation review](../design/v3/WORKSTATION_REVIEW.md).
+Continue Screener in populated states, then broader retained-page acceptance. No new feature backlog is added to that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:

@@ -21,6 +21,7 @@ type Props<T> = {
   itemClassName?: string;
   loading?: boolean;
   "data-testid"?: string;
+  "aria-label"?: string;
 };
 
 export function TerminalCombobox<T>({
@@ -42,6 +43,7 @@ export function TerminalCombobox<T>({
   itemClassName = "",
   loading = false,
   "data-testid": dataTestId,
+  "aria-label": ariaLabel,
 }: Props<T>) {
   const generatedId = useId();
   const inputId = `${generatedId}-input`;
@@ -54,6 +56,7 @@ export function TerminalCombobox<T>({
         tone="ui"
         id={inputId}
         role="combobox"
+        aria-label={ariaLabel}
         aria-autocomplete="list"
         aria-busy={loading || undefined}
         aria-expanded={open}
