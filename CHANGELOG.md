@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Added
+- **Headline-first News and readable sentiment context** — visible search/scope,
+  disclosed feed filters and independent sentiment/research context with jump
+  links. Headlines, full summaries and rationales remain readable alongside long
+  source names and visible dates. Original feed counts stay distinct from AI
+  overlays; daily values, keywords, source coverage and private notes are
+  inspectable. Retrieval failures differ from empty or zero-evidence neutral
+  views. Emotion metrics reflow and the gauge stays within its half-circle scale.
 - **Readable Notes and Trade Journal** — labelled dated-note capture, wrapping
   source metadata and visible editing actions. Journal puts trade creation in the
   header, labels filters and separates entry expansion from editing controls;
