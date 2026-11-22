@@ -38,6 +38,17 @@ useful space and readable labels, including populated entries and editing flows.
 
 ## Validation and evidence
 
+Subsequent maintainer feedback exposed a separate Journal save defect: quantities
+were integer-only in the API, database and CSV path. The follow-up widens that
+contract with migration 0023, defaults new trades to cash divided by entry price,
+keeps edits in asset units, labels monetary fields and separates fees. Fractional
+values and field-specific validation feedback supersede the original form's
+numeric behavior described above. Journal/Portfolio matching remains deferred.
+Focused backend tests cover fractional create/update/import and migration data
+preservation, including compiled PostgreSQL DDL; browser fixtures cover cash
+conversion, decimal fees, invalid exits, retained 422 drafts and fractional edits
+at desktop/mobile sizes. These do not validate a production database.
+
 All 854 frontend tests / 141 files, production build and all 93 deterministic
 installed-Chrome smoke journeys pass. The five new Notes/Journal cases pass again
 with analytics captures and tag-control checks. Focused temporal-note and gap-

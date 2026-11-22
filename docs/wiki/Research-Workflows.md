@@ -369,6 +369,21 @@ automatically create or match Portfolio transactions. Selecting executions and
 creating missing ones from Journal is an unscheduled [roadmap bridge](Roadmap.md).
 A Brain memo is a dated synthesis, not an execution record.
 
+New Journal trades default to a **cash amount**, excluding fees. The form divides
+that amount by the entry price and shows the calculated shares or coins. Fees
+are a separate total cash charge. Prices, trade amount and fees use the quote
+currency inferred from the symbol; this is not an FX conversion. You can switch
+to asset units, and editing an existing trade starts in units to preserve its
+stored quantity. Decimal values are accepted throughout, including CSV imports.
+API callers continue to send `quantity` in asset units, not money.
+
+Installations must apply Alembic migration `0023_journal_fractional_quantity`
+before saving fractional quantities. It widens the integer column to floating
+point and preserves existing records. Downgrade deliberately retains that wider
+column to avoid truncation; older integer-only application writers cannot safely
+edit fractional records. Validation errors now name the affected fields while
+keeping the draft available for correction and manual retry.
+
 ## API reference
 
 ### Comparison evidence preparation API

@@ -287,3 +287,36 @@ def test_pnl_computation_long_profit_long_loss_short_profit() -> None:
     assert long_profit.json()["entry"]["pnl"] == 1000.0
     assert long_loss.json()["entry"]["pnl"] == -20.0
     assert short_profit.json()["entry"]["pnl"] == 60.0
+
+
+def test_fractional_journal_create_update_and_csv_preserve_units_and_fees() -> None:
+    import pytest
+    client, _ = _build_client()
+    headers = _auth_headers(client, "fractional-journal@example.com")
+    response = _create_trade(client, headers, symbol="BTC-USD", entry_price=20000, exit_price=21000, quantity=0.005, fees=0.125)
+    assert response.status_code == 200, response.text
+    entry = response.json()["entry"]
+    assert entry["quantity"] == pytest.approx(0.005)
+    assert entry["fees"] == pytest.approx(0.125)
+    assert entry["pnl"] == pytest.approx(4.875)
+    updated = client.put(f"/api/journal/{entry['id']}", headers=headers, json={"quantity": 0.0075, "fees": 0.0625})
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["entry"]["quantity"] == pytest.approx(0.0075)
+    assert updated.json()["entry"]["pnl"] == pytest.approx(7.4375)
+    csv_text = "symbol,direction,entry_date,entry_price,exit_date,exit_price,quantity,fees\nBTC-USD,LONG,2026-04-01T09:15:00,20000,2026-04-01T15:20:00,22000,0.00000001,0.000001\n"
+    imported = client.post("/api/journal/import-csv", headers=headers, files={"file": ("fractional.csv", csv_text, "text/csv")})
+    assert imported.status_code == 200, imported.text
+    rows = client.get("/api/journal", headers=headers).json()["entries"]
+    tiny = next(row for row in rows if row["id"] != entry["id"])
+    assert tiny["quantity"] == pytest.approx(1e-8, abs=1e-15)
+    assert tiny["fees"] == pytest.approx(1e-6)
+    assert tiny["pnl"] == pytest.approx(0.000019)
+
+
+def test_journal_rejects_invalid_sizes_and_reports_validation_fields() -> None:
+    client, _ = _build_client()
+    headers = _auth_headers(client, "invalid-fractional-journal@example.com")
+    for field, value in [("quantity", 0), ("quantity", -1), ("quantity", "NaN"), ("fees", -0.1), ("fees", "Infinity"), ("entry_price", 0)]:
+        response = _create_trade(client, headers, **{field: value})
+        assert response.status_code == 422, response.text
+        assert any(issue["loc"][-1] == field for issue in response.json()["detail"])

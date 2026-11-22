@@ -10156,7 +10156,7 @@
           "quantity": {
             "exclusiveMinimum": 0.0,
             "title": "Quantity",
-            "type": "integer"
+            "type": "number"
           },
           "rating": {
             "anyOf": [
@@ -10324,7 +10324,7 @@
             "anyOf": [
               {
                 "exclusiveMinimum": 0.0,
-                "type": "integer"
+                "type": "number"
               },
               {
                 "type": "null"

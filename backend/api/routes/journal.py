@@ -38,7 +38,7 @@ def _normalize_tags(tags: list[str] | None) -> list[str]:
     return normalized
 
 
-def _compute_pnl(direction: str, entry_price: float, exit_price: float | None, quantity: int, fees: float) -> tuple[float | None, float | None]:
+def _compute_pnl(direction: str, entry_price: float, exit_price: float | None, quantity: float, fees: float) -> tuple[float | None, float | None]:
     if exit_price is None:
         return None, None
     gross = (exit_price - entry_price) * quantity if direction == "LONG" else (entry_price - exit_price) * quantity
@@ -135,11 +135,11 @@ class JournalEntryBase(BaseModel):
     symbol: str = Field(min_length=1, max_length=20)
     direction: str
     entry_date: datetime
-    entry_price: float = Field(gt=0)
+    entry_price: float = Field(gt=0, allow_inf_nan=False)
     exit_date: datetime | None = None
-    exit_price: float | None = Field(default=None, gt=0)
-    quantity: int = Field(gt=0)
-    fees: float = Field(default=0, ge=0)
+    exit_price: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    quantity: float = Field(gt=0, allow_inf_nan=False)
+    fees: float = Field(default=0, ge=0, allow_inf_nan=False)
     strategy: str | None = Field(default=None, max_length=100)
     setup: str | None = Field(default=None, max_length=100)
     emotion: str | None = Field(default=None, max_length=50)
@@ -189,11 +189,11 @@ class JournalEntryUpdate(BaseModel):
     symbol: str | None = Field(default=None, min_length=1, max_length=20)
     direction: str | None = None
     entry_date: datetime | None = None
-    entry_price: float | None = Field(default=None, gt=0)
+    entry_price: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     exit_date: datetime | None = None
-    exit_price: float | None = Field(default=None, gt=0)
-    quantity: int | None = Field(default=None, gt=0)
-    fees: float | None = Field(default=None, ge=0)
+    exit_price: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    quantity: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    fees: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     strategy: str | None = Field(default=None, max_length=100)
     setup: str | None = Field(default=None, max_length=100)
     emotion: str | None = Field(default=None, max_length=50)
@@ -241,7 +241,7 @@ def create_journal_entry(
         entry_price=float(payload.entry_price),
         exit_date=payload.exit_date,
         exit_price=float(payload.exit_price) if payload.exit_price is not None else None,
-        quantity=int(payload.quantity),
+        quantity=float(payload.quantity),
         pnl=pnl,
         pnl_pct=pnl_pct,
         fees=float(payload.fees),
@@ -468,7 +468,7 @@ async def import_journal_csv(
                 entry_price=float(record.get("entry_price") or 0),
                 exit_date=datetime.fromisoformat(str(record.get("exit_date") or "")) if str(record.get("exit_date") or "").strip() else None,
                 exit_price=float(record["exit_price"]) if str(record.get("exit_price") or "").strip() else None,
-                quantity=int(float(record.get("quantity") or 0)),
+                quantity=float(record.get("quantity") or 0),
                 fees=float(record.get("fees") or 0),
                 strategy=str(record.get("strategy") or "").strip() or None,
                 setup=str(record.get("setup") or "").strip() or None,
@@ -489,7 +489,7 @@ async def import_journal_csv(
             entry_price=float(payload.entry_price),
             exit_date=payload.exit_date,
             exit_price=float(payload.exit_price) if payload.exit_price is not None else None,
-            quantity=int(payload.quantity),
+            quantity=float(payload.quantity),
             pnl=pnl,
             pnl_pct=pnl_pct,
             fees=float(payload.fees),
@@ -538,7 +538,7 @@ def update_journal_entry(
     if "entry_price" in data:
         row.entry_price = float(data["entry_price"])
     if "quantity" in data:
-        row.quantity = int(data["quantity"])
+        row.quantity = float(data["quantity"])
     if "fees" in data:
         row.fees = float(data["fees"])
     if "tags" in data:
@@ -559,7 +559,7 @@ def update_journal_entry(
     if row.exit_date is not None and row.exit_date < row.entry_date:
         raise HTTPException(status_code=400, detail="exit_date must be after entry_date")
 
-    row.pnl, row.pnl_pct = _compute_pnl(row.direction, float(row.entry_price), row.exit_price, int(row.quantity), float(row.fees))
+    row.pnl, row.pnl_pct = _compute_pnl(row.direction, float(row.entry_price), row.exit_price, float(row.quantity), float(row.fees))
     db.commit()
     db.refresh(row)
     return {"status": "updated", "entry": _serialize_entry(row)}

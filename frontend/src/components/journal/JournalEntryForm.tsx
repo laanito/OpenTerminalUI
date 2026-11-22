@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { isAxiosError } from "axios";
 import { Star } from "lucide-react";
 
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { TerminalModal } from "../terminal/TerminalModal";
+import { nativeCurrencyForSymbol } from "../../lib/currency";
 import type { JournalEntry } from "../../types";
 import type { JournalEntryPayload } from "../../api/client";
 
@@ -26,6 +28,8 @@ type FormState = {
   exitDate: string;
   exitPrice: string;
   quantity: string;
+  tradeAmount: string;
+  sizeMode: "cash" | "units";
   fees: string;
   strategy: string;
   setup: string;
@@ -58,7 +62,9 @@ function buildInitialState(entry?: JournalEntry | null): FormState {
     entryPrice: entry?.entry_price ? String(entry.entry_price) : "",
     exitDate: toLocalDateTimeValue(entry?.exit_date),
     exitPrice: entry?.exit_price != null ? String(entry.exit_price) : "",
-    quantity: entry?.quantity ? String(entry.quantity) : "1",
+    quantity: entry?.quantity ? String(entry.quantity) : "",
+    tradeAmount: entry ? String(entry.quantity * entry.entry_price) : "",
+    sizeMode: entry ? "units" : "cash",
     fees: entry?.fees != null ? String(entry.fees) : "0",
     strategy: entry?.strategy ?? "",
     setup: entry?.setup ?? "",
@@ -67,6 +73,21 @@ function buildInitialState(entry?: JournalEntry | null): FormState {
     notes: entry?.notes ?? "",
     tags: entry?.tags?.join(", ") ?? "",
   };
+}
+
+export function journalSaveError(error: unknown): string {
+  const fallback = "Could not save this entry.";
+  if (!isAxiosError(error) || !error.response || error.response.status >= 500) return fallback;
+  const detail: unknown = error.response.data?.detail;
+  if (typeof detail === "string") return detail;
+  if (!Array.isArray(detail)) return fallback;
+  const messages = detail.flatMap(issue => {
+    if (!issue || typeof issue.msg !== "string") return [];
+    const location = Array.isArray(issue.loc) ? issue.loc.filter((part: unknown) => part !== "body").join(" · ").replace(/_/g, " ") : "";
+    const label = location ? location[0].toUpperCase() + location.slice(1) : "Trade";
+    return [`${label}: ${issue.msg.replace(/^Value error, /, "").replace(/_/g, " ")}`];
+  });
+  return [...new Set(messages)].join("; ") || fallback;
 }
 
 export function JournalEntryForm({
@@ -97,9 +118,32 @@ export function JournalEntryForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   useEffect(() => { if (open) setSubmitError(null); }, [open]);
 
+  const currency = state.symbol.trim() ? nativeCurrencyForSymbol(state.symbol) : null;
+  const moneyUnit = currency || "quote currency";
+  const unitQuantity = state.sizeMode === "cash" ? Number(state.tradeAmount) / Number(state.entryPrice) : Number(state.quantity);
+  const validQuantity = Number.isFinite(unitQuantity) && unitQuantity > 0;
+
+  function changeSizeMode(mode: "cash" | "units") {
+    setState(current => ({ ...current, sizeMode: mode,
+      quantity: mode === "units" && validQuantity ? String(unitQuantity) : current.quantity,
+      tradeAmount: mode === "cash" && validQuantity && Number(current.entryPrice) > 0 ? String(unitQuantity * Number(current.entryPrice)) : current.tradeAmount,
+    }));
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitError(null);
+    const price = Number(state.entryPrice), fee = Number(state.fees || 0);
+    let issue: string | null = null;
+    if (!state.symbol.trim()) issue = "Enter a symbol.";
+    else if (!Number.isFinite(price) || price <= 0) issue = "Entry price must be greater than zero.";
+    else if (!validQuantity) issue = state.sizeMode === "cash" ? "Trade amount must be greater than zero and produce a valid quantity." : "Quantity must be greater than zero.";
+    else if (!Number.isFinite(fee) || fee < 0) issue = "Fees must be zero or a positive cash amount.";
+    else if (Boolean(state.exitDate) !== Boolean(state.exitPrice.trim())) issue = "Provide both exit date and exit price, or leave both blank for an open trade.";
+    else if (state.exitPrice && (!Number.isFinite(Number(state.exitPrice)) || Number(state.exitPrice) <= 0)) issue = "Exit price must be greater than zero.";
+    else if (!Number.isFinite(Date.parse(state.entryDate))) issue = "Enter a valid entry date.";
+    else if (state.exitDate && (!Number.isFinite(Date.parse(state.exitDate)) || Date.parse(state.exitDate) < Date.parse(state.entryDate))) issue = "Exit date must be on or after the entry date.";
+    if (issue) { setSubmitError(issue); return; }
     try {
       await onSubmit({
         symbol: state.symbol.trim().toUpperCase(),
@@ -108,7 +152,7 @@ export function JournalEntryForm({
         entry_price: Number(state.entryPrice),
         exit_date: state.exitDate ? new Date(state.exitDate).toISOString() : null,
         exit_price: state.exitPrice ? Number(state.exitPrice) : null,
-        quantity: Number(state.quantity),
+        quantity: unitQuantity,
         fees: Number(state.fees || 0),
         strategy: state.strategy.trim() || null,
         setup: state.setup.trim() || null,
@@ -120,8 +164,8 @@ export function JournalEntryForm({
           .map((tag) => tag.trim())
           .filter(Boolean),
       });
-    } catch {
-      setSubmitError("Could not save this entry. Your draft is still here; retry when ready.");
+    } catch (error) {
+      setSubmitError(`${journalSaveError(error)} Your draft is still here; correct the fields and retry when ready.`);
     }
   }
 
@@ -174,14 +218,15 @@ export function JournalEntryForm({
           </fieldset>
         </div>
 
+        <p className="text-xs text-terminal-muted">{currency ? `Currency: ${currency} (from symbol). Prices, trade amount and fees must use this currency.` : "Use the symbol’s quote currency for prices, trade amount and fees."}</p>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block min-w-0 space-y-1">
             <div className="text-xs text-terminal-muted">Entry Date</div>
             <TerminalInput required type="datetime-local" value={state.entryDate} onChange={(event) => setState((current) => ({ ...current, entryDate: event.target.value }))} />
           </label>
           <label className="block min-w-0 space-y-1">
-            <div className="text-xs text-terminal-muted">Entry Price</div>
-            <TerminalInput required type="number" min="0" step="0.01" value={state.entryPrice} onChange={(event) => setState((current) => ({ ...current, entryPrice: event.target.value }))} />
+            <div className="text-xs text-terminal-muted">Entry Price ({moneyUnit} per unit)</div>
+            <TerminalInput required type="number" min="0" step="any" value={state.entryPrice} onChange={(event) => setState((current) => ({ ...current, entryPrice: event.target.value }))} />
           </label>
         </div>
 
@@ -191,19 +236,26 @@ export function JournalEntryForm({
             <TerminalInput type="datetime-local" value={state.exitDate} onChange={(event) => setState((current) => ({ ...current, exitDate: event.target.value }))} />
           </label>
           <label className="block min-w-0 space-y-1">
-            <div className="text-xs text-terminal-muted">Exit Price</div>
-            <TerminalInput type="number" min="0" step="0.01" value={state.exitPrice} onChange={(event) => setState((current) => ({ ...current, exitPrice: event.target.value }))} />
+            <div className="text-xs text-terminal-muted">Exit Price ({moneyUnit} per unit)</div>
+            <TerminalInput type="number" min="0" step="any" value={state.exitPrice} onChange={(event) => setState((current) => ({ ...current, exitPrice: event.target.value }))} />
           </label>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
+          <div className="min-w-0 space-y-2">
+            <label htmlFor="journal-size-mode" className="block text-xs text-terminal-muted">Trade size input</label>
+            <TerminalInput id="journal-size-mode" as="select" value={state.sizeMode} onChange={event => changeSizeMode(event.target.value as "cash" | "units")}>
+              <option value="cash">Cash amount</option><option value="units">Asset units</option>
+            </TerminalInput>
+            <label htmlFor="journal-size-value" className="block text-xs text-terminal-muted">{state.sizeMode === "cash" ? `Trade amount (${moneyUnit})` : "Quantity (asset units)"}</label>
+            <TerminalInput id="journal-size-value" required type="number" inputMode="decimal" min="0" step="any" value={state.sizeMode === "cash" ? state.tradeAmount : state.quantity} onChange={event => setState(current => ({ ...current, [current.sizeMode === "cash" ? "tradeAmount" : "quantity"]: event.target.value }))} />
+            <p className="text-xs text-terminal-muted">{state.sizeMode === "cash" ? "Before fees. Units = cash amount ÷ entry price." : "Shares or coins, rather than a cash amount."}</p>
+            {state.sizeMode === "cash" && validQuantity && Number(state.entryPrice) > 0 ? <p role="status" className="break-words text-xs text-terminal-text">Calculated quantity: {new Intl.NumberFormat(undefined, { maximumSignificantDigits: 12 }).format(unitQuantity)} asset units</p> : null}
+          </div>
           <label className="block min-w-0 space-y-1">
-            <div className="text-xs text-terminal-muted">Quantity</div>
-            <TerminalInput required type="number" min="1" step="1" value={state.quantity} onChange={(event) => setState((current) => ({ ...current, quantity: event.target.value }))} />
-          </label>
-          <label className="block min-w-0 space-y-1">
-            <div className="text-xs text-terminal-muted">Fees</div>
-            <TerminalInput type="number" min="0" step="0.01" value={state.fees} onChange={(event) => setState((current) => ({ ...current, fees: event.target.value }))} />
+            <div className="text-xs text-terminal-muted">Fees ({moneyUnit})</div>
+            <TerminalInput type="number" inputMode="decimal" min="0" step="any" value={state.fees} onChange={(event) => setState((current) => ({ ...current, fees: event.target.value }))} />
+            <span className="block text-xs text-terminal-muted">Total cash charges, separate from the trade amount.</span>
           </label>
           <fieldset className="min-w-0 space-y-1">
             <legend className="text-xs text-terminal-muted">Emotion</legend>
