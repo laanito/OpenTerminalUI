@@ -8,7 +8,16 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Workstation chart visibility and readable controls** (2026-11-22),
+Maintainer feedback after #302: **merged; Workstation layout accepted only**.
+Functional gaps remain in Workstation and other unspecified legacy areas, possibly
+previously obscured by the broken frontend. Do not infer live functional sign-off
+from the layout acceptance or deterministic browser fixtures. A broader feature
+functionality audit and repair work is deferred to a later, unassigned version;
+start with Workstation, inventory the other affected workflows before scoping
+repairs, and distinguish provider/configuration gaps from defects or unwired UI.
+This does not expand the v3 frontend-overhaul gate. Screener remains next.
+
+Completed layout work **v3 Workstation chart visibility and readable controls** (#302, 2026-11-22),
 after maintainer-confirmed merged and tested #301. Workspace setup is disclosed;
 tabs, status, active pane and layout controls remain visible. Plots retain useful
 height and narrow matrices reflow without rewriting saved desktop layouts.
