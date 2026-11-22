@@ -955,6 +955,10 @@ The Workstation pass discloses larger setup tools, preserves readable plot heigh
 and per-pane controls, and reflows narrow matrices without rewriting saved layouts.
 It reuses the wide indicator manager for each pane; existing replay, comparison,
 persistence and chart tools remain available. See the [Workstation review](../design/v3/WORKSTATION_REVIEW.md).
+The maintainer accepted #302's layout but reports functional gaps in Workstation
+and other unspecified legacy areas. This is not live functional sign-off. A
+broader functionality audit/repair track is deferred to a later, unassigned
+version (see Backlog / unscheduled); it does not expand this frontend milestone.
 Continue Screener in populated states, then broader retained-page acceptance. No new feature backlog is added to that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
@@ -1889,6 +1893,15 @@ sector-rotation** return live data from Yahoo/adapters — they only show
 
 Real but unscheduled; pull into a milestone when it fits.
 
+- **Legacy feature functionality audit and repairs** — maintainer feedback after
+  #302 accepts Workstation's layout but reports functional gaps there and in other
+  unspecified areas, possibly previously masked by the frontend. Start with
+  Workstation and inventory affected retained workflows before scoping repairs.
+  Reproduce failures with configured integrations and distinguish provider/access
+  limits from defects, stubs and unwired controls. Prioritize subsequent fixes
+  from that evidence. Layout acceptance and fixture browser checks do not establish
+  live functional correctness. Target version remains unassigned; this is outside
+  the current v3 frontend-overhaul gate.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode

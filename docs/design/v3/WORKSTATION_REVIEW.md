@@ -4,6 +4,13 @@ This follows maintainer-accepted News #301. Workstation is a separate slice from
 Screener because chart layout/persistence and result-table exploration have
 different acceptance needs. Screener remains open.
 
+Maintainer feedback after merging #302: the layout works as intended; this is
+**layout acceptance, not live functional sign-off**. The maintainer reports
+functional gaps in Workstation and other unspecified legacy areas, possibly
+previously masked by the frontend. Inventorying and repairing those workflows is
+deferred to a later, unassigned version. The deterministic checks below establish
+behavior with fixture responses, not correctness of the real integrations.
+
 ## Findings and changes
 
 - Workstation's large always-visible setup area displaced the charts. Workspace

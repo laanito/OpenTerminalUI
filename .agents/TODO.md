@@ -8,7 +8,16 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Workstation chart visibility and readable controls** (2026-11-22),
+Maintainer feedback after #302: **merged; Workstation layout accepted only**.
+Functional gaps remain in Workstation and other unspecified legacy areas, possibly
+previously obscured by the broken frontend. Do not infer live functional sign-off
+from the layout acceptance or deterministic browser fixtures. A broader feature
+functionality audit and repair work is deferred to a later, unassigned version;
+start with Workstation, inventory the other affected workflows before scoping
+repairs, and distinguish provider/configuration gaps from defects or unwired UI.
+This does not expand the v3 frontend-overhaul gate. Screener remains next.
+
+Completed layout work **v3 Workstation chart visibility and readable controls** (#302, 2026-11-22),
 after maintainer-confirmed merged and tested #301. Workspace setup is disclosed;
 tabs, status, active pane and layout controls remain visible. Plots retain useful
 height and narrow matrices reflow without rewriting saved desktop layouts.
@@ -2172,12 +2181,23 @@ ordered v1.7 milestone above.
             disclosed workspace/surface tools, full names/grouped values,
             visual-only matrix reflow/restoration, focus-safe symbol search,
             wide per-pane indicators and fullscreen/dialog layering.
-            See `docs/design/v3/WORKSTATION_REVIEW.md`; host acceptance remains open.
+            #302 merged; maintainer accepts the layout. Live functionality is
+            not signed off; broader legacy functional audit is deferred below.
+            See `docs/design/v3/WORKSTATION_REVIEW.md`.
       - [ ] Populated Screener hierarchy/readability/results review.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
             operations during development or implicit expansion into later scope.
+- [ ] **Audit and repair legacy feature functionality (later version, unassigned).**
+      After #302, the maintainer accepted Workstation's layout but reported
+      functional gaps there and in other unspecified areas, possibly previously
+      masked by the frontend. Start with Workstation, inventory affected retained
+      workflows, reproduce failures with real configured integrations and separate
+      provider/configuration limits from implementation defects, stubs or unwired
+      controls. Scope and prioritize repairs from that evidence. Layout acceptance
+      and fixture smoke checks are not live end-to-end functional sign-off.
+      This is deferred work, not an expansion of the v3 frontend-overhaul gate.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
