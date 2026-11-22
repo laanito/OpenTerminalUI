@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import type { StockEmotion } from "../../api/client";
 import { terminalColors } from "../../theme/terminal";
@@ -58,8 +58,8 @@ function pointAt(index: number, radius: number): { x: number; y: number } {
 function arcPath(startIndex: number, endIndex: number, radius: number): string {
   const start = pointAt(startIndex, radius);
   const end = pointAt(endIndex, radius);
-  const largeArc = Math.abs(endIndex - startIndex) > 50 ? 1 : 0;
-  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+  // The entire scale spans only 180 degrees; no segment uses the large arc.
+  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`;
 }
 
 function EmotionGauge({ index, label }: { index: number; label: string }) {
@@ -67,7 +67,7 @@ function EmotionGauge({ index, label }: { index: number; label: string }) {
   const needle = pointAt(value, GAUGE.r - 14);
   const color = indexColor(value);
   return (
-    <svg width={GAUGE.width} height={GAUGE.height} viewBox={`0 0 ${GAUGE.width} ${GAUGE.height}`}>
+    <svg role="img" aria-label={`Emotion index ${value.toFixed(0)} out of 100: ${label}`} width={GAUGE.width} height={GAUGE.height} viewBox={`0 0 ${GAUGE.width} ${GAUGE.height}`}>
       <path d={arcPath(0, 100, GAUGE.r)} fill="none" stroke={terminalColors.border} strokeWidth={14} strokeLinecap="round" />
       <path d={arcPath(0, value, GAUGE.r)} fill="none" stroke={color} strokeWidth={14} strokeLinecap="round" />
       <line x1={GAUGE.cx} y1={GAUGE.cy} x2={needle.x} y2={needle.y} stroke={color} strokeWidth={3} strokeLinecap="round" />
@@ -75,13 +75,13 @@ function EmotionGauge({ index, label }: { index: number; label: string }) {
       <text x={GAUGE.cx} y={GAUGE.cy - 30} textAnchor="middle" fontSize={28} fontWeight={700} fill={terminalColors.text}>
         {value.toFixed(0)}
       </text>
-      <text x={GAUGE.cx} y={GAUGE.cy - 12} textAnchor="middle" fontSize={11} fill={color} fontWeight={600}>
+      <text x={GAUGE.cx} y={GAUGE.cy - 12} textAnchor="middle" fontSize={12} fill={color} fontWeight={600}>
         {label.toUpperCase()}
       </text>
-      <text x={12} y={GAUGE.cy + 14} textAnchor="start" fontSize={9} fill={terminalColors.muted}>
+      <text x={12} y={GAUGE.cy + 14} textAnchor="start" fontSize={12} fill={terminalColors.muted}>
         FEAR
       </text>
-      <text x={GAUGE.width - 12} y={GAUGE.cy + 14} textAnchor="end" fontSize={9} fill={terminalColors.muted}>
+      <text x={GAUGE.width - 12} y={GAUGE.cy + 14} textAnchor="end" fontSize={12} fill={terminalColors.muted}>
         GREED
       </text>
     </svg>
@@ -89,6 +89,7 @@ function EmotionGauge({ index, label }: { index: number; label: string }) {
 }
 
 export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
+  const articleListId = useId();
   const [showArticles, setShowArticles] = useState(false);
 
   const distribution = useMemo(() => {
@@ -98,9 +99,9 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
 
   if (isLoading) {
     return (
-      <section className="rounded border border-terminal-border bg-terminal-panel p-3">
-        <div className="text-sm font-semibold">Emotion Indicator</div>
-        <div className="mt-1 text-[11px] text-terminal-muted">
+      <section aria-label="Emotion analysis" className="min-w-0 rounded border border-terminal-border bg-terminal-panel p-3 [overflow-wrap:anywhere]">
+        <h2 className="text-sm font-semibold">Emotion Indicator</h2>
+        <div className="mt-1 text-xs text-terminal-muted">
           Analyzing {ticker} news with the Fast model — this can take a minute…
         </div>
         <div className="mt-2 h-28 animate-pulse rounded bg-terminal-bg" />
@@ -109,7 +110,7 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
   }
   if (isError || !data) {
     return (
-      <section className="rounded border border-terminal-border bg-terminal-panel p-3 text-[11px] text-terminal-muted">
+      <section className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs text-terminal-muted">
         Emotion analysis unavailable for {ticker}.
       </section>
     );
@@ -120,16 +121,16 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
   const articles = data.articles ?? [];
 
   return (
-    <section className="rounded border border-terminal-border bg-terminal-panel p-3">
+    <section aria-label="Emotion analysis" className="min-w-0 rounded border border-terminal-border bg-terminal-panel p-3 [overflow-wrap:anywhere]">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-sm font-semibold">Emotion Indicator</div>
-          <div className="text-[10px] text-terminal-muted">
+          <h2 className="text-sm font-semibold">Emotion Indicator</h2>
+          <div className="text-xs text-terminal-muted">
             {ticker} · {data.articles_analyzed} articles · {data.period_days}d
           </div>
         </div>
         <span
-          className="rounded border px-1.5 py-0.5 text-[10px] font-semibold"
+          className="rounded border px-1.5 py-0.5 text-xs font-semibold"
           style={{
             borderColor: data.engine === "llm" ? terminalColors.accent : terminalColors.border,
             color: data.engine === "llm" ? terminalColors.accent : terminalColors.muted,
@@ -140,32 +141,32 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
         </span>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-4">
+      <div className="mt-2 flex flex-wrap items-center gap-3">
         <div className="shrink-0">
           <EmotionGauge index={data.emotion_index ?? 0} label={data.emotion_index_label ?? "Neutral"} />
         </div>
-        <div className="min-w-[150px] flex-1 space-y-2">
+        <div className="min-w-0 basis-40 flex-1 space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-2xl" aria-hidden>
               {dominant.emoji}
             </span>
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Dominant emotion</div>
+              <div className="text-xs tracking-normal text-terminal-muted">Dominant emotion</div>
               <div className="text-sm font-semibold capitalize" style={{ color: dominant.color }}>
                 {data.dominant_emotion}
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="rounded border border-terminal-border px-2 py-1">
               <div className="text-terminal-muted">Sentiment</div>
               <div className="font-semibold" style={{ color: sentimentColor(data.sentiment_label ?? "neutral") }}>
-                {data.sentiment_label ?? "Neutral"} ({ (data.sentiment_score ?? 0) >= 0 ? "+" : ""}
+                {data.sentiment_label ?? "Neutral"} ({(data.sentiment_score ?? 0) >= 0 ? "+" : ""}
                 {(data.sentiment_score ?? 0).toFixed(2)})
               </div>
-              </div>
-              <div className="flex items-center gap-2 text-[11px]">
-              <div className="w-16 text-terminal-muted">Confidence:</div>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="shrink-0 text-terminal-muted">Confidence:</div>
               <div className="font-semibold">{((data.confidence ?? 0) * 100).toFixed(0)}%</div>
 
             </div>
@@ -175,12 +176,12 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
 
       {distribution.length > 0 && (
         <div className="mt-3 space-y-1">
-          <div className="text-[10px] uppercase tracking-wide text-terminal-muted">Emotion mix</div>
+          <div className="text-xs tracking-normal text-terminal-muted">Emotion mix</div>
           {distribution.map((row) => {
             const meta = emotionMeta(row.emotion);
             return (
-              <div key={row.emotion} className="flex items-center gap-2 text-[11px]">
-                <span className="w-20 shrink-0 capitalize text-terminal-muted">
+              <div key={row.emotion} className="flex items-center gap-2 text-xs">
+                <span className="w-28 shrink-0 capitalize text-terminal-muted">
                   {meta.emoji} {row.emotion}
                 </span>
                 <div className="h-2 flex-1 overflow-hidden rounded bg-terminal-bg">
@@ -194,7 +195,7 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
       )}
 
       {data.narrative && (
-        <p className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2 text-xs text-terminal-text">
+        <p className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2 text-sm leading-relaxed text-terminal-text">
           {data.narrative}
         </p>
       )}
@@ -202,18 +203,20 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
       {articles.length > 0 && (
         <div className="mt-2">
           <button
-            className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted"
+            className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-muted"
+            aria-expanded={showArticles}
+            aria-controls={articleListId}
             onClick={() => setShowArticles((v) => !v)}
           >
             {showArticles ? "Hide" : "Show"} per-article breakdown ({articles.length})
           </button>
           {showArticles && (
-            <div className="mt-2 space-y-1">
+            <div id={articleListId} className="mt-2 space-y-2">
               {articles.map((article, idx) => {
                 const meta = emotionMeta(article.emotion);
                 return (
-                  <div key={`${article.url}-${idx}`} className="rounded border border-terminal-border bg-terminal-bg p-2 text-[11px]">
-                    <div className="flex items-start justify-between gap-2">
+                  <div key={`${article.url}-${idx}`} className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <a
                         href={article.url || undefined}
                         target="_blank"
@@ -222,9 +225,9 @@ export function EmotionIndicator({ ticker, data, isLoading, isError }: Props) {
                       >
                         {article.title}
                       </a>
-                      <div className="flex shrink-0 items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className="rounded px-1 py-0.5 text-[9px] font-bold text-black"
+                          className="rounded px-1 py-0.5 text-xs font-bold text-black"
                           style={{ backgroundColor: sentimentColor(article.sentiment_label) }}
                         >
                           {article.sentiment_label.toUpperCase()} {article.sentiment_score >= 0 ? "+" : ""}

@@ -8,7 +8,26 @@ fill space with new features or compress labels. Review populated remaining
 pages at desktop/mobile widths and 200% zoom. See `docs/design/v3/SCOPE.md`.
 Broader v3 acceptance remains open.
 
-Current work **v3 Notes and Journal readable capture and review** (2026-11-21),
+Current work **v3 News headline-first reading and sentiment context** (2026-11-22),
+after maintainer-confirmed merged and tested #300. Headlines lead; desktop has
+an independent context rail and narrow views have context jump links. Search and
+scope remain visible, with sort/period/markets in a labelled native disclosure.
+Original feed counts stay separate from content-keyed AI overlays; per-row engine
+labels, Fast/model identity, lexical fallback and retry remain visible. Long
+sources, full summaries/rationales, dates and emotion metadata are readable.
+Keywords, daily values, source coverage and private ticker notes are disclosed.
+Feed failure, empty results and absent sentiment stay distinct; ticker-card
+errors are explicit. Emotion metrics reflow and the gauge's arc remains inside
+its half-circle scale without changing input values. The global ticker loader
+remains because ticker scope uses it. See `docs/design/v3/NEWS_REVIEW.md`.
+Validation: 854 frontend tests / 141 files, build and all 98 Chrome smoke
+journeys pass, with five new populated/narrow/failure/native-200%-zoom cases.
+Mock, surface and whitespace guards pass. No backend/API/schema/dependency,
+provider/model/scoring/retention or saved-evidence changes; no production access.
+Next: Workstation/Screener, then broader retained-page/maintainer acceptance.
+v3 release preparation remains gated on that work.
+
+Completed **v3 Notes and Journal readable capture and review** (#300, 2026-11-21),
 after maintainer-confirmed merged #299. Notes put labelled prose first, with
 symbol/effective-time fields alongside each other when space permits, readable
 source/date badges and visible editing actions. Dated payloads, queued-index
@@ -154,9 +173,9 @@ unknown basis as SQL NULL, stable operation and audited repair identities, owner
 boundaries, no invented cash/profit, and migration 0022 retaining old/unknown data.
 Do not re-open unchanged financial feature scope or remove research/Brain identities.
 
-Next: continue populated retained-page hierarchy/readability reviews with News
-and Workstation/Screener, following Stock Detail/Home/Security/comparison,
-accepted Brain #299 and the Notes/Journal pass described above.
+Next: continue populated retained-page hierarchy/readability reviews with
+Workstation/Screener, following Stock Detail/Home/Security/comparison, Brain
+#299, accepted Notes/Journal #300 and the News pass described above.
 Correct clipped names/controls and secondary content dominating the main task;
 do not only rerun shell navigation tests and call those pages redesigned. Work
 in reviewable PRs and retain evidence/failure/async contracts. The broader frontend
@@ -2125,7 +2144,11 @@ ordered v1.7 milestone above.
             capture, readable sources, full-width journal notes, distinct review
             and editing controls, named forms and explicit save/load failures.
             See `docs/design/v3/NOTES_JOURNAL_REVIEW.md`; host acceptance remains open.
-      - [ ] Populated News and Workstation/Screener hierarchy/readability review.
+      - [x] Populated News hierarchy/readability review: headlines first, readable
+            sources/prose/dates and distinct original/AI/context/private scopes;
+            preserved on-demand scoring and explicit failure/empty states.
+            See `docs/design/v3/NEWS_REVIEW.md`; host acceptance remains open.
+      - [ ] Populated Workstation/Screener hierarchy/readability review.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB

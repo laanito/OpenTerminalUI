@@ -29,7 +29,7 @@ export function SentimentTrend({ data }: Props) {
   const plotted = coordinates(data);
   if (!plotted.length) {
     return (
-      <div className="flex h-full items-center justify-center text-[11px] text-terminal-muted">
+      <div className="flex h-full items-center justify-center text-xs text-terminal-muted">
         No daily sentiment trend yet
       </div>
     );

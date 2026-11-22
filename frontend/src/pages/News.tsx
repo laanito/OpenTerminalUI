@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { fetchCryptoNews, fetchLatestNews, fetchMarketSentiment, fetchNewsByTicker, fetchNewsSentiment, fetchNewsSentimentSummary, fetchNewsSummaries, fetchStockEmotion, scoreNewsArticles, searchLatestNews, type ArticleSentiment, type NewsLatestApiItem } from "../api/client";
@@ -205,6 +205,7 @@ async function loadMarketNews(slice: MarketSlice, limit = 200): Promise<NewsQuer
 }
 
 export function NewsPage() {
+  const fieldId = useId();
   const currentTicker = useStockStore((s) => s.ticker);
   const { data: selectedStock } = useStock(currentTicker);
   // Land on the market overview — news without a ticker gives the general read;
@@ -220,7 +221,7 @@ export function NewsPage() {
   const [sortMode, setSortMode] = useState<"time" | "sentiment">("time");
   const [keywordInput, setKeywordInput] = useState(localStorage.getItem("news:keyword-alerts") || "");
   const [keywordHits, setKeywordHits] = useState<Array<{ keyword: string; title: string; source: string; publishedAt: string }>>([]);
-  const [lastRefreshMs, setLastRefreshMs] = useState<number>(Date.now());
+  const [lastRefreshMs, setLastRefreshMs] = useState<number | null>(null);
   const [aiScores, setAiScores] = useState<Record<string, ArticleSentiment>>({});
 
   const isTickerScope = scope === "ticker";
@@ -519,50 +520,36 @@ export function NewsPage() {
     { key: "search", label: "Search", show: true },
   ];
 
+  const feedNames: Record<SourceMode, string> = { by_ticker: "Ticker headlines", search: "News search", latest: "Latest headlines", crypto: "Crypto headlines", failed: "Unavailable" };
+  const feedFailed = newsQuery.isError || newsQuery.data?.sourceMode === "failed";
+  const summaryArticleCount = isTickerScope && sentimentQuery.data
+    ? sentimentQuery.data.total_articles ?? sentimentQuery.data.count
+    : fallbackSummary.total_articles;
+  const hasSummary = summaryArticleCount > 0;
+
   return (
-    <div className="space-y-3 p-4">
+    <main aria-label="News research" className="min-w-0 space-y-3 p-3 text-terminal-text sm:p-4 [&_button]:min-h-8 [&_button]:focus-visible:outline [&_select]:min-h-9 [&_input]:min-h-9 [overflow-wrap:anywhere]">
       <div className="rounded border border-terminal-border bg-terminal-panel p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="text-sm font-semibold">News & Sentiment</div>
-            <div className="text-[11px] text-terminal-muted">{scopeLabel}</div>
-            <div className="text-[10px] text-terminal-muted">
-              Source: {newsQuery.data?.sourceMode || "-"} {newsQuery.data?.searchTerm ? `(${newsQuery.data.searchTerm})` : ""} | Refreshed: {new Date(lastRefreshMs).toLocaleTimeString()}
+            <h1 className="text-lg font-semibold">News &amp; Sentiment</h1>
+            <div className="text-xs text-terminal-muted">{scopeLabel}</div>
+            <div className="text-xs text-terminal-muted">
+              Feed: {newsQuery.data ? feedNames[newsQuery.data.sourceMode] : "Retrieving headlines"} {newsQuery.data?.searchTerm ? `(${newsQuery.data.searchTerm})` : ""} · {lastRefreshMs ? `Feed checked ${new Date(lastRefreshMs).toLocaleTimeString()}` : "Awaiting feed retrieval"}
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <select
-              className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs"
-              value={sortMode}
-              onChange={(e) => setSortMode(e.target.value as "time" | "sentiment")}
-            >
-              <option value="time">Sort: Time</option>
-              <option value="sentiment">Sort: Sentiment</option>
-            </select>
-            <select
-              className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs"
-              value={String(periodDays)}
-              onChange={(e) => setPeriodDays(Number(e.target.value) as PeriodOption)}
-            >
-              {PERIOD_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d}d
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
         {/* Scope tabs: Market (tickerless overview) · Ticker · Search */}
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div role="group" aria-label="News scope" className="mt-3 flex flex-wrap gap-2">
           {scopeTabs.filter((t) => t.show).map((tab) => (
             <button
               key={tab.key}
-              className={`rounded border px-2 py-1 text-xs ${
-                scope === tab.key
-                  ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
-                  : "border-terminal-border text-terminal-muted hover:border-terminal-accent"
-              }`}
+              aria-pressed={scope === tab.key}
+              className={`rounded border px-2 py-1 text-xs ${scope === tab.key
+                ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
+                : "border-terminal-border text-terminal-muted hover:border-terminal-accent"
+                }`}
               onClick={() => {
                 setScope(tab.key);
                 setSentimentFilter("all");
@@ -577,28 +564,10 @@ export function NewsPage() {
           ))}
         </div>
 
-        {/* Market-slice chips: browse by market without a ticker */}
-        {scope === "market" && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {MARKET_SLICES.map((slice) => (
-              <button
-                key={slice.key}
-                className={`rounded border px-2 py-0.5 text-[11px] ${
-                  marketSlice === slice.key
-                    ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
-                    : "border-terminal-border text-terminal-muted hover:border-terminal-accent"
-                }`}
-                onClick={() => selectMarketSlice(slice.key)}
-              >
-                {slice.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-2">
-          <input
-            className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs outline-none focus:border-terminal-accent"
+        <div className="mt-3 space-y-1">
+          <label htmlFor={`${fieldId}-search`} className="block text-xs text-terminal-muted">Search all news</label>
+          <input id={`${fieldId}-search`}
+            className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-sm outline-none focus:border-terminal-accent"
             placeholder="Search news across all markets..."
             value={searchInput}
             onChange={(e) => {
@@ -607,231 +576,305 @@ export function NewsPage() {
             }}
           />
         </div>
-      </div>
-
-      <section className="rounded border border-terminal-border bg-terminal-panel p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="rounded px-2 py-0.5 text-[11px] font-semibold text-black" style={{ backgroundColor: sentimentColor(summary.overall_label as SentimentLabel) }}>
-              {summary.overall_label}
-            </span>
-            <span className="text-sm font-semibold">
-              {summary.average_score >= 0 ? "+" : ""}
-              {Number(summary.average_score).toFixed(2)}
-            </span>
-          </div>
-          <div className="text-[11px] text-terminal-muted">
-            {summary.total_articles} articles | {periodDays}d
-          </div>
-        </div>
-
-        <div className="mt-2 h-2 w-full overflow-hidden rounded bg-terminal-bg">
-            <div className="flex h-full w-full">
-            <div style={{ width: `${summary.bullish_pct}%`, background: terminalColors.positive }} />
-            <div style={{ width: `${summary.neutral_pct}%`, background: terminalColors.muted }} />
-            <div style={{ width: `${summary.bearish_pct}%`, background: terminalColors.negative }} />
-          </div>
-        </div>
-        {/* Clickable legend: filter the feed down to one sentiment to test a thesis. */}
-        <div className="mt-1 flex items-center justify-between gap-1 text-[11px]">
-          {(["Bullish", "Neutral", "Bearish"] as SentimentLabel[]).map((label) => {
-            const pct = label === "Bullish" ? summary.bullish_pct : label === "Bearish" ? summary.bearish_pct : summary.neutral_pct;
-            const active = sentimentFilter === label;
-            return (
-              <button
-                key={label}
-                onClick={() => toggleSentimentFilter(label)}
-                className={`flex-1 rounded border px-1.5 py-0.5 ${
-                  active ? "border-terminal-accent text-terminal-accent" : "border-transparent text-terminal-muted hover:border-terminal-border"
-                }`}
-                title={`Show only ${label} headlines (${sentimentCounts[label]})`}
+        <details className="mt-3 rounded border border-terminal-border px-2 py-1">
+          <summary className="cursor-pointer text-xs text-terminal-muted focus-visible:outline">Feed filters · {periodDays}d · {sortMode === "time" ? "Newest first" : "Sentiment order"}</summary>
+          <div className="mt-2 space-y-2">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1 text-xs text-terminal-muted"><label htmlFor={`${fieldId}-sort`} className="block">Sort headlines</label><select id={`${fieldId}-sort`}
+                className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs"
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as "time" | "sentiment")}
               >
-                <span style={{ color: active ? undefined : sentimentColor(label) }}>{label}</span> {pct}%
-              </button>
-            );
-          })}
-        </div>
-        {sentimentFilter !== "all" && (
-          <div className="mt-1 flex items-center justify-between rounded border border-terminal-accent/40 bg-terminal-accent/5 px-2 py-1 text-[11px] text-terminal-accent">
-            <span>Filtered to {sentimentFilter} headlines ({sentimentCounts[sentimentFilter as SentimentLabel]})</span>
-            <button className="underline" onClick={() => setSentimentFilter("all")}>
-              Clear
-            </button>
-          </div>
-        )}
-
-        <div className="mt-3 h-28 w-full">
-          <SentimentTrend data={summary.daily_sentiment ?? []} />
-        </div>
-        {marketSentimentQuery.data?.sectors?.length ? (
-          <div className="mt-3">
-            <div className="mb-1 text-[11px] text-terminal-muted">Sectors — click to browse that segment</div>
-            <div className="grid grid-cols-2 gap-1 text-[11px] md:grid-cols-4">
-              {marketSentimentQuery.data.sectors.slice(0, 8).map((row) => (
-                <button
-                  key={row.sector}
-                  onClick={() => goToSector(row.sector)}
-                  className="rounded border border-terminal-border px-1.5 py-1 text-left hover:border-terminal-accent"
-                  style={{
-                    background:
-                      row.avg_sentiment > 0
-                        ? `rgba(34,197,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
-                        : row.avg_sentiment < 0
-                        ? `rgba(244,63,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
-                        : "#0D1117",
-                  }}
-                >
-                  <div className="truncate text-terminal-muted">{row.sector}</div>
-                  <div className="font-semibold">{row.avg_sentiment >= 0 ? "+" : ""}{row.avg_sentiment.toFixed(2)}</div>
-                </button>
-              ))}
+                <option value="time">Sort: Time</option>
+                <option value="sentiment">Sort: Sentiment</option>
+              </select></div>
+              <div className="space-y-1 text-xs text-terminal-muted"><label htmlFor={`${fieldId}-period`} className="block">Time window</label><select id={`${fieldId}-period`}
+                className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs"
+                value={String(periodDays)}
+                onChange={(e) => setPeriodDays(Number(e.target.value) as PeriodOption)}
+              >
+                {PERIOD_OPTIONS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}d
+                  </option>
+                ))}
+              </select></div>
             </div>
-          </div>
-        ) : null}
-        <div className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2">
-          <div className="mb-1 text-[11px] text-terminal-muted">Keyword Alerts (comma separated)</div>
-          <input
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-            placeholder="FDA approval, CEO resign, acquisition"
-            className="w-full rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs outline-none focus:border-terminal-accent"
-          />
-          {keywordHits.length ? (
-            <div className="mt-2 space-y-1">
-              {keywordHits.map((hit, idx) => (
-                <div key={`${hit.keyword}-${idx}`} className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-[11px]">
-                  <span className="text-terminal-accent">{hit.keyword}</span> | {hit.title}
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-        {sentimentSummaryQuery.data?.top_sources?.length ? (
-          <div className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2">
-            <div className="mb-1 text-[11px] text-terminal-muted">Top News Sources ({periodDays}d)</div>
-            <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
-              {sentimentSummaryQuery.data.top_sources.slice(0, 6).map((row) => (
-                <div key={row.source} className="flex items-center justify-between rounded border border-terminal-border px-2 py-1 text-[11px]">
-                  <span className="truncate">{row.source}</span>
-                  <span className="text-terminal-muted">{row.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
-
-      {isTickerScope && currentTicker && (
-        <EmotionIndicator
-          ticker={currentTicker}
-          data={emotionQuery.data}
-          isLoading={emotionQuery.isLoading}
-          isError={emotionQuery.isError}
-        />
-      )}
-
-      {isTickerScope && currentTicker && (
-        <section className="rounded border border-terminal-border bg-terminal-panel p-3">
-          <div className="mb-2 text-[10px] uppercase tracking-wide text-terminal-muted">
-            Your notes on {currentTicker} — captured into the Second Brain
-          </div>
-          <NotesPanel symbol={currentTicker} context="news" />
-        </section>
-      )}
-
-      {(newsQuery.isLoading || (isTickerScope && sentimentQuery.isLoading)) && (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="h-20 animate-pulse rounded border border-terminal-border bg-terminal-panel" />
-          ))}
-        </div>
-      )}
-      {newsQuery.isError && (
-        <div className="rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">Failed to load news feed</div>
-      )}
-      {isTickerScope && sentimentQuery.isError && (
-        <div className="rounded border border-terminal-warn bg-terminal-warn/10 p-2 text-xs text-terminal-warn">
-          Sentiment service unavailable. Showing headline feed with fallback sentiment summary.
-        </div>
-      )}
-
-      {!newsQuery.isLoading && visibleItems.length > 0 && (
-        <section className="rounded border border-terminal-border bg-terminal-panel px-3 py-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <div className="text-xs font-semibold">AI headline sentiment</div>
-              <div className="text-[10px] text-terminal-muted">
-                On demand · scores up to {PAGE_SIZE} visible headlines in one batch
+            {/* Market-slice chips: browse by market without a ticker */}
+            {scope === "market" && (
+              <div role="group" aria-label="Browse markets" className="mt-2 flex flex-wrap gap-2">
+                {MARKET_SLICES.map((slice) => (
+                  <button
+                    key={slice.key}
+                    aria-pressed={marketSlice === slice.key}
+                    className={`rounded border px-2 py-0.5 text-xs ${marketSlice === slice.key
+                      ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
+                      : "border-terminal-border text-terminal-muted hover:border-terminal-accent"
+                      }`}
+                    onClick={() => selectMarketSlice(slice.key)}
+                  >
+                    {slice.label}
+                  </button>
+                ))}
               </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {aiSentimentMutation.data && aiResultIsCurrent && (
-                <span className="text-[10px] text-terminal-muted">
-                  {newsSentimentEngineLabel(aiSentimentMutation.data)} · {aiSentimentMutation.data.items.length}/{aiSentimentMutation.variables?.items.length ?? 0}
-                </span>
-              )}
-              {aiSentimentMutation.isError && aiResultIsCurrent && (
-                <span className="text-[10px] text-terminal-neg">Scoring failed — retry</span>
-              )}
-              <button
-                type="button"
-                className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-text hover:border-terminal-accent disabled:opacity-50"
-                onClick={() => aiSentimentMutation.mutate({ items: aiBatchItems, contextKey: aiContextKey })}
-                disabled={aiSentimentMutation.isPending || aiBatchItems.length === 0}
-              >
-                {aiSentimentMutation.isPending
-                  ? "Scoring…"
-                  : unscoredVisibleItems.length > 0
-                  ? `AI sentiment · ${Math.min(unscoredVisibleItems.length, PAGE_SIZE)}`
-                  : `Rescore latest ${aiBatchItems.length}`}
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
+            )}
 
-      <div className="grid gap-1">
-        {visibleItems.map((item) => {
-          const aiSentiment = aiScores[newsSentimentScoreKey(item)];
-          return (
-            <NewsArticleRow
-              key={item.id}
-              item={{ ...item, summary: item.summary || summaryByUrl[item.url] || "" }}
-              nowMs={nowMs}
-              sentiment={
-                aiSentiment
-                  ? { label: aiSentiment.label, score: aiSentiment.score, confidence: aiSentiment.confidence }
-                  : { label: item.sentiment.label, score: item.sentiment.score, confidence: item.sentiment.confidence }
-              }
-              rationale={aiSentiment?.rationale}
-              meta={
-                isTickerScope ? (
-                  <span className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted">
-                    {relevanceReason(item, currentTicker, relevanceAliases)}
-                  </span>
-                ) : undefined
-              }
-            />
-          );
-        })}
-        {!newsQuery.isLoading && visibleItems.length === 0 && (
-          <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs text-terminal-muted">
-            {sentimentFilter !== "all"
-              ? `No ${sentimentFilter} headlines in this feed.`
-              : isTickerScope
-              ? `No relevant news found for ${currentTicker}.`
-              : "No news found for this view."}
           </div>
-        )}
+        </details>
       </div>
 
-      {visibleCount < filteredItems.length && (
-        <div className="pt-1">
-          <button className="rounded border border-terminal-border px-3 py-1 text-xs" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
-            Load more
-          </button>
-        </div>
-      )}
-    </div>
+      <nav aria-label="News sections" className="flex flex-wrap gap-4 text-xs text-terminal-accent">
+        <a href="#news-headlines" className="underline focus-visible:outline">Headlines</a>
+        <a href="#news-context" className="underline focus-visible:outline">Sentiment and research context</a>
+      </nav>
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section id="news-headlines" tabIndex={-1} aria-labelledby="news-headlines-title" className="min-w-0 scroll-mt-3 space-y-3">
+          <h2 id="news-headlines-title" className="text-sm font-semibold text-terminal-accent">Headlines</h2>
+          <div role="group" aria-label="Filter headline sentiment" className="space-y-2">
+            <p className="text-xs text-terminal-muted">Original feed labels</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+              {(["Bullish", "Neutral", "Bearish"] as SentimentLabel[]).map((label) => {
+                const active = sentimentFilter === label;
+                return (
+                  <button
+                    key={label}
+                    aria-pressed={active}
+                    onClick={() => toggleSentimentFilter(label)}
+                    className={`flex-1 rounded border px-1.5 py-0.5 ${active ? "border-terminal-accent text-terminal-accent" : "border-transparent text-terminal-muted hover:border-terminal-border"
+                      }`}
+                    title={`Show only ${label} headlines (${sentimentCounts[label]})`}
+                  >
+                    <span style={{ color: active ? undefined : sentimentColor(label) }}>{label}</span> · {sentimentCounts[label]}
+                  </button>
+                );
+              })}
+            </div>
+            {sentimentFilter !== "all" && (
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-2 rounded border border-terminal-accent/40 bg-terminal-accent/5 px-2 py-1 text-xs text-terminal-accent">
+                <span>Filtered to {sentimentFilter} headlines ({sentimentCounts[sentimentFilter as SentimentLabel]})</span>
+                <button className="underline" onClick={() => setSentimentFilter("all")}>
+                  Clear
+                </button>
+              </div>
+            )}
+
+          </div>
+          {newsQuery.isLoading && (
+            <div role="status" className="space-y-2"><p className="text-sm text-terminal-muted">Loading headlines…</p>
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="h-20 animate-pulse rounded border border-terminal-border bg-terminal-panel" />
+              ))}
+            </div>
+          )}
+          {feedFailed && (
+            <div role="alert" className="space-y-2 rounded border border-terminal-neg bg-terminal-neg/10 p-3 text-sm text-terminal-neg"><p>News feed unavailable.{visibleItems.length ? " Previously retrieved headlines remain below." : ""}</p><button className="rounded border border-terminal-neg px-2 py-1" onClick={() => void newsQuery.refetch()} disabled={newsQuery.isFetching}>Retry headlines</button></div>
+          )}
+          {isTickerScope && sentimentQuery.isError && (
+            <div role="alert" className="rounded border border-terminal-warn bg-terminal-warn/10 p-2 text-xs text-terminal-warn">
+              Ticker sentiment unavailable. Showing retrieved headline data.
+            </div>
+          )}
+
+          {!newsQuery.isLoading && visibleItems.length > 0 && (
+            <section className="rounded border border-terminal-border bg-terminal-panel px-3 py-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs text-terminal-muted">Score visible headlines on demand.</p>
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {aiSentimentMutation.data && aiResultIsCurrent && (
+                    <span className="text-xs text-terminal-muted">
+                      {newsSentimentEngineLabel(aiSentimentMutation.data)} · {aiSentimentMutation.data.items.length}/{aiSentimentMutation.variables?.items.length ?? 0}
+                    </span>
+                  )}
+                  {aiSentimentMutation.isError && aiResultIsCurrent && (
+                    <span role="alert" className="text-xs text-terminal-neg">Scoring failed — retry</span>
+                  )}
+                  <button
+                    type="button"
+                    className="rounded border border-terminal-border px-2 py-1 text-xs text-terminal-text hover:border-terminal-accent disabled:opacity-50"
+                    onClick={() => aiSentimentMutation.mutate({ items: aiBatchItems, contextKey: aiContextKey })}
+                    disabled={aiSentimentMutation.isPending || aiBatchItems.length === 0}
+                  >
+                    {aiSentimentMutation.isPending
+                      ? "Scoring…"
+                      : unscoredVisibleItems.length > 0
+                        ? `AI sentiment · ${Math.min(unscoredVisibleItems.length, PAGE_SIZE)}`
+                        : `Rescore latest ${aiBatchItems.length}`}
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <div className="grid min-w-0 gap-3">
+            {visibleItems.map((item) => {
+              const aiSentiment = aiScores[newsSentimentScoreKey(item)];
+              return (
+                <NewsArticleRow
+                  key={item.id}
+                  item={{ ...item, summary: item.summary || summaryByUrl[item.url] || "" }}
+                  nowMs={nowMs}
+                  sentiment={
+                    aiSentiment
+                      ? { label: aiSentiment.label, score: aiSentiment.score, confidence: aiSentiment.confidence }
+                      : { label: item.sentiment.label, score: item.sentiment.score, confidence: item.sentiment.confidence }
+                  }
+                  rationale={aiSentiment?.rationale}
+                  assessmentLabel={aiSentiment ? (aiSentiment.engine === "llm" ? "AI assessment" : "Lexical fallback") : "Original feed label"}
+                  meta={
+                    isTickerScope ? (
+                      <span className="rounded border border-terminal-border px-1.5 py-0.5 text-xs text-terminal-muted">
+                        {relevanceReason(item, currentTicker, relevanceAliases)}
+                      </span>
+                    ) : undefined
+                  }
+                />
+              );
+            })}
+            {!newsQuery.isLoading && !feedFailed && visibleItems.length === 0 && (
+              <div className="rounded border border-terminal-border bg-terminal-panel p-3 text-xs text-terminal-muted">
+                {sentimentFilter !== "all"
+                  ? `No ${sentimentFilter} headlines in this feed.`
+                  : isTickerScope
+                    ? `No relevant news found for ${currentTicker}.`
+                    : "No news found for this view."}
+              </div>
+            )}
+          </div>
+
+          {visibleCount < filteredItems.length && (
+            <div className="pt-1">
+              <button className="rounded border border-terminal-border px-3 py-1 text-xs" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
+                Load more
+              </button>
+            </div>
+          )}
+        </section>
+        <aside id="news-context" tabIndex={-1} aria-label="News context" className="min-w-0 scroll-mt-3 space-y-3">
+          <section aria-labelledby="news-context-title" className="min-w-0 space-y-3 rounded border border-terminal-border bg-terminal-panel p-3">
+            <h2 id="news-context-title" className="text-sm font-semibold text-terminal-accent">Sentiment context</h2>
+            <p className="text-xs text-terminal-muted">{isTickerScope && sentimentQuery.data ? `Ticker aggregate · ${currentTicker}` : `${scopeLabel} · original feed labels`}. Separate from on-demand AI headline assessments.</p>
+            {hasSummary ? <div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="rounded px-2 py-0.5 text-xs font-semibold text-black" style={{ backgroundColor: sentimentColor(summary.overall_label as SentimentLabel) }}>
+                    {summary.overall_label}
+                  </span>
+                  <span className="text-sm font-semibold">
+                    {summary.average_score >= 0 ? "+" : ""}
+                    {Number(summary.average_score).toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-xs text-terminal-muted">
+                  {summaryArticleCount} articles | {periodDays}d
+                </div>
+              </div>
+
+              <div className="mt-2 h-2 w-full overflow-hidden rounded bg-terminal-bg">
+                <div className="flex h-full w-full">
+                  <div style={{ width: `${summary.bullish_pct}%`, background: terminalColors.positive }} />
+                  <div style={{ width: `${summary.neutral_pct}%`, background: terminalColors.muted }} />
+                  <div style={{ width: `${summary.bearish_pct}%`, background: terminalColors.negative }} />
+                </div>
+              </div>
+              <dl className="mt-2 flex flex-wrap gap-3 text-xs text-terminal-muted">
+                <div><dt>Bullish</dt><dd>{summary.bullish_pct}%</dd></div>
+                <div><dt>Neutral</dt><dd>{summary.neutral_pct}%</dd></div>
+                <div><dt>Bearish</dt><dd>{summary.bearish_pct}%</dd></div>
+              </dl>
+              <div className="mt-3 h-28 w-full">
+                <SentimentTrend data={summary.daily_sentiment ?? []} />
+              </div>
+              {!!summary.daily_sentiment?.length && <details className="mt-2 text-xs text-terminal-muted"><summary className="cursor-pointer focus-visible:outline">Daily sentiment values</summary><dl className="mt-2 space-y-2">{summary.daily_sentiment.map(row => <div key={row.date} className="flex flex-wrap justify-between gap-2"><dt>{row.date}</dt><dd>{row.avg_score.toFixed(2)} · {row.count} articles</dd></div>)}</dl></details>}
+            </div> : <p role="status" className="text-sm text-terminal-muted">{newsQuery.isLoading || (isTickerScope && sentimentQuery.isLoading) ? "Loading sentiment context…" : "No sentiment summary available for this feed."}</p>}
+          </section>
+
+          {marketSentimentQuery.data?.sectors?.length ? (
+            <section aria-label="Market sector sentiment" className="rounded border border-terminal-border bg-terminal-panel p-3">
+              <div className="mb-1 text-xs text-terminal-muted">Market sectors · separate from the selected headline feed</div>
+              <div className="grid gap-2 text-xs">
+                {marketSentimentQuery.data.sectors.slice(0, 8).map((row) => (
+                  <button
+                    key={row.sector}
+                    onClick={() => goToSector(row.sector)}
+                    className="rounded border border-terminal-border px-1.5 py-1 text-left hover:border-terminal-accent"
+                    style={{
+                      background:
+                        row.avg_sentiment > 0
+                          ? `rgba(34,197,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
+                          : row.avg_sentiment < 0
+                            ? `rgba(244,63,94,${Math.min(0.55, Math.abs(row.avg_sentiment) + 0.1)})`
+                            : "#0D1117",
+                    }}
+                  >
+                    <div className="break-words text-terminal-muted">{row.sector}</div>
+                    <div className="font-semibold">{row.avg_sentiment >= 0 ? "+" : ""}{row.avg_sentiment.toFixed(2)}</div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          {marketSentimentQuery.isError ? <p role="alert" className="text-xs text-terminal-warn">Sector sentiment unavailable.</p> : null}
+          <details className="rounded border border-terminal-border bg-terminal-panel p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-terminal-accent focus-visible:outline">Keyword matches{keywordHits.length ? ` · ${keywordHits.length}` : ""}</summary>
+            <div className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2">
+              <label htmlFor={`${fieldId}-keywords`} className="mb-1 block text-xs text-terminal-muted">Keyword Alerts (comma separated)</label>
+              <p className="mb-2 text-xs text-terminal-muted">Matches in this retrieved feed, stored in this browser.</p>
+              <input id={`${fieldId}-keywords`}
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                placeholder="FDA approval, CEO resign, acquisition"
+                className="w-full rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs outline-none focus:border-terminal-accent"
+              />
+              {keywordHits.length ? (
+                <div className="mt-2 space-y-1">
+                  {keywordHits.map((hit, idx) => (
+                    <div key={`${hit.keyword}-${idx}`} className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs">
+                      <span className="text-terminal-accent">{hit.keyword}</span> | {hit.title}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </details>
+          <details className="rounded border border-terminal-border bg-terminal-panel p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-terminal-accent focus-visible:outline">Source coverage</summary>
+            {sentimentSummaryQuery.data?.top_sources?.length ? (
+              <div className="mt-3 rounded border border-terminal-border bg-terminal-bg p-2">
+                <h3 className="mb-1 text-sm font-semibold">Top News Sources ({periodDays}d)</h3><p className="mb-2 text-xs text-terminal-muted">Market-wide source summary; independent of the selected feed.</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {sentimentSummaryQuery.data.top_sources.slice(0, 6).map((row) => (
+                    <div key={row.source} className="flex flex-wrap items-center justify-between gap-2 rounded border border-terminal-border px-2 py-1 text-xs">
+                      <span className="min-w-0 break-words">{row.source}</span>
+                      <span className="text-terminal-muted">{row.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {sentimentSummaryQuery.isError ? <p role="alert" className="mt-2 text-xs text-terminal-warn">News-source summary unavailable.</p> : !sentimentSummaryQuery.data?.top_sources?.length ? <p className="mt-2 text-xs text-terminal-muted">No source summary available.</p> : null}
+          </details>
+          {isTickerScope && currentTicker && (
+            <EmotionIndicator
+              ticker={currentTicker}
+              data={emotionQuery.data}
+              isLoading={emotionQuery.isLoading}
+              isError={emotionQuery.isError}
+            />
+          )}
+
+          {isTickerScope && currentTicker && (
+            <details className="rounded border border-terminal-border bg-terminal-panel p-3">
+              <summary className="mb-2 cursor-pointer text-sm font-semibold text-terminal-accent focus-visible:outline">Your notes on {currentTicker}</summary>
+              <p className="mb-3 text-xs text-terminal-muted">Dated private research for the Second Brain, separate from headline assessments.</p>
+              <NotesPanel symbol={currentTicker} context="news" />
+            </details>
+          )}
+
+          <a href="#news-headlines" className="inline-block text-xs text-terminal-accent underline focus-visible:outline">Back to headlines</a>
+        </aside>
+      </div>
+    </main>
   );
 }

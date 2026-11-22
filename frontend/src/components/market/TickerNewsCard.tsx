@@ -68,31 +68,33 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
       subtitle={subtitle ?? `Latest headlines for ${ticker.toUpperCase()}`}
       actions={
         items.length > 0 ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {scored && (
-              <span className="text-[10px] text-terminal-muted">
+              <span className="text-xs text-terminal-muted">
                 {newsSentimentEngineLabel(scored)} · {scored.items.length}/{Math.min(items.length, 20)}
               </span>
             )}
             <button
               type="button"
-              className="rounded border border-terminal-border px-2 py-1 text-[11px] text-terminal-text hover:border-terminal-accent disabled:opacity-50"
+              className="min-h-8 rounded border border-terminal-border px-2 py-1 text-xs text-terminal-text hover:border-terminal-accent disabled:opacity-50"
               onClick={() => scoreMutation.mutate()}
               disabled={scoreMutation.isPending}
             >
               {scoreMutation.isPending ? "Scoring…" : scored ? "Rescore" : "AI sentiment"}
             </button>
             {scoreMutation.isError && (
-              <span className="text-[10px] text-terminal-neg">Scoring failed — retry</span>
+              <span className="text-xs text-terminal-neg">Scoring failed — retry</span>
             )}
           </div>
         ) : undefined
       }
     >
       {query.isLoading ? (
-        <div className="py-6 text-center text-[11px] text-terminal-muted">Loading news…</div>
+        <div className="py-6 text-center text-xs text-terminal-muted">Loading news…</div>
+      ) : query.isError ? (
+        <div role="alert" className="space-y-2 py-3 text-sm text-terminal-neg">News unavailable for {ticker.toUpperCase()}. <button type="button" className="rounded border border-terminal-border px-2 py-1 text-xs focus-visible:outline" onClick={() => void query.refetch()}>Retry news</button></div>
       ) : items.length === 0 ? (
-        <div className="py-6 text-center text-[11px] text-terminal-muted">
+        <div className="py-6 text-center text-xs text-terminal-muted">
           No recent news found for {ticker.toUpperCase()}.
         </div>
       ) : (
@@ -112,6 +114,7 @@ export function TickerNewsCard({ ticker, market, limit = 12, title = "News", sub
                 }}
                 sentiment={sentiment ? { label: sentiment.label, score: sentiment.score, confidence: sentiment.confidence } : undefined}
                 rationale={sentiment?.rationale}
+                assessmentLabel={sentiment ? (sentiment.engine === "llm" ? "AI assessment" : "Lexical fallback") : undefined}
               />
             );
           })}

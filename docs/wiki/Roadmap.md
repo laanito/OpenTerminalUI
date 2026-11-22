@@ -944,12 +944,15 @@ see the [comparison review](../design/v3/COMPARISON_REVIEW.md).
 The accepted Brain pass #299 puts the question first, improves dated citations and
 uses a bounded log list/full-width memo reader while preserving evidence checks
 and reviewed promotion; see the [Brain review](../design/v3/BRAIN_REVIEW.md).
-The Notes/Journal pass makes dated capture, source metadata and editing readable,
+The accepted Notes/Journal pass #300 makes dated capture, source metadata and editing readable,
 puts trade creation beside the page title, and gives full-width entry review its
 own keyboard control. Completeness review is secondary; analytics failures and
 save errors remain explicit. See the [Notes/Journal review](../design/v3/NOTES_JOURNAL_REVIEW.md).
-Continue News and Workstation/Screener in populated states. No new feature backlog is added to
-that usability work. v3.0 is not release-ready yet. See the design pack's
+The News pass puts readable headlines before secondary setup, with independent
+sentiment/research context, explicit original-versus-AI labels, disclosed helpers
+and honest failure/empty states. See the [News review](../design/v3/NEWS_REVIEW.md).
+Continue Workstation/Screener in populated states, then broader retained-page
+acceptance. No new feature backlog is added to that usability work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:
