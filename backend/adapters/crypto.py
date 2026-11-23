@@ -8,6 +8,7 @@ import httpx
 from backend.adapters.base import DataAdapter, FuturesContract, Instrument, OHLCV, OptionChain, QuoteResponse
 from backend.core.crypto_adapter import CryptoAdapter
 from backend.core.yahoo_client import YahooClient
+from backend.shared.market_classifier import crypto_quote_currency, foreign_symbol_currency
 
 
 class CryptoDataAdapter(DataAdapter):
@@ -17,6 +18,8 @@ class CryptoDataAdapter(DataAdapter):
 
     async def get_quote(self, symbol: str) -> QuoteResponse | None:
         s = symbol.strip().upper().replace("CRYPTO:", "")
+        if foreign_symbol_currency(s):
+            return None
         pair = s if "-" in s else f"{s}-USD"
         # Try CoinGecko simple price first.
         gecko_map = {
@@ -51,7 +54,7 @@ class CryptoDataAdapter(DataAdapter):
             price=float(price),
             change=float(row.get("regularMarketChange") or 0.0),
             change_pct=float(row.get("regularMarketChangePercent") or 0.0),
-            currency="USD",
+            currency=str(row.get("currency") or crypto_quote_currency(pair)),
             ts=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -63,6 +66,8 @@ class CryptoDataAdapter(DataAdapter):
         self, symbol: str, timeframe: str, start: date, end: date
     ) -> tuple[list[OHLCV], dict[str, Any] | None]:
         s = symbol.strip().upper().replace("CRYPTO:", "")
+        if foreign_symbol_currency(s):
+            return [], None
         pair = s if "-" in s else f"{s}-USD"
         rng_days = max(1, (end - start).days)
         range_str = "1y" if rng_days > 220 else "6mo" if rng_days > 120 else "3mo" if rng_days > 45 else "1mo"

@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from backend.adapters.registry import get_adapter_registry
 from backend.api.deps import get_unified_fetcher
+from backend.shared.market_classifier import foreign_symbol_currency
 
 router = APIRouter()
 
@@ -44,7 +45,7 @@ def _is_global_symbol(s: str) -> bool:
     - Futures symbols ending with =F (e.g. GC=F, CL=F, SI=F)
     - Forex symbols ending with =X (e.g. USDINR=X)
     """
-    return s.startswith("^") or s.endswith("=F") or s.endswith("=X")
+    return s.startswith("^") or s.endswith("=F") or s.endswith("=X") or foreign_symbol_currency(s) is not None
 
 
 def _parse_symbols(symbols: str) -> list[str]:

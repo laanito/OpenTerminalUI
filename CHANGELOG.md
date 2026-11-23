@@ -7,6 +7,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Fixed
+- **Listed-symbol identity and chart authentication** — normalized chart requests
+  use the shared bearer-token/refresh handler. Supported foreign listings such as
+  `MWRE.DE` retain their Yahoo symbol and EUR fallback under a stale Crypto or
+  India selection, instead of becoming `MWRE.DE-USD`. Legacy chart responses
+  preserve provider currency (then listing fallback), with a new cache identity;
+  REST/polled quotes bypass incompatible crypto/India/US adapters for those listings.
+  Genuine EUR-quoted crypto also keeps its quote currency in adapter responses.
 - **Journal cash entry and fractional quantities** — new trades accept a cash
   amount and calculate asset units from the entry price, with fees entered
   separately in the symbol's quote currency. Existing trades open in units;

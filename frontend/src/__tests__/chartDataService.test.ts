@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { setAccessTokenGetter, setRefreshHandler } from "../api/base";
 import { fetchChartData } from "../services/chartDataService";
 
 describe("fetchChartData", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    setAccessTokenGetter(null); setRefreshHandler(null);
   });
 
   it("calls unified chart endpoint with normalized flag", async () => {
@@ -27,4 +29,17 @@ describe("fetchChartData", () => {
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain("normalized=true");
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain("market=NASDAQ");
   });
+  it("authenticates listed-symbol charts and refreshes a rejected token once", async () => {
+    setAccessTokenGetter(() => "old-token");
+    const refresh = vi.fn().mockResolvedValue("fresh-token"); setRefreshHandler(refresh);
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({ ok: false, status: 401 } as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ symbol: "MWRE.DE", count: 0, data: [] }) } as Response);
+    const result = await fetchChartData("MWRE.DE", { market: "CRYPTO", interval: "1m", period: "1mo" });
+    expect(result.symbol).toBe("MWRE.DE"); expect(refresh).toHaveBeenCalledTimes(1); expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/chart/MWRE.DE?");
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain("market=CRYPTO");
+    expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get("Authorization")).toBe("Bearer old-token");
+    expect(new Headers(fetchMock.mock.calls[1][1]?.headers).get("Authorization")).toBe("Bearer fresh-token");
+  });
+
 });

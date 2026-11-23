@@ -2202,6 +2202,12 @@ ordered v1.7 milestone above.
             and responsive accessible heatmap with explicit missing-quote coverage.
             Preserve search/row routes, subscriptions and list ownership contracts.
             See `docs/design/v3/WATCHLIST_REVIEW.md`; host acceptance remains open.
+      - [x] Reported listed-symbol hotfix after merged #306: authenticate normalized
+            chart requests, preserve supported Yahoo suffixes under conflicting
+            Crypto/India hints, retain provider/listing native units and bypass
+            incompatible adapters in legacy chart/REST/polled quote paths. Crypto
+            adapter must never manufacture `MWRE.DE-USD`; genuine EUR pairs keep
+            EUR. No schema/stored-data migration; host verification remains open.
       - [ ] Review remaining Views, Alerts, Settings and Launchpad layouts with
             populated/long content, narrow screens and keyboard/zoom; inventory
             any other retained-tool readability issues before release acceptance.

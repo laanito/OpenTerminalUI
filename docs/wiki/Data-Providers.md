@@ -9,6 +9,21 @@ Generic equity workflows default to US/NASDAQ when no usable market is supplied.
 Explicit India selections retain NSE/BSE, INR and their intended benchmarks.
 EU/UK Yahoo suffixes such as `.L`, `.DE` and `.PA` bypass the India path.
 
+The instrument catalogue already has a native `currency` field; the global
+market selector is a request hint, not a currency conversion or an instruction
+to turn a listed instrument into a coin. Catalogue/search metadata can be
+incomplete, so supported listing suffixes remain a fallback (`MWRE.DE` → EUR).
+Normalized chart requests use the shared authenticated transport and omit a
+global market hint for explicit Yahoo listings/indices. Their provider resolver
+preserves supported foreign symbols even if an API caller sends a conflicting
+hint. Legacy charts skip incompatible adapters for these listings and prefer
+provider-reported currency, then the listing fallback; their cache identity was
+changed to avoid reusing old market-derived currency labels. REST and polled
+quotes likewise keep the native Yahoo symbol. The crypto adapter rejects such
+listed symbols instead of appending `-USD`; genuine `BTC-EUR` keeps EUR.
+This fixes read-path routing/metadata. It does not migrate or rewrite stored
+holdings, transactions or instrument rows, and does not guarantee upstream data.
+
 ## Markets and search
 
 | Provider/source | Retained role | Configuration |

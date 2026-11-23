@@ -1,5 +1,25 @@
 # External-agent project context
 
+Maintainer confirmed #306 merged. An unrelated `MWRE.DE` report interrupts the
+next layout slice: normalized charts used raw unauthenticated fetch, then legacy
+fallback trusted a stale CRYPTO hint and manufactured `MWRE.DE-USD`. Current fix
+uses shared authenticated fetch/refresh and omits hints for explicit Yahoo
+symbols. Supported foreign suffixes win over chart hints; legacy chart/REST/
+polled quote paths bypass incompatible adapters and keep native symbols/units.
+Legacy currency prefers provider metadata then the listing fallback, with cache
+identity v2. Crypto adapters reject these listings and preserve EUR coin units.
+The instrument catalogue already stores currency; no schema, migration, stored
+data repair or production access is involved. No implied upstream availability.
+Resume Views/Alerts/Settings/Launchpad review after maintainer acceptance.
+
+Native-listing hotfix validation: 47 focused backend chart/quote/adapter/WebSocket
+tests and all 860 frontend tests / 142 files pass. Production build and the 116
+existing Chrome smoke cases pass; the new authenticated EUR-listing scenario
+passes after correcting its fundamentals fixture and allowing explicit legacy
+pagination. Bearer refresh is also tested at transport level. API-reference,
+surface-inventory, production-mock and whitespace guards pass. These are isolated
+fixtures, not live Yahoo/model or production/deployment validation.
+
 Maintainer confirmed #305 merged and tested. Screener layout is accepted.
 Broader retained-page review found another concrete v3 gap: Watchlist still had
 a permanent sidebar, squeezed toolbar and fixed-width heatmap. Current follow-up

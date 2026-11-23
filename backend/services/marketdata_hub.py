@@ -10,6 +10,7 @@ from typing import Any
 
 from fastapi import WebSocket
 
+from backend.shared.market_classifier import foreign_symbol_currency
 from backend.api.deps import get_unified_fetcher
 from backend.core.ttl_policy import market_open_now
 from backend.services.candle_aggregator import CandleAggregator
@@ -635,6 +636,28 @@ class MarketDataHub:
         symbol_list = list(dict.fromkeys(s.strip().upper() for s in symbols if s.strip()))
         if not symbol_list:
             return []
+
+        # Explicit exchange listings keep their Yahoo identity under any UI scope.
+        native_symbols = [symbol for symbol in symbol_list if foreign_symbol_currency(symbol)]
+        if native_symbols:
+            native_quotes = []
+            try:
+                rows = await fetcher.yahoo.get_quotes(native_symbols)
+                for row in rows:
+                    symbol = str(row.get("symbol") or "").upper()
+                    last = _to_float(row.get("regularMarketPrice"))
+                    if symbol not in native_symbols or last is None or not 0 < last < float("inf"):
+                        continue
+                    epoch = row.get("regularMarketTime")
+                    native_quotes.append({"symbol": symbol, "last": last,
+                        "change": _to_float(row.get("regularMarketChange")) or 0.0,
+                        "changePct": _to_float(row.get("regularMarketChangePercent")) or 0.0,
+                        "volume": _to_float(row.get("regularMarketVolume")),
+                        "ts": datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat() if isinstance(epoch, (int, float)) and epoch > 0 else now_iso})
+            except Exception:
+                pass
+            remaining = [symbol for symbol in symbol_list if symbol not in native_symbols]
+            return native_quotes + (await self._fetch_quotes_batch(fetcher, market, remaining) if remaining else [])
 
         if market in US_MARKETS and fetcher.finnhub.api_key:
             payloads = await asyncio.gather(

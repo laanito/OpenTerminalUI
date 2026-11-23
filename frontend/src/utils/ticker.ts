@@ -39,5 +39,6 @@ export function isIndianSymbol(
   if (isCryptoSymbol(t)) return false;
   if (isIndexSymbol(t)) return false;
   if (/\.(NS|BO)$/i.test(t)) return true;
+  if (/\.[A-Z]{1,4}$/i.test(t)) return false;
   return market === "NSE" || market === "BSE";
 }
