@@ -25,7 +25,7 @@ vi.mock("../api/client", () => ({
 }));
 
 vi.mock("../realtime/useQuotesStream", () => ({
-  useQuotesStream: () => ({
+  useQuoteTokens: () => ({
     subscribe: vi.fn(),
     unsubscribe: vi.fn(),
     connectionState: "LIVE",
@@ -33,7 +33,7 @@ vi.mock("../realtime/useQuotesStream", () => ({
   useQuotesStore: (selector: (state: { ticksByToken: Record<string, { ltp?: number; change_pct?: number; volume?: number }> }) => unknown) =>
     selector({
       ticksByToken: {
-        "NSE:AAPL": {
+        "NASDAQ:AAPL": {
           ltp: 123.45,
           change_pct: 1.25,
           volume: 1200,

@@ -2207,7 +2207,14 @@ ordered v1.7 milestone above.
             Crypto/India hints, retain provider/listing native units and bypass
             incompatible adapters in legacy chart/REST/polled quote paths. Crypto
             adapter must never manufacture `MWRE.DE-USD`; genuine EUR pairs keep
-            EUR. No schema/stored-data migration; host verification remains open.
+            EUR. #307 merged and maintainer-confirmed fixed; no schema/stored-data
+            migration.
+      - [x] Mixed Watchlist quote follow-up after verified #307: resolve each
+            symbol from catalogue/explicit listing instead of selected search
+            market; accept EU socket/REST tokens and poll native symbols. Table,
+            heatmap and export use the same token and native units; catalogue
+            ambiguity stays explicit. Additive read metadata, no migration or
+            stored-list rewrite; host acceptance remains open.
       - [ ] Review remaining Views, Alerts, Settings and Launchpad layouts with
             populated/long content, narrow screens and keyboard/zoom; inventory
             any other retained-tool readability issues before release acceptance.

@@ -20,7 +20,7 @@ MAX_SYMBOLS = 50
 SYMBOL_RE = re.compile(r"^\^?[A-Z0-9][A-Z0-9._=\-]{0,24}$")
 IN_MARKETS = {"NSE", "BSE"}
 US_MARKETS = {"NYSE", "NASDAQ"}
-SUPPORTED_MARKETS = IN_MARKETS | US_MARKETS | {"CRYPTO"}
+SUPPORTED_MARKETS = IN_MARKETS | US_MARKETS | {"CRYPTO", "EU"}
 
 
 def _to_float(value: Any) -> float | None:
@@ -102,7 +102,7 @@ async def _fetch_yahoo_quotes(fetcher: Any, symbols: list[str], now_iso: str) ->
 
 @router.get("/quotes")
 async def get_quotes(
-    market: str = Query(..., description="NSE|BSE|NYSE|NASDAQ|CRYPTO"),
+    market: str = Query(..., description="NSE|BSE|NYSE|NASDAQ|CRYPTO|EU"),
     symbols: str = Query(..., description="Comma-separated symbols, e.g. RELIANCE,TCS"),
 ) -> dict[str, Any]:
     market_code = market.strip().upper()
@@ -114,8 +114,8 @@ async def get_quotes(
 
     # Split: global symbols (indices/futures use Yahoo-native notation like ^NSEI, GC=F)
     # are fetched directly from Yahoo without any market suffix.
-    global_syms = [s for s in symbol_list if _is_global_symbol(s)]
-    local_syms = [s for s in symbol_list if not _is_global_symbol(s)]
+    global_syms = [s for s in symbol_list if market_code == "EU" or _is_global_symbol(s)]
+    local_syms = [s for s in symbol_list if s not in global_syms]
 
     fetcher = await get_unified_fetcher()
     all_quotes: list[dict[str, Any]] = []

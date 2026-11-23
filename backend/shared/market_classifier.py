@@ -54,6 +54,7 @@ _NSE_LOCK = asyncio.Lock()
 _FOREIGN_SUFFIX_META = {
     ".L": {"exchange": "LSE", "country_code": "GB", "country_name": "United Kingdom", "flag_emoji": "", "currency": "GBP"},
     ".DE": {"exchange": "XETRA", "country_code": "DE", "country_name": "Germany", "flag_emoji": "", "currency": "EUR"},
+    ".MU": {"exchange": "MUN", "country_code": "DE", "country_name": "Germany", "flag_emoji": "", "currency": "EUR"},
     ".F": {"exchange": "XETRA", "country_code": "DE", "country_name": "Germany", "flag_emoji": "", "currency": "EUR"},
     ".SW": {"exchange": "SIX", "country_code": "CH", "country_name": "Switzerland", "flag_emoji": "", "currency": "CHF"},
     ".PA": {"exchange": "EURONEXT", "country_code": "FR", "country_name": "France", "flag_emoji": "", "currency": "EUR"},

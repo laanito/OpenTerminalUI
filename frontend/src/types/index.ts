@@ -403,6 +403,7 @@ export type ScheduledReport = {
 };
 
 export type Watchlist = {
+  quote_routes?: Record<string, { symbol: string; quote_symbol: string; market: string | null; currency: string | null; status: string }>;
   id: string;
   name: string;
   symbols: string[];

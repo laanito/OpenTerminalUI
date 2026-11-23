@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Fixed
+- **Mixed-market Watchlist quotes** — each symbol subscribes with its own quote
+  market instead of the search selector. EU subscriptions are accepted and
+  polled using native Yahoo symbols, including `.MU` listings. Table, heatmap
+  and export share the resolved identity; native currency/quote units are shown
+  per row. Conflicting catalogue matches stay unavailable until qualified.
 - **Listed-symbol identity and chart authentication** — normalized chart requests
   use the shared bearer-token/refresh handler. Supported foreign listings such as
   `MWRE.DE` retain their Yahoo symbol and EUR fallback under a stale Crypto or

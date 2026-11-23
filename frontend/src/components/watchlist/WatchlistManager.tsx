@@ -9,13 +9,14 @@ import {
   addWatchlistSymbols, removeWatchlistSymbol, searchSymbols
 } from "../../api/client";
 import { HeatmapView } from "./HeatmapView";
-import { useQuotesStream, useQuotesStore } from "../../realtime/useQuotesStream";
+import { useQuoteTokens, useQuotesStore } from "../../realtime/useQuotesStream";
 import { useSettingsStore } from "../../store/settingsStore";
 import { ExportButton } from "../common/ExportButton";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalInput } from "../terminal/TerminalInput";
 import { TerminalCombobox } from "../terminal/TerminalCombobox";
 import type { Watchlist } from "../../types";
+import { quoteToken, watchlistQuoteRoute } from "../../lib/watchlistQuotes";
 import { SymbolContextMenu } from "../common/SymbolContextMenu";
 
 const PULL_THRESHOLD = 30;
@@ -26,7 +27,6 @@ export function WatchlistManager() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedMarket = useSettingsStore(s => s.selectedMarket);
-  const { subscribe, unsubscribe, connectionState } = useQuotesStream(selectedMarket);
   const ticksByToken = useQuotesStore(s => s.ticksByToken);
 
   const [activeWlId, setActiveWlId] = useState<string | null>(null);
@@ -74,12 +74,12 @@ export function WatchlistManager() {
     if (activeWl && activeWlId !== activeWl.id) setActiveWlId(activeWl.id);
   }, [activeWl, activeWlId]);
 
-  // WebSocket Sync
-  useEffect(() => {
-    if (!activeWl?.symbols.length) return;
-    subscribe(activeWl.symbols);
-    return () => unsubscribe(activeWl.symbols);
-  }, [activeWl?.symbols, subscribe, unsubscribe]);
+  const routes = useMemo(() => new Map((activeWl?.symbols || []).map(symbol => [symbol, watchlistQuoteRoute(activeWl, symbol)])), [activeWl]);
+  const tokens = [...routes.values()].map(quoteToken).filter((token): token is string => Boolean(token));
+  const { connectionState } = useQuoteTokens(tokens);
+  const quoteMarkets = [...new Set([...routes.values()].map(route => route.market).filter(Boolean))].join(" / ");
+  const unresolved = [...routes.values()].filter(route => route.status !== "resolved");
+  const tickFor = (symbol: string) => { const route = routes.get(symbol); const token = route && quoteToken(route); return token ? ticksByToken[token] : undefined; };
 
   function chooseList(id: string) {
     const next = new URLSearchParams(searchParams); next.delete("name");
@@ -182,8 +182,8 @@ export function WatchlistManager() {
     };
   }, [queryClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const heatmapData = activeWl?.symbols.filter(s => Number.isFinite(ticksByToken[`${selectedMarket}:${s}`]?.change_pct)).map(s => {
-    const live = ticksByToken[`${selectedMarket}:${s}`];
+  const heatmapData = activeWl?.symbols.filter(s => Number.isFinite(tickFor(s)?.change_pct)).map(s => {
+    const live = tickFor(s);
     return {
       ticker: s,
       changePct: live?.change_pct || 0,
@@ -218,7 +218,7 @@ export function WatchlistManager() {
         </div>
         {activeWl ? <div className="flex flex-wrap items-center gap-2 text-xs text-terminal-muted">
           <span className="break-words">{activeWl.name}</span><span>{activeWl.symbols.length} symbols</span>
-          <span data-testid="watchlist-route-status">{selectedMarket} · {connectionState}</span>
+          <span data-testid="watchlist-route-status">{quoteMarkets || "No resolved quote routes"} · {connectionState}</span>
         </div> : null}
         {isCreating ? <form aria-label="Create watchlist" className="space-y-2" onSubmit={event => { event.preventDefault(); createList(); }}>
           <label className="block space-y-1"><span className="block text-xs text-terminal-muted">Watchlist name</span>
@@ -252,11 +252,12 @@ export function WatchlistManager() {
         </div>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <label className="space-y-1"><span className="block text-xs text-terminal-muted">Watchlist view</span><TerminalInput as="select" value={viewMode} onChange={event => setViewByMode(event.target.value as typeof viewMode)}><option value="table">Table</option><option value="heatmap">Heatmap</option></TerminalInput></label>
-          <div className="flex flex-wrap items-center gap-2"><ExportButton source="watchlist" data={activeWl.symbols.map(s => { const live = ticksByToken[`${selectedMarket}:${s}`]; return { symbol: s, price: live?.ltp, change_pct: live?.change_pct, volume: live?.volume }; })} filename={`${activeWl.name}_watchlist.csv`} />
+          <div className="flex flex-wrap items-center gap-2"><ExportButton source="watchlist" data={activeWl.symbols.map(s => { const live = tickFor(s); return { symbol: s, market: routes.get(s)?.market, currency: live?.currency || routes.get(s)?.currency, price: live?.ltp, change_pct: live?.change_pct, volume: live?.volume }; })} filename={`${activeWl.name}_watchlist.csv`} />
             <TerminalButton size="sm" variant="accent" onClick={() => { setIsTickerSearchOpen(true); searchRef.current?.querySelector("input")?.focus(); }}>Add to Watchlist</TerminalButton>
           </div>
         </div>
       </section> : null}
+        {unresolved.length ? <p role="status" className="text-sm text-terminal-warn">Choose an explicit exchange or ticker suffix for: {unresolved.map(route => route.symbol).join(", ")}. Quotes are withheld for ambiguous or unsupported listings.</p> : null}
         {/* Touch refresh stays on the content container; the page owns scrolling. */}
         <div className="min-w-0">
           {pullY > PULL_THRESHOLD && (
@@ -275,10 +276,11 @@ export function WatchlistManager() {
               viewMode === "table" ? (
                 <div role="region" aria-label="Watchlist quotes" tabIndex={0} className="overflow-x-auto rounded border border-terminal-border">
                   {!activeWl.symbols.length ? <p className="p-3 text-sm text-terminal-muted">This watchlist has no symbols. Search above to add one.</p> : null}
-                  <table className="w-full min-w-[680px] text-left text-sm font-mono">
+                  <table className="w-full min-w-[760px] text-left text-sm font-mono">
                     <thead className="bg-terminal-panel text-terminal-muted border-b border-terminal-border">
                       <tr>
                         <th className="px-3 py-2">SYMBOL</th>
+                        <th className="px-3 py-2">Currency</th>
                         <th className="px-3 py-2 text-right">Last price</th>
                         <th className="px-3 py-2 text-right">Change %</th>
                         <th className="px-3 py-2 text-right">Volume</th>
@@ -287,7 +289,7 @@ export function WatchlistManager() {
                     </thead>
                     <tbody className="divide-y divide-terminal-border/30">
                       {activeWl.symbols.map(s => {
-                        const live = ticksByToken[`${selectedMarket}:${s}`];
+                        const live = tickFor(s);
                         const changePct = live?.change_pct;
                         return (
 
@@ -314,6 +316,7 @@ export function WatchlistManager() {
                             }}
                           >
                             <td className="px-3 py-2 font-bold text-terminal-accent">{s}</td>
+                            <td className="px-3 py-2 text-terminal-muted">{live?.currency || routes.get(s)?.currency || "Unknown"}</td>
                             <td className="px-3 py-2 text-right text-terminal-text">{live?.ltp?.toFixed(2) || '--'}</td>
                             <td className={`px-3 py-2 text-right ${changePct == null ? 'text-terminal-muted' : changePct >= 0 ? 'text-terminal-pos' : 'text-terminal-neg'}`}>
                               {Number.isFinite(changePct) ? `${changePct! >= 0 ? "+" : ""}${changePct!.toFixed(2)}%` : "--"}
@@ -384,7 +387,7 @@ export function WatchlistManager() {
           symbol={contextMenu.symbol}
           anchor={{ x: contextMenu.x, y: contextMenu.y }}
           onClose={closeContextMenu}
-          market={selectedMarket}
+          market={routes.get(contextMenu.symbol)?.market || "NASDAQ"}
           customActions={[
             {
               id: "watchlist-remove-symbol",

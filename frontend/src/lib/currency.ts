@@ -67,6 +67,7 @@ export function currencySymbol(currency: CurrencyCode): string {
 // universe seeder stored.
 const SUFFIX_CURRENCY: Record<string, CurrencyCode> = {
   DE: "EUR",
+  MU: "EUR",
   F: "EUR",
   PA: "EUR",
   AS: "EUR",
