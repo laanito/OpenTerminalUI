@@ -1,7 +1,6 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import * as d3 from "d3-hierarchy";
 import { useNavigate } from "react-router-dom";
-import { TerminalTooltip } from "../terminal/TerminalTooltip";
 
 type HeatmapData = {
   ticker: string;
@@ -16,11 +15,21 @@ type Props = {
   width: number;
   height: number;
   sizeBy: "marketCap" | "equal";
+  responsive?: boolean;
 };
 
-export function HeatmapView({ data, width, height, sizeBy }: Props) {
+export function HeatmapView({ data, width: requestedWidth, height, sizeBy, responsive = false }: Props) {
   const navigate = useNavigate();
-  const svgRef = useRef<SVGSVGElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [hostWidth, setHostWidth] = useState(1);
+  useEffect(() => {
+    if (!responsive || !hostRef.current) return;
+    const host = hostRef.current;
+    const measure = () => setHostWidth(Math.max(1, host.clientWidth));
+    measure(); const observer = new ResizeObserver(measure); observer.observe(host);
+    return () => observer.disconnect();
+  }, [responsive]);
+  const width = responsive ? hostWidth : requestedWidth;
 
   const getColor = (change: number) => {
     if (change <= -5) return "#991b1b"; // Deep red
@@ -40,52 +49,56 @@ export function HeatmapView({ data, width, height, sizeBy }: Props) {
       .padding(1)
       (root as any);
 
-    return root.leaves();
+    return root.leaves().filter(leaf => "ticker" in leaf.data);
   }, [data, width, height, sizeBy]);
 
   return (
-    <div className="relative overflow-hidden" style={{ width, height }}>
+    <div ref={hostRef} aria-label="Watchlist heatmap" className="relative overflow-hidden" style={{ width: responsive ? "100%" : width, height: data.length ? height : 0 }}>
       <svg width={width} height={height} className="block">
         {treemapData.map((d: any, i) => {
           const item = d.data as HeatmapData;
           const rectWidth = d.x1 - d.x0;
           const rectHeight = d.y1 - d.y0;
           const color = getColor(item.changePct);
+          const textColor = ["#ef4444", "#22c55e"].includes(color) ? "#0a0e14" : "white";
 
           return (
             <g
               key={item.ticker}
               transform={`translate(${d.x0},${d.y0})`}
               className="cursor-pointer group"
+              role="link" tabIndex={0} aria-label={`Open ${item.ticker} chart · ${item.changePct.toFixed(2)}%`}
+              onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); navigate(`/equity/stocks?ticker=${encodeURIComponent(item.ticker)}`); } }}
               onClick={() => navigate(`/equity/stocks?ticker=${encodeURIComponent(item.ticker)}`)}
             >
+              <title>{item.ticker}: {item.changePct.toFixed(2)}%</title>
               <rect
                 width={Math.max(0, rectWidth)}
                 height={Math.max(0, rectHeight)}
                 fill={color}
                 className="transition-opacity hover:opacity-80"
               />
-              {rectWidth > 30 && rectHeight > 20 && (
+              {rectWidth > Math.max(60, item.ticker.length * 8 + 12) && rectHeight > 35 && (
                 <text
                   x={rectWidth / 2}
                   y={rectHeight / 2}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fill="white"
-                  className="pointer-events-none select-none text-[10px] font-bold"
+                  fill={textColor}
+                  className="pointer-events-none select-none text-xs font-bold"
                 >
                   {item.ticker}
                 </text>
               )}
-              {rectWidth > 40 && rectHeight > 35 && (
+              {rectWidth > Math.max(60, item.ticker.length * 8 + 12) && rectHeight > 55 && (
                 <text
                   x={rectWidth / 2}
-                  y={rectHeight / 2 + 12}
+                  y={rectHeight / 2 + 16}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fill="white"
-                  fillOpacity={0.8}
-                  className="pointer-events-none select-none text-[8px]"
+                  fill={textColor}
+                  fillOpacity={1}
+                  className="pointer-events-none select-none text-xs"
                 >
                   {item.changePct >= 0 ? "+" : ""}{item.changePct.toFixed(2)}%
                 </text>

@@ -1,0 +1,6 @@
+.watchlist-workspace :is(section, label, header, form) { min-width: 0; }
+.watchlist-workspace :is(p, span, button, summary) { overflow-wrap: anywhere; }
+.watchlist-workspace :is(input, select, textarea) { min-width: 0; max-width: 100%; font-size: 14px; }
+.watchlist-workspace button { font-size: 12px; white-space: normal; }
+.watchlist-workspace th, .watchlist-workspace td { white-space: nowrap; }
+.watchlist-workspace td button { white-space: nowrap; }
