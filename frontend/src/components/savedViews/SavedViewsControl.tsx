@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { createSavedView, deleteSavedView, listSavedViews, updateSavedView, type SavedView, type SavedViewPayload } from "../../api/client";
 import { useStockStore } from "../../store/stockStore";
 import { WORKSPACE_PRESET_STORAGE_KEY, readWorkspacePreset } from "../../workspace/presets";
 import { TerminalButton } from "../terminal/TerminalButton";
+import { TerminalInput } from "../terminal/TerminalInput";
+import { TerminalModal } from "../terminal/TerminalModal";
 
 const CAPTURE_STORAGE_KEYS = [
   WORKSPACE_PRESET_STORAGE_KEY,
@@ -52,122 +54,158 @@ function pageScope(pathname: string): string {
   return "workspace";
 }
 
-export function SavedViewsControl({ pageLabel, capture }: { pageLabel: string; capture?: () => Partial<SavedViewPayload> }) {
+type Editor = ({ kind: "save"; payload: SavedViewPayload; scope: string; page: string } | { kind: "rename"; view: SavedView }) & { epoch: number };
+
+export function SavedViewsControl({ pageLabel, capture, library = false }: {
+  pageLabel: string; capture?: () => Partial<SavedViewPayload>; library?: boolean;
+}) {
   const location = useLocation();
   const navigate = useNavigate();
-  const ticker = useStockStore((s) => s.ticker);
-  const setTicker = useStockStore((s) => s.setTicker);
+  const ticker = useStockStore(state => state.ticker);
+  const setTicker = useStockStore(state => state.setTicker);
+  const scope = pageScope(location.pathname);
+  const listScope = library ? undefined : scope;
   const [views, setViews] = useState<SavedView[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [status, setStatus] = useState("");
-  const scope = useMemo(() => pageScope(location.pathname), [location.pathname]);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [name, setName] = useState("");
+  const [formError, setFormError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const requestId = useRef(0);
+  const mounted = useRef(false);
+  const epoch = useRef(0);
+  const formId = useId();
+  const libraryRef = useRef<HTMLDivElement>(null);
+  const returnToLibrary = useRef(false);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
+    const request = ++requestId.current;
+    setLoading(true); setLoadError("");
     try {
-      setViews(await listSavedViews({ scope }));
+      const rows = await listSavedViews(listScope ? { scope: listScope } : undefined);
+      if (request === requestId.current) setViews(rows);
     } catch {
-      setViews([]);
+      if (request === requestId.current) setLoadError("Could not refresh saved views. Any previous entries below have not been refreshed.");
+    } finally {
+      if (request === requestId.current) setLoading(false);
     }
-  }
+  }, [listScope]);
 
   useEffect(() => {
-    void refresh();
-  }, [scope]);
+    mounted.current = true; setBusy(false); setViews([]); setEditor(null); setActionError(""); setStatus(""); void refresh();
+    return () => { mounted.current = false; requestId.current++; epoch.current++; };
+  }, [refresh]);
 
-  async function saveView() {
-    const name = window.prompt("Saved view name", `${pageLabel} ${new Date().toLocaleString()}`);
-    if (!name?.trim()) return;
-    const extra = capture?.() ?? {};
-    const payload: SavedViewPayload = {
-      page: location.pathname,
-      search: location.search,
-      selectedTicker: ticker,
-      shellPreset: readWorkspacePreset(),
-      storage: readStorageSnapshot(),
-      ...extra,
-    };
+  useEffect(() => {
+    if (!editor && returnToLibrary.current) { returnToLibrary.current = false; libraryRef.current?.focus(); }
+  }, [editor]);
+
+  function beginSave() {
+    setStatus(""); setFormError("");
+    setName(`${pageLabel} ${new Date().toLocaleString()}`);
+    // Capture the opening page/scope, not a potentially different page at submit.
+    setEditor({ kind: "save", scope, page: location.pathname, epoch: epoch.current, payload: {
+      page: location.pathname, search: location.search, selectedTicker: ticker,
+      shellPreset: readWorkspacePreset(), storage: readStorageSnapshot(), ...(capture?.() ?? {}),
+    } });
+  }
+
+  async function saveName(event: React.FormEvent) {
+    event.preventDefault();
+    if (!editor || busy) return;
+    if (!name.trim()) { setFormError("Enter a name for this view."); return; }
+    setBusy(true); setFormError("");
+    let confirmed = false;
     try {
-      await createSavedView({ name: name.trim(), scope, page: location.pathname, payload });
-      setStatus("Saved");
-      await refresh();
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Save failed");
-    }
+      const saved = editor.kind === "save"
+        ? await createSavedView({ name: name.trim(), scope: editor.scope, page: editor.page, payload: editor.payload })
+        : await updateSavedView(editor.view.id, { name: name.trim() });
+      if (!mounted.current || editor.epoch !== epoch.current) return;
+      setViews(previous => [saved, ...previous.filter(view => view.id !== saved.id)]);
+      if (editor.kind === "rename") returnToLibrary.current = true;
+      setEditor(null); setStatus(editor.kind === "save" ? "View saved." : "View renamed.");
+      confirmed = true;
+    } catch {
+      if (mounted.current && editor.epoch === epoch.current) setFormError("Could not save this name. Your draft is still here; check the library before retrying manually.");
+    } finally { if (mounted.current && editor.epoch === epoch.current) setBusy(false); }
+    if (confirmed && mounted.current && editor.epoch === epoch.current) await refresh();
+  }
+
+  async function removeView(view: SavedView) {
+    if (busy || !window.confirm(`Delete ${view.name}?`)) return;
+    const operationEpoch = epoch.current;
+    setBusy(true); setActionError(""); setStatus("");
+    let confirmed = false;
+    try {
+      await deleteSavedView(view.id);
+      if (!mounted.current || operationEpoch !== epoch.current) return;
+      setViews(previous => previous.filter(item => item.id !== view.id));
+      setStatus("View deleted."); libraryRef.current?.focus();
+      confirmed = true;
+    } catch {
+      if (mounted.current && operationEpoch === epoch.current) setActionError("Could not confirm deletion. Check the library before retrying manually.");
+    } finally { if (mounted.current && operationEpoch === epoch.current) setBusy(false); }
+    if (confirmed && mounted.current && operationEpoch === epoch.current) await refresh();
   }
 
   function applyView(view: SavedView) {
     restoreStorageSnapshot(view.payload.storage);
-    if (view.payload.shellPreset) {
-      localStorage.setItem(WORKSPACE_PRESET_STORAGE_KEY, JSON.stringify(view.payload.shellPreset));
-    }
-    if (view.payload.selectedTicker) {
-      setTicker(String(view.payload.selectedTicker).toUpperCase());
-    }
-    try {
-      localStorage.setItem(PENDING_SAVED_VIEW_KEY, JSON.stringify(view.payload));
-    } catch {
-      // ignore
-    }
-    const target = `${view.payload.page || view.page}${view.payload.search || ""}`;
-    navigate(target);
+    if (view.payload.shellPreset) localStorage.setItem(WORKSPACE_PRESET_STORAGE_KEY, view.payload.shellPreset);
+    if (view.payload.selectedTicker) setTicker(String(view.payload.selectedTicker).toUpperCase());
+    try { localStorage.setItem(PENDING_SAVED_VIEW_KEY, JSON.stringify(view.payload)); } catch { /* Retain existing route restoration when storage is unavailable. */ }
+    navigate(`${view.payload.page || view.page}${view.payload.search || ""}`);
     window.dispatchEvent(new CustomEvent("ot:saved-view:apply", { detail: view.payload }));
     window.setTimeout(() => window.location.reload(), 50);
   }
 
-  return (
-    <div className="relative flex flex-wrap items-center gap-1">
-      <TerminalButton size="sm" variant="accent" onClick={() => void saveView()}>
-        Save view
-      </TerminalButton>
-      <TerminalButton size="sm" variant="default" onClick={() => setOpen((v) => !v)}>
-        Saved views
-      </TerminalButton>
-      {status ? <span className="text-[11px] text-terminal-muted">{status}</span> : null}
-      {open ? (
-        <div className="absolute right-0 top-[calc(100%+4px)] z-50 w-80 rounded-sm border border-terminal-border bg-terminal-panel p-2 shadow-xl">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="ot-type-panel-title text-terminal-accent">{pageLabel} Views</div>
-            <button className="text-[11px] text-terminal-muted hover:text-terminal-text" onClick={() => setOpen(false)}>Close</button>
-          </div>
-          <div className="max-h-72 space-y-1 overflow-auto">
-            {views.length === 0 ? <div className="text-xs text-terminal-muted">No saved views yet.</div> : null}
-            {views.map((view) => (
-              <div key={view.id} className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-terminal-text">{view.name}</div>
-                    <div className="text-[10px] text-terminal-muted">{new Date(view.updated_at).toLocaleString()}</div>
-                  </div>
-                  <div className="flex gap-1">
-                    <button className="text-[10px] text-terminal-accent" onClick={() => applyView(view)}>Apply</button>
-                    <button
-                      className="text-[10px] text-terminal-muted hover:text-terminal-text"
-                      onClick={async () => {
-                        const name = window.prompt("Rename saved view", view.name);
-                        if (!name?.trim()) return;
-                        await updateSavedView(view.id, { name: name.trim() });
-                        await refresh();
-                      }}
-                    >
-                      Rename
-                    </button>
-                    <button
-                      className="text-[10px] text-terminal-neg"
-                      onClick={async () => {
-                        if (!window.confirm(`Delete ${view.name}?`)) return;
-                        await deleteSavedView(view.id);
-                        await refresh();
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+  const entries = (
+    <div ref={libraryRef} tabIndex={-1} role="region" aria-label="Saved view library" className="min-w-0 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-terminal-muted">{library ? "All saved workflow scopes" : `${pageLabel} scope`} · {views.length} entries</p>
+        <TerminalButton size="sm" onClick={() => void refresh()} disabled={loading || busy}>Refresh views</TerminalButton>
+      </div>
+      {loading ? <p role="status" className="text-sm text-terminal-muted">Loading saved views…</p> : null}
+      {loadError ? <p role="alert" className="text-sm text-terminal-neg">{loadError}</p> : null}
+      {actionError ? <p role="alert" className="text-sm text-terminal-neg">{actionError}</p> : null}
+      {!loading && !loadError && !views.length ? <p className="text-sm text-terminal-muted">No saved views yet. Save a view from a workflow page to return to its setup.</p> : null}
+      <div className={library ? "grid items-start gap-3 xl:grid-cols-2" : "space-y-3"}>
+      {views.map(view => <article key={view.id} aria-label={view.name} className="min-w-0 space-y-3 rounded-sm border border-terminal-border bg-terminal-bg p-3 [overflow-wrap:anywhere]">
+        <div className="min-w-0 space-y-1">
+          <h2 className="text-sm font-semibold text-terminal-text">{view.name}</h2>
+          {view.description ? <p className="whitespace-pre-wrap text-sm text-terminal-muted">{view.description}</p> : null}
+          <p className="text-xs text-terminal-muted">Scope: {view.scope} · Page: {view.page}</p>
+          <p className="text-xs text-terminal-muted">Updated <time dateTime={view.updated_at}>{new Date(view.updated_at).toLocaleString()}</time></p>
         </div>
-      ) : null}
+        <div className="flex flex-wrap gap-2">
+          <TerminalButton size="sm" variant="accent" disabled={busy} onClick={() => applyView(view)}>Apply</TerminalButton>
+          <TerminalButton size="sm" disabled={busy} onClick={() => { setName(view.name); setFormError(""); setEditor({ kind: "rename", view, epoch: epoch.current }); }}>Rename</TerminalButton>
+          <TerminalButton size="sm" variant="danger" disabled={busy} onClick={() => void removeView(view)}>Delete</TerminalButton>
+        </div>
+      </article>)}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={library ? "min-w-0 space-y-3" : "relative flex min-w-0 flex-wrap items-center gap-2"}>
+      <div className="flex flex-wrap gap-2">
+        <TerminalButton size="sm" variant="accent" disabled={busy} onClick={beginSave}>Save view</TerminalButton>
+        {!library ? <TerminalButton size="sm" disabled={busy} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>Saved views</TerminalButton> : null}
+      </div>
+      {status ? <p role="status" className="text-xs text-terminal-muted">{status}</p> : null}
+      {library ? entries : <TerminalModal open={open} onClose={() => setOpen(false)} title={`${pageLabel} saved views`} subtitle="Restore an existing workspace setup." size="lg" busy={busy}>{entries}</TerminalModal>}
+      <TerminalModal open={Boolean(editor)} onClose={() => setEditor(null)} title={editor?.kind === "rename" ? "Rename saved view" : "Save view"} size="md" busy={busy}
+        subtitle={editor?.kind === "save" ? `Capturing ${editor.payload.page} · ${editor.scope}` : editor?.kind === "rename" ? `Renaming ${editor.view.name}` : undefined}
+        footer={<div className="flex flex-wrap justify-end gap-2"><TerminalButton size="sm" onClick={() => setEditor(null)} disabled={busy}>Cancel</TerminalButton><TerminalButton form={formId} type="submit" size="sm" variant="accent" loading={busy}>{editor?.kind === "rename" ? "Save name" : "Save view"}</TerminalButton></div>}>
+        <form id={formId} onSubmit={event => void saveName(event)} className="min-w-0 space-y-3">
+          {formError ? <p role="alert" className="text-sm text-terminal-neg">{formError}</p> : null}
+          <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">View name</span><TerminalInput required value={name} onChange={event => setName(event.target.value)} className="!text-sm" /></label>
+        </form>
+      </TerminalModal>
     </div>
   );
 }

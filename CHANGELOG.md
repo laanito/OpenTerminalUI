@@ -27,6 +27,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Saved Views library** — the hub lists all owned workflow scopes
+  directly, with wrapping names, destinations, dates and visible actions. Shared
+  controls use a bounded dialog; save/rename forms retain failed name drafts.
+  Failed reads stay distinct from empty libraries and preserve previous entries;
+  existing capture, restore and saved payload formats remain compatible.
 - **Readable Watchlist scope and research** — a labelled list selector and
   disclosed management replace the permanent sidebar. Full-width search and
   readable quote actions keep research notes outside the scrolling table;
