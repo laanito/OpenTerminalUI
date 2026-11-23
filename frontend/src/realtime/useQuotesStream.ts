@@ -4,6 +4,7 @@ import { create } from "zustand";
 export type QuotesConnectionState = "connecting" | "connected" | "disconnected";
 
 export type QuoteTick = {
+  currency?: string;
   token: string;
   market: string;
   symbol: string;
@@ -202,6 +203,7 @@ class QuotesWsManager {
         if (!Number.isFinite(ltp)) return;
         const tick: QuoteTick = {
           token: payload.symbol.toUpperCase(),
+          currency: typeof payload.currency === "string" ? payload.currency : undefined,
           market: parsed.market,
           symbol: parsed.symbol,
           ltp,
@@ -297,4 +299,20 @@ export function useQuotesStream(market: string, onTick?: (tick: QuoteTick) => vo
     connectionState,
     isConnected: connectionState === "connected",
   };
+}
+
+/** Subscribe exact per-instrument tokens without inheriting a global selector. */
+export function useQuoteTokens(tokens: string[]) {
+  const connectionState = useQuotesStore(state => state.connectionState);
+  const key = JSON.stringify([...new Set(tokens)].sort());
+  useEffect(() => {
+    const groups = new Map<string, string[]>();
+    for (const token of JSON.parse(key) as string[]) {
+      const parsed = parseToken(token);
+      if (parsed) groups.set(parsed.market, [...(groups.get(parsed.market) || []), parsed.symbol]);
+    }
+    for (const [market, symbols] of groups) manager.subscribe(market, symbols);
+    return () => { for (const [market, symbols] of groups) manager.unsubscribe(market, symbols); };
+  }, [key]);
+  return { connectionState, isConnected: connectionState === "connected" };
 }

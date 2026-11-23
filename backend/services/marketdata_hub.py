@@ -14,7 +14,7 @@ from backend.shared.market_classifier import foreign_symbol_currency
 from backend.api.deps import get_unified_fetcher
 from backend.core.ttl_policy import market_open_now
 from backend.services.candle_aggregator import CandleAggregator
-from backend.services.binance_ws import BinanceSpotWebSocket
+from backend.services.binance_ws import BinanceSpotWebSocket, to_binance_stream
 from backend.services.finnhub_ws import FinnhubWebSocket
 from backend.services.instrument_map import get_instrument_map_service
 from backend.services.kite_stream import KiteStreamAdapter
@@ -22,10 +22,11 @@ from backend.services.redis_quote_bus import get_quote_bus
 
 logger = logging.getLogger(__name__)
 
-SYMBOL_TOKEN_RE = re.compile(r"^(NSE|BSE|NFO|NYSE|NASDAQ|CRYPTO):([A-Z0-9][A-Z0-9._-]{0,40})$")
+SYMBOL_TOKEN_RE = re.compile(r"^(NSE|BSE|NFO|NYSE|NASDAQ|CRYPTO|EU):([A-Z0-9][A-Z0-9._-]{0,40})$")
 US_MARKETS = {"NYSE", "NASDAQ"}
 IN_MARKETS = {"NSE", "BSE", "NFO"}
 CRYPTO_MARKETS = {"CRYPTO"}
+EU_MARKETS = {"EU"}
 NFO_OPTION_RE = re.compile(r"^([A-Z]+)\d{2}[A-Z]{3}(\d+)(CE|PE)$")
 NFO_FUT_RE = re.compile(r"^([A-Z]+)\d{2}[A-Z]{3}FUT$")
 
@@ -119,7 +120,7 @@ class MarketDataHub:
             await self._bus.connect()
 
             # Auto-subscribe to all supported markets
-            for m in list(US_MARKETS) + list(IN_MARKETS) + list(CRYPTO_MARKETS):
+            for m in list(US_MARKETS) + list(IN_MARKETS) + list(CRYPTO_MARKETS) + list(EU_MARKETS):
                 await self._bus.subscribe_market(m)
 
             self._poll_task = asyncio.create_task(self._poll_loop(), name="marketdata-hub-poll")
@@ -471,7 +472,7 @@ class MarketDataHub:
                     if self._finnhub_ws.connected:
                         stream_symbols.update({t for t in tokens if t.split(":", 1)[0] in US_MARKETS})
                     if self._binance_ws.connected:
-                        stream_symbols.update({t for t in tokens if t.split(":", 1)[0] in CRYPTO_MARKETS})
+                        stream_symbols.update({t for t in tokens if t.split(":", 1)[0] in CRYPTO_MARKETS and to_binance_stream(t.split(":", 1)[1])})
                     poll_tokens = sorted(tokens - stream_symbols)
                     if poll_tokens:
                         ticks = await self._fetch_ticks(poll_tokens)
@@ -628,6 +629,7 @@ class MarketDataHub:
                     "oi": _to_float(row.get("oi")),
                     "volume": _to_float(row.get("volume")),
                     "ts": str(row.get("ts") or _now_iso()),
+                    **({"currency": row["currency"]} if row.get("currency") else {}),
                 }
         return out
 
@@ -638,7 +640,7 @@ class MarketDataHub:
             return []
 
         # Explicit exchange listings keep their Yahoo identity under any UI scope.
-        native_symbols = [symbol for symbol in symbol_list if foreign_symbol_currency(symbol)]
+        native_symbols = [symbol for symbol in symbol_list if market in EU_MARKETS or foreign_symbol_currency(symbol)]
         if native_symbols:
             native_quotes = []
             try:
@@ -649,7 +651,7 @@ class MarketDataHub:
                     if symbol not in native_symbols or last is None or not 0 < last < float("inf"):
                         continue
                     epoch = row.get("regularMarketTime")
-                    native_quotes.append({"symbol": symbol, "last": last,
+                    native_quotes.append({"symbol": symbol, "last": last, "currency": row.get("currency"),
                         "change": _to_float(row.get("regularMarketChange")) or 0.0,
                         "changePct": _to_float(row.get("regularMarketChangePercent")) or 0.0,
                         "volume": _to_float(row.get("regularMarketVolume")),

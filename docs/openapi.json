@@ -24478,6 +24478,53 @@
         "title": "WatchlistCreate",
         "type": "object"
       },
+      "WatchlistQuoteRoute": {
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market"
+          },
+          "quote_symbol": {
+            "title": "Quote Symbol",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "quote_symbol",
+          "market",
+          "currency",
+          "status"
+        ],
+        "title": "WatchlistQuoteRoute",
+        "type": "object"
+      },
       "WatchlistResponse": {
         "properties": {
           "column_config": {
@@ -24497,6 +24544,13 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "quote_routes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/WatchlistQuoteRoute"
+            },
+            "title": "Quote Routes",
+            "type": "object"
           },
           "symbols": {
             "items": {
@@ -44694,12 +44748,12 @@
         "operationId": "get_quotes_api_quotes_get",
         "parameters": [
           {
-            "description": "NSE|BSE|NYSE|NASDAQ|CRYPTO",
+            "description": "NSE|BSE|NYSE|NASDAQ|CRYPTO|EU",
             "in": "query",
             "name": "market",
             "required": true,
             "schema": {
-              "description": "NSE|BSE|NYSE|NASDAQ|CRYPTO",
+              "description": "NSE|BSE|NYSE|NASDAQ|CRYPTO|EU",
               "title": "Market",
               "type": "string"
             }

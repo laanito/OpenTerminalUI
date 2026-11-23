@@ -62,6 +62,7 @@ def test_watchlists_are_read_and_mutated_only_by_their_owner() -> None:
     response = client.get("/api/watchlists")
     assert response.status_code == 200
     assert [row["id"] for row in response.json()] == ["wl-one"]
+    assert response.json()[0]["quote_routes"]["AAPL"] == {"symbol": "AAPL", "quote_symbol": "AAPL", "market": "NASDAQ", "currency": "USD", "status": "resolved"}
 
     assert client.put("/api/watchlists/wl-two", json={"name": "stolen"}).status_code == 404
     assert client.delete("/api/watchlists/wl-two").status_code == 404

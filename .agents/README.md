@@ -1,5 +1,27 @@
 # External-agent project context
 
+Maintainer confirmed #307 fixed the listed-symbol issue. A second Watchlist
+report exposed market-wide subscriptions/lookups and a backend socket grammar
+that rejected EU entirely. Current follow-up adds read-only `quote_routes` to
+owned watchlist responses, derived in one catalogue query plus explicit suffix/
+prefix/crypto inference. Mixed tokens share the existing socket and refcounts;
+EU tokens use native Yahoo polling. Table/heatmap/export/menu context share the
+resolved identity. Currency is per row (provider units first); no FX conversion.
+`.MU` now has an EUR fallback. Ambiguous catalogue matches are withheld; unknown
+bare symbols retain the existing US default. No schema or stored-data rewrite.
+Global selection continues to scope search, not every symbol's quote market.
+Views/Alerts/Settings/Launchpad review remains next after this hotfix is accepted.
+
+Mixed-quote validation: 862 frontend tests / 143 files, production build and all
+119 Chrome smoke cases pass. Final affected checks cover mixed US/three EUR/
+India/crypto lists across selector changes, EUR crypto pairs, provider pence
+units, table/heatmap/export parity and ambiguous-route withholding: seven browser
+cases and three focused frontend tests. All 36 focused backend tests pass, covering owner
+boundaries, read-only catalogue resolution, accepted EU subscriptions/polling,
+native units and keeping BTC-EUR polled when the USD crypto stream is connected.
+Generated OpenAPI was updated; API-reference/mock/surface/whitespace guards pass.
+These are synthetic/local checks; no production database or live providers used.
+
 Maintainer confirmed #306 merged. An unrelated `MWRE.DE` report interrupts the
 next layout slice: normalized charts used raw unauthenticated fetch, then legacy
 fallback trusted a stale CRYPTO hint and manufactured `MWRE.DE-USD`. Current fix

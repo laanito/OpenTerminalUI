@@ -64,3 +64,14 @@ provider/model, deployment or production database is accessed.
 Views, Alerts, Settings, Launchpad and broader retained-tool checks still need
 explicit review. The later legacy functionality audit remains separate. This
 slice does not authorize v3 release preparation.
+
+## Mixed-market quote follow-up
+
+After #307 was merged and verified, maintainer testing found that Watchlist still
+subscribed/looked up every symbol using the search market, and the quote socket
+rejected the EU token prefix. The follow-up resolves per-symbol identities from
+catalogue metadata and explicit suffixes/pairs, adds EU subscriptions/polling and
+uses those exact tokens for table, heatmap and export. Native quote currency is
+visible per row, with provider units preferred and ambiguous listings withheld.
+Changing search market no longer retargets the active list's quotes. This is a
+reported functionality repair, with no schema migration or stored-list rewrite.

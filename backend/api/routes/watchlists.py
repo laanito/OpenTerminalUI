@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from backend.api.deps import get_db
 from backend.auth.deps import get_current_user
 from backend.db.models import WatchlistORM
+from backend.services.watchlist_quotes import resolve_watchlist_quotes
 
 router = APIRouter(prefix="/api/watchlists", tags=["watchlists"])
 
@@ -41,9 +42,18 @@ class WatchlistUpdate(BaseModel):
     column_config: Optional[dict] = None
 
 
+class WatchlistQuoteRoute(BaseModel):
+    symbol: str
+    quote_symbol: str
+    market: str | None
+    currency: str | None
+    status: str
+
+
 class WatchlistResponse(WatchlistBase):
     id: str
     symbols: List[str]
+    quote_routes: dict[str, WatchlistQuoteRoute] = Field(default_factory=dict)
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -69,12 +79,14 @@ def list_watchlists(db: Session = Depends(get_db), current_user=Depends(get_curr
         db.refresh(default_wl)
         items = [default_wl]
 
+    routes = resolve_watchlist_quotes(db, (symbol for item in items for symbol in item.symbols_json))
     results = []
     for item in items:
         results.append({
             "id": item.id,
             "name": item.name,
             "symbols": item.symbols_json,
+            "quote_routes": {symbol.strip().upper(): routes[symbol.strip().upper()] for symbol in item.symbols_json if symbol.strip().upper() in routes},
             "column_config": item.column_config_json,
             "created_at": item.created_at
         })
@@ -99,6 +111,7 @@ def create_watchlist(payload: WatchlistCreate, db: Session = Depends(get_db), cu
         "id": new_wl.id,
         "name": new_wl.name,
         "symbols": new_wl.symbols_json,
+        "quote_routes": resolve_watchlist_quotes(db, new_wl.symbols_json),
         "column_config": new_wl.column_config_json,
         "created_at": new_wl.created_at
     }
@@ -126,6 +139,7 @@ def update_watchlist(
         "id": wl.id,
         "name": wl.name,
         "symbols": wl.symbols_json,
+        "quote_routes": resolve_watchlist_quotes(db, wl.symbols_json),
         "column_config": wl.column_config_json,
         "created_at": wl.created_at
     }
@@ -165,6 +179,7 @@ def add_symbols(
         "id": wl.id,
         "name": wl.name,
         "symbols": wl.symbols_json,
+        "quote_routes": resolve_watchlist_quotes(db, wl.symbols_json),
         "column_config": wl.column_config_json,
         "created_at": wl.created_at
     }
@@ -189,6 +204,7 @@ def remove_symbol(
         "id": wl.id,
         "name": wl.name,
         "symbols": wl.symbols_json,
+        "quote_routes": resolve_watchlist_quotes(db, wl.symbols_json),
         "column_config": wl.column_config_json,
         "created_at": wl.created_at
     }

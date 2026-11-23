@@ -24,6 +24,26 @@ listed symbols instead of appending `-USD`; genuine `BTC-EUR` keeps EUR.
 This fixes read-path routing/metadata. It does not migrate or rewrite stored
 holdings, transactions or instrument rows, and does not guarantee upstream data.
 
+Watchlists resolve quote identity independently of the global search selector.
+Their authenticated responses include additive `quote_routes` metadata keyed by
+stored symbol: `symbol`, `quote_symbol`, `market`, `currency` and `status`.
+Resolution reads the local instrument catalogue in a batch, honors explicit
+suffixes/prefixes and crypto quote pairs, and retains the existing US default for
+unknown bare tickers. Conflicting catalogue listings are marked `ambiguous` and
+receive no subscription; qualify the symbol rather than applying a global market
+to every row. This metadata is derived on reads; stored lists are not rewritten.
+
+The quote socket and REST quote route accept `EU`; those subscriptions use native
+Yahoo listings such as `MWRE.DE` or `MIGA.MU` and their existing polling path.
+The Watchlist subscribes to each resolved market on the shared socket, so US,
+European, India and crypto symbols can coexist. Table, heatmap and export read
+the same tokens. Provider-reported units take precedence over catalogue/suffix
+fallbacks (for example `GBp` remains pence); prices are not converted into the
+global display currency. Search still uses the selected market for suggestions.
+Crypto pairs unsupported by the connected Binance USD stream (such as `BTC-EUR`)
+remain on the existing polling path instead of being treated as streamed merely
+because the socket is connected.
+
 ## Markets and search
 
 | Provider/source | Retained role | Configuration |
