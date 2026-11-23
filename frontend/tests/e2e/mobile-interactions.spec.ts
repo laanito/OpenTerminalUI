@@ -69,7 +69,7 @@ test.describe("mobile interactions", () => {
   test("watchlist pull-to-refresh hint appears", async ({ page }) => {
     await loginAndOpen(page, "/equity/watchlist");
 
-    const rootSel = "div.space-y-3.p-4";
+    const rootSel = '[data-testid="watchlist-content"]';
     await expect(page.locator(rootSel).first()).toBeVisible();
     await page.waitForTimeout(120);
     await dispatchTouch(page, rootSel, "touchstart", 120, 50);

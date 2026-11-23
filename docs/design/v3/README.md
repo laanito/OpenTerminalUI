@@ -20,8 +20,10 @@ review](WORKSTATION_REVIEW.md) keeps real plots visible and pane controls readab
 with disclosed workspace/chart tools and visual reflow that preserves saved layouts.
 The [Screener review](SCREENER_REVIEW.md) gives results full width, discloses the
 preset library and independent scan, labels query/formula fields and makes
-company inspection available at every breakpoint. Broader retained-page and
-maintainer/host acceptance remain open.
+company inspection available at every breakpoint; the maintainer accepted #305.
+The subsequent [Watchlist review](WATCHLIST_REVIEW.md) addresses another retained-
+page layout gap. Views, Alerts, Settings, Launchpad and broader retained-tool/
+maintainer acceptance remain open.
 See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 

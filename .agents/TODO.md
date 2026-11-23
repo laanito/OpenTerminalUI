@@ -2195,7 +2195,16 @@ ordered v1.7 milestone above.
             query/formula controls and narrow source/view selectors. Company
             inspection works at all widths with explicit focus/return; failed
             refreshes distinguish retained results and empty runs clear selection.
-            See `docs/design/v3/SCREENER_REVIEW.md`; host acceptance remains open.
+            See `docs/design/v3/SCREENER_REVIEW.md`; #305 merged and tested by
+            the maintainer.
+      - [x] Watchlist retained-page follow-up: readable scope/search and disclosed
+            management, full-width notes with focus return, local quote scrolling
+            and responsive accessible heatmap with explicit missing-quote coverage.
+            Preserve search/row routes, subscriptions and list ownership contracts.
+            See `docs/design/v3/WATCHLIST_REVIEW.md`; host acceptance remains open.
+      - [ ] Review remaining Views, Alerts, Settings and Launchpad layouts with
+            populated/long content, narrow screens and keyboard/zoom; inventory
+            any other retained-tool readability issues before release acceptance.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB

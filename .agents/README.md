@@ -1,11 +1,30 @@
 # External-agent project context
 
+Maintainer confirmed #305 merged and tested. Screener layout is accepted.
+Broader retained-page review found another concrete v3 gap: Watchlist still had
+a permanent sidebar, squeezed toolbar and fixed-width heatmap. Current follow-up
+puts list scope first, discloses management, gives search its own row and keeps
+quotes in a named local scroller. Notes use full-width reading with focus/return;
+heatmap resizes and has readable accessible tile labels. Missing quotes remain
+unavailable/omitted with coverage rather than receiving a false zero change.
+Search/create failures retain drafts for manual retry; list selection clears a
+prior name deep link, and a confirmed create is cached before selecting it.
+See `docs/design/v3/WATCHLIST_REVIEW.md`. Views, Alerts, Settings, Launchpad and
+broader retained-tool checks remain to be reviewed explicitly. No release prep;
+the separate later legacy functionality audit and Journal import UI stay deferred.
+
+Watchlist validation: 858 frontend tests / 142 files, build and all 116 installed-
+Chrome smoke cases pass; all five Watchlist cases pass again after final affected
+changes. Synthetic desktop/mobile/notes/heatmap and measured native-200%-zoom
+evidence is in the review. API-reference/mock/surface/whitespace guards pass.
+No backend/API/schema/dependency or production access/deployment changes.
+
 Maintainer confirmed #304 merged and frontend-validated. Journal defaults new
 trades to cash divided by entry price, with separate currency-labelled fees;
 existing entries open in asset units. Fractional quantities now survive API,
 storage and CSV paths via migration 0023. CSV import remains API-only. A frontend
 import workflow is explicitly deferred to a later functionality release, outside
-v3.0; see TODO/Roadmap. The Screener follow-up below awaits maintainer acceptance.
+v3.0; see TODO/Roadmap. Screener #305 is now maintainer-accepted as noted above.
 
 Current **v3 Screener results and query readability** slice gives results the full
 width instead of reserving empty preset/company rails. Preset search and the
@@ -42,7 +61,8 @@ from the layout acceptance or deterministic browser fixtures. A broader feature
 functionality audit and repair work is deferred to a later, unassigned version;
 start with Workstation, inventory the other affected workflows before scoping
 repairs, and distinguish provider/configuration gaps from defects or unwired UI.
-This does not expand the v3 frontend-overhaul gate. Screener remains next.
+This does not expand the v3 frontend-overhaul gate. Screener #305 is now accepted;
+continue the broader retained-page review described above.
 
 Completed layout work **v3 Workstation chart visibility and readable controls** (#302, 2026-11-22),
 after maintainer-confirmed merged and tested #301. Workspace setup is disclosed;

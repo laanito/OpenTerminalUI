@@ -1,5 +1,8 @@
 # Screener results and query readability review
 
+Maintainer confirmed #305 merged and tested on 2026-11-23. This slice is accepted;
+broader retained-page review continues separately.
+
 This follows the accepted Workstation layout (#302) and maintainer-validated
 Journal save follow-up (#304). The v3 standard remains useful space and readable
 labels; the later functionality audit is a separate workstream.

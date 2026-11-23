@@ -15,6 +15,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Watchlist scope and research** — a labelled list selector and
+  disclosed management replace the permanent sidebar. Full-width search and
+  readable quote actions keep research notes outside the scrolling table;
+  heatmaps resize with the page and expose keyboard-accessible symbols. Missing
+  quotes stay unavailable with explicit heatmap coverage. Failed writes retain
+  drafts for manual retry, and newly created/deep-linked list selection stays coherent.
 - **Readable full-width Screener results** — presets and the independent market
   scan are disclosed; selected-company inspection works at every width without
   reserving empty side columns. Query/formula/scan fields have visible labels,
