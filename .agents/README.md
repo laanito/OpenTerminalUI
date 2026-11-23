@@ -1,5 +1,32 @@
 # External-agent project context
 
+Maintainer confirmed #304 merged and frontend-validated. Journal defaults new
+trades to cash divided by entry price, with separate currency-labelled fees;
+existing entries open in asset units. Fractional quantities now survive API,
+storage and CSV paths via migration 0023. CSV import remains API-only. A frontend
+import workflow is explicitly deferred to a later functionality release, outside
+v3.0; see TODO/Roadmap. The Screener follow-up below awaits maintainer acceptance.
+
+Current **v3 Screener results and query readability** slice gives results the full
+width instead of reserving empty preset/company rails. Preset search and the
+independent multi-market scan use disclosures; current query/Run stay visible,
+and AI follows results/detail. Narrow source/view selectors reduce control
+stacking. Company inspection works at every breakpoint with an explicit focus
+link and Close returning to results. Labels, company/sector names, explanations
+and score names wrap; query/formula/arithmetic/scan/save controls remain usable.
+The unrelated single-ticker loader is hidden. An empty run clears old selection;
+failed runs explicitly identify retained previous results as unrefreshed.
+See `docs/design/v3/SCREENER_REVIEW.md`. Screening rules, scoring, routes, saved
+formats, provider/model behavior, APIs and schemas are unchanged. Broader retained-
+page and maintainer/host acceptance remain open; no v3 release preparation yet.
+
+Screener validation: 858 frontend tests / 142 files, build and all 111 installed-
+Chrome smoke cases pass. Final affected checks pass after enforcing minimum table
+width and intact headings: five Screener browser cases plus three route/saved-
+screen tests. Synthetic 1440/1024/390px and measured native-200%-zoom evidence is
+in the review. API-reference/mock/surface/whitespace guards pass. No backend,
+database, dependency or production access/deployment changes.
+
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
 layout as the reference. Keep the primary task visible, related context together

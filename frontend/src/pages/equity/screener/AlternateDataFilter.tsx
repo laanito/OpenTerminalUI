@@ -11,14 +11,14 @@ export function AlternateDataFilter() {
 
   return (
     <TerminalPanel title="Alternate Data" subtitle="Tijori-style filters">
-      <div className="grid grid-cols-2 gap-1">
-        <TerminalInput as="select" value={sector} onChange={(event) => setSector(event.target.value)}>
+      <div className="grid items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+        <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Sector</span><TerminalInput as="select" value={sector} onChange={(event) => setSector(event.target.value)}>
           <option>Chemicals</option>
           <option>Electronics</option>
           <option>Textiles</option>
           <option>Pharma API</option>
           <option>Auto Components</option>
-        </TerminalInput>
+        </TerminalInput></label>
         <TerminalButton onClick={() => setQuery(`${query}${query ? " AND " : ""}Sector = '${sector}'`)}>Add Sector</TerminalButton>
       </div>
     </TerminalPanel>

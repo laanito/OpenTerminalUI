@@ -1,9 +1,7 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useRef } from "react";
 
-import { TerminalBadge } from "../../components/terminal/TerminalBadge";
-import { TerminalButton } from "../../components/terminal/TerminalButton";
 import { TerminalInput } from "../../components/terminal/TerminalInput";
-import { TerminalPanel } from "../../components/terminal/TerminalPanel";
+import { TerminalButton } from "../../components/terminal/TerminalButton";
 import { AiInsightCard } from "../../components/terminal/AiInsightCard";
 import { SavedViewsControl } from "../../components/savedViews/SavedViewsControl";
 
@@ -26,173 +24,76 @@ import { StatusBar } from "./screener/StatusBar";
 import { ViewToggle } from "./screener/ViewToggle";
 import { MultiMarketScanPanel } from "./screener/MultiMarketScanPanel";
 import { lazyWithRetry } from "../../utils/lazyWithRetry";
+import "./screener/screener.css";
 
 const ScreenVizLoader = lazyWithRetry(() =>
   import("./screener/viz/ScreenVizLoader").then((module) => ({ default: module.ScreenVizLoader })),
 );
 
 function ScreenerWorkspace() {
-  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
-  const {
-    error,
-    loading,
-    tab,
-    setTab,
-    result,
-    view,
-    query,
-    universe,
-    selectedPresetId,
-    presets,
-    setSelectedPresetId,
-    run,
-    selectedRow,
-  } = useScreenerContext();
-
-  useEffect(() => {
-    if (!selectedRow) {
-      setMobileDetailOpen(false);
-    }
-  }, [selectedRow]);
+  const resultsRef = useRef<HTMLElement>(null);
+  const { error, loading, tab, setTab, result, view, query, universe,
+    selectedPresetId, selectedRow, setSelectedRow } = useScreenerContext();
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 p-3 md:p-4 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-      <div className="hidden xl:block">
-        <ScreenLibrarySidebar />
-      </div>
-
-      <main className="min-w-0 space-y-3">
-        <TerminalPanel title="Quick Preset" subtitle="Mobile Selector" className="xl:hidden">
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <TerminalInput
-              as="select"
-              value={selectedPresetId || ""}
-              onChange={(event) => setSelectedPresetId(event.target.value || null)}
-            >
-              {presets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name}
-                </option>
-              ))}
-            </TerminalInput>
-            <TerminalButton
-              variant="accent"
-              onClick={() => {
-                if (!selectedPresetId) return;
-                void run({ preset_id: selectedPresetId });
-              }}
-            >
-              Run
-            </TerminalButton>
-          </div>
-        </TerminalPanel>
-
-        <TerminalPanel
-          title="Workspace"
-          subtitle="Screener"
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <TerminalBadge variant="live">revamped</TerminalBadge>
-              <SavedViewsControl
-                pageLabel="Screener"
-                capture={() => ({
-                  filters: { query, universe, selectedPresetId },
-                  activeTabs: { tab, view },
-                  tableColumns: "results-default",
-                  selectedTicker: typeof selectedRow?.ticker === "string" ? selectedRow.ticker : undefined,
-                })}
-              />
-            </div>
-          }
-        >
-          <div className="flex flex-wrap gap-1 text-xs">
-            {[
-              ["library", "Screens Library"],
-              ["custom", "Custom Query"],
-              ["formula", "Custom Formula"],
-              ["saved", "Saved Screens"],
-              ["public", "Public Screens"],
-            ].map(([id, label]) => (
-              <TerminalButton key={id} variant={tab === id ? "accent" : "default"} onClick={() => setTab(id as typeof tab)}>
-                {label}
-              </TerminalButton>
-            ))}
-          </div>
-        </TerminalPanel>
-
-        <QueryBar />
-        <MultiMarketScanPanel />
-        <FilterChips />
-        <ViewToggle />
-
-        {error ? <div className="rounded-sm border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">{error}</div> : null}
-        {loading ? <div className="rounded-sm border border-terminal-border p-2 text-xs text-terminal-muted">Running screener...</div> : null}
-
-        {tab === "custom" ? (
-          <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-            <QueryBuilder />
-            <div className="space-y-3">
-              <AlternateDataFilter />
-              <AdvancedArithmetic />
-              <SaveScreenDialog />
-            </div>
-          </section>
-        ) : null}
-
-        {tab === "formula" ? <CustomFormulaScreener /> : null}
-
-        {tab === "saved" ? <SavedScreens /> : null}
-        {tab === "public" ? <PublicScreens /> : null}
-
-        {tab !== "saved" && tab !== "public" && result && result.results.length > 0 && (
-          <div className="mb-3">
-            <AiInsightCard
-              title="AI Screener Analysis"
-              description={`Gemma-powered assessment of the top ${Math.min(result.results.length, 10)} results in this screen`}
-              fetcher={(_, options) => fetchCollectionBriefing(result.results.slice(0, 10).map((i: any) => String(i.ticker || i.symbol || "")), "screen results", undefined, options)}
-            />
-          </div>
-        )}
-
-        {view === "table" || view === "split" ? <ResultsTable /> : null}
-        {view !== "table" ? (
-          <Suspense fallback={<div className="p-3 text-xs text-terminal-muted">Loading screen visualizations...</div>}>
-            <ScreenVizLoader screenId={selectedPresetId} vizData={(result?.viz_data || {}) as Record<string, unknown>} />
-          </Suspense>
-        ) : null}
-        {selectedRow && mobileDetailOpen ? (
-          <div className="xl:hidden">
-            <CompanyDetailDrawer />
-          </div>
-        ) : null}
-
-        <StatusBar />
-      </main>
-
-      <div className="hidden xl:block">
-        <CompanyDetailDrawer />
-      </div>
-
-      {selectedRow ? (
-        <div className="fixed bottom-16 left-0 right-0 z-20 border-t border-terminal-border bg-terminal-panel/95 px-3 py-2 backdrop-blur md:hidden">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 text-xs text-terminal-muted">
-              Selected:{" "}
-              <span className="truncate text-terminal-text">
-                {String(selectedRow.company || selectedRow.ticker || "Company")}
-              </span>
-            </div>
-            <TerminalButton
-              variant={mobileDetailOpen ? "default" : "accent"}
-              className="min-h-9 px-3 py-1 text-[10px]"
-              onClick={() => setMobileDetailOpen((open) => !open)}
-            >
-              {mobileDetailOpen ? "Hide Details" : "Open Details"}
-            </TerminalButton>
-          </div>
+    <main aria-label="Screener research" className="screener-workspace min-w-0 space-y-3 p-3 md:p-4">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold">Screener</h1>
+          <p className="text-sm text-terminal-muted">Choose a screen, run a query and inspect its results.</p>
         </div>
+        <SavedViewsControl pageLabel="Screener" capture={() => ({
+          filters: { query, universe, selectedPresetId }, activeTabs: { tab, view },
+          tableColumns: "results-default", selectedTicker: typeof selectedRow?.ticker === "string" ? selectedRow.ticker : undefined,
+        })} />
+      </header>
+      <label className="flex items-center gap-3 sm:hidden"><span className="shrink-0 text-xs text-terminal-muted">Screen source</span><TerminalInput as="select" value={tab} onChange={event => setTab(event.target.value as typeof tab)}>{[["library", "Screens Library"], ["custom", "Custom Query"], ["formula", "Custom Formula"], ["saved", "Saved Screens"], ["public", "Public Screens"]].map(([id, label]) => <option key={id} value={id}>{label}</option>)}</TerminalInput></label>
+      <nav aria-label="Screen sources" className="hidden flex-wrap gap-2 sm:flex">
+        {[["library", "Screens Library"], ["custom", "Custom Query"], ["formula", "Custom Formula"],
+          ["saved", "Saved Screens"], ["public", "Public Screens"]].map(([id, label]) => (
+          <TerminalButton key={id} aria-pressed={tab === id} variant={tab === id ? "accent" : "default"} onClick={() => setTab(id as typeof tab)}>{label}</TerminalButton>
+        ))}
+      </nav>
+      <details className="screener-disclosure">
+        <summary>Preset library · browse and run a screen</summary>
+        <ScreenLibrarySidebar />
+      </details>
+      <QueryBar />
+      {error ? <p role="alert" className="rounded-sm border border-terminal-neg p-3 text-sm text-terminal-neg">{error}{result ? " Previous results remain below; they were not refreshed." : ""}</p> : null}
+      {loading ? <p role="status" className="text-sm text-terminal-muted">Running screener...</p> : null}
+      {tab === "custom" ? (
+        <section aria-label="Query construction" className="space-y-3">
+          <QueryBuilder />
+          <details className="screener-disclosure"><summary>Additional filters and arithmetic</summary>
+            <div className="grid gap-3 xl:grid-cols-2"><AlternateDataFilter /><AdvancedArithmetic /></div>
+          </details>
+          <SaveScreenDialog />
+        </section>
       ) : null}
-    </div>
+      {tab === "formula" ? <CustomFormulaScreener /> : null}
+      {tab === "saved" ? <SavedScreens /> : null}
+      {tab === "public" ? <PublicScreens /> : null}
+      <section ref={resultsRef} tabIndex={-1} aria-label="Screen results" className="min-w-0 space-y-3 scroll-mt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <ViewToggle />
+          {selectedRow ? <a href="#screener-company-detail" className="text-sm text-terminal-accent underline" onClick={() => document.getElementById("screener-company-detail")?.focus()}>Inspect selected company</a> : null}
+        </div>
+        {view === "table" || view === "split" ? <ResultsTable /> : null}
+        {view !== "table" ? <Suspense fallback={<p role="status" className="p-3 text-sm text-terminal-muted">Loading screen visualizations...</p>}>
+          <ScreenVizLoader screenId={selectedPresetId} vizData={(result?.viz_data || {}) as Record<string, unknown>} />
+        </Suspense> : null}
+        <StatusBar />
+      </section>
+      <details className="screener-disclosure"><summary>Active query filters</summary><FilterChips /></details>
+      {selectedRow ? <section id="screener-company-detail" tabIndex={-1} aria-label="Selected company" className="min-w-0 scroll-mt-4">
+        <CompanyDetailDrawer onClose={() => { setSelectedRow(null); resultsRef.current?.focus(); }} />
+      </section> : null}
+      {tab !== "saved" && tab !== "public" && result && result.results.length > 0 ? (
+        <AiInsightCard title="AI Screener Analysis" description={`On-demand assessment of the top ${Math.min(result.results.length, 10)} results in this screen`}
+          fetcher={(_, options) => fetchCollectionBriefing(result.results.slice(0, 10).map((i: any) => String(i.ticker || i.symbol || "")), "screen results", undefined, options)} />
+      ) : null}
+      <details className="screener-disclosure"><summary>Multi-market scan · separate filters and results</summary><MultiMarketScanPanel /></details>
+    </main>
   );
 }
 

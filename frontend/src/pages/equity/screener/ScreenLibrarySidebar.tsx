@@ -32,8 +32,10 @@ export function ScreenLibrarySidebar() {
   };
 
   return (
-    <TerminalPanel title="Screener Library" subtitle="Preset Screens" className="h-full" bodyClassName="space-y-3 overflow-auto">
+    <TerminalPanel title="Screener Library" subtitle="Preset Screens" bodyClassName="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="min-w-0 md:col-span-2 xl:col-span-3"><div className="mb-1 block text-xs text-terminal-muted">Search presets</div>
       <TerminalCombobox
+        aria-label="Search presets"
         value={query}
         onChange={(value) => {
           setQuery(value);
@@ -72,17 +74,17 @@ export function ScreenLibrarySidebar() {
         renderItem={(preset, meta) => (
           <div className={`rounded-sm px-2 py-1 ${meta.selected ? "bg-terminal-accent/15 text-terminal-accent" : "hover:bg-terminal-bg"}`}>
             <div className="text-xs">{preset.name}</div>
-            <div className="text-[10px] text-terminal-muted">{preset.category}</div>
+            <div className="text-xs text-terminal-muted">{preset.category}</div>
           </div>
         )}
-      />
+      /></div>
       {CATEGORY_ORDER.map((category) => {
         const items = presets.filter((preset) => preset.category === category);
         if (!items.length) return null;
         return (
-          <section key={category} className="space-y-1">
-            <div className="text-[10px] uppercase tracking-wide text-terminal-muted">{category}</div>
-            <div className="space-y-1">
+          <section key={category} className="min-w-0 space-y-1">
+            <div className="text-xs uppercase tracking-wide text-terminal-muted">{category}</div>
+            <div className="min-w-0 space-y-1">
               {items.map((preset) => (
                 <TerminalButton
                   key={preset.id}

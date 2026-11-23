@@ -15,6 +15,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable full-width Screener results** — presets and the independent market
+  scan are disclosed; selected-company inspection works at every width without
+  reserving empty side columns. Query/formula/scan fields have visible labels,
+  names and explanations wrap, and narrow source/view selectors keep results
+  closer to the primary query. Empty results clear the old company selection;
+  failed refreshes explicitly identify retained results as unrefreshed.
 - **Readable chart-first Workstation** — larger workspace setup and chart controls
   are disclosed, leaving useful plots visible. Narrow panes stack without changing
   saved desktop layouts; company names, controls and grouped candle/quote values

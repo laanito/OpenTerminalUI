@@ -141,9 +141,7 @@ export function ScreenerProvider({ children }: { children: React.ReactNode }) {
           include_scores: ["value", "momentum", "quality", "low_vol", "composite"],
         });
         setResult(data);
-        if (data.results.length > 0) {
-          setSelectedRow(data.results[0]);
-        }
+        setSelectedRow(data.results[0] ?? null);
       } catch (err) {
         if (typeof err === "object" && err !== null && "response" in err) {
           const response = (err as { response?: { data?: { detail?: unknown } } }).response;

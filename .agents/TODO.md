@@ -2176,8 +2176,9 @@ ordered v1.7 milestone above.
       - [x] Journal save follow-up: cash amount divided by entry price by default,
             separate labelled cash fees, optional asset-unit input, fractional
             API/model/CSV quantities and actionable 422 errors retaining drafts.
-            Migration 0023 widens quantity; downgrade retains fractions. Verify
-            on host after upgrade; no production database changed during development.
+            Migration 0023 widens quantity; downgrade retains fractions. #304
+            merged and frontend-validated by the maintainer; no production
+            database changed during development.
       - [x] Populated News hierarchy/readability review: headlines first, readable
             sources/prose/dates and distinct original/AI/context/private scopes;
             preserved on-demand scoring and explicit failure/empty states.
@@ -2189,7 +2190,12 @@ ordered v1.7 milestone above.
             #302 merged; maintainer accepts the layout. Live functionality is
             not signed off; broader legacy functional audit is deferred below.
             See `docs/design/v3/WORKSTATION_REVIEW.md`.
-      - [ ] Populated Screener hierarchy/readability/results review.
+      - [x] Populated Screener hierarchy/readability/results review: full-width
+            results, disclosed preset library/separate scan, readable labelled
+            query/formula controls and narrow source/view selectors. Company
+            inspection works at all widths with explicit focus/return; failed
+            refreshes distinguish retained results and empty runs clear selection.
+            See `docs/design/v3/SCREENER_REVIEW.md`; host acceptance remains open.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
@@ -2258,6 +2264,14 @@ ordered v1.7 milestone above.
 
 ## UX and domain follow-ups
 
+- [ ] **Journal CSV import UI (later functionality release, outside v3.0).**
+      Maintainer requested frontend access to the existing authenticated
+      `POST /api/journal/import-csv` after #304 was merged and frontend-validated.
+      Add a discoverable import action with a documented template, explicit
+      asset-unit quantity/cash-fee semantics, validation feedback and safe retry
+      behavior. Audit the current endpoint's validation and duplicate behavior
+      before designing preview/confirmation; do not imply it already supports
+      dry-run or deduplication. No import UI ships in #304 or this layout pass.
 - [ ] **Link Journal trades to Portfolio transactions (later decision lifecycle).**
       Let a user select existing portfolio buys/sells when journaling a trade, or
       enter a missing transaction inline and create it in the chosen portfolio

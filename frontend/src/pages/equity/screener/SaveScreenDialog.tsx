@@ -29,8 +29,8 @@ export function SaveScreenDialog() {
   return (
     <TerminalPanel title="Save Screen" subtitle="Persist Current Query" bodyClassName="space-y-2">
       {error ? <div className="rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{error}</div> : null}
-      <TerminalInput value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" />
-      <TerminalInput value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description" />
+      <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Screen name</span><TerminalInput value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" /></label>
+      <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Screen description</span><TerminalInput value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description" /></label>
       <label className="flex items-center gap-2 text-xs text-terminal-muted">
         <input type="checkbox" checked={publicMode} onChange={(event) => setPublicMode(event.target.checked)} />
         Publish after save
