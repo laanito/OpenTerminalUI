@@ -113,7 +113,7 @@ export function CustomFormulaScreener() {
     <section className="space-y-3">
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
         <TerminalPanel title="Formula Editor" subtitle="Computed Ratio Builder" bodyClassName="space-y-3">
-          <TerminalInput
+          <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Arithmetic formula</span><TerminalInput
             as="textarea"
             rows={7}
             className="font-mono text-sm"
@@ -121,22 +121,22 @@ export function CustomFormulaScreener() {
             onChange={(event) => setFormula(event.target.value)}
             placeholder="pe * pb"
             invalid={Boolean(validationError)}
-          />
+          /></label>
           <div className={`rounded-sm border px-2 py-1 text-xs ${validationError ? "border-terminal-neg bg-terminal-neg/10 text-terminal-neg" : "border-terminal-pos bg-terminal-pos/10 text-terminal-pos"}`}>
             {validationError || "Validation OK"}
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <TerminalInput as="select" value={universe} onChange={(event) => setUniverse(event.target.value as typeof universe)}>
+            <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Formula universe</span><TerminalInput as="select" value={universe} onChange={(event) => setUniverse(event.target.value as typeof universe)}>
               <option value="nifty50">Nifty 50</option>
               <option value="nifty100">Nifty 100</option>
               <option value="nifty200">Nifty 200</option>
               <option value="nifty500">Nifty 500</option>
               <option value="all">All</option>
-            </TerminalInput>
-            <TerminalInput as="select" value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
+            </TerminalInput></label>
+            <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Formula sort</span><TerminalInput as="select" value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
               <option value="desc">Computed Value Desc</option>
               <option value="asc">Computed Value Asc</option>
-            </TerminalInput>
+            </TerminalInput></label>
             <TerminalButton
               variant="accent"
               loading={loading}
@@ -163,12 +163,12 @@ export function CustomFormulaScreener() {
               Run
             </TerminalButton>
           </div>
-          <TerminalInput
+          <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Optional formula filter</span><TerminalInput
             value={filterExpr}
             onChange={(event) => setFilterExpr(event.target.value)}
             placeholder="Optional filter, e.g. market_cap > 10000"
             className="font-mono"
-          />
+          /></label>
           <div className="flex flex-wrap gap-2">
             {EXAMPLE_FORMULAS.map(([example, label]) => (
               <button
@@ -196,14 +196,14 @@ export function CustomFormulaScreener() {
         </TerminalPanel>
 
         <TerminalPanel title="Saved Formulas" subtitle="Load Or Persist" bodyClassName="space-y-3">
-          <TerminalInput as="select" value={selectedSavedId} onChange={(event) => setSelectedSavedId(event.target.value)}>
+          <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Saved formula</span><TerminalInput as="select" value={selectedSavedId} onChange={(event) => setSelectedSavedId(event.target.value)}>
             <option value="">Load saved formula</option>
             {savedFormulas.map((item) => (
               <option key={item.id} value={String(item.id)}>
                 {item.name}
               </option>
             ))}
-          </TerminalInput>
+          </TerminalInput></label>
           <div className="flex flex-wrap gap-2">
             <TerminalButton
               variant="default"
@@ -374,8 +374,8 @@ export function CustomFormulaScreener() {
       >
         <div className="space-y-3">
           {saveError ? <div className="rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{saveError}</div> : null}
-          <TerminalInput value={saveName} onChange={(event) => setSaveName(event.target.value)} placeholder="Formula name" />
-          <TerminalInput value={saveDescription} onChange={(event) => setSaveDescription(event.target.value)} placeholder="Description" />
+          <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Formula name</span><TerminalInput value={saveName} onChange={(event) => setSaveName(event.target.value)} placeholder="Formula name" /></label>
+          <label className="block min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Formula description</span><TerminalInput value={saveDescription} onChange={(event) => setSaveDescription(event.target.value)} placeholder="Description" /></label>
           <div className="rounded-sm border border-terminal-border px-3 py-2 font-mono text-xs text-terminal-accent">{formula}</div>
         </div>
       </TerminalModal>

@@ -15,12 +15,12 @@ export function AdvancedArithmetic() {
 
   return (
     <TerminalPanel title="Advanced Arithmetic" subtitle="Expression Builder" bodyClassName="space-y-1">
-      <div className="grid grid-cols-5 gap-1">
-        <TerminalInput value={left} onChange={(event) => setLeft(event.target.value)} />
-        <TerminalInput value={op} onChange={(event) => setOp(event.target.value)} />
-        <TerminalInput value={right} onChange={(event) => setRight(event.target.value)} />
-        <TerminalInput value={cmp} onChange={(event) => setCmp(event.target.value)} />
-        <TerminalInput value={value} onChange={(event) => setValue(event.target.value)} />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Left field</span><TerminalInput value={left} onChange={(event) => setLeft(event.target.value)} /></label>
+        <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Arithmetic operator</span><TerminalInput value={op} onChange={(event) => setOp(event.target.value)} /></label>
+        <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Right field</span><TerminalInput value={right} onChange={(event) => setRight(event.target.value)} /></label>
+        <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Comparison operator</span><TerminalInput value={cmp} onChange={(event) => setCmp(event.target.value)} /></label>
+        <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Comparison value</span><TerminalInput value={value} onChange={(event) => setValue(event.target.value)} /></label>
       </div>
       <TerminalButton onClick={() => setQuery(`${query}${query ? " AND " : ""}(${left} ${op} ${right}) ${cmp} ${value}`)}>Append Equation</TerminalButton>
     </TerminalPanel>

@@ -61,3 +61,24 @@
   font-size: 11px;
   color: var(--text-secondary);
 }
+
+/* v3 research layout: scoped to the retained Screener route. */
+.screener-workspace :is(section, fieldset, details, label) { min-width: 0; }
+.screener-workspace :is(button, input, select, textarea) { font-size: 14px; }
+.screener-workspace :is(button, summary) { white-space: normal; overflow-wrap: anywhere; }
+.screener-workspace :is(p, h1, h2, span, a) { overflow-wrap: anywhere; }
+.screener-workspace :is(.text-\[10px\], .text-\[11px\]) { font-size: 12px; }
+.screener-workspace :is(input, select, textarea) { min-width: 0; max-width: 100%; }
+.screener-workspace textarea { resize: vertical; }
+.screener-disclosure { border: 1px solid var(--ot-color-border-default); border-radius: 2px; }
+.screener-disclosure > summary { cursor: pointer; padding: 10px 12px; font-size: 14px; }
+.screener-disclosure > summary:focus-visible { outline: 2px solid var(--ot-color-accent-primary); outline-offset: -2px; }
+.screener-results-table { font-size: 14px; }
+.screener-results-table th { white-space: nowrap; font-size: 12px; }
+
+.screener-results-table .ot-type-table-cell { font-size: 14px; }
+/* Keep numbers and headings intact; wide evidence belongs in a local scroller. */
+.screener-results-table { min-width: 1760px; }
+.screener-results-table :is(th, td) { min-width: 80px; white-space: nowrap; }
+.screener-results-table th :is(button, span) { white-space: nowrap; overflow-wrap: normal; }
+.screener-results-table td.screener-prose { white-space: normal; }

@@ -28,7 +28,6 @@ export function QueryBar() {
   return (
     <TerminalPanel
       title="Query"
-      subtitle={activeLabel}
       actions={(
         <div className="flex gap-1">
           <TerminalButton variant="default" size="sm" onClick={() => void run({ query, preset_id: activeSavedScreen ? null : selectedPresetId })} disabled={loading}>
@@ -47,6 +46,7 @@ export function QueryBar() {
         </div>
       )}
     >
+      <p className="mb-2 text-xs text-terminal-muted">{activeLabel}</p>
       <div className="mb-2 flex flex-wrap gap-1">
         <TerminalBadge variant="accent">{tab}</TerminalBadge>
         <TerminalBadge variant="neutral">{universe}</TerminalBadge>
@@ -55,8 +55,9 @@ export function QueryBar() {
       </div>
       <TerminalInput
         as="textarea"
-        rows={5}
-        className="font-mono text-[11px]"
+        aria-label="Screen query"
+        rows={2}
+        className="font-mono text-sm"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />

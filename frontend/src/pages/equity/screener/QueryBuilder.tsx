@@ -54,26 +54,26 @@ export function QueryBuilder() {
     <TerminalPanel title="Query Builder" subtitle="GUI Filters" bodyClassName="space-y-2">
       {validationError ? <div className="rounded-sm border border-terminal-neg bg-terminal-neg/10 px-2 py-1 text-xs text-terminal-neg">{validationError}</div> : null}
       {rows.map((row, index) => (
-        <div key={index} className="grid grid-cols-[1fr_86px_1fr_78px_84px] gap-1">
-          <TerminalInput as="select" value={row.field} onChange={(event) => {
+        <div key={index} className="grid items-end gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(220px,2fr)_minmax(90px,1fr)_minmax(100px,1fr)_minmax(90px,1fr)_auto]">
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Field {index + 1}</span><TerminalInput as="select" value={row.field} onChange={(event) => {
             const next = [...rows];
             next[index] = { ...next[index], field: event.target.value };
             setRows(next);
             syncQuery(next);
-          }}>{FIELD_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</TerminalInput>
-          <TerminalInput as="select" value={row.op} onChange={(event) => {
+          }}>{FIELD_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</TerminalInput></label>
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Operator {index + 1}</span><TerminalInput as="select" value={row.op} onChange={(event) => {
             const next = [...rows];
             next[index] = { ...next[index], op: event.target.value };
             setRows(next);
             syncQuery(next);
-          }}>{OP_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</TerminalInput>
-          <TerminalInput value={row.value} onChange={(event) => {
+          }}>{OP_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</TerminalInput></label>
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Value {index + 1}</span><TerminalInput value={row.value} onChange={(event) => {
             const next = [...rows];
             next[index] = { ...next[index], value: event.target.value };
             setRows(next);
             syncQuery(next);
-          }} />
-          <TerminalInput
+          }} /></label>
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Join {index + 1}</span><TerminalInput
             as="select"
             value={row.combinator || "AND"}
             onChange={(event) => {
@@ -86,7 +86,7 @@ export function QueryBuilder() {
             title={index === 0 ? "First row does not require a join operator" : "Join operator before this row"}
           >
             {COMBINATORS.map((option) => <option key={option} value={option}>{option}</option>)}
-          </TerminalInput>
+          </TerminalInput></label>
           <TerminalButton variant="danger" onClick={() => {
             const next = rows.filter((_, idx) => idx !== index);
             setRows(next);

@@ -54,7 +54,7 @@ function whyRanked(row: Record<string, unknown>): string {
   return chips.length ? `Top drivers: ${chips.join(", ")}` : "Ranked by composite factor score and active screen filters.";
 }
 
-export function CompanyDetailDrawer() {
+export function CompanyDetailDrawer({ onClose }: { onClose?: () => void } = {}) {
   const navigate = useNavigate();
   const setTicker = useStockStore((state) => state.setTicker);
   const { selectedRow, setSelectedRow } = useScreenerContext();
@@ -115,78 +115,83 @@ export function CompanyDetailDrawer() {
     <TerminalPanel
       title={String(selectedRow.company || selectedRow.ticker || "Company")}
       subtitle={String(selectedRow.ticker || "-")}
-      className="h-full"
-      bodyClassName="space-y-2 overflow-auto max-h-[72vh]"
-      actions={<TerminalButton variant="default" onClick={() => setSelectedRow(null)}>Close</TerminalButton>}
+      bodyClassName="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3"
+      actions={<TerminalButton variant="default" onClick={() => onClose ? onClose() : setSelectedRow(null)}>Close</TerminalButton>}
     >
-      <div className="flex flex-wrap gap-1">
-        {ticker ? <TerminalBadge variant="accent">{ticker}</TerminalBadge> : null}
-        <TerminalBadge variant="neutral">{String(selectedRow.sector || "Unclassified")}</TerminalBadge>
-        {selectedRow.exchange ? <TerminalBadge variant="info">{String(selectedRow.exchange)}</TerminalBadge> : null}
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 rounded-sm border border-terminal-border bg-terminal-bg p-2 text-xs">
-        <div>
-          <div className="text-terminal-muted">Sector</div>
-          <div>{String(selectedRow.sector || "-")}</div>
+      <div className="min-w-0 space-y-3">
+        <div className="flex flex-wrap gap-1">
+          {ticker ? <TerminalBadge variant="accent">{ticker}</TerminalBadge> : null}
+          <TerminalBadge variant="neutral">{String(selectedRow.sector || "Unclassified")}</TerminalBadge>
+          {selectedRow.exchange ? <TerminalBadge variant="info">{String(selectedRow.exchange)}</TerminalBadge> : null}
         </div>
-        <div>
-          <div className="text-terminal-muted">Market Cap</div>
-          <div>{formatMoneyIn(
-            Number(selectedRow.market_cap || 0),
-            nativeCurrencyForInstrument(
-              typeof selectedRow.currency === "string" ? selectedRow.currency : null,
-              ticker,
-              String(selectedRow.market || selectedRow.exchange || selectedRow.country_code || ""),
-            ),
-            { compact: true },
-          )}</div>
+
+        <div className="grid grid-cols-2 gap-2 rounded-sm border border-terminal-border bg-terminal-bg p-2 text-xs">
+          <div>
+            <div className="text-terminal-muted">Sector</div>
+            <div>{String(selectedRow.sector || "-")}</div>
+          </div>
+          <div>
+            <div className="text-terminal-muted">Market Cap</div>
+            <div>{formatMoneyIn(
+              Number(selectedRow.market_cap || 0),
+              nativeCurrencyForInstrument(
+                typeof selectedRow.currency === "string" ? selectedRow.currency : null,
+                ticker,
+                String(selectedRow.market || selectedRow.exchange || selectedRow.country_code || ""),
+              ),
+              { compact: true },
+            )}</div>
+          </div>
+          <div>
+            <div className="text-terminal-muted">PE</div>
+            <div>{formatNum(selectedRow.pe)}</div>
+          </div>
+          <div>
+            <div className="text-terminal-muted">ROE</div>
+            <div>{formatNum(selectedRow.roe)}</div>
+          </div>
         </div>
-        <div>
-          <div className="text-terminal-muted">PE</div>
-          <div>{formatNum(selectedRow.pe)}</div>
+
+      </div>
+      <div className="min-w-0 space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <TerminalButton variant="accent" onClick={openChart} disabled={!ticker}>Open Chart</TerminalButton>
+          <TerminalButton variant="default" onClick={() => openSecurity("overview")} disabled={!ticker}>Security Hub</TerminalButton>
+          <TerminalButton variant="default" onClick={openBacktest} disabled={!ticker}>Backtest</TerminalButton>
+          <TerminalButton variant="default" onClick={openCompare} disabled={!ticker}>Compare</TerminalButton>
+          <TerminalButton variant="default" onClick={() => void addToWatchlist()} disabled={!ticker}>Add Watchlist</TerminalButton>
+          <TerminalButton variant="default" onClick={openAlert} disabled={!ticker}>Create Alert</TerminalButton>
         </div>
-        <div>
-          <div className="text-terminal-muted">ROE</div>
-          <div>{formatNum(selectedRow.roe)}</div>
+
+        {actionMessage ? (
+          <div className="rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-muted">{actionMessage}</div>
+        ) : null}
+
+        <div className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
+          <div className="mb-1 text-xs uppercase tracking-wide text-terminal-muted">Price Trend</div>
+          <SparklineCell values={Array.isArray(selectedRow.sparkline_price_1y) ? (selectedRow.sparkline_price_1y as number[]) : []} width={240} height={60} />
         </div>
+
       </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <TerminalButton variant="accent" onClick={openChart} disabled={!ticker}>Open Chart</TerminalButton>
-        <TerminalButton variant="default" onClick={() => openSecurity("overview")} disabled={!ticker}>Security Hub</TerminalButton>
-        <TerminalButton variant="default" onClick={openBacktest} disabled={!ticker}>Backtest</TerminalButton>
-        <TerminalButton variant="default" onClick={openCompare} disabled={!ticker}>Compare</TerminalButton>
-        <TerminalButton variant="default" onClick={() => void addToWatchlist()} disabled={!ticker}>Add Watchlist</TerminalButton>
-        <TerminalButton variant="default" onClick={openAlert} disabled={!ticker}>Create Alert</TerminalButton>
-      </div>
-
-      {actionMessage ? (
-        <div className="rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-muted">{actionMessage}</div>
-      ) : null}
-
-      <div className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
-        <div className="mb-1 text-[11px] uppercase tracking-wide text-terminal-muted">Price Trend</div>
-        <SparklineCell values={Array.isArray(selectedRow.sparkline_price_1y) ? (selectedRow.sparkline_price_1y as number[]) : []} width={240} height={60} />
-      </div>
-
-      <div className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
-        <div className="mb-1 text-[11px] uppercase tracking-wide text-terminal-muted">Signal Layer</div>
-        <div className="mb-2 flex flex-wrap gap-1">
-          {factorChips(selectedRow).map((chip) => <TerminalBadge key={chip} variant="neutral">{chip}</TerminalBadge>)}
+      <div className="min-w-0 space-y-3">
+        <div className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
+          <div className="mb-1 text-xs uppercase tracking-wide text-terminal-muted">Signal Layer</div>
+          <div className="mb-2 flex flex-wrap gap-1">
+            {factorChips(selectedRow).map((chip) => <TerminalBadge key={chip} variant="neutral">{chip}</TerminalBadge>)}
+          </div>
+          <div className="text-xs text-terminal-muted">{whyRanked(selectedRow)}</div>
         </div>
-        <div className="text-xs text-terminal-muted">{whyRanked(selectedRow)}</div>
-      </div>
 
-      <div className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
-        <div className="mb-1 text-[11px] uppercase tracking-wide text-terminal-muted">Model Scores</div>
-        <div className="space-y-1 text-xs">
-          {scoreEntries.map(([name, payload]) => (
-            <div key={name} className="flex items-center justify-between border-b border-terminal-border/40 pb-1 last:border-b-0">
-              <span>{name}</span>
-              <TerminalBadge variant="neutral">{typeof payload === "object" && payload && "value" in payload ? String((payload as { value: unknown }).value) : "--"}</TerminalBadge>
-            </div>
-          ))}
+        <div className="rounded-sm border border-terminal-border bg-terminal-bg p-2">
+          <div className="mb-1 text-xs uppercase tracking-wide text-terminal-muted">Model Scores</div>
+          <div className="space-y-1 text-xs">
+            {scoreEntries.map(([name, payload]) => (
+              <div key={name} className="flex flex-wrap items-center justify-between gap-2 border-b border-terminal-border/40 pb-1 last:border-b-0">
+                <span>{name}</span>
+                <TerminalBadge variant="neutral">{typeof payload === "object" && payload && "value" in payload ? String((payload as { value: unknown }).value) : "--"}</TerminalBadge>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </TerminalPanel>

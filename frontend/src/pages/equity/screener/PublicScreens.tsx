@@ -11,7 +11,7 @@ export function PublicScreens() {
     <TerminalPanel title="Public Screens" subtitle={`Count: ${publicScreens.length}`}>
       <div className="space-y-1 text-xs">
         {publicScreens.map((screen) => (
-          <div key={screen.id} className="flex items-center justify-between rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1">
+          <div key={screen.id} className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1">
             <div>
               <div>{screen.name}</div>
               <TerminalBadge variant="neutral">{screen.upvotes} upvotes</TerminalBadge>

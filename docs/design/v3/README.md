@@ -18,7 +18,10 @@ accepted through #301, puts headlines first, with readable source names, prose
 and separately scoped sentiment/research context. The current [Workstation
 review](WORKSTATION_REVIEW.md) keeps real plots visible and pane controls readable,
 with disclosed workspace/chart tools and visual reflow that preserves saved layouts.
-Screener and broader retained-page acceptance remain open.
+The [Screener review](SCREENER_REVIEW.md) gives results full width, discloses the
+preset library and independent scan, labels query/formula fields and makes
+company inspection available at every breakpoint. Broader retained-page and
+maintainer/host acceptance remain open.
 See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 

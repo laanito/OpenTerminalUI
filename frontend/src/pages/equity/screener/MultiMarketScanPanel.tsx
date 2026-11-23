@@ -288,12 +288,12 @@ export function MultiMarketScanPanel() {
               {m}
             </label>
           ))}
-          <TerminalInput
+          <label className="space-y-1 text-xs text-terminal-muted"><span className="block">Result limit</span><TerminalInput
             value={limit}
             onChange={(e) => setLimit(Math.max(20, Math.min(500, Number(e.target.value) || 100)))}
-            className="w-20"
+            className="w-24"
             aria-label="Result limit"
-          />
+          /></label>
           <TerminalButton variant="accent" onClick={() => void runScan()}>
             {loading ? "Scanning..." : "Run Scan"}
           </TerminalButton>
@@ -302,9 +302,9 @@ export function MultiMarketScanPanel() {
         </div>
 
         <div className="grid gap-2 md:grid-cols-3">
-          <TerminalInput value={marketCapMin} onChange={(e) => setMarketCapMin(e.target.value)} placeholder="Min Market Cap" />
-          <TerminalInput value={peMax} onChange={(e) => setPeMax(e.target.value)} placeholder="Max P/E" />
-          <TerminalInput value={sectorCsv} onChange={(e) => setSectorCsv(e.target.value)} placeholder="Sectors comma-separated" />
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Minimum market cap</span><TerminalInput value={marketCapMin} onChange={(e) => setMarketCapMin(e.target.value)} placeholder="Min Market Cap" /></label>
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Maximum P/E</span><TerminalInput value={peMax} onChange={(e) => setPeMax(e.target.value)} placeholder="Max P/E" /></label>
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Sectors (comma-separated)</span><TerminalInput value={sectorCsv} onChange={(e) => setSectorCsv(e.target.value)} placeholder="Sectors comma-separated" /></label>
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
@@ -323,6 +323,7 @@ export function MultiMarketScanPanel() {
           <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
             <div className="mb-1 text-[11px] text-terminal-muted">Custom formula</div>
             <textarea
+              aria-label="Scan formula"
               value={formula}
               onChange={(e) => setFormula(e.target.value)}
               className="h-16 w-full resize-none rounded border border-terminal-border bg-[#0D1117] px-2 py-1 font-mono text-[11px] text-terminal-text outline-none focus:border-terminal-accent"
@@ -345,7 +346,7 @@ export function MultiMarketScanPanel() {
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between text-xs text-terminal-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-terminal-muted">
           <div className="inline-flex items-center gap-2">
             <TerminalBadge variant="neutral">{rows.length} results</TerminalBadge>
             <span>{markets.join(" / ")} scan board</span>

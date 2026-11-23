@@ -133,10 +133,10 @@ export function ResultsTable() {
         onRowSelect={(idx) => setSelectedRow(rows[idx] || null)}
         onRowOpen={(idx) => setSelectedRow(rows[idx] || null)}
         rowActions={(row) => (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex min-w-[180px] flex-wrap gap-1">
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 openChart(row);
@@ -146,7 +146,7 @@ export function ResultsTable() {
             </button>
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 openSecurity(row, "overview");
@@ -156,7 +156,7 @@ export function ResultsTable() {
             </button>
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 openSecurity(row, "news");
@@ -166,7 +166,7 @@ export function ResultsTable() {
             </button>
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 openBacktest(row);
@@ -176,7 +176,7 @@ export function ResultsTable() {
             </button>
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 openCompare(row);
@@ -186,7 +186,7 @@ export function ResultsTable() {
             </button>
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 void watch(row);
@@ -196,7 +196,7 @@ export function ResultsTable() {
             </button>
             <button
               type="button"
-              className="rounded border border-terminal-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
+              className="rounded border border-terminal-border px-1.5 py-0.5 text-xs uppercase tracking-wide text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent"
               onClick={(event) => {
                 event.stopPropagation();
                 openAlert(row);
@@ -206,10 +206,13 @@ export function ResultsTable() {
             </button>
           </div>
         )}
-        className="max-h-[52vh] xl:max-h-[56vh]"
+        className="max-h-[65vh]"
+        tableClassName="screener-results-table"
+        emptyText={result ? "No companies match this screen." : "Run a screen to see results."}
         columns={[
           {
             key: "company",
+            cellClassName: "screener-prose min-w-[220px] max-w-[300px] whitespace-normal break-words",
             header: "Company",
             sortable: true,
             sortValue: (row) => String(row.company || row.company_name || row.ticker || ""),
@@ -217,6 +220,7 @@ export function ResultsTable() {
           },
           {
             key: "sector",
+            cellClassName: "screener-prose min-w-[150px] max-w-[230px] whitespace-normal break-words",
             header: "Sector",
             sortable: true,
             sortValue: (row) => String(row.sector || ""),
@@ -285,14 +289,15 @@ export function ResultsTable() {
             header: "Factors",
             renderCell: (row) => (
               <div className="flex flex-wrap gap-1">
-                {factorChips(row).slice(0, 4).map((chip) => <span key={`${getTicker(row)}-${chip}`} className="rounded border border-terminal-border px-1 py-0.5 text-[10px] text-terminal-muted">{chip}</span>)}
+                {factorChips(row).slice(0, 4).map((chip) => <span key={`${getTicker(row)}-${chip}`} className="rounded border border-terminal-border px-1 py-0.5 text-xs text-terminal-muted">{chip}</span>)}
               </div>
             ),
           },
           {
             key: "why",
+            cellClassName: "screener-prose",
             header: "Why Ranked",
-            renderCell: (row) => <span className="block max-w-[240px] truncate text-terminal-muted" title={whyRanked(row)}>{whyRanked(row)}</span>,
+            renderCell: (row) => <span className="block min-w-[240px] max-w-[320px] whitespace-normal break-words text-terminal-muted" title={whyRanked(row)}>{whyRanked(row)}</span>,
           },
           {
             key: "score",

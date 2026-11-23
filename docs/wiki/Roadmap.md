@@ -959,7 +959,11 @@ The maintainer accepted #302's layout but reports functional gaps in Workstation
 and other unspecified legacy areas. This is not live functional sign-off. A
 broader functionality audit/repair track is deferred to a later, unassigned
 version (see Backlog / unscheduled); it does not expand this frontend milestone.
-Continue Screener in populated states, then broader retained-page acceptance. No new feature backlog is added to that usability work. v3.0 is not release-ready yet. See the design pack's
+The [Screener review](../design/v3/SCREENER_REVIEW.md) gives results full width,
+discloses presets and the independent scan, labels query/formula controls and
+keeps company inspection accessible at every width. Continue broader retained-page
+and maintainer/host acceptance. No new feature backlog is added to that usability
+work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
 Portfolio is the first concrete workflow workstream:
@@ -1893,6 +1897,13 @@ sector-rotation** return live data from Yahoo/adapters — they only show
 
 Real but unscheduled; pull into a milestone when it fits.
 
+- **Journal CSV import UI (later functionality release, outside v3.0)** — expose
+  the existing authenticated import endpoint through a discoverable upload flow,
+  documented template, explicit units/currency guidance and actionable row errors.
+  Audit validation, partial-write and duplicate behavior before specifying preview
+  and retry. #304 fixed fractional quantities and cash entry in the editor; it
+  did not add an import UI. The maintainer confirmed that PR merged and frontend
+  validated. Target functionality version remains unassigned.
 - **Legacy feature functionality audit and repairs** — maintainer feedback after
   #302 accepts Workstation's layout but reports functional gaps there and in other
   unspecified areas, possibly previously masked by the frontend. Start with
