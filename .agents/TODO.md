@@ -2219,8 +2219,14 @@ ordered v1.7 milestone above.
             readable names/destinations/dates/actions, bounded scoped/nested name
             dialogs, retained drafts and distinct load/empty/failure states.
             Preserve capture/restore contracts and ignore stale scope responses.
-            See `docs/design/v3/SAVED_VIEWS_REVIEW.md`; host acceptance remains open.
-      - [ ] Review remaining Alerts, Settings and Launchpad layouts with
+            See `docs/design/v3/SAVED_VIEWS_REVIEW.md`; #309 merged.
+      - [x] Alerts retained-page follow-up: readable cards, labelled conditions/
+            delivery fields, disclosed notes/limits, bounded editor and independent
+            rule/history failures. Failed drafts survive; confirmed writes and
+            old pending reads stay separate. Keep delivery defaults key/format,
+            precise unchanged expiry and existing rule/delivery payloads.
+            See `docs/design/v3/ALERTS_REVIEW.md`; host acceptance remains open.
+      - [ ] Review remaining Settings and Launchpad layouts with
             populated/long content, narrow screens and keyboard/zoom; inventory
             any other retained-tool readability issues before release acceptance.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release

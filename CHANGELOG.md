@@ -27,6 +27,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Alerts rules and delivery** — labelled condition groups and delivery
+  fields replace squeezed controls; rule cards, history and browser defaults
+  remain readable on narrow screens. Limits and notes are disclosed. Failed reads
+  differ from empty lists, failed drafts survive, and confirmed writes stay
+  distinct from failed or late refreshes. Unchanged expiry keeps its exact instant;
+  existing rule evaluation, delivery endpoints and defaults storage are retained.
 - **Readable Saved Views library** — the hub lists all owned workflow scopes
   directly, with wrapping names, destinations, dates and visible actions. Shared
   controls use a bounded dialog; save/rename forms retain failed name drafts.

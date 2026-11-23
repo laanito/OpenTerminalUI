@@ -1,8 +1,28 @@
 # External-agent project context
 
+Maintainer confirmed #309 merged. Current v3 follow-up is Alerts: readable rule
+cards, labelled condition/delivery forms, disclosed limits/notes and independent
+history/defaults tabs. Loading, empty and failed reads differ; previous data stays
+visible after failed refreshes. Confirmed writes are separate from follow-up
+reads, older pending reads cannot erase them, and failed drafts remain for manual
+retry. Browser delivery defaults keep the existing key/format; token inputs are
+visually masked, not newly encrypted. Unchanged expiry preserves its exact instant.
+The unrelated global ticker loader is hidden; both symbol/ticker deep links work.
+See `docs/design/v3/ALERTS_REVIEW.md`. No rule-engine/provider, backend/API/schema,
+dependency or stored-data changes; fixtures do not certify real delivery. Settings,
+Launchpad and broader retained-tool/maintainer acceptance remain; no release prep.
+
+Alerts validation: 876 frontend tests / 145 files, production build and all 129
+installed-Chrome smoke cases pass. Final affected checks include five browser
+cases and seven unit cases covering native 200% zoom, keyboard/focus, exact edit
+payloads, drafts, defaults, independent failures and late-refresh isolation.
+API-reference/mock/surface/whitespace guards pass. See the review for synthetic
+screenshots and limits. Maintainer acceptance remains open; no production database,
+deployment or real notifications are accessed. Backend tests were not rerun.
+
 Maintainer confirmed #308 merged and tested; mixed Watchlist quotes now work.
-Current v3 follow-up is Saved Views. The hub shows all owned workflow scopes in
-a readable library; shared workflow controls retain scope filtering and open a
+The following Saved Views work was subsequently merged as #309. The hub shows
+all owned workflow scopes in a readable library; shared workflow controls retain scope filtering and open a
 bounded TerminalModal instead of the fixed 320px popup. Names/descriptions wrap,
 destinations/dates/actions are visible, and save/rename use labelled retained
 drafts. Loading/empty/error states differ; previous entries survive failed reads.
