@@ -74,6 +74,12 @@ _FOREIGN_SUFFIX_META = {
 # can route these straight to Yahoo and skip the India/adapter path.
 FOREIGN_SUFFIXES = tuple(_FOREIGN_SUFFIX_META.keys())
 
+def foreign_symbol_currency(symbol: str) -> str | None:
+    """Currency fallback for an explicit supported Yahoo listing, not a market hint."""
+    normalized = (symbol or "").strip().upper()
+    return next((meta["currency"] for suffix, meta in _FOREIGN_SUFFIX_META.items() if normalized.endswith(suffix)), None)
+
+
 # Fiat legs a crypto pair can quote in (BTC-USD, BTC-EUR, ...). Stablecoins map
 # to the fiat they track so the display currency stays a real currency symbol.
 _CRYPTO_QUOTE_FIATS = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "INR", "BRL", "TRY"}

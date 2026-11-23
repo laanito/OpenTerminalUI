@@ -1,3 +1,5 @@
+import { fetchApi } from "../api/base";
+
 export interface UnifiedOHLCVBar {
   t: number; // ms epoch
   o: number;
@@ -17,10 +19,6 @@ export interface UnifiedChartResponse {
   data: UnifiedOHLCVBar[];
 }
 
-function apiBase(): string {
-  return String(import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/+$/, "");
-}
-
 export async function fetchChartData(
   symbol: string,
   opts?: {
@@ -36,11 +34,14 @@ export async function fetchChartData(
   params.set("normalized", "true");
   params.set("interval", opts?.interval ?? "1d");
   params.set("period", opts?.period ?? "6mo");
-  if (opts?.market) params.set("market", opts.market);
+  // An explicit Yahoo listing/index identifies itself; the global selector is
+  // only a disambiguating hint for bare symbols, never an asset-class override.
+  const explicitListing = /\.[A-Z]{1,4}$/i.test(symbol) || symbol.startsWith("^") || /=([FX])$/i.test(symbol);
+  if (opts?.market && !explicitListing) params.set("market", opts.market);
   if (opts?.start) params.set("start", opts.start);
   if (opts?.end) params.set("end", opts.end);
   if (opts?.extended) params.set("extended", "true");
-  const res = await fetch(`${apiBase()}/chart/${encodeURIComponent(symbol)}?${params.toString()}`);
+  const res = await fetchApi(`/chart/${encodeURIComponent(symbol)}?${params.toString()}`);
   if (!res.ok) {
     throw new Error(`Unified chart fetch failed (${res.status})`);
   }

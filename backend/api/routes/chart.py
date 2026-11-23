@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from backend.shared.market_classifier import foreign_symbol_currency
 from backend.api.deps import cache_instance, get_chart_provider, get_unified_fetcher
 from backend.api.deps import get_db
 from backend.auth.deps import get_current_user
@@ -489,7 +490,8 @@ async def get_chart(
             ],
         }
 
-    key = cache_instance.build_key("chart", ticker.upper(), {"i": interval, "r": range, "market": market})
+    native_currency = foreign_symbol_currency(ticker)
+    key = cache_instance.build_key("chart", ticker.upper(), {"i": interval, "r": range, "market": market, "identity_version": 2})
     cached = await cache_instance.get(key)
     if cached:
         payload = cached
@@ -499,7 +501,7 @@ async def get_chart(
         # Pagination/backfill requests should use a stable source path across calls.
         # The adapter registry may use loop-bound clients/caches that become brittle
         # under direct `asyncio.run(...)` test invocations with repeated cursors.
-        use_adapter_registry = get_adapter_registry is not None and limit is None and cursor is None
+        use_adapter_registry = get_adapter_registry is not None and limit is None and cursor is None and native_currency is None
         if use_adapter_registry:
             try:
                 registry = get_adapter_registry()
@@ -528,6 +530,8 @@ async def get_chart(
         # Integrity: no synthetic random-walk fallback. When live data is
         # unavailable, return an empty series flagged degraded so the UI shows
         # "no data" instead of a convincing fake chart (v1.0 silent-mock audit).
+        chart_results = ((raw_data or {}).get("chart") or {}).get("result") or []
+        provider_currency = ((chart_results[0].get("meta") or {}).get("currency") if chart_results else None)
         warnings: list[Dict[str, str]] = []
         degraded: Dict[str, Any] | None = None
         if hist.empty:
@@ -549,7 +553,7 @@ async def get_chart(
         payload = {
             "ticker": ticker.upper(),
             "interval": interval,
-            "currency": currency_for_market(market),
+            "currency": provider_currency or native_currency or currency_for_market(market),
             "data": [d.model_dump() for d in data],
             "meta": {"warnings": warnings, "degraded": degraded},
         }

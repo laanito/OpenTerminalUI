@@ -23,6 +23,10 @@ const PAIRS: PairQuotes = {
 };
 
 describe("nativeCurrencyForSymbol", () => {
+  it("retains an explicit EUR listing under crypto and India selection", () => {
+    expect(nativeCurrencyForSymbol("MWRE.DE", "CRYPTO")).toBe("EUR");
+    expect(nativeCurrencyForSymbol("MWRE.DE", "NSE")).toBe("EUR");
+  });
   it("reads the crypto pair's quote currency", () => {
     expect(nativeCurrencyForSymbol("BTC-USD")).toBe("USD");
     expect(nativeCurrencyForSymbol("BTC-EUR")).toBe("EUR");

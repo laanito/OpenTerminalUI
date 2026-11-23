@@ -13,7 +13,7 @@ import yfinance as yf
 
 from backend.db.ohlcv_cache import get_ohlcv_cache
 from backend.services.instrument_map import get_instrument_map_service
-from backend.shared.market_classifier import market_classifier
+from backend.shared.market_classifier import foreign_symbol_currency, market_classifier
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,9 @@ class ChartDataProvider:
             return ("IN", raw[:-3], raw)
         if raw.endswith(".BO"):
             return ("IN", raw[:-3], raw)
+
+        if foreign_symbol_currency(raw):
+            return ("US", raw, raw)
 
         hint = (market_hint or "").strip().upper()
         if hint in IN_EXCHANGES:
