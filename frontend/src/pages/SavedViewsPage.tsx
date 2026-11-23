@@ -1,17 +1,13 @@
 import { SavedViewsControl } from "../components/savedViews/SavedViewsControl";
-import { TerminalPanel } from "../components/terminal/TerminalPanel";
 
 export function SavedViewsPage() {
   return (
-    <div className="space-y-3 p-4">
-      <TerminalPanel title="Saved Views" subtitle="Workspace snapshots">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-terminal-muted">
-            Save and restore page filters, selected ticker, active tabs, chart layout, table state, and shell preset from supported workflow pages.
-          </p>
-          <SavedViewsControl pageLabel="Workspace" />
-        </div>
-      </TerminalPanel>
-    </div>
+    <main aria-label="Saved workspace views" className="min-w-0 space-y-3 p-3 md:p-4">
+      <header className="space-y-1">
+        <h1 className="text-lg font-semibold">Saved views</h1>
+        <p className="text-sm text-terminal-muted">Return to your saved workflow setups. Each view restores its page, filters, selected ticker and captured workspace state.</p>
+      </header>
+      <SavedViewsControl pageLabel="Workspace" library />
+    </main>
   );
 }

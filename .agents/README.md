@@ -1,5 +1,26 @@
 # External-agent project context
 
+Maintainer confirmed #308 merged and tested; mixed Watchlist quotes now work.
+Current v3 follow-up is Saved Views. The hub shows all owned workflow scopes in
+a readable library; shared workflow controls retain scope filtering and open a
+bounded TerminalModal instead of the fixed 320px popup. Names/descriptions wrap,
+destinations/dates/actions are visible, and save/rename use labelled retained
+drafts. Loading/empty/error states differ; previous entries survive failed reads.
+Capture preserves opening-page/scope/ticker/storage/caller fields; Apply keeps
+the pending payload, route/search, storage/preset/ticker restoration and reload.
+Late scope responses are ignored; confirmed writes are distinct from failed
+refreshes. See `docs/design/v3/SAVED_VIEWS_REVIEW.md`. No backend/API/schema,
+dependency or stored-format changes. Alerts, Settings, Launchpad and broader
+retained-tool/maintainer acceptance remain open; no v3 release preparation yet.
+
+Saved Views validation: 869 frontend tests / 144 files, build and all 124 installed-
+Chrome smoke cases pass. Final affected checks include five browser cases and
+seven unit tests: native 200% zoom, nested dialogs/focus, all-vs-scoped reads,
+capture/restore, failed drafts, confirmed writes with failed reads and pending-
+write isolation from earlier refresh completion. Synthetic screenshots are in
+the review. API-reference/mock/surface/whitespace guards pass. No backend tests
+rerun for unchanged server code; no production/deployment access.
+
 Maintainer confirmed #307 fixed the listed-symbol issue. A second Watchlist
 report exposed market-wide subscriptions/lookups and a backend socket grammar
 that rejected EU entirely. Current follow-up adds read-only `quote_routes` to

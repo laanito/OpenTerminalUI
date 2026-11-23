@@ -68,6 +68,12 @@ the terminal. Security Hub provides ticker-centric research; the chart workstati
 supports linked panels, indicators, drawings and volume profile. Screens, quotes
 and history follow selected markets and available providers.
 
+The Views hub lists saved workflow setups across owned scopes, with their full
+names, destination pages and update dates. Save view captures the current page's
+supported filters/tabs/ticker and workspace state; Apply restores that setup.
+Workflow-page controls keep their scope filter and open a keyboard-accessible
+library dialog. Save/rename failures preserve the name draft for manual retry.
+
 ## Markets, news and alerts
 
 US/EU equity and crypto workflows combine instrument search, charts, screening,

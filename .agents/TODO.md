@@ -2214,8 +2214,13 @@ ordered v1.7 milestone above.
             market; accept EU socket/REST tokens and poll native symbols. Table,
             heatmap and export use the same token and native units; catalogue
             ambiguity stays explicit. Additive read metadata, no migration or
-            stored-list rewrite; host acceptance remains open.
-      - [ ] Review remaining Views, Alerts, Settings and Launchpad layouts with
+            stored-list rewrite; #308 merged and maintainer-tested successfully.
+      - [x] Saved Views hub and shared controls: all owned scopes visible directly,
+            readable names/destinations/dates/actions, bounded scoped/nested name
+            dialogs, retained drafts and distinct load/empty/failure states.
+            Preserve capture/restore contracts and ignore stale scope responses.
+            See `docs/design/v3/SAVED_VIEWS_REVIEW.md`; host acceptance remains open.
+      - [ ] Review remaining Alerts, Settings and Launchpad layouts with
             populated/long content, narrow screens and keyboard/zoom; inventory
             any other retained-tool readability issues before release acceptance.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
