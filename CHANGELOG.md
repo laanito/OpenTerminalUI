@@ -27,6 +27,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Paper and Position Sizer workflows** — one Paper account scope,
+  position/activity review before secondary tools, labelled retained order/create
+  dialogs and independent read failures. Confirmed writes remain separate from
+  refresh failures and stale reads. Shared hotkeys respect editable fields and
+  pending submissions; the floating widget stays within the viewport. Position
+  Sizer exposes its existing methods and live result with readable labels and an
+  explicit currency assumption. Existing simulation and sizing formulas remain.
 - **Readable responsive Launchpad** — labelled layout selection and disclosed
   management replace crowded presets; bounded dialogs manage panel choices,
   titles, symbols and linking. Long titles, headlines, template descriptions and

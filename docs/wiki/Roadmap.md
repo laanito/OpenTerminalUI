@@ -975,8 +975,9 @@ The [Launchpad review](../design/v3/LAUNCHPAD_REVIEW.md) follows merged #311 wit
 readable panel/template controls and visual reflow that preserves saved geometry.
 After maintainer-accepted #312, the [remaining-page audit](../design/v3/RETAINED_PAGE_AUDIT.md)
 identifies concrete layout gaps in other retained tools: twenty ordinary menu
-destinations remain, starting with Paper and Position Sizer, followed by macro/
-market, risk/quant, MTA/DOM, Backtesting and account/auth work. Secondary/hidden
+destinations awaited review at that baseline. The [Paper/Sizer review](../design/v3/PAPER_SIZING_REVIEW.md)
+implements two, with host acceptance open; eighteen remain, starting with macro/FX,
+then market, risk/quant, MTA/DOM, Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
 No new feature backlog is added to that usability
