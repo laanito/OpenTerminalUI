@@ -1,0 +1,4783 @@
+{
+  "method": "Installed Chrome, fixed initial-view probes after 1500ms. Fresh synthetic JWT/profile and selected typed read fixtures; every other API read intentionally 503, all writes/models/WebSockets/external origins blocked. Visible viewport candidates only; small numbers, clipped selectors and local scrollers can be intentional. Not populated acceptance, zoom, accessibility or live-provider certification.",
+  "cases": [
+    {
+      "name": "forex",
+      "path": "/equity/forex",
+      "observedPath": "/equity/forex",
+      "width": 1440,
+      "height": 1000,
+      "state": "Synthetic cross rates, dated bank entries and pair candles",
+      "documentWidth": 1440,
+      "initialText": "none\nForex Terminal\nCross rates, pair detail, central banks, and major-currency relative strength\nBACKEND LIVE\nFX\nCROSS RATES\nClick a cell to open pair detail and rate context\nBASE\tUSD\tEUR\tGBP\tJPY\tCHF\tAUD\tCAD\tINR\nUSD\t1.0000\t0.9200\t0.7800\t150.00\t0.8800\t1.5000\t1.3500\t83.000\nEUR\t1.0870\t1.0000\t0.8478\t163.04\t0.9565\t1.6304\t1.4674\t90.217\nGBP\t1.2821\t1.1795\t1.0000\t192.31\t1.1282\t1.9231\t1.7308\t106.41\nJPY\t0.0067\t0.0061\t0.0052\t1.0000\t0.0059\t0.0100\t0.0090\t0.5533\nCHF\t1.1364\t1.0455\t0.8864\t170.45\t1.0000\t1.7045\t1.5341\t94.318\nAUD\t0.6667\t0.6133\t0.5200\t100.00\t0.586",
+      "smallLabelCount": 49,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "Click a cell to open pair detail and rate context",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "th",
+          "text": "BASE",
+          "className": "px-2 py-1 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "USD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EUR",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "GBP",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "JPY",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHF",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AUD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CAD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "INR",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "USD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EUR",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "GBP",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "JPY",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHF",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AUD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CAD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "INR",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "a",
+          "text": "OPEN CHART",
+          "className": "rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SPOT",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 1,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "BASE USD EUR GBP JPY CHF AUD CAD INR USD 1.0000 0.9200 0.7800 150.00 0.8800 1.5000 1.3500 83.000 EUR 1.0870 1.0000 0.8478 163.04 0",
+          "className": "overflow-x-auto",
+          "width": 674,
+          "scrollWidth": 678,
+          "overflowX": "auto",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "commodities",
+      "path": "/equity/commodities",
+      "observedPath": "/equity/commodities",
+      "width": 1440,
+      "height": 1000,
+      "state": "Intentional unavailable API; existing labelled frontend fallback",
+      "documentWidth": 1440,
+      "initialText": "none\nCommodities Terminal\nEnergy, metals, and agriculture futures with curve and seasonality context\nSEEDED FALLBACK\nCMDTY\nENERGY\nMETALS\nAGRICULTURE\nCommand aliases:\nCOMMODITY\nGOLD\nOIL\nCommodities backend routes can render seeded fixtures until router registration is wired into the main backend app.\nENERGY\nSpot watchlist with mini trend, daily move, and liquidity\nCONTRACT\tLAST\tCHG\tCHG%\tVOLUME\tTREND\n\nCL=F\nWTI Crude\n\t82.46\t+1.18\t+1.45%\t382.4K\t\n\n\nNG=F\nNatural Gas\n\t2.74\t-0.03\t-1.08%\t214.5K\t\n\n\nRB=F\nRBOB Gasoline\n\t2.61\t+0.02\t+0.83%\t42.1K\t\n\n\nHO=F\nHeat",
+      "smallLabelCount": 19,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "Command aliases:",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "COMMODITY",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "GOLD",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "OIL",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Spot watchlist with mini trend, daily move, and liquidity",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "th",
+          "text": "CONTRACT",
+          "className": "px-3 py-2 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "LAST",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHG",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHG%",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "VOLUME",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "TREND",
+          "className": "px-3 py-2 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "WTI Crude",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Natural Gas",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RBOB Gasoline",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Heating Oil",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "a",
+          "text": "OPEN SECURITY",
+          "className": "rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "LAST",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "DAILY MOVE",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "VOLUME",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/commodities/futures-chain/CL%3DF",
+        "/api/commodities/quotes",
+        "/api/commodities/seasonal/CL%3DF",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "economics",
+      "path": "/equity/economics",
+      "observedPath": "/equity/economics",
+      "width": 1440,
+      "height": 1000,
+      "state": "Intentional unavailable API; initial configuration/loading state",
+      "documentWidth": 1440,
+      "initialText": "ECONOMIC TERMINAL\nCALENDAR\nMACRO DASHBOARD\nNOVEMBER 2026\nHIGH\nMEDIUM\nLOW\nUNKNOWN\nSUN\nMON\nTUE\nWED\nTHU\nFRI\nSAT\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nnone\nEVENT DETAILS\nSelect an event dot on the calendar to view details.",
+      "smallLabelCount": 11,
+      "smallLabels": [
+        {
+          "tag": "label",
+          "text": "HIGH",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "MEDIUM",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "LOW",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "UNKNOWN",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SUN",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MON",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "TUE",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "WED",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "THU",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "FRI",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SAT",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/economics/calendar",
+        "/api/economics/indicators",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "dividends",
+      "path": "/equity/dividends",
+      "observedPath": "/equity/dividends",
+      "width": 1440,
+      "height": 1000,
+      "state": "Synthetic dividend calendar",
+      "documentWidth": 1440,
+      "initialText": "Upcoming Calendar\nPortfolio Income\nStock Analysis\nAristocrats\nnone\nUpcoming Dividends\nEx-dates in the next 30 days\nSYMBOL\tEX-DATE\tAMOUNT\tTYPE\n\nAAPL\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data\n\n\nSAP.DE\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data\n\n\nMSFT\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data",
+      "smallLabelCount": 10,
+      "smallLabels": [
+        {
+          "tag": "th",
+          "text": "SYMBOL",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EX-DATE",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AMOUNT",
+          "className": "px-2 py-1 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "TYPE",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "AAPL",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SAP.DE",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "MSFT",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "position-sizer",
+      "path": "/equity/position-sizer",
+      "observedPath": "/equity/position-sizer",
+      "width": 1440,
+      "height": 1000,
+      "state": "Existing local calculator defaults; no execution",
+      "documentWidth": 1440,
+      "initialText": "POSITION SIZER\nClient-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.\nnone\nInputs\nAccount, trade, and method-specific sizing parameters\nACCOUNT SIZE\nFormatted: $1,000,000.00\nRISK PER TRADE\n% of Account\nFixed Amount\nRISK %\n1.00% of account\nENTRY PRICE\n$2,500.00\nSTOP LOSS PRICE\n$2,450.00\nTARGET PRICE\nOptional\nCURRENT ATR VALUE\nOptional\nMETHOD\nFIXED FRACTIONAL\nRisk a fixed portion of account equity.\nKELLY CRITERION\nPosition size from edge and payoff ratio.\nATR-BASED\nSize by volatility-adjusted stop distance",
+      "smallLabelCount": 34,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "Client-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "ACCOUNT SIZE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Formatted: $1,000,000.00",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK PER TRADE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "% of Account",
+          "className": "flex-1 rounded-sm px-3 py-2 text-[11px] bg-terminal-accent text-terminal-bg",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "Fixed Amount",
+          "className": "flex-1 rounded-sm px-3 py-2 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK %",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "1.00% of account",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ENTRY PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "STOP LOSS PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "TARGET PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Optional",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "CURRENT ATR VALUE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Optional",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "METHOD",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "FIXED FRACTIONAL",
+          "className": "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Risk a fixed portion of account equity.",
+          "className": "mt-1 text-[10px]",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "KELLY CRITERION",
+          "className": "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Position size from edge and payoff ratio.",
+          "className": "mt-1 text-[10px]",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ATR-BASED",
+          "className": "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "paper",
+      "path": "/equity/paper",
+      "observedPath": "/equity/paper",
+      "width": 1440,
+      "height": 1000,
+      "state": "Synthetic portfolio, position and empty order/trade lists; no execution",
+      "documentWidth": 1440,
+      "initialText": "Create Virtual Portfolio\nCreate\nSelect portfolio\nLong-term worldwide paper research with independent simulated capital\nVirtual Order Entry\nBuy\nSell\nMarket\nLimit\nSL\nPlace\nHOT KEY TRADING\nAAPL\nPAPER\n0.00\n+0.00 (+0.00%)\nBID 0.00\nASK 0.00\nPORTFOLIO\nSelect\nLong-term worldwide paper research with independent simulated capital\nQUANTITY\n-\n+\n1x\n5x\n10x\n25x\nMax\nORDER TYPE\nMARKET\nLIMIT\nBUY (B)\nSELL (S)\nFLATTEN (F)\nREVERSE (R)\nCLEAR DRAFT (ESC)\nRECENT ORDERS\nEmbedded on Paper Trading\nNo recent orders for AAPL.\nPerformance\nPortfolio: Long-term worldwide pape",
+      "smallLabelCount": 14,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "HOT KEY TRADING",
+          "className": "text-[10px] uppercase tracking-[0.22em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "PAPER",
+          "className": "rounded-sm border border-amber-500/70 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "PORTFOLIO",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "QUANTITY",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "Max",
+          "className": "rounded-sm border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "ORDER TYPE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "MARKET",
+          "className": "rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.16em] border-terminal-accent bg-terminal-accent/10 text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "LIMIT",
+          "className": "rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.16em] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "FLATTEN (F)",
+          "className": "rounded-sm border border-terminal-border px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "REVERSE (R)",
+          "className": "rounded-sm border border-terminal-border px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "CLEAR DRAFT (ESC)",
+          "className": "rounded-sm border border-terminal-border px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RECENT ORDERS",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Embedded on Paper Trading",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "No recent orders for AAPL.",
+          "className": "rounded-sm border border-dashed border-terminal-border px-2 py-3 text-center text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 10,
+      "unlabelledInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": "limit"
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": "sl"
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        }
+      ],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/depth/AAPL",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "risk",
+      "path": "/equity/risk",
+      "observedPath": "/equity/risk",
+      "width": 1440,
+      "height": 1000,
+      "state": "Intentional unavailable analytics; initial read state",
+      "documentWidth": 1440,
+      "initialText": "RISK ENGINE CONTROL\nMULTI-FACTOR RISK ATTRIBUTION & ATTRIBUTION ANALYTICS\nOVERVIEW\nFACTOR ATTRIBUTION\nSTRESS TEST\nPORTFOLIO\nTICKER: AAPL\nRELOAD ANALYTICS\nRequest failed with status code 503\nAI Risk Insights\nPortfolio · Gemma reading of volatility, concentration, and correlation\nGenerate\nUses your configured LLM endpoint — analysis can take a minute.\nnone\nSTATISTICAL RISK METRICS\nTotal Portfolio Attribution\nEWMA VOLATILITY\n0.00%\nSYSTEMATIC BETA\n0.00\nMARGINAL CONTRIBUTION TO RISK (MCTR)\nnone\nFACTOR EXPOSURES (PCA)\nVariance decomposition by latent",
+      "smallLabelCount": 9,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "MULTI-FACTOR RISK ATTRIBUTION & ATTRIBUTION ANALYTICS",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "OVERVIEW",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors bg-terminal-accent text-terminal-bg",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "FACTOR ATTRIBUTION",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "STRESS TEST",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "PORTFOLIO",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors bg-terminal-accent text-terminal-bg",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "TICKER: AAPL",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "EWMA VOLATILITY",
+          "className": "mb-1 text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SYSTEMATIC BETA",
+          "className": "mb-1 text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MARGINAL CONTRIBUTION TO RISK (MCTR)",
+          "className": "mb-2 border-b border-terminal-border pb-1 text-[10px] font-bold uppercase text-terminal-accent",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/risk/correlation",
+        "/api/risk/exposures",
+        "/api/risk/sector-concentration",
+        "/api/risk/summary",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "backtesting",
+      "path": "/backtesting",
+      "observedPath": "/backtesting",
+      "width": 1440,
+      "height": 1000,
+      "state": "Initial setup with unavailable services; no submitted run",
+      "documentWidth": 1440,
+      "initialText": "none\nResearch Suites\nBacktesting control deck\nSAVE VIEW\nSAVED VIEWS\nBacktesting Console\nnone\nBacktesting Control Deck\nCompact controls for chart-first workflow\nASSET (TICKER)\nMARKET\nNSE\nBSE\nNYSE\nNASDAQ\nAMEX\nDATA TF\nDaily\n1 Hour\n15 Min\n5 Min\n1 Min\nSTART\nEND\nMODEL\n[TREND] SMA Crossover (20/50)\n[TREND] EMA Crossover (12/26)\n[MEAN_REVERSION] Mean Reversion (Z-Score)\n[BREAKOUT] 20-Day Breakout\n[OSCILLATOR] RSI Overbought/Oversold\n[TREND] MACD Crossover\n[VOLATILITY] Bollinger Bands\n[MOMENTUM] Dual Momentum\n[MEAN_REVERSION] VWAP Reversion\n[TREND] Supe",
+      "smallLabelCount": 23,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "ASSET (TICKER)",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MARKET",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA TF",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "START",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "END",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MODEL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "TRADE CAPITAL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA VERSION ID",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SERIES",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "EXECUTION PROFILE",
+          "className": "text-[11px] font-semibold uppercase tracking-wide text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Slippage, spread, market impact, and market-volume participation cap.",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "rounded border border-terminal-border px-2 py-0.5 text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SLIPPAGE MODEL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "COMM BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SLIP BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SPREAD BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "IMPACT BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "% VOLUME CAP",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "TREND",
+          "className": "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Trend-following model using simple moving average crossover.",
+          "className": "rounded border border-terminal-border/60 bg-terminal-bg px-2 py-1 text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/data/version/active",
+        "/api/instruments/search",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "fno",
+      "path": "/fno",
+      "observedPath": "/fno",
+      "width": 1440,
+      "height": 1000,
+      "state": "Initial shell with unavailable services; no contract/provider acceptance",
+      "documentWidth": 1440,
+      "initialText": "SYMBOL\nNIFTY\nBANKNIFTY\nRELIANCE\nTCS\nINFY\nHDFCBANK\nICICIBANK\nSBIN\nLT\nAXISBANK\nKOTAKBANK\nITC\nBAJFINANCE\nMARUTI\nTATAMOTORS\nBHARTIARTL\nSUNPHARMA\nHCLTECH\nWIPRO\nADANIPORTS\nNTPC\nONGC\nEXPIRY\nNo expiry\nDATA\nLive cache 60s\nUNIVERSE\nNSE F&O\nPOPULAR INDICES\nNIFTY\nBANKNIFTY\nFINNIFTY\nMIDCPNIFTY\nNIFTYNXT50\nSYMBOL\nNIFTY\nEXPIRY\n-\nSPOT\n₹0.00\nATM IV\n-\nIV RANK\n0.0%\nIV PCTL\n0.0%\nPCR\n-\nMAX PAIN\n-\nSTRIKE RANGE\n�10\n�15\n�20\nAll\n? ATM | Green ?OI up | Red ?OI down\nFailed to load option chain",
+      "smallLabelCount": 19,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "SYMBOL",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "EXPIRY",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UNIVERSE",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "POPULAR INDICES",
+          "className": "mr-1 text-[10px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "NIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-accent text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "BANKNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "FINNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "MIDCPNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "NIFTYNXT50",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SYMBOL",
+          "className": "text-[10px] uppercase text-terminal-muted flex items-center gap-1",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "EXPIRY",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SPOT",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ATM IV",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "IV RANK",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "IV PCTL",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "PCR",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MAX PAIN",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "? ATM | Green ?OI up | Red ?OI down",
+          "className": "ml-auto text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/fno/chain/NIFTY",
+        "/api/fno/chain/NIFTY/expiries",
+        "/api/fno/chain/NIFTY/summary",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "account",
+      "path": "/account",
+      "observedPath": "/account",
+      "width": 1440,
+      "height": 1000,
+      "state": "Fresh browser account defaults and synthetic JWT; no changes",
+      "documentWidth": 1440,
+      "initialText": "ACCOUNT | IDENTITY HQ\nNASDAQ\nTERMINAL-NOIR\nHUD OFF\nBACK\nSAVE PROFILE\nnone\nIdentity HQ\nIdentity, completion, and current market posture\nONLINE\nAU\nTRADER\nUSD\nPOLLING\nAUDIT\naudit@example.test\nLocation pending | Desk focus pending\nBROKER ALIAS\nMain Trading\nCOUNTRY ROUTE\nUS\nUnited States\nRISK POSTURE\nMODERATE\nLOCAL VAULT\n0/3 slots | 0/4 connectors\n0%\nIDENTITY COMPLETION\nMissing: First Name, Last Name, Display Name, Phone, Location, Desk Focus, Bio, Avatar\nCOMPLETED\n0\nMISSING\n8\nCompletion tracks identity fields only. Desk routing and integrations con",
+      "smallLabelCount": 19,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "ACCOUNT | IDENTITY HQ",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "BROKER ALIAS",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "COUNTRY ROUTE",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK POSTURE",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "LOCAL VAULT",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "COMPLETED",
+          "className": "",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MISSING",
+          "className": "",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Completion tracks identity fields only. Desk routing and integrations continue to use the existing save flow.",
+          "className": "mt-3 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "AUTH SESSION",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Role TRADER | Timezone Europe/Madrid",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "DESK ROUTE",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "USD settlement | Main Trading",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SECURITY POSTURE",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "HYBRID flow | MODERATE risk",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "INTEGRATIONS",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Webhook pending",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "LATEST ACTION",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "No browser snapshot saved yet",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Linked charts, replay, multi-timeframe studies.",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [
+        "https://flagcdn.com"
+      ],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "login",
+      "path": "/login",
+      "observedPath": "/login",
+      "width": 1440,
+      "height": 1000,
+      "state": "Initial form; no submitted credentials",
+      "documentWidth": 1440,
+      "initialText": "OPENTERMINALUI\nSYSTEM STATUS: ONLINE\n23:01:02 IST | 24 NOV 2026\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nUPTIME 99.97%\n|\nLATENCY 2MS\n|\nSESSIONS 1,247\nOPEN-SOURCE TRADING TERMINAL\nOPENTERMINALUI\n\nAnalyze. Trade. Optimize.\n\nSECURE ACCESS\n\nAUTHENTICATE\n\nEnter credentials to access termin",
+      "smallLabelCount": 24,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "OPENTERMINALUI",
+          "className": "ot-status-bar-left",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SYSTEM STATUS: ONLINE",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "23:01:02 IST | 24 NOV 2026",
+          "className": "ot-status-bar-right",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DOW",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "AAPL",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MSFT",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NVDA",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "EURUSD",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UPTIME 99.97%",
+          "className": "ot-value-up",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "LATENCY 2MS",
+          "className": "ot-value-cyan",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SESSIONS 1,247",
+          "className": "ot-value-amber",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "OPEN-SOURCE TRADING TERMINAL",
+          "className": "ot-brand-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "SECURE ACCESS",
+          "className": "ot-panel-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "USER ID",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "Remember terminal",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "a",
+          "text": "Forgot access?",
+          "className": "ot-forgot-link",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "> DEMO ACCESS",
+          "className": "ot-demo-button ot-stagger",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 1,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-market-ticker",
+          "width": 863,
+          "scrollWidth": 2450,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "register",
+      "path": "/register",
+      "observedPath": "/register",
+      "width": 1440,
+      "height": 1000,
+      "state": "Initial form; no registration",
+      "documentWidth": 1440,
+      "initialText": "OPENTERMINALUI\nSYSTEM STATUS: ONLINE\n23:01:04 IST | 24 NOV 2026\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nUPTIME 99.97%\n|\nLATENCY 2MS\n|\nSESSIONS 1,247\nOPEN-SOURCE TRADING TERMINAL\nOPENTERMINALUI\n\nCreate secure terminal access.\n\nNEW OPERATOR\n\nREQUEST ACCESS\n\nProvision your terminal cred",
+      "smallLabelCount": 21,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "OPENTERMINALUI",
+          "className": "ot-status-bar-left",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SYSTEM STATUS: ONLINE",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "23:01:04 IST | 24 NOV 2026",
+          "className": "ot-status-bar-right",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DOW",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "AAPL",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MSFT",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NVDA",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "EURUSD",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UPTIME 99.97%",
+          "className": "ot-value-up",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "LATENCY 2MS",
+          "className": "ot-value-cyan",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SESSIONS 1,247",
+          "className": "ot-value-amber",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "OPEN-SOURCE TRADING TERMINAL",
+          "className": "ot-brand-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "NEW OPERATOR",
+          "className": "ot-panel-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "EMAIL",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "CONFIRM PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "ROLE",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "Already registered? Access terminal",
+          "className": "",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 1,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-market-ticker",
+          "width": 863,
+          "scrollWidth": 2450,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "forgot-access",
+      "path": "/forgot-access",
+      "observedPath": "/forgot-access",
+      "width": 1440,
+      "height": 1000,
+      "state": "Initial form; no submitted reset",
+      "documentWidth": 1440,
+      "initialText": "Forgot access\nReset access\nBack to Login",
+      "smallLabelCount": 0,
+      "smallLabels": [],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 3,
+      "unlabelledInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": "Email"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "New password"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "Confirm new password"
+        }
+      ],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "forex",
+      "path": "/equity/forex",
+      "observedPath": "/equity/forex",
+      "width": 1024,
+      "height": 1000,
+      "state": "Synthetic cross rates, dated bank entries and pair candles",
+      "documentWidth": 1024,
+      "initialText": "none\nForex Terminal\nCross rates, pair detail, central banks, and major-currency relative strength\nBACKEND LIVE\nFX\nCROSS RATES\nClick a cell to open pair detail and rate context\nBASE\tUSD\tEUR\tGBP\tJPY\tCHF\tAUD\tCAD\tINR\nUSD\t1.0000\t0.9200\t0.7800\t150.00\t0.8800\t1.5000\t1.3500\t83.000\nEUR\t1.0870\t1.0000\t0.8478\t163.04\t0.9565\t1.6304\t1.4674\t90.217\nGBP\t1.2821\t1.1795\t1.0000\t192.31\t1.1282\t1.9231\t1.7308\t106.41\nJPY\t0.0067\t0.0061\t0.0052\t1.0000\t0.0059\t0.0100\t0.0090\t0.5533\nCHF\t1.1364\t1.0455\t0.8864\t170.45\t1.0000\t1.7045\t1.5341\t94.318\nAUD\t0.6667\t0.6133\t0.5200\t100.00\t0.586",
+      "smallLabelCount": 19,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "Click a cell to open pair detail and rate context",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "th",
+          "text": "BASE",
+          "className": "px-2 py-1 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "USD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EUR",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "GBP",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "JPY",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHF",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AUD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CAD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "INR",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "USD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EUR",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "GBP",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "JPY",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHF",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AUD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CAD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "INR",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "a",
+          "text": "OPEN CHART",
+          "className": "rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "commodities",
+      "path": "/equity/commodities",
+      "observedPath": "/equity/commodities",
+      "width": 1024,
+      "height": 1000,
+      "state": "Intentional unavailable API; existing labelled frontend fallback",
+      "documentWidth": 1024,
+      "initialText": "none\nCommodities Terminal\nEnergy, metals, and agriculture futures with curve and seasonality context\nSEEDED FALLBACK\nCMDTY\nENERGY\nMETALS\nAGRICULTURE\nCommand aliases:\nCOMMODITY\nGOLD\nOIL\nCommodities backend routes can render seeded fixtures until router registration is wired into the main backend app.\nENERGY\nSpot watchlist with mini trend, daily move, and liquidity\nCONTRACT\tLAST\tCHG\tCHG%\tVOLUME\tTREND\n\nCL=F\nWTI Crude\n\t82.46\t+1.18\t+1.45%\t382.4K\t\n\n\nNG=F\nNatural Gas\n\t2.74\t-0.03\t-1.08%\t214.5K\t\n\n\nRB=F\nRBOB Gasoline\n\t2.61\t+0.02\t+0.83%\t42.1K\t\n\n\nHO=F\nHeat",
+      "smallLabelCount": 16,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "Command aliases:",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "COMMODITY",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "GOLD",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "OIL",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Spot watchlist with mini trend, daily move, and liquidity",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "th",
+          "text": "CONTRACT",
+          "className": "px-3 py-2 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "LAST",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHG",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHG%",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "VOLUME",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "TREND",
+          "className": "px-3 py-2 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "WTI Crude",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Natural Gas",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RBOB Gasoline",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Heating Oil",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "a",
+          "text": "OPEN SECURITY",
+          "className": "rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/commodities/futures-chain/CL%3DF",
+        "/api/commodities/quotes",
+        "/api/commodities/seasonal/CL%3DF",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "economics",
+      "path": "/equity/economics",
+      "observedPath": "/equity/economics",
+      "width": 1024,
+      "height": 1000,
+      "state": "Intentional unavailable API; initial configuration/loading state",
+      "documentWidth": 1024,
+      "initialText": "ECONOMIC TERMINAL\nCALENDAR\nMACRO DASHBOARD\nNOVEMBER 2026\nHIGH\nMEDIUM\nLOW\nUNKNOWN\nSUN\nMON\nTUE\nWED\nTHU\nFRI\nSAT\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nnone\nEVENT DETAILS\nSelect an event dot on the calendar to view details.",
+      "smallLabelCount": 11,
+      "smallLabels": [
+        {
+          "tag": "label",
+          "text": "HIGH",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "MEDIUM",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "LOW",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "UNKNOWN",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SUN",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MON",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "TUE",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "WED",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "THU",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "FRI",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SAT",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/economics/calendar",
+        "/api/economics/indicators",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "dividends",
+      "path": "/equity/dividends",
+      "observedPath": "/equity/dividends",
+      "width": 1024,
+      "height": 1000,
+      "state": "Synthetic dividend calendar",
+      "documentWidth": 1024,
+      "initialText": "Upcoming Calendar\nPortfolio Income\nStock Analysis\nAristocrats\nnone\nUpcoming Dividends\nEx-dates in the next 30 days\nSYMBOL\tEX-DATE\tAMOUNT\tTYPE\n\nAAPL\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data\n\n\nSAP.DE\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data\n\n\nMSFT\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data",
+      "smallLabelCount": 10,
+      "smallLabels": [
+        {
+          "tag": "th",
+          "text": "SYMBOL",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EX-DATE",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AMOUNT",
+          "className": "px-2 py-1 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "TYPE",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "AAPL",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SAP.DE",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "MSFT",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "position-sizer",
+      "path": "/equity/position-sizer",
+      "observedPath": "/equity/position-sizer",
+      "width": 1024,
+      "height": 1000,
+      "state": "Existing local calculator defaults; no execution",
+      "documentWidth": 1024,
+      "initialText": "POSITION SIZER\nClient-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.\nnone\nInputs\nAccount, trade, and method-specific sizing parameters\nACCOUNT SIZE\nFormatted: $1,000,000.00\nRISK PER TRADE\n% of Account\nFixed Amount\nRISK %\n1.00% of account\nENTRY PRICE\n$2,500.00\nSTOP LOSS PRICE\n$2,450.00\nTARGET PRICE\nOptional\nCURRENT ATR VALUE\nOptional\nMETHOD\nFIXED FRACTIONAL\nRisk a fixed portion of account equity.\nKELLY CRITERION\nPosition size from edge and payoff ratio.\nATR-BASED\nSize by volatility-adjusted stop distance",
+      "smallLabelCount": 26,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "Client-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "ACCOUNT SIZE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Formatted: $1,000,000.00",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK PER TRADE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "% of Account",
+          "className": "flex-1 rounded-sm px-3 py-2 text-[11px] bg-terminal-accent text-terminal-bg",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "Fixed Amount",
+          "className": "flex-1 rounded-sm px-3 py-2 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK %",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "1.00% of account",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ENTRY PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "STOP LOSS PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "TARGET PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Optional",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "CURRENT ATR VALUE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Optional",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "METHOD",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "FIXED FRACTIONAL",
+          "className": "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Risk a fixed portion of account equity.",
+          "className": "mt-1 text-[10px]",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "KELLY CRITERION",
+          "className": "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Position size from edge and payoff ratio.",
+          "className": "mt-1 text-[10px]",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ATR-BASED",
+          "className": "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "paper",
+      "path": "/equity/paper",
+      "observedPath": "/equity/paper",
+      "width": 1024,
+      "height": 1000,
+      "state": "Synthetic portfolio, position and empty order/trade lists; no execution",
+      "documentWidth": 1024,
+      "initialText": "Create Virtual Portfolio\nCreate\nSelect portfolio\nLong-term worldwide paper research with independent simulated capital\nVirtual Order Entry\nBuy\nSell\nMarket\nLimit\nSL\nPlace\nHOT KEY TRADING\nAAPL\nPAPER\n0.00\n+0.00 (+0.00%)\nBID 0.00\nASK 0.00\nPORTFOLIO\nSelect\nLong-term worldwide paper research with independent simulated capital\nQUANTITY\n-\n+\n1x\n5x\n10x\n25x\nMax\nORDER TYPE\nMARKET\nLIMIT\nBUY (B)\nSELL (S)\nFLATTEN (F)\nREVERSE (R)\nCLEAR DRAFT (ESC)\nRECENT ORDERS\nEmbedded on Paper Trading\nNo recent orders for AAPL.\nPerformance\nPortfolio: Long-term worldwide pape",
+      "smallLabelCount": 14,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "HOT KEY TRADING",
+          "className": "text-[10px] uppercase tracking-[0.22em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "PAPER",
+          "className": "rounded-sm border border-amber-500/70 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "PORTFOLIO",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "QUANTITY",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "Max",
+          "className": "rounded-sm border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "ORDER TYPE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "MARKET",
+          "className": "rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.16em] border-terminal-accent bg-terminal-accent/10 text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "LIMIT",
+          "className": "rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.16em] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "FLATTEN (F)",
+          "className": "rounded-sm border border-terminal-border px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "REVERSE (R)",
+          "className": "rounded-sm border border-terminal-border px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "CLEAR DRAFT (ESC)",
+          "className": "rounded-sm border border-terminal-border px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RECENT ORDERS",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Embedded on Paper Trading",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "No recent orders for AAPL.",
+          "className": "rounded-sm border border-dashed border-terminal-border px-2 py-3 text-center text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 10,
+      "unlabelledInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": "limit"
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": "sl"
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        }
+      ],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/depth/AAPL",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "risk",
+      "path": "/equity/risk",
+      "observedPath": "/equity/risk",
+      "width": 1024,
+      "height": 1000,
+      "state": "Intentional unavailable analytics; initial read state",
+      "documentWidth": 1024,
+      "initialText": "RISK ENGINE CONTROL\nMULTI-FACTOR RISK ATTRIBUTION & ATTRIBUTION ANALYTICS\nOVERVIEW\nFACTOR ATTRIBUTION\nSTRESS TEST\nPORTFOLIO\nTICKER: AAPL\nRELOAD ANALYTICS\nRequest failed with status code 503\nAI Risk Insights\nPortfolio · Gemma reading of volatility, concentration, and correlation\nGenerate\nUses your configured LLM endpoint — analysis can take a minute.\nnone\nSTATISTICAL RISK METRICS\nTotal Portfolio Attribution\nEWMA VOLATILITY\n0.00%\nSYSTEMATIC BETA\n0.00\nMARGINAL CONTRIBUTION TO RISK (MCTR)\nnone\nFACTOR EXPOSURES (PCA)\nVariance decomposition by latent",
+      "smallLabelCount": 9,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "MULTI-FACTOR RISK ATTRIBUTION & ATTRIBUTION ANALYTICS",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "OVERVIEW",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors bg-terminal-accent text-terminal-bg",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "FACTOR ATTRIBUTION",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "STRESS TEST",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "PORTFOLIO",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors bg-terminal-accent text-terminal-bg",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "TICKER: AAPL",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "EWMA VOLATILITY",
+          "className": "mb-1 text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SYSTEMATIC BETA",
+          "className": "mb-1 text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MARGINAL CONTRIBUTION TO RISK (MCTR)",
+          "className": "mb-2 border-b border-terminal-border pb-1 text-[10px] font-bold uppercase text-terminal-accent",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/risk/correlation",
+        "/api/risk/exposures",
+        "/api/risk/sector-concentration",
+        "/api/risk/summary",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "backtesting",
+      "path": "/backtesting",
+      "observedPath": "/backtesting",
+      "width": 1024,
+      "height": 1000,
+      "state": "Initial setup with unavailable services; no submitted run",
+      "documentWidth": 1024,
+      "initialText": "none\nResearch Suites\nBacktesting control deck\nSAVE VIEW\nSAVED VIEWS\nBacktesting Console\nnone\nBacktesting Control Deck\nCompact controls for chart-first workflow\nASSET (TICKER)\nMARKET\nNSE\nBSE\nNYSE\nNASDAQ\nAMEX\nDATA TF\nDaily\n1 Hour\n15 Min\n5 Min\n1 Min\nSTART\nEND\nMODEL\n[TREND] SMA Crossover (20/50)\n[TREND] EMA Crossover (12/26)\n[MEAN_REVERSION] Mean Reversion (Z-Score)\n[BREAKOUT] 20-Day Breakout\n[OSCILLATOR] RSI Overbought/Oversold\n[TREND] MACD Crossover\n[VOLATILITY] Bollinger Bands\n[MOMENTUM] Dual Momentum\n[MEAN_REVERSION] VWAP Reversion\n[TREND] Supe",
+      "smallLabelCount": 23,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "ASSET (TICKER)",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MARKET",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA TF",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "START",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "END",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MODEL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "TRADE CAPITAL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA VERSION ID",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SERIES",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "EXECUTION PROFILE",
+          "className": "text-[11px] font-semibold uppercase tracking-wide text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Slippage, spread, market impact, and market-volume participation cap.",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "rounded border border-terminal-border px-2 py-0.5 text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SLIPPAGE MODEL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "COMM BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SLIP BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SPREAD BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "IMPACT BPS",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "% VOLUME CAP",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "TREND",
+          "className": "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Trend-following model using simple moving average crossover.",
+          "className": "rounded border border-terminal-border/60 bg-terminal-bg px-2 py-1 text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/data/version/active",
+        "/api/instruments/search",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "fno",
+      "path": "/fno",
+      "observedPath": "/fno",
+      "width": 1024,
+      "height": 1000,
+      "state": "Initial shell with unavailable services; no contract/provider acceptance",
+      "documentWidth": 1024,
+      "initialText": "SYMBOL\nNIFTY\nBANKNIFTY\nRELIANCE\nTCS\nINFY\nHDFCBANK\nICICIBANK\nSBIN\nLT\nAXISBANK\nKOTAKBANK\nITC\nBAJFINANCE\nMARUTI\nTATAMOTORS\nBHARTIARTL\nSUNPHARMA\nHCLTECH\nWIPRO\nADANIPORTS\nNTPC\nONGC\nEXPIRY\nNo expiry\nDATA\nLive cache 60s\nUNIVERSE\nNSE F&O\nPOPULAR INDICES\nNIFTY\nBANKNIFTY\nFINNIFTY\nMIDCPNIFTY\nNIFTYNXT50\nSYMBOL\nNIFTY\nEXPIRY\n-\nSPOT\n₹0.00\nATM IV\n-\nIV RANK\n0.0%\nIV PCTL\n0.0%\nPCR\n-\nMAX PAIN\n-\nSTRIKE RANGE\n�10\n�15\n�20\nAll\n? ATM | Green ?OI up | Red ?OI down\nFailed to load option chain",
+      "smallLabelCount": 19,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "SYMBOL",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "EXPIRY",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UNIVERSE",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "POPULAR INDICES",
+          "className": "mr-1 text-[10px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "NIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-accent text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "BANKNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "FINNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "MIDCPNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "NIFTYNXT50",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SYMBOL",
+          "className": "text-[10px] uppercase text-terminal-muted flex items-center gap-1",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "EXPIRY",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SPOT",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ATM IV",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "IV RANK",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "IV PCTL",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "PCR",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MAX PAIN",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "? ATM | Green ?OI up | Red ?OI down",
+          "className": "ml-auto text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/fno/chain/NIFTY",
+        "/api/fno/chain/NIFTY/expiries",
+        "/api/fno/chain/NIFTY/summary",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [
+        "https://flagcdn.com"
+      ],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "account",
+      "path": "/account",
+      "observedPath": "/account",
+      "width": 1024,
+      "height": 1000,
+      "state": "Fresh browser account defaults and synthetic JWT; no changes",
+      "documentWidth": 1024,
+      "initialText": "ACCOUNT | IDENTITY HQ\nNASDAQ\nTERMINAL-NOIR\nHUD OFF\nBACK\nSAVE PROFILE\nnone\nIdentity HQ\nIdentity, completion, and current market posture\nONLINE\nAU\nTRADER\nUSD\nPOLLING\nAUDIT\naudit@example.test\nLocation pending | Desk focus pending\nBROKER ALIAS\nMain Trading\nCOUNTRY ROUTE\nUS\nUnited States\nRISK POSTURE\nMODERATE\nLOCAL VAULT\n0/3 slots | 0/4 connectors\n0%\nIDENTITY COMPLETION\nMissing: First Name, Last Name, Display Name, Phone, Location, Desk Focus, Bio, Avatar\nCOMPLETED\n0\nMISSING\n8\nCompletion tracks identity fields only. Desk routing and integrations con",
+      "smallLabelCount": 13,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "ACCOUNT | IDENTITY HQ",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "BROKER ALIAS",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "COUNTRY ROUTE",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK POSTURE",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "LOCAL VAULT",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "COMPLETED",
+          "className": "",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MISSING",
+          "className": "",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Completion tracks identity fields only. Desk routing and integrations continue to use the existing save flow.",
+          "className": "mt-3 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "AUTH SESSION",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Role TRADER | Timezone Europe/Madrid",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "DESK ROUTE",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "USD settlement | Main Trading",
+          "className": "mt-1 text-[11px] leading-5 text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SECURITY POSTURE",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [
+        "https://flagcdn.com"
+      ],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "login",
+      "path": "/login",
+      "observedPath": "/login",
+      "width": 1024,
+      "height": 1000,
+      "state": "Initial form; no submitted credentials",
+      "documentWidth": 1024,
+      "initialText": "OPENTERMINALUI\nSYSTEM STATUS: ONLINE\n23:01:23 IST | 24 NOV 2026\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nUPTIME 99.97%\n|\nLATENCY 2MS\n|\nSESSIONS 1,247\nOPEN-SOURCE TRADING TERMINAL\nOPENTERMINALUI\n\nAnalyze. Trade. Optimize.\n\nSECURE ACCESS\n\nAUTHENTICATE\n\nEnter credentials to access termin",
+      "smallLabelCount": 18,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "OPENTERMINALUI",
+          "className": "ot-status-bar-left",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SYSTEM STATUS: ONLINE",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "23:01:23 IST | 24 NOV 2026",
+          "className": "ot-status-bar-right",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DOW",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "AAPL",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MSFT",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NVDA",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UPTIME 99.97%",
+          "className": "ot-value-up",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "LATENCY 2MS",
+          "className": "ot-value-cyan",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SESSIONS 1,247",
+          "className": "ot-value-amber",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "OPEN-SOURCE TRADING TERMINAL",
+          "className": "ot-brand-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "SECURE ACCESS",
+          "className": "ot-panel-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "USER ID",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "Remember terminal",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "a",
+          "text": "Forgot access?",
+          "className": "ot-forgot-link",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "> DEMO ACCESS",
+          "className": "ot-demo-button ot-stagger",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 1,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-market-ticker",
+          "width": 1024,
+          "scrollWidth": 2450,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "register",
+      "path": "/register",
+      "observedPath": "/register",
+      "width": 1024,
+      "height": 1000,
+      "state": "Initial form; no registration",
+      "documentWidth": 1024,
+      "initialText": "OPENTERMINALUI\nSYSTEM STATUS: ONLINE\n23:01:25 IST | 24 NOV 2026\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nUPTIME 99.97%\n|\nLATENCY 2MS\n|\nSESSIONS 1,247\nOPEN-SOURCE TRADING TERMINAL\nOPENTERMINALUI\n\nCreate secure terminal access.\n\nNEW OPERATOR\n\nREQUEST ACCESS\n\nProvision your terminal cred",
+      "smallLabelCount": 17,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "OPENTERMINALUI",
+          "className": "ot-status-bar-left",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SYSTEM STATUS: ONLINE",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "23:01:25 IST | 24 NOV 2026",
+          "className": "ot-status-bar-right",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DOW",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "AAPL",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MSFT",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NVDA",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UPTIME 99.97%",
+          "className": "ot-value-up",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "LATENCY 2MS",
+          "className": "ot-value-cyan",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SESSIONS 1,247",
+          "className": "ot-value-amber",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "OPEN-SOURCE TRADING TERMINAL",
+          "className": "ot-brand-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "NEW OPERATOR",
+          "className": "ot-panel-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "EMAIL",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "CONFIRM PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "ROLE",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 1,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-market-ticker",
+          "width": 1024,
+          "scrollWidth": 2450,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "forgot-access",
+      "path": "/forgot-access",
+      "observedPath": "/forgot-access",
+      "width": 1024,
+      "height": 1000,
+      "state": "Initial form; no submitted reset",
+      "documentWidth": 1024,
+      "initialText": "Forgot access\nReset access\nBack to Login",
+      "smallLabelCount": 0,
+      "smallLabels": [],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 3,
+      "unlabelledInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": "Email"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "New password"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "Confirm new password"
+        }
+      ],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "forex",
+      "path": "/equity/forex",
+      "observedPath": "/equity/forex",
+      "width": 390,
+      "height": 1000,
+      "state": "Synthetic cross rates, dated bank entries and pair candles",
+      "documentWidth": 390,
+      "initialText": "none\nForex Terminal\nCross rates, pair detail, central banks, and major-currency relative strength\nBACKEND LIVE\nFX\nCROSS RATES\nClick a cell to open pair detail and rate context\nBASE\tUSD\tEUR\tGBP\tJPY\tCHF\tAUD\tCAD\tINR\nUSD\t1.0000\t0.9200\t0.7800\t150.00\t0.8800\t1.5000\t1.3500\t83.000\nEUR\t1.0870\t1.0000\t0.8478\t163.04\t0.9565\t1.6304\t1.4674\t90.217\nGBP\t1.2821\t1.1795\t1.0000\t192.31\t1.1282\t1.9231\t1.7308\t106.41\nJPY\t0.0067\t0.0061\t0.0052\t1.0000\t0.0059\t0.0100\t0.0090\t0.5533\nCHF\t1.1364\t1.0455\t0.8864\t170.45\t1.0000\t1.7045\t1.5341\t94.318\nAUD\t0.6667\t0.6133\t0.5200\t100.00\t0.586",
+      "smallLabelCount": 14,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "Click a cell to open pair detail and rate context",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "th",
+          "text": "BASE",
+          "className": "px-2 py-1 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "USD",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EUR",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "GBP",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "JPY",
+          "className": "px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "USD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EUR",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "GBP",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "JPY",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHF",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AUD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CAD",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "INR",
+          "className": "px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 4,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "none Forex Terminal Cross rates, pair detail, central banks, and major-currency relative strength BACKEND LIVE FX CROSS RATES Clic",
+          "className": "space-y-4 px-3 py-3",
+          "width": 390,
+          "scrollWidth": 717,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "section",
+          "text": "none Forex Terminal Cross rates, pair detail, central banks, and major-currency relative strength BACKEND LIVE FX CROSS RATES Clic",
+          "className": "rounded-sm border border-terminal-border bg-terminal-panel",
+          "width": 364,
+          "scrollWidth": 704,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "CROSS RATES Click a cell to open pair detail and rate context BASE USD EUR GBP JPY CHF AUD CAD INR USD 1.0000 0.9200 0.7800 150.00",
+          "className": "p-2",
+          "width": 364,
+          "scrollWidth": 704,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "CROSS RATES Click a cell to open pair detail and rate context BASE USD EUR GBP JPY CHF AUD CAD INR USD 1.0000 0.9200 0.7800 150.00",
+          "className": "grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]",
+          "width": 348,
+          "scrollWidth": 696,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "commodities",
+      "path": "/equity/commodities",
+      "observedPath": "/equity/commodities",
+      "width": 390,
+      "height": 1000,
+      "state": "Intentional unavailable API; existing labelled frontend fallback",
+      "documentWidth": 390,
+      "initialText": "none\nCommodities Terminal\nEnergy, metals, and agriculture futures with curve and seasonality context\nSEEDED FALLBACK\nCMDTY\nENERGY\nMETALS\nAGRICULTURE\nCommand aliases:\nCOMMODITY\nGOLD\nOIL\nCommodities backend routes can render seeded fixtures until router registration is wired into the main backend app.\nENERGY\nSpot watchlist with mini trend, daily move, and liquidity\nCONTRACT\tLAST\tCHG\tCHG%\tVOLUME\tTREND\n\nCL=F\nWTI Crude\n\t82.46\t+1.18\t+1.45%\t382.4K\t\n\n\nNG=F\nNatural Gas\n\t2.74\t-0.03\t-1.08%\t214.5K\t\n\n\nRB=F\nRBOB Gasoline\n\t2.61\t+0.02\t+0.83%\t42.1K\t\n\n\nHO=F\nHeat",
+      "smallLabelCount": 17,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "Command aliases:",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "COMMODITY",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "GOLD",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "OIL",
+          "className": "rounded border border-terminal-border px-2 py-0.5",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Spot watchlist with mini trend, daily move, and liquidity",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "th",
+          "text": "CONTRACT",
+          "className": "px-3 py-2 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "LAST",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHG",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "CHG%",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "VOLUME",
+          "className": "px-3 py-2 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "TREND",
+          "className": "px-3 py-2 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "WTI Crude",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Natural Gas",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RBOB Gasoline",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Heating Oil",
+          "className": "text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "a",
+          "text": "OPEN SECURITY",
+          "className": "rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "LAST",
+          "className": "text-[10px] uppercase tracking-[0.16em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 5,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "none Commodities Terminal Energy, metals, and agriculture futures with curve and seasonality context SEEDED FALLBACK CMDTY ENERGY ",
+          "className": "space-y-4 px-3 py-3",
+          "width": 390,
+          "scrollWidth": 511,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "section",
+          "text": "none Commodities Terminal Energy, metals, and agriculture futures with curve and seasonality context SEEDED FALLBACK CMDTY ENERGY ",
+          "className": "rounded-sm border border-terminal-border bg-terminal-panel",
+          "width": 364,
+          "scrollWidth": 498,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "ENERGY METALS AGRICULTURE Command aliases: COMMODITY GOLD OIL Commodities backend routes can render seeded fixtures until router r",
+          "className": "p-2",
+          "width": 364,
+          "scrollWidth": 498,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "ENERGY METALS AGRICULTURE Command aliases: COMMODITY GOLD OIL Commodities backend routes can render seeded fixtures until router r",
+          "className": "flex flex-col gap-3",
+          "width": 348,
+          "scrollWidth": 490,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "ENERGY Spot watchlist with mini trend, daily move, and liquidity CONTRACT LAST CHG CHG% VOLUME TREND CL=F WTI Crude 82.46 +1.18 +1",
+          "className": "grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]",
+          "width": 348,
+          "scrollWidth": 490,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/commodities/futures-chain/CL%3DF",
+        "/api/commodities/quotes",
+        "/api/commodities/seasonal/CL%3DF",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "economics",
+      "path": "/equity/economics",
+      "observedPath": "/equity/economics",
+      "width": 390,
+      "height": 1000,
+      "state": "Intentional unavailable API; initial configuration/loading state",
+      "documentWidth": 390,
+      "initialText": "ECONOMIC TERMINAL\nCALENDAR\nMACRO DASHBOARD\nNOVEMBER 2026\nHIGH\nMEDIUM\nLOW\nUNKNOWN\nSUN\nMON\nTUE\nWED\nTHU\nFRI\nSAT\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nnone\nEVENT DETAILS\nSelect an event dot on the calendar to view details.",
+      "smallLabelCount": 11,
+      "smallLabels": [
+        {
+          "tag": "label",
+          "text": "HIGH",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "MEDIUM",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "LOW",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "UNKNOWN",
+          "className": "flex items-center gap-1 text-[10px] uppercase cursor-pointer",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SUN",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MON",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "TUE",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "WED",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "THU",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "FRI",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SAT",
+          "className": "bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 5,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "ECONOMIC TERMINAL CALENDAR MACRO DASHBOARD",
+          "className": "flex items-center justify-between border-b border-terminal-border pb-4",
+          "width": 358,
+          "scrollWidth": 362,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "NOVEMBER 2026 HIGH MEDIUM LOW UNKNOWN SUN MON TUE WED THU FRI SAT 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 2",
+          "className": "flex-grow min-h-0 overflow-auto",
+          "width": 358,
+          "scrollWidth": 390,
+          "overflowX": "auto",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "NOVEMBER 2026 HIGH MEDIUM LOW UNKNOWN SUN MON TUE WED THU FRI SAT 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 2",
+          "className": "grid grid-cols-1 gap-4 lg:grid-cols-4 h-full",
+          "width": 358,
+          "scrollWidth": 390,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "NOVEMBER 2026 HIGH MEDIUM LOW UNKNOWN SUN MON TUE WED THU FRI SAT 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 2",
+          "className": "lg:col-span-3 flex flex-col gap-4 h-full",
+          "width": 358,
+          "scrollWidth": 390,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "NOVEMBER 2026 HIGH MEDIUM LOW UNKNOWN",
+          "className": "flex items-center justify-between",
+          "width": 358,
+          "scrollWidth": 390,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/economics/calendar",
+        "/api/economics/indicators",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "dividends",
+      "path": "/equity/dividends",
+      "observedPath": "/equity/dividends",
+      "width": 390,
+      "height": 1000,
+      "state": "Synthetic dividend calendar",
+      "documentWidth": 390,
+      "initialText": "Upcoming Calendar\nPortfolio Income\nStock Analysis\nAristocrats\nnone\nUpcoming Dividends\nEx-dates in the next 30 days\nSYMBOL\tEX-DATE\tAMOUNT\tTYPE\n\nAAPL\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data\n\n\nSAP.DE\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data\n\n\nMSFT\n\t\n2026-12-01\n\t\n0.25\n\t\nOrdinary cash dividend from synthetic audit data",
+      "smallLabelCount": 10,
+      "smallLabels": [
+        {
+          "tag": "th",
+          "text": "SYMBOL",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "EX-DATE",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "AMOUNT",
+          "className": "px-2 py-1 text-right",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "th",
+          "text": "TYPE",
+          "className": "px-2 py-1 text-left",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "AAPL",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SAP.DE",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "MSFT",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Ordinary cash dividend from synthetic audit data",
+          "className": "flex min-w-0  ot-type-table-cell tabular-nums",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 2,
+      "overflowCandidates": [
+        {
+          "tag": "div",
+          "text": "Upcoming Calendar Portfolio Income Stock Analysis Aristocrats none Upcoming Dividends Ex-dates in the next 30 days SYMBOL EX-DATE ",
+          "className": "space-y-3 p-4",
+          "width": 390,
+          "scrollWidth": 409,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "Upcoming Calendar Portfolio Income Stock Analysis Aristocrats",
+          "className": "flex items-center gap-2 mb-2",
+          "width": 358,
+          "scrollWidth": 393,
+          "overflowX": "visible",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "position-sizer",
+      "path": "/equity/position-sizer",
+      "observedPath": "/equity/position-sizer",
+      "width": 390,
+      "height": 1000,
+      "state": "Existing local calculator defaults; no execution",
+      "documentWidth": 390,
+      "initialText": "POSITION SIZER\nClient-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.\nnone\nInputs\nAccount, trade, and method-specific sizing parameters\nACCOUNT SIZE\nFormatted: $1,000,000.00\nRISK PER TRADE\n% of Account\nFixed Amount\nRISK %\n1.00% of account\nENTRY PRICE\n$2,500.00\nSTOP LOSS PRICE\n$2,450.00\nTARGET PRICE\nOptional\nCURRENT ATR VALUE\nOptional\nMETHOD\nFIXED FRACTIONAL\nRisk a fixed portion of account equity.\nKELLY CRITERION\nPosition size from edge and payoff ratio.\nATR-BASED\nSize by volatility-adjusted stop distance",
+      "smallLabelCount": 13,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "Client-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.",
+          "className": "mt-1 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "ACCOUNT SIZE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Formatted: $1,000,000.00",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK PER TRADE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "% of Account",
+          "className": "flex-1 rounded-sm px-3 py-2 text-[11px] bg-terminal-accent text-terminal-bg",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "Fixed Amount",
+          "className": "flex-1 rounded-sm px-3 py-2 text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK %",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "1.00% of account",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ENTRY PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "STOP LOSS PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "TARGET PRICE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "Optional",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "CURRENT ATR VALUE",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "paper",
+      "path": "/equity/paper",
+      "observedPath": "/equity/paper",
+      "width": 390,
+      "height": 1000,
+      "state": "Synthetic portfolio, position and empty order/trade lists; no execution",
+      "documentWidth": 390,
+      "initialText": "Create Virtual Portfolio\nCreate\nSelect portfolio\nLong-term worldwide paper research with independent simulated capital\nVirtual Order Entry\nBuy\nSell\nMarket\nLimit\nSL\nPlace\nHOT KEY TRADING\nAAPL\nPAPER\n0.00\n+0.00 (+0.00%)\nBID 0.00\nASK 0.00\nPORTFOLIO\nSelect\nLong-term worldwide paper research with independent simulated capital\nQUANTITY\n-\n+\n1x\n5x\n10x\n25x\nMax\nORDER TYPE\nMARKET\nLIMIT\nBUY (B)\nSELL (S)\nFLATTEN (F)\nREVERSE (R)\nCLEAR DRAFT (ESC)\nRECENT ORDERS\nEmbedded on Paper Trading\nNo recent orders for AAPL.\nPerformance\nPortfolio: Long-term worldwide pape",
+      "smallLabelCount": 5,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "HOT KEY TRADING",
+          "className": "text-[10px] uppercase tracking-[0.22em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "PAPER",
+          "className": "rounded-sm border border-amber-500/70 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "PORTFOLIO",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "QUANTITY",
+          "className": "text-[10px] uppercase tracking-[0.18em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "Max",
+          "className": "rounded-sm border border-terminal-border px-2 py-1 text-[11px] text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 10,
+      "unlabelledInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": "limit"
+        },
+        {
+          "tag": "input",
+          "type": "number",
+          "placeholder": "sl"
+        },
+        {
+          "tag": "select",
+          "type": "select-one",
+          "placeholder": null
+        }
+      ],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/depth/AAPL",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "risk",
+      "path": "/equity/risk",
+      "observedPath": "/equity/risk",
+      "width": 390,
+      "height": 1000,
+      "state": "Intentional unavailable analytics; initial read state",
+      "documentWidth": 390,
+      "initialText": "RISK ENGINE CONTROL\nMULTI-FACTOR RISK ATTRIBUTION & ATTRIBUTION ANALYTICS\nOVERVIEW\nFACTOR ATTRIBUTION\nSTRESS TEST\nPORTFOLIO\nTICKER: AAPL\nRELOAD ANALYTICS\nRequest failed with status code 503\nAI Risk Insights\nPortfolio · Gemma reading of volatility, concentration, and correlation\nGenerate\nUses your configured LLM endpoint — analysis can take a minute.\nnone\nSTATISTICAL RISK METRICS\nTotal Portfolio Attribution\nEWMA VOLATILITY\n0.00%\nSYSTEMATIC BETA\n0.00\nMARGINAL CONTRIBUTION TO RISK (MCTR)\nnone\nFACTOR EXPOSURES (PCA)\nVariance decomposition by latent",
+      "smallLabelCount": 9,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "MULTI-FACTOR RISK ATTRIBUTION & ATTRIBUTION ANALYTICS",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "OVERVIEW",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors bg-terminal-accent text-terminal-bg",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "FACTOR ATTRIBUTION",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "STRESS TEST",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "PORTFOLIO",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors bg-terminal-accent text-terminal-bg",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "TICKER: AAPL",
+          "className": "px-3 py-1 text-[10px] font-bold rounded-sm transition-colors text-terminal-muted hover:text-terminal-text",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "EWMA VOLATILITY",
+          "className": "mb-1 text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SYSTEMATIC BETA",
+          "className": "mb-1 text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MARGINAL CONTRIBUTION TO RISK (MCTR)",
+          "className": "mb-2 border-b border-terminal-border pb-1 text-[10px] font-bold uppercase text-terminal-accent",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/risk/correlation",
+        "/api/risk/exposures",
+        "/api/risk/sector-concentration",
+        "/api/risk/summary",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "backtesting",
+      "path": "/backtesting",
+      "observedPath": "/backtesting",
+      "width": 390,
+      "height": 1000,
+      "state": "Initial setup with unavailable services; no submitted run",
+      "documentWidth": 390,
+      "initialText": "none\nResearch Suites\nBacktesting control deck\nSAVE VIEW\nSAVED VIEWS\nBacktesting Console\nnone\nBacktesting Control Deck\nCompact controls for chart-first workflow\nASSET (TICKER)\nMARKET\nNSE\nBSE\nNYSE\nNASDAQ\nAMEX\nDATA TF\nDaily\n1 Hour\n15 Min\n5 Min\n1 Min\nSTART\nEND\nMODEL\n[TREND] SMA Crossover (20/50)\n[TREND] EMA Crossover (12/26)\n[MEAN_REVERSION] Mean Reversion (Z-Score)\n[BREAKOUT] 20-Day Breakout\n[OSCILLATOR] RSI Overbought/Oversold\n[TREND] MACD Crossover\n[VOLATILITY] Bollinger Bands\n[MOMENTUM] Dual Momentum\n[MEAN_REVERSION] VWAP Reversion\n[TREND] Supe",
+      "smallLabelCount": 12,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "ASSET (TICKER)",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MARKET",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA TF",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "START",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "END",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "MODEL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "TRADE CAPITAL",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA VERSION ID",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SERIES",
+          "className": "mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "EXECUTION PROFILE",
+          "className": "text-[11px] font-semibold uppercase tracking-wide text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "Slippage, spread, market impact, and market-volume participation cap.",
+          "className": "text-[10px] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "rounded border border-terminal-border px-2 py-0.5 text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/data/version/active",
+        "/api/instruments/search",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/saved-views",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "fno",
+      "path": "/fno",
+      "observedPath": "/fno",
+      "width": 390,
+      "height": 1000,
+      "state": "Initial shell with unavailable services; no contract/provider acceptance",
+      "documentWidth": 390,
+      "initialText": "SYMBOL\nNIFTY\nBANKNIFTY\nRELIANCE\nTCS\nINFY\nHDFCBANK\nICICIBANK\nSBIN\nLT\nAXISBANK\nKOTAKBANK\nITC\nBAJFINANCE\nMARUTI\nTATAMOTORS\nBHARTIARTL\nSUNPHARMA\nHCLTECH\nWIPRO\nADANIPORTS\nNTPC\nONGC\nEXPIRY\nNo expiry\nDATA\nLive cache 60s\nUNIVERSE\nNSE F&O\nPOPULAR INDICES\nNIFTY\nBANKNIFTY\nFINNIFTY\nMIDCPNIFTY\nNIFTYNXT50\nSYMBOL\nNIFTY\nEXPIRY\n-\nSPOT\n₹0.00\nATM IV\n-\nIV RANK\n0.0%\nIV PCTL\n0.0%\nPCR\n-\nMAX PAIN\n-\nSTRIKE RANGE\n�10\n�15\n�20\nAll\n? ATM | Green ?OI up | Red ?OI down\nFailed to load option chain",
+      "smallLabelCount": 19,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "SYMBOL",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "EXPIRY",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "DATA",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UNIVERSE",
+          "className": "mb-1 block uppercase tracking-wide text-terminal-muted",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "POPULAR INDICES",
+          "className": "mr-1 text-[10px] uppercase tracking-wide text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "button",
+          "text": "NIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-accent text-terminal-accent",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "BANKNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "FINNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "MIDCPNIFTY",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "NIFTYNXT50",
+          "className": "rounded border px-2 py-1 text-[11px] border-terminal-border text-terminal-muted hover:text-terminal-text",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "SYMBOL",
+          "className": "text-[10px] uppercase text-terminal-muted flex items-center gap-1",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "EXPIRY",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "SPOT",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "ATM IV",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "IV RANK",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "IV PCTL",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "PCR",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "MAX PAIN",
+          "className": "text-[10px] uppercase text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "? ATM | Green ?OI up | Red ?OI down",
+          "className": "ml-auto text-[11px] text-terminal-muted",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/fno/chain/NIFTY",
+        "/api/fno/chain/NIFTY/expiries",
+        "/api/fno/chain/NIFTY/summary",
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "account",
+      "path": "/account",
+      "observedPath": "/account",
+      "width": 390,
+      "height": 1000,
+      "state": "Fresh browser account defaults and synthetic JWT; no changes",
+      "documentWidth": 390,
+      "initialText": "ACCOUNT | IDENTITY HQ\nNASDAQ\nTERMINAL-NOIR\nHUD OFF\nBACK\nSAVE PROFILE\nnone\nIdentity HQ\nIdentity, completion, and current market posture\nONLINE\nAU\nTRADER\nUSD\nPOLLING\nAUDIT\naudit@example.test\nLocation pending | Desk focus pending\nBROKER ALIAS\nMain Trading\nCOUNTRY ROUTE\nUS\nUnited States\nRISK POSTURE\nMODERATE\nLOCAL VAULT\n0/3 slots | 0/4 connectors\n0%\nIDENTITY COMPLETION\nMissing: First Name, Last Name, Display Name, Phone, Location, Desk Focus, Bio, Avatar\nCOMPLETED\n0\nMISSING\n8\nCompletion tracks identity fields only. Desk routing and integrations con",
+      "smallLabelCount": 5,
+      "smallLabels": [
+        {
+          "tag": "span",
+          "text": "ACCOUNT | IDENTITY HQ",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "BROKER ALIAS",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "COUNTRY ROUTE",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "RISK POSTURE",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "div",
+          "text": "LOCAL VAULT",
+          "className": "text-[10px] uppercase tracking-[0.14em] text-terminal-muted",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [
+        {
+          "name": "AxiosError",
+          "message": "Request failed with status code 503"
+        }
+      ],
+      "unavailablePaths": [
+        "/api/notifications/unread-count",
+        "/api/reports/market-status",
+        "/api/v1/equity/overview/top-tickers"
+      ],
+      "blockedOrigins": [
+        "https://flagcdn.com"
+      ],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "login",
+      "path": "/login",
+      "observedPath": "/login",
+      "width": 390,
+      "height": 1000,
+      "state": "Initial form; no submitted credentials",
+      "documentWidth": 390,
+      "initialText": "OPENTERMINALUI\nSYSTEM STATUS: ONLINE\n23:01:44 IST | 24 NOV 2026\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nUPTIME 99.97%\n|\nLATENCY 2MS\n|\nSESSIONS 1,247\nOPEN-SOURCE TRADING TERMINAL\nOPENTERMINALUI\n\nAnalyze. Trade. Optimize.\n\nSECURE ACCESS\n\nAUTHENTICATE\n\nEnter credentials to access termin",
+      "smallLabelCount": 14,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "OPENTERMINALUI",
+          "className": "ot-status-bar-left",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SYSTEM STATUS: ONLINE",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "23:01:44 IST | 24 NOV 2026",
+          "className": "ot-status-bar-right",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UPTIME 99.97%",
+          "className": "ot-value-up",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "LATENCY 2MS",
+          "className": "ot-value-cyan",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SESSIONS 1,247",
+          "className": "ot-value-amber",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "OPEN-SOURCE TRADING TERMINAL",
+          "className": "ot-brand-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "SECURE ACCESS",
+          "className": "ot-panel-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "USER ID",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "Remember terminal",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "a",
+          "text": "Forgot access?",
+          "className": "ot-forgot-link",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "button",
+          "text": "> DEMO ACCESS",
+          "className": "ot-demo-button ot-stagger",
+          "fontSize": "11px"
+        }
+      ],
+      "overflowCandidateCount": 2,
+      "overflowCandidates": [
+        {
+          "tag": "section",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-login-hero",
+          "width": 390,
+          "scrollWidth": 431,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-market-ticker",
+          "width": 390,
+          "scrollWidth": 2450,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "register",
+      "path": "/register",
+      "observedPath": "/register",
+      "width": 390,
+      "height": 1000,
+      "state": "Initial form; no registration",
+      "documentWidth": 390,
+      "initialText": "OPENTERMINALUI\nSYSTEM STATUS: ONLINE\n23:01:46 IST | 24 NOV 2026\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nS&P 500 5,762.48 ?24.30|\nNASDAQ 18,340.10 ?89.40|\nDOW 42,120.00 ?310.55|\nAAPL 227.50 ?1.30|\nMSFT 415.80 ?2.90|\nNVDA 120.20 ?1.45|\nEURUSD 1.0842 ?0.0008|\nUPTIME 99.97%\n|\nLATENCY 2MS\n|\nSESSIONS 1,247\nOPEN-SOURCE TRADING TERMINAL\nOPENTERMINALUI\n\nCreate secure terminal access.\n\nNEW OPERATOR\n\nREQUEST ACCESS\n\nProvision your terminal cred",
+      "smallLabelCount": 13,
+      "smallLabels": [
+        {
+          "tag": "div",
+          "text": "OPENTERMINALUI",
+          "className": "ot-status-bar-left",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "SYSTEM STATUS: ONLINE",
+          "className": "",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "div",
+          "text": "23:01:46 IST | 24 NOV 2026",
+          "className": "ot-status-bar-right",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "NASDAQ",
+          "className": "ot-market-ticker-symbol",
+          "fontSize": "11px"
+        },
+        {
+          "tag": "span",
+          "text": "UPTIME 99.97%",
+          "className": "ot-value-up",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "LATENCY 2MS",
+          "className": "ot-value-cyan",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "SESSIONS 1,247",
+          "className": "ot-value-amber",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "span",
+          "text": "OPEN-SOURCE TRADING TERMINAL",
+          "className": "ot-brand-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "p",
+          "text": "NEW OPERATOR",
+          "className": "ot-panel-kicker",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "EMAIL",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "CONFIRM PASSWORD",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        },
+        {
+          "tag": "label",
+          "text": "ROLE",
+          "className": "ot-field-label ot-stagger",
+          "fontSize": "10px"
+        }
+      ],
+      "overflowCandidateCount": 2,
+      "overflowCandidates": [
+        {
+          "tag": "section",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-login-hero",
+          "width": 390,
+          "scrollWidth": 431,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        },
+        {
+          "tag": "div",
+          "text": "S&P 500 5,762.48 ?24.30| NASDAQ 18,340.10 ?89.40| DOW 42,120.00 ?310.55| AAPL 227.50 ?1.30| MSFT 415.80 ?2.90| NVDA 120.20 ?1.45| ",
+          "className": "ot-market-ticker",
+          "width": 390,
+          "scrollWidth": 2450,
+          "overflowX": "hidden",
+          "role": null,
+          "name": null
+        }
+      ],
+      "unlabelledInputCount": 0,
+      "unlabelledInputs": [],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    },
+    {
+      "name": "forgot-access",
+      "path": "/forgot-access",
+      "observedPath": "/forgot-access",
+      "width": 390,
+      "height": 1000,
+      "state": "Initial form; no submitted reset",
+      "documentWidth": 390,
+      "initialText": "Forgot access\nReset access\nBack to Login",
+      "smallLabelCount": 0,
+      "smallLabels": [],
+      "overflowCandidateCount": 0,
+      "overflowCandidates": [],
+      "unlabelledInputCount": 3,
+      "unlabelledInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": "Email"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "New password"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "Confirm new password"
+        }
+      ],
+      "pageErrors": [],
+      "unavailablePaths": [],
+      "blockedOrigins": [],
+      "blockedWritePaths": []
+    }
+  ]
+}

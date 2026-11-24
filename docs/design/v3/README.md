@@ -30,8 +30,12 @@ tested. The [Settings review](SETTINGS_REVIEW.md) groups browser preferences,
 automation access, data tools and host setup with readable labelled controls and
 retained drafts; #311 is merged. The [Launchpad review](LAUNCHPAD_REVIEW.md)
 reflows narrow panels without rewriting saved geometry, gives titles room and
-uses bounded panel/template controls. Broader retained-tool/maintainer acceptance
-remains open.
+uses bounded panel/template controls; #312 is merged and maintainer-accepted.
+The [remaining-page audit](RETAINED_PAGE_AUDIT.md) reconciles 80 render entries,
+keeps redirects/hidden routes distinct and records 39 initial browser probes.
+Twenty ordinary menu destinations still need page review, starting with Paper
+and Position Sizer. Broader populated/keyboard/zoom and maintainer acceptance
+remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 
