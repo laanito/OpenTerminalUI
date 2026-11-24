@@ -295,7 +295,7 @@ for exact payloads; external-note keys do not grant general Brain access.
 
 ## External note ingestion
 
-In **Settings → API Keys**, create a key with **Read + external notes**
+In **Settings → Automation → Automation API Keys**, create a key with **Read + external notes**
 (`read_write`) permission. Save its secret when shown. Provider credentials
 and SEC identification are managed separately on the host.
 

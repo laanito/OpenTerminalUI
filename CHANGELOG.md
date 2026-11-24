@@ -27,6 +27,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable grouped Settings** — Preferences, Automation, Data and Host setup
+  separate account/browser tasks from operator configuration. Visible labels and
+  wrapping cards replace squeezed controls/tables; existing Europe/EUR/Crypto
+  preferences display correctly. Key generation uses a bounded one-time dialog
+  with copy-failure feedback. Failed drafts and prior list data survive failures;
+  confirmed actions remain separate from failed refreshes. Exports and dataset
+  retrieval report failures explicitly; existing storage and API contracts remain.
 - **Readable Alerts rules and delivery** — labelled condition groups and delivery
   fields replace squeezed controls; rule cards, history and browser defaults
   remain readable on narrow screens. Limits and notes are disclosed. Failed reads

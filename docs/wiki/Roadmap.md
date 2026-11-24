@@ -968,8 +968,10 @@ responsive heatmap. The [Saved Views review](../design/v3/SAVED_VIEWS_REVIEW.md)
 then makes the all-scope library and shared scoped dialogs readable, preserving
 capture/restore compatibility (#309 merged). The [Alerts review](../design/v3/ALERTS_REVIEW.md)
 then labels and reflows the rule editor, history and delivery defaults, keeping
-failed drafts and retrieval/confirmation feedback explicit. Settings, Launchpad
-and broader retained-tool/maintainer acceptance remain open. No new feature backlog is added to that usability
+failed drafts and retrieval/confirmation feedback explicit; #310 is maintainer-
+accepted. The [Settings review](../design/v3/SETTINGS_REVIEW.md) groups preferences,
+automation, data and host setup with readable labels/cards and retained drafts.
+Launchpad and broader retained-tool/maintainer acceptance remain open. No new feature backlog is added to that usability
 work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 
