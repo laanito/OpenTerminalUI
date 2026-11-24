@@ -19,6 +19,11 @@ keyboard/dialog focus, panel settings, template capture and typed popout identit
 Final affected checks include hidden mobile drag handles and measured heatmap
 size; API-reference/mock/surface/whitespace guards pass. Synthetic screenshots and
 limits are in the review; backend tests were not rerun for unchanged server code.
+#312 CI follow-up: initial grid sizing now runs before paint. Browser inspections
+wait for measured grid mode and confirmation focus, then focus/reveal the current
+lazy panel with bounded retries for inspection only, never writes. All five
+journeys pass six repetitions (30 runs); the reported desktop path also passes
+eight repetitions at 4× Chrome CPU throttling. All eight affected unit tests pass.
 Existing embedded functionality limitations remain deferred: placeholder slots, mixed-market quote
 lookups/zero fallbacks, hosted layout-sync feedback and full detach/return behavior
 need real-integration auditing rather than being certified by layout fixtures.

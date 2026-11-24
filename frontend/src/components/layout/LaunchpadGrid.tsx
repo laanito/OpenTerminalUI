@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import GridLayout, { type Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -13,7 +13,7 @@ type LaunchpadGridProps = {
 export function LaunchpadGrid({ panels, renderPanel, onLayoutChange }: LaunchpadGridProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = hostRef.current;
     if (!node) return;
     const apply = () => setWidth(Math.floor(node.clientWidth));

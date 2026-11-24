@@ -85,3 +85,25 @@ navigation and preserved URL context, not the entire live window lifecycle.
 These limits are recorded in the TODO rather than hidden by layout acceptance.
 
 Continue with the broader retained-page inventory and maintainer acceptance.
+
+## CI follow-up: initial measurement and lazy-panel inspection
+
+The maintainer reported a desktop failure before the chart could be scrolled,
+then a retry where the newly added heatmap's controls disappeared. The grid's
+initial zero-width state could render a stacked tree and replace it after its
+first desktop measurement. Also, the add-panel confirmation deliberately focuses
+the status message; scrolling before that effect completed could be undone,
+leaving the new panel outside the lazy mount's visible range.
+
+Initial host measurement now runs before paint. Browser journeys wait for the
+expected grid mode and add-panel confirmation focus. A bounded, retryable helper
+re-resolves, focuses and reveals the current panel before inspecting lazy content;
+only these reversible inspection actions retry. Panel creation, edits and other
+writes are still performed once. Existing visibility pausing and saved geometry
+behavior remain intact. The desktop journey also exercises 4× CPU throttling.
+
+Validation: all five journeys pass six consecutive repetitions (30 runs); the
+reported desktop case passes eight further repetitions at 4× Chrome CPU
+throttling. All eight affected unit tests and the browser run's production build
+pass. Whitespace checks pass. These focused stress runs supplement the earlier
+full suite; the unrelated backend and browser suites were not repeated.
