@@ -6,6 +6,13 @@ slices, not acceptance of the entire frontend overhaul. v3.0 remains open for
 page-level hierarchy, usable controls and readable labels across retained screens.
 The [Portfolio report](ACCEPTANCE.md) is historical evidence for that workflow.
 
+After accepted #312, the [remaining-page audit](RETAINED_PAGE_AUDIT.md) reconciles
+all route entries and documents concrete gaps in other retained tools. Twenty
+ordinary menu destinations still need a dedicated page review, starting with
+Paper and Position Sizer. Initial probes and source hints do not replace the
+populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
+configuration classifications remain unchanged; no new features are added.
+
 ## Release north star
 
 **No wasted blank spaces and no unreadable labels.** The maintainer accepted

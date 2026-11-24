@@ -1,6 +1,31 @@
 # External-agent project context
 
-Maintainer confirmed #311 merged. Current v3 follow-up is Launchpad: labelled
+Maintainer confirmed #312 merged and working as intended, including the CI timing
+follow-up. Current v3 work is the retained-page inventory, documented in
+`docs/design/v3/RETAINED_PAGE_AUDIT.md` with a generated route ledger and raw probes.
+App.tsx has 80 render entries / 78 entry files, 4 shells and 27 redirects. Twenty
+render entries have dedicated page work; 20 of the 36 ordinary menu destinations
+still need review (19 PRIMARY_NAV_ITEMS plus Account). Additional direct/F&O and
+hidden compatibility routes have bounded presentation/availability review, not a
+new feature mandate. Existing navigation classifications are unchanged.
+
+39 initial browser probes cover 13 routes at 1440/1024/390. Forex content reaches
+717px inside a 390px viewport despite a fitting root; Paper has 10 unlabelled
+controls, and Position Sizer primary labels are 10px. Source hints and initial
+probes are not populated/zoom/accessibility acceptance. Intentionally unavailable
+API reads produce Axios 503 events, retained in the evidence rather than called
+new product defects. No live data, API writes, models or production access.
+
+Next implementation: Paper + Position Sizer, preserving simulation/calculations.
+Then macro/market screens, risk/quant, MTA/DOM, Backtesting, account/auth/About,
+and secondary/compatibility notices as itemized in the audit. Complete populated,
+keyboard/zoom/error/draft checks per slice; functionality repair stays on its
+deferred track. No release preparation. This PR changes docs/audit tools only;
+production build, source-artifact --check, script/JSON/whitespace checks pass.
+Application/backend/full smoke suites are unchanged and were not rerun.
+
+Maintainer confirmed #311 merged; the following Launchpad work was subsequently
+merged and accepted as #312: labelled
 layout selection, disclosed management/link details, bounded panel picker/editor,
 full wrapping titles and readable embedded/template/popout text. Narrow hosts
 stack panels without writing x/y/w/h; desktop keeps drag/resize with larger rows

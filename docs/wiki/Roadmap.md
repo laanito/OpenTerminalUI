@@ -973,7 +973,13 @@ accepted. The [Settings review](../design/v3/SETTINGS_REVIEW.md) groups preferen
 automation, data and host setup with readable labels/cards and retained drafts.
 The [Launchpad review](../design/v3/LAUNCHPAD_REVIEW.md) follows merged #311 with
 readable panel/template controls and visual reflow that preserves saved geometry.
-Broader retained-tool/maintainer acceptance remains open. No new feature backlog is added to that usability
+After maintainer-accepted #312, the [remaining-page audit](../design/v3/RETAINED_PAGE_AUDIT.md)
+identifies concrete layout gaps in other retained tools: twenty ordinary menu
+destinations remain, starting with Paper and Position Sizer, followed by macro/
+market, risk/quant, MTA/DOM, Backtesting and account/auth work. Secondary/hidden
+routes keep their existing classifications and receive bounded presentation
+checks. Populated, keyboard/zoom and maintainer acceptance remain open.
+No new feature backlog is added to that usability
 work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 

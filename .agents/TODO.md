@@ -2239,9 +2239,35 @@ ordered v1.7 milestone above.
             saved x/y/w/h; only explicit desktop grid gestures write geometry.
             Preserve panel/link/template contracts and use explicit popout metadata.
             Restore an editable active default after final-layout deletion.
-            See `docs/design/v3/LAUNCHPAD_REVIEW.md`; host acceptance remains open.
-      - [ ] Inventory remaining retained-tool readability issues with populated/
-            long content, narrow screens and keyboard/zoom before release acceptance.
+            See `docs/design/v3/LAUNCHPAD_REVIEW.md`; #312 merged and maintainer-
+            confirmed working, including the CI sizing/focus follow-up.
+      - [x] Reconcile remaining retained routes/navigation and initial layout
+            probes. See `docs/design/v3/RETAINED_PAGE_AUDIT.md`, generated ledger
+            and source/browser evidence: 80 render entries, 4 shells, 27 redirects;
+            39 initial probes, not populated/keyboard/zoom or live-provider sign-off.
+            Twenty ordinary menu destinations still need page review. The initial
+            icon-rail pass does not complete the frontend overhaul.
+      - [ ] Paper + Position Sizer (next): labelled scope/cash/asset quantities/
+            prices and readable calculator methods/results; preserve existing
+            simulation writes and formulas, with retained drafts and honest errors.
+      - [ ] Macro/FX: Forex, Commodities, Economics and Yield Curve; contain
+            matrices/charts, show full names and existing provider/fallback scope.
+      - [ ] Market overview: Heatmap, Rotation, Crypto and ETF Analytics;
+            responsive plots/tiles, readable filters/legends and existing context.
+      - [ ] Income/risk/quant: Dividends, Risk, Correlation, Stat Lab and Pair
+            Trading; scope, readable setup/results and local numerical scrolling.
+      - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
+            and configured/unavailable market scope without provider expansion.
+      - [ ] Backtesting and direct governance/algorithm/optimizer subpages:
+            setup, populated runs/results, bounded inspection and async states.
+      - [ ] Account, About and login/register/forgot-access: labelled/wrapping
+            forms and existing status/error/keyboard flows; no auth redesign.
+      - [ ] Secondary/direct/F&O and hidden compatibility presentation pass:
+            preserve classifications/bookmarks, readable retained controls and
+            configuration/unavailable notices; do not build dormant features.
+            Each remaining slice needs populated/long content, 1440/1024/390,
+            actual 200% zoom, keyboard/focus and error/draft/late-read checks as
+            specified in the audit. Source metrics alone are not acceptance.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
