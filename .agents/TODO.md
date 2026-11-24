@@ -2232,10 +2232,16 @@ ordered v1.7 milestone above.
             retained drafts. Reads fail independently; confirmed writes survive
             later read failures. Preserve preference, key, alert, report/export
             contracts; reflect existing EU/EUR/Crypto values without resetting them.
-            See `docs/design/v3/SETTINGS_REVIEW.md`; host acceptance remains open.
-      - [ ] Review remaining Launchpad layout with
-            populated/long content, narrow screens and keyboard/zoom; inventory
-            any other retained-tool readability issues before release acceptance.
+            See `docs/design/v3/SETTINGS_REVIEW.md`; #311 merged.
+      - [x] Launchpad retained-page follow-up: labelled layout scope and disclosed
+            management, bounded picker/panel editor, full titles and readable
+            embedded/template/popout content. Narrow hosts stack without changing
+            saved x/y/w/h; only explicit desktop grid gestures write geometry.
+            Preserve panel/link/template contracts and use explicit popout metadata.
+            Restore an editable active default after final-layout deletion.
+            See `docs/design/v3/LAUNCHPAD_REVIEW.md`; host acceptance remains open.
+      - [ ] Inventory remaining retained-tool readability issues with populated/
+            long content, narrow screens and keyboard/zoom before release acceptance.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
@@ -2248,6 +2254,13 @@ ordered v1.7 milestone above.
       provider/configuration limits from implementation defects, stubs or unwired
       controls. Scope and prioritize repairs from that evidence. Layout acceptance
       and fixture smoke checks are not live end-to-end functional sign-off.
+      Launchpad review also identifies existing template-only embedded slots,
+      market-wide watchlist/heatmap quote lookups and zero fallbacks (including
+      missing yield/quote observations), silent hosted layout-sync failures and
+      possible edits racing hydration. Verify mixed native identities/units,
+      missing-data semantics and hosted persistence; test actual popout detach/
+      recall/return and linked context across windows. The layout checks establish
+      typed popout URLs/readability, not the full live integration contract.
       This is deferred work, not an expansion of the v3 frontend-overhaul gate.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):

@@ -355,7 +355,11 @@ export function LaunchpadProvider({ children }: { children: ReactNode }) {
       deleteLayout: (id) => {
         setSavedLayouts((prev) => {
           const next = prev.filter((layout) => layout.id !== id);
-          if (!next.length) return defaultPresets();
+          if (!next.length) {
+            const defaults = defaultPresets();
+            setActiveLayoutId(defaults[0].id);
+            return defaults;
+          }
           if (activeLayoutId === id) setActiveLayoutId(next[0].id);
           return next;
         });

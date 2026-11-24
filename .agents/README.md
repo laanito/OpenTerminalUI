@@ -1,6 +1,30 @@
 # External-agent project context
 
-Maintainer confirmed #310 merged and tested. Current v3 follow-up is Settings:
+Maintainer confirmed #311 merged. Current v3 follow-up is Launchpad: labelled
+layout selection, disclosed management/link details, bounded panel picker/editor,
+full wrapping titles and readable embedded/template/popout text. Narrow hosts
+stack panels without writing x/y/w/h; desktop keeps drag/resize with larger rows
+and useful minimum panel sizes. Only explicit grid gestures persist geometry.
+Panel settings retain title/symbol/group behavior; popouts read explicit panel
+metadata rather than header-badge/input structure. Existing layouts/templates,
+link groups, lazy visibility mounting and panel types remain. Deleting the last
+layout now selects an editable restored default. See `docs/design/v3/LAUNCHPAD_REVIEW.md`.
+No backend/API/schema, dependencies or stored format changes; no production access.
+Broader retained-tool/maintainer acceptance remains open, not release preparation.
+
+Launchpad validation: 889 frontend tests / 147 files, production build and all 139
+installed-Chrome smoke cases pass. Eight focused unit cases and five browser
+journeys cover actual chart resizing, visual-only reflow, native 200% zoom,
+keyboard/dialog focus, panel settings, template capture and typed popout identity.
+Final affected checks include hidden mobile drag handles and measured heatmap
+size; API-reference/mock/surface/whitespace guards pass. Synthetic screenshots and
+limits are in the review; backend tests were not rerun for unchanged server code.
+Existing embedded functionality limitations remain deferred: placeholder slots, mixed-market quote
+lookups/zero fallbacks, hosted layout-sync feedback and full detach/return behavior
+need real-integration auditing rather than being certified by layout fixtures.
+
+Maintainer confirmed #310 merged and tested; the following Settings work was
+subsequently merged as #311:
 Preferences/Automation/Data/Host setup tabs replace the long dense page. Visible
 labels cover preferences, keys, reports and quick alerts; existing EU/EUR/Crypto
 values are represented. Drafts survive tab changes; forms and row cards reflow.

@@ -106,4 +106,18 @@ describe("LaunchpadContext persistence", () => {
 
     expect(result.current.activeLayout?.panels.find((panel) => panel.id === "panel-red-b")?.poppedOut).toBe(true);
   });
+  it("restores an active editable default after deleting the final layout", async () => {
+    localStorage.setItem("ot:launchpad:layouts:v1", JSON.stringify([{ id: "only", name: "Only", panels: [] }]));
+    localStorage.setItem("ot:launchpad:active:v1", "only");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+    const wrapper = ({ children }: { children: React.ReactNode }) => <LaunchpadProvider>{children}</LaunchpadProvider>;
+    const { result } = renderHook(() => useLaunchpad(), { wrapper });
+    await act(async () => { await Promise.resolve(); });
+    act(() => result.current.deleteLayout("only"));
+    expect(result.current.activeLayoutId).toBe(result.current.activeLayout?.id);
+    const count = result.current.activeLayout!.panels.length;
+    act(() => result.current.addPanel("news-feed"));
+    expect(result.current.activeLayout!.panels).toHaveLength(count + 1);
+  });
+
 });
