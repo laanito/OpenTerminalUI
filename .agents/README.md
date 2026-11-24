@@ -1,6 +1,31 @@
 # External-agent project context
 
-Maintainer confirmed #309 merged. Current v3 follow-up is Alerts: readable rule
+Maintainer confirmed #310 merged and tested. Current v3 follow-up is Settings:
+Preferences/Automation/Data/Host setup tabs replace the long dense page. Visible
+labels cover preferences, keys, reports and quick alerts; existing EU/EUR/Crypto
+values are represented. Drafts survive tab changes; forms and row cards reflow.
+Automation keys use TerminalModal, retain failed drafts and one-time credentials
+through failed refresh/copy, strip full credentials from list metadata, and clear
+the full key on close. Old key reads cannot erase confirmed metadata. Scheduled
+reports and quick alerts read independently with retained-but-unrefreshed errors;
+confirmed writes are separate from follow-up reads. Export failures are explicit;
+datasets distinguish unrequested/loading/empty/error and retain previous files.
+Host variable names wrap in their own cards. See `docs/design/v3/SETTINGS_REVIEW.md`.
+No backend/API/schema/dependency or preference-storage changes, real key creation,
+delivery, exports or production access during development. Launchpad and broader
+retained-tool/maintainer acceptance remain; no release preparation yet.
+
+Settings validation: 885 frontend tests / 146 files, production build and all 134
+installed-Chrome smoke cases pass. Ten affected unit cases and five browser
+journeys cover preferences, exact writes, retained drafts/reads, one-time key
+handling, copy/export errors, downloads, keyboard/focus and native 200% zoom.
+Final screenshots wait for colour transitions and show the longest host label.
+API-reference/mock/surface/whitespace guards pass. Host acceptance remains open;
+fixtures do not establish scheduler/provider reliability. Backend tests were not
+rerun for unchanged server code. Synthetic evidence is in the review.
+
+Maintainer confirmed #309 merged; the following Alerts work was subsequently
+merged/tested as #310. It adds readable rule
 cards, labelled condition/delivery forms, disclosed limits/notes and independent
 history/defaults tabs. Loading, empty and failed reads differ; previous data stays
 visible after failed refreshes. Confirmed writes are separate from follow-up
@@ -17,8 +42,9 @@ installed-Chrome smoke cases pass. Final affected checks include five browser
 cases and seven unit cases covering native 200% zoom, keyboard/focus, exact edit
 payloads, drafts, defaults, independent failures and late-refresh isolation.
 API-reference/mock/surface/whitespace guards pass. See the review for synthetic
-screenshots and limits. Maintainer acceptance remains open; no production database,
-deployment or real notifications are accessed. Backend tests were not rerun.
+screenshots and limits. Maintainer accepted #310 after testing; no production
+database, deployment or real notifications were accessed during development.
+Backend tests were not rerun.
 
 Maintainer confirmed #308 merged and tested; mixed Watchlist quotes now work.
 The following Saved Views work was subsequently merged as #309. The hub shows

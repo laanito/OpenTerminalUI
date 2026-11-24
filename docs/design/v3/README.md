@@ -25,8 +25,10 @@ The subsequent [Watchlist review](WATCHLIST_REVIEW.md) addresses another retaine
 page layout gap, followed by the [Saved Views review](SAVED_VIEWS_REVIEW.md) for a
 readable all-scope hub and bounded shared workflow controls (#309 merged). The
 [Alerts review](ALERTS_REVIEW.md) adds readable rules, labelled condition/delivery
-forms and independent retrieval/action feedback. Settings, Launchpad and broader
-retained-tool/maintainer acceptance remain open.
+forms and independent retrieval/action feedback; #310 is merged and maintainer-
+tested. The [Settings review](SETTINGS_REVIEW.md) groups browser preferences,
+automation access, data tools and host setup with readable labelled controls and
+retained drafts. Launchpad and broader retained-tool/maintainer acceptance remain open.
 See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.
 

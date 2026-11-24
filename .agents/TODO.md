@@ -2225,8 +2225,15 @@ ordered v1.7 milestone above.
             rule/history failures. Failed drafts survive; confirmed writes and
             old pending reads stay separate. Keep delivery defaults key/format,
             precise unchanged expiry and existing rule/delivery payloads.
-            See `docs/design/v3/ALERTS_REVIEW.md`; host acceptance remains open.
-      - [ ] Review remaining Settings and Launchpad layouts with
+            See `docs/design/v3/ALERTS_REVIEW.md`; #310 merged and maintainer-tested.
+      - [x] Settings retained-page follow-up: grouped Preferences/Automation/Data/
+            Host setup, labelled controls, wrapping key/schedule/alert cards,
+            bounded one-time-key dialog with copy failure/manual-save route and
+            retained drafts. Reads fail independently; confirmed writes survive
+            later read failures. Preserve preference, key, alert, report/export
+            contracts; reflect existing EU/EUR/Crypto values without resetting them.
+            See `docs/design/v3/SETTINGS_REVIEW.md`; host acceptance remains open.
+      - [ ] Review remaining Launchpad layout with
             populated/long content, narrow screens and keyboard/zoom; inventory
             any other retained-tool readability issues before release acceptance.
       - [ ] Broader frontend and maintainer/host acceptance, PR CI and release
