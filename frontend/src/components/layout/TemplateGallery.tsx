@@ -130,7 +130,7 @@ export function TemplateGallery({
       size="lg"
       className="max-w-6xl"
     >
-      <div data-testid="workspace-template-gallery" className="space-y-4">
+      <div data-testid="workspace-template-gallery" className="min-w-0 space-y-4 [&_input]:!text-sm [&_select]:!text-sm">
         <div className="flex flex-wrap gap-2">
           {TABS.map((item) => (
             <TerminalButton
@@ -161,30 +161,30 @@ export function TemplateGallery({
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 items-start gap-2">
                     <div className="rounded-sm border border-terminal-border bg-terminal-panel p-2 text-terminal-accent">
                       <TemplateIcon icon={template.icon} />
                     </div>
                     <div className="min-w-0">
-                      <div className="ot-type-panel-title truncate text-terminal-text">{template.name}</div>
-                      <div className="text-[10px] uppercase tracking-[0.24em] text-terminal-muted">
+                      <div className="text-sm font-semibold break-words text-terminal-text">{template.name}</div>
+                      <div className="text-xs uppercase tracking-[0.24em] text-terminal-muted">
                         {template.category}
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-sm border border-terminal-border px-1.5 py-0.5 text-[10px] text-terminal-muted">
+                  <div className="shrink-0 rounded-sm border border-terminal-border px-1.5 py-0.5 text-xs text-terminal-muted">
                     {template.panels.length} panels
                   </div>
                 </div>
 
-                <p className="mt-3 min-h-10 text-xs leading-relaxed text-terminal-muted">
+                <p className="mt-3 min-h-10 text-sm leading-relaxed text-terminal-muted">
                   {template.description}
                 </p>
 
                 <div className="relative mt-3">
                   <TemplatePreview template={template} />
                   <div className="pointer-events-none absolute inset-0 rounded-sm bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-                    <div className="absolute bottom-2 right-2 rounded-sm border border-terminal-accent/50 bg-terminal-panel/90 px-2 py-1 text-[10px] uppercase tracking-[0.22em] text-terminal-accent">
+                    <div className="absolute bottom-2 right-2 rounded-sm border border-terminal-accent/50 bg-terminal-panel/90 px-2 py-1 text-xs uppercase tracking-[0.22em] text-terminal-accent">
                       Preview
                     </div>
                   </div>
@@ -212,7 +212,7 @@ export function TemplateGallery({
                       Delete
                     </TerminalButton>
                   ) : (
-                    <span className="text-[10px] text-terminal-muted">
+                    <span className="text-xs text-terminal-muted">
                       {isBuiltin ? "Built in" : ""}
                     </span>
                   )}

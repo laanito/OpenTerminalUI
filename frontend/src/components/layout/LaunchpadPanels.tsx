@@ -43,7 +43,7 @@ export function LaunchpadTemplatePlaceholderPanel({ panel }: PanelProps) {
           {panel.type} is available as a saved Launchpad template slot but does not have a dedicated embedded panel yet.
         </div>
       </div>
-      <div className="rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1 text-[10px] text-terminal-muted">
+      <div className="rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-muted">
         {panel.symbol ? `Symbol: ${panel.symbol}` : "Assign a symbol or replace this panel from the Launchpad toolbar."}
       </div>
     </PanelBody>
@@ -92,13 +92,13 @@ export function LaunchpadAIResearchPanel({ panel }: PanelProps) {
                 <Bot size={14} />
               </div>
             )}
-            <div className={`max-w-[85%] rounded-sm px-3 py-2 text-xs leading-relaxed ${
+            <div className={`min-w-0 max-w-[85%] whitespace-pre-wrap break-words rounded-sm px-3 py-2 text-sm leading-relaxed ${
               m.role === 'user'
                 ? 'bg-terminal-accent text-terminal-bg font-bold'
                 : 'bg-terminal-panel border border-terminal-border text-terminal-text'
             }`}>
               {m.text}
-              {m.model ? <p className="mt-1 break-words text-[10px] text-terminal-muted">Fast profile · {m.model}</p> : null}
+              {m.model ? <p className="mt-1 break-words text-xs text-terminal-muted">Fast profile · {m.model}</p> : null}
             </div>
             {m.role === 'user' && (
               <div className="h-6 w-6 shrink-0 rounded-full bg-terminal-muted/20 flex items-center justify-center text-terminal-muted">
@@ -112,7 +112,7 @@ export function LaunchpadAIResearchPanel({ panel }: PanelProps) {
             <div className="h-6 w-6 shrink-0 rounded-full bg-terminal-accent/20 flex items-center justify-center text-terminal-accent">
               <Bot size={14} />
             </div>
-            <div className="flex items-center gap-2 rounded-sm border border-terminal-border bg-terminal-panel px-3 py-2 text-[10px] text-terminal-muted italic">
+            <div className="flex items-center gap-2 rounded-sm border border-terminal-border bg-terminal-panel px-3 py-2 text-xs text-terminal-muted italic">
               <Loader2 size={12} className="animate-spin" />
               Thinking...
             </div>
@@ -120,21 +120,24 @@ export function LaunchpadAIResearchPanel({ panel }: PanelProps) {
         )}
       </div>
 
-      <div className="border-t border-terminal-border p-2">
+      <div className="shrink-0 border-t border-terminal-border p-2">
+        <label htmlFor={`research-${panel.id}`} className="mb-1 block text-xs text-terminal-muted">Research question</label>
         <div className="flex items-center gap-2 rounded-sm border border-terminal-border bg-terminal-panel px-2">
           <input
+            id={`research-${panel.id}`}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
             placeholder="Ask research question..."
-            className="h-9 min-w-0 flex-grow bg-transparent text-xs outline-none"
+            className="h-11 min-w-0 flex-grow bg-transparent text-sm outline-none"
           />
           <button
+            aria-label="Send research question"
             onClick={handleSend}
             disabled={!query.trim() || loading}
             className="text-terminal-accent disabled:text-terminal-muted hover:text-terminal-text transition-colors"
           >
-            <Send size={16} />
+            <span className="inline-flex items-center gap-1 text-xs"><Send size={16} />Send</span>
           </button>
         </div>
       </div>
@@ -163,21 +166,22 @@ export function LaunchpadOptionChainPanel({ panel }: PanelProps) {
     enabled: !!expiry,
   });
 
-  if (isLoading) return <div className="p-4 text-[10px] text-terminal-muted animate-pulse">LOADING CHAIN...</div>;
+  if (isLoading) return <div className="p-4 text-xs text-terminal-muted animate-pulse">LOADING CHAIN...</div>;
 
   return (
-    <div className="flex h-full flex-col p-1 overflow-hidden">
+    <div className="flex h-full min-w-0 flex-col gap-2 overflow-hidden p-2">
       <div className="flex items-center gap-2 mb-1">
-        <div className="text-[10px] font-bold text-terminal-accent">{symbol}</div>
+        <div className="text-xs font-bold text-terminal-accent">{symbol}</div>
         <select
-          className="bg-terminal-bg text-[9px] border border-terminal-border rounded px-1 outline-none"
+          className="min-h-10 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-2 text-sm outline-none"
+          aria-label="Option expiry"
           value={expiry}
           onChange={(e) => setExpiry(e.target.value)}
         >
           {expiries?.map((e: string) => <option key={e} value={e}>{e}</option>)}
         </select>
       </div>
-      <div className="flex-1 overflow-auto">
+      <div className="min-h-0 min-w-0 flex-1 overflow-auto [&_th]:!text-xs [&_td]:!text-xs">
         <OptionChainTable rows={(chain?.strikes || []) as any} atmStrike={chain?.atm_strike || 0} />
       </div>
     </div>
@@ -185,11 +189,18 @@ export function LaunchpadOptionChainPanel({ panel }: PanelProps) {
 }
 
 export function LaunchpadWatchlistHeatmapPanel({ panel }: PanelProps) {
+  const heatmapHost = useRef<HTMLDivElement>(null);
+  const [heatmapSize, setHeatmapSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const node = heatmapHost.current; if (!node) return;
+    const observer = new ResizeObserver(() => setHeatmapSize({ width: node.clientWidth, height: node.clientHeight }));
+    observer.observe(node); return () => observer.disconnect();
+  }, []);
   const [activeWlId, setActiveWlId] = useState<string>("");
   const selectedMarket = useSettingsStore(s => s.selectedMarket);
   const ticksByToken = useQuotesStore(s => s.ticksByToken);
 
-  const { data: watchlists } = useQuery({
+  const { data: watchlists, isPending: watchlistsPending, isError: watchlistsFailed } = useQuery({
     queryKey: ["watchlists"],
     queryFn: fetchWatchlists
   });
@@ -215,26 +226,28 @@ export function LaunchpadWatchlistHeatmapPanel({ panel }: PanelProps) {
     }) || []
   , [activeWl, ticksByToken, selectedMarket]);
 
-  if (!activeWl) return <div className="p-4 text-[10px] text-terminal-muted animate-pulse">LOADING HEATMAP...</div>;
+
 
   return (
-    <div className="flex h-full flex-col p-1 overflow-hidden">
+    <div className="flex h-full min-w-0 flex-col gap-2 overflow-hidden p-2">
       <div className="flex items-center justify-between mb-1">
         <select
-          className="bg-terminal-bg text-[9px] border border-terminal-border rounded px-1 outline-none"
+          className="min-h-10 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-2 text-sm outline-none"
+          aria-label="Heatmap watchlist"
+          disabled={!activeWl}
           value={activeWlId}
           onChange={(e) => setActiveWlId(e.target.value)}
         >
           {watchlists?.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
         </select>
       </div>
-      <div className="flex-1 min-h-0 bg-terminal-panel/20 rounded">
-        <HeatmapView
+      <div ref={heatmapHost} className="min-h-[180px] min-w-0 flex-1 rounded bg-terminal-panel/20">
+        {activeWl ? <HeatmapView
           data={heatmapData}
-          width={300}
-          height={200}
+          width={heatmapSize.width}
+          height={heatmapSize.height || 180}
           sizeBy="equal"
-        />
+        /> : <p role={watchlistsFailed ? "alert" : "status"} className="p-2 text-sm text-terminal-muted">{watchlistsFailed ? "Could not load watchlists." : watchlistsPending ? "Loading watchlists…" : "No watchlists available."}</p>}
       </div>
     </div>
   );
@@ -255,17 +268,17 @@ export function LaunchpadYieldCurvePanel(_: PanelProps) {
     staleTime: 300_000
   });
 
-  if (isLoading) return <div className="flex h-full items-center justify-center text-[10px] text-terminal-muted animate-pulse">LOADING CURVE...</div>;
+  if (isLoading) return <div className="flex h-full items-center justify-center text-xs text-terminal-muted animate-pulse">LOADING CURVE...</div>;
 
   return (
     <div className="h-full flex flex-col p-2">
       <div className="flex-grow min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data?.data}>
-            <XAxis dataKey="label" fontSize={8} stroke="#4B5563" tickLine={false} axisLine={false} />
+            <XAxis dataKey="label" fontSize={12} stroke="#4B5563" tickLine={false} axisLine={false} />
             <YAxis hide domain={['dataMin - 0.2', 'dataMax + 0.2']} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', fontSize: '10px' }}
+              contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', fontSize: '12px' }}
             />
             <Area type="monotone" dataKey="yield" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.1} strokeWidth={2} isAnimationActive={false} />
           </AreaChart>
@@ -273,16 +286,16 @@ export function LaunchpadYieldCurvePanel(_: PanelProps) {
       </div>
       <div className="mt-1 grid grid-cols-3 gap-1">
         <div className="rounded border border-terminal-border bg-terminal-bg p-1 text-center">
-          <div className="text-[8px] uppercase text-terminal-muted">2Y</div>
-          <div className="text-[10px] font-mono text-terminal-text">{(data?.data || []).find(d => d.label === "2Y")?.yield.toFixed(2) || "0.00"}%</div>
+          <div className="text-xs uppercase text-terminal-muted">2Y</div>
+          <div className="text-xs font-mono text-terminal-text">{(data?.data || []).find(d => d.label === "2Y")?.yield.toFixed(2) || "0.00"}%</div>
         </div>
         <div className="rounded border border-terminal-border bg-terminal-bg p-1 text-center">
-          <div className="text-[8px] uppercase text-terminal-muted">10Y</div>
-          <div className="text-[10px] font-mono text-terminal-text">{(data?.data || []).find(d => d.label === "10Y")?.yield.toFixed(2) || "0.00"}%</div>
+          <div className="text-xs uppercase text-terminal-muted">10Y</div>
+          <div className="text-xs font-mono text-terminal-text">{(data?.data || []).find(d => d.label === "10Y")?.yield.toFixed(2) || "0.00"}%</div>
         </div>
         <div className={`rounded border border-terminal-border bg-terminal-bg p-1 text-center ${Number(data?.spreads?.["2s10s"]) < 0 ? "border-terminal-neg/40" : ""}`}>
-          <div className="text-[8px] uppercase text-terminal-muted">2s10s</div>
-          <div className={`text-[10px] font-mono ${Number(data?.spreads?.["2s10s"]) < 0 ? "text-terminal-neg" : "text-terminal-pos"}`}>
+          <div className="text-xs uppercase text-terminal-muted">2s10s</div>
+          <div className={`text-xs font-mono ${Number(data?.spreads?.["2s10s"]) < 0 ? "text-terminal-neg" : "text-terminal-pos"}`}>
             {(data?.spreads?.["2s10s"] || 0).toFixed(3)}%
           </div>
         </div>
@@ -353,7 +366,7 @@ export function LaunchpadWatchlistPanel(_: PanelProps) {
 
   return (
     <div className="h-full overflow-auto p-2" tabIndex={0} onKeyDown={nav.onKeyDown}>
-      <div className="mb-1 flex items-center justify-between text-[10px] uppercase text-terminal-muted">
+      <div className="mb-1 flex items-center justify-between text-xs uppercase text-terminal-muted">
         <span>{selectedMarket} feed: {connectionState}</span>
         <span>{rows.length} symbols</span>
       </div>
@@ -364,12 +377,12 @@ export function LaunchpadWatchlistPanel(_: PanelProps) {
             key={row.id}
             type="button"
             onClick={() => navigate(`/equity/stocks?ticker=${encodeURIComponent(row.ticker)}`)}
-            className={`grid w-full grid-cols-4 rounded border px-2 py-1 text-left text-xs ${
+            className={`grid min-w-0 w-full grid-cols-2 gap-2 rounded border px-2 py-2 text-left text-xs ${
               idx === nav.selected ? "border-terminal-accent bg-terminal-accent/10" : "border-terminal-border bg-terminal-bg"
             }`}
           >
             <div className="ot-type-data text-terminal-text">{row.ticker}</div>
-            <div className="truncate text-terminal-muted">{row.watchlist_name}</div>
+            <div className="whitespace-normal break-words text-terminal-muted">{row.watchlist_name}</div>
             <div className="text-right ot-type-data text-terminal-text">
               {Number(ticksByToken[`${selectedMarket}:${row.ticker}`]?.ltp ?? NaN).toFixed(2).replace("NaN", "--")}
             </div>
@@ -400,7 +413,7 @@ export function LaunchpadNewsFeedPanel({ panel }: PanelProps) {
 
   return (
     <div className="h-full overflow-auto p-2" tabIndex={0} onKeyDown={nav.onKeyDown}>
-      <div className="mb-1 text-[10px] uppercase text-terminal-muted">j/k navigation</div>
+      <div className="mb-1 text-xs uppercase text-terminal-muted">j/k navigation</div>
       <div className="space-y-1">
         {rows.map((row, idx) => (
           <a
@@ -410,8 +423,8 @@ export function LaunchpadNewsFeedPanel({ panel }: PanelProps) {
             rel="noreferrer"
             className={`block rounded border px-2 py-1 text-xs ${idx === nav.selected ? "border-terminal-accent bg-terminal-accent/10" : "border-terminal-border bg-terminal-bg"}`}
           >
-            <div className="truncate text-terminal-text">{row.title}</div>
-            <div className="truncate text-[10px] text-terminal-muted">{row.source}</div>
+            <div className="whitespace-normal break-words text-sm text-terminal-text">{row.title}</div>
+            <div className="break-words text-xs text-terminal-muted">{row.source}</div>
           </a>
         ))}
       </div>
@@ -453,7 +466,7 @@ export function LaunchpadScreenerResultsPanel(_: PanelProps) {
   const nav = useJkListNavigation(rows);
   return (
     <div className="h-full overflow-auto p-2" tabIndex={0} onKeyDown={nav.onKeyDown}>
-      <div className="mb-1 text-[10px] uppercase text-terminal-muted">Top movers proxy</div>
+      <div className="mb-1 text-xs uppercase text-terminal-muted">Top movers proxy</div>
       <div className="space-y-1">
         {rows.map((row, idx) => (
           <div key={row.key} className={`grid grid-cols-3 rounded border px-2 py-1 text-xs ${idx === nav.selected ? "border-terminal-accent bg-terminal-accent/10" : "border-terminal-border bg-terminal-bg"}`}>
@@ -480,7 +493,7 @@ export function LaunchpadAlertsPanel(_: PanelProps) {
               <span className="text-terminal-text">{row.ticker}</span>
               <span className="text-terminal-muted uppercase">{row.alert_type}</span>
             </div>
-            <div className="truncate text-terminal-muted">{row.condition}</div>
+            <div className="whitespace-normal break-words text-terminal-muted">{row.condition}</div>
           </div>
         ))}
         {!rows.length ? <div className="text-xs text-terminal-muted">No active alerts.</div> : null}
@@ -500,7 +513,7 @@ export function LaunchpadPortfolioSummaryPanel(_: PanelProps) {
         <div className="rounded border border-terminal-border bg-terminal-bg p-2"><div className="text-terminal-muted">Net Liquidation</div><div className="ot-type-data text-terminal-text">{formatMoney(summary?.net_liquidation_value, baseCurrency ?? undefined)}</div></div>
         <div className="rounded border border-terminal-border bg-terminal-bg p-2"><div className="text-terminal-muted">Total Cost</div><div className="ot-type-data text-terminal-text">{formatMoney(summary?.total_cost, baseCurrency ?? undefined)}</div></div>
         <div className="rounded border border-terminal-border bg-terminal-bg p-2"><div className="text-terminal-muted">Overall PnL</div><div className={`${Number(summary?.overall_pnl ?? 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"} ot-type-data`}>{formatSignedMoney(summary?.overall_pnl, baseCurrency ?? undefined)}</div></div>
-        <div className="text-[10px] uppercase tracking-[0.1em] text-terminal-muted">Accounting {portfolio.data?.accounting.status ?? "unavailable"}</div>
+        <div className="text-xs uppercase tracking-[0.1em] text-terminal-muted">Accounting {portfolio.data?.accounting.status ?? "unavailable"}</div>
       </div>
     </div>
   );

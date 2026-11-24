@@ -80,9 +80,9 @@ function getLaunchpadPanelPopoutUrl(panelRoot: HTMLElement, currentLinkGroup: Li
   const themeVariant = getCurrentThemeVariant();
 
   const badgeCode = (typeBadge?.textContent ?? "").trim().toUpperCase();
-  const panelType = LAUNCHPAD_TYPE_BY_BADGE[badgeCode];
-  const panelTitle = titleInput?.value.trim() || typeBadge?.parentElement?.textContent?.trim() || "Launchpad Panel";
-  const panelSymbol = symbolInput?.value.trim().toUpperCase() || "";
+  const panelType = panelRoot.dataset.launchpadPanelType || LAUNCHPAD_TYPE_BY_BADGE[badgeCode];
+  const panelTitle = panelRoot.dataset.launchpadPanelTitle || titleInput?.value.trim() || typeBadge?.parentElement?.textContent?.trim() || "Launchpad Panel";
+  const panelSymbol = (panelRoot.dataset.launchpadPanelSymbol || symbolInput?.value || "").trim().toUpperCase();
   const effectiveLinkGroup = linkGroupButton?.dataset.linkGroup?.trim() || currentLinkGroup;
 
   if (!panelType) return null;

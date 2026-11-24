@@ -1,23 +1,10 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import {
-  Link2,
-  Unlink2,
-  Plus,
-  Settings,
-  X,
-  GripVertical,
-  LayoutGrid,
-  Search,
-} from "lucide-react";
-
-import {
-  setGroupSymbol,
-  subscribeSymbolLinkMessages,
-  type LinkGroup,
-} from "../../contexts/SymbolLinkContext";
+import { GripVertical } from "lucide-react";
+import { setGroupSymbol, subscribeSymbolLinkMessages, type LinkGroup } from "../../contexts/SymbolLinkContext";
 import { PanelBody, PanelFrame, PanelHeader } from "./PanelChrome";
-import { type LaunchpadPanelType, useLaunchpad } from "./LaunchpadContext";
+import { type LaunchpadPanelConfig, type LaunchpadPanelType, useLaunchpad } from "./LaunchpadContext";
 import { LaunchpadGrid } from "./LaunchpadGrid";
+import { TerminalButton, TerminalInput, TerminalModal } from "../terminal";
 import { useStockStore } from "../../store/stockStore";
 
 const PANEL_TYPES: LaunchpadPanelType[] = [
@@ -38,58 +25,6 @@ const PANEL_TYPES: LaunchpadPanelType[] = [
   "sector-rotation",
   "hotkeys",
 ];
-
-function typeIconLabel(type: LaunchpadPanelType) {
-  switch (type) {
-    case "chart":
-      return "CH";
-    case "watchlist":
-      return "WL";
-    case "news-feed":
-    case "news":
-      return "NW";
-    case "overview":
-      return "OV";
-    case "order-book":
-      return "OB";
-    case "screener":
-    case "screener-results":
-      return "SC";
-    case "financials":
-    case "fundamentals":
-      return "FN";
-    case "portfolio-allocation":
-      return "AL";
-    case "portfolio-performance":
-      return "PF";
-    case "risk-metrics":
-      return "RM";
-    case "market-pulse":
-      return "MP";
-    case "yield-curve":
-      return "YC";
-    case "economics":
-      return "EC";
-    case "greeks":
-      return "GR";
-    case "oi-chart":
-      return "OI";
-    case "peers":
-      return "PR";
-    case "ai-research":
-      return "AI";
-    case "option-chain":
-      return "OC";
-    case "watchlist-heatmap":
-      return "HM";
-    case "sector-rotation":
-      return "RRG";
-    case "hotkeys":
-      return "HK";
-    default:
-      return "PN";
-  }
-}
 
 function resolvePanelLinkGroup(panel: { linkGroup?: LinkGroup; linked?: boolean }): LinkGroup {
   if (
@@ -138,332 +73,95 @@ function VisibilityMount({
 }
 
 export function LaunchpadWorkspace({ toolbarActions }: { toolbarActions?: ReactNode }) {
-  const {
-    activeLayout,
-    activeLayoutId,
-    savedLayouts,
-    setActiveLayoutId,
-    createLayout,
-    renameLayout,
-    deleteLayout,
-    addPanel,
-    closePanel,
-    updatePanel,
-    updatePanelsLayout,
-    reorderPanels,
-    setPanelPoppedOut,
-    panelRegistry,
-    emitSymbolChange,
-    lastBroadcastSymbol,
-    symbolEventVersion,
-    loadingLayouts,
-  } = useLaunchpad();
-  const globalTicker = useStockStore((s) => s.ticker);
-  const setTicker = useStockStore((s) => s.setTicker);
-  const loadTicker = useStockStore((s) => s.load);
-  const [draggingPanelId, setDraggingPanelId] = useState<string | null>(null);
-  const [editingLayoutId, setEditingLayoutId] = useState<string | null>(null);
+  const { activeLayout, activeLayoutId, savedLayouts, setActiveLayoutId, createLayout, renameLayout, deleteLayout, addPanel, closePanel, updatePanel, updatePanelsLayout, setPanelPoppedOut, panelRegistry, emitSymbolChange, lastBroadcastSymbol, symbolEventVersion, loadingLayouts } = useLaunchpad();
+  const globalTicker = useStockStore(state => state.ticker);
+  const setTicker = useStockStore(state => state.setTicker);
+  const loadTicker = useStockStore(state => state.load);
   const [layoutNameDraft, setLayoutNameDraft] = useState("");
   const [panelTypeOpen, setPanelTypeOpen] = useState(false);
   const [focusedPanelId, setFocusedPanelId] = useState<string | null>(null);
   const [panelSearch, setPanelSearch] = useState("");
-  
+  const [editingPanel, setEditingPanel] = useState<LaunchpadPanelConfig | null>(null);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [symbolDraft, setSymbolDraft] = useState("");
+  const [groupDraft, setGroupDraft] = useState<LinkGroup>("none");
+  const [notice, setNotice] = useState("");
+  const noticeRef = useRef<HTMLParagraphElement>(null);
   const panels = activeLayout?.panels ?? [];
-
-  const filteredPanelTypes = useMemo(() => 
-    PANEL_TYPES.filter(t => t.toLowerCase().includes(panelSearch.toLowerCase())),
-    [panelSearch]
-  );
-
+  const filteredTypes = useMemo(() => PANEL_TYPES.filter(type => type.replace(/-/g, " ").includes(panelSearch.toLowerCase().trim().replace(/-/g, " "))), [panelSearch]);
+  useEffect(() => { setLayoutNameDraft(activeLayout?.name || ""); }, [activeLayout?.id, activeLayout?.name]);
+  useEffect(() => { if (notice && !panelTypeOpen && !editingPanel) noticeRef.current?.focus(); }, [notice, panelTypeOpen, editingPanel]);
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-      const key = event.key;
-      if (/^[1-9]$/.test(key)) {
-        const idx = Number(key) - 1;
-        const panel = panels[idx];
-        if (!panel) return;
-        event.preventDefault();
-        setFocusedPanelId(panel.id);
-        const node = document.querySelector<HTMLElement>(`[data-launchpad-panel-id="${panel.id}"]`);
-        node?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || panelTypeOpen || editingPanel) return;
+      if (/^[1-9]$/.test(event.key)) {
+        const panel = panels[Number(event.key) - 1]; if (!panel) return;
+        event.preventDefault(); setFocusedPanelId(panel.id);
+        document.querySelector<HTMLElement>(`[data-launchpad-panel-id="${CSS.escape(panel.id)}"]`)?.focus();
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [panels]);
+    window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
+  }, [panels, panelTypeOpen, editingPanel]);
+  useEffect(() => subscribeSymbolLinkMessages(message => {
+    if (message.type === "panel-return" && message.panelId) setPanelPoppedOut(message.panelId, false);
+    if (message.type === "symbol-change" && message.linkGroup !== "none" && message.symbol) emitSymbolChange(message.symbol, undefined, message.linkGroup);
+  }), [emitSymbolChange, setPanelPoppedOut]);
 
-  useEffect(() => {
-    return subscribeSymbolLinkMessages((message) => {
-      if (message.type === "panel-return" && message.panelId) {
-        setPanelPoppedOut(message.panelId, false);
-        return;
-      }
-      if (message.type === "symbol-change" && message.linkGroup !== "none" && message.symbol) {
-        emitSymbolChange(message.symbol, undefined, message.linkGroup);
-      }
-    });
-  }, [emitSymbolChange, setPanelPoppedOut]);
-
-  if (!activeLayout) {
-    return (
-      <div className="p-3">
-        <PanelFrame>
-          <PanelBody>No launchpad layout loaded.</PanelBody>
-        </PanelFrame>
-      </div>
-    );
+  function editPanel(panel: LaunchpadPanelConfig) {
+    setTitleDraft(panel.title); setSymbolDraft(panel.symbol || ""); setGroupDraft(resolvePanelLinkGroup(panel)); setEditingPanel(panel); setNotice("");
   }
+  function savePanel() {
+    if (!editingPanel || !titleDraft.trim()) return;
+    const current = panels.find(panel => panel.id === editingPanel.id);
+    if (!current) { setEditingPanel(null); setNotice("This panel is no longer in the selected layout."); return; }
+    const symbol = symbolDraft.trim().toUpperCase();
+    updatePanel(current.id, { title: titleDraft.trim(), symbol, linkGroup: groupDraft, linked: groupDraft !== "none" });
+    if (symbol && (symbol !== current.symbol || groupDraft !== resolvePanelLinkGroup(current))) {
+      setTicker(symbol); void loadTicker();
+      if (groupDraft !== "none") { setGroupSymbol(groupDraft, symbol, current.id); emitSymbolChange(symbol, current.id, groupDraft); }
+    }
+    setEditingPanel(null); setNotice("Panel settings updated in this workspace.");
+  }
+  if (!activeLayout) return <p role="status" className="p-3 text-sm text-terminal-muted">No Launchpad layout loaded.</p>;
 
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-2 p-2">
-      <div className="flex flex-wrap items-center gap-2 rounded-sm border border-terminal-border bg-terminal-panel px-2 py-1">
-        <div className="inline-flex items-center gap-2">
-          <LayoutGrid className="h-4 w-4 text-terminal-accent" />
-          <span className="ot-type-label text-terminal-accent">Launchpad Presets</span>
-          {loadingLayouts ? <span className="text-[10px] text-terminal-muted">SYNCING...</span> : null}
-        </div>
-        <div className="ml-2 flex flex-wrap items-center gap-1">
-          {savedLayouts.map((layout) => (
-            <div key={layout.id} className="relative">
-              {editingLayoutId === layout.id ? (
-                <input
-                  autoFocus
-                  className="h-7 rounded-sm border border-terminal-accent bg-terminal-bg px-2 text-xs outline-none"
-                  value={layoutNameDraft}
-                  onChange={(e) => setLayoutNameDraft(e.target.value)}
-                  onBlur={() => {
-                    const next = layoutNameDraft.trim();
-                    if (next) renameLayout(layout.id, next);
-                    setEditingLayoutId(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const next = layoutNameDraft.trim();
-                      if (next) renameLayout(layout.id, next);
-                      setEditingLayoutId(null);
-                    }
-                    if (e.key === "Escape") setEditingLayoutId(null);
-                  }}
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setActiveLayoutId(layout.id)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    const action = window.prompt("Layout action: rename / delete", "rename");
-                    if (!action) return;
-                    if (action.toLowerCase() === "delete") {
-                      deleteLayout(layout.id);
-                      return;
-                    }
-                    setEditingLayoutId(layout.id);
-                    setLayoutNameDraft(layout.name);
-                  }}
-                  className={`h-7 rounded-sm border px-2 text-[11px] uppercase tracking-wide ${
-                    layout.id === activeLayoutId
-                      ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"
-                      : "border-terminal-border text-terminal-muted hover:text-terminal-text"
-                  }`}
-                >
-                  {layout.name}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          {toolbarActions}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setPanelTypeOpen((v) => !v)}
-              className="inline-flex h-7 items-center gap-1 rounded-sm border border-terminal-border px-2 text-[11px] hover:border-terminal-accent hover:text-terminal-accent"
-            >
-              <Plus className="h-3.5 w-3.5" /> Panel
-            </button>
-            {panelTypeOpen ? (
-              <div className="absolute right-0 top-8 z-40 w-48 rounded-sm border border-terminal-border bg-[#0F141B] p-2 shadow-xl">
-                <div className="relative mb-2">
-                  <Search className="absolute left-2 top-1.5 h-3 w-3 text-terminal-muted" />
-                  <input
-                    autoFocus
-                    className="w-full rounded-sm border border-terminal-border bg-terminal-bg pl-7 pr-2 py-1 text-[10px] outline-none focus:border-terminal-accent"
-                    placeholder="Search panels..."
-                    value={panelSearch}
-                    onChange={(e) => setPanelSearch(e.target.value)}
-                  />
-                </div>
-                <div className="max-h-60 overflow-auto">
-                  {filteredPanelTypes.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => {
-                        addPanel(type);
-                        setPanelTypeOpen(false);
-                        setPanelSearch("");
-                      }}
-                      className="block w-full rounded px-2 py-1 text-left text-xs hover:bg-terminal-panel capitalize"
-                    >
-                      {type.replace(/-/g, " ")}
-                    </button>
-                  ))}
-                  {filteredPanelTypes.length === 0 && (
-                    <div className="px-2 py-1 text-[10px] text-terminal-muted italic text-center">No matching panels</div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <button type="button" onClick={createLayout} className="inline-flex h-7 items-center gap-1 rounded-sm border border-terminal-border px-2 text-[11px] hover:border-terminal-accent hover:text-terminal-accent">
-            <Plus className="h-3.5 w-3.5" /> Layout
-          </button>
-        </div>
+  return <main aria-label="Launchpad workspace" className="min-h-full min-w-0 space-y-3 p-3 [overflow-wrap:anywhere] md:p-4">
+    <header className="shrink-0 space-y-3">
+      <div><h1 className="text-lg font-semibold">Launchpad</h1><p className="text-sm text-terminal-muted">{activeLayout.name}</p></div>
+      <div className="flex min-w-0 flex-wrap items-end gap-3">
+        <label className="min-w-0 flex-1 basis-64 space-y-1"><span className="block text-xs text-terminal-muted">Layout</span><TerminalInput as="select" aria-label="Launchpad layout" className="!text-sm" value={activeLayoutId} onChange={event => { setActiveLayoutId(event.target.value); setNotice(""); }}>{savedLayouts.map(layout => <option key={layout.id} value={layout.id}>{layout.name}</option>)}</TerminalInput></label>
+        <div className="flex max-w-full flex-wrap gap-2">{toolbarActions}<TerminalButton size="sm" onClick={() => { setPanelSearch(""); setPanelTypeOpen(true); setNotice(""); }}>Add panel</TerminalButton><TerminalButton size="sm" onClick={createLayout}>New layout</TerminalButton></div>
       </div>
-
-      <div className="rounded-sm border border-terminal-border bg-[#0B1018] px-2 py-1 text-[11px] text-terminal-muted">
-        Linked symbol broadcast: <span className="ot-type-data text-terminal-text">{lastBroadcastSymbol || globalTicker || "NONE"}</span>
-        <span className="ml-2">event #{symbolEventVersion}</span>
-        <span className="ml-4">Tip: drag panel headers to reorder; resize with CSS resize handle at panel bottom-right.</span>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-auto rounded-sm border border-terminal-border bg-terminal-bg p-2">
-        <LaunchpadGrid
-          panels={activeLayout.panels}
-          onLayoutChange={(panels) => updatePanelsLayout(panels)}
-          renderPanel={(panel) => {
-            const PanelView = panelRegistry[panel.type];
-            const panelLinkGroup = resolvePanelLinkGroup(panel);
-            return (
-              <PanelFrame
-                key={panel.id}
-                draggable
-                onDragStart={() => setDraggingPanelId(panel.id)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => {
-                  if (draggingPanelId && draggingPanelId !== panel.id) reorderPanels(draggingPanelId, panel.id);
-                  setDraggingPanelId(null);
-                }}
-                className={`flex h-full min-h-0 min-w-0 flex-col overflow-hidden ${focusedPanelId === panel.id ? "ring-1 ring-terminal-accent/70" : ""}`}
-                tabIndex={0}
-                onFocus={() => setFocusedPanelId(panel.id)}
-                data-launchpad-panel-id={panel.id}
-                data-testid="launchpad-panel-frame"
-              >
-                <PanelHeader
-                  title={
-                    <div className="inline-flex items-center gap-2">
-                      <button
-                        type="button"
-                        draggable
-                        className="launchpad-drag-handle cursor-grab text-terminal-muted"
-                        aria-label={`Drag ${panel.title}`}
-                        onDragStart={() => setDraggingPanelId(panel.id)}
-                      >
-                        <GripVertical className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="inline-flex rounded-sm border border-terminal-border px-1 text-[10px] text-terminal-muted">
-                        {typeIconLabel(panel.type)}
-                      </span>
-                      <input
-                        value={panel.title}
-                        onChange={(e) => updatePanel(panel.id, { title: e.target.value })}
-                        className="w-32 border-0 bg-transparent p-0 text-xs text-terminal-accent outline-none"
-                        aria-label="Panel title"
-                      />
-                    </div>
-                  }
-                  subtitle={
-                    <div className="inline-flex items-center gap-2 text-[10px]">
-                      <span>{panel.type}</span>
-                      <input
-                        value={panel.symbol || ""}
-                        onChange={(e) => updatePanel(panel.id, { symbol: e.target.value.toUpperCase() })}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            const symbol = (e.currentTarget.value || "").trim().toUpperCase();
-                            if (!symbol) return;
-                            updatePanel(panel.id, { symbol });
-                            setTicker(symbol);
-                            void loadTicker();
-                            if (panelLinkGroup !== "none") {
-                              setGroupSymbol(panelLinkGroup, symbol, panel.id);
-                              emitSymbolChange(symbol, panel.id, panelLinkGroup);
-                            }
-                          }
-                        }}
-                        placeholder="SYMBOL"
-                        className="w-20 rounded-sm border border-terminal-border bg-terminal-bg px-1 py-0 text-[10px] ot-type-data text-terminal-text outline-none focus:border-terminal-accent"
-                        aria-label="Panel symbol"
-                      />
-                    </div>
-                  }
-                  linkGroup={panelLinkGroup}
-                  onLinkGroupChange={(group) => {
-                    updatePanel(panel.id, { linkGroup: group, linked: group !== "none" });
-                    if (group !== "none" && panel.symbol) {
-                      setGroupSymbol(group, panel.symbol, panel.id);
-                      emitSymbolChange(panel.symbol, panel.id, group);
-                    }
-                  }}
-                  onPopout={() => setPanelPoppedOut(panel.id, true)}
-                  actions={
-                    <div className="inline-flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextGroup = panelLinkGroup === "none" ? "red" : "none";
-                          updatePanel(panel.id, { linkGroup: nextGroup, linked: nextGroup !== "none" });
-                          if (nextGroup !== "none" && panel.symbol) {
-                            setGroupSymbol(nextGroup, panel.symbol, panel.id);
-                            emitSymbolChange(panel.symbol, panel.id, nextGroup);
-                          }
-                        }}
-                        className={`rounded p-1 ${panelLinkGroup !== "none" ? "text-terminal-accent" : "text-terminal-muted hover:text-terminal-text"}`}
-                        title={panelLinkGroup !== "none" ? "Linked panel" : "Unlinked panel"}
-                        aria-label={panelLinkGroup !== "none" ? "Disable panel link" : "Enable panel link"}
-                      >
-                        {panelLinkGroup !== "none" ? <Link2 className="h-3.5 w-3.5" /> : <Unlink2 className="h-3.5 w-3.5" />}
-                      </button>
-                      <button type="button" className="rounded p-1 text-terminal-muted hover:text-terminal-text" aria-label="Panel settings">
-                        <Settings className="h-3.5 w-3.5" />
-                      </button>
-                      <button type="button" onClick={() => closePanel(panel.id)} className="rounded p-1 text-terminal-muted hover:text-rose-400" aria-label="Close panel">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  }
-                />
-                {panel.poppedOut ? (
-                  <PanelBody className="flex min-h-[160px] flex-col items-center justify-center gap-3 text-center">
-                    <div>
-                      <div className="ot-type-panel-title text-terminal-accent">Panel In External Window</div>
-                      <div className="mt-1 text-xs text-terminal-muted">
-                        This panel is detached. Close the popout to restore it here, or recall it manually.
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-sm border border-terminal-border px-3 py-1 text-xs text-terminal-text hover:border-terminal-accent hover:text-terminal-accent"
-                      onClick={() => setPanelPoppedOut(panel.id, false)}
-                    >
-                      Recall Panel
-                    </button>
-                  </PanelBody>
-                ) : (
-                  <Suspense fallback={<PanelBody>Loading panel...</PanelBody>}>
-                    <VisibilityMount panelId={panel.id} focused={focusedPanelId === panel.id}>
-                      <PanelView panel={panel} />
-                    </VisibilityMount>
-                  </Suspense>
-                )}
-              </PanelFrame>
-            );
-          }}
-        />
-      </div>
+      <details className="rounded border border-terminal-border bg-terminal-panel p-3"><summary className="cursor-pointer text-sm">Layout controls and linking</summary><div className="mt-3 space-y-3">
+        <form aria-label="Rename layout" className="flex min-w-0 flex-wrap items-end gap-3" onSubmit={event => { event.preventDefault(); if (layoutNameDraft.trim()) { renameLayout(activeLayout.id, layoutNameDraft.trim()); setNotice("Layout renamed in this workspace."); } }}><label className="min-w-0 flex-1 basis-64 space-y-1"><span className="block text-xs text-terminal-muted">Layout name</span><TerminalInput required className="!text-sm" value={layoutNameDraft} onChange={event => setLayoutNameDraft(event.target.value)} /></label><TerminalButton type="submit" size="sm">Rename layout</TerminalButton><TerminalButton type="button" size="sm" variant="danger" onClick={() => { deleteLayout(activeLayout.id); setNotice("Layout removed. Removing the last layout restores the defaults."); }}>Delete layout</TerminalButton></form>
+        <p className="text-xs text-terminal-muted">Drag panel handles and resize on wide workspaces. Narrow screens stack panels without changing the saved grid. Ctrl/Cmd + 1–9 focuses a panel.</p>
+        <p className="text-xs text-terminal-muted">Linked symbol: <span className="text-terminal-text">{lastBroadcastSymbol || globalTicker || "None"}</span> · event {symbolEventVersion}. Panels share symbols within their colour group.</p>
+      </div></details>
+      {loadingLayouts ? <p role="status" className="text-xs text-terminal-muted">Syncing layout list…</p> : null}
+      {notice ? <p ref={noticeRef} role="status" tabIndex={-1} className="text-sm text-terminal-muted">{notice}</p> : null}
+    </header>
+    <div role="region" aria-label="Launchpad panels" tabIndex={0} className="min-w-0 rounded border border-terminal-border bg-terminal-bg p-2">
+      {!panels.length ? <p className="p-3 text-sm text-terminal-muted">This layout has no panels. Add a panel or apply a template.</p> : null}
+      <LaunchpadGrid panels={panels} onLayoutChange={updatePanelsLayout} renderPanel={panel => {
+        const PanelView = panelRegistry[panel.type]; const group = resolvePanelLinkGroup(panel);
+        return <PanelFrame className={`flex h-full min-h-0 min-w-0 flex-col overflow-hidden ${focusedPanelId === panel.id ? "ring-1 ring-terminal-accent/70" : ""}`} tabIndex={0} onFocus={() => setFocusedPanelId(panel.id)} aria-label={panel.title} data-launchpad-panel-id={panel.id} data-launchpad-panel-type={panel.type} data-launchpad-panel-title={panel.title} data-launchpad-panel-symbol={panel.symbol || ""} data-testid="launchpad-panel-frame">
+          <PanelHeader title={<span className="block min-w-0 whitespace-normal text-sm">{panel.title}</span>} subtitle={<span className="block text-xs">{panel.type.replace(/-/g, " ")}{panel.symbol ? ` · ${panel.symbol}` : ""}</span>}
+            toolbar={<div className="flex flex-wrap items-center gap-2 py-1"><button type="button" className="launchpad-drag-handle inline-flex min-h-8 items-center gap-1 rounded border border-terminal-border px-2 text-xs text-terminal-muted" aria-label={`Drag ${panel.title}`}><GripVertical size={14} />Move</button><TerminalButton size="sm" onClick={() => editPanel(panel)}>Panel settings</TerminalButton><TerminalButton size="sm" variant="danger" onClick={() => { closePanel(panel.id); setNotice(`Closed ${panel.title}.`); }}>Close panel</TerminalButton></div>}
+            linkGroup={group} onLinkGroupChange={next => { updatePanel(panel.id, { linkGroup: next, linked: next !== "none" }); if (next !== "none" && panel.symbol) { setGroupSymbol(next, panel.symbol, panel.id); emitSymbolChange(panel.symbol, panel.id, next); } }} onPopout={() => setPanelPoppedOut(panel.id, true)} />
+          {panel.poppedOut ? <PanelBody className="space-y-3 text-sm"><p>Panel in external window. Close it or recall it here.</p><TerminalButton size="sm" onClick={() => setPanelPoppedOut(panel.id, false)}>Recall Panel</TerminalButton></PanelBody> : <Suspense fallback={<PanelBody>Loading panel…</PanelBody>}><VisibilityMount panelId={panel.id} focused={focusedPanelId === panel.id}><PanelView panel={panel} /></VisibilityMount></Suspense>}
+        </PanelFrame>;
+      }} />
     </div>
-  );
+    <TerminalModal open={panelTypeOpen} onClose={() => setPanelTypeOpen(false)} title="Add Launchpad panel" subtitle="Choose a panel for the selected layout." size="lg">
+      <label className="block space-y-1"><span className="block text-xs text-terminal-muted">Find a panel</span><TerminalInput className="!text-sm" value={panelSearch} onChange={event => setPanelSearch(event.target.value)} placeholder="Chart, news, portfolio…" /></label>
+      <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">{filteredTypes.map(type => <TerminalButton key={type} className="justify-start whitespace-normal text-left !text-sm" onClick={() => { addPanel(type); setPanelTypeOpen(false); setNotice(`Added ${type.replace(/-/g, " ")} panel.`); }}>{type.replace(/-/g, " ")}</TerminalButton>)}</div>
+      {!filteredTypes.length ? <p className="mt-3 text-sm text-terminal-muted">No matching panels.</p> : null}
+    </TerminalModal>
+    <TerminalModal open={Boolean(editingPanel)} onClose={() => setEditingPanel(null)} title="Panel settings" subtitle={editingPanel?.title} size="md" footer={<TerminalButton variant="accent" type="submit" form="launchpad-panel-settings">Save panel settings</TerminalButton>}>
+      <form id="launchpad-panel-settings" aria-label="Panel settings" className="min-w-0 space-y-3 [&_input]:!text-sm [&_select]:!text-sm" onSubmit={event => { event.preventDefault(); savePanel(); }}>
+        <label className="block space-y-1"><span className="block text-xs text-terminal-muted">Panel title</span><TerminalInput required value={titleDraft} onChange={event => setTitleDraft(event.target.value)} /></label>
+        <label className="block space-y-1"><span className="block text-xs text-terminal-muted">Panel symbol</span><TerminalInput value={symbolDraft} onChange={event => setSymbolDraft(event.target.value)} placeholder="Optional symbol" /></label>
+        <label className="block space-y-1"><span className="block text-xs text-terminal-muted">Symbol link group</span><TerminalInput as="select" value={groupDraft} onChange={event => setGroupDraft(event.target.value as LinkGroup)}>{["none", "red", "blue", "green", "yellow"].map(group => <option key={group}>{group}</option>)}</TerminalInput></label>
+      </form>
+    </TerminalModal>
+  </main>;
 }

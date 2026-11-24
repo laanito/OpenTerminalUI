@@ -971,7 +971,9 @@ then labels and reflows the rule editor, history and delivery defaults, keeping
 failed drafts and retrieval/confirmation feedback explicit; #310 is maintainer-
 accepted. The [Settings review](../design/v3/SETTINGS_REVIEW.md) groups preferences,
 automation, data and host setup with readable labels/cards and retained drafts.
-Launchpad and broader retained-tool/maintainer acceptance remain open. No new feature backlog is added to that usability
+The [Launchpad review](../design/v3/LAUNCHPAD_REVIEW.md) follows merged #311 with
+readable panel/template controls and visual reflow that preserves saved geometry.
+Broader retained-tool/maintainer acceptance remains open. No new feature backlog is added to that usability
 work. v3.0 is not release-ready yet. See the design pack's
 [implementation tracking](../design/v3/README.md#first-implementation-slice-responsive-shared-shell).
 

@@ -186,22 +186,22 @@ export function LaunchpadPopoutPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-terminal-bg p-2 text-terminal-text">
-      <div className="mb-2 flex items-center justify-between rounded border border-terminal-border bg-terminal-panel px-2 py-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="ot-type-label truncate text-terminal-accent">{panel.title}</div>
-          {linked ? <div className="rounded border border-terminal-border px-1 text-[10px] text-terminal-muted">{linkGroup}</div> : null}
-          {panelSymbol ? <div className="rounded border border-terminal-border px-1 text-[10px] text-terminal-muted">{panelSymbol}</div> : null}
+    <div className="flex h-dvh min-w-0 flex-col gap-3 overflow-hidden bg-terminal-bg p-3 text-terminal-text [overflow-wrap:anywhere]">
+      <div className="shrink-0 flex flex-wrap items-start justify-between gap-2 rounded border border-terminal-border bg-terminal-panel px-2 py-1">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <div className="min-w-0 whitespace-normal break-words text-sm text-terminal-accent">{panel.title}</div>
+          {linked ? <div className="rounded border border-terminal-border px-1 text-xs text-terminal-muted">{linkGroup}</div> : null}
+          {panelSymbol ? <div className="rounded border border-terminal-border px-1 text-xs text-terminal-muted">{panelSymbol}</div> : null}
         </div>
         <button
           type="button"
-          className="rounded border border-terminal-border px-2 py-0.5 text-[11px] text-terminal-muted hover:text-terminal-text"
+          className="rounded border border-terminal-border px-2 py-0.5 text-xs text-terminal-muted hover:text-terminal-text"
           onClick={handleClose}
         >
           Close
         </button>
       </div>
-      <div className="h-[calc(100%-40px)] rounded border border-terminal-border bg-terminal-panel">
+      <div className="min-h-0 min-w-0 flex-1 overflow-auto rounded border border-terminal-border bg-terminal-panel">
         <Suspense fallback={<div className="p-2 text-xs text-terminal-muted">Loading panel...</div>}>
           <Panel panel={panel} />
         </Suspense>

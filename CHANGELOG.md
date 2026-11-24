@@ -27,6 +27,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable responsive Launchpad** — labelled layout selection and disclosed
+  management replace crowded presets; bounded dialogs manage panel choices,
+  titles, symbols and linking. Long titles, headlines, template descriptions and
+  popout headings wrap. Narrow screens stack panels without changing saved grid
+  coordinates; desktop gestures retain arrangement/resizing with larger rows.
+  Popouts use panel metadata, and deleting the last layout selects a usable default.
 - **Readable grouped Settings** — Preferences, Automation, Data and Host setup
   separate account/browser tasks from operator configuration. Visible labels and
   wrapping cards replace squeezed controls/tables; existing Europe/EUR/Crypto
