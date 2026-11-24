@@ -44,6 +44,10 @@ export function HotKeyPanelFloat() {
       return { x: Math.max(16, window.innerWidth - 344), y: Math.max(72, window.innerHeight - 580) };
     }
   });
+  const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  useEffect(() => { const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight }); window.addEventListener("resize", resize); return () => window.removeEventListener("resize", resize); }, []);
+  const renderedX = Math.min(Math.max(8, position.x), Math.max(8, viewport.width - Math.min(320, viewport.width - 16) - 8));
+  const renderedY = Math.min(Math.max(8, position.y), Math.max(8, viewport.height - Math.min(580, viewport.height - 16) - 8));
   const dragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
 
   useEffect(() => writeJson(VISIBILITY_KEY, visible), [visible]);
@@ -87,22 +91,22 @@ export function HotKeyPanelFloat() {
   return (
     <div
       className="fixed z-[70] w-[320px] max-w-[calc(100vw-16px)]"
-      style={{ left: position.x, top: position.y }}
+      style={{ left: renderedX, top: renderedY }}
       data-testid="hotkey-panel-float"
     >
-      <div className="overflow-hidden rounded-sm border border-terminal-border bg-terminal-panel shadow-2xl">
+      <div className="flex flex-col overflow-hidden rounded-sm border border-terminal-border bg-terminal-panel shadow-2xl" style={{ maxHeight: viewport.height - renderedY - 8 }}>
         <div
-          className="flex cursor-move items-center justify-between border-b border-terminal-border bg-terminal-bg px-2 py-1.5"
+          className="shrink-0 flex cursor-move items-center justify-between border-b border-terminal-border bg-terminal-bg px-2 py-1.5"
           onMouseDown={(event) => {
             dragRef.current = {
               startX: event.clientX,
               startY: event.clientY,
-              originX: position.x,
-              originY: position.y,
+              originX: renderedX,
+              originY: renderedY,
             };
           }}
         >
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-terminal-accent">
+          <div className="flex items-center gap-2 text-xs uppercase text-terminal-accent">
             <Move className="h-3.5 w-3.5" />
             Hot Keys
           </div>
@@ -125,7 +129,7 @@ export function HotKeyPanelFloat() {
             </button>
           </div>
         </div>
-        {!minimized ? <HotKeyPanel className="border-0 rounded-none" autoFocus /> : null}
+        <div hidden={minimized} className="min-h-0 overflow-auto"><HotKeyPanel className="border-0 rounded-none" autoFocus /></div>
       </div>
     </div>
   );

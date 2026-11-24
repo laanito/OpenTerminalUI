@@ -255,18 +255,18 @@ function Field({
   helper?: string;
 }) {
   return (
-    <label className="space-y-1.5">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{label}</div>
+    <div className="min-w-0 space-y-1.5">
+      <div className="text-xs uppercase text-terminal-muted">{label}</div>
       {children}
-      {helper ? <div className="text-[10px] text-terminal-muted">{helper}</div> : null}
-    </label>
+      {helper ? <div className="text-xs text-terminal-muted">{helper}</div> : null}
+    </div>
   );
 }
 
 function InfoCard({ label, value, accent = false, testId }: { label: string; value: string; accent?: boolean; testId?: string }) {
   return (
-    <div className="rounded-sm border border-terminal-border bg-terminal-bg/60 p-3">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{label}</div>
+    <div className="min-w-0 rounded-sm border border-terminal-border bg-terminal-bg/60 p-3">
+      <div className="text-xs uppercase text-terminal-muted">{label}</div>
       <div data-testid={testId} className={`mt-2 font-mono text-lg font-semibold ${accent ? "text-terminal-accent" : "text-terminal-text"}`}>
         {value}
       </div>
@@ -335,15 +335,20 @@ export function PositionSizerPage() {
   }
 
   return (
-    <div className="space-y-4 p-4 font-mono">
+    <main aria-label="Position sizer" className="min-w-0 space-y-3 p-3 [overflow-wrap:anywhere] [&_input]:!text-sm md:p-4">
       <div className="rounded-sm border border-terminal-border bg-terminal-panel px-4 py-3">
-        <div className="text-sm font-semibold uppercase tracking-[0.22em] text-terminal-accent">Position Sizer</div>
-        <div className="mt-1 text-[11px] text-terminal-muted">
+        <h1 className="text-lg font-semibold text-terminal-accent">Position Sizer</h1>
+        <div className="mt-1 text-xs text-terminal-muted">
           Client-side trade sizing across fixed fractional, Kelly, ATR, and volatility targeting methods.
         </div>
+        <div className="mt-3 grid min-w-0 items-end gap-3 lg:grid-cols-2">
+          <label className="min-w-0 space-y-1"><span className="block text-xs text-terminal-muted">Position sizing method</span><TerminalInput as="select" aria-label="Position sizing method" aria-describedby="position-sizer-method-help" className="!text-sm" value={inputs.method} onChange={event => setInputs(current => ({ ...current, method: event.target.value as PositionSizingMethod }))}>{METHOD_OPTIONS.map(method => <option key={method.id} value={method.id}>{method.label}</option>)}</TerminalInput><span id="position-sizer-method-help" className="block text-xs text-terminal-muted">{METHOD_OPTIONS.find(method => method.id === inputs.method)?.description}</span></label>
+          <div className="min-w-0 space-y-1"><output aria-label="Calculated position size" className="block break-words text-sm">{formatNumber(result.shares, 2)} asset units · {formatCurrency(result.positionValue)} · {formatPercent(result.positionSizePct)}% of account</output><a href="#position-sizing-results" className="text-sm text-terminal-accent underline" onClick={() => document.getElementById("position-sizing-results")?.focus()}>View sizing results</a></div>
+        </div>
+        <p className="mt-3 text-xs text-terminal-muted">Amounts use {currency}. Use one currency consistently for account, entry and stop values; this calculator does not convert between currencies.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+      <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <TerminalPanel title="Inputs" subtitle="Account, trade, and method-specific sizing parameters">
           <div className="space-y-4">
             <Field label="Account Size" helper={`Formatted: ${formatCurrency(inputs.accountSize)}`}>
@@ -360,17 +365,19 @@ export function PositionSizerPage() {
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-[200px_minmax(0,1fr)]">
               <Field label="Risk Per Trade">
-                <div className="flex rounded-sm border border-terminal-border bg-terminal-bg p-1">
+                <div className="flex min-w-0 flex-wrap rounded-sm border border-terminal-border bg-terminal-bg p-1">
                   <button
                     type="button"
-                    className={`flex-1 rounded-sm px-3 py-2 text-[11px] ${inputs.riskMode === "percent" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted"}`}
+                    className={`flex-1 rounded-sm px-3 py-2 text-xs ${inputs.riskMode === "percent" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted"}`}
+                    aria-pressed={inputs.riskMode === "percent"}
                     onClick={() => setInputs((current) => ({ ...current, riskMode: "percent" }))}
                   >
                     % of Account
                   </button>
                   <button
                     type="button"
-                    className={`flex-1 rounded-sm px-3 py-2 text-[11px] ${inputs.riskMode === "fixed" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted"}`}
+                    className={`flex-1 rounded-sm px-3 py-2 text-xs ${inputs.riskMode === "fixed" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted"}`}
+                    aria-pressed={inputs.riskMode === "fixed"}
                     onClick={() => setInputs((current) => ({ ...current, riskMode: "fixed" }))}
                   >
                     Fixed Amount
@@ -442,27 +449,6 @@ export function PositionSizerPage() {
                   onChange={(event) => updateNumber("atrValue", event.target.value)}
                 />
               </Field>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Method</div>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {METHOD_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setInputs((current) => ({ ...current, method: option.id }))}
-                    className={`rounded-sm border px-3 py-3 text-left transition-colors ${
-                      inputs.method === option.id
-                        ? "border-terminal-accent bg-terminal-accent/10 text-terminal-text"
-                        : "border-terminal-border bg-terminal-bg/50 text-terminal-muted hover:text-terminal-text"
-                    }`}
-                  >
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em]">{option.label}</div>
-                    <div className="mt-1 text-[10px]">{option.description}</div>
-                  </button>
-                ))}
-              </div>
             </div>
 
             {inputs.method === "kelly" ? (
@@ -552,7 +538,7 @@ export function PositionSizerPage() {
             ) : null}
 
             {result.errors.length > 0 ? (
-              <div className="rounded-sm border border-terminal-neg bg-terminal-neg/10 p-3 text-xs text-terminal-neg">
+              <div role="alert" className="rounded-sm border border-terminal-neg bg-terminal-neg/10 p-3 text-xs text-terminal-neg">
                 {result.errors.map((error) => (
                   <div key={error}>{error}</div>
                 ))}
@@ -560,7 +546,7 @@ export function PositionSizerPage() {
             ) : null}
 
             {result.warnings.length > 0 ? (
-              <div className="rounded-sm border border-orange-500/60 bg-orange-500/10 p-3 text-xs text-orange-300">
+              <div role="status" className="rounded-sm border border-orange-500/60 bg-orange-500/10 p-3 text-xs text-orange-300">
                 {result.warnings.map((warning) => (
                   <div key={warning.id}>{warning.message}</div>
                 ))}
@@ -569,7 +555,7 @@ export function PositionSizerPage() {
           </div>
         </TerminalPanel>
 
-        <div className="space-y-4">
+        <section aria-label="Sizing results" id="position-sizing-results" tabIndex={-1} className="min-w-0 space-y-4">
           <TerminalPanel title="Primary Output" subtitle="Position size, notional value, and account exposure">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <InfoCard label="Shares to Buy/Sell" value={formatNumber(result.shares, 2)} accent testId="position-sizer-shares" />
@@ -605,7 +591,7 @@ export function PositionSizerPage() {
 
           <TerminalPanel title="Risk / Reward" subtitle="Entry centered with downside risk and upside reward">
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-terminal-muted">
+              <div className="flex items-center gap-3 text-xs uppercase text-terminal-muted">
                 <span>Risk</span>
                 <div className="relative h-5 flex-1 overflow-hidden rounded-full border border-terminal-border bg-terminal-bg">
                   <div className="absolute inset-y-0 left-0 bg-terminal-neg/80" style={{ width: `${rewardBar.riskWidth}%` }} />
@@ -614,7 +600,7 @@ export function PositionSizerPage() {
                 </div>
                 <span>Reward</span>
               </div>
-              <div className="grid grid-cols-3 text-[11px] text-terminal-muted">
+              <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 text-xs text-terminal-muted">
                 <div>{formatCurrency(result.effectiveStopLossPrice)}</div>
                 <div className="text-center text-terminal-text">Entry {formatCurrency(inputs.entryPrice)}</div>
                 <div className="text-right">{hasTarget && inputs.targetPrice != null ? formatCurrency(inputs.targetPrice) : "No target"}</div>
@@ -623,7 +609,7 @@ export function PositionSizerPage() {
           </TerminalPanel>
 
           <TerminalPanel title="Position Summary" subtitle="Trade-level snapshot">
-            <div className="overflow-x-auto">
+            <div role="region" aria-label="Position sizing summary table" tabIndex={0} className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
                   <tr className="border-b border-terminal-border text-terminal-muted">
@@ -651,8 +637,8 @@ export function PositionSizerPage() {
               </table>
             </div>
           </TerminalPanel>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

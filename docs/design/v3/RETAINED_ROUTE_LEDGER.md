@@ -37,8 +37,8 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/watchlist` | [WatchlistPage](../../../frontend/src/pages/Watchlist.tsx) | supported | 0 |
 | `/equity/news` | [NewsPage](../../../frontend/src/pages/News.tsx) | supported | 0 |
 | `/equity/alerts` | [AlertsPage](../../../frontend/src/pages/Alerts.tsx) | supported | 0 |
-| `/equity/paper` | [PaperTradingPage](../../../frontend/src/pages/PaperTrading.tsx) | supported | 1 |
-| `/equity/position-sizer` | [PositionSizerPage](../../../frontend/src/pages/PositionSizerPage.tsx) | supported | 11 |
+| `/equity/paper` | [PaperTradingPage](../../../frontend/src/pages/PaperTrading.tsx) | supported | 0 |
+| `/equity/position-sizer` | [PositionSizerPage](../../../frontend/src/pages/PositionSizerPage.tsx) | supported | 0 |
 | `/equity/journal` | [TradeJournalPage](../../../frontend/src/pages/TradeJournalPage.tsx) | supported | 4 |
 | `/equity/brain` | [SecondBrainPage](../../../frontend/src/pages/SecondBrain.tsx) | supported | 0 |
 | `/equity/notes` | [NotesHubPage](../../../frontend/src/pages/NotesHub.tsx) | Shell menu extra | 0 |

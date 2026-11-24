@@ -8,8 +8,9 @@ The [Portfolio report](ACCEPTANCE.md) is historical evidence for that workflow.
 
 After accepted #312, the [remaining-page audit](RETAINED_PAGE_AUDIT.md) reconciles
 all route entries and documents concrete gaps in other retained tools. Twenty
-ordinary menu destinations still need a dedicated page review, starting with
-Paper and Position Sizer. Initial probes and source hints do not replace the
+ordinary menu destinations needed a dedicated page review at that baseline.
+The [Paper/Sizer implementation](PAPER_SIZING_REVIEW.md) covers the first two, with
+host acceptance open; eighteen remain, starting with macro/FX. Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.
 

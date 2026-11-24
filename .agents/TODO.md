@@ -2247,9 +2247,14 @@ ordered v1.7 milestone above.
             39 initial probes, not populated/keyboard/zoom or live-provider sign-off.
             Twenty ordinary menu destinations still need page review. The initial
             icon-rail pass does not complete the frontend overhaul.
-      - [ ] Paper + Position Sizer (next): labelled scope/cash/asset quantities/
+      - [x] Paper + Position Sizer: labelled scope/cash/asset quantities/
             prices and readable calculator methods/results; preserve existing
             simulation writes and formulas, with retained drafts and honest errors.
+            Unified embedded hotkey account, guarded/captured writes, independent
+            scoped reads and confirmation/refresh separation; responsive floating
+            widget, editable-input/held-key protection and explicit missing/estimated
+            quote labels. See `docs/design/v3/PAPER_SIZING_REVIEW.md`; host acceptance
+            remains open. Eighteen ordinary menu destinations still need review.
       - [ ] Macro/FX: Forex, Commodities, Economics and Yield Curve; contain
             matrices/charts, show full names and existing provider/fallback scope.
       - [ ] Market overview: Heatmap, Rotation, Crypto and ETF Analytics;

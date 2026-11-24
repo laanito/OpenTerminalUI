@@ -1,5 +1,33 @@
 # External-agent project context
 
+Maintainer confirmed #313 merged. Current v3 follow-up is Paper + Position Sizer:
+one labelled paper account scope, overview/positions and activity tabs before
+secondary hotkeys, bounded retained create/order dialogs and independent scoped
+reads. Confirmed writes are separate from refresh failures; pre-order reads cannot
+overwrite refreshed analytics or confirmation. Pending scope and payloads are
+captured/locked, duplicate submissions are guarded, missing metrics stay unavailable.
+The embedded hotkey widget shares account scope; standalone/floating/Launchpad
+uses keep their existing selection/storage. Editable fields and held trade keys
+do not trade; explicit results/drafts survive failure/minimize, and floating
+position is clamped visually without rewriting coordinates. Missing quotes are
+unavailable and derived bid/ask values labelled estimated; execution math is intact.
+
+Sizer uses a labelled method selector, live compact result and focusable detailed
+results with 12px labels/14px inputs and explicit single-currency scope. Calculation
+defaults/validation/formulas remain byte-for-byte unchanged. No backend/API/schema,
+dependencies or stored formats change. See `docs/design/v3/PAPER_SIZING_REVIEW.md`.
+901 frontend tests / 150 files and the full 145-case Chrome smoke suite pass.
+After the final quote-label change, all six affected browser journeys and eighteen
+focused tests pass again. Production build and API-reference/surface/mock/source
+guards pass; screenshots are linked in the review. No live engine/provider/
+production calls. Host acceptance is open.
+The first two remaining menu destinations now have dedicated implementation;
+eighteen remain, starting with macro/FX (Forex/Commodities/Economics/Yield Curve).
+Historical browser audit evidence stays unchanged; the source ledger is current.
+No release preparation or expansion into deferred simulation/provider functionality.
+
+Historical handoff from #313 (superseded by the progress above):
+
 Maintainer confirmed #312 merged and working as intended, including the CI timing
 follow-up. Current v3 work is the retained-page inventory, documented in
 `docs/design/v3/RETAINED_PAGE_AUDIT.md` with a generated route ledger and raw probes.
