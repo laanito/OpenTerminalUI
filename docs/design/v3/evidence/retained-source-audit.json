@@ -1467,44 +1467,24 @@
       "hidden_compatibility_reason": null,
       "source_hints": [
         {
-          "line": 144,
-          "text": "<div className=\"text-[11px] uppercase tracking-wide text-terminal-muted\">{label}</div>"
+          "line": 369,
+          "text": "<table className=\"w-full min-w-[1120px] text-xs [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap [&_td]:px-2 [&_th]:px-2\">"
         },
         {
-          "line": 357,
-          "text": "<table className=\"w-full min-w-[760px] text-xs\">"
+          "line": 390,
+          "text": "<td className=\"min-w-[230px] max-w-xs py-2\">"
         },
         {
-          "line": 396,
-          "text": "<span className=\"rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-wide text-terminal-muted\">"
+          "line": 401,
+          "text": "<div className=\"max-w-[260px] whitespace-normal text-sm text-terminal-muted\">{row.name}</div>"
         },
         {
-          "line": 429,
-          "text": "<TerminalInput as=\"select\" value={moversMetric} onChange={(event) => setMoversMetric(event.target.value)} className=\"min-w-[140px]\">"
+          "line": 407,
+          "text": "<td className=\"max-w-[220px] whitespace-normal py-2\">"
         },
         {
-          "line": 491,
-          "text": "<div className=\"grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5\">"
-        },
-        {
-          "line": 528,
-          "text": "className=\"rounded border border-terminal-border px-2 py-1 text-[10px] text-terminal-muted hover:border-terminal-accent hover:text-terminal-text\""
-        },
-        {
-          "line": 595,
-          "text": "<TerminalInput as=\"select\" value={corrWindow} onChange={(event) => setCorrWindow(Number(event.target.value))} className=\"min-w-[100px]\">"
-        },
-        {
-          "line": 627,
-          "text": "<div className=\"w-full max-w-[360px] rounded border border-terminal-border bg-terminal-bg/80 p-2\">"
-        },
-        {
-          "line": 629,
-          "text": "<div className=\"text-[11px] uppercase tracking-wide text-terminal-muted\">Active module</div>"
-        },
-        {
-          "line": 758,
-          "text": "<span className=\"text-[11px] uppercase tracking-wide text-terminal-muted\">Mover queue</span>"
+          "line": 412,
+          "text": "<td className=\"min-w-[90px] py-2 text-right\">"
         }
       ]
     },

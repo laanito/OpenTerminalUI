@@ -63,7 +63,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/option-greeks` | [OptionGreeksCalculator](../../../frontend/src/pages/fixed-income/OptionGreeksCalculator.tsx) | Other direct | 3 |
 | `/equity/economics` | [EconomicTerminal](../../../frontend/src/pages/economics/EconomicTerminal.tsx) | configuration-gated | 0 |
 | `/equity/sector-rotation` | [SectorRotationPage](../../../frontend/src/pages/SectorRotation.tsx) | supported | 0 |
-| `/equity/crypto` | [CryptoWorkspacePage](../../../frontend/src/pages/CryptoWorkspace.tsx) | supported | 10 |
+| `/equity/crypto` | [CryptoWorkspacePage](../../../frontend/src/pages/CryptoWorkspace.tsx) | supported | 5 |
 | `/equity/etf-analytics` | [ETFAnalyticsPage](../../../frontend/src/pages/ETFAnalytics.tsx) | supported | 0 |
 | `/equity/cockpit` | [CockpitDashboard](../../../frontend/src/pages/Cockpit/index.ts) | Hidden compatibility | 0 |
 | `/equity/saved-views` | [SavedViewsPage](../../../frontend/src/pages/SavedViewsPage.tsx) | Shell menu extra | 0 |

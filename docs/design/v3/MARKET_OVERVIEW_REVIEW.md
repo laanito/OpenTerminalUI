@@ -2,8 +2,9 @@
 
 This continues merged #316 and the retained-page queue. It covers Market Heatmap,
 Sector Rotation and ETF Analytics. Crypto's eight modules and shared panels remain
-next in a separate PR; this split keeps their review coherent. Host acceptance is
-open. Existing provider/data repair, including the maintainer's F&O and macro/FX
+next in a separate PR; this split keeps their review coherent. The maintainer
+confirmed #317 merged and working on 2026-11-25; the frontend is accepted. Existing
+provider/data repair, including the maintainer's F&O and macro/FX
 findings, remains assigned to v5. No release preparation.
 
 ## Heatmap
@@ -112,5 +113,6 @@ existing HoldingsViewer divides weights by 100 before formatPercent, while the
 overlap view passes weights directly; verify source contracts before changing
 these transforms. This PR retains them and does not certify numerical accuracy.
 
-Next retained-page slice: Crypto. Eleven ordinary menu destinations remain after
-this implementation, plus the bounded direct/compatibility reviews in the audit.
+Crypto follows in its [separate review](CRYPTO_REVIEW.md). Eleven ordinary menu
+destinations remained at this report’s implementation point, plus the bounded
+direct/compatibility reviews in the audit.

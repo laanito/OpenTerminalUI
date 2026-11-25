@@ -19,8 +19,9 @@ The [Paper/Sizer implementation](PAPER_SIZING_REVIEW.md) covers the first two an
 #314 is merged. The [macro/FX implementation](MACRO_FX_REVIEW.md) adds four more
 destinations; #315 is merged and the frontend is maintainer-accepted. The
 [market-overview implementation](MARKET_OVERVIEW_REVIEW.md) adds Heatmap, Rotation
-and ETF Analytics, with host acceptance open; eleven remain, starting with Crypto
-as a separate slice. Initial probes and source hints do not replace the
+and ETF Analytics (#317 merged and maintainer-accepted). The separate
+[Crypto implementation](CRYPTO_REVIEW.md) covers its eight modules, with host
+acceptance open; ten remain, starting with income/risk/quant. Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.
 

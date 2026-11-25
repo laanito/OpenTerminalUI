@@ -1,5 +1,35 @@
 # External-agent project context
 
+#318 CI timing follow-up: the desktop Crypto journey exceeded 60 seconds in the
+per-element geometry helper while 165 other cases passed. The helper now reads
+one DOM snapshot per module, preserving visible control/region/page bounds and
+failure identities. No application change or normal throttle/timeout increase.
+Seven affected journeys pass; six desktop repeats with the test-only
+CRYPTO_LAYOUT_CPU_RATE=12 override pass at 2.9–3.3 seconds each locally. See the
+CI follow-up in `docs/design/v3/CRYPTO_REVIEW.md`. Full app/backend suites were
+not rerun for this test-only change; earlier full validation below is historical.
+
+#317 is merged and maintainer-confirmed working. Current v3 slice is the eight-
+module Crypto workspace: active-module-first hierarchy, compact labelled
+navigation, readable full names/metrics and named local table scrollers. Focus
+survives valid ranking changes; absent-board selections search the existing
+market endpoint. Snapshot/radar/sector helpers are disclosed. Failed/empty/partial
+reads and missing versus numerical-zero cells differ; DeFi proxies are explicit.
+See `docs/design/v3/CRYPTO_REVIEW.md` for validation/screenshots and limits.
+No backend/API/schema/dependency, saved-format, provider or calculation expansion.
+Existing polling/limits/transports and chart/context route conventions remain;
+source-level sorting-key mismatch, metadata propagation, proxy/identity/history
+and coverage concerns are recorded for v5. Host acceptance is open. Ten ordinary
+menu destinations remain, starting with income/risk/quant. No release preparation.
+Validation: all 907 frontend tests / 150 files and all 166 installed-Chrome smoke
+cases pass, including seven new browser journeys. Seven focused unit cases,
+production build and API-reference/surface/mock/source/whitespace guards pass;
+review links/JSON and retained quote-format/chart-symbol helpers are checked.
+Screenshots are linked in the review. No real provider/model/corpus, production
+DB or deployment access; the unchanged backend suite was not rerun.
+
+Historical implementation handoff for #317:
+
 #316 is merged. Current v3 slice covers Market Heatmap, Sector Rotation and ETF
 Analytics; Crypto's eight modules/shared panels remain a separate next PR.
 See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`: labelled scopes, readable
