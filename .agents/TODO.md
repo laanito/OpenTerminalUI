@@ -8,9 +8,11 @@ API-key permission expansion or broad functionality audit in v3. v4 discovery
 must define tool inventory, authentication/ownership, read/write permissions,
 structured evidence/results and retry/audit boundaries, including paper trading
 without live execution authority. See `docs/wiki/Roadmap.md` Product generations.
-#317 is merged and maintainer-confirmed working. Current slice: Crypto's eight
-modules/shared panels. See `docs/design/v3/CRYPTO_REVIEW.md`. Income/risk/quant
-remains next; provider/calculation repair stays on v5's audit track.
+#318 is merged; Crypto's frontend is maintainer-accepted. Host testing reports
+non-live Crypto derivatives; audit configured provider coverage/provenance in v5
+without assuming a cause. Current slice: Dividends' four views, then risk/quant.
+See `docs/design/v3/DIVIDENDS_REVIEW.md`. Risk/quant remains next;
+provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2286,9 +2288,14 @@ ordered v1.7 milestone above.
             and contained tables. Focus/scopes remain coherent across ranking,
             filters, outside-board selection and late search/window responses.
             Read/failure/empty/partial states, true zeros and modelled DeFi proxies
-            are explicit. See `docs/design/v3/CRYPTO_REVIEW.md`; host acceptance
-            open. Ten ordinary menu destinations remain. No provider expansion.
-      - [ ] Income/risk/quant: Dividends, Risk, Correlation, Stat Lab and Pair
+            are explicit. See `docs/design/v3/CRYPTO_REVIEW.md`; #318 merged and
+            frontend accepted. Non-live derivatives are a v5 host finding.
+      - [x] Dividends: four readable views, explicit applied history symbol,
+            cancellable scoped reads/manual retries, accessible numerical tables,
+            currency-unspecified totals and dated reference scope. See
+            `docs/design/v3/DIVIDENDS_REVIEW.md`; host acceptance open. Nine
+            ordinary menu destinations remain after this implementation.
+      - [ ] Risk/quant: Risk, Correlation, Stat Lab and Pair
             Trading; scope, readable setup/results and local numerical scrolling.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
             and configured/unavailable market scope without provider expansion.
@@ -2363,6 +2370,10 @@ ordered v1.7 milestone above.
       by 100 before formatPercent, while overlap passes weights directly. Audit
       source contracts before changing these transforms; v3 retains the numbers
       and cannot certify live numerical correctness from layout fixtures.
+      Host testing after #318 reports Crypto derivatives are non-live. Reproduce
+      with configured integrations; verify timestamps, sample/fallback/proxy
+      provenance and provider/access coverage before choosing a repair. Frontend
+      acceptance does not establish live data. No root cause verified yet.
       Crypto follow-ups: existing market client sends sortBy/sortOrder while the
       backend declares sort_by/sort_order; verify/fix that adapter contract in v5.
       Audit quote/native identity/freshness and existing chart normalization/global
@@ -2372,6 +2383,13 @@ ordered v1.7 milestone above.
       observed on-chain fundamentals, correlation return-history alignment and
       partial coverage. Review hidden-module polling load; v3 preserves cadence,
       request limits and transports rather than certifying providers/calculations.
+      Dividends: audit native-currency metadata and mixed-currency income before
+      presenting a base-currency projection; these responses supply no currency.
+      Verify resolved holdings scope/duplicate tickers, missing calendar amounts
+      coerced to zero, ex-date vs payment-date assumptions, scheduled vs yield-only
+      annual/monthly coverage, estimated event provenance and stale curated
+      aristocrat membership/streaks (reference dated 2025). v3 labels limitations
+      but does not change accounting, provider or aggregation semantics.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

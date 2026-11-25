@@ -194,6 +194,9 @@ macro/FX frontend, while reporting the following for v5 verification and repair:
   trigger and verify authenticated provider-backed reads and freshness.
 - **Commodities:** sample data appears. Verify quotes, futures curves and
   seasonality separately, including observed/projected/sample provenance.
+- **Crypto derivatives (after #318):** non-live data observed by the maintainer.
+  Verify configured provider/access coverage, timestamps and sample/fallback/proxy
+  provenance. Root cause is unverified; frontend acceptance is separate.
 - **Economics:** “Sample calendar events — no live source is available for this
   response.” Verify calendar wiring, configured provider access and date coverage;
   the banner alone does not establish the root cause.
@@ -1030,8 +1033,10 @@ implements two (#314 merged). The [macro/FX pass](../design/v3/MACRO_FX_REVIEW.m
 implements four more (#315 merged, frontend maintainer-accepted). The
 [market-overview pass](../design/v3/MARKET_OVERVIEW_REVIEW.md) adds Heatmap, Rotation
 and ETF Analytics (#317 merged and maintainer-accepted). The separate
-[Crypto review](../design/v3/CRYPTO_REVIEW.md) covers its eight modules, with host
-acceptance open. Ten ordinary menu destinations remain, starting with income/
+[Crypto review](../design/v3/CRYPTO_REVIEW.md) covers its eight modules (#318 merged,
+frontend accepted; non-live derivatives recorded for v5). The
+[Dividends review](../design/v3/DIVIDENDS_REVIEW.md) covers its four retained views,
+with host acceptance open. Nine ordinary menu destinations remain, starting with
 risk/quant, then MTA/DOM, Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
@@ -1951,7 +1956,9 @@ isn't worth keeping). Pull into a milestone as data sources are chosen.
 - **Tape / Time & Sales** (`/api/tape/*`) — needs a real trade/tick feed adapter
   (`get_recent_trades`). Without it the tape is empty + degraded; we deliberately
   do **not** synthesize ticks or buy/sell order flow.
-- **Crypto market depth & derivatives** — DONE (real Binance source): heatmap
+- **Crypto market depth & derivatives** — existing Binance adapters (host live
+  correctness requires v5 verification: non-live derivatives reported after #318).
+  Earlier implementation status: heatmap
   depth is now real top-of-book from spot `bookTicker`; derivatives funding +
   open interest are real from futures `premiumIndex` + `openInterest`. Both flag
   `degraded` when Binance is unreachable. **Remaining**: 24h **liquidations** have
@@ -1985,7 +1992,11 @@ Real but unscheduled; pull into a milestone when it fits.
   limits from defects, stubs and unwired controls. Prioritize subsequent fixes
   from that evidence. Layout acceptance and fixture browser checks do not establish
   live functional correctness. Assigned to v5; this is outside
-  the current v3 frontend-overhaul gate.
+  the current v3 frontend-overhaul gate. Include Dividends native-currency and
+  conversion metadata, resolved holdings/duplicate-ticker scope, missing amounts
+  coerced to zero, ex-date/payment-date semantics, annual/monthly estimate coverage
+  and the curated aristocrat reference dated 2025. The v3 screen labels these
+  limitations without changing provider or aggregation logic.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode

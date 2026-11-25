@@ -27,6 +27,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Dividends workflows** — wrapping four-view navigation, explicit
+  history draft/apply controls, readable chart/value tables and keyboard-local
+  numerical scrolling. Loading, empty, failed and late reads retain correct
+  scope; missing amounts differ from numeric zero. Reported totals no longer
+  receive an unsupported display-currency label; currency and dated-reference
+  limitations remain visible without changing providers or aggregation.
 - **Readable Crypto workspace** — compact eight-module navigation, primary module
   reading order, responsive full-name panels, labelled filters and local numerical
   scrolling. Focus survives valid ranking changes, outside-board selections resolve

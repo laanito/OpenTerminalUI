@@ -21,7 +21,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/stocks/about` | [AboutPage](../../../frontend/src/pages/About.tsx) | supported | 26 |
 | `/equity/dashboard` | [DashboardPage](../../../frontend/src/pages/Dashboard.tsx) | Other direct | 0 |
 | `/equity/heatmap` | [MarketHeatmapPage](../../../frontend/src/pages/MarketHeatmapPage.tsx) | supported | 0 |
-| `/equity/dividends` | [DividendDashboardPage](../../../frontend/src/pages/DividendDashboardPage.tsx) | supported | 1 |
+| `/equity/dividends` | [DividendDashboardPage](../../../frontend/src/pages/DividendDashboardPage.tsx) | supported | 2 |
 | `/equity/rs` | [RelativeStrengthPage](../../../frontend/src/pages/RelativeStrengthPage.tsx) | Hidden compatibility | 1 |
 | `/equity/data-quality` | [DataQualityDashboard](../../../frontend/src/pages/DataQualityDashboard.tsx) | Other direct | 1 |
 | `/equity/screener` | [ScreenerPage](../../../frontend/src/pages/Screener.tsx) | supported | 0 |

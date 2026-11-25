@@ -2,9 +2,17 @@
 
 This continues maintainer-accepted #317. Crypto was split from Heatmap, Rotation
 and ETF Analytics because its eight modules and shared panels merit a separate
-review. This implements the remaining market-overview page; host acceptance is
-open. Ten ordinary menu destinations remain, starting with income/risk/quant.
+review. At implementation this completed the market-overview page family and
+left ten ordinary menu destinations, starting with income/risk/quant.
 No release preparation or provider expansion.
+
+## Host outcome
+
+#318 is merged and the maintainer clears continuation. Frontend accepted. Host
+testing also reports non-live derivatives data; this is recorded for v5
+provider/functionality verification. Verify configured sources, freshness and
+fallback/proxy coverage before diagnosing a cause. Layout fixtures and existing
+Binance adapters do not establish live host data.
 
 ## Hierarchy and scope
 
