@@ -128,9 +128,12 @@ export function postSymbolLinkMessage(message: SymbolLinkBroadcastMessage): void
   channel.postMessage(message);
 }
 
+// useSyncExternalStore requires an unchanged snapshot to retain its identity.
+const UNLINKED_GROUP_STATE: LinkGroupState = { group: "none", symbol: null, source: null, version: 0 };
+
 function readGroupState(group: LinkGroup): LinkGroupState {
   if (group === "none") {
-    return { group: "none", symbol: null, source: null, version: 0 };
+    return UNLINKED_GROUP_STATE;
   }
   return groupStates[group];
 }

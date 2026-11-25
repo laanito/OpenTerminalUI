@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { hierarchy, treemap, type HierarchyRectangularNode } from "d3-hierarchy";
 import { useNavigate } from "react-router-dom";
@@ -12,15 +12,8 @@ import {
   type HeatmapPeriod,
   type HeatmapSizeBy,
 } from "../api/client";
-import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { DegradedBanner } from "../components/common/DegradedBanner";
 import { useSettingsStore } from "../store/settingsStore";
-
-type TooltipState = {
-  x: number;
-  y: number;
-  item: HeatmapLeaf;
-} | null;
 
 type TreemapNode = {
   x0: number;
@@ -94,7 +87,9 @@ function buildTreemap(groups: HeatmapGroup[], width: number, height: number): Tr
   } as { children: HeatmapGroup[] })
     .sum((node) => {
       const candidate = node as Partial<HeatmapLeaf> & Partial<HeatmapGroup>;
-      return Number(candidate.value ?? 0);
+      // Group values already aggregate their children; counting them again
+      // allocates blank parent area alongside the actual tiles.
+      return candidate.children ? 0 : Number(candidate.value ?? 0);
     })
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
@@ -130,325 +125,61 @@ function buildTreemap(groups: HeatmapGroup[], width: number, height: number): Tr
 
 export function MarketHeatmapPage() {
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  // Default the heatmap to the user's selected market (US for the de-India fork),
-  // not a hardcoded India. Only IN/US are supported, so EU/crypto fall back to US.
-  const selectedCountry = useSettingsStore((s) => s.selectedCountry);
+  const selectedCountry = useSettingsStore(state => state.selectedCountry);
   const [market, setMarket] = useState<HeatmapMarket>(selectedCountry === "IN" ? "IN" : "US");
   const [period, setPeriod] = useState<HeatmapPeriod>("1d");
   const [group, setGroup] = useState<HeatmapGroupBy>("sector");
   const [sizeBy, setSizeBy] = useState<HeatmapSizeBy>("market_cap");
-  const [activeGroupName, setActiveGroupName] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<TooltipState>(null);
-  const [size, setSize] = useState({ width: 960, height: 620 });
-
-  useEffect(() => {
+  const [activeGroupName, setActiveGroupName] = useState("");
+  const [inspected, setInspected] = useState("");
+  const [view, setView] = useState("map");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
     const node = containerRef.current;
     if (!node) return;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      setSize({
-        width: Math.max(320, Math.floor(entry.contentRect.width)),
-        height: Math.max(420, Math.floor(entry.contentRect.height)),
-      });
-    });
-    observer.observe(node);
+    const measure = () => setWidth(Math.max(0, Math.floor(node.clientWidth)));
+    measure(); const observer = new ResizeObserver(measure); observer.observe(node);
     return () => observer.disconnect();
   }, []);
-
-  const query = useQuery({
-    queryKey: ["market-heatmap", market, group, period, sizeBy],
-    queryFn: () => fetchMarketHeatmap({ market, group, period, sizeBy }),
-    staleTime: 300_000,
-  });
-
-  useEffect(() => {
-    setActiveGroupName(null);
-  }, [group, market, period, sizeBy]);
-
-  const activeGroup = useMemo(
-    () => (query.data?.groups ?? []).find((entry) => entry.name === activeGroupName) ?? null,
-    [activeGroupName, query.data?.groups],
-  );
-  const visibleGroups = useMemo(() => {
-    if (activeGroup) {
-      return [
-        {
-          ...activeGroup,
-          value: activeGroup.children.reduce((sum, child) => sum + Number(child.value || 0), 0),
-        },
-      ];
-    }
-    return query.data?.groups ?? [];
-  }, [activeGroup, query.data?.groups]);
-  const layout = useMemo(() => buildTreemap(visibleGroups, size.width, size.height), [visibleGroups, size.height, size.width]);
-  const isMobile = size.width < 768;
-
-  return (
-    <div className="space-y-4">
-      <TerminalPanel
-        title="Market Heatmap"
-        subtitle="Treemap of the current equity universe sized by cap, volume, or turnover."
-        className="min-h-[760px]"
-        bodyClassName="space-y-4"
-      >
-        <DegradedBanner info={query.data?.degraded} />
-        <div className="flex flex-wrap items-center gap-3 rounded border border-terminal-border bg-terminal-bg/40 px-3 py-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-terminal-muted">Market</span>
-            {(["IN", "US"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setMarket(value)}
-                className={`rounded border px-2 py-1 ${market === value ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:text-terminal-text"}`}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-terminal-muted">Period</span>
-            {PERIOD_OPTIONS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setPeriod(value)}
-                data-testid={`heatmap-period-${value}`}
-                className={`rounded border px-2 py-1 uppercase ${period === value ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:text-terminal-text"}`}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-terminal-muted">Group</span>
-            {(["sector", "industry"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setGroup(value)}
-                className={`rounded border px-2 py-1 capitalize ${group === value ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:text-terminal-text"}`}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-          <label className="ml-auto flex items-center gap-2 text-terminal-muted">
-            <span>Size By</span>
-            <select
-              value={sizeBy}
-              onChange={(event) => setSizeBy(event.target.value as HeatmapSizeBy)}
-              className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-terminal-text outline-none"
-            >
-              {SIZE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+  const query = useQuery({ queryKey: ["market-heatmap", market, group, period, sizeBy], queryFn: () => fetchMarketHeatmap({ market, group, period, sizeBy }), staleTime: 300_000, retry: false });
+  useEffect(() => { setActiveGroupName(""); setInspected(""); }, [market, group, period, sizeBy]);
+  const activeGroup = query.data?.groups.find(row => row.name === activeGroupName);
+  const groups = useMemo(() => activeGroup ? [{ ...activeGroup, value: activeGroup.children.reduce((sum, row) => sum + Number(row.value || 0), 0) }] : query.data?.groups || [], [activeGroup, query.data?.groups]);
+  const items = activeGroup?.children ?? query.data?.data ?? [];
+  const layout = useMemo(() => buildTreemap(groups, width, 480), [groups, width]);
+  const list = width < 768 || view === "list";
+  const item = items.find(row => row.symbol === inspected);
+  const open = (symbol: string) => navigate(`/equity/security/${encodeURIComponent(symbol)}`);
+  return <main aria-label="Market heatmap" className="min-w-0 space-y-3 p-3 [overflow-wrap:anywhere]">
+    <header className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-lg font-semibold text-terminal-accent">Market Heatmap</h1><p className="text-sm text-terminal-muted">Equity universe sized by market cap, volume or turnover.</p></div><button className="rounded border border-terminal-border px-3 py-2 text-sm" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh heatmap</button></header>
+    <section aria-label="Heatmap scope" className="grid min-w-0 grid-cols-2 gap-3 rounded border border-terminal-border p-3 sm:grid-cols-2 xl:grid-cols-4 [&_select]:w-full [&_select]:min-w-0 [&_select]:rounded [&_select]:border [&_select]:border-terminal-border [&_select]:bg-terminal-panel [&_select]:p-2 [&_select]:text-sm">
+      <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span className="block">Market</span><select aria-label="Heatmap market" value={market} onChange={event => setMarket(event.target.value as HeatmapMarket)}><option value="US">United States</option><option value="IN">India</option></select></label>
+      <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span className="block">Period</span><select aria-label="Heatmap period" value={period} onChange={event => setPeriod(event.target.value as HeatmapPeriod)}>{PERIOD_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+      <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span className="block">Group by</span><select aria-label="Heatmap grouping" value={group} onChange={event => setGroup(event.target.value as HeatmapGroupBy)}><option value="sector">Sector</option><option value="industry">Industry</option></select></label>
+      <label className="min-w-0 space-y-1 text-xs text-terminal-muted"><span className="block">Size by</span><select aria-label="Heatmap size" value={sizeBy} onChange={event => setSizeBy(event.target.value as HeatmapSizeBy)}>{SIZE_OPTIONS.map(value => <option key={value.value} value={value.value}>{value.label}</option>)}</select></label>
+    </section>
+    <DegradedBanner info={query.data?.degraded} className="!text-xs"/>
+    {query.isFetching ? <p role="status" className="text-sm text-terminal-muted">Loading heatmap data…</p> : null}
+    {query.isError ? <p role="alert" className="text-sm text-terminal-neg">Failed to load heatmap data. Any previously displayed values are unrefreshed.</p> : null}
+    <div className="grid min-w-0 grid-cols-1 items-start gap-3 2xl:grid-cols-[minmax(0,1fr)_300px]">
+      <section aria-label="Heatmap results" className="min-w-0 space-y-3 rounded border border-terminal-border bg-terminal-panel p-3">
+        <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
+          <label className="block min-w-0 max-w-full space-y-1 text-xs text-terminal-muted"><span className="block">Inspect group</span><select aria-label="Inspect heatmap group" className="w-full min-w-0 max-w-full rounded border border-terminal-border bg-terminal-bg p-2 text-sm" value={activeGroup?.name || ""} onChange={event => { setActiveGroupName(event.target.value); setInspected(""); }}><option value="">All groups</option>{query.data?.groups.map(row => <option key={row.name} value={row.name}>{row.name}</option>)}</select></label>
+          {width >= 768 ? <div role="group" aria-label="Heatmap presentation" className="flex gap-2">{["map", "list"].map(value => <button key={value} aria-pressed={view === value} className="rounded border border-terminal-border px-3 py-2 text-sm capitalize" onClick={() => setView(value)}>{value}</button>)}</div> : null}
         </div>
-
-        <div className="grid gap-4 xl:grid-cols-[1fr_240px]">
-          <div className="relative min-h-[620px] rounded border border-terminal-border bg-terminal-panel">
-            <div className="flex items-center gap-2 border-b border-terminal-border px-3 py-2 text-xs">
-              <button
-                type="button"
-                onClick={() => setActiveGroupName(null)}
-                className={`rounded px-2 py-1 ${activeGroupName == null ? "bg-terminal-accent/15 text-terminal-accent" : "text-terminal-muted hover:text-terminal-text"}`}
-              >
-                All
-              </button>
-              {activeGroupName ? (
-                <>
-                  <span className="text-terminal-muted">{">"}</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveGroupName(activeGroupName)}
-                    className="rounded bg-terminal-accent/15 px-2 py-1 text-terminal-accent"
-                  >
-                    {activeGroupName}
-                  </button>
-                </>
-              ) : (
-                <span className="text-terminal-muted">Click a group label to drill down.</span>
-              )}
-            </div>
-            <div ref={containerRef} className="h-[620px] w-full">
-              {query.isLoading ? (
-                <div className="flex h-full items-center justify-center text-sm text-terminal-muted">Loading heatmap data…</div>
-              ) : query.isError ? (
-                <div className="flex h-full items-center justify-center px-6 text-center text-sm text-terminal-neg">
-                  Failed to load heatmap data.
-                </div>
-              ) : !layout.leaves.length ? (
-                <div className="flex h-full items-center justify-center text-sm text-terminal-muted">No heatmap data available.</div>
-              ) : isMobile ? (
-                <div className="space-y-2 overflow-auto p-3" data-testid="heatmap-mobile-list">
-                  {(activeGroup?.children ?? query.data?.data ?? []).map((item) => (
-                    <button
-                      key={item.symbol}
-                      type="button"
-                      className="w-full rounded border border-terminal-border bg-terminal-bg/40 p-3 text-left hover:border-terminal-accent/50"
-                      onClick={() => navigate(`/equity/security/${encodeURIComponent(item.symbol)}`)}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="font-semibold text-terminal-text">{item.symbol}</div>
-                          <div className="text-[11px] text-terminal-muted">{item.name}</div>
-                        </div>
-                        <div className={`text-sm font-semibold ${item.change_pct == null ? "text-terminal-muted" : item.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                          {formatPct(item.change_pct)}
-                        </div>
-                      </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded bg-terminal-border/20">
-                        <div
-                          className="h-full rounded"
-                          style={{
-                            width: `${Math.min(100, Math.max(8, Math.abs(item.change_pct ?? 0) * 12))}%`,
-                            backgroundColor: heatColor(item.change_pct),
-                          }}
-                        />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <svg width={size.width} height={size.height} className="block" data-testid="market-heatmap-svg">
-                  {layout.groups.map((node) => {
-                    const labelWidth = Math.max(0, node.x1 - node.x0);
-                    return (
-                      <g key={`group-${node.data.name}`} transform={`translate(${node.x0}, ${node.y0})`}>
-                        <rect width={labelWidth} height={18} fill="rgba(15,23,42,0.55)" />
-                        <text
-                          x={6}
-                          y={13}
-                          fill="#cbd5e1"
-                          fontSize={11}
-                          fontWeight={700}
-                          className={`${activeGroupName ? "" : "cursor-pointer"}`}
-                          onClick={() => {
-                            if (!activeGroupName) setActiveGroupName(node.data.name);
-                          }}
-                        >
-                          {node.data.name}
-                        </text>
-                      </g>
-                    );
-                  })}
-                  {layout.leaves.map((node) => {
-                    const item = node.data;
-                    const rectWidth = Math.max(0, node.x1 - node.x0);
-                    const rectHeight = Math.max(0, node.y1 - node.y0);
-                    return (
-                      <g
-                        key={`${item.symbol}-${item.value}`}
-                        transform={`translate(${node.x0}, ${node.y0})`}
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/equity/security/${encodeURIComponent(item.symbol)}`)}
-                        onMouseEnter={(event) => {
-                          setTooltip({
-                            x: event.clientX,
-                            y: event.clientY,
-                            item,
-                          });
-                        }}
-                        onMouseMove={(event) => {
-                          setTooltip((current) => (current ? { ...current, x: event.clientX, y: event.clientY } : current));
-                        }}
-                        onMouseLeave={() => setTooltip(null)}
-                      >
-                        <rect width={rectWidth} height={rectHeight} rx={2} fill={heatColor(item.change_pct)} data-testid="heatmap-rect" />
-                        {rectWidth > 56 && rectHeight > 28 ? (
-                          <text x={8} y={18} fill="#f8fafc" fontSize={12} fontWeight={700}>
-                            {item.symbol}
-                          </text>
-                        ) : null}
-                        {rectWidth > 72 && rectHeight > 50 ? (
-                          <text x={8} y={34} fill="#e5e7eb" fontSize={11}>
-                            {formatPct(item.change_pct)}
-                          </text>
-                        ) : null}
-                        {rectWidth > 120 && rectHeight > 68 ? (
-                          <text x={8} y={50} fill="#d1d5db" fontSize={10}>
-                            {item.name}
-                          </text>
-                        ) : null}
-                      </g>
-                    );
-                  })}
-                </svg>
-              )}
-            </div>
-            {tooltip ? (
-              <div
-                className="pointer-events-none fixed z-40 max-w-64 rounded border border-terminal-border bg-terminal-panel px-3 py-2 text-[11px] text-terminal-text shadow-lg"
-                style={{ left: tooltip.x + 14, top: tooltip.y + 14 }}
-              >
-              <div className="font-semibold">{tooltip.item.symbol}</div>
-              <div className="text-terminal-muted">{tooltip.item.name}</div>
-                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-                  <span className="text-terminal-muted">Sector</span>
-                  <span>{tooltip.item.sector}</span>
-                  <span className="text-terminal-muted">Industry</span>
-                  <span>{tooltip.item.industry}</span>
-                  <span className="text-terminal-muted">Price</span>
-                  <span>{formatCurrency(tooltip.item.price, market)}</span>
-                  <span className="text-terminal-muted">Change</span>
-                  <span>{formatPct(tooltip.item.change_pct)}</span>
-                  <span className="text-terminal-muted">Volume</span>
-                  <span>{formatCompact(tooltip.item.volume)}</span>
-                  <span className="text-terminal-muted">Mkt Cap</span>
-                  <span>{formatCompact(tooltip.item.market_cap)}</span>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-3">
-            <TerminalPanel title="Top Movers" bodyClassName="space-y-2">
-              {(query.data?.data ?? []).slice(0, 8).map((item) => (
-                <button
-                  key={item.symbol}
-                  type="button"
-                  onClick={() => navigate(`/equity/security/${encodeURIComponent(item.symbol)}`)}
-                  className="flex w-full items-center justify-between rounded border border-terminal-border bg-terminal-bg/40 px-3 py-2 text-left text-xs hover:border-terminal-accent/50"
-                >
-                  <div>
-                    <div className="font-semibold text-terminal-text">{item.symbol}</div>
-                    <div className="text-[10px] text-terminal-muted">{group === "sector" ? item.sector : item.industry}</div>
-                  </div>
-                  <div className={`font-semibold ${item.change_pct == null ? "text-terminal-muted" : item.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                    {formatPct(item.change_pct)}
-                  </div>
-                </button>
-              ))}
-            </TerminalPanel>
-            <TerminalPanel title="Universe Snapshot" bodyClassName="space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-terminal-muted">Constituents</span>
-                <span className="text-terminal-text">{query.data?.data.length ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-terminal-muted">Grouping</span>
-                <span className="capitalize text-terminal-text">{group}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-terminal-muted">Size Metric</span>
-                <span className="text-terminal-text">{SIZE_OPTIONS.find((option) => option.value === sizeBy)?.label}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-terminal-muted">Aggregate Value</span>
-                <span className="text-terminal-text">{formatCompact(query.data?.total_value ?? 0)}</span>
-              </div>
-            </TerminalPanel>
-          </div>
+        <p className="text-sm">{activeGroup?.name || "All groups"} · {market} · {period} · {SIZE_OPTIONS.find(row => row.value === sizeBy)?.label}</p>
+        <p className="text-xs text-terminal-muted">{list ? "Full names and quote metrics. Select a symbol to open its security." : "Focus or hover a tile to inspect it below. Select a tile to open its security; List shows full names and metrics."} Grey means unavailable or a move near zero; inspect the value to distinguish them.</p>
+        <div ref={containerRef} className="min-w-0 max-w-full">
+          {!items.length ? <p className="py-6 text-sm text-terminal-muted">{query.isFetching ? "Waiting for the current scope…" : query.isError ? "No heatmap values available for this scope." : "No heatmap data available."}</p> : list ? <div data-testid="heatmap-mobile-list" className="grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">{items.map(row => <article key={row.symbol} className="min-w-0 space-y-2 rounded border border-terminal-border bg-terminal-bg p-3"><button onClick={() => open(row.symbol)} className="text-left text-sm font-semibold text-terminal-accent underline">{row.symbol}</button><p className="text-sm">{row.name}</p><p className="text-xs text-terminal-muted">{row.sector} · {row.industry}</p><dl className="grid min-w-0 grid-cols-2 gap-2 text-sm">{[["Price", formatCurrency(row.price, market)], ["Change", formatPct(row.change_pct)], ["Volume", formatCompact(row.volume)], ["Market cap", formatCompact(row.market_cap)]].map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-terminal-muted">{label}</dt><dd>{value}</dd></div>)}</dl></article>)}</div> : <svg width={width} height={480} className="block max-w-full" aria-label="Equity heatmap tiles" data-testid="market-heatmap-svg">{layout.leaves.map(node => {
+            const row = node.data, w = Math.max(0, node.x1 - node.x0), h = Math.max(0, node.y1 - node.y0);
+            return <g key={row.symbol} transform={`translate(${node.x0}, ${node.y0})`} role="link" tabIndex={0} aria-label={`${row.symbol} · ${row.name} · ${formatPct(row.change_pct)}`} onMouseEnter={() => setInspected(row.symbol)} onFocus={() => setInspected(row.symbol)} onClick={() => open(row.symbol)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(row.symbol); } }} className="cursor-pointer outline-terminal-accent"><title>{row.symbol} · {row.name}</title><rect width={w} height={h} rx={2} fill={heatColor(row.change_pct)} data-testid="heatmap-rect"/>{w > Math.max(72, row.symbol.length * 9 + 16) && h > 30 ? <text x={8} y={20} fill="#fff" fontSize={14} fontWeight={700}>{row.symbol}</text> : null}{w > 80 && h > 55 ? <text x={8} y={40} fill="#fff" fontSize={12}>{formatPct(row.change_pct)}</text> : null}</g>;
+          })}</svg>}
         </div>
-      </TerminalPanel>
+        {!list ? <section aria-label="Heatmap tile inspection" className="min-w-0 rounded border border-terminal-border p-3">{item ? <><h2 className="text-sm font-semibold">{item.symbol} · {item.name}</h2><p className="mt-2 text-xs text-terminal-muted">{item.sector} · {item.industry}</p><p className="mt-2 text-sm">Price {formatCurrency(item.price, market)} · Change {formatPct(item.change_pct)} · Volume {formatCompact(item.volume)} · Market cap {formatCompact(item.market_cap)}</p></> : <p className="text-sm text-terminal-muted">Focus or hover a tile for its full name and values.</p>}</section> : null}
+      </section>
+      <section aria-label="Heatmap coverage" className="min-w-0 space-y-3 rounded border border-terminal-border p-3"><h2 className="text-sm font-semibold">Universe snapshot</h2><dl className="grid min-w-0 grid-cols-2 gap-3 text-sm"><div><dt className="text-xs text-terminal-muted">Constituents</dt><dd>{query.data ? query.data.data.length : "Unavailable"}</dd></div><div><dt className="text-xs text-terminal-muted">Aggregate sizing value</dt><dd>{formatCompact(query.data?.total_value)}</dd></div></dl><p className="text-xs text-terminal-muted">US and India are the existing market choices. Prices retain the selected market’s existing USD/INR convention; no display-currency conversion is performed here. No observation timestamp is supplied by this response.</p><details><summary className="cursor-pointer text-sm">Constituent preview</summary><div className="mt-3 space-y-2">{(query.data?.data || []).slice(0,8).map(row => <button key={row.symbol} onClick={() => open(row.symbol)} className="block w-full rounded border border-terminal-border p-2 text-left text-sm"><span className="block text-terminal-accent">{row.symbol} · {formatPct(row.change_pct)}</span><span className="block">{row.name}</span></button>)}</div></details></section>
     </div>
-  );
+  </main>;
 }
-
 export default MarketHeatmapPage;

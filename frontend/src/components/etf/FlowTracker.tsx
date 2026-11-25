@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { TerminalTable, type TerminalTableColumn } from "../terminal/TerminalTable";
-import { api } from "../../api/base";
+import { useETFResource } from "./useETFResource";
 import type { DegradedInfo } from "../../api/types";
 import { DegradedBanner } from "../common/DegradedBanner";
 
@@ -20,35 +19,14 @@ interface Props {
 }
 
 export function FlowTracker({ ticker }: Props) {
-  const [data, setData] = useState<FlowData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!ticker) return;
-
-    const fetchFlows = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Shared api client → bearer token attached (raw fetch 401'd on /api/etf/*).
-        const { data: json } = await api.get<FlowData>("/etf/flows", { params: { ticker } });
-        setData(json);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFlows();
-  }, [ticker]);
+  const { data, loading, error, retry } = useETFResource<FlowData>("/etf/flows", { ticker }, Boolean(ticker));
 
   const columns: TerminalTableColumn<FlowPoint>[] = [
     {
       key: "date",
       label: "Date",
       sortable: true,
+      sortValue: f => f.date,
       render: (f) => <span className="text-terminal-muted">{f.date}</span>,
     },
     {
@@ -56,6 +34,7 @@ export function FlowTracker({ ticker }: Props) {
       label: "Net Flow ($M)",
       align: "right",
       sortable: true,
+      sortValue: f => f.net_flow,
       render: (f) => (
         <span className={f.net_flow >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
           {f.net_flow >= 0 ? "+" : ""}{f.net_flow.toFixed(2)}M
@@ -64,17 +43,19 @@ export function FlowTracker({ ticker }: Props) {
     },
   ];
 
-  if (loading) return <div className="p-4 text-center text-terminal-muted">Loading flows...</div>;
-  if (error) return <div className="p-4 text-center text-terminal-neg">{error}</div>;
+  if (!ticker) return <p className="p-3 text-sm text-terminal-muted">Enter an ETF ticker to load data.</p>;
+  if (loading) return <div role="status" className="p-4 text-center text-terminal-muted">Loading flows...</div>;
+  if (error) return <p role="alert" className="p-3 text-sm text-terminal-neg">Could not read this ETF flow history. No previous scope is shown. <button type="button" onClick={retry} className="underline">Retry flows</button></p>;
   if (!data) return null;
 
   return (
-    <div className="rounded border border-terminal-border bg-terminal-panel p-1">
-      <div className="mb-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-terminal-muted">
+    <div className="min-w-0 space-y-2 rounded border border-terminal-border bg-terminal-panel p-1 [&_.ot-type-table-cell]:text-xs [&_.ot-type-table-header]:text-xs">
+      <div className="mb-2 px-3 py-2 text-xs font-semibold uppercase text-terminal-muted">
         Fund Flows: {ticker} (Last 30 Days)
       </div>
-      <DegradedBanner info={data.degraded} className="mx-3 mb-2" />
+      <DegradedBanner info={data.degraded} className="mx-3 mb-2 !text-xs" />
       <TerminalTable
+        tableClassName="min-w-[520px] [&_th]:whitespace-nowrap"
         columns={columns}
         rows={data.flows}
         rowKey={(f) => f.date}

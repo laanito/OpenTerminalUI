@@ -1,5 +1,22 @@
 # External-agent project context
 
+#316 is merged. Current v3 slice covers Market Heatmap, Sector Rotation and ETF
+Analytics; Crypto's eight modules/shared panels remain a separate next PR.
+See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`: labelled scopes, readable
+map/list and dated sector values, plot-first controls, bounded playback, explicit
+ETF draft/apply forms, scoped reads/manual retries and locally scrolling tables.
+The shared unlinked symbol-store snapshot is stable so retained popouts render
+without a React update loop. No provider/backend/API/schema/dependency or saved-
+format change; ETF numerical transforms remain unchanged and their weight/overlap
+conventions need v5 verification. Host acceptance is open. Eleven ordinary menu
+destinations remain after this implementation, starting with Crypto. No release
+preparation. Current source ledger updates do not replace historical browser probes.
+Validation: all 903 frontend tests / 150 files and all 159 installed-Chrome smoke
+cases pass, including eight new journeys. Four focused ETF/shared-context checks,
+production build and API-reference/surface/mock/source/whitespace guards pass.
+Synthetic screenshots are linked in the review. No live provider/model/corpus,
+production DB or deployment access. The unchanged backend suite was not rerun.
+
 Current direction (maintainer, 2026-11-25): **v3 frontend overhaul → v4 LLM
 interface through OTUI MCP → v5 retained-functionality audit/repair → new
 capabilities from v6 onward**. The MCP is the preferred curated agent interface,
@@ -18,7 +35,8 @@ for this response.” These are reported observations, not a verified provider/a
 diagnosis. Audit F&O provenance, dates/expiries and intended NSE/BSE coverage;
 reproduce the sample paths with configured authentication/providers. Do not infer
 live data correctness from frontend acceptance or expand v3 into provider repair.
-Next v3 batch remains Market Heatmap, Rotation, Crypto and ETF Analytics.
+That feedback's next batch was Market Heatmap, Rotation, Crypto and ETF Analytics;
+the current implementation/split is recorded above.
 
 Historical implementation handoff for #315:
 

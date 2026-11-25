@@ -35,7 +35,9 @@ The [remaining-page audit](RETAINED_PAGE_AUDIT.md) reconciles 80 render entries,
 keeps redirects/hidden routes distinct and records 39 initial browser probes.
 The [Paper/Sizer review](PAPER_SIZING_REVIEW.md) implements the next two menu
 destinations (#314 merged). The [macro/FX review](MACRO_FX_REVIEW.md) adds four
-more (#315 merged, frontend maintainer-accepted); fourteen remain, starting with market overview.
+more (#315 merged, frontend maintainer-accepted). The [market-overview review](MARKET_OVERVIEW_REVIEW.md)
+adds Heatmap, Rotation and ETF Analytics, with host acceptance open; eleven remain.
+Crypto follows separately because its eight modules/shared panels merit a focused review.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

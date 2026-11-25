@@ -20,7 +20,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/insider` | [InsiderActivityPage](../../../frontend/src/pages/InsiderActivityPage.tsx) | Hidden compatibility | 3 |
 | `/equity/stocks/about` | [AboutPage](../../../frontend/src/pages/About.tsx) | supported | 26 |
 | `/equity/dashboard` | [DashboardPage](../../../frontend/src/pages/Dashboard.tsx) | Other direct | 0 |
-| `/equity/heatmap` | [MarketHeatmapPage](../../../frontend/src/pages/MarketHeatmapPage.tsx) | supported | 3 |
+| `/equity/heatmap` | [MarketHeatmapPage](../../../frontend/src/pages/MarketHeatmapPage.tsx) | supported | 0 |
 | `/equity/dividends` | [DividendDashboardPage](../../../frontend/src/pages/DividendDashboardPage.tsx) | supported | 1 |
 | `/equity/rs` | [RelativeStrengthPage](../../../frontend/src/pages/RelativeStrengthPage.tsx) | Hidden compatibility | 1 |
 | `/equity/data-quality` | [DataQualityDashboard](../../../frontend/src/pages/DataQualityDashboard.tsx) | Other direct | 1 |
@@ -64,7 +64,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/economics` | [EconomicTerminal](../../../frontend/src/pages/economics/EconomicTerminal.tsx) | configuration-gated | 0 |
 | `/equity/sector-rotation` | [SectorRotationPage](../../../frontend/src/pages/SectorRotation.tsx) | supported | 0 |
 | `/equity/crypto` | [CryptoWorkspacePage](../../../frontend/src/pages/CryptoWorkspace.tsx) | supported | 10 |
-| `/equity/etf-analytics` | [ETFAnalyticsPage](../../../frontend/src/pages/ETFAnalytics.tsx) | supported | 3 |
+| `/equity/etf-analytics` | [ETFAnalyticsPage](../../../frontend/src/pages/ETFAnalytics.tsx) | supported | 0 |
 | `/equity/cockpit` | [CockpitDashboard](../../../frontend/src/pages/Cockpit/index.ts) | Hidden compatibility | 0 |
 | `/equity/saved-views` | [SavedViewsPage](../../../frontend/src/pages/SavedViewsPage.tsx) | Shell menu extra | 0 |
 | `/fno` | [OptionChainPage](../../../frontend/src/fno/pages/OptionChainPage.tsx) | Other direct | 1 |
