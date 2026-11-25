@@ -1,638 +1,137 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ComposedChart,
-  ErrorBar,
-  LabelList,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import {
-  fetchFactorAttribution,
-  fetchFactorExposures,
-  fetchFactorHistory,
-  fetchFactorReturns,
-  fetchRiskCorrelation,
-  fetchRiskExposures,
-  fetchRiskInsights,
-  fetchRiskSummary,
-  fetchSectorConcentration,
-} from "../api/client";
+import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, ErrorBar, Legend, Line, LineChart, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { fetchFactorAttribution, fetchFactorExposures, fetchFactorHistory, fetchFactorReturns, fetchRiskCorrelation, fetchRiskExposures, fetchRiskInsights, fetchRiskSummary, fetchSectorConcentration } from "../api/client";
 import { ExposureHeatmap } from "../components/dashboard/ExposureHeatmap";
 import { StressTestPanel } from "../components/risk/StressTestPanel";
+import { finite, RiskPanel, RiskTable, riskNumber, riskPercent, useRiskRead } from "../components/risk/RiskRead";
 import { AiInsightCard } from "../components/terminal/AiInsightCard";
 import { TerminalButton } from "../components/terminal/TerminalButton";
-import { TerminalPanel } from "../components/terminal/TerminalPanel";
+import { TerminalInput } from "../components/terminal/TerminalInput";
 import { useStockStore } from "../store/stockStore";
 import type { PortfolioItem } from "../types";
 
-const COLORS = ["#26A65B", "#E84142", "#F39C12", "#5B8FF9", "#9B59B6", "#E67E22", "#1ABC9C"];
-const FACTOR_ORDER = ["market", "size", "value", "momentum", "quality", "low_vol"] as const;
-const FACTOR_LABELS: Record<(typeof FACTOR_ORDER)[number], string> = {
-  market: "Market",
-  size: "Size",
-  value: "Value",
-  momentum: "Momentum",
-  quality: "Quality",
-  low_vol: "Low Vol",
-};
-const FACTOR_LINE_COLORS: Record<string, string> = {
-  market: "#5B8FF9",
-  size: "#F39C12",
-  value: "#26A65B",
-  momentum: "#9B59B6",
-  quality: "#1ABC9C",
-  low_vol: "#E67E22",
-};
+const COLORS = ["#26A65B", "#E84142", "#F39C12", "#5B8FF9", "#9B59B6", "#E67E22"];
+const FACTORS = ["market", "size", "value", "momentum", "quality", "low_vol"] as const;
+const LABELS = ["Market", "Size", "Value", "Momentum", "Quality", "Low volatility"];
 const PERIODS = ["3M", "6M", "1Y", "3Y"] as const;
+const tooltipStyle = { backgroundColor: "#0D1117", border: "1px solid #263040", fontSize: 12 };
+const signed = (value: unknown) => finite(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}` : "Unavailable";
 
-function fmtSigned(value: number | null | undefined, digits = 2): string {
-  if (value == null || Number.isNaN(value)) return "-";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
+function Overview({ ticker }: { ticker?: string }) {
+  const scope = ticker || "portfolio";
+  const summary = useRiskRead(scope, () => fetchRiskSummary(ticker));
+  const exposure = useRiskRead(scope, () => fetchRiskExposures(ticker));
+  const correlation = useRiskRead(scope, () => fetchRiskCorrelation(ticker));
+  const classification = useRiskRead(scope, () => fetchSectorConcentration(ticker));
+  const sectors = Object.entries(classification.data?.sectors || {}).map(([name, value]) => ({ name, value: finite(value) ? value : null }));
+  const pca = (exposure.data?.pca_factors || []).map((row: any) => ({ name: row.factor, variance: finite(row.variance_explained) ? Number((row.variance_explained * 100).toFixed(1)) : null }));
+  const assets: string[] = correlation.data?.assets || [];
+  const matrix: unknown[][] = correlation.data?.matrix || [];
+  const completeMatrix = assets.length > 0 && matrix.length === assets.length && matrix.every(row => row.length === assets.length && row.every(finite));
+  const heatmapItems = sectors.filter(row => finite(row.value)).map((row, i) => ({ id: String(i), ticker: row.name, quantity: 0, avg_buy_price: 0, buy_date: "", sector: row.name, current_price: null, current_value: row.value, pnl: null, exchange: ticker ? undefined : "PORTFOLIO" })) as PortfolioItem[];
+  return <div className="min-w-0 space-y-4">
+    <p className="text-xs text-terminal-muted">{ticker ? `${ticker} and service-selected peers` : "Current portfolio symbols"} · overview uses the service’s equal-weighted model, not transaction-weighted portfolio returns.</p>
+    <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <RiskPanel title="Statistical risk metrics" read={summary}>
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded border border-terminal-border p-3"><p className="text-xs text-terminal-muted">EWMA volatility</p><p className="mt-2 text-2xl tabular-nums">{finite(summary.data?.ewma_vol) ? `${(summary.data.ewma_vol * 100).toFixed(2)}%` : "Unavailable"}</p></div>
+          <div className="rounded border border-terminal-border p-3"><p className="text-xs text-terminal-muted">Systematic beta</p><p className="mt-2 text-2xl tabular-nums">{riskNumber(summary.data?.beta)}</p></div>
+        </div>
+        <p className="mb-2 text-sm">Marginal contribution to risk</p>
+        {Object.keys(summary.data?.marginal_contribution || {}).length ? <RiskTable compact name="Marginal risk contributions" headers={["Asset", "Contribution"]} rows={Object.entries(summary.data.marginal_contribution).map(([asset, value]) => [asset, riskNumber(value, 4)])} /> : <p className="text-sm text-terminal-muted">No asset contributions returned. Zero summary values alone do not establish sufficient history.</p>}
+      </RiskPanel>
+      <RiskPanel title="PCA factor exposures" subtitle="Reported variance decomposition" read={exposure} empty={!pca.length}>
+        <div className="h-64 min-w-0" role="img" aria-label="PCA variance chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={pca}><CartesianGrid stroke="#263040" vertical={false} /><XAxis tick={{ fill: "var(--ot-color-text-muted)" }} dataKey="name" fontSize={12} /><YAxis tick={{ fill: "var(--ot-color-text-muted)" }} fontSize={12} unit="%" /><Tooltip contentStyle={tooltipStyle} /><Bar dataKey="variance" name="Variance (%)" fill="#5B8FF9" isAnimationActive={false} /></BarChart></ResponsiveContainer></div>
+        <RiskTable name="PCA variance values" headers={["Factor", "Variance (%)"]} rows={pca.map((row: any) => [row.name, riskNumber(row.variance, 1)])} />
+      </RiskPanel>
+    </div>
+    <RiskPanel title="Reported classification share" subtitle="The service groups country metadata and counts symbols here; these are not market-value sector weights" read={classification} empty={!sectors.length}>
+      <div className="grid min-w-0 grid-cols-1 items-center gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div className="h-60 min-w-0" role="img" aria-label="Reported classification share chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={sectors.filter(row => finite(row.value))} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} isAnimationActive={false}>{sectors.map((row, index) => <Cell key={row.name} fill={COLORS[index % COLORS.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} /></PieChart></ResponsiveContainer></div>
+        <RiskTable name="Reported classification values" headers={["Reported group", "Share (%)"]} rows={sectors.map(row => [row.name, finite(row.value) ? `${row.value.toFixed(2)}%` : "Unavailable"])} />
+      </div>
+    </RiskPanel>
+    <RiskPanel title="Correlation dynamics" subtitle="Pairwise matrix · up to 60 observations, subject to service coverage" read={correlation} empty={!assets.length}>
+      <RiskTable name="Risk correlation matrix" headers={["Asset", ...assets]} rows={assets.map((asset, i) => [asset, ...assets.map((_, j) => riskNumber(matrix[i]?.[j]))])} />
+    </RiskPanel>
+    <details className="min-w-0 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Exposure summary preview</summary><div className="mt-3 min-w-0">
+      {completeMatrix || sectors.some(row => finite(row.value)) ? <><p className="mb-3 text-xs text-terminal-muted">Derived from the reported groups and matrix above, not a separate instrument/currency exposure analysis.</p><ExposureHeatmap title="Risk exposure preview" market={ticker || "PORTFOLIO"} items={heatmapItems} correlation={completeMatrix ? correlation.data : null} defaultMode={completeMatrix ? "correlation" : "sector"} /></> : <p className="text-sm text-terminal-muted">Load classifications or a complete matrix to inspect this preview.</p>}
+    </div></details>
+    <details className="min-w-0 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">AI risk insights</summary><div className="mt-3 min-w-0"><AiInsightCard key={`${scope}:${summary.revision}:${correlation.revision}`} title="AI Risk Insights" description={`${ticker || "Current portfolio"} · on-demand interpretation of the loaded summary and correlation scope`} disabled={!summary.data || summary.loading || !Object.keys(summary.data?.marginal_contribution || {}).length || !assets.length || correlation.loading} disabledMessage="Load usable summary contributions and correlation assets before requesting insights." fetcher={(_, options) => fetchRiskInsights(ticker ? `${ticker} and peers` : "the portfolio", { ...summary.data, correlation_assets: correlation.data?.assets }, options)} /></div></details>
+  </div>;
 }
 
-function fmtPct(value: number | null | undefined, digits = 2): string {
-  if (value == null || Number.isNaN(value)) return "-";
-  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(digits)}%`;
+function Factors({ period }: { period: string }) {
+  const exposure = useRiskRead("current:1Y", () => fetchFactorExposures("current"));
+  const attribution = useRiskRead(`current:${period}`, () => fetchFactorAttribution("current", period));
+  const history = useRiskRead(`current:${period}:60`, () => fetchFactorHistory("current", period, 60));
+  const returns = useRiskRead(period, () => fetchFactorReturns(period));
+  const [hidden, setHidden] = useState<string[]>([]);
+  const loadings = FACTORS.map((key, i) => {
+    const row = exposure.data?.exposures?.[key];
+    const value = row?.exposure;
+    const ci = finite(value) && finite(row?.confidence) ? Math.max(0.05, Math.abs(value) * (1 - Math.min(row.confidence, 0.95))) : null;
+    return { key, label: LABELS[i], exposure: finite(value) ? value : null, t: row?.t_stat, confidence: row?.confidence, confidenceInterval: ci === null ? null : [ci, ci] };
+  });
+  const size = exposure.data?.exposures?.size?.exposure, value = exposure.data?.exposures?.value?.exposure;
+  const style = finite(size) && finite(value) ? { row: size > .35 ? "Small" : size < -.35 ? "Large" : "Mid", column: value > .35 ? "Value" : value < -.35 ? "Growth" : "Blend" } : null;
+  const waterfall = useMemo(() => {
+    const data = attribution.data;
+    if (!data || !FACTORS.every(key => finite(data.factor_contributions?.[key])) || !finite(data.alpha) || !finite(data.total_return)) return [];
+    let running = 0;
+    const values = [...FACTORS.map((key, i) => ({ key, label: LABELS[i], value: data.factor_contributions[key] })), { key: "alpha", label: "Alpha", value: data.alpha }];
+    const rows = values.map(row => { const start = running; running += row.value; return { ...row, offset: Math.min(start, running), contribution: Math.abs(row.value), runningTotal: running }; });
+    return [...rows, { key: "total", label: "Total", value: data.total_return, offset: 0, contribution: Math.abs(data.total_return), runningTotal: data.total_return }];
+  }, [attribution.data]);
+  const rolling = useMemo(() => {
+    const map = new Map<string, Record<string, any>>();
+    FACTORS.forEach(key => (history.data?.series?.[key] || []).forEach((row: any) => { const item = map.get(row.date) || { date: row.date }; item[key] = finite(row.exposure) ? row.exposure : null; map.set(row.date, item); }));
+    return Array.from(map.values());
+  }, [history.data]);
+  const marketReturns = returns.data?.factors?.market;
+  const marketSum = Array.isArray(marketReturns) && marketReturns.length && marketReturns.every(row => finite(row.return)) ? marketReturns.reduce((sum, row) => sum + row.return, 0) : null;
+  return <div className="min-w-0 space-y-4">
+    <p className="text-xs text-terminal-muted">Current portfolio · attribution, rolling history and factor returns: {period}. Exposure/style uses the endpoint’s fixed 1Y context. Rolling window: 60 observations.</p>
+    <RiskPanel title="Factor exposures and style" subtitle="Illustrative confidence whiskers use the retained client heuristic; they are not statistical confidence bounds" read={exposure} empty={!Object.keys(exposure.data?.exposures || {}).length}>
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="h-80 min-w-0" role="img" aria-label="Factor loading chart" data-testid="factor-exposure-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={loadings.filter(row => row.exposure !== null)} layout="vertical" margin={{ left: 8, right: 24 }}><CartesianGrid stroke="#263040" horizontal={false} /><XAxis tick={{ fill: "var(--ot-color-text-muted)" }} domain={[(min: number) => Math.min(0, min), (max: number) => Math.max(0, max)]} type="number" fontSize={12} /><YAxis tick={{ fill: "var(--ot-color-text-muted)" }} type="category" dataKey="label" width={100} fontSize={12} /><Tooltip contentStyle={tooltipStyle} /><ReferenceLine x={0} stroke="#8e98a8" /><Bar dataKey="exposure" fill="#5B8FF9" isAnimationActive={false}>{loadings.filter(row => row.exposure !== null).map(row => <Cell key={row.key} fill={row.exposure! >= 0 ? "#5B8FF9" : "#F39C12"} />)}<ErrorBar dataKey="confidenceInterval" width={4} stroke="#8e98a8" /></Bar></BarChart></ResponsiveContainer></div>
+        <div className="min-w-0 space-y-3"><p className="text-sm">Size / value style</p>{style ? <><div data-testid="factor-style-box" className="grid grid-cols-3 gap-1 text-center text-xs">{["Small", "Mid", "Large"].flatMap(row => ["Value", "Blend", "Growth"].map(column => <div key={`${row}:${column}`} className={`min-w-0 break-words rounded border px-1 py-3 ${style.row === row && style.column === column ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`}>{row}<br />{column}</div>))}</div><p className="text-sm text-terminal-accent">Current positioning: {style.row} / {style.column}</p></> : <p className="text-sm text-terminal-muted">Style unavailable: both size and value exposures are required.</p>}</div>
+      </div>
+      <RiskTable name="Factor loading values" headers={["Factor", "Exposure", "T-statistic", "Confidence score"]} rows={loadings.map(row => [row.label, signed(row.exposure), signed(row.t), riskNumber(row.confidence)])} />
+    </RiskPanel>
+    <RiskPanel title="Return attribution" subtitle={`${period} · retained waterfall decomposition`} read={attribution} empty={!attribution.data || !Object.keys(attribution.data).length}>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">{[["Total return", riskPercent(attribution.data?.total_return)], ["Alpha", riskPercent(attribution.data?.alpha)], ["R-squared", finite(attribution.data?.r_squared) ? `${(attribution.data.r_squared * 100).toFixed(1)}%` : "Unavailable"]].map(([label, result]) => <div key={label} className="min-w-0 rounded border border-terminal-border p-3"><p className="text-xs text-terminal-muted">{label}</p><p className="mt-2 break-words text-xl tabular-nums">{result}</p></div>)}</div>
+      {waterfall.length ? <div className="h-80 min-w-0" role="img" aria-label="Return attribution waterfall" data-testid="factor-waterfall-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={waterfall}><CartesianGrid stroke="#263040" vertical={false} /><XAxis tick={{ fill: "var(--ot-color-text-muted)" }} dataKey="label" fontSize={12} minTickGap={20} /><YAxis tick={{ fill: "var(--ot-color-text-muted)" }} fontSize={12} tickFormatter={value => `${(Number(value) * 100).toFixed(1)}%`} /><Tooltip contentStyle={tooltipStyle} formatter={(_, key, item: any) => key === "contribution" ? [riskPercent(item.payload.value), item.payload.label] : key === "runningTotal" ? [riskPercent(item.payload.runningTotal), "Running total"] : ["", ""]} /><ReferenceLine y={0} stroke="#8e98a8" /><Bar dataKey="offset" stackId="waterfall" fill="transparent" tooltipType="none" isAnimationActive={false} /><Bar dataKey="contribution" stackId="waterfall" isAnimationActive={false}>{waterfall.map(row => <Cell key={row.key} fill={row.key === "total" ? "#5B8FF9" : row.value >= 0 ? "#26A65B" : "#E84142"} />)}</Bar><Line dataKey="runningTotal" stroke="#8e98a8" isAnimationActive={false} /></ComposedChart></ResponsiveContainer></div> : <p className="mb-3 text-sm text-terminal-muted">Attribution is incomplete; no partial waterfall is shown.</p>}
+      <RiskTable name="Factor return contributions" headers={["Component", "Contribution"]} rows={[...FACTORS.map((key, i) => [LABELS[i], riskPercent(attribution.data?.factor_contributions?.[key])]), ["Alpha", riskPercent(attribution.data?.alpha)], ["Total", riskPercent(attribution.data?.total_return)]]} />
+    </RiskPanel>
+    <RiskPanel title="Market factor return series" subtitle={`${period} · sum of daily returns, not a compounded return`} read={returns} empty={!marketReturns?.length}><p className="mb-3 text-2xl tabular-nums">{riskPercent(marketSum)}</p><details><summary className="cursor-pointer text-sm">Exact market factor values</summary><div className="mt-3"><RiskTable name="Market factor returns" headers={["Date", "Daily return"]} rows={(marketReturns || []).map((row: any) => [row.date, riskPercent(row.return)])} /></div></details></RiskPanel>
+    <RiskPanel title="Rolling factor exposures" subtitle={`${period} · 60-observation betas`} read={history} empty={!rolling.length}>
+      <fieldset className="mb-3 flex flex-wrap gap-x-4 gap-y-2"><legend className="mb-2 text-xs text-terminal-muted">Visible factors</legend>{FACTORS.map((key, i) => <label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!hidden.includes(key)} onChange={() => setHidden(old => old.includes(key) ? old.filter(item => item !== key) : [...old, key])} />{LABELS[i]}</label>)}</fieldset>
+      <div className="h-80 min-w-0" role="img" aria-label="Rolling factor exposure chart" data-testid="factor-history-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={rolling}><CartesianGrid stroke="#263040" vertical={false} /><XAxis tick={{ fill: "var(--ot-color-text-muted)" }} dataKey="date" fontSize={12} minTickGap={30} /><YAxis tick={{ fill: "var(--ot-color-text-muted)" }} fontSize={12} /><Tooltip contentStyle={tooltipStyle} /><Legend wrapperStyle={{ fontSize: 12 }} /><ReferenceLine y={0} stroke="#8e98a8" />{FACTORS.map((key, i) => hidden.includes(key) ? null : <Line key={key} type="monotone" dataKey={key} name={LABELS[i]} stroke={COLORS[i]} dot={false} isAnimationActive={false} />)}</LineChart></ResponsiveContainer></div>
+      <details><summary className="cursor-pointer text-sm">Exact rolling values</summary><div className="mt-3"><RiskTable name="Rolling exposure values" headers={["Date", ...LABELS]} rows={rolling.map(row => [row.date, ...FACTORS.map(key => signed(row[key]))])} /></div></details>
+    </RiskPanel>
+  </div>;
 }
 
 export function RiskDashboardPage() {
-  const storeTicker = useStockStore((s) => s.ticker);
+  const storeTicker = useStockStore(state => state.ticker);
   const [tab, setTab] = useState<"overview" | "factors" | "stress">("overview");
-  const [mode, setMode] = useState<"portfolio" | "ticker">("portfolio");
-  const [factorPeriod, setFactorPeriod] = useState<(typeof PERIODS)[number]>("1Y");
-  const [summary, setSummary] = useState<any>(null);
-  const [exposures, setExposures] = useState<any>(null);
-  const [correlation, setCorrelation] = useState<any>(null);
-  const [concentration, setConcentration] = useState<any>(null);
-  const [factorExposures, setFactorExposures] = useState<any>(null);
-  const [factorAttribution, setFactorAttribution] = useState<any>(null);
-  const [factorHistory, setFactorHistory] = useState<any>(null);
-  const [factorReturns, setFactorReturns] = useState<any>(null);
-  const [hiddenFactors, setHiddenFactors] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [factorLoading, setFactorLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const activeTicker = useMemo(() => (mode === "ticker" ? storeTicker : undefined), [mode, storeTicker]);
-
-  async function loadOverview() {
-    setLoading(true);
-    setError(null);
-    try {
-      const [sumData, expData, corrData, concData] = await Promise.all([
-        fetchRiskSummary(activeTicker),
-        fetchRiskExposures(activeTicker),
-        fetchRiskCorrelation(activeTicker),
-        fetchSectorConcentration(activeTicker),
-      ]);
-      setSummary(sumData);
-      setExposures(expData);
-      setCorrelation(corrData);
-      setConcentration(concData);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load risk data");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadFactors(period: (typeof PERIODS)[number]) {
-    setFactorLoading(true);
-    setError(null);
-    try {
-      const [expData, attrData, histData, retData] = await Promise.all([
-        fetchFactorExposures("current"),
-        fetchFactorAttribution("current", period),
-        fetchFactorHistory("current", period, 60),
-        fetchFactorReturns(period),
-      ]);
-      setFactorExposures(expData);
-      setFactorAttribution(attrData);
-      setFactorHistory(histData);
-      setFactorReturns(retData);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load factor analytics");
-    } finally {
-      setFactorLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (tab === "overview") {
-      void loadOverview();
-    }
-  }, [activeTicker, tab]);
-
-  useEffect(() => {
-    if (tab === "factors") {
-      void loadFactors(factorPeriod);
-    }
-  }, [tab, factorPeriod]);
-
-  const pcaData =
-    exposures?.pca_factors?.map((f: any) => ({
-      name: f.factor,
-      variance: Number((f.variance_explained * 100).toFixed(1)),
-    })) || [];
-
-  const sectorData = Object.entries(concentration?.sectors || {}).map(([name, value]) => ({
-    name,
-    value: Number(value),
-  }));
-  const heatmapItems = useMemo<PortfolioItem[]>(
-    () =>
-      sectorData.map((row, index) => ({
-        id: String(index),
-        ticker: row.name,
-        quantity: 0,
-        avg_buy_price: 0,
-        buy_date: "",
-        sector: row.name,
-        current_price: null,
-        current_value: row.value,
-        pnl: null,
-        exchange: mode === "ticker" ? undefined : "PORTFOLIO",
-      })),
-    [mode, sectorData],
-  );
-
-  const factorExposureData = useMemo(
-    () =>
-      FACTOR_ORDER.map((factor) => {
-        const row = factorExposures?.exposures?.[factor] || {};
-        const exposure = Number(row.exposure || 0);
-        const confidence = Number(row.confidence || 0);
-        const ci = Math.max(0.05, Math.abs(exposure) * (1 - Math.min(confidence, 0.95)));
-        return {
-          factor,
-          label: FACTOR_LABELS[factor],
-          exposure,
-          tStat: Number(row.t_stat || 0),
-          confidence,
-          confidenceInterval: [ci, ci],
-        };
-      }),
-    [factorExposures],
-  );
-
-  const factorHistoryData = useMemo(() => {
-    const factorSeries = factorHistory?.series || {};
-    const map = new Map<string, Record<string, string | number>>();
-    FACTOR_ORDER.forEach((factor) => {
-      const rows = factorSeries[factor] || [];
-      rows.forEach((row: { date: string; exposure: number }) => {
-        const current = map.get(row.date) || { date: row.date };
-        current[factor] = Number(row.exposure || 0);
-        map.set(row.date, current);
-      });
-    });
-    return Array.from(map.values());
-  }, [factorHistory]);
-
-  const waterfallData = useMemo(() => {
-    type WaterfallRow = {
-      key: string;
-      label: string;
-      offset: number;
-      contribution: number;
-      signedContribution: number;
-      runningTotal: number;
-      fill: string;
-    };
-    const contributions = factorAttribution?.factor_contributions || {};
-    let running = 0;
-    const rows: WaterfallRow[] = FACTOR_ORDER.map((factor) => {
-      const value = Number(contributions[factor] || 0);
-      const start = running;
-      running += value;
-      return {
-        key: factor,
-        label: FACTOR_LABELS[factor],
-        offset: Math.min(start, running),
-        contribution: Math.abs(value),
-        signedContribution: value,
-        runningTotal: running,
-        fill: value >= 0 ? "#26A65B" : "#E84142",
-      };
-    });
-    const alpha = Number(factorAttribution?.alpha || 0);
-    const alphaStart = running;
-    running += alpha;
-    rows.push({
-      key: "alpha",
-      label: "Alpha",
-      offset: Math.min(alphaStart, running),
-      contribution: Math.abs(alpha),
-      signedContribution: alpha,
-      runningTotal: running,
-      fill: alpha >= 0 ? "#26A65B" : "#E84142",
-    });
-    rows.push({
-      key: "total",
-      label: "Total",
-      offset: 0,
-      contribution: Math.abs(Number(factorAttribution?.total_return || 0)),
-      signedContribution: Number(factorAttribution?.total_return || 0),
-      runningTotal: Number(factorAttribution?.total_return || 0),
-      fill: "#5B8FF9",
-    });
-    return rows;
-  }, [factorAttribution]);
-
-  const styleBox = useMemo(() => {
-    const sizeExposure = Number(factorExposures?.exposures?.size?.exposure || 0);
-    const valueExposure = Number(factorExposures?.exposures?.value?.exposure || 0);
-    const row = sizeExposure > 0.35 ? "Small" : sizeExposure < -0.35 ? "Large" : "Mid";
-    const column = valueExposure > 0.35 ? "Value" : valueExposure < -0.35 ? "Growth" : "Blend";
-    return { row, column };
-  }, [factorExposures]);
-
-  function toggleFactor(factor: string) {
-    setHiddenFactors((current) =>
-      current.includes(factor) ? current.filter((item) => item !== factor) : [...current, factor],
-    );
-  }
-
-  return (
-    <div className="space-y-3 p-4 font-mono">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-terminal-border bg-terminal-panel p-3">
-        <div>
-          <div className="text-sm font-semibold uppercase text-terminal-accent">RISK ENGINE CONTROL</div>
-          <div className="text-[10px] uppercase text-terminal-muted">Multi-factor risk attribution & attribution analytics</div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded border border-terminal-border bg-terminal-bg p-0.5">
-            <button
-              className={`px-3 py-1 text-[10px] font-bold rounded-sm transition-colors ${tab === "overview" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted hover:text-terminal-text"}`}
-              onClick={() => setTab("overview")}
-            >
-              OVERVIEW
-            </button>
-            <button
-              className={`px-3 py-1 text-[10px] font-bold rounded-sm transition-colors ${tab === "factors" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted hover:text-terminal-text"}`}
-              onClick={() => setTab("factors")}
-            >
-              FACTOR ATTRIBUTION
-            </button>
-            <button
-              className={`px-3 py-1 text-[10px] font-bold rounded-sm transition-colors ${tab === "stress" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted hover:text-terminal-text"}`}
-              onClick={() => setTab("stress")}
-            >
-              STRESS TEST
-            </button>
-          </div>
-
-          {tab === "overview" ? (
-            <div className="flex rounded border border-terminal-border bg-terminal-bg p-0.5">
-              <button
-                className={`px-3 py-1 text-[10px] font-bold rounded-sm transition-colors ${mode === "portfolio" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted hover:text-terminal-text"}`}
-                onClick={() => setMode("portfolio")}
-              >
-                PORTFOLIO
-              </button>
-              <button
-                className={`px-3 py-1 text-[10px] font-bold rounded-sm transition-colors ${mode === "ticker" ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted hover:text-terminal-text"}`}
-                onClick={() => setMode("ticker")}
-              >
-                TICKER: {storeTicker}
-              </button>
-            </div>
-          ) : null}
-
-          {tab === "factors" ? (
-            <div className="flex rounded border border-terminal-border bg-terminal-bg p-0.5">
-              {PERIODS.map((period) => (
-                <button
-                  key={period}
-                  className={`px-3 py-1 text-[10px] font-bold rounded-sm transition-colors ${factorPeriod === period ? "bg-terminal-accent text-terminal-bg" : "text-terminal-muted hover:text-terminal-text"}`}
-                  onClick={() => setFactorPeriod(period)}
-                >
-                  {period}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          {tab === "overview" ? (
-            <TerminalButton size="sm" onClick={() => void loadOverview()} disabled={loading}>
-              {loading ? "SYNCING..." : "RELOAD ANALYTICS"}
-            </TerminalButton>
-          ) : null}
-
-          {tab === "factors" ? (
-            <TerminalButton size="sm" onClick={() => void loadFactors(factorPeriod)} disabled={factorLoading}>
-              {factorLoading ? "SYNCING..." : "RELOAD FACTORS"}
-            </TerminalButton>
-          ) : null}
-        </div>
-      </div>
-
-      {error && tab !== "stress" ? (
-        <div className="rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">{error}</div>
-      ) : null}
-
-      {tab === "overview" ? (
-        <>
-          <AiInsightCard
-            title="AI Risk Insights"
-            description={`${mode === "ticker" ? storeTicker : "Portfolio"} · Gemma reading of volatility, concentration, and correlation`}
-            fetcher={(_, options) =>
-              fetchRiskInsights(mode === "ticker" ? `${storeTicker} and peers` : "the portfolio", {
-                ...(summary && typeof summary === "object" ? summary : {}),
-                correlation_assets: correlation?.assets,
-                factor_exposures: factorExposures?.exposures,
-              }, options)
-            }
-          />
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-            <TerminalPanel title="STATISTICAL RISK METRICS" subtitle={mode === "ticker" ? `Analysis for ${storeTicker} + Peers` : "Total Portfolio Attribution"}>
-              <div className="space-y-4 p-1 text-xs">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded border border-terminal-border/50 bg-terminal-bg p-2">
-                    <div className="mb-1 text-[10px] text-terminal-muted">EWMA VOLATILITY</div>
-                    <div className="text-lg font-bold text-terminal-pos">{(Number(summary?.ewma_vol || 0) * 100).toFixed(2)}%</div>
-                  </div>
-                  <div className="rounded border border-terminal-border/50 bg-terminal-bg p-2">
-                    <div className="mb-1 text-[10px] text-terminal-muted">SYSTEMATIC BETA</div>
-                    <div className="text-lg font-bold text-terminal-accent">{Number(summary?.beta || 0).toFixed(2)}</div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 border-b border-terminal-border pb-1 text-[10px] font-bold uppercase text-terminal-accent">Marginal Contribution to Risk (MCTR)</div>
-                  <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
-                    {Object.entries(summary?.marginal_contribution || {}).map(([asset, val]) => (
-                      <div key={asset} className="flex items-center justify-between border-b border-terminal-border/20 py-1">
-                        <span className="font-bold text-[10px]">{asset}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="h-1 w-20 overflow-hidden rounded-full bg-terminal-border">
-                            <div className="h-full bg-terminal-accent" style={{ width: `${Math.min(100, Number(val) * 1000)}%` }} />
-                          </div>
-                          <span className="w-10 text-right tabular-nums">{Number(val).toFixed(4)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </TerminalPanel>
-
-            <TerminalPanel title="FACTOR EXPOSURES (PCA)" subtitle="Variance decomposition by latent factors">
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pcaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid stroke="#333" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" axisLine={{ stroke: "#333" }} stroke="#666" tick={{ fill: "#888" }} fontSize={10} />
-                    <YAxis axisLine={{ stroke: "#333" }} stroke="#666" tick={{ fill: "#888" }} fontSize={10} unit="%" />
-                    <Tooltip contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #333", fontSize: "10px", borderRadius: "2px" }} itemStyle={{ color: "#26A65B" }} cursor={{ fill: "#ffffff11" }} />
-                    <Bar dataKey="variance" fill="#26A65B" name="Variance Explained" barSize={30}>
-                      {pcaData.map((_entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} opacity={0.8} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TerminalPanel>
-
-            <TerminalPanel title="EXPOSURE CLUSTERING" subtitle={mode === "ticker" ? "Regional/Industry Breakdown" : "Sector Concentration (%)"}>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={sectorData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                      label={({ name, percent }: any) => `${name} ${(Number(percent || 0) * 100).toFixed(0)}%`}
-                      labelLine={false}
-                      stroke="#000"
-                      strokeWidth={2}
-                    >
-                      {sectorData.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #333", fontSize: "10px", borderRadius: "2px" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </TerminalPanel>
-          </div>
-
-          <ExposureHeatmap
-            title="Risk Exposure Heatmap"
-            market={mode === "ticker" ? storeTicker : "PORTFOLIO"}
-            items={heatmapItems}
-            factorExposures={factorExposures}
-            correlation={correlation}
-            defaultMode={correlation?.assets?.length ? "correlation" : "sector"}
-          />
-
-          <TerminalPanel title="CORRELATION DYNAMICS" subtitle="Rolling pairwise correlation matrix (60D window)">
-            <div className="overflow-x-auto p-1">
-              <table className="w-full border-collapse text-right text-[10px]">
-                <thead>
-                  <tr>
-                    <th className="border border-terminal-border bg-terminal-panel p-2 text-left font-bold uppercase tracking-wider">ASSET</th>
-                    {correlation?.assets?.map((a: string) => (
-                      <th key={a} className="border border-terminal-border bg-terminal-panel p-2 font-bold tabular-nums uppercase">{a}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {correlation?.matrix?.map((row: number[], idx: number) => (
-                    <tr key={idx} className="transition-colors hover:bg-terminal-border/10">
-                      <td className="border border-terminal-border bg-terminal-panel p-2 text-left font-bold uppercase">{correlation.assets[idx]}</td>
-                      {row.map((val, cIdx) => {
-                        const absVal = Math.abs(val);
-                        const color = val > 0.7 ? "#26A65B" : val < -0.7 ? "#E84142" : "inherit";
-                        const opacity = absVal < 0.2 ? 0.3 : absVal < 0.5 ? 0.6 : 1;
-                        return (
-                          <td key={cIdx} className="border border-terminal-border p-2 tabular-nums" style={{ color, opacity }}>
-                            {val.toFixed(2)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </TerminalPanel>
-        </>
-      ) : null}
-
-      {tab === "factors" ? (
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-            <TerminalPanel title="FACTOR EXPOSURES" subtitle={`Portfolio factor loadings (${factorPeriod})`} className="xl:col-span-2">
-              <div className="h-80 w-full" data-testid="factor-exposure-chart">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={factorExposureData} layout="vertical" margin={{ top: 12, right: 24, left: 12, bottom: 12 }}>
-                    <CartesianGrid stroke="#333" strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" stroke="#666" tick={{ fill: "#888" }} fontSize={10} />
-                    <YAxis type="category" dataKey="label" width={80} stroke="#666" tick={{ fill: "#d8dde7" }} fontSize={11} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #333", fontSize: "10px", borderRadius: "2px" }}
-                      formatter={(value, key, item: any) => {
-                        if (key === "exposure") return [fmtSigned(Number(value), 2), "Exposure"];
-                        return [String(value), item?.payload?.label || key || "Value"];
-                      }}
-                    />
-                    <ReferenceLine x={0} stroke="#5c6677" />
-                    <Bar dataKey="exposure" radius={[0, 4, 4, 0]}>
-                      <LabelList dataKey="exposure" position="right" formatter={(value: any) => fmtSigned(Number(value), 2)} fill="#d8dde7" fontSize={10} />
-                      <ErrorBar dataKey="confidenceInterval" width={4} strokeWidth={1.5} stroke="#d8dde7" />
-                      {factorExposureData.map((row) => (
-                        <Cell key={row.factor} fill={row.exposure >= 0 ? "#5B8FF9" : "#F39C12"} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TerminalPanel>
-
-            <TerminalPanel title="STYLE BOX" subtitle="Size vs value positioning">
-              <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-2 text-center text-[10px]" data-testid="factor-style-box">
-                  {["Small", "Mid", "Large"].map((row) =>
-                    ["Value", "Blend", "Growth"].map((column) => {
-                      const active = styleBox.row === row && styleBox.column === column;
-                      return (
-                        <div
-                          key={`${row}-${column}`}
-                          className={`rounded border p-4 ${active ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent" : "border-terminal-border bg-terminal-bg text-terminal-muted"}`}
-                        >
-                          <div className="font-bold uppercase">{row}</div>
-                          <div className="mt-1 uppercase">{column}</div>
-                        </div>
-                      );
-                    }),
-                  )}
-                </div>
-                <div className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
-                  <div className="text-terminal-muted">Current positioning</div>
-                  <div className="mt-1 text-terminal-accent">{styleBox.row} / {styleBox.column}</div>
-                  <div className="mt-2 text-[11px] text-terminal-muted">
-                    Size {fmtSigned(factorExposures?.exposures?.size?.exposure || 0, 2)} | Value {fmtSigned(factorExposures?.exposures?.value?.exposure || 0, 2)}
-                  </div>
-                </div>
-              </div>
-            </TerminalPanel>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-5">
-            <TerminalPanel title="RETURN ATTRIBUTION" subtitle="Waterfall decomposition of realized return" className="xl:col-span-3">
-              <div className="h-80 w-full" data-testid="factor-waterfall-chart">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={waterfallData} margin={{ top: 12, right: 24, left: 8, bottom: 12 }}>
-                    <CartesianGrid stroke="#333" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="label" stroke="#666" tick={{ fill: "#888" }} fontSize={10} />
-                    <YAxis stroke="#666" tick={{ fill: "#888" }} fontSize={10} tickFormatter={(value) => `${(Number(value) * 100).toFixed(1)}%`} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #333", fontSize: "10px", borderRadius: "2px" }}
-                      formatter={(_value, key, item: any) => {
-                        if (key === "signedContribution") return [fmtPct(item?.payload?.signedContribution || 0), item?.payload?.label || "Contribution"];
-                        if (key === "runningTotal") return [fmtPct(item?.payload?.runningTotal || 0), "Running Total"];
-                        return [String(_value), key || "Value"];
-                      }}
-                    />
-                    <ReferenceLine y={0} stroke="#5c6677" />
-                    <Bar dataKey="offset" stackId="waterfall" fill="transparent" isAnimationActive={false} />
-                    <Bar dataKey="contribution" stackId="waterfall" radius={[4, 4, 0, 0]}>
-                      {waterfallData.map((row) => (
-                        <Cell key={row.key} fill={row.fill} />
-                      ))}
-                    </Bar>
-                    <Line type="monotone" dataKey="runningTotal" stroke="#d8dde7" strokeWidth={2} dot={{ r: 2, fill: "#d8dde7" }} activeDot={{ r: 4 }} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </TerminalPanel>
-
-            <TerminalPanel title="FACTOR SNAPSHOT" subtitle="Contribution and model fit" className="xl:col-span-2">
-              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded border border-terminal-border bg-terminal-bg p-2">
-                  <div className="text-[10px] uppercase text-terminal-muted">Total Return</div>
-                  <div className={`mt-1 text-lg font-bold ${Number(factorAttribution?.total_return || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                    {fmtPct(factorAttribution?.total_return || 0)}
-                  </div>
-                </div>
-                <div className="rounded border border-terminal-border bg-terminal-bg p-2">
-                  <div className="text-[10px] uppercase text-terminal-muted">Alpha</div>
-                  <div className={`mt-1 text-lg font-bold ${Number(factorAttribution?.alpha || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                    {fmtPct(factorAttribution?.alpha || 0)}
-                  </div>
-                </div>
-                <div className="rounded border border-terminal-border bg-terminal-bg p-2">
-                  <div className="text-[10px] uppercase text-terminal-muted">R-Squared</div>
-                  <div className="mt-1 text-lg font-bold text-terminal-accent">{(Number(factorAttribution?.r_squared || 0) * 100).toFixed(1)}%</div>
-                </div>
-                <div className="rounded border border-terminal-border bg-terminal-bg p-2">
-                  <div className="text-[10px] uppercase text-terminal-muted">Market Factor Return</div>
-                  <div className="mt-1 text-lg font-bold text-terminal-text">
-                    {fmtPct((factorReturns?.factors?.market || []).reduce((sum: number, row: { return: number }) => sum + Number(row.return || 0), 0), 2)}
-                  </div>
-                </div>
-              </div>
-            </TerminalPanel>
-          </div>
-
-          <TerminalPanel title="ROLLING FACTOR EXPOSURES" subtitle="60-day rolling portfolio betas">
-            <div className="h-96 w-full" data-testid="factor-history-chart">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={factorHistoryData} margin={{ top: 12, right: 24, left: 8, bottom: 12 }}>
-                  <CartesianGrid stroke="#333" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" stroke="#666" tick={{ fill: "#888" }} fontSize={10} minTickGap={24} />
-                  <YAxis stroke="#666" tick={{ fill: "#888" }} fontSize={10} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #333", fontSize: "10px", borderRadius: "2px" }}
-                      formatter={(value, name) => [
-                        fmtSigned(Number(value), 2),
-                        FACTOR_LABELS[(name || "") as keyof typeof FACTOR_LABELS] || name || "Factor",
-                      ]}
-                    />
-                  <Legend onClick={(entry: any) => toggleFactor(String(entry.dataKey || ""))} />
-                  <ReferenceLine y={0} stroke="#d8dde7" strokeWidth={1.5} />
-                  {FACTOR_ORDER.map((factor) =>
-                    hiddenFactors.includes(factor) ? null : (
-                      <Line
-                        key={factor}
-                        type="monotone"
-                        dataKey={factor}
-                        name={FACTOR_LABELS[factor]}
-                        stroke={FACTOR_LINE_COLORS[factor]}
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    ),
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </TerminalPanel>
-        </div>
-      ) : null}
-
-      {tab === "stress" ? <StressTestPanel /> : null}
-    </div>
-  );
+  const [mode, setMode] = useState("portfolio");
+  const [draft, setDraft] = useState(storeTicker);
+  const [ticker, setTicker] = useState(storeTicker);
+  const [period, setPeriod] = useState("1Y");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setDraft(storeTicker); setTicker(storeTicker); }, [storeTicker]);
+  return <main aria-label="Risk workspace" className="min-w-0 space-y-4 p-3 text-terminal-text sm:p-4">
+    <header className="space-y-2"><h1 className="text-lg font-semibold">Risk analytics</h1><p className="text-sm text-terminal-muted">Review observed risk, factor attribution or a hypothetical portfolio stress run.</p></header>
+    <nav aria-label="Risk views" className="flex flex-wrap gap-2">{(["overview", "factors", "stress"] as const).map((key, i) => <TerminalButton key={key} type="button" aria-pressed={key === tab} disabled={busy} variant={tab === key ? "accent" : "default"} onClick={() => setTab(key)} className="normal-case tracking-normal">{["Overview", "Factor attribution", "Stress test"][i]}</TerminalButton>)}</nav>
+    {tab === "overview" && <form aria-label="Risk overview scope" className="flex flex-wrap items-end gap-3 rounded border border-terminal-border bg-terminal-panel p-3" onSubmit={event => { event.preventDefault(); if (draft.trim()) setTicker(draft.trim().toUpperCase()); }}>
+      <label className="min-w-0 flex-1 basis-52 space-y-2 text-xs">Risk scope<TerminalInput as="select" className="block text-sm" value={mode} onChange={event => setMode(event.target.value)}><option value="portfolio">Current portfolio</option><option value="ticker">Ticker and peers</option></TerminalInput></label>
+      {mode === "ticker" && <><label className="min-w-0 flex-1 basis-52 space-y-2 text-xs">Risk ticker<TerminalInput className="block text-sm" value={draft} required maxLength={80} onChange={event => setDraft(event.target.value)} /></label><TerminalButton type="submit" disabled={!draft.trim()} className="normal-case tracking-normal">Apply ticker</TerminalButton></>}
+      <p className="w-full break-words text-xs text-terminal-muted">Applied scope: {mode === "ticker" ? `${ticker} and peers` : "current portfolio"}. Other views always use the service’s current portfolio.</p>
+    </form>}
+    {tab === "factors" && <label className="block max-w-sm space-y-2 text-xs">Attribution and history period<TerminalInput as="select" value={period} onChange={event => setPeriod(event.target.value)} className="block text-sm">{PERIODS.map(item => <option key={item}>{item}</option>)}</TerminalInput></label>}
+    {tab === "overview" ? <Overview key={mode === "ticker" ? ticker : "portfolio"} ticker={mode === "ticker" ? ticker : undefined} /> : tab === "factors" ? <Factors period={period} /> : <StressTestPanel onBusyChange={setBusy} />}
+    <details className="min-w-0 rounded border border-terminal-border p-3 text-sm"><summary className="cursor-pointer">Model scope and limits</summary><div className="mt-3 space-y-2 text-sm text-terminal-muted"><p>These are existing service models, not verified trading or accounting results. Overview uses equal-weighted symbols and a simplified beta benchmark; history alignment, coverage and zero sentinels need validation. No response freshness metadata is provided.</p><p>Factor exposures use a fixed 1Y context. Attribution and rolling exposures use the chosen period; the market factor snapshot sums daily returns. Whiskers use an illustrative client heuristic.</p><p>Stress tests use the service’s current holdings and stored purchase-cost values, with inferred classifications. Currency conversion is not established. The FX shock retains the legacy INR factor. The separate Monte Carlo simulation is not conditioned on the selected scenario.</p><p>Run history is a legacy process-local service list; it is not a durable personal journal. Calculation, provider, currency and ownership coverage require the v5 functionality audit.</p></div></details>
+  </main>;
 }

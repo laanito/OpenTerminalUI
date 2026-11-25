@@ -39,8 +39,11 @@ more (#315 merged, frontend maintainer-accepted). The [market-overview review](M
 adds Heatmap, Rotation and ETF Analytics (#317 merged and maintainer-accepted).
 The separate [Crypto review](CRYPTO_REVIEW.md) covers its eight modules; #318 is
 merged and the frontend accepted. Reported non-live derivatives belong to v5.
-The [Dividends review](DIVIDENDS_REVIEW.md) covers four retained income views,
-with host acceptance open. Nine ordinary menu destinations remain, starting with risk/quant.
+The [Dividends review](DIVIDENDS_REVIEW.md) covers four retained income views
+(#319/#320 merged; legacy income issue recorded for v5). The
+[Risk review](RISK_REVIEW.md) covers overview/factors/stress and scoped reference
+context; host acceptance is open. Eight ordinary menu destinations remain,
+starting with Correlation, Stat Lab and Pair Trading.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

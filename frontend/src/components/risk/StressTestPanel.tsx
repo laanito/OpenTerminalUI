@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -6,7 +6,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Line,
   Pie,
   PieChart,
@@ -22,7 +21,8 @@ import {
   runStressMonteCarlo,
   runStressScenario,
 } from "../../api/client";
-import { TerminalBadge } from "../terminal/TerminalBadge";
+import { finite, RiskPanel, RiskTable, riskNumber, riskPercent, useRiskRead } from "./RiskRead";
+import { TerminalInput } from "../terminal/TerminalInput";
 import { TerminalButton } from "../terminal/TerminalButton";
 import { TerminalPanel } from "../terminal/TerminalPanel";
 
@@ -139,7 +139,7 @@ const FACTOR_SLIDERS: Array<{
   },
   {
     key: "fx_inr",
-    label: "FX",
+    label: "FX (legacy INR)",
     min: -50,
     max: 50,
     step: 1,
@@ -169,21 +169,11 @@ const FACTOR_SLIDERS: Array<{
   },
 ];
 
-function formatPct(value: number) {
-  return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
-}
-
 function formatCurrency(value: number) {
   return value.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-}
-
-function severityVariant(severity: ScenarioDescriptor["severity"]) {
-  if (severity === "extreme") return "danger";
-  if (severity === "high") return "warn";
-  return "accent";
 }
 
 function buildFanChart(paths: number[][]) {
@@ -217,388 +207,84 @@ function buildFanChart(paths: number[][]) {
   return rows;
 }
 
-export function StressTestPanel() {
-  const [portfolioId] = useState("current");
-  const [scenarios, setScenarios] = useState<ScenarioDescriptor[]>([]);
-  const [selectedScenarioId, setSelectedScenarioId] = useState<string>("gfc_2008");
-  const [customShocks, setCustomShocks] = useState<CustomShocks>(DEFAULT_CUSTOM_SHOCKS);
+const money = (value: unknown) => finite(value) ? formatCurrency(value) : "Unavailable";
+const chartTooltip = { backgroundColor: "#0D1117", border: "1px solid #263040", fontSize: 12 };
+
+export function StressTestPanel({ onBusyChange }: { onBusyChange?: (busy: boolean) => void } = {}) {
+  const library = useRiskRead<ScenarioDescriptor[]>("scenarios", fetchPredefinedStressScenarios);
+  const history = useRiskRead<HistoryRow[]>("history", fetchStressScenarioHistory);
+  const [selectedId, setSelectedId] = useState("gfc_2008");
+  const [custom, setCustom] = useState<CustomShocks>(DEFAULT_CUSTOM_SHOCKS);
   const [result, setResult] = useState<ScenarioResult | null>(null);
-  const [monteCarlo, setMonteCarlo] = useState<MonteCarloResult | null>(null);
-  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [simulation, setSimulation] = useState<MonteCarloResult | null>(null);
+  const [applied, setApplied] = useState<{ name: string; shocks: Record<string, number> } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [monteCarloLoading, setMonteCarloLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [runError, setRunError] = useState(false);
+  const [simulationError, setSimulationError] = useState(false);
+  const pending = useRef(false), mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; onBusyChange?.(false); }; }, [onBusyChange]);
+  const scenarios = Array.isArray(library.data) ? library.data : [];
+  const selected = scenarios.find(row => row.id === selectedId);
+  const isCustom = selectedId === "custom";
+  useEffect(() => { if (!loading && scenarios.length && selectedId !== "custom" && !selected) setSelectedId(scenarios[0].id); }, [library.data, selectedId, loading]);
+  const canRun = isCustom || Boolean(selected);
+  const holdingChart = [...(result?.by_holding || [])].sort((a,b) => a.impact_pct - b.impact_pct).slice(0,10).map(row => ({ symbol: row.symbol, impactPct: finite(row.impact_pct) ? Number((row.impact_pct * 100).toFixed(2)) : null }));
+  const sectors = [...(result?.by_sector || [])].sort((a,b) => Math.abs(b.impact_value) - Math.abs(a.impact_value)).map(row => ({ ...row, value: finite(row.impact_value) ? Math.abs(row.impact_value) : null }));
+  const fan = useMemo(() => Array.isArray(simulation?.paths) && simulation.paths.length && simulation.paths.every(path => Array.isArray(path) && path.length && path.every(finite)) ? buildFanChart(simulation.paths) : [], [simulation]);
 
-  const isCustomSelected = selectedScenarioId === "custom";
-
-  const holdingChartData = useMemo(
-    () =>
-      [...(result?.by_holding ?? [])]
-        .sort((left, right) => left.impact_pct - right.impact_pct)
-        .slice(0, 10)
-        .map((holding) => ({
-          symbol: holding.symbol,
-          impactPct: Number((holding.impact_pct * 100).toFixed(2)),
-        })),
-    [result],
-  );
-
-  const sectorChartData = useMemo(
-    () =>
-      [...(result?.by_sector ?? [])]
-        .sort((left, right) => Math.abs(right.impact_value) - Math.abs(left.impact_value))
-        .map((sector) => ({
-          name: sector.sector,
-          value: Math.abs(sector.impact_value),
-          impactPct: sector.impact_pct,
-        })),
-    [result],
-  );
-
-  const fanChartData = useMemo(() => buildFanChart(monteCarlo?.paths ?? []), [monteCarlo]);
-
-  async function refreshHistory() {
-    const items = await fetchStressScenarioHistory();
-    setHistory(Array.isArray(items) ? items : []);
+  async function run() {
+    if (pending.current || !canRun) return;
+    pending.current = true; setLoading(true); onBusyChange?.(true);
+    const snapshot = { name: isCustom ? "Custom Scenario" : selected!.name, shocks: { ...(isCustom ? custom : selected!.shocks) } };
+    setApplied(snapshot); setResult(null); setSimulation(null); setRunError(false); setSimulationError(false);
+    const payload = { portfolio_id: "current", ...(isCustom ? { custom_shocks: snapshot.shocks } : { scenario_id: selectedId }) };
+    // These outcomes are independent. A simulation/history read failure must not
+    // erase a scenario that the service has already completed and recorded.
+    await Promise.allSettled([
+      Promise.resolve().then(() => runStressScenario(payload)).then(data => { if (mounted.current) { setResult(data); history.reload(); } }).catch(() => { if (mounted.current) setRunError(true); }),
+      Promise.resolve().then(() => runStressMonteCarlo({ portfolio_id: "current", n_simulations: 1000 })).then(data => { if (mounted.current) setSimulation(data); }).catch(() => { if (mounted.current) setSimulationError(true); }),
+    ]);
+    pending.current = false;
+    if (mounted.current) { setLoading(false); onBusyChange?.(false); }
   }
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const [scenarioItems] = await Promise.all([fetchPredefinedStressScenarios(), refreshHistory()]);
-        const nextScenarios = Array.isArray(scenarioItems) ? scenarioItems : [];
-        setScenarios(nextScenarios);
-        if (nextScenarios.length > 0 && !nextScenarios.some((scenario) => scenario.id === selectedScenarioId)) {
-          setSelectedScenarioId(nextScenarios[0].id);
-        }
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Failed to load stress-test data");
-      }
-    })();
-  }, []);
-
-  async function runSelectedScenario() {
-    setLoading(true);
-    setMonteCarloLoading(true);
-    setError(null);
-    try {
-      const [scenarioResult, monteCarloResult] = await Promise.all([
-        runStressScenario({
-          portfolio_id: portfolioId,
-          ...(isCustomSelected
-            ? { custom_shocks: customShocks }
-            : { scenario_id: selectedScenarioId }),
-        }),
-        runStressMonteCarlo({ portfolio_id: portfolioId, n_simulations: 1000 }),
-      ]);
-      setResult(scenarioResult);
-      setMonteCarlo(monteCarloResult);
-      await refreshHistory();
-    } catch (runError) {
-      setError(runError instanceof Error ? runError.message : "Failed to run scenario analysis");
-    } finally {
-      setLoading(false);
-      setMonteCarloLoading(false);
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      <TerminalPanel
-        title="Scenario Library"
-        subtitle="Predefined crisis templates, custom factor shocks, and portfolio stress outcomes"
-        actions={<TerminalBadge variant={loading ? "warn" : "live"}>{loading ? "RUNNING" : "READY"}</TerminalBadge>}
-      >
-        <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {scenarios.map((scenario) => (
-              <div
-                key={scenario.id}
-                role="button"
-                tabIndex={0}
-                className={`rounded border p-3 text-left transition-colors ${
-                  selectedScenarioId === scenario.id
-                    ? "border-terminal-accent bg-terminal-accent/10"
-                    : "border-terminal-border bg-terminal-bg/40 hover:border-terminal-accent/60"
-                }`}
-                onClick={() => setSelectedScenarioId(scenario.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setSelectedScenarioId(scenario.id);
-                  }
-                }}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="text-sm text-terminal-text">{scenario.name}</div>
-                  <TerminalBadge variant={severityVariant(scenario.severity)}>{scenario.severity}</TerminalBadge>
-                </div>
-                <p className="mt-2 text-xs text-terminal-muted">{scenario.description}</p>
-                <div className="mt-3">
-                  <TerminalButton
-                    size="sm"
-                    variant={selectedScenarioId === scenario.id ? "accent" : "default"}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setSelectedScenarioId(scenario.id);
-                      void runSelectedScenario();
-                    }}
-                  >
-                    Run
-                  </TerminalButton>
-                </div>
-              </div>
-            ))}
-
-            <div
-              role="button"
-              tabIndex={0}
-              className={`rounded border p-3 text-left transition-colors ${
-                isCustomSelected
-                  ? "border-terminal-accent bg-terminal-accent/10"
-                  : "border-dashed border-terminal-border bg-terminal-bg/30 hover:border-terminal-accent/60"
-              }`}
-              onClick={() => setSelectedScenarioId("custom")}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  setSelectedScenarioId("custom");
-                }
-              }}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="text-sm text-terminal-text">Custom Scenario</div>
-                <div className="text-lg leading-none text-terminal-accent">+</div>
-              </div>
-              <p className="mt-2 text-xs text-terminal-muted">Build your own factor shock mix across equity, rates, vol, FX, gold, and crude.</p>
-              <div className="mt-3">
-                <TerminalButton
-                  size="sm"
-                  variant={isCustomSelected ? "accent" : "default"}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedScenarioId("custom");
-                  }}
-                >
-                  Configure
-                </TerminalButton>
-              </div>
-            </div>
-          </div>
-
-          {isCustomSelected ? (
-            <div className="rounded border border-terminal-border bg-terminal-bg/30 p-3">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Custom Scenario Builder</div>
-                  <div className="text-xs text-terminal-text">Adjust factor shocks and run a portfolio stress projection.</div>
-                </div>
-                <TerminalButton size="sm" variant="accent" onClick={() => void runSelectedScenario()} loading={loading}>
-                  Run Custom Scenario
-                </TerminalButton>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {FACTOR_SLIDERS.map((slider) => {
-                  const sliderValue = slider.fromStored(customShocks[slider.key]);
-                  return (
-                    <label key={slider.key} className="rounded border border-terminal-border/60 bg-terminal-panel/40 p-3">
-                      <div className="flex items-center justify-between gap-2 text-[11px]">
-                        <span className="text-terminal-muted">{slider.label}</span>
-                        <span className="text-terminal-text">{slider.format(sliderValue)}</span>
-                      </div>
-                      <input
-                        aria-label={`${slider.label} shock`}
-                        className="mt-3 w-full accent-terminal-accent"
-                        type="range"
-                        min={slider.min}
-                        max={slider.max}
-                        step={slider.step}
-                        value={sliderValue}
-                        onChange={(event) => {
-                          const nextValue = Number(event.target.value);
-                          setCustomShocks((current) => ({
-                            ...current,
-                            [slider.key]: slider.toStored(nextValue),
-                          }));
-                        }}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
+  return <section aria-label="Stress testing workspace" className="min-w-0 space-y-4">
+    <TerminalPanel title="Stress scenario setup" subtitle="Current portfolio · hypothetical shocks, not orders or a forecast">
+      <form aria-label="Stress scenario setup" className="space-y-4" onSubmit={event => { event.preventDefault(); void run(); }}>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="min-w-0 flex-1 basis-64 space-y-2 text-xs">Scenario<TerminalInput as="select" value={selectedId} disabled={loading} onChange={event => setSelectedId(event.target.value)} className="block text-sm">{scenarios.map(row => <option value={row.id} key={row.id}>{row.name}</option>)}<option value="custom">Custom Scenario</option></TerminalInput></label>
+          <TerminalButton type="submit" variant="accent" disabled={loading || !canRun} className="normal-case tracking-normal">{loading ? "Running analysis…" : "Run scenario"}</TerminalButton>
         </div>
+        <p className="break-words text-sm text-terminal-muted">{isCustom ? "Set the six retained factor shocks below. Interest rates are in basis points; other shocks are percentages." : selected?.description || "Load the scenario library or choose a custom scenario."}</p>
+        {isCustom && <fieldset disabled={loading} className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"><legend className="mb-3 text-sm">Custom factor shocks</legend>{FACTOR_SLIDERS.map(slider => <label key={slider.key} className="min-w-0 space-y-3 rounded border border-terminal-border p-3"><span className="flex flex-wrap justify-between gap-2 text-sm"><span>{slider.label}</span><output>{slider.format(slider.fromStored(custom[slider.key]))}</output></span><input aria-label={`${slider.label} shock`} type="range" className="block w-full accent-terminal-accent" min={slider.min} max={slider.max} step={slider.step} value={slider.fromStored(custom[slider.key])} onChange={event => setCustom(old => ({ ...old, [slider.key]: slider.toStored(Number(event.target.value)) }))} /></label>)}</fieldset>}
+        {loading && <p role="status" className="text-sm">Running the captured setup. Controls are locked until both requests settle; no automatic retry.</p>}
+      </form>
+    </TerminalPanel>
+    <details className="min-w-0 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Scenario library and assumptions</summary><div className="mt-3"><RiskPanel title="Predefined scenarios" read={library} empty={!scenarios.length}><div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">{scenarios.map(row => <article key={row.id} className="min-w-0 space-y-2 rounded border border-terminal-border p-3"><h3 className="break-words text-sm font-semibold">{row.name}</h3><p className="text-xs text-terminal-muted">Severity: {row.severity}</p><p className="break-words text-sm text-terminal-muted">{row.description}</p><TerminalButton type="button" disabled={loading} onClick={() => setSelectedId(row.id)} className="normal-case tracking-normal">Use {row.name}</TerminalButton></article>)}</div></RiskPanel></div></details>
+    {library.failed && <p role="alert" className="text-sm text-terminal-neg">Scenario library unavailable. Open the library to refresh, or configure a custom scenario.</p>}
+    {applied && <section aria-label="Captured stress run" className="min-w-0 space-y-3">
+      <h2 className="break-words text-base font-semibold">Captured run · {applied.name}</h2>
+      <p className="text-xs text-terminal-muted">Results below belong to this captured run. Editing setup does not change them. Reported monetary values have no currency metadata and use the service’s stored-cost valuation.</p>
+      <details className="min-w-0 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Captured shocks</summary><div className="mt-3"><RiskTable name="Captured stress shocks" headers={["Service factor", "Stored shock (fraction)"]} rows={Object.entries(applied.shocks).map(([key,value]) => [key, riskNumber(value,4)])} /></div></details>
+      {runError && <p role="alert" className="text-sm text-terminal-neg">Could not confirm the scenario result. The request may have completed; refresh run history before starting another run. No automatic retry was made.</p>}
+      {result && <TerminalPanel title="Scenario impact" subtitle={result.scenario_name}>
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2"><div className="rounded border border-terminal-border p-3"><p className="text-xs text-terminal-muted">Portfolio impact</p><p className="mt-2 text-2xl tabular-nums">{riskPercent(result.total_impact_pct)}</p></div><div className="rounded border border-terminal-border p-3"><p className="text-xs text-terminal-muted">Reported impact value · currency unspecified</p><p className="mt-2 break-words text-2xl tabular-nums">{money(result.total_impact_value)}</p></div></div>
+        <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="min-w-0"><h3 className="mb-3 text-sm">Impact by holding · ten lowest impacts</h3>{holdingChart.length ? <div className="h-80 min-w-0" data-testid="impact-by-holding-chart" role="img" aria-label="Holding impact chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={holdingChart} layout="vertical" margin={{ left: 0, right: 12 }}><CartesianGrid stroke="#263040" horizontal={false} /><XAxis tick={{ fill: "var(--ot-color-text-muted)" }} domain={[(min: number) => Math.min(0, min), (max: number) => Math.max(0, max)]} type="number" fontSize={12} unit="%" /><YAxis tick={{ fill: "var(--ot-color-text-muted)" }} dataKey="symbol" type="category" width={100} fontSize={12} /><Tooltip contentStyle={chartTooltip} /><Bar dataKey="impactPct" fill="#E84142" isAnimationActive={false}>{holdingChart.map((row,i) => <Cell key={row.symbol} fill={HOLDING_COLORS[i % HOLDING_COLORS.length]} />)}</Bar></BarChart></ResponsiveContainer></div> : <p className="text-sm text-terminal-muted">No holding impacts returned.</p>}</div>
+          <div className="min-w-0"><h3 className="mb-3 text-sm">Reported sector impacts · slices sized by absolute impact value</h3>{sectors.length ? <div className="h-80 min-w-0" role="img" aria-label="Sector absolute impact chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={sectors} dataKey="value" nameKey="sector" innerRadius={55} outerRadius={90} isAnimationActive={false}>{sectors.map((row,i) => <Cell key={row.sector} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}</Pie><Tooltip contentStyle={chartTooltip} /></PieChart></ResponsiveContainer></div> : <p className="text-sm text-terminal-muted">No sector impacts returned.</p>}</div>
+        </div>
+        <details className="mb-4"><summary className="cursor-pointer text-sm">All holding impacts</summary><div className="mt-3"><RiskTable name="Stress holding impacts" headers={["Symbol", "Reported sector", "Weight", "Current value", "Impact", "Impact value", "New value"]} rows={(result.by_holding || []).map(row => [row.symbol,row.sector,riskPercent(row.weight),money(row.current_value),riskPercent(row.impact_pct),money(row.impact_value),money(row.new_value)])} /></div></details>
+        <RiskTable name="Stress sector impacts" headers={["Reported sector", "Weight", "Impact", "Impact value"]} rows={sectors.map(row => [row.sector,riskPercent(row.weight),riskPercent(row.impact_pct),money(row.impact_value)])} />
+        <details className="mt-4"><summary className="cursor-pointer text-sm">Worst five holdings</summary><div className="mt-3"><RiskTable name="Worst stress holdings" headers={["Symbol", "Current value", "Impact", "Impact value"]} rows={(result.worst_holdings || []).map(row => [row.symbol,money(row.current_value),riskPercent(row.impact_pct),money(row.impact_value)])} /></div></details>
+      </TerminalPanel>}
+      <TerminalPanel title="Independent portfolio simulation" subtitle="1,000 Monte Carlo simulations · not conditioned on the selected scenario">
+        {simulationError ? <p role="alert" className="text-sm text-terminal-neg">Simulation unavailable. Completed scenario results remain available; no percentile values are assumed.</p> : simulation ? <>
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{(["p5","p25","p50","p75","p95"] as const).map(key => <div key={key} className="min-w-0 rounded border border-terminal-border p-3"><p className="text-xs text-terminal-muted">{key.toUpperCase()} terminal return</p><p className="mt-2 break-words text-lg tabular-nums">{riskPercent(simulation.percentiles?.[key])}</p></div>)}<div className="rounded border border-terminal-border p-3 text-xs text-terminal-muted">Worst {riskPercent(simulation.worst_case)}<br />Best {riskPercent(simulation.best_case)}</div></div>
+          {fan.length ? <><p className="mb-3 text-xs text-terminal-muted">Fan bands use the returned path sample; terminal percentiles above come from the service.</p><div className="h-80 min-w-0" role="img" aria-label="Monte Carlo fan chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={fan}><CartesianGrid stroke="#263040" vertical={false} /><XAxis tick={{ fill: "var(--ot-color-text-muted)" }} dataKey="step" fontSize={12} /><YAxis tick={{ fill: "var(--ot-color-text-muted)" }} fontSize={12} tickFormatter={value => `${Number(value * 100).toFixed(0)}%`} /><Tooltip contentStyle={chartTooltip} formatter={value => riskPercent(value)} /><Area type="monotone" dataKey="band95Base" stackId="fan95" stroke="none" fill="transparent" isAnimationActive={false} /><Area type="monotone" dataKey="band95Range" stackId="fan95" stroke="none" fill="#5B8FF9" fillOpacity={.15} isAnimationActive={false} /><Area type="monotone" dataKey="band75Base" stackId="fan75" stroke="none" fill="transparent" isAnimationActive={false} /><Area type="monotone" dataKey="band75Range" stackId="fan75" stroke="none" fill="#26A65B" fillOpacity={.2} isAnimationActive={false} /><Line type="monotone" dataKey="p50" stroke="#F7D154" dot={false} isAnimationActive={false} /></AreaChart></ResponsiveContainer></div><details><summary className="cursor-pointer text-sm">Exact simulation path bands</summary><div className="mt-3"><RiskTable name="Simulation path bands" headers={["Step", "P5", "P25", "P50", "P75", "P95"]} rows={fan.map(row => [row.step,riskPercent(row.p5),riskPercent(row.p25),riskPercent(row.p50),riskPercent(row.p75),riskPercent(row.p95)])} /></div></details></> : <p className="text-sm text-terminal-muted">No usable simulation paths returned.</p>}
+        </> : <p role="status" className="text-sm text-terminal-muted">{loading ? "Simulation running…" : "No simulation result returned."}</p>}
       </TerminalPanel>
-
-      {error ? <div className="rounded border border-terminal-neg bg-terminal-neg/10 px-3 py-2 text-xs text-terminal-neg">{error}</div> : null}
-
-      {result ? (
-        <div className="grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
-          <TerminalPanel
-            title="Results Panel"
-            subtitle={result.scenario_name}
-            actions={<TerminalBadge variant={result.total_impact_pct <= 0 ? "danger" : "success"}>{formatPct(result.total_impact_pct)}</TerminalBadge>}
-          >
-            <div className="space-y-4">
-              <div className="rounded border border-terminal-border bg-terminal-bg/40 p-4">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Total Portfolio Impact</div>
-                <div className={`mt-2 text-3xl font-semibold ${result.total_impact_pct <= 0 ? "text-terminal-neg" : "text-terminal-pos"}`}>
-                  {formatPct(result.total_impact_pct)}
-                </div>
-                <div className={`mt-1 text-sm ${result.total_impact_value <= 0 ? "text-terminal-neg" : "text-terminal-pos"}`}>
-                  {result.total_impact_value > 0 ? "+" : ""}
-                  {formatCurrency(result.total_impact_value)}
-                </div>
-              </div>
-
-              <div className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded border border-terminal-border bg-terminal-bg/30 p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Impact By Holding</div>
-                  <div className="h-80" data-testid="impact-by-holding-chart">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={holdingChartData} layout="vertical" margin={{ top: 8, right: 12, left: 8, bottom: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#24303F" horizontal={false} />
-                        <XAxis type="number" stroke="#6E7681" tickFormatter={(value) => `${value}%`} />
-                        <YAxis type="category" dataKey="symbol" stroke="#6E7681" width={70} />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: "#0D1117", border: "1px solid #263040", borderRadius: 4, fontSize: 11 }}
-                          formatter={(value) => `${Number(value ?? 0).toFixed(2)}%`}
-                        />
-                        <Bar dataKey="impactPct" radius={[0, 4, 4, 0]}>
-                          {holdingChartData.map((entry, index) => (
-                            <Cell key={entry.symbol} fill={HOLDING_COLORS[index % HOLDING_COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="rounded border border-terminal-border bg-terminal-bg/30 p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Impact By Sector</div>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={sectorChartData}
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius={60}
-                          outerRadius={92}
-                          paddingAngle={3}
-                          stroke="#0D1117"
-                          strokeWidth={2}
-                        >
-                          {sectorChartData.map((entry, index) => (
-                            <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{ backgroundColor: "#0D1117", border: "1px solid #263040", borderRadius: 4, fontSize: 11 }}
-                          formatter={(value) => formatCurrency(Number(value ?? 0))}
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded border border-terminal-border bg-terminal-bg/30 p-3">
-                <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Monte Carlo Fan Chart</div>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={fanChartData} margin={{ top: 8, right: 12, left: 8, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#24303F" vertical={false} />
-                      <XAxis dataKey="step" stroke="#6E7681" />
-                      <YAxis stroke="#6E7681" tickFormatter={(value) => `${Number(value * 100).toFixed(0)}%`} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "#0D1117", border: "1px solid #263040", borderRadius: 4, fontSize: 11 }}
-                        formatter={(value) => formatPct(Number(value ?? 0))}
-                      />
-                      <Area type="monotone" dataKey="band95Base" stackId="fan95" stroke="none" fill="transparent" />
-                      <Area type="monotone" dataKey="band95Range" stackId="fan95" stroke="none" fill="#5B8FF9" fillOpacity={0.12} />
-                      <Area type="monotone" dataKey="band75Base" stackId="fan75" stroke="none" fill="transparent" />
-                      <Area type="monotone" dataKey="band75Range" stackId="fan75" stroke="none" fill="#26A65B" fillOpacity={0.2} />
-                      <Line type="monotone" dataKey="p50" stroke="#F7D154" strokeWidth={2} dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-terminal-muted">
-                  <TerminalBadge variant="info">5-95: {monteCarloLoading ? "..." : formatPct(monteCarlo?.percentiles.p5 ?? 0)} / {monteCarloLoading ? "..." : formatPct(monteCarlo?.percentiles.p95 ?? 0)}</TerminalBadge>
-                  <TerminalBadge variant="info">25-75: {monteCarloLoading ? "..." : formatPct(monteCarlo?.percentiles.p25 ?? 0)} / {monteCarloLoading ? "..." : formatPct(monteCarlo?.percentiles.p75 ?? 0)}</TerminalBadge>
-                  <TerminalBadge variant="accent">Median: {monteCarloLoading ? "..." : formatPct(monteCarlo?.percentiles.p50 ?? 0)}</TerminalBadge>
-                </div>
-              </div>
-            </div>
-          </TerminalPanel>
-
-          <div className="space-y-3">
-            <TerminalPanel title="Worst 5 Holdings" subtitle="Largest contributors to drawdown">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[11px]">
-                  <thead className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
-                    <tr>
-                      <th className="border-b border-terminal-border px-2 py-2">Symbol</th>
-                      <th className="border-b border-terminal-border px-2 py-2 text-right">Current Value</th>
-                      <th className="border-b border-terminal-border px-2 py-2 text-right">Impact %</th>
-                      <th className="border-b border-terminal-border px-2 py-2 text-right">Impact Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.worst_holdings.map((holding) => (
-                      <tr key={holding.symbol}>
-                        <td className="border-b border-terminal-border/40 px-2 py-2 text-terminal-text">{holding.symbol}</td>
-                        <td className="border-b border-terminal-border/40 px-2 py-2 text-right text-terminal-text">{formatCurrency(holding.current_value)}</td>
-                        <td className="border-b border-terminal-border/40 px-2 py-2 text-right text-terminal-neg">{formatPct(holding.impact_pct)}</td>
-                        <td className="border-b border-terminal-border/40 px-2 py-2 text-right text-terminal-neg">{formatCurrency(holding.impact_value)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TerminalPanel>
-
-            <TerminalPanel title="Run History" subtitle="Recent scenario runs">
-              <div className="max-h-72 overflow-auto">
-                <table className="w-full text-left text-[11px]">
-                  <thead className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
-                    <tr>
-                      <th className="border-b border-terminal-border px-2 py-2">Date</th>
-                      <th className="border-b border-terminal-border px-2 py-2">Scenario</th>
-                      <th className="border-b border-terminal-border px-2 py-2 text-right">Impact %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((row) => (
-                      <tr key={row.id}>
-                        <td className="border-b border-terminal-border/40 px-2 py-2 text-terminal-muted">
-                          {new Date(row.run_date).toLocaleString("en-US", {
-                            month: "short",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                        <td className="border-b border-terminal-border/40 px-2 py-2 text-terminal-text">{row.scenario_name}</td>
-                        <td className={`border-b border-terminal-border/40 px-2 py-2 text-right ${row.total_impact_pct <= 0 ? "text-terminal-neg" : "text-terminal-pos"}`}>
-                          {formatPct(row.total_impact_pct)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TerminalPanel>
-          </div>
-        </div>
-      ) : (
-        <TerminalPanel title="Results Panel" subtitle="Run a scenario to populate holding, sector, and Monte Carlo analysis">
-          <div className="p-4 text-xs text-terminal-muted">Select a predefined scenario or build a custom shock profile, then run it to view portfolio impacts.</div>
-        </TerminalPanel>
-      )}
-    </div>
-  );
+    </section>}
+    {!applied && <p className="rounded border border-terminal-border p-4 text-sm text-terminal-muted">Choose a scenario and run it to inspect its captured results. Nothing runs automatically.</p>}
+    <details className="min-w-0 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Service run history</summary><div className="mt-3"><RiskPanel title="Run history" subtitle="Legacy process-local service list, not a durable personal journal" read={history} empty={!history.data?.length}><RiskTable name="Stress run history" headers={["Date", "Scenario", "Impact"]} rows={(history.data || []).map(row => [row.run_date,row.scenario_name,riskPercent(row.total_impact_pct)])} /></RiskPanel></div></details>
+  </section>;
 }

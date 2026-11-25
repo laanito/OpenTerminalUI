@@ -10,8 +10,9 @@ structured evidence/results and retry/audit boundaries, including paper trading
 without live execution authority. See `docs/wiki/Roadmap.md` Product generations.
 #318 is merged; Crypto's frontend is maintainer-accepted. Host testing reports
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
-without assuming a cause. Current slice: Dividends' four views, then risk/quant.
-See `docs/design/v3/DIVIDENDS_REVIEW.md`. Risk/quant remains next;
+without assuming a cause. #319/#320 are merged, including the pre-existing
+Portfolio Income finding. Current slice: Risk overview/factors/stress; see
+`docs/design/v3/RISK_REVIEW.md`. Correlation/Stat Lab/Pair Trading remain next;
 provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
@@ -2295,7 +2296,13 @@ ordered v1.7 milestone above.
             currency-unspecified totals and dated reference scope. See
             `docs/design/v3/DIVIDENDS_REVIEW.md`; host acceptance open. Nine
             ordinary menu destinations remain after this implementation.
-      - [ ] Risk/quant: Risk, Correlation, Stat Lab and Pair
+      - [x] Risk: explicit overview ticker/portfolio and factor-period scopes,
+            independent scoped reads/retries, readable chart/HTML values and
+            captured stress setup. Completed scenario results survive independent
+            simulation/history failures; no automatic run retry. Shared ticker
+            rail scope is explicit. See `docs/design/v3/RISK_REVIEW.md`; host
+            acceptance open. Eight ordinary menu destinations remain.
+      - [ ] Quant: Correlation, Stat Lab and Pair
             Trading; scope, readable setup/results and local numerical scrolling.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
             and configured/unavailable market scope without provider expansion.
@@ -2396,6 +2403,18 @@ ordered v1.7 milestone above.
       annual/monthly coverage, estimated event provenance and stale curated
       aristocrat membership/streaks (reference dated 2025). v3 labels limitations
       but does not change accounting, provider or aggregation semantics.
+      Risk follow-ups: overview equal-weighting and simplified beta benchmark,
+      positional return alignment, missing-history zero sentinels and classifier
+      country/count shares under the sectors field. Verify factor proxy/model
+      calibration, shared engine state, fixed 1Y exposure context vs selected
+      attribution period, heuristic confidence whiskers and arithmetic daily-
+      return sum vs compounded returns. Stress uses stored purchase cost as
+      current value, inferred sectors and a legacy INR shock; verify native/base
+      currencies, prices, shock application and Monte Carlo calibration. The
+      simulation is independent of the selected scenario. Audit process-local
+      global run-history durability/ownership and portfolio-id resolution; the
+      existing authenticated history route does not filter rows by user. Scope
+      and source review are not live model/financial/ownership certification.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
