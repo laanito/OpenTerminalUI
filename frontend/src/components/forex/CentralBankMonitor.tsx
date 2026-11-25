@@ -24,9 +24,9 @@ function toneForDays(daysUntil: number): string {
 
 export function CentralBankMonitor({ banks, loading = false }: Props) {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-xs">
-        <thead className="bg-terminal-bg/40 text-[10px] uppercase tracking-[0.16em] text-terminal-muted">
+    <div role="region" aria-label="Central bank reference table" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto">
+      <table className="min-w-[780px] w-full table-fixed text-xs [&_th]:whitespace-nowrap"><colgroup><col className="w-[30%]"/><col className="w-[12%]"/><col className="w-[23%]"/><col className="w-[23%]"/><col className="w-[12%]"/></colgroup>
+        <thead className="bg-terminal-bg/40 text-xs uppercase text-terminal-muted">
           <tr>
             <th className="px-3 py-2 text-left">Bank</th>
             <th className="px-3 py-2 text-right">Rate</th>
@@ -40,18 +40,18 @@ export function CentralBankMonitor({ banks, loading = false }: Props) {
             <tr key={`${bank.currency}:${bank.bank}`} className="border-t border-terminal-border/70">
               <td className="px-3 py-2">
                 <div className="font-medium text-terminal-text">{bank.bank}</div>
-                <div className="text-[11px] text-terminal-muted">{bank.currency}</div>
+                <div className="text-xs text-terminal-muted">{bank.currency}</div>
               </td>
               <td className="px-3 py-2 text-right ot-type-data text-terminal-text">{bank.policy_rate.toFixed(2)}%</td>
               <td className="px-3 py-2">
                 <div className="text-terminal-text">{bank.last_action}</div>
-                <div className="text-[11px] text-terminal-muted">
+                <div className="text-xs text-terminal-muted">
                   {bank.last_change_bps >= 0 ? "+" : ""}{bank.last_change_bps} bps on {bank.last_decision_date}
                 </div>
               </td>
               <td className="px-3 py-2">
                 <div className={toneForDays(bank.days_until_next_decision)}>{bank.next_decision_date}</div>
-                <div className="text-[11px] text-terminal-muted">{bank.days_until_next_decision}d remaining</div>
+                <div className="text-xs text-terminal-muted">{bank.days_until_next_decision < 0 ? `${Math.abs(bank.days_until_next_decision)}d past reference date` : `${bank.days_until_next_decision}d remaining`}</div>
               </td>
               <td className="px-3 py-2 text-right text-terminal-muted">{bank.decision_cycle}</td>
             </tr>

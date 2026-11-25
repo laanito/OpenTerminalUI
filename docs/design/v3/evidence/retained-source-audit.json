@@ -126,40 +126,16 @@
       "hidden_compatibility_reason": null,
       "source_hints": [
         {
-          "line": 443,
-          "text": "<div className=\"ml-auto flex items-center gap-2 text-[11px] text-terminal-muted\">"
+          "line": 472,
+          "text": "<table className=\"min-w-[850px] w-full text-xs [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap\">"
         },
         {
-          "line": 460,
-          "text": "<div className=\"mt-1 text-[11px] text-terminal-muted\">"
+          "line": 496,
+          "text": "<div className=\"min-w-[170px] max-w-xs whitespace-normal text-xs text-terminal-muted\">{item.name}</div>"
         },
         {
-          "line": 468,
-          "text": "<thead className=\"bg-terminal-bg/40 text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">"
-        },
-        {
-          "line": 491,
-          "text": "<div className=\"text-[11px] text-terminal-muted\">{item.name}</div>"
-        },
-        {
-          "line": 507,
+          "line": 512,
           "text": "className=\"min-w-[120px]\""
-        },
-        {
-          "line": 526,
-          "text": "className=\"rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text\""
-        },
-        {
-          "line": 536,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">Last</div>"
-        },
-        {
-          "line": 542,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">Daily Move</div>"
-        },
-        {
-          "line": 548,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">Volume</div>"
         }
       ]
     },
@@ -173,36 +149,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 312,
-          "text": "<div className=\"mt-1 text-[11px] text-terminal-muted\">Click a cell to open pair detail and rate context</div>"
-        },
-        {
-          "line": 333,
-          "text": "className=\"rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text\""
-        },
-        {
-          "line": 359,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">Spot</div>"
-        },
-        {
-          "line": 363,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">Window Change</div>"
-        },
-        {
-          "line": 369,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em] text-terminal-muted\">Range</div>"
-        },
-        {
-          "line": 386,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.16em]\">{row.currency}</div>"
-        },
-        {
-          "line": 388,
-          "text": "<div className=\"mt-1 text-[11px]\">"
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/hotlists",
@@ -1456,12 +1403,8 @@
       "hidden_compatibility_reason": null,
       "source_hints": [
         {
-          "line": 229,
-          "text": "<div className=\"flex items-center justify-between text-[10px] font-bold uppercase text-terminal-neg\">"
-        },
-        {
-          "line": 338,
-          "text": "<p className=\"mt-4 text-[10px] leading-relaxed text-terminal-muted italic\">"
+          "line": 256,
+          "text": "<table className=\"min-w-[680px] w-full text-left text-xs\">"
         }
       ]
     },
@@ -1511,60 +1454,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 108,
-          "text": "<div className=\"flex items-center gap-2 rounded border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-[11px] text-orange-300\">"
-        },
-        {
-          "line": 129,
-          "text": "<label key={impact} className=\"flex items-center gap-1 text-[10px] uppercase cursor-pointer\">"
-        },
-        {
-          "line": 146,
-          "text": "<div className=\"grid grid-cols-7 gap-px bg-terminal-border flex-grow overflow-auto border border-terminal-border\">"
-        },
-        {
-          "line": 148,
-          "text": "<div key={d} className=\"bg-terminal-bg-accent p-2 text-center text-[10px] font-bold text-terminal-muted\">{d}</div>"
-        },
-        {
-          "line": 177,
-          "text": "{dayEvents.length > 8 && <span className=\"text-[8px] text-terminal-muted\">+{dayEvents.length - 8}</span>}"
-        },
-        {
-          "line": 196,
-          "text": "<p className=\"text-[10px] text-terminal-muted\">{selectedEvent.country} | {selectedEvent.date} {selectedEvent.time}</p>"
-        },
-        {
-          "line": 201,
-          "text": "<div className=\"text-[10px] text-terminal-muted uppercase\">ACTUAL</div>"
-        },
-        {
-          "line": 205,
-          "text": "<div className=\"text-[10px] text-terminal-muted uppercase\">FORECAST</div>"
-        },
-        {
-          "line": 209,
-          "text": "<div className=\"text-[10px] text-terminal-muted uppercase\">PREVIOUS</div>"
-        },
-        {
-          "line": 213,
-          "text": "<div className=\"text-[10px] text-terminal-muted uppercase\">UNIT</div>"
-        },
-        {
-          "line": 218,
-          "text": "<div className=\"mt-4 p-2 rounded border border-terminal-border/50 bg-terminal-accent/5 italic text-[10px] text-terminal-muted\">"
-        },
-        {
-          "line": 247,
-          "text": "<div className=\"text-[10px] font-bold text-terminal-muted uppercase tracking-tighter\">{name.replace('_', ' ')}</div>"
-        },
-        {
-          "line": 272,
-          "text": "<div className=\"text-[8px] text-terminal-muted uppercase\">AS OF {data.date}</div>"
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/sector-rotation",

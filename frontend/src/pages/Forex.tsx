@@ -27,6 +27,8 @@ type PairCandle = {
 type PairResponse = {
   pair: string;
   current_rate: number;
+  as_of?: string;
+  source_symbol?: string;
   candles: PairCandle[];
 };
 
@@ -153,6 +155,8 @@ function normalizePairResponse(payload: unknown, pair: string, currencies: strin
     : [];
   return {
     pair: String(raw.pair || pair).toUpperCase(),
+    as_of: typeof raw.as_of === "string" ? raw.as_of : undefined,
+    source_symbol: typeof raw.source_symbol === "string" ? raw.source_symbol : undefined,
     current_rate: Number(raw.current_rate ?? raw.currentRate ?? candles[candles.length - 1]?.c ?? 0),
     candles: candles.length ? candles : buildFallbackPair(pair, currencies, matrix).candles,
   };
@@ -216,11 +220,13 @@ export function ForexPage() {
     currencies: FALLBACK_CURRENCIES,
     matrix: buildFallbackMatrix(FALLBACK_CURRENCIES),
   });
+  const [ratesAsOf, setRatesAsOf] = useState("");
   const [banks, setBanks] = useState<CentralBankEntry[]>(FALLBACK_BANKS);
   const [pairData, setPairData] = useState<PairResponse>(buildFallbackPair("EURUSD", FALLBACK_CURRENCIES, buildFallbackMatrix(FALLBACK_CURRENCIES)));
   const [ratesLoading, setRatesLoading] = useState(true);
   const [pairLoading, setPairLoading] = useState(false);
-  const [fallbackMode, setFallbackMode] = useState(false);
+  const [fallbackMode, setFallbackMode] = useState(true);
+  const [pairFallback, setPairFallback] = useState(true);
   const selectedPair = normalizePair(searchParams.get("pair"));
 
   useEffect(() => {
@@ -236,8 +242,9 @@ export function ForexPage() {
         ? normalizeCrossRates(ratesResult.value)
         : { currencies: FALLBACK_CURRENCIES, matrix: buildFallbackMatrix(FALLBACK_CURRENCIES) };
       setCrossRates(nextCrossRates);
+      setRatesAsOf(ratesResult.status === "fulfilled" && typeof (ratesResult.value as any)?.as_of === "string" ? (ratesResult.value as any).as_of : "");
       setBanks(banksResult.status === "fulfilled" ? normalizeBanks(banksResult.value) : FALLBACK_BANKS);
-      setFallbackMode(!(ratesResult.status === "fulfilled" && banksResult.status === "fulfilled"));
+      setFallbackMode(ratesResult.status !== "fulfilled" || !Array.isArray((ratesResult.value as any)?.matrix) || !(ratesResult.value as any)?.matrix?.length);
       setRatesLoading(false);
     })();
     return () => {
@@ -261,10 +268,11 @@ export function ForexPage() {
         const payload = await requestJson<unknown>(`/forex/pairs/${encodeURIComponent(selectedPair)}`);
         if (cancelled) return;
         setPairData(normalizePairResponse(payload, selectedPair, crossRates.currencies, crossRates.matrix));
+        setPairFallback(!Array.isArray((payload as any)?.candles) || !(payload as any)?.candles?.length);
       } catch {
         if (cancelled) return;
         setPairData(buildFallbackPair(selectedPair, crossRates.currencies, crossRates.matrix));
-        setFallbackMode(true);
+        setPairFallback(true);
       } finally {
         if (!cancelled) setPairLoading(false);
       }
@@ -277,7 +285,7 @@ export function ForexPage() {
   const chartRows = useMemo(
     () =>
       pairData.candles.map((row) => ({
-        time: new Date(row.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date(row.t * 1000).toLocaleDateString([], { month: "short", day: "numeric" }),
         close: row.c,
         high: row.h,
         low: row.l,
@@ -291,25 +299,26 @@ export function ForexPage() {
   const strengthRows = useMemo(() => currencyStrengthRows(crossRates.currencies, crossRates.matrix), [crossRates.currencies, crossRates.matrix]);
 
   return (
-    <div className="space-y-4 px-3 py-3">
+    <main aria-label="Forex" className="min-w-0 space-y-3 p-3 [overflow-wrap:anywhere]">
       <TerminalPanel
         title="Forex Terminal"
-        subtitle="Cross rates, pair detail, central banks, and major-currency relative strength"
+        subtitle="Cross rates and pair history; central-bank reference snapshots are separate"
         actions={
-          <div className="flex items-center gap-2">
-            <TerminalBadge variant={fallbackMode ? "warn" : "live"} dot>
-              {fallbackMode ? "Seeded fallback" : "Backend live"}
+          <div className="flex flex-wrap items-center gap-2">
+            <TerminalBadge variant={fallbackMode || pairFallback ? "warn" : "info"} dot>
+              {ratesLoading || pairLoading ? "Loading data" : fallbackMode || pairFallback ? "Includes sample data" : "Backend response"}
             </TerminalBadge>
             <TerminalBadge variant="accent">FX</TerminalBadge>
           </div>
         }
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="rounded border border-terminal-border bg-terminal-panel/50">
-            <div className="flex items-center justify-between border-b border-terminal-border px-3 py-2">
+        <p role="status" className="mb-3 text-xs text-terminal-muted">Cross rates: {ratesLoading ? "loading" : fallbackMode ? "sample values; provider data unavailable" : "backend snapshot"}. Pair history: {pairLoading ? "loading" : pairFallback ? "synthetic sample; not market history" : "backend history"}. Central banks: static reference snapshots, not a live policy calendar.</p>
+        <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="min-w-0 rounded border border-terminal-border bg-terminal-panel/50">
+            <div className="flex min-w-0 flex-wrap gap-2 items-center justify-between border-b border-terminal-border px-3 py-2">
               <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-terminal-muted">Cross Rates</div>
-                <div className="mt-1 text-[11px] text-terminal-muted">Click a cell to open pair detail and rate context</div>
+                <div className="text-xs uppercase text-terminal-muted">Cross Rates</div>
+                <div className="mt-1 text-xs text-terminal-muted">Quote units per 1 base unit. Select a cell; scroll the matrix horizontally when needed. {ratesAsOf ? `As of ${ratesAsOf}.` : "Timestamp unavailable."}</div>
               </div>
               {ratesLoading ? <TerminalBadge variant="info" dot>Refreshing</TerminalBadge> : null}
             </div>
@@ -318,19 +327,19 @@ export function ForexPage() {
                 currencies={crossRates.currencies}
                 matrix={crossRates.matrix}
                 selectedPair={selectedPair}
-                onSelectPair={(pair) => setSearchParams(new URLSearchParams({ pair }), { replace: true })}
+                onSelectPair={(pair) => { const next = new URLSearchParams(searchParams); next.set("pair", pair); setSearchParams(next, { replace: true }); }}
               />
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid min-w-0 grid-cols-1 items-start gap-4">
             <TerminalPanel
               title={`${selectedPair.slice(0, 3)}/${selectedPair.slice(3, 6)} Detail`}
-              subtitle="Spot trend and intraday range"
+              subtitle={pairLoading ? "Loading selected pair; previous values hidden" : pairFallback ? "Synthetic sample history — not live prices" : `Selected pair history · ${pairData.source_symbol || "Source symbol unavailable"} · ${pairData.as_of || "Timestamp unavailable"}`}
               actions={
                 <Link
                   to={`/equity/chart-workstation?ticker=${encodeURIComponent(selectedPair)}&symbol=${encodeURIComponent(selectedPair)}`}
-                  className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text"
+                  className="rounded border border-terminal-border px-2 py-1 text-xs uppercase text-terminal-muted hover:text-terminal-text"
                 >
                   Open Chart
                 </Link>
@@ -338,7 +347,7 @@ export function ForexPage() {
               bodyClassName="h-[280px]"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartRows} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
+                <AreaChart data={pairLoading ? [] : chartRows} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="fx-pair-fill" x1="0" x2="0" y1="0" y2="1">
                       <stop offset="0%" stopColor="var(--ot-color-accent-primary)" stopOpacity={0.28} />
@@ -346,29 +355,29 @@ export function ForexPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
-                  <XAxis dataKey="time" stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} minTickGap={24} />
-                  <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} domain={["dataMin", "dataMax"]} />
-                  <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }} />
-                  <Area type="monotone" dataKey="close" stroke="var(--ot-color-accent-primary)" fill="url(#fx-pair-fill)" strokeWidth={2} />
+                  <XAxis dataKey="time" stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} minTickGap={24} />
+                  <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} domain={["dataMin", "dataMax"]} />
+                  <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "12px" }} />
+                  <Area isAnimationActive={false} type="monotone" dataKey="close" stroke="var(--ot-color-accent-primary)" fill="url(#fx-pair-fill)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </TerminalPanel>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-3">
               <div className="rounded border border-terminal-border bg-terminal-panel/50 px-3 py-2">
-                <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Spot</div>
-                <div className="mt-1 ot-type-data text-lg text-terminal-text">{pairData.current_rate.toFixed(4)}</div>
+                <div className="text-xs uppercase text-terminal-muted">Spot</div>
+                <div className="mt-1 ot-type-data text-lg text-terminal-text">{pairLoading ? "Loading…" : pairData.current_rate.toFixed(4)}</div>
               </div>
               <div className="rounded border border-terminal-border bg-terminal-panel/50 px-3 py-2">
-                <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Window Change</div>
+                <div className="text-xs uppercase text-terminal-muted">Window Change</div>
                 <div className={`mt-1 ot-type-data text-lg ${pairChangePct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
-                  {pairChangePct >= 0 ? "+" : ""}{pairChangePct.toFixed(2)}%
+                  {pairLoading ? "Loading…" : `${pairChangePct >= 0 ? "+" : ""}${pairChangePct.toFixed(2)}%`}
                 </div>
               </div>
               <div className="rounded border border-terminal-border bg-terminal-panel/50 px-3 py-2">
-                <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Range</div>
+                <div className="text-xs uppercase text-terminal-muted">Range</div>
                 <div className="mt-1 ot-type-data text-lg text-terminal-text">
-                  {pairData.candles.length
+                  {!pairLoading && pairData.candles.length
                     ? `${Math.min(...pairData.candles.map((row) => row.l)).toFixed(4)} - ${Math.max(...pairData.candles.map((row) => row.h)).toFixed(4)}`
                     : "--"}
                 </div>
@@ -378,14 +387,14 @@ export function ForexPage() {
         </div>
       </TerminalPanel>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <TerminalPanel title="Majors Heatmap" subtitle="Relative strength vs USD basket proxy">
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <TerminalPanel title="Currency levels" subtitle="Nominal USD levels and an existing cross-sectional score; not currency returns">
+          <div className="grid min-w-0 grid-cols-1 items-start gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {strengthRows.map((row) => (
               <div key={row.currency} className={`rounded border border-terminal-border px-3 py-3 ${strengthTone(row.score)}`}>
-                <div className="text-[10px] uppercase tracking-[0.16em]">{row.currency}</div>
+                <div className="text-xs uppercase">{row.currency}</div>
                 <div className="mt-1 ot-type-data text-lg">{row.usdValue.toFixed(4)}</div>
-                <div className="mt-1 text-[11px]">
+                <div className="mt-1 text-xs">
                   Score {row.score >= 0 ? "+" : ""}{row.score.toFixed(2)}
                 </div>
               </div>
@@ -395,7 +404,7 @@ export function ForexPage() {
 
         <TerminalPanel
           title="Central Bank Monitor"
-          subtitle="Policy rates, recent decisions, and upcoming meetings"
+          subtitle="Static reference snapshot — dates and rates may be outdated; not live policy data"
           actions={pairLoading ? <TerminalBadge variant="info" dot>Pair updating</TerminalBadge> : null}
         >
           <CentralBankMonitor banks={banks} loading={ratesLoading} />
@@ -404,9 +413,9 @@ export function ForexPage() {
 
       {fallbackMode ? (
         <div className="rounded border border-terminal-warn/40 bg-terminal-warn/10 px-3 py-2 text-xs text-terminal-warn">
-          Forex backend routes are implemented in the workspace, but global router registration is still outside this packet scope, so the page can fall back to seeded data.
+          Sample cross rates are shown because provider data could not be read. They are not current market quotes.
         </div>
       ) : null}
-    </div>
+    </main>
   );
 }

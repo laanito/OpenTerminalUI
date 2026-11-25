@@ -297,10 +297,11 @@ function formatSignedPercent(value: number): string {
 export function CommoditiesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState<CommodityCategory[]>(FALLBACK_CATEGORIES);
+  const [metadata, setMetadata] = useState({ quotes: "", curve: "", seasonal: "" });
   const [quotesLoading, setQuotesLoading] = useState(true);
-  const [quotesFallback, setQuotesFallback] = useState(false);
+  const [quotesFallback, setQuotesFallback] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [detailsFallback, setDetailsFallback] = useState(false);
+  const [detailsFallback, setDetailsFallback] = useState(true);
   const [curvePoints, setCurvePoints] = useState<FuturesCurvePoint[]>(buildFallbackCurve("CL=F"));
   const [seasonalData, setSeasonalData] = useState<{ years: number; monthly: SeasonalPoint[] }>({
     years: 7,
@@ -319,7 +320,8 @@ export function CommoditiesPage() {
         if (cancelled) return;
         const normalized = normalizeCategories(payload);
         setCategories(normalized);
-        setQuotesFallback(false);
+        setMetadata(previous => ({ ...previous, quotes: String((payload as any)?.as_of || "Timestamp unavailable") }));
+        setQuotesFallback(normalized === FALLBACK_CATEGORIES);
       } catch {
         if (cancelled) return;
         setCategories(FALLBACK_CATEGORIES);
@@ -391,15 +393,17 @@ export function CommoditiesPage() {
         requestJson<unknown>(`/commodities/seasonal/${encodeURIComponent(selectedCommodity.symbol)}`),
       ]);
       if (cancelled) return;
-      const curveOk = curveResult.status === "fulfilled";
-      const seasonalOk = seasonalResult.status === "fulfilled";
-      setCurvePoints(curveOk ? normalizeCurve(curveResult.value, selectedCommodity.symbol) : buildFallbackCurve(selectedCommodity.symbol));
+      const curveOk = curveResult.status === "fulfilled" && ["points", "items", "contracts"].some(key => Array.isArray((curveResult.value as any)?.[key]) && (curveResult.value as any)[key].length);
+      const seasonalOk = seasonalResult.status === "fulfilled" && Array.isArray((seasonalResult.value as any)?.monthly) && (seasonalResult.value as any).monthly.length > 0;
+      setCurvePoints(curveOk ? normalizeCurve(curveResult.status === "fulfilled" ? curveResult.value : null, selectedCommodity.symbol) : buildFallbackCurve(selectedCommodity.symbol));
       setSeasonalData(
         seasonalOk
-          ? normalizeSeasonal(seasonalResult.value, selectedCommodity.symbol)
+          ? normalizeSeasonal(seasonalResult.status === "fulfilled" ? seasonalResult.value : null, selectedCommodity.symbol)
           : { years: 7, monthly: buildFallbackSeasonal(selectedCommodity.symbol) },
       );
       setDetailsFallback(!(curveOk && seasonalOk));
+      const describe = (value: any) => `${value?.source || "Source unavailable"} · ${value?.as_of || "Timestamp unavailable"}${value?.source === "projected" ? " · Modelled curve, not observed futures quotes" : ""}`;
+      setMetadata(previous => ({ ...previous, curve: curveOk && curveResult.status === "fulfilled" ? describe(curveResult.value) : "Seeded sample", seasonal: seasonalOk && seasonalResult.status === "fulfilled" ? describe(seasonalResult.value) : "Seeded sample" }));
       setDetailsLoading(false);
     })();
     return () => {
@@ -408,14 +412,14 @@ export function CommoditiesPage() {
   }, [selectedCommodity?.symbol]);
 
   return (
-    <div className="space-y-4 px-3 py-3">
+    <main aria-label="Commodities" className="min-w-0 space-y-3 p-3 [overflow-wrap:anywhere]">
       <TerminalPanel
         title="Commodities Terminal"
         subtitle="Energy, metals, and agriculture futures with curve and seasonality context"
         actions={
-          <div className="flex items-center gap-2">
-            <TerminalBadge variant={quotesFallback || detailsFallback ? "warn" : "live"} dot>
-              {quotesFallback || detailsFallback ? "Seeded fallback" : "Backend live"}
+          <div className="flex flex-wrap items-center gap-2">
+            <TerminalBadge variant={quotesFallback || detailsFallback ? "warn" : "info"} dot>
+              {quotesFallback || detailsFallback ? "Includes sample data" : "Backend response"}
             </TerminalBadge>
             <TerminalBadge variant="accent">CMDTY</TerminalBadge>
           </div>
@@ -429,18 +433,19 @@ export function CommoditiesPage() {
                 <button
                   key={categoryId}
                   type="button"
-                  className={`rounded border px-3 py-1.5 text-xs uppercase tracking-[0.16em] ${
+                  className={`rounded border px-3 py-1.5 text-xs uppercase ${
                     isActive
                       ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent"
                       : "border-terminal-border text-terminal-muted hover:text-terminal-text"
                   }`}
-                  onClick={() => setActiveTab(categoryId)}
+                  aria-pressed={isActive}
+                  onClick={() => { setActiveTab(categoryId); const first = categories.find(row => row.id === categoryId)?.items[0]; if (first) setSelectedSymbol(first.symbol); }}
                 >
                   {CATEGORY_LABELS[categoryId]}
                 </button>
               );
             })}
-            <div className="ml-auto flex items-center gap-2 text-[11px] text-terminal-muted">
+            <div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-terminal-muted">
               <span>Command aliases:</span>
               <span className="rounded border border-terminal-border px-2 py-0.5">COMMODITY</span>
               <span className="rounded border border-terminal-border px-2 py-0.5">GOLD</span>
@@ -449,23 +454,23 @@ export function CommoditiesPage() {
           </div>
           {(quotesFallback || detailsFallback) ? (
             <div className="rounded border border-terminal-warn/40 bg-terminal-warn/10 px-3 py-2 text-xs text-terminal-warn">
-              Commodities backend routes can render seeded fixtures until router registration is wired into the main backend app.
+              Some quotes or detail panels contain seeded sample data because the requested data could not be read. Samples are not live quotes or historical evidence.
             </div>
           ) : null}
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-            <div className="rounded border border-terminal-border bg-terminal-panel/50">
-              <div className="flex items-center justify-between border-b border-terminal-border px-3 py-2">
+          <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+            <div className="min-w-0 rounded border border-terminal-border bg-terminal-panel/50">
+              <div className="flex min-w-0 flex-wrap gap-2 items-center justify-between border-b border-terminal-border px-3 py-2">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.16em] text-terminal-muted">{activeCategory.label}</div>
-                  <div className="mt-1 text-[11px] text-terminal-muted">
-                    Spot watchlist with mini trend, daily move, and liquidity
+                  <div className="text-xs uppercase text-terminal-muted">{activeCategory.label}</div>
+                  <div className="mt-1 text-xs text-terminal-muted">
+                    Contract quotes and mini trends. {quotesFallback ? "Seeded sample quotes." : metadata.quotes} Prices retain provider quote units.
                   </div>
                 </div>
                 {quotesLoading ? <TerminalBadge variant="info" dot>Refreshing</TerminalBadge> : null}
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-xs">
-                  <thead className="bg-terminal-bg/40 text-[10px] uppercase tracking-[0.16em] text-terminal-muted">
+              <div role="region" aria-label="Commodity quotes table" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto">
+                <table className="min-w-[850px] w-full text-xs [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
+                  <thead className="bg-terminal-bg/40 text-xs uppercase text-terminal-muted">
                     <tr>
                       <th className="px-3 py-2 text-left">Contract</th>
                       <th className="px-3 py-2 text-right">Last</th>
@@ -487,8 +492,8 @@ export function CommoditiesPage() {
                           onClick={() => setSelectedSymbol(item.symbol)}
                         >
                           <td className="px-3 py-2">
-                            <div className="font-medium text-terminal-text">{item.symbol}</div>
-                            <div className="text-[11px] text-terminal-muted">{item.name}</div>
+                            <button type="button" aria-pressed={selected} onClick={() => setSelectedSymbol(item.symbol)} className="text-left font-medium text-terminal-accent underline">{item.symbol}</button>
+                            <div className="min-w-[170px] max-w-xs whitespace-normal text-xs text-terminal-muted">{item.name}</div>
                           </td>
                           <td className="px-3 py-2 text-right ot-type-data text-terminal-text">{item.price.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
                           <td className={`px-3 py-2 text-right ot-type-data ${item.change >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
@@ -515,7 +520,7 @@ export function CommoditiesPage() {
               </div>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-4">
               <TerminalPanel
                 title={selectedCommodity ? `${selectedCommodity.name} Snapshot` : "Contract Snapshot"}
                 subtitle={selectedCommodity?.symbol || "Select a commodity"}
@@ -523,7 +528,7 @@ export function CommoditiesPage() {
                   selectedCommodity ? (
                     <Link
                       to={`/equity/security/${encodeURIComponent(selectedCommodity.symbol)}?tab=overview`}
-                      className="rounded border border-terminal-border px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-terminal-muted hover:text-terminal-text"
+                      className="rounded border border-terminal-border px-2 py-1 text-xs uppercase text-terminal-muted hover:text-terminal-text"
                     >
                       Open Security
                     </Link>
@@ -531,58 +536,58 @@ export function CommoditiesPage() {
                 }
               >
                 {selectedCommodity ? (
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-3">
                     <div className="rounded border border-terminal-border bg-terminal-bg/40 px-3 py-2">
-                      <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Last</div>
+                      <div className="text-xs uppercase text-terminal-muted">Last</div>
                       <div className="mt-1 ot-type-data text-lg text-terminal-text">
                         {selectedCommodity.price.toLocaleString("en-US", { maximumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div className="rounded border border-terminal-border bg-terminal-bg/40 px-3 py-2">
-                      <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Daily Move</div>
+                      <div className="text-xs uppercase text-terminal-muted">Daily Move</div>
                       <div className={`mt-1 ot-type-data text-lg ${selectedCommodity.change_pct >= 0 ? "text-terminal-pos" : "text-terminal-neg"}`}>
                         {formatSignedPercent(selectedCommodity.change_pct)}
                       </div>
                     </div>
                     <div className="rounded border border-terminal-border bg-terminal-bg/40 px-3 py-2">
-                      <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Volume</div>
+                      <div className="text-xs uppercase text-terminal-muted">Volume</div>
                       <div className="mt-1 ot-type-data text-lg text-terminal-text">{formatCompactNumber(selectedCommodity.volume)}</div>
                     </div>
                   </div>
                 ) : null}
-              </TerminalPanel>
-
-              <TerminalPanel
-                title="Term Structure"
-                subtitle={selectedCommodity ? `${selectedCommodity.symbol} futures curve` : "Select a contract"}
-                actions={detailsLoading ? <TerminalBadge variant="info" dot>Updating</TerminalBadge> : null}
-                bodyClassName="h-[260px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={curvePoints} margin={{ top: 12, right: 18, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
-                    <XAxis dataKey="contract" stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} />
-                    <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} domain={["dataMin - 2", "dataMax + 2"]} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }}
-                      formatter={(value) => formatChartTooltipValue(value, "Price")}
-                    />
-                    <Line type="monotone" dataKey="price" stroke="var(--ot-color-accent-primary)" strokeWidth={2.2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                  </LineChart>
-                </ResponsiveContainer>
               </TerminalPanel>
             </div>
           </div>
         </div>
       </TerminalPanel>
 
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 xl:grid-cols-2">
+        <TerminalPanel
+          title="Term Structure"
+          subtitle={detailsLoading ? "Loading selected contract; previous curve hidden" : `${selectedCommodity.symbol} · ${metadata.curve}`}
+          actions={detailsLoading ? <TerminalBadge variant="info" dot>Updating</TerminalBadge> : null}
+          bodyClassName="h-[260px]"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={detailsLoading ? [] : curvePoints} margin={{ top: 12, right: 18, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
+              <XAxis dataKey="contract" stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} />
+              <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} domain={["dataMin - 2", "dataMax + 2"]} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "12px" }}
+                formatter={(value) => formatChartTooltipValue(value, "Price")}
+              />
+              <Line isAnimationActive={false} type="monotone" dataKey="price" stroke="var(--ot-color-accent-primary)" strokeWidth={2.2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </TerminalPanel>
       <TerminalPanel
         title="Seasonality"
-        subtitle={selectedCommodity ? `${selectedCommodity.symbol} monthly average profile over ${seasonalData.years} years` : "Monthly average returns"}
+        subtitle={detailsLoading ? "Loading selected contract; previous profile hidden" : `${selectedCommodity.symbol} monthly average profile over ${seasonalData.years} years · ${metadata.seasonal}`}
         bodyClassName="h-[320px]"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={seasonalData.monthly} margin={{ top: 12, right: 18, left: 0, bottom: 0 }}>
+          <AreaChart data={detailsLoading ? [] : seasonalData.monthly} margin={{ top: 12, right: 18, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="commodities-seasonal-fill" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="var(--ot-color-accent-primary)" stopOpacity={0.32} />
@@ -590,13 +595,13 @@ export function CommoditiesPage() {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.14)" />
-            <XAxis dataKey="month" stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} />
-            <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={10} />
+            <XAxis dataKey="month" stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} />
+            <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} fontSize={12} />
             <Tooltip
-              contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "11px" }}
+              contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", fontSize: "12px" }}
               formatter={(value) => formatPercentTooltipValue(value, "Avg return")}
             />
-            <Area
+            <Area isAnimationActive={false}
               type="monotone"
               dataKey="average_return_pct"
               stroke="var(--ot-color-accent-primary)"
@@ -606,6 +611,7 @@ export function CommoditiesPage() {
           </AreaChart>
         </ResponsiveContainer>
       </TerminalPanel>
-    </div>
+      </div>
+    </main>
   );
 }

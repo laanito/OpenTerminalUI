@@ -27,6 +27,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable macro/FX workflows** — contained FX/commodity/yield tables, keyboard
+  pair and contract selection, full economic-event names and focused details,
+  explicit sample/static/projected scope and labelled retained yield comparisons.
+  Current and spread read failures remain distinct; absent observations are not zero.
 - **Readable Paper and Position Sizer workflows** — one Paper account scope,
   position/activity review before secondary tools, labelled retained order/create
   dialogs and independent read failures. Confirmed writes remain separate from

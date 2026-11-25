@@ -107,10 +107,10 @@ describe("ForexPage", () => {
 
     expect(screen.getByText("Forex Terminal")).toBeInTheDocument();
     expect(await screen.findByText("Federal Reserve")).toBeInTheDocument();
-    expect(screen.getByText("Majors Heatmap")).toBeInTheDocument();
+    expect(screen.getByText("Currency levels")).toBeInTheDocument();
     expect(screen.getByText("EUR/USD Detail")).toBeInTheDocument();
 
-    fireEvent.click(await screen.findByRole("button", { name: "1.2736" }));
+    fireEvent.click(await screen.findByRole("button", { name: "GBP/USD: 1.2736" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/forex/cross-rates"));

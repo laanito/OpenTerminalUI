@@ -139,16 +139,49 @@ The adopted release targets and later north-star themes are:
 | **v1 — Coherent, honest fork** | One product identity, intentional surface area, accurate docs/contracts, and no accidental inherited defaults |
 | **v2 — Cross-market intelligence** | Markets and asset classes explain one another instead of remaining isolated screens |
 | **v3 — UX and frontend overhaul** | Existing capabilities form coherent, discoverable workflows, beginning with Portfolio |
+| **v4 — LLM interface through OTUI MCP** | A curated, authenticated tool interface lets external agents use intentional terminal capabilities without arbitrary endpoint access |
+| **v5 — Functionality audit and repair** | Verify retained workflows end to end, repair broken or unwired capabilities, and make provider/configuration limits explicit |
+| **v6 onward — New capabilities** | Resume feature expansion toward the north star after the frontend, agent interface and existing functionality are coherent |
 | **Later — Multi-dimensional validation** | Fundamentals, technicals, sentiment, regime, portfolio context, and private evidence converge |
 | **Later — Decision lifecycle** | Evidence → thesis → decision → position → outcome → review becomes one traceable loop |
 | **Later — Multiple horizons and instruments** | Investing, swing, intraday/scalping, spot, and leveraged workflows have explicit risk semantics |
-| **Later — Agent-native terminal** | External models can safely read, investigate, ingest, and propose through stable scoped interfaces |
 | **Later — Controlled execution** | Broker sync matures through paper and approval-gated orders into auditable, bounded automation |
 
-Sequencing agreed 2026-11-14: **finish v2 first, then make the UX overhaul v3
-before expanding the feature set further**. This replaces the former v3 label
-for multi-dimensional validation. Later themes retain their goals without
-assigning replacement release numbers yet; they are not v3 release gates.
+Sequencing updated by the maintainer on 2026-11-25: **v3 frontend overhaul →
+v4 LLM interface → v5 functionality audit/repair → new functionality from v6**.
+The later themes above retain their goals, without assigning each to a particular
+major release. They are not v3 release gates. This supersedes earlier unassigned
+version references for the functionality audit and agent-native interface.
+
+### v4 direction: an intentional OTUI MCP
+
+Build an OTUI MCP as the preferred external-agent interface, including agents such
+as Hermes. Select useful workflows and provide stable tool names, bounded inputs,
+structured results, evidence dates/provenance and actionable failure states.
+Do not mechanically expose the route inventory or keep granting ad hoc API-key
+access to interesting endpoints. Existing documented integrations remain supported;
+this direction does not revoke their contracts or remove the application's APIs.
+
+Authentication, owner isolation, explicit read/write scope, auditability and safe
+retry/confirmation behavior belong in the interface design. Distinguish research
+reads, ingestion and mutations; exposing paper trading must not confer authority
+for live broker execution. Exact tool inventory, transport, permissions and the
+paper-trading boundary need discovery before implementation. No MCP implementation
+or expansion of endpoint permissions is part of v3.
+
+### v5 direction: make the retained application work
+
+Inventory supported workflows and verify frontend → API → service/provider →
+persistence → displayed outcome, including configured real-provider checks where
+appropriate. Start from the recorded Workstation and other legacy gaps; distinguish
+product bugs, missing wiring, unsupported contracts and unavailable configuration.
+Repair retained capabilities and reconcile their documentation/availability rather
+than treating layout fixtures as functional sign-off. Capture safe repeatable
+acceptance checks. This is the destination for the broader functionality audit
+previously deferred without a version, not a mandate for new features in v3.
+
+New analytical, decision-lifecycle and execution capabilities resume from v6
+onward after these foundations; their exact release scopes remain to be agreed.
 
 These are dominant promises, not isolated feature buckets. The journal is an
 early decision-lifecycle foundation, derivatives contribute to broader instrument
@@ -957,8 +990,7 @@ It reuses the wide indicator manager for each pane; existing replay, comparison,
 persistence and chart tools remain available. See the [Workstation review](../design/v3/WORKSTATION_REVIEW.md).
 The maintainer accepted #302's layout but reports functional gaps in Workstation
 and other unspecified legacy areas. This is not live functional sign-off. A
-broader functionality audit/repair track is deferred to a later, unassigned
-version (see Backlog / unscheduled); it does not expand this frontend milestone.
+broader functionality audit/repair track is assigned to v5 (see Backlog / unscheduled); it does not expand this frontend milestone.
 The [Screener review](../design/v3/SCREENER_REVIEW.md) gives results full width,
 discloses presets and the independent scan, labels query/formula controls and
 keeps company inspection accessible at every width; #305 is maintainer-accepted.
@@ -976,8 +1008,9 @@ readable panel/template controls and visual reflow that preserves saved geometry
 After maintainer-accepted #312, the [remaining-page audit](../design/v3/RETAINED_PAGE_AUDIT.md)
 identifies concrete layout gaps in other retained tools: twenty ordinary menu
 destinations awaited review at that baseline. The [Paper/Sizer review](../design/v3/PAPER_SIZING_REVIEW.md)
-implements two, with host acceptance open; eighteen remain, starting with macro/FX,
-then market, risk/quant, MTA/DOM, Backtesting and account/auth work. Secondary/hidden
+implements two (#314 merged). The [macro/FX pass](../design/v3/MACRO_FX_REVIEW.md)
+implements four more, with host acceptance open; fourteen remain, starting with market overview,
+then risk/quant, MTA/DOM, Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
 No new feature backlog is added to that usability
@@ -1929,7 +1962,7 @@ Real but unscheduled; pull into a milestone when it fits.
   Reproduce failures with configured integrations and distinguish provider/access
   limits from defects, stubs and unwired controls. Prioritize subsequent fixes
   from that evidence. Layout acceptance and fixture browser checks do not establish
-  live functional correctness. Target version remains unassigned; this is outside
+  live functional correctness. Assigned to v5; this is outside
   the current v3 frontend-overhaul gate.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).

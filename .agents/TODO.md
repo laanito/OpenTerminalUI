@@ -1,5 +1,15 @@
 # Current project state and backlog
 
+Maintainer sequencing update (2026-11-25): **v3 frontend overhaul; v4 LLM
+interface through a curated OTUI MCP; v5 retained-functionality audit and repair;
+new capabilities from v6 onward.** Prefer intentional agent tools over ad hoc
+API exposure. Preserve existing integration contracts; no MCP implementation,
+API-key permission expansion or broad functionality audit in v3. v4 discovery
+must define tool inventory, authentication/ownership, read/write permissions,
+structured evidence/results and retry/audit boundaries, including paper trading
+without live execution authority. See `docs/wiki/Roadmap.md` Product generations.
+#314 is merged. Continue the retained-page queue with macro/FX.
+
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
 layout as the reference. Keep the primary task visible, related context together
@@ -12,7 +22,7 @@ Maintainer feedback after #302: **merged; Workstation layout accepted only**.
 Functional gaps remain in Workstation and other unspecified legacy areas, possibly
 previously obscured by the broken frontend. Do not infer live functional sign-off
 from the layout acceptance or deterministic browser fixtures. A broader feature
-functionality audit and repair work is deferred to a later, unassigned version;
+functionality audit and repair work is assigned to v5;
 start with Workstation, inventory the other affected workflows before scoping
 repairs, and distinguish provider/configuration gaps from defects or unwired UI.
 This does not expand the v3 frontend-overhaul gate. Screener remains next.
@@ -2255,8 +2265,13 @@ ordered v1.7 milestone above.
             widget, editable-input/held-key protection and explicit missing/estimated
             quote labels. See `docs/design/v3/PAPER_SIZING_REVIEW.md`; host acceptance
             remains open. Eighteen ordinary menu destinations still need review.
-      - [ ] Macro/FX: Forex, Commodities, Economics and Yield Curve; contain
+      - [x] Macro/FX: Forex, Commodities, Economics and Yield Curve; contain
             matrices/charts, show full names and existing provider/fallback scope.
+            Full-name event agenda and focused details, named local table scrollers,
+            keyboard selection, current/partial failure states and labelled retained
+            yield comparisons. Existing calculations/provider coverage retained;
+            see `docs/design/v3/MACRO_FX_REVIEW.md`. Host acceptance open; fourteen
+            ordinary menu destinations remain. Broad functional certification is v5.
       - [ ] Market overview: Heatmap, Rotation, Crypto and ETF Analytics;
             responsive plots/tiles, readable filters/legends and existing context.
       - [ ] Income/risk/quant: Dividends, Risk, Correlation, Stat Lab and Pair
@@ -2277,7 +2292,16 @@ ordered v1.7 milestone above.
             review after retained-page work; keep PostgreSQL/SQLite
             ownership, migration, currency and history safety. No production DB
             operations during development or implicit expansion into later scope.
-- [ ] **Audit and repair legacy feature functionality (later version, unassigned).**
+- [ ] **v4 — External LLM interface through OTUI MCP.**
+      Discover and prioritize a curated workflow/tool inventory for agents such
+      as Hermes; avoid arbitrary endpoint passthrough and ad hoc permission grants.
+      Define authentication, ownership and read/write scopes, bounded inputs,
+      structured results with evidence dates/provenance, actionable failures,
+      retry/idempotency/confirmation and audit behavior. Decide paper-trading tool
+      boundaries explicitly; no live broker authority follows from research or
+      paper access. Preserve existing integrations. Select transport/SDK and
+      implementation slices during v4 discovery, outside the v3 frontend gate.
+- [ ] **v5 — Audit and repair retained feature functionality.**
       After #302, the maintainer accepted Workstation's layout but reported
       functional gaps there and in other unspecified areas, possibly previously
       masked by the frontend. Start with Workstation, inventory affected retained
@@ -2293,6 +2317,15 @@ ordered v1.7 milestone above.
       recall/return and linked context across windows. The layout checks establish
       typed popout URLs/readability, not the full live integration contract.
       This is deferred work, not an expansion of the v3 frontend-overhaul gate.
+      Include macro/FX's static central-bank reference freshness, nominal currency
+      score semantics, commodity normalization/projected contract fidelity, macro
+      units and calendar coverage/timezones. Their v3 source/sample labels and
+      deterministic layout checks do not certify live provider correctness.
+      Verify authenticated Forex/Commodities retrieval: their existing page-local
+      requestJson helpers use raw fetch without the shared API client's bearer
+      handling; AuthMiddleware requires bearer auth for these paths. This can
+      turn an authentication gap into a labelled sample fallback. Reproduce with
+      configured auth before scoping repair; v3 fixtures do not validate it.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
