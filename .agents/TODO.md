@@ -2385,6 +2385,12 @@ ordered v1.7 milestone above.
       request limits and transports rather than certifying providers/calculations.
       Dividends: audit native-currency metadata and mixed-currency income before
       presenting a base-currency projection; these responses supply no currency.
+      Maintainer host feedback after the Dividends layout pass reports Portfolio
+      Income is not working well: an unexpectedly small, currency-unspecified
+      annual projection. Reported as pre-existing, unrelated to the layout PR;
+      not independently reproduced or diagnosed. Include an end-to-end comparison
+      against actual owned holdings, quantities, dividend/yield units and source
+      coverage before choosing a repair. Keep this on v5's functionality track.
       Verify resolved holdings scope/duplicate tickers, missing calendar amounts
       coerced to zero, ex-date vs payment-date assumptions, scheduled vs yield-only
       annual/monthly coverage, estimated event provenance and stale curated

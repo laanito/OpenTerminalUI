@@ -27,6 +27,12 @@ Dividends host acceptance and broader v3 acceptance are open. No release prepara
 
 ## Read states and data limits
 
+Subsequent host feedback reports Portfolio Income is not working well, with an
+unexpectedly small, currency-unspecified annual projection. The maintainer states
+this predates the layout PR. This is recorded for the v5 functionality audit;
+the cause is not independently verified and the layout review does not establish
+income-calculation correctness.
+
 View/symbol changes cancel old reads and ignore late completions. A new view or
 failed refresh shows no previous curve/table. Loading, failure, empty results,
 empty monthly breakdown and real zero have separate outcomes. Refresh view retries
