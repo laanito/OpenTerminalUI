@@ -14,7 +14,11 @@ first batch after #313 and brought dedicated work to 22 render entries. The
 covers 26 render entries, including 19 of the 32
 tool destinations and three shell-menu extras. #315 is merged and its frontend
 is maintainer-accepted; reported sample-data/F&O concerns are recorded for v5.
-Fourteen ordinary menu destinations remain. Market overview is next. The counts
+The [market-overview review](MARKET_OVERVIEW_REVIEW.md) adds Heatmap, Rotation and
+ETF Analytics: 29 render entries now have dedicated work, including 22 of the 32
+tool destinations and three shell-menu extras. Host acceptance for this slice is
+open. Eleven ordinary menu destinations remain. Crypto follows separately because
+its eight modules/shared panels merit their own review. The counts
 and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.
@@ -103,14 +107,15 @@ zoom, accessibility or live-provider certification.
 
 These are coherent review areas, not a promise of one PR per row. Split an area
 when the existing components, fixtures or review size warrant it. **Paper and Position Sizer are implemented in the linked review; continue with
-the market-overview batch after the implemented [macro/FX pass](MACRO_FX_REVIEW.md).** Their original audit confirms ambiguous entry controls and unreadable
+Crypto after the implemented [macro/FX pass](MACRO_FX_REVIEW.md) and
+[Heatmap/Rotation/ETF pass](MARKET_OVERVIEW_REVIEW.md).** Their original audit confirms ambiguous entry controls and unreadable
 primary labels.
 
 | Order | Retained area/routes | Acceptance focus |
 |---|---|---|
 | 1 · implemented | Paper `/equity/paper`; Position Sizer `/equity/position-sizer` | Explicit account/symbol/unit/cash labels; readable existing calculator methods; scope and review before secondary setup; retained drafts and honest action outcomes. No new order types, sizing formulas or execution. |
 | 2 · implemented | Forex, Commodities, Economics, Yield Curve | Matrix/chart containment, long names, dates, visible current scope and existing provider/fallback disclosures. No new feeds or FX accounting. |
-| 3 | Market Heatmap, Rotation, Crypto, ETF Analytics | Responsive plots/tiles, readable filters/legends and actual existing context; populated/failure states. Provider breadth stays unchanged. |
+| 3 · partial | Market Heatmap, Rotation, Crypto, ETF Analytics | Heatmap, Rotation and ETF Analytics implemented in the linked review; Crypto remains next. Responsive plots/tiles, readable filters/legends and actual existing context; populated/failure states. Provider breadth stays unchanged. |
 | 4 | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
 | 5 | MTA `/equity/mta`; DOM `/equity/dom` | Useful chart/depth space, readable instrument/interval controls, keyboard/zoom and configured versus unavailable markets. Preserve existing route/provider contracts. |
 | 6 | Backtesting `/backtesting`; direct Model governance, Algorithm framework, Portfolio optimizer | Readable setup and dated run/results, bounded inspection, busy/error/draft states. Include direct subpages without expanding their capabilities or promoting experimental tools. |

@@ -27,6 +27,10 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable market-overview review** — responsive Heatmap map/list and keyboard
+  group/tile inspection, Rotation plot-first controls with readable dated values
+  and bounded playback, and labelled ETF draft/apply forms with scoped read/retry
+  states. Long names and numerical tables stay readable; provider inputs remain.
 - **Readable macro/FX workflows** — contained FX/commodity/yield tables, keyboard
   pair and contract selection, full economic-event names and focused details,
   explicit sample/static/projected scope and labelled retained yield comparisons.

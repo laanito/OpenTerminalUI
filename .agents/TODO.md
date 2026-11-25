@@ -8,8 +8,9 @@ API-key permission expansion or broad functionality audit in v3. v4 discovery
 must define tool inventory, authentication/ownership, read/write permissions,
 structured evidence/results and retry/audit boundaries, including paper trading
 without live execution authority. See `docs/wiki/Roadmap.md` Product generations.
-#315 is merged and the maintainer accepts the macro/FX frontend. Continue the
-retained-page queue with Market Heatmap, Rotation, Crypto and ETF Analytics.
+#316 is merged; the maintainer accepts #315's macro/FX frontend. Current slice:
+Market Heatmap, Rotation and ETF Analytics; Crypto's eight modules/shared panels
+follow separately. See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2273,8 +2274,16 @@ ordered v1.7 milestone above.
             yield comparisons. Existing calculations/provider coverage retained;
             see `docs/design/v3/MACRO_FX_REVIEW.md`. #315 merged; frontend accepted. Fourteen
             ordinary menu destinations remain. Broad functional certification is v5.
-      - [ ] Market overview: Heatmap, Rotation, Crypto and ETF Analytics;
+      - [x] Market overview: Heatmap, Rotation and ETF Analytics;
             responsive plots/tiles, readable filters/legends and existing context.
+            Native group/list/tile navigation, dated rotation values outside SVG,
+            cleaned-up bounded playback and submitted ETF drafts/scoped retries.
+            Stable unlinked symbol snapshots prevent a React popout render loop.
+            See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`; host acceptance open.
+            Eleven ordinary menu destinations remain after this implementation.
+      - [ ] Crypto market overview: eight modules/shared panels; a separate next
+            PR for scope/hierarchy, readable labels, bounded plots/tables and
+            existing loading/unavailable/degraded states. No provider expansion.
       - [ ] Income/risk/quant: Dividends, Risk, Correlation, Stat Lab and Pair
             Trading; scope, readable setup/results and local numerical scrolling.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
@@ -2343,6 +2352,13 @@ ordered v1.7 milestone above.
       handling; AuthMiddleware requires bearer auth for these paths. This can
       turn an authentication gap into a labelled sample fallback. Reproduce with
       configured auth before scoping repair; v3 fixtures do not validate it.
+      Market-overview follow-ups: verify Heatmap coverage/period/sizing/native
+      currency/quote freshness; Rotation's benchmark histories, fixed plot-window
+      outliers/missing trails and stock routes; ETF provider coverage, flow units
+      and weight/overlap conventions. HoldingsViewer currently divides weights
+      by 100 before formatPercent, while overlap passes weights directly. Audit
+      source contracts before changing these transforms; v3 retains the numbers
+      and cannot certify live numerical correctness from layout fixtures.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

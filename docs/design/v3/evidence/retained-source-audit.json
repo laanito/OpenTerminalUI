@@ -331,20 +331,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 300,
-          "text": "<div className=\"text-[11px] text-terminal-muted\">{item.name}</div>"
-        },
-        {
-          "line": 387,
-          "text": "className=\"pointer-events-none fixed z-40 max-w-64 rounded border border-terminal-border bg-terminal-panel px-3 py-2 text-[11px] text-terminal-text shadow-lg\""
-        },
-        {
-          "line": 421,
-          "text": "<div className=\"text-[10px] text-terminal-muted\">{group === \"sector\" ? item.sector : item.industry}</div>"
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/dividends",
@@ -1531,20 +1518,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 43,
-          "text": "<span className=\"text-[10px] uppercase text-terminal-muted font-semibold\">Active Ticker</span>"
-        },
-        {
-          "line": 70,
-          "text": "<span className=\"text-[10px] uppercase text-terminal-muted\">Compare</span>"
-        },
-        {
-          "line": 74,
-          "text": "className=\"w-48 h-6 text-[10px]\""
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/cockpit",
