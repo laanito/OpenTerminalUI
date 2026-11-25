@@ -108,20 +108,37 @@ describe("CryptoWorkspace advanced tabs", () => {
   it("renders heatmap, derivatives, defi, and correlation tabs", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "heatmap" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "heatmap" } });
     await waitFor(() => expect(screen.getByTestId("crypto-heatmap-panel")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("Depth 14.0%")).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole("button", { name: "derivatives" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "derivatives" } });
     await waitFor(() => expect(screen.getByTestId("crypto-derivatives-panel")).toBeInTheDocument());
     await waitFor(() => expect(screen.getAllByText("BTC-USD").length).toBeGreaterThanOrEqual(1));
 
-    fireEvent.click(screen.getByRole("button", { name: "defi" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "defi" } });
     await waitFor(() => expect(screen.getByTestId("crypto-defi-panel")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByText("Uniswap")).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole("button", { name: "correlation" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "correlation" } });
     await waitFor(() => expect(screen.getByTestId("crypto-correlation-panel")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByTestId("corr-cell-0-1")).toHaveTextContent("0.87"));
   });
+  it("shows a failed advanced read without substituting a zero-valued panel", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ detail: "PRIVATE_PROVIDER_CONTEXT" }), { status: 503 })));
+    renderPage();
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "defi" } });
+    await waitFor(() => expect(screen.getByRole("region", { name: "Active crypto module", exact: true })).toHaveTextContent("Could not refresh defi"));
+    expect(screen.queryByTestId("crypto-defi-panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("PRIVATE_PROVIDER_CONTEXT")).not.toBeInTheDocument();
+  });
+
+  it("distinguishes a missing correlation cell from a reported zero", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ symbols: ["BTC-USD", "ETH-USD"], matrix: [[1, null], [0, 1]], window: 30 }), { status: 200 })));
+    renderPage();
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "correlation" } });
+    await waitFor(() => expect(screen.getByTestId("corr-cell-0-1")).toHaveTextContent("Unavailable"));
+    expect(screen.getByTestId("corr-cell-1-0")).toHaveTextContent("0.00");
+  });
+
 });

@@ -16,8 +16,8 @@ export function CryptoCorrelationMatrixPanel({ data }: { data: CryptoCorrelation
   const matrix = data.matrix || [];
 
   return (
-    <div className="overflow-auto" data-testid="crypto-correlation-panel">
-      <table className="w-full min-w-[560px] border-collapse text-xs">
+    <div role="region" aria-label="Crypto correlation table" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto" data-testid="crypto-correlation-panel">
+      <table className="w-full min-w-[560px] border-collapse text-xs [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
         <thead>
           <tr>
             <th className="border border-terminal-border p-2 text-left text-terminal-muted">Pair</th>
@@ -33,14 +33,15 @@ export function CryptoCorrelationMatrixPanel({ data }: { data: CryptoCorrelation
             <tr key={left}>
               <td className="border border-terminal-border p-2 text-terminal-accent">{left.replace("-USD", "")}</td>
               {symbols.map((right, j) => {
-                const value = Number(matrix[i]?.[j] ?? 0);
+                const raw = matrix[i]?.[j];
+                const value = typeof raw === "number" && Number.isFinite(raw) ? raw : null;
                 return (
                   <td
                     key={`${left}-${right}`}
-                    className={`border border-terminal-border p-2 text-right ${cellClass(value)}`}
+                    className={`border border-terminal-border p-2 text-right ${value == null ? "bg-terminal-bg text-terminal-muted" : cellClass(value)}`}
                     data-testid={`corr-cell-${i}-${j}`}
                   >
-                    {value.toFixed(2)}
+                    {value == null ? "Unavailable" : value.toFixed(2)}
                   </td>
                 );
               })}

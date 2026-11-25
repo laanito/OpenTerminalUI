@@ -20,31 +20,31 @@ export function CryptoDerivativesPanel({
   onSelect,
 }: {
   rows: CryptoDerivativesRow[];
-  totals: CryptoDerivativesTotals;
+  totals?: CryptoDerivativesTotals | null;
   onSelect?: (symbol: string) => void;
 }) {
   return (
-    <div className="space-y-3" data-testid="crypto-derivatives-panel">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <div className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
+    <div className="min-w-0 space-y-3 [overflow-wrap:anywhere]" data-testid="crypto-derivatives-panel">
+      <div className="grid min-w-0 grid-cols-2 gap-2 2xl:grid-cols-4">
+        <div className="min-w-0 rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
           <div className="text-terminal-muted">Open Interest</div>
-          <div className="text-terminal-text">${Math.round(totals.open_interest_usd).toLocaleString()}</div>
+          <div className="text-terminal-text">{totals?.open_interest_usd == null ? "Unavailable" : `$${Math.round(totals.open_interest_usd).toLocaleString()}`}</div>
         </div>
-        <div className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
+        <div className="min-w-0 rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
           <div className="text-terminal-muted">Liquidations</div>
-          <div className="text-terminal-text">${Math.round(totals.liquidations_24h).toLocaleString()}</div>
+          <div className="text-terminal-text">{totals?.liquidations_24h == null ? "Unavailable" : `$${Math.round(totals.liquidations_24h).toLocaleString()}`}</div>
         </div>
-        <div className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
-          <div className="text-terminal-muted">Long Liq</div>
-          <div className="text-terminal-neg">${Math.round(totals.long_liquidations_24h).toLocaleString()}</div>
+        <div className="min-w-0 rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
+          <div className="text-terminal-muted">Long liquidations</div>
+          <div className="text-terminal-neg">{totals?.long_liquidations_24h == null ? "Unavailable" : `$${Math.round(totals.long_liquidations_24h).toLocaleString()}`}</div>
         </div>
-        <div className="rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
-          <div className="text-terminal-muted">Short Liq</div>
-          <div className="text-terminal-pos">${Math.round(totals.short_liquidations_24h).toLocaleString()}</div>
+        <div className="min-w-0 rounded border border-terminal-border bg-terminal-bg p-2 text-xs">
+          <div className="text-terminal-muted">Short liquidations</div>
+          <div className="text-terminal-pos">{totals?.short_liquidations_24h == null ? "Unavailable" : `$${Math.round(totals.short_liquidations_24h).toLocaleString()}`}</div>
         </div>
       </div>
 
-      <table className="w-full text-xs">
+      <div role="region" aria-label="Crypto derivatives table" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto"><table className="min-w-[620px] w-full text-xs [&_th]:whitespace-nowrap [&_td]:p-2 [&_th]:p-2">
         <thead className="text-terminal-muted">
           <tr>
             <th className="text-left">Symbol</th>
@@ -73,7 +73,7 @@ export function CryptoDerivativesPanel({
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

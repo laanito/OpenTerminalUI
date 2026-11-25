@@ -8,9 +8,9 @@ API-key permission expansion or broad functionality audit in v3. v4 discovery
 must define tool inventory, authentication/ownership, read/write permissions,
 structured evidence/results and retry/audit boundaries, including paper trading
 without live execution authority. See `docs/wiki/Roadmap.md` Product generations.
-#316 is merged; the maintainer accepts #315's macro/FX frontend. Current slice:
-Market Heatmap, Rotation and ETF Analytics; Crypto's eight modules/shared panels
-follow separately. See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`.
+#317 is merged and maintainer-confirmed working. Current slice: Crypto's eight
+modules/shared panels. See `docs/design/v3/CRYPTO_REVIEW.md`. Income/risk/quant
+remains next; provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2279,11 +2279,15 @@ ordered v1.7 milestone above.
             Native group/list/tile navigation, dated rotation values outside SVG,
             cleaned-up bounded playback and submitted ETF drafts/scoped retries.
             Stable unlinked symbol snapshots prevent a React popout render loop.
-            See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`; host acceptance open.
+            See `docs/design/v3/MARKET_OVERVIEW_REVIEW.md`; #317 merged and accepted.
             Eleven ordinary menu destinations remain after this implementation.
-      - [ ] Crypto market overview: eight modules/shared panels; a separate next
-            PR for scope/hierarchy, readable labels, bounded plots/tables and
-            existing loading/unavailable/degraded states. No provider expansion.
+      - [x] Crypto market overview: eight modules/shared panels; active-module-
+            first reading order, compact labelled navigation, readable full names
+            and contained tables. Focus/scopes remain coherent across ranking,
+            filters, outside-board selection and late search/window responses.
+            Read/failure/empty/partial states, true zeros and modelled DeFi proxies
+            are explicit. See `docs/design/v3/CRYPTO_REVIEW.md`; host acceptance
+            open. Ten ordinary menu destinations remain. No provider expansion.
       - [ ] Income/risk/quant: Dividends, Risk, Correlation, Stat Lab and Pair
             Trading; scope, readable setup/results and local numerical scrolling.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
@@ -2359,6 +2363,15 @@ ordered v1.7 milestone above.
       by 100 before formatPercent, while overlap passes weights directly. Audit
       source contracts before changing these transforms; v3 retains the numbers
       and cannot certify live numerical correctness from layout fixtures.
+      Crypto follow-ups: existing market client sends sortBy/sortOrder while the
+      backend declares sort_by/sort_order; verify/fix that adapter contract in v5.
+      Audit quote/native identity/freshness and existing chart normalization/global
+      market interaction, basic helpers discarding metadata, index membership vs
+      filtered board preview, sector/depth basket semantics and estimates, funding/
+      OI/liquidation coverage/zero sentinels, DeFi proxy coefficients/provenance vs
+      observed on-chain fundamentals, correlation return-history alignment and
+      partial coverage. Review hidden-module polling load; v3 preserves cadence,
+      request limits and transports rather than certifying providers/calculations.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

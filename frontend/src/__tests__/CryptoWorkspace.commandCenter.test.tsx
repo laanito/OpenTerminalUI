@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -164,4 +164,24 @@ describe("Crypto command center", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cross-market context" }));
     expect(navigateMock).toHaveBeenCalledWith("/equity/market-context?symbol=BTC-USD");
   });
+  it("searches for a mover outside the filtered board before focusing it", async () => {
+    fetchCryptoMoversMock.mockResolvedValue([{ symbol: "ETH-USD", name: "Ethereum", price: 3000, change_24h: 1.1, volume_24h: 900, market_cap: 900000 }]);
+    renderPage();
+    fireEvent.change(screen.getByLabelText("Search crypto markets"), { target: { value: "bitcoin" } });
+    await waitFor(() => expect(screen.getByRole("region", { name: "Focus Asset", exact: true })).toHaveTextContent("Bitcoin"));
+    fireEvent.change(screen.getByRole("combobox", { name: "Crypto module" }), { target: { value: "movers" } });
+    fireEvent.click(await within(screen.getByRole("region", { name: "Active crypto module", exact: true })).findByRole("button", { name: /ETH-USD.*Ethereum/ }));
+    await waitFor(() => expect(fetchCryptoMarketsMock).toHaveBeenLastCalledWith(expect.objectContaining({ q: "ETH-USD", sector: undefined })));
+    await waitFor(() => expect(screen.getByRole("region", { name: "Focus Asset", exact: true })).toHaveTextContent("Ethereum"));
+  });
+
+  it("keeps a focused asset when a new ranking still includes it", async () => {
+    renderPage();
+    const board = within(screen.getByRole("region", { name: "Active crypto module", exact: true }));
+    fireEvent.click(await board.findByRole("button", { name: "ETH-USD", exact: true }));
+    fireEvent.change(screen.getByLabelText("Sort direction"), { target: { value: "asc" } });
+    await waitFor(() => expect(fetchCryptoMarketsMock).toHaveBeenLastCalledWith(expect.objectContaining({ sortOrder: "asc" })));
+    await waitFor(() => expect(screen.getByRole("region", { name: "Focus Asset", exact: true })).toHaveTextContent("Ethereum"));
+  });
+
 });

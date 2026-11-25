@@ -36,8 +36,9 @@ keeps redirects/hidden routes distinct and records 39 initial browser probes.
 The [Paper/Sizer review](PAPER_SIZING_REVIEW.md) implements the next two menu
 destinations (#314 merged). The [macro/FX review](MACRO_FX_REVIEW.md) adds four
 more (#315 merged, frontend maintainer-accepted). The [market-overview review](MARKET_OVERVIEW_REVIEW.md)
-adds Heatmap, Rotation and ETF Analytics, with host acceptance open; eleven remain.
-Crypto follows separately because its eight modules/shared panels merit a focused review.
+adds Heatmap, Rotation and ETF Analytics (#317 merged and maintainer-accepted).
+The separate [Crypto review](CRYPTO_REVIEW.md) covers its eight modules, with host
+acceptance open; ten ordinary menu destinations remain, starting with income/risk/quant.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

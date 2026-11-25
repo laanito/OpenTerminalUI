@@ -27,6 +27,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Crypto workspace** — compact eight-module navigation, primary module
+  reading order, responsive full-name panels, labelled filters and local numerical
+  scrolling. Focus survives valid ranking changes, outside-board selections resolve
+  through the existing search, and failed/partial/empty reads stay explicit. DeFi
+  proxies are labelled; missing correlation cells no longer appear as zero.
 - **Readable market-overview review** — responsive Heatmap map/list and keyboard
   group/tile inspection, Rotation plot-first controls with readable dated values
   and bounded playback, and labelled ETF draft/apply forms with scoped read/retry
