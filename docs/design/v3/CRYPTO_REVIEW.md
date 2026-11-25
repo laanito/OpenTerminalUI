@@ -103,6 +103,21 @@ selection preservation. All API reads/sockets are intercepted; no real provider,
 model, private corpus, production DB or deployment is used. No backend/API/schema,
 dependency or saved-format changes. The unchanged backend suite is not rerun.
 
+## CI geometry-check follow-up
+
+The reported GitHub run passed 165 cases but exhausted the desktop journey's
+60-second budget inside the per-element geometry helper. Geometry is now read
+in one browser-side snapshot per module, retaining document/main overflow,
+visible non-table control and named-region bounds, with element names in failures.
+Closed disclosures remain excluded from visibility checks. Application code and
+the normal 4× throttle/60-second timeout are unchanged by this follow-up.
+
+All seven affected journeys pass. Six desktop repeats with the test-only
+`CRYPTO_LAYOUT_CPU_RATE=12` override pass at 2.9–3.3 seconds each locally. This
+covers the same eight modules and assertions; the initial full local 166-case
+suite and 907 frontend-test results above precede this test-only follow-up.
+Application/backend suites were not rerun for it.
+
 ## v5 audit and next v3 work
 
 These UI checks do not certify the underlying crypto tools or calculations.

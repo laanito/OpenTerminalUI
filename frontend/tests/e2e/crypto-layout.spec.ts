@@ -40,19 +40,47 @@ async function fixture(page: Page) {
   });
   return state;
 }
+// Measure a single DOM snapshot so eight-module coverage does not spend the
+// CI budget on repeated per-element Playwright protocol round trips.
 async function bounded(page: Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-  const main = page.getByRole("main", { name: "Crypto workspace", exact: true });
-  expect(await main.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
-  for (const element of await main.locator("input, select, button").all()) {
-    if (!await element.isVisible() || await element.evaluate(el => Boolean(el.closest("table")))) continue;
-    const box = await element.boundingBox(); if (box) { expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth) + 1); }
+  const metrics = await page.getByRole("main", { name: "Crypto workspace", exact: true }).evaluate(main => {
+    const visible = (element: Element) => {
+      const rect = element.getBoundingClientRect();
+      if (!rect.width || !rect.height || getComputedStyle(element).visibility !== "visible") return false;
+      for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        if (parent instanceof HTMLDetailsElement && !parent.open) {
+          const summary = Array.from(parent.children).find(child => child.tagName === "SUMMARY");
+          if (!summary?.contains(element)) return false;
+        }
+      }
+      return true;
+    };
+    const measure = (element: Element) => {
+      const rect = element.getBoundingClientRect();
+      return { name: element.getAttribute("aria-label") || element.textContent?.trim().slice(0, 80) || element.tagName, left: rect.left, right: rect.right };
+    };
+    return {
+      viewport: innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      mainWidth: main.clientWidth,
+      mainScrollWidth: main.scrollWidth,
+      controls: Array.from(main.querySelectorAll("input, select, button")).filter(element => !element.closest("table") && visible(element)).map(measure),
+      regions: Array.from(main.querySelectorAll('[role="region"], section[aria-label], section[aria-labelledby]')).filter(visible).map(measure),
+    };
+  });
+  expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.viewport + 1);
+  expect(metrics.mainScrollWidth).toBeLessThanOrEqual(metrics.mainWidth + 1);
+  expect(metrics.controls.length).toBeGreaterThan(0);
+  for (const control of metrics.controls) {
+    expect(control.left, control.name).toBeGreaterThanOrEqual(0);
+    expect(control.right, control.name).toBeLessThanOrEqual(metrics.viewport + 1);
   }
-  for (const region of await main.getByRole("region").all()) { const box = await region.boundingBox(); if (box) expect(box.x + box.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth) + 1); }
+  for (const region of metrics.regions) expect(region.right, region.name).toBeLessThanOrEqual(metrics.viewport + 1);
 }
+
 for (const width of [1440,1024,390]) test(`@smoke Crypto eight-module review and readable asset context at ${width}px`, async ({ page }, info) => {
   await page.setViewportSize({ width, height: 1000 }); const state = await fixture(page);
-  if (width === 1440) { const cdp = await page.context().newCDPSession(page); await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 }); }
+  if (width === 1440) { const cdp = await page.context().newCDPSession(page); await cdp.send("Emulation.setCPUThrottlingRate", { rate: Number(process.env.CRYPTO_LAYOUT_CPU_RATE || 4) }); }
   await page.goto("/equity/crypto"); const module = page.getByRole("region", { name: "Active crypto module", exact: true }); const selector = page.getByRole("combobox", { name: "Crypto module", exact: true });
   await expect(module.getByText(longName, { exact: true })).toBeVisible(); await expect(page.getByRole("heading", { name: "Crypto Command Center", exact: true })).toHaveCSS("font-size", "18px");
   await module.getByRole("button", { name: "UNI-USD", exact: true }).focus(); await page.keyboard.press("Enter"); await expect(page.getByRole("region", { name: "Focus Asset", exact: true })).toContainText(longName);

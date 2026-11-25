@@ -1,5 +1,14 @@
 # External-agent project context
 
+#318 CI timing follow-up: the desktop Crypto journey exceeded 60 seconds in the
+per-element geometry helper while 165 other cases passed. The helper now reads
+one DOM snapshot per module, preserving visible control/region/page bounds and
+failure identities. No application change or normal throttle/timeout increase.
+Seven affected journeys pass; six desktop repeats with the test-only
+CRYPTO_LAYOUT_CPU_RATE=12 override pass at 2.9–3.3 seconds each locally. See the
+CI follow-up in `docs/design/v3/CRYPTO_REVIEW.md`. Full app/backend suites were
+not rerun for this test-only change; earlier full validation below is historical.
+
 #317 is merged and maintainer-confirmed working. Current v3 slice is the eight-
 module Crypto workspace: active-module-first hierarchy, compact labelled
 navigation, readable full names/metrics and named local table scrollers. Focus
