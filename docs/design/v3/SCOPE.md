@@ -17,7 +17,7 @@ all route entries and documents concrete gaps in other retained tools. Twenty
 ordinary menu destinations needed a dedicated page review at that baseline.
 The [Paper/Sizer implementation](PAPER_SIZING_REVIEW.md) covers the first two and
 #314 is merged. The [macro/FX implementation](MACRO_FX_REVIEW.md) adds four more
-destinations, with host acceptance open; fourteen remain, starting with market
+destinations; #315 is merged and the frontend is maintainer-accepted. Fourteen remain, starting with market
 overview. Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.

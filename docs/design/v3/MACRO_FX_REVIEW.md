@@ -2,7 +2,8 @@
 
 This continues merged #314. It covers Forex, Commodities, Economics and Yield
 Curve without adding feeds, indicators, accounting or analysis capabilities.
-Host acceptance is open. The original remaining-page browser audit remains a
+The maintainer merged #315 and accepted the frontend on 2026-11-25. This is layout
+acceptance, not provider/data certification. The original remaining-page browser audit remains a
 historical baseline; the source ledger is regenerated for the current entry files.
 
 ## Reading and scope
@@ -85,6 +86,13 @@ No live provider/model, private corpus, real orders, production DB or deployment
 is used. No backend/API/schema/dependency or persistence-format changes.
 
 ## Functional limits and next work
+
+Host testing after #315 confirms sample data is visible in Forex and Commodities,
+and Economics shows “Sample calendar events — no live source is available for
+this response.” The maintainer also reports mainly hardcoded Indian F&O values
+and suspects stale content there. These findings are recorded in the v5 audit
+backlog; no specific auth/provider cause or F&O staleness has been verified here.
+Frontend acceptance stands; provider and data repair remains v5 work.
 
 This is presentation and local request-state acceptance, not certification of the
 legacy macro/FX tools or provider accuracy. The frontend retains its synthetic FX

@@ -10,6 +10,18 @@ No MCP implementation or live execution authority is added in v3. The previously
 unassigned broad functionality audit now belongs to v5. Product-generation detail
 is in `docs/wiki/Roadmap.md`.
 
+#315 is merged and the maintainer accepts the macro/FX frontend. Host feedback
+(2026-11-25) belongs to v5's data/functionality audit: F&O appears mainly hardcoded
+to Indian values, with suspected stale content; Forex and Commodities include
+sample data; Economics shows “Sample calendar events — no live source is available
+for this response.” These are reported observations, not a verified provider/auth
+diagnosis. Audit F&O provenance, dates/expiries and intended NSE/BSE coverage;
+reproduce the sample paths with configured authentication/providers. Do not infer
+live data correctness from frontend acceptance or expand v3 into provider repair.
+Next v3 batch remains Market Heatmap, Rotation, Crypto and ETF Analytics.
+
+Historical implementation handoff for #315:
+
 #314 is merged. Current follow-up reviews Forex, Commodities, Economics and Yield
 Curve: contained numerical tables, readable names and controls, full-name monthly
 economic agenda/focused details, explicit sample/static/projected source scope,
