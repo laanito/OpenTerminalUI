@@ -27,13 +27,13 @@ function formatRate(rate: number): string {
 
 export function CrossRatesMatrix({ currencies, matrix, selectedPair, onSelectPair }: Props) {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full border-separate border-spacing-1 text-xs">
+    <div role="region" aria-label="FX cross rates table" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto">
+      <table aria-label="Quote units per one base currency" className="min-w-[700px] w-full [&_th]:whitespace-nowrap border-separate border-spacing-1 text-xs">
         <thead>
           <tr>
-            <th className="px-2 py-1 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted">Base</th>
+            <th className="px-2 py-1 text-left text-xs uppercase text-terminal-muted">Base</th>
             {currencies.map((currency) => (
-              <th key={currency} className="px-2 py-1 text-center text-[10px] uppercase tracking-[0.16em] text-terminal-muted">
+              <th key={currency} className="px-2 py-1 text-center text-xs uppercase text-terminal-muted">
                 {currency}
               </th>
             ))}
@@ -42,7 +42,7 @@ export function CrossRatesMatrix({ currencies, matrix, selectedPair, onSelectPai
         <tbody>
           {currencies.map((base, rowIndex) => (
             <tr key={base}>
-              <th className="px-2 py-2 text-left text-[10px] uppercase tracking-[0.16em] text-terminal-muted">{base}</th>
+              <th className="px-2 py-2 text-left text-xs uppercase text-terminal-muted">{base}</th>
               {currencies.map((quote, columnIndex) => {
                 const rate = Number(matrix[rowIndex]?.[columnIndex] ?? NaN);
                 const pair = `${base}${quote}`;
@@ -52,6 +52,8 @@ export function CrossRatesMatrix({ currencies, matrix, selectedPair, onSelectPai
                   <td key={pair}>
                     <button
                       type="button"
+                      aria-label={`${base}/${quote}: ${formatRate(rate)}`}
+                      aria-pressed={selected}
                       disabled={diagonal}
                       className={`min-w-[72px] rounded border px-2 py-2 text-right ot-type-data transition ${
                         diagonal

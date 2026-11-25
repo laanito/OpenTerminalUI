@@ -14,8 +14,8 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/stocks` | [StockDetailPage](../../../frontend/src/pages/StockDetail.tsx) | supported | 1 |
 | `/equity/security` | [SecurityHubPage](../../../frontend/src/pages/SecurityHub.tsx) | supported | 2 |
 | `/equity/security/:ticker` | [SecurityHubPage](../../../frontend/src/pages/SecurityHub.tsx) | Other direct | 2 |
-| `/equity/commodities` | [CommoditiesPage](../../../frontend/src/pages/Commodities.tsx) | configuration-gated | 9 |
-| `/equity/forex` | [ForexPage](../../../frontend/src/pages/Forex.tsx) | supported | 7 |
+| `/equity/commodities` | [CommoditiesPage](../../../frontend/src/pages/Commodities.tsx) | configuration-gated | 3 |
+| `/equity/forex` | [ForexPage](../../../frontend/src/pages/Forex.tsx) | supported | 0 |
 | `/equity/hotlists` | [HotlistsPage](../../../frontend/src/pages/Hotlists.tsx) | Hidden compatibility | 3 |
 | `/equity/insider` | [InsiderActivityPage](../../../frontend/src/pages/InsiderActivityPage.tsx) | Hidden compatibility | 3 |
 | `/equity/stocks/about` | [AboutPage](../../../frontend/src/pages/About.tsx) | supported | 26 |
@@ -58,10 +58,10 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/launchpad/popout` | [LaunchpadPopoutPage](../../../frontend/src/pages/LaunchpadPopout.tsx) | Other direct | 0 |
 | `/equity/compare` | [SplitComparisonPage](../../../frontend/src/pages/SplitComparison.tsx) | supported | 5 |
 | `/equity/market-context` | [MarketContextPage](../../../frontend/src/pages/MarketContextPage.tsx) | Other direct | 0 |
-| `/equity/yield-curve` | [YieldCurveDashboard](../../../frontend/src/pages/fixed-income/YieldCurveDashboard.tsx) | configuration-gated | 2 |
+| `/equity/yield-curve` | [YieldCurveDashboard](../../../frontend/src/pages/fixed-income/YieldCurveDashboard.tsx) | configuration-gated | 1 |
 | `/equity/bond-analytics` | [BondAnalyticsCalculator](../../../frontend/src/pages/fixed-income/BondAnalyticsCalculator.tsx) | Other direct | 1 |
 | `/equity/option-greeks` | [OptionGreeksCalculator](../../../frontend/src/pages/fixed-income/OptionGreeksCalculator.tsx) | Other direct | 3 |
-| `/equity/economics` | [EconomicTerminal](../../../frontend/src/pages/economics/EconomicTerminal.tsx) | configuration-gated | 13 |
+| `/equity/economics` | [EconomicTerminal](../../../frontend/src/pages/economics/EconomicTerminal.tsx) | configuration-gated | 0 |
 | `/equity/sector-rotation` | [SectorRotationPage](../../../frontend/src/pages/SectorRotation.tsx) | supported | 0 |
 | `/equity/crypto` | [CryptoWorkspacePage](../../../frontend/src/pages/CryptoWorkspace.tsx) | supported | 10 |
 | `/equity/etf-analytics` | [ETFAnalyticsPage](../../../frontend/src/pages/ETFAnalytics.tsx) | supported | 3 |

@@ -34,7 +34,9 @@ uses bounded panel/template controls; #312 is merged and maintainer-accepted.
 The [remaining-page audit](RETAINED_PAGE_AUDIT.md) reconciles 80 render entries,
 keeps redirects/hidden routes distinct and records 39 initial browser probes.
 The [Paper/Sizer review](PAPER_SIZING_REVIEW.md) implements the next two menu
-destinations, with host acceptance open; eighteen remain, starting with macro/FX. Broader populated/keyboard/zoom and maintainer acceptance
+destinations (#314 merged). The [macro/FX review](MACRO_FX_REVIEW.md) adds four
+more, with host acceptance open; fourteen remain, starting with market overview.
+Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because
 the pilot's automated acceptance checks pass.

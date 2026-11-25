@@ -1,5 +1,11 @@
 # v3.0 scope and acceptance gate
 
+Release sequence agreed 2026-11-25: this release remains the frontend overhaul.
+v4 builds the curated OTUI MCP interface for external LLM agents; v5 verifies and
+repairs retained functionality; new capabilities resume from v6. See the
+[product generations](../../wiki/Roadmap.md#product-generations). Neither the MCP
+nor the wider functionality audit expands this frontend gate.
+
 Status: discovery accepted through #286, **scope corrected by maintainer feedback
 on 2026-11-20**. The Portfolio pilot and its local acceptance report are completed
 slices, not acceptance of the entire frontend overhaul. v3.0 remains open for
@@ -9,8 +15,10 @@ The [Portfolio report](ACCEPTANCE.md) is historical evidence for that workflow.
 After accepted #312, the [remaining-page audit](RETAINED_PAGE_AUDIT.md) reconciles
 all route entries and documents concrete gaps in other retained tools. Twenty
 ordinary menu destinations needed a dedicated page review at that baseline.
-The [Paper/Sizer implementation](PAPER_SIZING_REVIEW.md) covers the first two, with
-host acceptance open; eighteen remain, starting with macro/FX. Initial probes and source hints do not replace the
+The [Paper/Sizer implementation](PAPER_SIZING_REVIEW.md) covers the first two and
+#314 is merged. The [macro/FX implementation](MACRO_FX_REVIEW.md) adds four more
+destinations, with host acceptance open; fourteen remain, starting with market
+overview. Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.
 

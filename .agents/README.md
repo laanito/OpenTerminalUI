@@ -1,5 +1,32 @@
 # External-agent project context
 
+Current direction (maintainer, 2026-11-25): **v3 frontend overhaul → v4 LLM
+interface through OTUI MCP → v5 retained-functionality audit/repair → new
+capabilities from v6 onward**. The MCP is the preferred curated agent interface,
+not a mechanical wrapper over arbitrary endpoints or ad hoc API-key permissions.
+Preserve existing integration contracts; inventory/authentication/ownership,
+read/write scope, provenance/results and retry/audit semantics need v4 discovery.
+No MCP implementation or live execution authority is added in v3. The previously
+unassigned broad functionality audit now belongs to v5. Product-generation detail
+is in `docs/wiki/Roadmap.md`.
+
+#314 is merged. Current follow-up reviews Forex, Commodities, Economics and Yield
+Curve: contained numerical tables, readable names and controls, full-name monthly
+economic agenda/focused details, explicit sample/static/projected source scope,
+independent yield/spread failure states and retained comparison dates. Existing
+providers and calculations remain. See `docs/design/v3/MACRO_FX_REVIEW.md` for
+validation and screenshots; host acceptance remains open. Fourteen ordinary menu
+destinations remain after this implementation, starting with Market Heatmap,
+Rotation, Crypto and ETF Analytics. No release preparation.
+Validation: 901 frontend tests / 150 files and all 151 Chrome smoke journeys pass.
+After the final calendar-refresh selection fix, all six affected browser journeys,
+two existing page unit checks and production build pass again. API-reference,
+surface/mock/source and whitespace checks pass. Screenshots are in the review;
+no live provider/model/production access and no backend/API/schema/dependency or
+persistence-format change. The wider backend suite was not rerun.
+
+Historical handoff from #314 (superseded by the progress above):
+
 Maintainer confirmed #313 merged. Current v3 follow-up is Paper + Position Sizer:
 one labelled paper account scope, overview/positions and activity tabs before
 secondary hotkeys, bounded retained create/order dialogs and independent scoped

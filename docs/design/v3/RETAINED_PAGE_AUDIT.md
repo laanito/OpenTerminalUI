@@ -8,10 +8,12 @@ features, providers, algorithms or execution capabilities.
 
 ## Current implementation progress
 
-The [Paper/Sizer review](PAPER_SIZING_REVIEW.md) implements the first batch after
-#313. Dedicated page work now covers 22 render entries, including 15 of the 32
-tool destinations and three shell-menu extras. Host acceptance for the new pass
-is open; eighteen ordinary menu destinations remain. Macro/FX is next. The counts
+The [Paper/Sizer review](PAPER_SIZING_REVIEW.md), merged as #314, implemented the
+first batch after #313 and brought dedicated work to 22 render entries. The
+[Macro/FX review](MACRO_FX_REVIEW.md) adds four destinations: dedicated work now
+covers 26 render entries, including 19 of the 32
+tool destinations and three shell-menu extras. Host acceptance for this new pass
+is open; fourteen ordinary menu destinations remain. Market overview is next. The counts
 and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.
@@ -100,13 +102,13 @@ zoom, accessibility or live-provider certification.
 
 These are coherent review areas, not a promise of one PR per row. Split an area
 when the existing components, fixtures or review size warrant it. **Paper and Position Sizer are implemented in the linked review; continue with
-macro/FX.** Their original audit confirms ambiguous entry controls and unreadable
+the market-overview batch after the implemented [macro/FX pass](MACRO_FX_REVIEW.md).** Their original audit confirms ambiguous entry controls and unreadable
 primary labels.
 
 | Order | Retained area/routes | Acceptance focus |
 |---|---|---|
 | 1 · implemented | Paper `/equity/paper`; Position Sizer `/equity/position-sizer` | Explicit account/symbol/unit/cash labels; readable existing calculator methods; scope and review before secondary setup; retained drafts and honest action outcomes. No new order types, sizing formulas or execution. |
-| 2 | Forex, Commodities, Economics, Yield Curve | Matrix/chart containment, long names, dates, visible current scope and existing provider/fallback disclosures. No new feeds or FX accounting. |
+| 2 · implemented | Forex, Commodities, Economics, Yield Curve | Matrix/chart containment, long names, dates, visible current scope and existing provider/fallback disclosures. No new feeds or FX accounting. |
 | 3 | Market Heatmap, Rotation, Crypto, ETF Analytics | Responsive plots/tiles, readable filters/legends and actual existing context; populated/failure states. Provider breadth stays unchanged. |
 | 4 | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
 | 5 | MTA `/equity/mta`; DOM `/equity/dom` | Useful chart/depth space, readable instrument/interval controls, keyboard/zoom and configured versus unavailable markets. Preserve existing route/provider contracts. |
