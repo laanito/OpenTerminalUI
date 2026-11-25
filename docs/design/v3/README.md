@@ -37,8 +37,10 @@ The [Paper/Sizer review](PAPER_SIZING_REVIEW.md) implements the next two menu
 destinations (#314 merged). The [macro/FX review](MACRO_FX_REVIEW.md) adds four
 more (#315 merged, frontend maintainer-accepted). The [market-overview review](MARKET_OVERVIEW_REVIEW.md)
 adds Heatmap, Rotation and ETF Analytics (#317 merged and maintainer-accepted).
-The separate [Crypto review](CRYPTO_REVIEW.md) covers its eight modules, with host
-acceptance open; ten ordinary menu destinations remain, starting with income/risk/quant.
+The separate [Crypto review](CRYPTO_REVIEW.md) covers its eight modules; #318 is
+merged and the frontend accepted. Reported non-live derivatives belong to v5.
+The [Dividends review](DIVIDENDS_REVIEW.md) covers four retained income views,
+with host acceptance open. Nine ordinary menu destinations remain, starting with risk/quant.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

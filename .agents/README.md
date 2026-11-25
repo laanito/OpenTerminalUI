@@ -1,5 +1,27 @@
 # External-agent project context
 
+#318 is merged and the maintainer clears continuation. Crypto's frontend is
+accepted; host testing also reports non-live Crypto derivatives data. Record
+that as a v5 provider/functionality finding, not a verified diagnosis or a v3
+provider repair. Current slice: Dividends' four retained views, before the larger
+risk/quant workflows. See `docs/design/v3/DIVIDENDS_REVIEW.md` for scope and
+validation. No release preparation. Earlier implementation handoffs below are
+historical; Dividends host acceptance remains open.
+Dedicated work now covers 31 render entries, including 24 of 32 tool destinations
+and three shell-menu extras. Nine ordinary menu destinations remain, starting
+with Risk/Correlation/Stat Lab/Pair Trading. Four unit cases and five synthetic
+browser journeys cover all four Dividends views, explicit drafts/applied scope,
+cancelled/late reads, failed-refresh clearing, empty/missing/zero and retry, long
+content, local keyboard scrolling, 1440/1024/390px and native 200% Chrome zoom.
+All 911 frontend tests / 151 files and 171 installed-Chrome smoke cases pass;
+after final table styling, the four focused unit cases, five affected browser
+journeys and build pass again. API-reference/surface/mock/source/whitespace
+guards pass. Screenshots are linked in the review. Currency-unspecified dividend
+responses, mixed-currency aggregation, holdings scope and dated reference data
+need v5 verification; no backend/provider/accounting expansion in this slice.
+No live provider/model/private corpus, production DB or deployment access;
+the unchanged backend suite was not rerun. User-owned workspace dirt is untouched.
+
 #318 CI timing follow-up: the desktop Crypto journey exceeded 60 seconds in the
 per-element geometry helper while 165 other cases passed. The helper now reads
 one DOM snapshot per module, preserving visible control/region/page bounds and
@@ -9,7 +31,7 @@ CRYPTO_LAYOUT_CPU_RATE=12 override pass at 2.9–3.3 seconds each locally. See t
 CI follow-up in `docs/design/v3/CRYPTO_REVIEW.md`. Full app/backend suites were
 not rerun for this test-only change; earlier full validation below is historical.
 
-#317 is merged and maintainer-confirmed working. Current v3 slice is the eight-
+#317 is merged and maintainer-confirmed working. Historical v3 slice: the eight-
 module Crypto workspace: active-module-first hierarchy, compact labelled
 navigation, readable full names/metrics and named local table scrollers. Focus
 survives valid ranking changes; absent-board selections search the existing
