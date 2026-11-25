@@ -1,5 +1,11 @@
 # External-agent project context
 
+Latest host feedback: Dividends Portfolio Income is reported unreliable, with an
+unexpectedly small annual projection and no currency. The maintainer identifies
+this as pre-existing, unrelated to the frontend PR. Recorded under the existing
+v5 Dividends audit in TODO/Roadmap; no root cause independently verified. Do not
+treat the readable frontend or synthetic fixtures as income-calculation sign-off.
+
 #318 is merged and the maintainer clears continuation. Crypto's frontend is
 accepted; host testing also reports non-live Crypto derivatives data. Record
 that as a v5 provider/functionality finding, not a verified diagnosis or a v3

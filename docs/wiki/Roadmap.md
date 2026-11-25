@@ -1997,6 +1997,11 @@ Real but unscheduled; pull into a milestone when it fits.
   coerced to zero, ex-date/payment-date semantics, annual/monthly estimate coverage
   and the curated aristocrat reference dated 2025. The v3 screen labels these
   limitations without changing provider or aggregation logic.
+  **Host feedback after the Dividends layout pass:** Portfolio Income is reported
+  unreliable, showing an unexpectedly small annual projection without currency.
+  The maintainer identifies this as pre-existing and unrelated to the frontend
+  PR. Reconcile the result with owned holdings, quantities, dividend/yield units
+  and provider coverage in v5; no root cause has been independently verified.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode
