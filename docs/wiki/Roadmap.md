@@ -183,6 +183,24 @@ previously deferred without a version, not a mandate for new features in v3.
 New analytical, decision-lifecycle and execution capabilities resume from v6
 onward after these foundations; their exact release scopes remain to be agreed.
 
+**Host findings recorded after #315 (2026-11-25):** the maintainer accepts the
+macro/FX frontend, while reporting the following for v5 verification and repair:
+
+- **F&O:** mainly hardcoded Indian values, with suspected stale content. Audit
+  provenance, static fixtures, observation dates, contract expiries and refresh
+  paths. Preserve intentional NSE/BSE support; distinguish market scope from
+  hardcoded or stale data. Staleness has not yet been reproduced in this audit.
+- **Forex:** sample data appears in the running instance. Trace the fallback
+  trigger and verify authenticated provider-backed reads and freshness.
+- **Commodities:** sample data appears. Verify quotes, futures curves and
+  seasonality separately, including observed/projected/sample provenance.
+- **Economics:** “Sample calendar events — no live source is available for this
+  response.” Verify calendar wiring, configured provider access and date coverage;
+  the banner alone does not establish the root cause.
+
+These are host observations, not live functional sign-off or a verified
+provider/authentication diagnosis. They do not expand the v3 frontend gate.
+
 These are dominant promises, not isolated feature buckets. The journal is an
 early decision-lifecycle foundation, derivatives contribute to broader instrument
 support, and Hermes-compatible notes begin agent-native access, but none makes
@@ -1009,7 +1027,8 @@ After maintainer-accepted #312, the [remaining-page audit](../design/v3/RETAINED
 identifies concrete layout gaps in other retained tools: twenty ordinary menu
 destinations awaited review at that baseline. The [Paper/Sizer review](../design/v3/PAPER_SIZING_REVIEW.md)
 implements two (#314 merged). The [macro/FX pass](../design/v3/MACRO_FX_REVIEW.md)
-implements four more, with host acceptance open; fourteen remain, starting with market overview,
+implements four more (#315 merged, frontend maintainer-accepted); fourteen remain,
+starting with market overview,
 then risk/quant, MTA/DOM, Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.

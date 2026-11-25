@@ -12,8 +12,9 @@ The [Paper/Sizer review](PAPER_SIZING_REVIEW.md), merged as #314, implemented th
 first batch after #313 and brought dedicated work to 22 render entries. The
 [Macro/FX review](MACRO_FX_REVIEW.md) adds four destinations: dedicated work now
 covers 26 render entries, including 19 of the 32
-tool destinations and three shell-menu extras. Host acceptance for this new pass
-is open; fourteen ordinary menu destinations remain. Market overview is next. The counts
+tool destinations and three shell-menu extras. #315 is merged and its frontend
+is maintainer-accepted; reported sample-data/F&O concerns are recorded for v5.
+Fourteen ordinary menu destinations remain. Market overview is next. The counts
 and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.

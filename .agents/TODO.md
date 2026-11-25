@@ -8,7 +8,8 @@ API-key permission expansion or broad functionality audit in v3. v4 discovery
 must define tool inventory, authentication/ownership, read/write permissions,
 structured evidence/results and retry/audit boundaries, including paper trading
 without live execution authority. See `docs/wiki/Roadmap.md` Product generations.
-#314 is merged. Continue the retained-page queue with macro/FX.
+#315 is merged and the maintainer accepts the macro/FX frontend. Continue the
+retained-page queue with Market Heatmap, Rotation, Crypto and ETF Analytics.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2270,7 +2271,7 @@ ordered v1.7 milestone above.
             Full-name event agenda and focused details, named local table scrollers,
             keyboard selection, current/partial failure states and labelled retained
             yield comparisons. Existing calculations/provider coverage retained;
-            see `docs/design/v3/MACRO_FX_REVIEW.md`. Host acceptance open; fourteen
+            see `docs/design/v3/MACRO_FX_REVIEW.md`. #315 merged; frontend accepted. Fourteen
             ordinary menu destinations remain. Broad functional certification is v5.
       - [ ] Market overview: Heatmap, Rotation, Crypto and ETF Analytics;
             responsive plots/tiles, readable filters/legends and existing context.
@@ -2302,6 +2303,22 @@ ordered v1.7 milestone above.
       paper access. Preserve existing integrations. Select transport/SDK and
       implementation slices during v4 discovery, outside the v3 frontend gate.
 - [ ] **v5 — Audit and repair retained feature functionality.**
+      Host feedback after #315 (2026-11-25; frontend accepted):
+      - [ ] F&O appears mainly hardcoded to Indian values; content may be stale.
+            Audit static/seeded versus provider-backed values, observation dates,
+            contract expiries and update paths. Staleness is suspected, not yet
+            reproduced. Preserve intentional NSE/BSE F&O support; Indian scope
+            alone is not proof of a bug or authorization to remove it.
+      - [ ] Forex includes sample data in the running instance. Trace the exact
+            fallback trigger and verify authenticated provider-backed retrieval.
+      - [ ] Commodities includes sample data. Distinguish quote, term-structure
+            and seasonality coverage; separate projected curves from sample and
+            observed values, and verify provenance/freshness per panel.
+      - [ ] Economics displays “Sample calendar events — no live source is
+            available for this response.” Verify calendar wiring, configured
+            provider access, dates/coverage and failure reporting. Do not infer
+            missing keys or a specific root cause from this banner alone.
+      These reported data/functionality gaps are v5 work, not new v3 release gates.
       After #302, the maintainer accepted Workstation's layout but reported
       functional gaps there and in other unspecified areas, possibly previously
       masked by the frontend. Start with Workstation, inventory affected retained
