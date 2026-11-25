@@ -1035,9 +1035,11 @@ implements four more (#315 merged, frontend maintainer-accepted). The
 and ETF Analytics (#317 merged and maintainer-accepted). The separate
 [Crypto review](../design/v3/CRYPTO_REVIEW.md) covers its eight modules (#318 merged,
 frontend accepted; non-live derivatives recorded for v5). The
-[Dividends review](../design/v3/DIVIDENDS_REVIEW.md) covers its four retained views,
-with host acceptance open. Nine ordinary menu destinations remain, starting with
-risk/quant, then MTA/DOM, Backtesting and account/auth work. Secondary/hidden
+[Dividends review](../design/v3/DIVIDENDS_REVIEW.md) covers its four retained views
+(#319/#320 merged, legacy income issue recorded for v5). The
+[Risk review](../design/v3/RISK_REVIEW.md) covers overview/factors/stress, with host
+acceptance open. Eight ordinary menu destinations remain, starting with
+Correlation, Stat Lab and Pair Trading, then MTA/DOM, Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
 No new feature backlog is added to that usability
@@ -2002,6 +2004,15 @@ Real but unscheduled; pull into a milestone when it fits.
   The maintainer identifies this as pre-existing and unrelated to the frontend
   PR. Reconcile the result with owned holdings, quantities, dividend/yield units
   and provider coverage in v5; no root cause has been independently verified.
+  Risk source findings also require v5 verification: equal-weighted overview and
+  simplified beta/alignment, zero history sentinels, country/count classification
+  shares, factor proxy calibration/shared model state, fixed 1Y exposure context,
+  heuristic whiskers and daily-return sums. Stress uses stored purchase-cost
+  values and inferred sectors without established currency conversion; the FX
+  shock retains an INR factor and Monte Carlo is independent of the selected
+  scenario. Audit current-portfolio resolution and the process-local global run
+  history’s durability/ownership (its authenticated route does not filter by
+  user). v3 makes these limits visible without certifying or repairing the models.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode

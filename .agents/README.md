@@ -1,5 +1,25 @@
 # External-agent project context
 
+#319 and #320 are merged; maintainer clears continuation. Current v3 slice is
+Risk: overview, factors and stress testing, including the retained shared-ticker
+context rail. See `docs/design/v3/RISK_REVIEW.md`. Explicit page scopes, independent
+read/retry states, readable exact values and captured stress-run outcomes replace
+the dense controls/ambiguous stale results. Providers, API contracts and valid
+calculation conventions remain; legacy model/ownership/currency limits need v5.
+Risk host acceptance is open. Dedicated work now covers 32 render entries,
+including 25 tool destinations and three shell-menu extras. Eight ordinary menu
+destinations remain, starting with Correlation, Stat Lab and Pair Trading. No
+release preparation. Prior implementation/validation handoffs below are historical.
+Validation: all 919 frontend tests / 152 files and all 177 installed-Chrome smoke
+journeys pass. After final axis contrast/zero baselines, bounded long tables and
+reference-rail failure/scope presentation, eight focused unit cases, all six Risk
+browser journeys and production build pass again. API-reference/surface/mock/
+source/whitespace guards pass; review links/JSON and retained fan/default/slider
+unit-conversion helpers are checked. Thirteen synthetic captures cover desktop,
+mobile and native 200% Chrome zoom. No real provider/model/private corpus,
+production DB or deployment access; no backend/API/schema/dependency/saved-format
+change, and the unchanged backend suite was not rerun. User dirt is untouched.
+
 Latest host feedback: Dividends Portfolio Income is reported unreliable, with an
 unexpectedly small annual projection and no currency. The maintainer identifies
 this as pre-existing, unrelated to the frontend PR. Recorded under the existing

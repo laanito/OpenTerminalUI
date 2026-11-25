@@ -23,6 +23,7 @@ import { getSymbolNews } from "../providers/newsProvider";
 import { useAlertsStore } from "../store/alertsStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { useStockStore } from "../store/stockStore";
+import { finite, riskNumber } from "../components/risk/RiskRead";
 import { getWorkspacePresetConfig } from "../workspace/presets";
 import type { AlertRule, AuditEvent, KillSwitch, OmsOrder, PaperOrder, PaperPerformance, PaperPortfolio, PaperPosition, WatchlistItem } from "../types";
 
@@ -332,34 +333,24 @@ function EquityRightRail() {
 
         {isRiskRoute ? (
           <>
-            <TerminalPanel title="Risk Snapshot" subtitle="Summary metrics" bodyClassName="space-y-1 text-[11px]">
+            <p className="break-words text-xs text-terminal-muted">Reference scope: {ticker} and peers. Page analysis has its own applied scope.</p>
+            <TerminalPanel title="Shared ticker risk" subtitle={ticker} bodyClassName="space-y-2 text-xs">
               {riskSummaryQuery.isLoading ? (
                 <div className="text-terminal-muted">Loading risk summary...</div>
+              ) : riskSummaryQuery.isError ? (
+                <p>Shared ticker summary unavailable; previous values are not shown.</p>
               ) : !riskSummary ? (
                 <div className="text-terminal-muted">No risk summary available.</div>
               ) : (
                 <>
-                  <div className="flex justify-between"><span className="text-terminal-muted">EWMA Vol</span><span>{Number(riskSummary.ewma_vol || 0).toFixed(4)}</span></div>
-                  <div className="flex justify-between"><span className="text-terminal-muted">Beta</span><span>{Number(riskSummary.beta || 0).toFixed(4)}</span></div>
+                  <div className="flex justify-between"><span className="text-terminal-muted">EWMA volatility (fraction)</span><span>{riskNumber(riskSummary.ewma_vol, 4)}</span></div>
+                  <div className="flex justify-between"><span className="text-terminal-muted">Beta</span><span>{riskNumber(riskSummary.beta, 4)}</span></div>
                   <div className="flex justify-between"><span className="text-terminal-muted">MCR Assets</span><span>{Object.keys((riskSummary.marginal_contribution as Record<string, unknown>) || {}).length}</span></div>
                 </>
               )}
             </TerminalPanel>
-            <TerminalPanel title="Exposures" subtitle="Top entries" bodyClassName="space-y-1 text-[11px]">
-              {riskExposuresQuery.isLoading ? (
-                <div className="text-terminal-muted">Loading exposures...</div>
-              ) : Object.keys(riskExposures).length === 0 ? (
-                <div className="text-terminal-muted">No exposure rows.</div>
-              ) : (
-                Object.entries(riskExposures)
-                  .slice(0, 5)
-                  .map(([k, v]) => (
-                    <div key={k} className="flex justify-between rounded border border-terminal-border bg-terminal-bg px-2 py-1">
-                      <span className="truncate text-terminal-muted">{k}</span>
-                      <span>{typeof v === "number" ? v.toFixed(4) : String(v)}</span>
-                    </div>
-                  ))
-              )}
+            <TerminalPanel title="Shared ticker PCA" subtitle="Reported variance fractions" bodyClassName="space-y-2 text-xs">
+              {riskExposuresQuery.isLoading ? <p>Loading exposures…</p> : riskExposuresQuery.isError ? <p>Exposure reference unavailable.</p> : !Array.isArray(riskExposures.pca_factors) || !riskExposures.pca_factors.length ? <p>No exposure rows.</p> : riskExposures.pca_factors.slice(0,5).map((row: { factor: string; variance_explained: unknown }) => <div key={row.factor} className="flex flex-wrap justify-between gap-2 rounded border border-terminal-border p-2"><span className="min-w-0 break-words text-terminal-muted">{row.factor}</span><span>{finite(row.variance_explained) ? riskNumber(row.variance_explained,4) : "Unavailable"}</span></div>)}
             </TerminalPanel>
           </>
         ) : null}
@@ -501,7 +492,7 @@ export function EquityLayout() {
       contentClassName="pb-16 md:pb-0"
       showInstallPrompt
       showMobileBottomNav
-      hideTickerLoader={["/equity/brain", "/equity/notes", "/equity/journal", "/equity/chart-workstation", "/equity/screener", "/equity/watchlist", "/equity/saved-views", "/equity/alerts", "/equity/settings", "/equity/launchpad", "/equity/position-sizer", "/equity/forex", "/equity/commodities", "/equity/economics", "/equity/yield-curve", "/equity/heatmap", "/equity/sector-rotation", "/equity/etf-analytics", "/equity/crypto", "/equity/dividends"].includes(location.pathname)}
+      hideTickerLoader={["/equity/brain", "/equity/notes", "/equity/journal", "/equity/chart-workstation", "/equity/screener", "/equity/watchlist", "/equity/saved-views", "/equity/alerts", "/equity/settings", "/equity/launchpad", "/equity/position-sizer", "/equity/forex", "/equity/commodities", "/equity/economics", "/equity/yield-curve", "/equity/heatmap", "/equity/sector-rotation", "/equity/etf-analytics", "/equity/crypto", "/equity/dividends", "/equity/risk"].includes(location.pathname)}
       workspacePresetStorageKey="ot:shell:equity:preset"
       rightRailStorageKey="ot:shell:equity:right-rail"
       rightRailContent={<EquityRightRail />}

@@ -22,8 +22,11 @@ The separate [Crypto review](CRYPTO_REVIEW.md) adds one render/tool destination:
 extras. #318 is merged and its frontend is accepted; non-live derivatives are a
 v5 host finding. The [Dividends review](DIVIDENDS_REVIEW.md) brings dedicated work
 to 31 render entries, including 24 tools and three shell-menu extras. Dividends
-host acceptance is open. Nine ordinary menu destinations remain, starting with
-Risk, Correlation, Stat Lab and Pair Trading. The counts
+work is merged as #319/#320, with the legacy income issue recorded for v5.
+The [Risk review](RISK_REVIEW.md) brings dedicated work to 32 render entries,
+including 25 tools and three shell-menu extras. Risk host acceptance is open.
+Eight ordinary menu destinations remain, starting with Correlation, Stat Lab and
+Pair Trading. The counts
 and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.
@@ -114,7 +117,8 @@ These are coherent review areas, not a promise of one PR per row. Split an area
 when the existing components, fixtures or review size warrant it. Paper/Sizer,
 [macro/FX](MACRO_FX_REVIEW.md), [market overview](MARKET_OVERVIEW_REVIEW.md),
 [Crypto](CRYPTO_REVIEW.md) and [Dividends](DIVIDENDS_REVIEW.md) now have dedicated
-implementation. Continue with Risk/Correlation/Stat Lab/Pair Trading, preserving
+implementation. The [Risk pass](RISK_REVIEW.md) follows; continue with
+Correlation/Stat Lab/Pair Trading, preserving
 existing analytics rather than expanding provider or calculation scope.
 
 | Order | Retained area/routes | Acceptance focus |
@@ -122,7 +126,7 @@ existing analytics rather than expanding provider or calculation scope.
 | 1 · implemented | Paper `/equity/paper`; Position Sizer `/equity/position-sizer` | Explicit account/symbol/unit/cash labels; readable existing calculator methods; scope and review before secondary setup; retained drafts and honest action outcomes. No new order types, sizing formulas or execution. |
 | 2 · implemented | Forex, Commodities, Economics, Yield Curve | Matrix/chart containment, long names, dates, visible current scope and existing provider/fallback disclosures. No new feeds or FX accounting. |
 | 3 · implemented | Market Heatmap, Rotation, Crypto, ETF Analytics | Heatmap, Rotation and ETF Analytics (#317 accepted) followed by the separate Crypto review. Responsive plots/tiles, readable filters/legends and actual existing context; populated/failure states. Provider breadth stays unchanged. |
-| 4 · Dividends implemented | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
+| 4 · Dividends/Risk implemented | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
 | 5 | MTA `/equity/mta`; DOM `/equity/dom` | Useful chart/depth space, readable instrument/interval controls, keyboard/zoom and configured versus unavailable markets. Preserve existing route/provider contracts. |
 | 6 | Backtesting `/backtesting`; direct Model governance, Algorithm framework, Portfolio optimizer | Readable setup and dated run/results, bounded inspection, busy/error/draft states. Include direct subpages without expanding their capabilities or promoting experimental tools. |
 | 7 | Account, About, Login/Register/Forgot access | Shared auth/account fields, long names, status/error text and keyboard/zoom. No broker/account/security-feature redesign. |

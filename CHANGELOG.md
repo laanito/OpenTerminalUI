@@ -27,6 +27,12 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Risk workflows** — explicit overview ticker/portfolio and factor-
+  period scopes, independent panel reads/retries, full-name classification/value
+  tables and keyboard factor visibility controls. Stress setup is compact and
+  captured per run; completed scenarios survive independent simulation/history
+  failures without automatic replay. Model, currency and reference-rail scopes
+  are explicit; existing providers and calculation conventions remain.
 - **Readable Dividends workflows** — wrapping four-view navigation, explicit
   history draft/apply controls, readable chart/value tables and keyboard-local
   numerical scrolling. Loading, empty, failed and late reads retain correct
