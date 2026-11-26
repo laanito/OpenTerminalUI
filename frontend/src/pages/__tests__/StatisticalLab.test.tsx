@@ -64,6 +64,6 @@ describe("StatisticalLab", () => {
   it("renders the statistical lab page with title", async () => {
     renderWithProviders(<StatisticalLab />);
     expect(await screen.findByText("Statistical Lab")).toBeTruthy();
-    expect(await screen.findByText("Forecasting Configuration")).toBeTruthy();
+    expect(await screen.findByText("Forecast inputs")).toBeTruthy();
   });
 });

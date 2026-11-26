@@ -1,5 +1,24 @@
 # External-agent project context
 
+#323 is merged and the maintainer confirms the mixed-market fix works. Current
+v3 slice: Statistical Lab, with seven retained analyses, labelled inputs,
+captured per-analysis runs and readable charts/exact tables. The previously blank
+Decomposition tab now explains its unavailable workflow; wiring it belongs to v5.
+See `docs/design/v3/STATLAB_REVIEW.md`. No backend/API/schema/provider/model or
+persisted-format change. Dedicated work now covers 34 render entries, including
+27 tools and three shell-menu extras. Six ordinary menu destinations remain,
+starting with Pair Trading, then MTA/DOM, Backtesting and About/Account. Direct,
+auth and hidden-route presentation and broader host acceptance still remain.
+Stat Lab host acceptance is open. No release preparation. Earlier handoffs below
+are historical; validation for this slice is recorded in its review.
+Validation: all 933 frontend tests / 154 files, production build and 189 installed-
+Chrome smoke journeys pass. After final capture/legend refinements, nine affected
+unit cases, six browser journeys and build pass again. API-reference/surface/mock/
+source/whitespace guards and review links/JSON pass. Seventeen synthetic captures
+cover readable setup/results, narrow screens and native 200% zoom. No live
+provider/model/private corpus, production DB or deployment access; the unchanged
+backend suite was not rerun. User-owned workspace dirt remains untouched.
+
 #322 is merged. Host mixed-market Correlation testing exposed exact-timestamp
 joins between crypto midnight and equity session bars; the BTC-USD.NS calendar
 warning is a separate corporate-events fallback. Current focused fix normalizes

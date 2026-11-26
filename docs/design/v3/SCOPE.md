@@ -26,8 +26,9 @@ frontend accepted). Non-live derivatives are recorded for v5. The
 work is merged as #319/#320; the reported income issue is on v5. The
 [Risk implementation](RISK_REVIEW.md) adds overview/factors/stress (#321 merged
 and accepted). The [Correlation implementation](CORRELATION_REVIEW.md) follows;
-host acceptance is open. Seven ordinary destinations remain, starting with
-Stat Lab and Pair Trading.
+it is accepted through #322/#323. The [Stat Lab implementation](STATLAB_REVIEW.md)
+adds seven retained analyses and captured-run inspection; host acceptance is open.
+Six ordinary destinations remain, starting with Pair Trading.
 Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.

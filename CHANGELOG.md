@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Statistical Lab** — labelled inputs, seven focused analysis views,
+  captured run scopes and readable charts with exact-value tables. Drafts survive
+  failures and analysis switches; pending and failed runs clear previous results.
+  The previously blank Decomposition tab explains its unavailable workflow.
+  Existing models and service defaults remain unchanged.
 - **Readable Correlation workflows** — keyboard-operable heatmap/value cells,
   labelled rolling controls and exact values, readable clusters and an expandable
   merge tree. Symbol management is disclosed; click/native entry, explicit search

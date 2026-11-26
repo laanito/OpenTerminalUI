@@ -4,8 +4,9 @@ Continues merged #321, which the maintainer confirms works as intended. This
 covers the retained Correlation matrix, rolling-pair and cluster workflows before
 Stat Lab and Pair Trading. Dedicated work now covers 33 render entries, including
 26 tool destinations and three shell-menu extras. Seven ordinary destinations
-remain; Correlation host acceptance and wider v3 acceptance are open. No release
-preparation or provider/model expansion.
+remained at this slice. #322/#323 are merged and maintainer-accepted, including
+the reported mixed-market correction below. Wider v3 acceptance stays open.
+No release preparation or provider/model expansion.
 
 ## Hierarchy and scope
 
@@ -130,8 +131,8 @@ The BTC-USD.NS warning came from the corporate-events calendar fallback, rather
 than the correlation endpoint rewriting the request. Crypto now skips Yahoo
 stock-calendar and dividend lookups, matching the existing FMP crypto guard.
 Non-crypto lookup behavior remains. Native symbols are unchanged. The broader
-provider/identity/model audit stays on v5; no live-host resolution is claimed
-until maintainer retest. Regression evidence uses synthetic native BTC-USD/AAPL/
+provider/identity/model audit stays on v5. #323 is merged; the maintainer
+confirms the correction fixes the reported issue. Regression evidence uses synthetic native BTC-USD/AAPL/
 SAP.DE histories at different UTC times, crypto weekends, missing/duplicate data,
 no-overlap cases and crypto versus genuine-equity calendar eligibility.
 
@@ -142,4 +143,4 @@ production-mock, Python compile and whitespace checks pass. The coverage-enabled
 full attempt was interrupted after prolonged local slowdown; no completed coverage
 result is claimed. New provider fixtures are stubbed and repository test isolation
 uses disposable SQLite. No production DB/deployment verification or frontend/browser
-rerun for this backend-only change. Host retest remains open.
+rerun for this backend-only change. Maintainer host retest passed.

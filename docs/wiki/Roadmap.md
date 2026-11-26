@@ -1042,9 +1042,12 @@ merged and maintainer-accepted). The
 [Correlation review](../design/v3/CORRELATION_REVIEW.md) follows with matrix,
 rolling-pair and cluster workflows (#322 merged). Host testing exposed a daily
 timestamp-alignment failure for mixed markets; a focused backend correction
-normalizes UTC date labels and excludes crypto stock-calendar lookups. Host
-retest remains open. Seven ordinary menu
-destinations remain, starting with Stat Lab and Pair Trading, then MTA/DOM,
+normalizes UTC date labels and excludes crypto stock-calendar lookups. #323 is
+merged and maintainer-confirmed working. The [Stat Lab review](../design/v3/STATLAB_REVIEW.md)
+adds readable retained analyses, captured runs and exact tables, with an honest
+notice for the previously blank Decomposition workflow. Host acceptance is open.
+Dedicated work covers 34 render entries, including 27 tools and three shell-menu
+extras. Six ordinary menu destinations remain, starting with Pair Trading, then MTA/DOM,
 Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
@@ -2019,6 +2022,12 @@ Real but unscheduled; pull into a milestone when it fits.
   scenario. Audit current-portfolio resolution and the process-local global run
   history’s durability/ownership (its authenticated route does not filter by
   user). v3 makes these limits visible without certifying or repairing the models.
+  Statistical Lab needs its missing Decomposition editor/results in a later
+  functionality release. Audit pair-column identity fallback, currency/adjusted
+  basis and calendar overlap, business-day forecast dates for crypto, model
+  calibration/zero sentinels, Hurst and Granger interpretation, and regime
+  classification/annualization. The v3 presentation preserves service defaults
+  and reported units; synthetic fixtures do not certify model accuracy.
   Correlation also needs provider/native-identity and omitted-symbol coverage,
   adjusted-price/return and currency basis, complete-case date alignment, backend
   undefined-correlation zero filling, cache order/freshness and rolling/regime/
