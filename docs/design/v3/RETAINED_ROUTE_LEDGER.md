@@ -45,7 +45,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/risk` | [RiskDashboardPage](../../../frontend/src/pages/RiskDashboard.tsx) | supported | 0 |
 | `/equity/correlation` | [CorrelationDashboardPage](../../../frontend/src/pages/CorrelationDashboardPage.tsx) | supported | 0 |
 | `/equity/stat-lab` | [StatisticalLab](../../../frontend/src/pages/StatisticalLab.tsx) | supported | 0 |
-| `/equity/pair-trading` | [PairTradingLabPage](../../../frontend/src/pages/PairTradingLabPage.tsx) | supported | 12 |
+| `/equity/pair-trading` | [PairTradingLabPage](../../../frontend/src/pages/PairTradingLabPage.tsx) | supported | 0 |
 | `/equity/oms` | [OmsCompliancePage](../../../frontend/src/pages/OmsCompliance.tsx) | Hidden compatibility | 0 |
 | `/equity/ops` | [OpsDashboardPage](../../../frontend/src/pages/OpsDashboard.tsx) | Hidden compatibility | 3 |
 | `/equity/plugins` | [PluginsPage](../../../frontend/src/pages/Plugins/Plugins.tsx) | Hidden compatibility | 1 |

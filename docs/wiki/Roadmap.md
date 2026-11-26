@@ -1045,10 +1045,12 @@ timestamp-alignment failure for mixed markets; a focused backend correction
 normalizes UTC date labels and excludes crypto stock-calendar lookups. #323 is
 merged and maintainer-confirmed working. The [Stat Lab review](../design/v3/STATLAB_REVIEW.md)
 adds readable retained analyses, captured runs and exact tables, with an honest
-notice for the previously blank Decomposition workflow. Host acceptance is open.
-Dedicated work covers 34 render entries, including 27 tools and three shell-menu
-extras. Six ordinary menu destinations remain, starting with Pair Trading, then MTA/DOM,
-Backtesting and account/auth work. Secondary/hidden
+notice for the previously blank Decomposition workflow; #324 is maintainer-tested.
+The [Pair Trading review](../design/v3/PAIR_TRADING_REVIEW.md) adds four explicit
+captured-run workflows, readable plots and exact values; host acceptance is open.
+Dedicated work covers 35 render entries, including 28 tools and three shell-menu
+extras. Five ordinary menu destinations remain: MTA, DOM, Backtesting, About and
+Account. Auth/direct and secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
 No new feature backlog is added to that usability
@@ -2028,6 +2030,12 @@ Real but unscheduled; pull into a milestone when it fits.
   calibration/zero sentinels, Hurst and Granger interpretation, and regime
   classification/annualization. The v3 presentation preserves service defaults
   and reported units; synthetic fixtures do not certify model accuracy.
+  Pair Trading also needs native identity/currency/adjusted basis and exact-date
+  joins verified, scan-wide versus per-pair overlap and omitted-pair coverage,
+  non-finite/half-life sentinels, calibration/full-sample fitting, return and exit
+  accounting, and absent trading/financing costs. Its sorted-basket cache identity
+  needs directional OLS/order verification (unlike Correlation’s order-preserving
+  cache). v3 keeps the fixed basket and existing model operations unchanged.
   Correlation also needs provider/native-identity and omitted-symbol coverage,
   adjusted-price/return and currency basis, complete-case date alignment, backend
   undefined-correlation zero filling, cache order/freshness and rolling/regime/

@@ -29,9 +29,11 @@ The [Correlation review](CORRELATION_REVIEW.md) brings dedicated work to 33
 render entries, including 26 tools and three shell-menu extras. Correlation host
 acceptance passed through #322/#323. The [Stat Lab review](STATLAB_REVIEW.md)
 brings dedicated work to 34 render entries, including 27 tools and three shell-
-menu extras; Stat Lab host acceptance is open. Six ordinary menu destinations
-remain, starting with Pair Trading. The counts
-and examples below describe the original audit baseline unless stated otherwise.
+menu extras; #324 is merged and maintainer-tested. The
+[Pair Trading review](PAIR_TRADING_REVIEW.md) brings dedicated work to 35 render
+entries, including 28 tools and three shell-menu extras. Pair Trading host
+acceptance is open. Five ordinary menu destinations remain, starting with MTA/DOM.
+The counts and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.
 
@@ -121,8 +123,9 @@ These are coherent review areas, not a promise of one PR per row. Split an area
 when the existing components, fixtures or review size warrant it. Paper/Sizer,
 [macro/FX](MACRO_FX_REVIEW.md), [market overview](MARKET_OVERVIEW_REVIEW.md),
 [Crypto](CRYPTO_REVIEW.md) and [Dividends](DIVIDENDS_REVIEW.md) now have dedicated
-implementation. The [Risk](RISK_REVIEW.md), [Correlation](CORRELATION_REVIEW.md)
-and [Stat Lab](STATLAB_REVIEW.md) passes follow; continue with Pair Trading, preserving
+implementation. The [Risk](RISK_REVIEW.md), [Correlation](CORRELATION_REVIEW.md),
+[Stat Lab](STATLAB_REVIEW.md) and [Pair Trading](PAIR_TRADING_REVIEW.md) passes
+follow; continue with MTA/DOM, preserving
 existing analytics rather than expanding provider or calculation scope.
 
 | Order | Retained area/routes | Acceptance focus |
@@ -130,7 +133,7 @@ existing analytics rather than expanding provider or calculation scope.
 | 1 · implemented | Paper `/equity/paper`; Position Sizer `/equity/position-sizer` | Explicit account/symbol/unit/cash labels; readable existing calculator methods; scope and review before secondary setup; retained drafts and honest action outcomes. No new order types, sizing formulas or execution. |
 | 2 · implemented | Forex, Commodities, Economics, Yield Curve | Matrix/chart containment, long names, dates, visible current scope and existing provider/fallback disclosures. No new feeds or FX accounting. |
 | 3 · implemented | Market Heatmap, Rotation, Crypto, ETF Analytics | Heatmap, Rotation and ETF Analytics (#317 accepted) followed by the separate Crypto review. Responsive plots/tiles, readable filters/legends and actual existing context; populated/failure states. Provider breadth stays unchanged. |
-| 4 · Dividends/Risk/Correlation/Stat Lab implemented | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
+| 4 · implemented | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
 | 5 | MTA `/equity/mta`; DOM `/equity/dom` | Useful chart/depth space, readable instrument/interval controls, keyboard/zoom and configured versus unavailable markets. Preserve existing route/provider contracts. |
 | 6 | Backtesting `/backtesting`; direct Model governance, Algorithm framework, Portfolio optimizer | Readable setup and dated run/results, bounded inspection, busy/error/draft states. Include direct subpages without expanding their capabilities or promoting experimental tools. |
 | 7 | Account, About, Login/Register/Forgot access | Shared auth/account fields, long names, status/error text and keyboard/zoom. No broker/account/security-feature redesign. |

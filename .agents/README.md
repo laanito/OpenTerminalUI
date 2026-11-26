@@ -1,5 +1,24 @@
 # External-agent project context
 
+#324 is merged and maintainer-tested. Current v3 slice: Pair Trading, with four
+explicit run workflows, effective labelled inputs, captured pair/period/threshold
+scope, separate spread/z-score plots and exact HTML values. See
+`docs/design/v3/PAIR_TRADING_REVIEW.md`. The fixed eight-symbol scan basket and
+all existing payloads/defaults/calculations remain. Host acceptance is open.
+Dedicated work now covers 35 render entries, including 28 tools and three shell-
+menu extras. Five ordinary destinations remain: MTA, DOM, Backtesting, About and
+Account; direct/auth/secondary/hidden presentation and broader acceptance remain.
+Continue with MTA/DOM after this slice. No release preparation. Prior handoffs
+below are historical; validation for this slice is recorded in its review.
+Validation: all 941 frontend tests / 155 files, production build and all 195
+installed-Chrome smoke journeys pass. After final metric/draft/native-zoom
+refinements, eight affected unit cases, six browser journeys and build pass again.
+API-reference/surface/mock/source/whitespace guards and review links/JSON pass.
+Thirteen final synthetic captures show setup, populated results and actual 200%
+Chrome zoom. The separate live-data journey is updated but not run. No live
+provider/model/private corpus, production DB, deployment or order execution;
+the unchanged backend suite was not rerun. User-owned workspace dirt remains.
+
 #323 is merged and the maintainer confirms the mixed-market fix works. Current
 v3 slice: Statistical Lab, with seven retained analyses, labelled inputs,
 captured per-analysis runs and readable charts/exact tables. The previously blank

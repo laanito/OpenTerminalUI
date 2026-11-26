@@ -5,7 +5,8 @@ its broader model/provider audit remains v5. This slice brings dedicated fronten
 work to 34 render entries, including 27 of 32 tool destinations and three shell-
 menu extras. Six ordinary menu destinations remain: Pair Trading, MTA, DOM,
 Backtesting, About and Account. Direct/auth/secondary/hidden presentation and
-broader v3 acceptance remain open. Stat Lab host acceptance is open.
+broader v3 acceptance remain open. #324 is merged and maintainer-tested;
+Stat Lab host acceptance passed. Counts above describe this historical slice.
 
 ## Retained workflows
 

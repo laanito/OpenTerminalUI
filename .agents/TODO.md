@@ -12,8 +12,8 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-#323 is merged and maintainer-confirmed working. Current slice: Statistical Lab;
-see `docs/design/v3/STATLAB_REVIEW.md`.
+#323 and #324 are merged and maintainer-tested. Current slice: Pair Trading;
+see `docs/design/v3/PAIR_TRADING_REVIEW.md`.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -21,8 +21,10 @@ dates, versions matrix cache identity and skips crypto Yahoo corporate calendars
 dividends. Host retest passed; this does not complete v5's broader model audit.
 Stat Lab's seven retained analyses now have readable setup/results and captured
 run states. The previously blank Decomposition tab has an availability notice;
-its missing editor remains v5 work. Host acceptance is open. Six ordinary menu
-destinations remain, starting with Pair Trading;
+its missing editor remains v5 work. Stat Lab host acceptance passed. Pair Trading
+now has four explicit captured-run workflows, labelled effective inputs, readable
+plots/tables and retained failed drafts. Pair Trading host acceptance is open.
+Five ordinary menu destinations remain, starting with MTA/DOM;
 provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
@@ -2320,10 +2322,15 @@ ordered v1.7 milestone above.
       - [x] Stat Lab: seven retained analyses, labelled scoped inputs, independent
             captured runs/drafts, manual retries, readable plots/exact HTML values
             and honest Decomposition availability. See
-            `docs/design/v3/STATLAB_REVIEW.md`; host acceptance open. Dedicated
+            `docs/design/v3/STATLAB_REVIEW.md`; #324 merged and maintainer-tested. Dedicated
             work covers 34 render entries, 27 tools and three shell-menu extras.
             Six ordinary menu destinations remain after this implementation.
-      - [ ] Pair Trading: scope, readable setup/results and local numerical scrolling.
+      - [x] Pair Trading: explicit test/spread/backtest/fixed-basket scan runs,
+            captured inputs/results, readable separate spread/z-score plots and
+            exact values, missing/zero states and bounded keyboard tables. See
+            `docs/design/v3/PAIR_TRADING_REVIEW.md`; host acceptance open. Dedicated
+            work covers 35 render entries, 28 tools and three shell-menu extras.
+            Five ordinary menu destinations remain, starting with MTA/DOM.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
             and configured/unavailable market scope without provider expansion.
       - [ ] Backtesting and direct governance/algorithm/optimizer subpages:
@@ -2459,6 +2466,16 @@ ordered v1.7 milestone above.
       regime classification/annualization/probabilities. v3 preserves valid API
       payloads, defaults and reported units; synthetic frontend acceptance does
       not certify statistical models, live coverage or investment usefulness.
+      Pair Trading: verify native identity, adjusted/currency basis and exact-
+      timestamp cross-market joins. The scan drops dates across its available
+      basket before testing each pair and can omit unavailable symbols/pairs;
+      audit per-pair coverage and disclosure. Review non-finite-to-zero coercion,
+      half-life 9999 sentinel, model calibration, full-sample fitting/lookahead,
+      return denominator, exit/trade accounting and costs. Pair scan cache sorts
+      basket identity although OLS direction follows supplied symbol order;
+      verify cache orientation/freshness. This is separate from Correlation's
+      already order-preserving cache. No model/provider repair is inferred from
+      synthetic frontend acceptance; no live or paper orders are placed here.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

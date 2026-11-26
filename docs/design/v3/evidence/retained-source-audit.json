@@ -760,56 +760,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 111,
-          "text": "<div className=\"text-[10px] uppercase text-terminal-muted\">{label}</div>"
-        },
-        {
-          "line": 164,
-          "text": "<div className=\"grid grid-cols-2 gap-3 md:grid-cols-5\">"
-        },
-        {
-          "line": 173,
-          "text": "<div className=\"text-[10px] uppercase text-terminal-muted\">{label}</div>"
-        },
-        {
-          "line": 205,
-          "text": "<table className=\"w-full text-left text-[11px]\">"
-        },
-        {
-          "line": 229,
-          "text": "<span className={`rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase ${item.cointegrated ? \"bg-terminal-pos/20 text-terminal-pos\" : \"bg-terminal-muted/20 text-terminal-muted\"}"
-        },
-        {
-          "line": 255,
-          "text": "<div className=\"grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6\">"
-        },
-        {
-          "line": 257,
-          "text": "<label className=\"text-[10px] uppercase text-terminal-muted\">Symbol 1</label>"
-        },
-        {
-          "line": 261,
-          "text": "<label className=\"text-[10px] uppercase text-terminal-muted\">Symbol 2</label>"
-        },
-        {
-          "line": 265,
-          "text": "<label className=\"text-[10px] uppercase text-terminal-muted\">Period</label>"
-        },
-        {
-          "line": 274,
-          "text": "<label className=\"text-[10px] uppercase text-terminal-muted\">Entry Z</label>"
-        },
-        {
-          "line": 278,
-          "text": "<label className=\"text-[10px] uppercase text-terminal-muted\">Exit Z</label>"
-        },
-        {
-          "line": 282,
-          "text": "<label className=\"text-[10px] uppercase text-terminal-muted\">Z Window</label>"
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/oms",
