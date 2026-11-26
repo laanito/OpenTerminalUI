@@ -12,13 +12,17 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-Current slice: Correlation; see `docs/design/v3/CORRELATION_REVIEW.md`.
+#323 is merged and maintainer-confirmed working. Current slice: Statistical Lab;
+see `docs/design/v3/STATLAB_REVIEW.md`.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
 dates, versions matrix cache identity and skips crypto Yahoo corporate calendars/
-dividends. Await host retest; this does not complete v5's broader model audit.
-Stat Lab/Pair Trading remain next;
+dividends. Host retest passed; this does not complete v5's broader model audit.
+Stat Lab's seven retained analyses now have readable setup/results and captured
+run states. The previously blank Decomposition tab has an availability notice;
+its missing editor remains v5 work. Host acceptance is open. Six ordinary menu
+destinations remain, starting with Pair Trading;
 provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
@@ -2312,10 +2316,14 @@ ordered v1.7 milestone above.
             context/native entry, keyboard heatmap pairs, readable rolling values
             and cluster/merge inspection. Scope/retry/search guards discard old
             responses; missing coefficients differ from zero. See
-            `docs/design/v3/CORRELATION_REVIEW.md`; host acceptance open. Seven
-            ordinary menu destinations remain after this implementation.
-      - [ ] Quant: Stat Lab and Pair
-            Trading; scope, readable setup/results and local numerical scrolling.
+            `docs/design/v3/CORRELATION_REVIEW.md`; #322/#323 merged and accepted.
+      - [x] Stat Lab: seven retained analyses, labelled scoped inputs, independent
+            captured runs/drafts, manual retries, readable plots/exact HTML values
+            and honest Decomposition availability. See
+            `docs/design/v3/STATLAB_REVIEW.md`; host acceptance open. Dedicated
+            work covers 34 render entries, 27 tools and three shell-menu extras.
+            Six ordinary menu destinations remain after this implementation.
+      - [ ] Pair Trading: scope, readable setup/results and local numerical scrolling.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
             and configured/unavailable market scope without provider expansion.
       - [ ] Backtesting and direct governance/algorithm/optimizer subpages:
@@ -2441,6 +2449,16 @@ ordered v1.7 milestone above.
       UTC date labels do not synchronize closes or equalize elapsed return
       horizons across trading calendars. Cache keys already preserve symbol order;
       the contrary assertion in the initial Correlation review was corrected.
+      Statistical Lab: implement the missing Decomposition workspace editor/results
+      only in a functionality release (endpoint exists; original tab was blank).
+      Audit native symbols and `_get_pair` positional column fallback, currency/
+      adjusted-price basis, overlap and missing-data handling. Forecast business-
+      day dates need crypto/calendar verification; review calibration, fallbacks
+      and zero sentinels. Verify cointegration half-life/z-score/signal semantics,
+      Hurst thresholds, Granger lag selection/multiple comparisons and volatility
+      regime classification/annualization/probabilities. v3 preserves valid API
+      payloads, defaults and reported units; synthetic frontend acceptance does
+      not certify statistical models, live coverage or investment usefulness.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
