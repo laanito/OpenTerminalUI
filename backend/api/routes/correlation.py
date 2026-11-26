@@ -84,10 +84,21 @@ def _returns_from_close(frame: pd.DataFrame) -> pd.Series:
     close = pd.to_numeric(frame["Close"], errors="coerce").dropna()
     if close.empty:
         return pd.Series(dtype=float)
-    returns = close.pct_change().dropna()
-    if isinstance(frame.index, pd.DatetimeIndex):
-        returns.index = frame.index[-len(returns):]
-    return returns
+    if isinstance(close.index, pd.DatetimeIndex):
+        # Daily candles are stamped at different session times by each market
+        # (e.g. crypto 00:00 UTC, US 14:30 UTC). Join their UTC date labels,
+        # rather than requiring those instants to coincide. Do not fill dates.
+        close.index = pd.to_datetime(close.index, utc=True).normalize()
+        close = close.sort_index()
+        if close.index.has_duplicates:
+            # Repeated identical observations are harmless. Conflicting daily
+            # closes cannot be resolved safely by choosing an arbitrary row.
+            if close.groupby(level=0).nunique().gt(1).any():
+                return pd.Series(dtype=float)
+            close = close[~close.index.duplicated(keep="last")]
+    # Keep the actual observation index when internal missing closes are dropped;
+    # relabelling with the tail of the original frame shifts returns onto wrong days.
+    return close.pct_change().dropna()
 
 
 async def _load_returns_frame(symbols: list[str], period: str, frequency: FrequencyCode = "daily") -> pd.DataFrame:
@@ -270,7 +281,7 @@ async def correlation_matrix(
         raise HTTPException(status_code=400, detail="At least two symbols are required")
 
     cache_key = cache_instance.build_key(
-        "correlation_matrix",
+        "correlation_matrix_utc_days_v2",
         "_".join(symbols),
         {"period": payload.period, "frequency": payload.frequency},
     )

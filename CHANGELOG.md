@@ -7,6 +7,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
 ## [Unreleased]
 
 ### Fixed
+- **Mixed-market Correlation histories** — align daily UTC date labels across
+  crypto and US/EU session timestamps, preserving each observed return’s date
+  without filling missing prices. Conflicting daily closes remain unavailable;
+  earlier matrix cache entries are bypassed. Crypto no longer starts Yahoo stock-
+  calendar/dividend lookups that could generate invalid `.NS`/`.BO` requests.
 - **Mixed-market Watchlist quotes** — each symbol subscribes with its own quote
   market instead of the search selector. EU subscriptions are accepted and
   polled using native Yahoo symbols, including `.MU` listings. Table, heatmap

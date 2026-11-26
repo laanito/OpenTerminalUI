@@ -1040,7 +1040,10 @@ frontend accepted; non-live derivatives recorded for v5). The
 [Risk review](../design/v3/RISK_REVIEW.md) covers overview/factors/stress (#321
 merged and maintainer-accepted). The
 [Correlation review](../design/v3/CORRELATION_REVIEW.md) follows with matrix,
-rolling-pair and cluster workflows; host acceptance is open. Seven ordinary menu
+rolling-pair and cluster workflows (#322 merged). Host testing exposed a daily
+timestamp-alignment failure for mixed markets; a focused backend correction
+normalizes UTC date labels and excludes crypto stock-calendar lookups. Host
+retest remains open. Seven ordinary menu
 destinations remain, starting with Stat Lab and Pair Trading, then MTA/DOM,
 Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation

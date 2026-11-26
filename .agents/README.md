@@ -1,5 +1,28 @@
 # External-agent project context
 
+#322 is merged. Host mixed-market Correlation testing exposed exact-timestamp
+joins between crypto midnight and equity session bars; the BTC-USD.NS calendar
+warning is a separate corporate-events fallback. Current focused fix normalizes
+each instrument's daily UTC labels before its own returns, keeps missing-close
+dates attached to the right observations, rejects conflicting daily duplicates,
+and versions the matrix cache. Crypto skips Yahoo stock calendars/dividends,
+matching the existing FMP guard. Native symbols and stored data are unchanged.
+No schema/API/frontend change; broad model/provider/calendar audits remain v5.
+The prior review's sorted-cache-order assertion was incorrect and is corrected;
+the existing cache preserves request order. Await host retest after this fix.
+Seven ordinary v3 destinations remain, starting with Stat Lab and Pair Trading.
+Earlier implementation/validation handoffs below are historical.
+Validation: all 2,004 backend tests pass, with three skips, in the completed run
+without pytest-cov. Thirteen new regression cases cover mixed BTC/USD-US-EU daily
+times, native symbols, all three endpoints, missing/duplicate/no-overlap data and
+crypto/equity calendar eligibility. Initial affected checks passed (25 cases;
+two further cases are included in the full run). API-reference/surface/mock,
+Python compile and whitespace checks pass. The coverage-enabled full attempt was
+interrupted after prolonged local slowdown; no complete coverage result is claimed.
+New provider fixtures are stubbed and tests use the repository's isolated SQLite
+setup; no production DB/deployment verification. Frontend/browser suites were not
+rerun because their source/contracts are unchanged. Host retest remains open.
+
 #321 is merged and the maintainer confirms Risk works as intended. Current v3
 slice is Correlation: keyboard-operable heatmap/value cells, readable rolling
 evidence, cluster groups/merge tree, disclosed symbol management and scoped read/
