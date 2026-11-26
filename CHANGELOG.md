@@ -27,6 +27,13 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Correlation workflows** — keyboard-operable heatmap/value cells,
+  labelled rolling controls and exact values, readable clusters and an expandable
+  merge tree. Symbol management is disclosed; click/native entry, explicit search
+  ranking context and primary-portfolio read/retry states share the 20-symbol cap.
+  Late responses and missing values keep their scope; valid backend calculations
+  remain unchanged. Risk’s accepted read/table pattern is shared without changing
+  its public imports.
 - **Readable Risk workflows** — explicit overview ticker/portfolio and factor-
   period scopes, independent panel reads/retries, full-name classification/value
   tables and keyboard factor visibility controls. Stress setup is compact and

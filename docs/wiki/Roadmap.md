@@ -1037,9 +1037,12 @@ and ETF Analytics (#317 merged and maintainer-accepted). The separate
 frontend accepted; non-live derivatives recorded for v5). The
 [Dividends review](../design/v3/DIVIDENDS_REVIEW.md) covers its four retained views
 (#319/#320 merged, legacy income issue recorded for v5). The
-[Risk review](../design/v3/RISK_REVIEW.md) covers overview/factors/stress, with host
-acceptance open. Eight ordinary menu destinations remain, starting with
-Correlation, Stat Lab and Pair Trading, then MTA/DOM, Backtesting and account/auth work. Secondary/hidden
+[Risk review](../design/v3/RISK_REVIEW.md) covers overview/factors/stress (#321
+merged and maintainer-accepted). The
+[Correlation review](../design/v3/CORRELATION_REVIEW.md) follows with matrix,
+rolling-pair and cluster workflows; host acceptance is open. Seven ordinary menu
+destinations remain, starting with Stat Lab and Pair Trading, then MTA/DOM,
+Backtesting and account/auth work. Secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
 No new feature backlog is added to that usability
@@ -2013,6 +2016,11 @@ Real but unscheduled; pull into a milestone when it fits.
   scenario. Audit current-portfolio resolution and the process-local global run
   history’s durability/ownership (its authenticated route does not filter by
   user). v3 makes these limits visible without certifying or repairing the models.
+  Correlation also needs provider/native-identity and omitted-symbol coverage,
+  adjusted-price/return and currency basis, complete-case date alignment, backend
+  undefined-correlation zero filling, cache order/freshness and rolling/regime/
+  linkage semantics verified. Signed ascending coefficients are not an independence
+  ranking; static baskets and search-context ranking do not establish live coverage.
 - **Portfolio Movement sub-1Y timeframes** — add 1M/3M/6M ranges with finer
   granularity (the chart is 1Y/monthly only).
 - **Notes capture from the general News feed** — notes work in News *ticker* mode

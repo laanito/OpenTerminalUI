@@ -1,5 +1,25 @@
 # External-agent project context
 
+#321 is merged and the maintainer confirms Risk works as intended. Current v3
+slice is Correlation: keyboard-operable heatmap/value cells, readable rolling
+evidence, cluster groups/merge tree, disclosed symbol management and scoped read/
+retry states. See `docs/design/v3/CORRELATION_REVIEW.md`. Risk's accepted read/table
+primitives are shared through terminal/AnalyticsRead with its imports preserved.
+No backend/model/provider expansion or saved-format change. Correlation host
+acceptance is open. Dedicated work now covers 33 render entries, including 26
+tools and three shell-menu extras; seven ordinary menu destinations remain,
+starting with Stat Lab and Pair Trading. No release preparation. Prior handoffs
+and validation below are historical.
+Validation: all 925 frontend tests / 153 files, production build and all 183
+installed-Chrome smoke journeys pass. Six new unit cases and six browser journeys
+cover scope/search/retry/empty/missing/zero, native entry/click selection, cap and
+focus behavior, pair navigation, clusters, 1440/1024/390px, 4× desktop CPU and real
+200% Chrome zoom. The eight accepted Risk unit cases also pass; shared primitives
+were checked identical apart from names/import paths. API-reference/surface/mock/
+source/whitespace guards and review links/JSON pass. Nine synthetic captures are
+linked in the review. No live provider/model/private corpus, production DB or
+deployment access; the unchanged backend suite was not rerun. User dirt remains.
+
 #319 and #320 are merged; maintainer clears continuation. Current v3 slice is
 Risk: overview, factors and stress testing, including the retained shared-ticker
 context rail. See `docs/design/v3/RISK_REVIEW.md`. Explicit page scopes, independent

@@ -11,8 +11,9 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 #318 is merged; Crypto's frontend is maintainer-accepted. Host testing reports
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
-Portfolio Income finding. Current slice: Risk overview/factors/stress; see
-`docs/design/v3/RISK_REVIEW.md`. Correlation/Stat Lab/Pair Trading remain next;
+Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
+Current slice: Correlation; see `docs/design/v3/CORRELATION_REVIEW.md`.
+Stat Lab/Pair Trading remain next;
 provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
@@ -2300,9 +2301,15 @@ ordered v1.7 milestone above.
             independent scoped reads/retries, readable chart/HTML values and
             captured stress setup. Completed scenario results survive independent
             simulation/history failures; no automatic run retry. Shared ticker
-            rail scope is explicit. See `docs/design/v3/RISK_REVIEW.md`; host
-            acceptance open. Eight ordinary menu destinations remain.
-      - [ ] Quant: Correlation, Stat Lab and Pair
+            rail scope is explicit. See `docs/design/v3/RISK_REVIEW.md`; #321
+            merged and maintainer-accepted. Eight ordinary destinations remained.
+      - [x] Correlation: disclosed symbol management, explicit search ranking
+            context/native entry, keyboard heatmap pairs, readable rolling values
+            and cluster/merge inspection. Scope/retry/search guards discard old
+            responses; missing coefficients differ from zero. See
+            `docs/design/v3/CORRELATION_REVIEW.md`; host acceptance open. Seven
+            ordinary menu destinations remain after this implementation.
+      - [ ] Quant: Stat Lab and Pair
             Trading; scope, readable setup/results and local numerical scrolling.
       - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
             and configured/unavailable market scope without provider expansion.
@@ -2415,6 +2422,14 @@ ordered v1.7 milestone above.
       global run-history durability/ownership and portfolio-id resolution; the
       existing authenticated history route does not filter rows by user. Scope
       and source review are not live model/financial/ownership certification.
+      Correlation follow-ups: provider/native symbol identity and omitted names,
+      adjusted-price/return and quote-currency basis, complete-case date alignment
+      across markets, insufficient history and backend undefined-correlation zero
+      filling. Audit matrix cache identity/order and real timestamps/coverage,
+      rolling observation/regime semantics, hierarchical linkage/distance and
+      singleton averages. The UI preserves signed ascending pair ranking; strong
+      negatives do not establish independence. Presets are static baskets and
+      search context ranks existing matches without adding provider coverage.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
