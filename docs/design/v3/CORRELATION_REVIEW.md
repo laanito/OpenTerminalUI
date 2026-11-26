@@ -68,8 +68,9 @@ and can omit symbols without history. The frontend labels requested versus retur
 scope; no adjusted-return basis, FX conversion, provider freshness or complete
 cross-market calendar coverage is established. The backend itself fills undefined
 matrix correlations with zero, which the UI cannot distinguish from a reported
-literal zero. The matrix cache sorts its symbol identity while the returned order
-can reflect an earlier request; this page respects the returned order.
+literal zero. The matrix cache preserves the request’s symbol order, and this
+page respects the returned order. The earlier assertion that the key sorted
+symbols was incorrect.
 
 Audit provider/native listing identity, history basis/coverage, zero sentinels,
 cache/freshness behavior, rolling/regime semantics and hierarchical distance,
@@ -111,3 +112,34 @@ the original 39 browser probes and baseline captures remain unchanged.
 scrolling workspace viewport at the reviewed section; lower content/local overflow
 is verified by interaction rather than claimed to fit on one screen. Native zoom
 uses Chrome surface capture through CDP to avoid CSS-sized clipping.
+
+
+## Post-merge mixed-market correction
+
+Host testing after merged #322 exposed a separate backend failure: daily crypto
+bars at midnight and US/EU bars at their session timestamps had no exact timestamp
+intersection. Correlation now aligns UTC date labels before calculating each
+instrument's own observed returns; it does not fill prices, add weekend returns,
+synchronize closes or equalize elapsed return horizons. Missing-close observations
+keep their real dates instead of being shifted to the original frame's tail.
+Identical daily duplicates collapse; conflicting closes make that instrument
+unavailable rather than selecting an arbitrary value. The matrix cache namespace
+is versioned so earlier results cannot mask the correction.
+
+The BTC-USD.NS warning came from the corporate-events calendar fallback, rather
+than the correlation endpoint rewriting the request. Crypto now skips Yahoo
+stock-calendar and dividend lookups, matching the existing FMP crypto guard.
+Non-crypto lookup behavior remains. Native symbols are unchanged. The broader
+provider/identity/model audit stays on v5; no live-host resolution is claimed
+until maintainer retest. Regression evidence uses synthetic native BTC-USD/AAPL/
+SAP.DE histories at different UTC times, crypto weekends, missing/duplicate data,
+no-overlap cases and crypto versus genuine-equity calendar eligibility.
+
+
+Correction validation: 2,004 backend tests pass with three skips in the completed
+run without pytest-cov, including 13 new regressions. API-reference, surface,
+production-mock, Python compile and whitespace checks pass. The coverage-enabled
+full attempt was interrupted after prolonged local slowdown; no completed coverage
+result is claimed. New provider fixtures are stubbed and repository test isolation
+uses disposable SQLite. No production DB/deployment verification or frontend/browser
+rerun for this backend-only change. Host retest remains open.

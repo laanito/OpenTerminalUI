@@ -13,6 +13,11 @@ non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
 Current slice: Correlation; see `docs/design/v3/CORRELATION_REVIEW.md`.
+After merged #322, host feedback exposed mixed-market daily joins failing on
+different session timestamps plus crypto calendar lookups trying .NS/.BO. A
+focused backend correction normalizes UTC date labels, preserves observation
+dates, versions matrix cache identity and skips crypto Yahoo corporate calendars/
+dividends. Await host retest; this does not complete v5's broader model audit.
 Stat Lab/Pair Trading remain next;
 provider/calculation repair stays on v5's audit track.
 
@@ -2430,6 +2435,12 @@ ordered v1.7 milestone above.
       singleton averages. The UI preserves signed ascending pair ranking; strong
       negatives do not establish independence. Presets are static baskets and
       search context ranks existing matches without adding provider coverage.
+      The post-#322 correction fixes exact-timestamp joins for daily UTC labels
+      and prevents crypto Yahoo stock-calendar/dividend suffix fallbacks. Other
+      legacy bare-equity suffix fallback behavior remains for v5 verification.
+      UTC date labels do not synchronize closes or equalize elapsed return
+      horizons across trading calendars. Cache keys already preserve symbol order;
+      the contrary assertion in the initial Correlation review was corrected.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

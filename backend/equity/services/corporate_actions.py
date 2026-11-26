@@ -156,10 +156,11 @@ class CorporateActionsService:
     CACHE_TTL_SECONDS = 1 * 60 * 60  # Reduced to 1 hour
 
     async def _fetch_yahoo_events(self, symbol: str) -> list[CorporateEvent]:
+        if is_crypto_symbol(symbol):
+            return []
         fetcher = await get_unified_fetcher()
-        # Try the symbol as given first (US/EU/explicit-suffix resolve here);
-        # only fall back to NSE/BSE suffixes if the bare symbol yields nothing,
-        # so US/EU tickers never get mislabelled as Indian.
+        # Try native listings first. The legacy bare-equity suffix fallback
+        # remains; crypto must never enter that equity-only candidate list.
         candidates = [symbol.upper()]
         if "." not in symbol:
             candidates.append(f"{symbol.upper()}.NS")
@@ -215,6 +216,8 @@ class CorporateActionsService:
         next ex-date, and is empty for many ETFs / EU names like JEIP.DE). This
         is the workhorse for dividend history and feeds next-payment projection.
         """
+        if is_crypto_symbol(symbol):
+            return []
         fetcher = await get_unified_fetcher()
         candidates = [symbol.upper()]
         if "." not in symbol:
