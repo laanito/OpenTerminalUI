@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Pair Trading Lab** — four explicit analysis workflows with labelled
+  effective inputs, captured pair/period/threshold scope, separate spread and
+  z-score plots and exact-value tables. Drafts survive failed runs, old results
+  clear on rerun, and late inactive completions keep their scope. The fixed scan
+  basket and existing statistical calculations remain unchanged.
 - **Readable Statistical Lab** — labelled inputs, seven focused analysis views,
   captured run scopes and readable charts with exact-value tables. Drafts survive
   failures and analysis switches; pending and failed runs clear previous results.

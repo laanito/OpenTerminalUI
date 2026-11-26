@@ -46,8 +46,10 @@ context (#321 merged and maintainer-accepted). The
 [Correlation review](CORRELATION_REVIEW.md) adds the matrix, rolling-pair and
 cluster workflows; #322/#323 are merged and maintainer-accepted. The
 [Stat Lab review](STATLAB_REVIEW.md) covers seven retained analyses, captured runs
-and exact-value inspection. Its host acceptance is open. Six ordinary menu
-destinations remain, starting with Pair Trading.
+and exact-value inspection; #324 is merged and maintainer-tested. The
+[Pair Trading review](PAIR_TRADING_REVIEW.md) adds four explicit captured-run
+workflows, readable plots and exact tables. Its host acceptance is open. Five
+ordinary menu destinations remain, starting with MTA/DOM.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

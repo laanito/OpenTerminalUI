@@ -30,7 +30,8 @@ test("pair trading lab renders cointegration verdict from real data", async ({ p
 
   await page.goto("/equity/pair-trading");
 
-  // Default load is VOO/SPY on the "test" tab -> hits real /api/pairs/test
+  // Explicit default run is VOO/SPY on the pair-test view -> real /api/pairs/test
+  await page.getByRole("button", { name: "Run analysis", exact: true }).click();
   const verdict = page.getByText(/Cointegrated|Not Cointegrated/i).first();
   await expect(verdict).toBeVisible({ timeout: 60_000 });
 
@@ -41,6 +42,7 @@ test("pair trading lab renders cointegration verdict from real data", async ({ p
 
   // Backtest tab should load an equity curve from real data
   await page.getByRole("button", { name: /Backtest/i }).first().click();
+  await page.getByRole("button", { name: "Run analysis", exact: true }).click();
   await expect(page.getByText(/Sharpe/i).first()).toBeVisible({ timeout: 60_000 });
 
   await page.screenshot({ path: "test-results/pair-trading-backtest.png", fullPage: true });
