@@ -4,8 +4,9 @@ Continues merged #319/#320. Their pre-existing Portfolio Income finding remains
 on v5's functionality track. Risk receives a dedicated overview/factors/stress
 pass before Correlation, Stat Lab and Pair Trading. Dedicated work now covers 32
 render entries, including 25 of the 32 tools and three shell-menu extras. Eight
-ordinary menu destinations remain. Risk host acceptance and wider v3 acceptance
-are open; this is not release preparation.
+ordinary menu destinations remained at this slice. #321 is merged and the
+maintainer confirms it works as intended. Wider v3 acceptance remains open;
+this is not release preparation.
 
 ## Reading and scope
 

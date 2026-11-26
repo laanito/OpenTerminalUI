@@ -24,8 +24,10 @@ and ETF Analytics (#317 merged and maintainer-accepted). The separate
 frontend accepted). Non-live derivatives are recorded for v5. The
 [Dividends implementation](DIVIDENDS_REVIEW.md) adds four income views;
 work is merged as #319/#320; the reported income issue is on v5. The
-[Risk implementation](RISK_REVIEW.md) adds overview/factors/stress; Risk host
-acceptance is open. Eight ordinary destinations remain, starting with quant.
+[Risk implementation](RISK_REVIEW.md) adds overview/factors/stress (#321 merged
+and accepted). The [Correlation implementation](CORRELATION_REVIEW.md) follows;
+host acceptance is open. Seven ordinary destinations remain, starting with
+Stat Lab and Pair Trading.
 Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.
