@@ -87,6 +87,7 @@ const NAV_CARD_SECTIONS: Array<{ title: string; cards: NavCard[] }> = [
       { label: "Yield Curve", to: "/equity/yield-curve", badge: "YC", configuration: CONFIGURATION_BY_PATH.get("/equity/yield-curve") },
       { label: "Rotation", to: "/equity/sector-rotation", badge: "ROT" },
       { label: "Heatmap", to: "/equity/heatmap", badge: "HM" },
+      { label: "Depth of Market", to: "/equity/dom", badge: "DOM" },
     ],
   },
   {

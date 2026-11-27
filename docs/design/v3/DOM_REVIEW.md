@@ -141,3 +141,15 @@ numerical scrolling is intentional; interactions check content beyond the frame.
 [Unavailable coverage](evidence/dom-unavailable.png) and
 [native 200% Chrome zoom](evidence/dom-native-zoom.png). Native zoom captures
 Chrome's actual surface through CDP to avoid CSS-sized clipping.
+
+## Home discovery follow-up
+
+#328 is merged. Home → Launch Matrix → Markets → **Depth of Market** now opens
+`/equity/dom`, using the full name and the shared launcher’s keyboard/responsive
+behavior. Menu → Markets → DOM remains available. This adds a shortcut to the
+existing workspace; dedicated review counts and the next Backtesting slice remain.
+
+Navigation follow-up validation: 19 existing Home/widget tests, five Home browser
+journeys (1440/1024/390px, Quant and native 200% zoom), production build, source
+audit and whitespace checks pass. Broader application/backend suites were not
+repeated for this single launcher item; the full DOM validation above is historical.

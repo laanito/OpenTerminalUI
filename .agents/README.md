@@ -1,5 +1,14 @@
 # External-agent project context
 
+#328 is merged. Current small follow-up: Home → Launch Matrix → Markets →
+Depth of Market opens `/equity/dom`, using the existing responsive/keyboard
+launcher. Menu → Markets → DOM remains available. No route/provider/calculation
+change; dedicated coverage remains 37 render entries, 30 tools and three shell-
+menu extras. Backtesting remains next. Earlier handoffs below are historical.
+Navigation follow-up validation: 19 existing Home/widget tests, five Home browser
+journeys including narrow screens and native 200% zoom, production build, source
+audit and whitespace checks pass. Broader suites were not repeated for this item.
+
 #327 is merged. Current v3 slice: DOM's readable depth/tape workspace, bounded
 local inspection and explicit failure/empty/degraded states. See
 `docs/design/v3/DOM_REVIEW.md`. The shared TimeAndSales component also improves
