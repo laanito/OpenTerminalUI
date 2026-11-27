@@ -4,7 +4,9 @@ Continues merged #324, which the maintainer confirms tested. Dedicated v3 work
 now covers 35 render entries, including 28 of 32 tool destinations and three
 shell-menu extras. Five ordinary destinations remain: MTA, DOM, Backtesting,
 About and Account. Direct/auth/secondary/hidden presentation and wider v3
-acceptance remain open. Pair Trading host acceptance is open. No release prep.
+acceptance remain open. #325 is merged and the maintainer clears continuation.
+Broader host acceptance remains open.
+Counts above describe this historical slice. No release prep.
 
 ## Hierarchy and retained operations
 

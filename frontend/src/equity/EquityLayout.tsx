@@ -492,7 +492,7 @@ export function EquityLayout() {
       contentClassName="pb-16 md:pb-0"
       showInstallPrompt
       showMobileBottomNav
-      hideTickerLoader={["/equity/brain", "/equity/notes", "/equity/journal", "/equity/chart-workstation", "/equity/screener", "/equity/watchlist", "/equity/saved-views", "/equity/alerts", "/equity/settings", "/equity/launchpad", "/equity/position-sizer", "/equity/forex", "/equity/commodities", "/equity/economics", "/equity/yield-curve", "/equity/heatmap", "/equity/sector-rotation", "/equity/etf-analytics", "/equity/crypto", "/equity/dividends", "/equity/risk", "/equity/correlation", "/equity/stat-lab", "/equity/pair-trading"].includes(location.pathname)}
+      hideTickerLoader={["/equity/brain", "/equity/notes", "/equity/journal", "/equity/chart-workstation", "/equity/screener", "/equity/watchlist", "/equity/saved-views", "/equity/alerts", "/equity/settings", "/equity/launchpad", "/equity/position-sizer", "/equity/forex", "/equity/commodities", "/equity/economics", "/equity/yield-curve", "/equity/heatmap", "/equity/sector-rotation", "/equity/etf-analytics", "/equity/crypto", "/equity/dividends", "/equity/risk", "/equity/correlation", "/equity/stat-lab", "/equity/pair-trading", "/equity/mta"].includes(location.pathname)}
       workspacePresetStorageKey="ot:shell:equity:preset"
       rightRailStorageKey="ot:shell:equity:right-rail"
       rightRailContent={<EquityRightRail />}

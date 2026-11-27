@@ -1,5 +1,27 @@
 # External-agent project context
 
+#325 is merged; the maintainer clears continuation. Current v3 slice: MTA's four
+historical chart contexts, readable scope/presets and disclosed per-chart controls,
+real plot height, exact OHLCV/EMA tables and independently scoped read states.
+See `docs/design/v3/MTA_REVIEW.md`. Presets, EMA/nearest-bar calculations, existing
+search/request market mappings and persisted ticker contracts remain. DOM is a
+separate next slice after reviewing both workspaces; no DOM implementation here.
+Dedicated work covers 36 render entries, including 29 tools and three shell-menu
+extras. Four ordinary destinations remain: DOM, Backtesting, About and Account;
+direct/auth/secondary/hidden presentation and wider host acceptance remain open.
+MTA host acceptance is open.
+No release preparation. Prior handoffs below are historical; current validation
+is recorded in the review.
+Validation: all 949 frontend tests / 156 files, production build and all 201
+installed-Chrome smoke journeys pass. After final disclosure/hover refinements,
+eight focused unit cases, seven affected browser journeys (including the retained
+fixture) and build pass again. API-reference/surface/mock/source/whitespace guards
+and review links/JSON pass. Source comparison verifies unchanged preset/market
+helpers, EMA/nearest-point/trend math and series conversions. Eleven synthetic
+captures cover setup, real plots, exact values, long names and native 200% zoom.
+No live provider/model/private corpus, production DB, deployment or execution;
+the unchanged backend suite was not rerun. User-owned workspace dirt remains.
+
 #324 is merged and maintainer-tested. Current v3 slice: Pair Trading, with four
 explicit run workflows, effective labelled inputs, captured pair/period/threshold
 scope, separate spread/z-score plots and exact HTML values. See

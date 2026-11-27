@@ -19,6 +19,9 @@ import {
 } from "react";
 
 import { fetchChart } from "../api/client";
+import { AnalyticsTable, analyticsNumber } from "../components/terminal/AnalyticsRead";
+import { TerminalButton } from "../components/terminal/TerminalButton";
+import { TerminalInput } from "../components/terminal/TerminalInput";
 import { TickerDropdown } from "../components/chart-workstation/TickerDropdown";
 import { terminalChartTheme } from "../shared/chart/chartTheme";
 import { useSettingsStore } from "../store/settingsStore";
@@ -144,7 +147,7 @@ function marketToApi(value: string): "NSE" | "NASDAQ" {
 }
 
 function formatPrice(value: number | null): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "--";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "Unavailable";
   return value.toLocaleString(undefined, {
     minimumFractionDigits: value >= 1000 ? 1 : 2,
     maximumFractionDigits: value >= 1000 ? 1 : 2,
@@ -152,7 +155,7 @@ function formatPrice(value: number | null): string {
 }
 
 function formatDiffPct(value: number | null): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "--";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "Unavailable";
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
 }
 
@@ -234,7 +237,8 @@ function computeTrendSummary(data: ChartPoint[]): TrendSummary {
   return { price, ema20, diffPct, direction };
 }
 
-function alignmentBadge(trends: TrendSummary[]): { label: "ALIGNED" | "MIXED"; className: string } {
+function alignmentBadge(trends: TrendSummary[]): { label: "ALIGNED" | "MIXED" | "UNAVAILABLE"; className: string } {
+  if (trends.some(trend => trend.price === null || trend.ema20 === null || trend.diffPct === null)) return { label: "UNAVAILABLE", className: "border-terminal-border text-terminal-muted" };
   const firstDirectional = trends.find((trend) => trend.direction !== "sideways")?.direction ?? null;
   const aligned =
     firstDirectional !== null &&
@@ -297,7 +301,7 @@ function MtaChartPanel({
   const syncEnabledRef = useRef(syncEnabled);
   const hoverTimeChangeRef = useRef(onHoverTimeChange);
   const [crosshairStyle, setCrosshairStyle] = useState<CSSProperties>({ opacity: 0 });
-  const [hoverPrice, setHoverPrice] = useState<number | null>(null);
+  const [hover, setHover] = useState<{ source: ChartPoint[]; price: number; time: number } | null>(null);
   const chartData = useMemo(() => chartPointSeriesData(data), [data]);
   const lineData = useMemo(() => priceLineData(data), [data]);
   const emaData = useMemo(
@@ -308,11 +312,12 @@ function MtaChartPanel({
       })),
     [data, indicatorPeriod],
   );
-  const latestPrice = typeof hoverPrice === "number" && Number.isFinite(hoverPrice)
-    ? hoverPrice
-    : data.length
-      ? Number(data[data.length - 1]?.c)
-      : null;
+  const inspected = hover?.source === data ? hover : null;
+  const latestPrice = inspected ? inspected.price : data.length ? Number(data[data.length - 1]?.c) : null;
+  const inspectedTime = inspected ? inspected.time : data.length ? Number(data[data.length - 1]?.t) : null;
+  const emaByTime = useMemo(() => new Map(emaData.map(point => [Number(point.time),point.value])), [emaData]);
+  const observationTime = (value: number | null) => value !== null && Number.isFinite(value) && !Number.isNaN(new Date(value*1000).getTime()) ? new Date(value*1000).toISOString().replace("T"," ").replace(".000Z"," UTC") : "Unavailable";
+
 
   useEffect(() => {
     dataRef.current = data;
@@ -332,6 +337,7 @@ function MtaChartPanel({
       ...terminalChartTheme,
       layout: {
         ...terminalChartTheme.layout,
+        fontSize: 12,
         background: {
           type: ColorType.Solid,
           color: terminalColors.panel,
@@ -385,7 +391,7 @@ function MtaChartPanel({
       const nextTime = typeof param.time === "number" ? Number(param.time) : null;
       const matched = findClosestPoint(dataRef.current, nextTime);
       startTransition(() => {
-        setHoverPrice(matched ? Number(matched.c) : null);
+        setHover(nextTime !== null && matched ? { source: dataRef.current, price: Number(matched.c), time: Number(matched.t) } : null);
       });
       if (syncEnabledRef.current) {
         hoverTimeChangeRef.current(nextTime);
@@ -452,86 +458,19 @@ function MtaChartPanel({
     });
   }, [data, sharedCrosshairTime, syncEnabled]);
 
-  return (
-    <section
-      data-testid={`mta-panel-${panelId}`}
-      className="flex min-h-[300px] flex-col rounded-sm border border-terminal-border bg-terminal-panel shadow-[0_0_0_1px_rgba(255,107,0,0.03)]"
-    >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-terminal-border px-3 py-2">
-        <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{PANEL_TITLES[panelId]}</div>
-          <div className="flex items-center gap-2">
-            <span
-              data-testid={`mta-interval-${panelId}`}
-              className="text-sm font-semibold text-terminal-text"
-            >
-              {intervalLabel}
-            </span>
-            <span className="text-xs text-terminal-muted">{symbol}</span>
-            <span className="text-sm text-terminal-text">{formatPrice(latestPrice)}</span>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 text-[10px]">
-          <div className="flex items-center gap-1 rounded border border-terminal-border bg-terminal-bg/80 p-0.5">
-            {(["candles", "line"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                className={`rounded px-2 py-1 uppercase ${
-                  chartMode === mode ? "bg-terminal-accent/20 text-terminal-accent" : "text-terminal-muted"
-                }`}
-                onClick={() => onChartModeChange(mode)}
-              >
-                {mode === "candles" ? "Candle" : "Line"}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1 rounded border border-terminal-border bg-terminal-bg/80 p-0.5">
-            {INDICATOR_PERIODS.map((period) => (
-              <button
-                key={period}
-                type="button"
-                className={`rounded px-2 py-1 ${
-                  indicatorPeriod === period ? "bg-terminal-info/15 text-terminal-info" : "text-terminal-muted"
-                }`}
-                onClick={() => onIndicatorPeriodChange(period)}
-              >
-                EMA {period}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
+  return <section aria-label={`${PANEL_TITLES[panelId]} chart context`} aria-busy={loading} data-testid={`mta-panel-${panelId}`} className="min-w-0 rounded border border-terminal-border bg-terminal-panel">
+    <header className="min-w-0 space-y-3 border-b border-terminal-border p-3">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1 basis-48"><h2 className="text-sm font-semibold text-terminal-text">{PANEL_TITLES[panelId]} · <span data-testid={`mta-interval-${panelId}`}>{intervalLabel}</span></h2><p className="mt-1 break-words text-sm text-terminal-muted">{symbol}</p></div><dl className="min-w-0"><dt className="text-xs text-terminal-muted">{inspected ? "Inspected close" : "Latest close"}</dt><dd className="mt-1 break-words text-base tabular-nums text-terminal-text" data-testid={`mta-close-${panelId}`}>{formatPrice(latestPrice)}</dd><dd className="mt-1 text-xs text-terminal-muted">{observationTime(inspectedTime)}</dd></dl></div>
+      <details><summary className="cursor-pointer text-xs text-terminal-text">Chart controls · {chartMode === "candles" ? "Candles" : "Line"} · EMA {indicatorPeriod}</summary><div className="mt-3 flex min-w-0 flex-wrap gap-3"><label className="min-w-0 flex-1 basis-40 space-y-2 text-xs text-terminal-text">Chart style<TerminalInput as="select" className="block text-sm" value={chartMode} onChange={event => onChartModeChange(event.target.value as ChartMode)}><option value="candles">Candles</option><option value="line">Line</option></TerminalInput></label><label className="min-w-0 flex-1 basis-40 space-y-2 text-xs text-terminal-text">EMA overlay<TerminalInput as="select" className="block text-sm" value={indicatorPeriod} onChange={event => onIndicatorPeriodChange(Number(event.target.value) as IndicatorPeriod)}>{INDICATOR_PERIODS.map(period => <option key={period} value={period}>EMA {period}</option>)}</TerminalInput></label></div></details>
+    </header>
+    <div className="relative h-80 min-w-0 overflow-hidden">
+      <div ref={hostRef} role="img" aria-label={`${PANEL_TITLES[panelId]} ${intervalLabel} price chart`} className="h-full w-full" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 top-0 z-[4] w-px" style={{ ...(data.length ? crosshairStyle : { opacity: 0 }), background: PANEL_CROSSHAIR_COLORS[panelId], boxShadow: `0 0 12px ${PANEL_CROSSHAIR_COLORS[panelId]}` }} />
+      {loading ? <p role="status" className="absolute inset-0 flex items-center justify-center bg-terminal-panel/90 p-4 text-sm text-terminal-muted">Loading {intervalLabel} history…</p> : error ? <p role="alert" className="absolute inset-0 flex items-center justify-center bg-terminal-panel/90 p-4 text-center text-sm text-terminal-neg">{error}</p> : !data.length ? <p role="status" className="absolute inset-0 flex items-center justify-center bg-terminal-panel/90 p-4 text-sm text-terminal-muted">No chart data returned for this context.</p> : null}
+    </div>
+    <details className="min-w-0 border-t border-terminal-border p-3"><summary className="cursor-pointer text-sm text-terminal-text">Exact observations · EMA {indicatorPeriod}</summary><div className="mt-3"><AnalyticsTable name={`${PANEL_TITLES[panelId]} exact observations`} headers={["UTC observation","Open","High","Low","Close","Volume",`EMA ${indicatorPeriod}`]} rows={data.map(point => [observationTime(Number(point.t)),analyticsNumber(point.o,4),analyticsNumber(point.h,4),analyticsNumber(point.l,4),analyticsNumber(point.c,4),analyticsNumber(point.v,0),analyticsNumber(emaByTime.get(Number(point.t)),4)])} /></div></details>
+  </section>;
 
-      <div className="relative flex-1 overflow-hidden">
-        <div ref={hostRef} className="h-full w-full" />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 top-0 z-[4] w-px"
-          style={{
-            ...crosshairStyle,
-            background: PANEL_CROSSHAIR_COLORS[panelId],
-            boxShadow: `0 0 12px ${PANEL_CROSSHAIR_COLORS[panelId]}`,
-          }}
-        />
-        {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-terminal-panel/80 text-xs text-terminal-muted">
-            Loading {intervalLabel}...
-          </div>
-        ) : null}
-        {!loading && error ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-terminal-panel/85 px-4 text-center text-xs text-terminal-neg">
-            {error}
-          </div>
-        ) : null}
-        {!loading && !error && data.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-terminal-panel/80 text-xs text-terminal-muted">
-            No chart data
-          </div>
-        ) : null}
-      </div>
-    </section>
-  );
 }
 
 export function MultiTimeframePage() {
@@ -554,79 +493,30 @@ export function MultiTimeframePage() {
     "short-term": 20,
     execution: 20,
   });
-  const [datasets, setDatasets] = useState<Record<PanelRole, PanelDataset>>(() => ({
-    "long-term": { interval: PRESETS[1].frames[0], data: [], loading: true, error: null },
-    "medium-term": { interval: PRESETS[1].frames[1], data: [], loading: true, error: null },
-    "short-term": { interval: PRESETS[1].frames[2], data: [], loading: true, error: null },
-    execution: { interval: PRESETS[1].frames[3], data: [], loading: true, error: null },
-  }));
-
+  const [revision,setRevision] = useState(0);
+  const [companyName,setCompanyName] = useState<string | null>(null);
   const market = useMemo(() => marketToApi(selectedMarket), [selectedMarket]);
   const dropdownMarket = useMemo(() => marketToDropdown(selectedMarket), [selectedMarket]);
-  const preset = useMemo(() => PRESETS.find((item) => item.key === presetKey) ?? PRESETS[1], [presetKey]);
+  const preset = useMemo(() => PRESETS.find(item => item.key === presetKey) ?? PRESETS[1], [presetKey]);
+  const scope = JSON.stringify([symbol,market,presetKey,revision]);
+  const emptyPanels = useMemo<Record<PanelRole,PanelDataset>>(() => { const panel = (index: number): PanelDataset => ({ interval: preset.frames[index],data: [],loading: true,error: null }); return { "long-term": panel(0),"medium-term": panel(1),"short-term": panel(2),execution: panel(3) }; }, [preset]);
+  const [read,setRead] = useState<{ scope: string; panels: Record<PanelRole,PanelDataset> }>({ scope: "",panels: emptyPanels });
+  const datasets = read.scope === scope ? read.panels : emptyPanels;
 
-  useEffect(() => {
-    const nextSymbol = normalizeTicker(symbol);
-    if (!nextSymbol) return;
-    setPersistedTicker(nextSymbol);
-  }, [setPersistedTicker, symbol]);
-
+  useEffect(() => { const next = normalizeTicker(symbol); if (next) setPersistedTicker(next); }, [symbol,setPersistedTicker]);
+  useEffect(() => { setSharedCrosshairTime(null); }, [scope]);
   useEffect(() => {
     let active = true;
-    const roles = PANEL_ROLES;
-    const nextIntervals = preset.frames;
-
-    setDatasets((current) =>
-      roles.reduce((acc, role, index) => {
-        acc[role] = {
-          ...current[role],
-          interval: nextIntervals[index],
-          loading: true,
-          error: null,
-        };
-        return acc;
-      }, {} as Record<PanelRole, PanelDataset>),
-    );
-
-    void Promise.all(
-      roles.map(async (role, index) => {
-        const interval = nextIntervals[index];
-        try {
-          const response = await fetchChart(symbol, interval.interval, interval.range, market);
-          return {
-            role,
-            interval,
-            data: Array.isArray(response.data) ? response.data : [],
-            error: null,
-          };
-        } catch (error) {
-          return {
-            role,
-            interval,
-            data: [],
-            error: error instanceof Error ? error.message : "Failed to load chart",
-          };
-        }
-      }),
-    ).then((results) => {
-      if (!active) return;
-      setDatasets(
-        results.reduce((acc, result) => {
-          acc[result.role] = {
-            interval: result.interval,
-            data: result.data,
-            loading: false,
-            error: result.error,
-          };
-          return acc;
-        }, {} as Record<PanelRole, PanelDataset>),
-      );
+    setRead({ scope,panels: emptyPanels });
+    PANEL_ROLES.forEach(async (role,index) => {
+      const interval = preset.frames[index];
+      let data: ChartPoint[] = [],error: string | null = null;
+      try { const response = await fetchChart(symbol,interval.interval,interval.range,market); data = Array.isArray(response.data) ? response.data : []; }
+      catch { error = "Could not load this context. Refresh charts to retry; no previous values are shown."; }
+      if (active) setRead(current => current.scope === scope ? { scope,panels: { ...current.panels,[role]: { interval,data,loading: false,error } } } : current);
     });
-
-    return () => {
-      active = false;
-    };
-  }, [market, preset, symbol]);
+    return () => { active = false; };
+  }, [scope,emptyPanels,market,preset,symbol]);
 
   const trendSummaries = useMemo(
     () =>
@@ -643,152 +533,15 @@ export function MultiTimeframePage() {
     [trendSummaries],
   );
 
-  return (
-    <div
-      data-testid="mta-page"
-      className="flex min-h-full flex-col gap-4 px-4 py-4 md:px-6"
-    >
-      <section className="rounded-sm border border-terminal-border bg-terminal-panel">
-        <div className="flex flex-col gap-3 border-b border-terminal-border px-4 py-3">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-terminal-text">Multi-Timeframe Analysis</h1>
-              <p className="text-xs text-terminal-muted">
-                Four linked contexts for structural trend, intermediate setup, lower timeframe timing, and execution.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex min-w-[220px] items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Symbol</span>
-                <TickerDropdown
-                  value={symbol}
-                  market={dropdownMarket}
-                  placeholder="Search symbol"
-                  inputTestId="mta-symbol-input"
-                  className="w-full"
-                  inputClassName="w-full min-w-[180px]"
-                  onChange={(ticker) => {
-                    const next = normalizeTicker(ticker);
-                    setSharedCrosshairTime(null);
-                    setSymbol(next);
-                  }}
-                />
-              </div>
-              <label
-                className="inline-flex items-center gap-2 rounded border border-terminal-border bg-terminal-bg/80 px-3 py-2 text-xs text-terminal-text"
-                data-testid="mta-crosshair-toggle"
-              >
-                <input
-                  type="checkbox"
-                  checked={syncEnabled}
-                  onChange={(event) => {
-                    const enabled = event.target.checked;
-                    setSyncEnabled(enabled);
-                    if (!enabled) setSharedCrosshairTime(null);
-                  }}
-                  className="accent-terminal-accent"
-                />
-                Crosshair Sync
-              </label>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {PRESETS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                data-testid={`mta-preset-${item.key}`}
-                className={`rounded-sm border px-3 py-2 text-xs ${
-                  presetKey === item.key
-                    ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent"
-                    : "border-terminal-border bg-terminal-bg/80 text-terminal-muted hover:text-terminal-text"
-                }`}
-                onClick={() => {
-                  setPresetKey(item.key);
-                  setSharedCrosshairTime(null);
-                }}
-              >
-                {item.label}
-                <span className="ml-2 text-[10px] opacity-70">
-                  {item.frames.map((frame) => frame.label).join(" / ")}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div
-          data-testid="mta-grid"
-          className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2"
-        >
-          {PANEL_ROLES.map((role) => (
-            <MtaChartPanel
-              key={role}
-              panelId={role}
-              symbol={symbol}
-              intervalLabel={datasets[role].interval.label}
-              data={datasets[role].data}
-              loading={datasets[role].loading}
-              error={datasets[role].error}
-              chartMode={chartModes[role]}
-              indicatorPeriod={indicatorPeriods[role]}
-              syncEnabled={syncEnabled}
-              sharedCrosshairTime={sharedCrosshairTime}
-              onHoverTimeChange={(time) => {
-                if (!syncEnabled) return;
-                setSharedCrosshairTime(time);
-              }}
-              onChartModeChange={(mode) =>
-                setChartModes((current) => ({ ...current, [role]: mode }))
-              }
-              onIndicatorPeriodChange={(period) =>
-                setIndicatorPeriods((current) => ({ ...current, [role]: period }))
-              }
-            />
-          ))}
-        </div>
-      </section>
-
-      <section
-        data-testid="mta-trend-summary"
-        className="rounded-sm border border-terminal-border bg-terminal-panel"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-terminal-border px-4 py-3">
-          <div>
-            <h2 className="text-sm font-semibold text-terminal-text">Trend Summary</h2>
-            <p className="text-xs text-terminal-muted">
-              Relative position versus EMA20 across the selected preset stack.
-            </p>
-          </div>
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${alignment.className}`}>
-            {alignment.label}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-4">
-          {trendSummaries.map(({ role, intervalLabel, summary }) => {
-            const visual = trendVisual(summary.direction);
-            return (
-              <div
-                key={role}
-                data-testid={`mta-trend-${role}`}
-                className="rounded-sm border border-terminal-border bg-terminal-bg/70 p-3"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold text-terminal-text">{intervalLabel}</span>
-                  <span
-                    data-testid={`mta-trend-arrow-${role}`}
-                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm ${visual.tone}`}
-                  >
-                    {visual.arrow}
-                  </span>
-                </div>
-                <div className="mt-3 text-sm text-terminal-text">{formatPrice(summary.price)}</div>
-                <div className="mt-1 text-xs text-terminal-muted">{formatTrendMessage(summary)}</div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-    </div>
-  );
+  return <main aria-label="Multi-timeframe workspace" data-testid="mta-page" className="min-w-0 space-y-4 p-3 text-terminal-text sm:p-4">
+    <header className="space-y-2"><h1 className="text-lg font-semibold">Multi-Timeframe Analysis</h1><p className="text-sm text-terminal-muted">Four chart contexts for structural trend, intermediate setup, timing and execution.</p></header>
+    <section aria-label="Timeframe scope" className="min-w-0 space-y-3 rounded border border-terminal-border bg-terminal-panel p-3">
+      <div className="flex min-w-0 flex-wrap items-end gap-3"><div className="min-w-0 flex-1 basis-64 space-y-2"><p className="text-xs">Chart symbol</p><TickerDropdown key={dropdownMarket} value={symbol} market={dropdownMarket} placeholder="Search symbol" inputTestId="mta-symbol-input" className="w-full min-w-0 [&_.ticker-dropdown-results]:w-full [&_.ticker-dropdown-results]:max-w-full [&_.ticker-dropdown-item]:flex-col [&_.ticker-dropdown-item]:items-start [&_.ticker-dropdown-item]:break-words" inputClassName="w-full !min-w-0 !text-sm" onChange={(ticker,_context,name) => { const next = normalizeTicker(ticker); if (!next) return; setSharedCrosshairTime(null); setSymbol(next); setCompanyName(name || null); }} /></div><label data-testid="mta-crosshair-toggle" className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={syncEnabled} onChange={event => { setSyncEnabled(event.target.checked); if (!event.target.checked) setSharedCrosshairTime(null); }} />Crosshair sync</label><TerminalButton type="button" onClick={() => setRevision(value => value+1)} className="normal-case tracking-normal">Refresh charts</TerminalButton></div>
+      <p className="break-words text-sm text-terminal-muted">{symbol} · {market} · {preset.label}{companyName ? ` · ${companyName}` : ""}</p>
+      <nav aria-label="Timeframe presets" className="flex min-w-0 flex-wrap gap-2">{PRESETS.map(item => <TerminalButton key={item.key} type="button" data-testid={`mta-preset-${item.key}`} aria-pressed={presetKey === item.key} variant={presetKey === item.key ? "accent" : "default"} className="normal-case tracking-normal" onClick={() => { setPresetKey(item.key); setSharedCrosshairTime(null); }}>{item.label}<span className="ml-2 text-xs normal-case">{item.frames.map(frame => frame.label).join(" / ")}</span></TerminalButton>)}</nav>
+    </section>
+    <div data-testid="mta-grid" className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-2">{PANEL_ROLES.map(role => <MtaChartPanel key={role} panelId={role} symbol={symbol} intervalLabel={datasets[role].interval.label} data={datasets[role].data} loading={datasets[role].loading} error={datasets[role].error} chartMode={chartModes[role]} indicatorPeriod={indicatorPeriods[role]} syncEnabled={syncEnabled} sharedCrosshairTime={sharedCrosshairTime} onHoverTimeChange={time => { if (syncEnabled) setSharedCrosshairTime(time); }} onChartModeChange={mode => setChartModes(current => ({ ...current,[role]: mode }))} onIndicatorPeriodChange={period => setIndicatorPeriods(current => ({ ...current,[role]: period }))} />)}</div>
+    <details data-testid="mta-trend-summary" className="min-w-0 rounded border border-terminal-border bg-terminal-panel p-3"><summary className="cursor-pointer text-sm font-semibold">Trend summary · <span className={`rounded border px-2 py-1 text-xs ${alignment.className}`}>{alignment.label}</span></summary><p className="mt-3 text-sm text-terminal-muted">Latest closes versus EMA20 across the selected stack. This summary always uses EMA20, independently of each chart’s selected overlay.</p><div className="mt-3 flex min-w-0 flex-wrap gap-3">{trendSummaries.map(({ role,intervalLabel,summary }) => { const ready = summary.price !== null && summary.ema20 !== null && summary.diffPct !== null; const visual = ready ? trendVisual(summary.direction) : { arrow: "—",tone: "border-terminal-border text-terminal-muted" }; return <section key={role} aria-label={`${PANEL_TITLES[role]} trend`} data-testid={`mta-trend-${role}`} className="min-w-0 flex-1 basis-48 rounded border border-terminal-border p-3"><div className="flex min-w-0 flex-wrap items-center justify-between gap-3"><h2 className="text-sm font-semibold">{PANEL_TITLES[role]} · {intervalLabel}</h2><span data-testid={`mta-trend-arrow-${role}`} className={`rounded border px-2 py-1 text-sm ${visual.tone}`}>{visual.arrow}</span></div><p className="mt-3 break-words text-sm">{formatPrice(summary.price)}</p><p className="mt-2 text-xs text-terminal-muted">{datasets[role].loading ? "Loading history…" : datasets[role].error ? "History unavailable" : formatTrendMessage(summary)}</p></section>; })}</div></details>
+    <details className="rounded border border-terminal-border p-3 text-sm"><summary className="cursor-pointer">Context and interpretation</summary><div className="mt-3 space-y-2 text-terminal-muted"><p>These are historical chart observations, not live execution signals. M = monthly, W = weekly, D = daily, H = hours, m = minutes. Crosshair sync marks the nearest available bar in each context; different observation times do not imply simultaneous prices.</p><p>EMA20 alignment is the retained trend heuristic, not a validated trading conclusion. Search retains its US/India context, and chart requests retain the existing NASDAQ/NSE market mapping. Listing coverage, interval availability and adjusted-price/currency basis depend on the existing data service. No display-currency conversion is applied here.</p></div></details>
+  </main>;
 }
