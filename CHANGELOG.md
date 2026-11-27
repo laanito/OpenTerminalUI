@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Multi-Timeframe Analysis** — four plots with reliable height, readable
+  scope/presets and disclosed per-chart style/EMA controls. Exact OHLCV/EMA tables
+  support keyboard review. Contexts complete independently, clear old values on
+  scope changes and offer manual refresh; incomplete histories no longer imply
+  neutral or mixed trend alignment. Existing presets and calculations remain.
 - **Readable Pair Trading Lab** — four explicit analysis workflows with labelled
   effective inputs, captured pair/period/threshold scope, separate spread and
   z-score plots and exact-value tables. Drafts survive failed runs, old results

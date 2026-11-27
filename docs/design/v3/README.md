@@ -48,8 +48,10 @@ cluster workflows; #322/#323 are merged and maintainer-accepted. The
 [Stat Lab review](STATLAB_REVIEW.md) covers seven retained analyses, captured runs
 and exact-value inspection; #324 is merged and maintainer-tested. The
 [Pair Trading review](PAIR_TRADING_REVIEW.md) adds four explicit captured-run
-workflows, readable plots and exact tables. Its host acceptance is open. Five
-ordinary menu destinations remain, starting with MTA/DOM.
+workflows, readable plots and exact tables (#325 merged). The
+[MTA review](MTA_REVIEW.md) gives its four contexts real plot height, readable
+controls, exact observations and independently scoped read states; host acceptance
+is open. Four ordinary menu destinations remain, starting with DOM.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

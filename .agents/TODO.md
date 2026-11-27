@@ -12,8 +12,9 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-#323 and #324 are merged and maintainer-tested. Current slice: Pair Trading;
-see `docs/design/v3/PAIR_TRADING_REVIEW.md`.
+#325 is merged; the maintainer clears continuation. Current slice: MTA;
+see `docs/design/v3/MTA_REVIEW.md`. DOM follows as a separate slice because each
+workspace has its own chart/depth state and review requirements.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -24,7 +25,9 @@ run states. The previously blank Decomposition tab has an availability notice;
 its missing editor remains v5 work. Stat Lab host acceptance passed. Pair Trading
 now has four explicit captured-run workflows, labelled effective inputs, readable
 plots/tables and retained failed drafts. Pair Trading host acceptance is open.
-Five ordinary menu destinations remain, starting with MTA/DOM;
+MTA now has readable chart scope/controls, reliable real plot height, exact tables
+and independent scoped reads; its host acceptance is open. Four ordinary menu
+destinations remain, starting with DOM;
 provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
@@ -2331,8 +2334,14 @@ ordered v1.7 milestone above.
             `docs/design/v3/PAIR_TRADING_REVIEW.md`; host acceptance open. Dedicated
             work covers 35 render entries, 28 tools and three shell-menu extras.
             Five ordinary menu destinations remain, starting with MTA/DOM.
-      - [ ] MTA and DOM: plot/depth space, readable instrument/interval controls
-            and configured/unavailable market scope without provider expansion.
+      - [x] MTA: four real plots, readable scope/presets and disclosed independent
+            controls, exact OHLCV/EMA tables, scoped read clearing, independent
+            completion and honest incomplete trend states. See
+            `docs/design/v3/MTA_REVIEW.md`; host acceptance open. Dedicated work
+            covers 36 render entries, 29 tools and three shell-menu extras.
+            Four ordinary menu destinations remain, starting with DOM.
+      - [ ] DOM: useful depth space, readable instrument/refresh controls and
+            configured/unavailable market scope without provider expansion.
       - [ ] Backtesting and direct governance/algorithm/optimizer subpages:
             setup, populated runs/results, bounded inspection and async states.
       - [ ] Account, About and login/register/forgot-access: labelled/wrapping
@@ -2476,6 +2485,16 @@ ordered v1.7 milestone above.
       verify cache orientation/freshness. This is separate from Correlation's
       already order-preserving cache. No model/provider repair is inferred from
       synthetic frontend acceptance; no live or paper orders are placed here.
+      MTA: verify legacy BSE→NSE and non-India→NASDAQ request mapping, US/IN search
+      context and shared picker search race/metadata behavior. Inspect available
+      4h/intraday periods, normalized/legacy history fallback, currency/adjusted
+      basis and missing/duplicate/sorted bars. Preserve EMA seeding and nearest-bar
+      crosshair semantics until model review; EMA20/±0.5% alignment is a heuristic,
+      independent of the selected overlay. Currency metadata/warnings currently
+      are not consumed by this page. v3 does not certify provider/indicator values.
+      DOM source observations for its later audit: inferred volume-at-price bars,
+      market fallback and missing/stale quote/depth presentation need provenance
+      review. No DOM fixes or provider validation are included in the MTA slice.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

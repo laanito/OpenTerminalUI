@@ -841,32 +841,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 462,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.2em] text-terminal-muted\">{PANEL_TITLES[panelId]}</div>"
-        },
-        {
-          "line": 474,
-          "text": "<div className=\"flex flex-wrap items-center gap-3 text-[10px]\">"
-        },
-        {
-          "line": 661,
-          "text": "<div className=\"flex min-w-[220px] items-center gap-2\">"
-        },
-        {
-          "line": 662,
-          "text": "<span className=\"text-[10px] uppercase tracking-[0.2em] text-terminal-muted\">Symbol</span>"
-        },
-        {
-          "line": 669,
-          "text": "inputClassName=\"w-full min-w-[180px]\""
-        },
-        {
-          "line": 712,
-          "text": "<span className=\"ml-2 text-[10px] opacity-70\">"
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/dom",

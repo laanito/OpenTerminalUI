@@ -30,14 +30,16 @@ function makeSeries(interval: string, symbol: string) {
 test.describe("Multi-timeframe dashboard", () => {
   test.beforeEach(async ({ page }) => {
     const context = page.context();
+    await context.routeWebSocket("**/*", socket => socket.close());
+    await context.route("**/api/**", route => route.fulfill({ json: { items: [], results: [], alerts: [] } }));
 
-    await context.route(/http:\/\/127\.0\.0\.1:\d+\/api\/search(?:\?.*)?$/, async (route) => {
+    await context.route(/http:\/\/127\.0\.0\.1:\d+\/api\/instruments\/search(?:\?.*)?$/, async (route) => {
       const url = new URL(route.request().url());
       const q = (url.searchParams.get("q") || "").toUpperCase();
       const symbol = q.includes("TCS") ? "TCS" : "RELIANCE";
       await route.fulfill({
         json: {
-          results: [{ ticker: symbol, name: symbol === "TCS" ? "Tata Consultancy Services" : "Reliance Industries", country_code: "IN" }],
+          results: [{ display_symbol: symbol, canonical_id: symbol, type: "stock", exchange: "NSE", name: symbol === "TCS" ? "Tata Consultancy Services" : "Reliance Industries", country_code: "IN" }],
         },
       });
     });
@@ -52,7 +54,7 @@ test.describe("Multi-timeframe dashboard", () => {
           ticker: symbol,
           interval,
           currency: "INR",
-          data: makeSeries(interval, symbol),
+          data: makeSeries(interval, symbol).map(point => url.searchParams.get("normalized") === "true" ? { ...point,t: point.t*1000 } : point),
         },
       });
     };
