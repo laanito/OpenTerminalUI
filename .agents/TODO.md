@@ -12,9 +12,9 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-#325 is merged; the maintainer clears continuation. Current slice: MTA;
-see `docs/design/v3/MTA_REVIEW.md`. DOM follows as a separate slice because each
-workspace has its own chart/depth state and review requirements.
+#326 is merged and the maintainer confirms MTA works. Current small follow-up:
+Home Launch Matrix → Research → Multi-Timeframe Analysis for better discovery.
+See `docs/design/v3/MTA_REVIEW.md`. DOM follows as the next separate slice.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -26,7 +26,7 @@ its missing editor remains v5 work. Stat Lab host acceptance passed. Pair Tradin
 now has four explicit captured-run workflows, labelled effective inputs, readable
 plots/tables and retained failed drafts. Pair Trading host acceptance is open.
 MTA now has readable chart scope/controls, reliable real plot height, exact tables
-and independent scoped reads; its host acceptance is open. Four ordinary menu
+and independent scoped reads; #326 is maintainer-accepted. Four ordinary menu
 destinations remain, starting with DOM;
 provider/calculation repair stays on v5's audit track.
 
@@ -2337,7 +2337,8 @@ ordered v1.7 milestone above.
       - [x] MTA: four real plots, readable scope/presets and disclosed independent
             controls, exact OHLCV/EMA tables, scoped read clearing, independent
             completion and honest incomplete trend states. See
-            `docs/design/v3/MTA_REVIEW.md`; host acceptance open. Dedicated work
+            `docs/design/v3/MTA_REVIEW.md`; #326 maintainer-accepted. Home Research
+            now has a full-name launcher card for the existing workspace. Dedicated work
             covers 36 render entries, 29 tools and three shell-menu extras.
             Four ordinary menu destinations remain, starting with DOM.
       - [ ] DOM: useful depth space, readable instrument/refresh controls and

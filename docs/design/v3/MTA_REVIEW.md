@@ -8,7 +8,10 @@ This slice implements MTA; DOM is next.
 Dedicated v3 work now covers 36 render entries, including 29 of 32 tool destinations
 and three shell-menu extras. Four ordinary destinations remain: DOM, Backtesting,
 About and Account. Direct/auth/secondary/hidden presentation and broader host
-acceptance remain open. MTA host acceptance is open. No release preparation.
+acceptance remain open. #326 is merged and maintainer-confirmed working.
+Home discovery follow-up: **Launch Matrix → Research → Multi-Timeframe Analysis**
+opens `/equity/mta`; the existing Menu → Workspace → MTA entry also remains.
+No release preparation.
 
 ## Chart-first hierarchy
 
@@ -118,3 +121,15 @@ check lower content and intentional local numerical scrolling.
 [Native 200% Chrome zoom](evidence/mta-native-zoom.png) uses a Chrome surface
 capture through CDP to avoid CSS-sized clipping. It focuses the exact-value table;
 keyboard checks cover both scroll directions and real plots keep useful height.
+
+## Home discovery follow-up
+
+After confirming #326 works, the maintainer requested a Research card on Home.
+The Launch Matrix now shows **Multi-Timeframe Analysis** with the existing `MT`
+badge and `/equity/mta` destination. The shared launcher supplies its normal
+keyboard activation, responsive label wrapping and workspace-preset ordering.
+Nineteen existing Home/widget tests, five Home browser journeys and production
+build pass, including 1440/1024/390px, Quant and actual 200% Chrome zoom. Source-
+audit and whitespace checks pass. Broad application/backend suites were not
+repeated for this single navigation item; the full MTA validation above remains
+historical. DOM remains the next page review.

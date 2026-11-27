@@ -50,8 +50,8 @@ and exact-value inspection; #324 is merged and maintainer-tested. The
 [Pair Trading review](PAIR_TRADING_REVIEW.md) adds four explicit captured-run
 workflows, readable plots and exact tables (#325 merged). The
 [MTA review](MTA_REVIEW.md) gives its four contexts real plot height, readable
-controls, exact observations and independently scoped read states; host acceptance
-is open. Four ordinary menu destinations remain, starting with DOM.
+controls, exact observations and independently scoped read states; #326 is merged
+and maintainer-confirmed working. Home’s Launch Matrix now links to MTA under Research. Four ordinary menu destinations remain, starting with DOM.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

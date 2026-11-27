@@ -32,6 +32,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **MTA discovery from Home** — a Multi-Timeframe Analysis card under Research in
+  the Launch Matrix opens the existing MTA workspace.
 - **Readable Multi-Timeframe Analysis** — four plots with reliable height, readable
   scope/presets and disclosed per-chart style/EMA controls. Exact OHLCV/EMA tables
   support keyboard review. Contexts complete independently, clear old values on

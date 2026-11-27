@@ -112,6 +112,7 @@ const NAV_CARD_SECTIONS: Array<{ title: string; cards: NavCard[] }> = [
       { label: "Factors", to: "/equity/factors", badge: "FAC" },
       { label: "Intelligence", to: "/equity/intelligence-timeline", badge: "INT" },
       { label: "Compare", to: "/equity/compare", badge: "CMP" },
+      { label: "Multi-Timeframe Analysis", to: "/equity/mta", badge: "MT" },
     ],
   },
   {
