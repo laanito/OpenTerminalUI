@@ -30,8 +30,8 @@ it is accepted through #322/#323. The [Stat Lab implementation](STATLAB_REVIEW.m
 adds seven retained analyses and captured-run inspection (#324 maintainer-tested).
 The [Pair Trading implementation](PAIR_TRADING_REVIEW.md) adds four explicit runs,
 readable plots and exact tables (#325 merged). The [MTA implementation](MTA_REVIEW.md)
-adds four real plots, readable controls and exact observations; host acceptance
-is open. Four ordinary destinations remain, starting with DOM.
+adds four real plots, readable controls and exact observations (#326 accepted).
+Home’s Research Launch Matrix card makes the existing MTA workspace discoverable. Four ordinary destinations remain, starting with DOM.
 Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.

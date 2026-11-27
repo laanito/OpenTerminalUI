@@ -34,7 +34,8 @@ menu extras; #324 is merged and maintainer-tested. The
 entries, including 28 tools and three shell-menu extras. Pair Trading host
 acceptance remains open; #325 is merged. The [MTA review](MTA_REVIEW.md) brings
 dedicated work to 36 render entries, including 29 tools and three shell-menu extras.
-MTA host acceptance is open. Four ordinary menu destinations remain, starting with DOM.
+MTA is accepted through #326, with a Home Research card for discovery. Four ordinary
+menu destinations remain, starting with DOM.
 The counts and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.

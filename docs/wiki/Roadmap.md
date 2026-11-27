@@ -1049,7 +1049,8 @@ notice for the previously blank Decomposition workflow; #324 is maintainer-teste
 The [Pair Trading review](../design/v3/PAIR_TRADING_REVIEW.md) adds four explicit
 captured-run workflows, readable plots and exact values (#325 merged). The
 [MTA review](../design/v3/MTA_REVIEW.md) adds readable four-chart contexts, exact
-observations and independent scoped reads; host acceptance is open. Dedicated
+observations and independent scoped reads (#326 maintainer-accepted). Home’s
+Launch Matrix links to it under Research. Dedicated
 work covers 36 render entries, including 29 tools and three shell-menu extras.
 Four ordinary menu destinations remain: DOM, Backtesting, About and Account.
 Auth/direct and secondary/hidden

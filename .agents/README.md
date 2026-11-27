@@ -1,5 +1,16 @@
 # External-agent project context
 
+#326 is merged and the maintainer confirms MTA works. Current small follow-up:
+Home → Launch Matrix → Research → Multi-Timeframe Analysis opens `/equity/mta`.
+The full-name card supplements Menu → Workspace → MTA and uses the existing
+keyboard/responsive launcher. No route/provider/calculation change. Dedicated
+coverage counts remain 36 render entries, 29 tools and three shell-menu extras.
+DOM remains next; no release preparation. Earlier handoffs below are historical.
+Validation for this navigation follow-up: 19 existing Home/widget tests, five
+Home browser journeys (1440/1024/390px, Quant and native 200% zoom), production
+build, source audit and whitespace checks pass. Broader suites were not repeated
+for this single launcher-card addition; the MTA slice's validation below is historical.
+
 #325 is merged; the maintainer clears continuation. Current v3 slice: MTA's four
 historical chart contexts, readable scope/presets and disclosed per-chart controls,
 real plot height, exact OHLCV/EMA tables and independently scoped read states.
