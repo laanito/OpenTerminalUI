@@ -1,5 +1,28 @@
 # External-agent project context
 
+#327 is merged. Current v3 slice: DOM's readable depth/tape workspace, bounded
+local inspection and explicit failure/empty/degraded states. See
+`docs/design/v3/DOM_REVIEW.md`. The shared TimeAndSales component also improves
+its existing Security Hub and direct Tape callers; their wrapper pages are not
+new dedicated reviews. Depth grids/cumulative math and tape identity/large-trade
+rules remain; quotes are scoped separately instead of reading stale global stock.
+No provider, backend/schema, persistence or execution expansion. The frontend
+depth type now describes the backend's existing optional degraded marker.
+Dedicated work covers 37 render entries, including 30 tools and three shell-menu
+extras. Three ordinary menu destinations remain: Backtesting, About and Account;
+direct/auth/secondary/hidden presentation and broader host acceptance remain.
+DOM host acceptance is open. No release preparation. Earlier handoffs below are
+historical; validation for this slice is recorded in its review.
+Validation: all 961 frontend tests / 157 files, production build and all 207
+installed-Chrome smoke journeys pass. After final visible toggle styling, twelve
+focused unit cases, seven affected browser journeys (including the retained
+ladder fixture) and build pass again. API-reference/surface/mock/source/whitespace
+guards and review links/JSON pass. Retained market/tick/grid and tape-time/
+identity/large-trade helpers match main. Twelve synthetic captures cover readable
+populated/unavailable states and native 200% zoom. No live provider/model/private
+corpus, production DB, deployment or execution; unchanged backend suite not rerun.
+User-owned workspace dirt remains untouched.
+
 #326 is merged and the maintainer confirms MTA works. Current small follow-up:
 Home → Launch Matrix → Research → Multi-Timeframe Analysis opens `/equity/mta`.
 The full-name card supplements Menu → Workspace → MTA and uses the existing

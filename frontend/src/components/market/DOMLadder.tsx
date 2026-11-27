@@ -1,37 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-
 import { fetchDepth, type DepthSnapshotResponse } from "../../api/client";
+import { AnalyticsTable, finite } from "../terminal/AnalyticsRead";
+import { TerminalButton } from "../terminal/TerminalButton";
+import { TerminalInput } from "../terminal/TerminalInput";
 import { TerminalPanel } from "../terminal/TerminalPanel";
-
-type Props = {
-  symbol: string;
-  market: string;
-  className?: string;
-  onSnapshot?: (snapshot: DepthSnapshotResponse | null) => void;
-};
-
-type LadderRow = {
-  price: number;
-  bidQty: number;
-  askQty: number;
-  bidOrders: number;
-  askOrders: number;
-  bidCumulative: number;
-  askCumulative: number;
-  bidFlash: "up" | "down" | null;
-  askFlash: "up" | "down" | null;
-  volumeAtPrice: number;
-};
-
-const REFRESH_OPTIONS = [
-  { label: "1s", value: 1_000 },
-  { label: "2s", value: 2_000 },
-  { label: "5s", value: 5_000 },
-] as const;
-
-const DEPTH_OPTIONS = [10, 20, 40] as const;
-
+import { CoverageNotice, MarketMetrics, marketNumber, observationTime } from "./MarketReadout";
+type Props = { symbol: string; market: string; className?: string; onSnapshot?: (snapshot: DepthSnapshotResponse | null) => void };
+type LadderRow = { price: number; bidQty: number; askQty: number; bidOrders: number; askOrders: number; bidCumulative: number; askCumulative: number; bidFlash: "up" | "down" | null; askFlash: "up" | "down" | null; volumeAtPrice: number };
+const REFRESH_OPTIONS = [{ label: "1 second",value: 1000 },{ label: "2 seconds",value: 2000 },{ label: "5 seconds",value: 5000 }] as const;
+const DEPTH_OPTIONS = [10,20,40] as const;
 function normalizeMarket(value: string): string {
   const market = String(value || "").trim().toUpperCase();
   if (market === "NSE" || market === "BSE" || market === "IN") return "IN";
@@ -61,7 +39,7 @@ function formatPrice(value: number, decimals = 2): string {
 
 function formatCompact(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "";
-  return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return value.toLocaleString("en-US", { maximumFractionDigits: 8 });
 }
 
 function formatSigned(value: number): string {
@@ -107,263 +85,37 @@ function buildRows(snapshot: DepthSnapshotResponse, levels: number, previous: De
   return rows;
 }
 
-export function DOMLadder({ symbol, market, className = "", onSnapshot }: Props) {
-  const normalizedSymbol = String(symbol || "").trim().toUpperCase() || "AAPL";
-  const normalizedMarket = normalizeMarket(market);
-  const [autoCenter, setAutoCenter] = useState(true);
-  const [showCumulative, setShowCumulative] = useState(false);
-  const [levels, setLevels] = useState<(typeof DEPTH_OPTIONS)[number]>(20);
-  const [refreshMs, setRefreshMs] = useState<(typeof REFRESH_OPTIONS)[number]["value"]>(2_000);
-  const [previousSnapshot, setPreviousSnapshot] = useState<DepthSnapshotResponse | null>(null);
-  const lastPriceRowRef = useRef<HTMLDivElement | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const lastSnapshotRef = useRef<DepthSnapshotResponse | null>(null);
-
-  const depthQuery = useQuery({
-    queryKey: ["dom-depth", normalizedMarket, normalizedSymbol, levels],
-    queryFn: async () => {
-      const next = await fetchDepth(normalizedSymbol, normalizedMarket, levels);
-      setPreviousSnapshot(lastSnapshotRef.current);
-      lastSnapshotRef.current = next;
-      return next;
-    },
-    refetchInterval: refreshMs,
-    staleTime: Math.max(500, refreshMs - 100),
-  });
-
-  useEffect(() => {
-    setPreviousSnapshot(null);
-    lastSnapshotRef.current = null;
-  }, [levels, normalizedMarket, normalizedSymbol]);
-
-  useEffect(() => {
-    onSnapshot?.(depthQuery.data ?? null);
-  }, [depthQuery.data, onSnapshot]);
-
-  useEffect(() => {
-    if (!autoCenter) return;
-    lastPriceRowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-  }, [autoCenter, depthQuery.data, levels]);
-
-  const snapshot = depthQuery.data ?? null;
-  const tickSize = snapshot?.tick_size || 0.01;
-  const decimals = decimalsFromTick(tickSize);
-  const bestBid = snapshot?.bids[0]?.price ?? 0;
-  const bestAsk = snapshot?.asks[0]?.price ?? 0;
-  const anchorPrice = snapshot ? roundToTick(snapshot.last_price || snapshot.mid_price, tickSize, decimals) : 0;
-
-  const rows = useMemo(
-    () => (snapshot ? buildRows(snapshot, levels, previousSnapshot) : []),
-    [levels, previousSnapshot, snapshot],
-  );
-  const maxDisplayedQty = useMemo(() => {
-    return rows.reduce((maxValue, row) => {
-      const bidValue = showCumulative ? row.bidCumulative : row.bidQty;
-      const askValue = showCumulative ? row.askCumulative : row.askQty;
-      return Math.max(maxValue, bidValue, askValue, row.volumeAtPrice);
-    }, 0);
-  }, [rows, showCumulative]);
-  const totalDisplayed = (snapshot?.total_bid_qty ?? 0) + (snapshot?.total_ask_qty ?? 0);
-  const bidShare = totalDisplayed > 0 ? ((snapshot?.total_bid_qty ?? 0) / totalDisplayed) * 100 : 50;
-  const askShare = Math.max(0, 100 - bidShare);
-  const spreadBps = snapshot?.last_price ? (snapshot.spread / snapshot.last_price) * 10_000 : 0;
-
-  return (
-    <TerminalPanel
-      title="DOM Ladder"
-      subtitle={`${normalizedSymbol} level 2`}
-      className={className}
-      bodyClassName="flex h-full min-h-0 flex-col gap-3"
-      actions={
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
-          <span>{normalizedMarket}</span>
-          {depthQuery.isFetching ? <span className="text-terminal-accent">Live</span> : null}
-        </div>
-      }
-    >
-      <div className="grid gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-terminal-border bg-terminal-panel px-3 py-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Depth Monitor</div>
-            <div className="mt-1 flex items-baseline gap-3">
-              <span className="font-mono text-xl font-semibold text-terminal-text">{formatPrice(snapshot?.last_price ?? 0, decimals)}</span>
-              <span className="font-mono text-xs text-terminal-muted">Last Qty {formatCompact(snapshot?.last_qty ?? 0)}</span>
-            </div>
-          </div>
-          <div className="grid gap-2 text-right sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-sm border border-terminal-border bg-terminal-bg px-3 py-2">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Spread</div>
-              <div className="mt-1 font-mono text-sm text-terminal-text">{formatPrice(snapshot?.spread ?? 0, decimals)}</div>
-              <div className="font-mono text-[11px] text-terminal-muted">{spreadBps.toFixed(1)} bps</div>
-            </div>
-            <div className="rounded-sm border border-terminal-border bg-terminal-bg px-3 py-2">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Imbalance</div>
-              <div className={`mt-1 font-mono text-sm ${(snapshot?.imbalance ?? 0) >= 0 ? "text-blue-300" : "text-red-300"}`}>
-                {formatSigned((snapshot?.imbalance ?? 0) * 100)}%
-              </div>
-            </div>
-            <div className="rounded-sm border border-terminal-border bg-terminal-bg px-3 py-2">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Refresh</div>
-              <div className="mt-1 font-mono text-sm text-terminal-text">{refreshMs / 1000}s</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 rounded-sm border border-terminal-border bg-terminal-panel px-3 py-2 text-[11px]">
-          <button
-            type="button"
-            onClick={() => setAutoCenter((current) => !current)}
-            className={`rounded-sm border px-3 py-1 uppercase tracking-[0.14em] ${
-              autoCenter
-                ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent"
-                : "border-terminal-border bg-terminal-bg text-terminal-muted hover:text-terminal-text"
-            }`}
-          >
-            Auto-center
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowCumulative((current) => !current)}
-            className={`rounded-sm border px-3 py-1 uppercase tracking-[0.14em] ${
-              showCumulative
-                ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent"
-                : "border-terminal-border bg-terminal-bg text-terminal-muted hover:text-terminal-text"
-            }`}
-          >
-            Cumulative
-          </button>
-          <div className="ml-0 flex items-center gap-1 sm:ml-3">
-            <span className="uppercase tracking-[0.14em] text-terminal-muted">Levels</span>
-            {DEPTH_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setLevels(option)}
-                className={`rounded-sm border px-2 py-1 font-mono ${
-                  levels === option
-                    ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent"
-                    : "border-terminal-border bg-terminal-bg text-terminal-muted hover:text-terminal-text"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-          <div className="ml-0 flex items-center gap-1 sm:ml-3">
-            <span className="uppercase tracking-[0.14em] text-terminal-muted">Refresh</span>
-            {REFRESH_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setRefreshMs(option.value)}
-                className={`rounded-sm border px-2 py-1 font-mono ${
-                  refreshMs === option.value
-                    ? "border-terminal-accent bg-terminal-accent/15 text-terminal-accent"
-                    : "border-terminal-border bg-terminal-bg text-terminal-muted hover:text-terminal-text"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-sm border border-terminal-border bg-terminal-panel px-3 py-3">
-          <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
-            <span>Bid / Ask Imbalance</span>
-            <span className="font-mono">{formatCompact(snapshot?.total_bid_qty ?? 0)} vs {formatCompact(snapshot?.total_ask_qty ?? 0)}</span>
-          </div>
-          <div className="flex h-3 overflow-hidden rounded-full border border-terminal-border bg-terminal-bg">
-            <div className="bg-blue-500/60 transition-all duration-200" style={{ width: `${bidShare}%` }} />
-            <div className="bg-red-500/60 transition-all duration-200" style={{ width: `${askShare}%` }} />
-          </div>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-terminal-border bg-terminal-bg">
-          <div className="grid grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] gap-2 border-b border-terminal-border bg-terminal-panel px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
-            <span className="text-right">Bid Size</span>
-            <span className="text-center">Price</span>
-            <span>Ask Size</span>
-          </div>
-          <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto lg:max-h-[calc(100dvh-18rem)]" data-testid="dom-scroll-region">
-            {depthQuery.isLoading && !rows.length ? (
-              <div className="flex h-full items-center justify-center px-3 py-10 text-xs text-terminal-muted">Loading DOM ladder...</div>
-            ) : null}
-            {!depthQuery.isLoading && !rows.length ? (
-              <div className="flex h-full items-center justify-center px-3 py-10 text-xs text-terminal-muted">No depth available.</div>
-            ) : null}
-            {rows.map((row) => {
-              const bidValue = showCumulative ? row.bidCumulative : row.bidQty;
-              const askValue = showCumulative ? row.askCumulative : row.askQty;
-              const bidPct = maxDisplayedQty > 0 ? Math.max(0, Math.min(100, (bidValue / maxDisplayedQty) * 100)) : 0;
-              const askPct = maxDisplayedQty > 0 ? Math.max(0, Math.min(100, (askValue / maxDisplayedQty) * 100)) : 0;
-              const volumePct = maxDisplayedQty > 0 ? Math.max(0, Math.min(100, (row.volumeAtPrice / maxDisplayedQty) * 100)) : 0;
-              const isLastTrade = Math.abs(row.price - anchorPrice) < tickSize / 2;
-              const isSpreadRow = bestBid > 0 && bestAsk > 0 && row.price < bestAsk && row.price > bestBid;
-              const isBestBid = bestBid > 0 && row.price === bestBid;
-              const isBestAsk = bestAsk > 0 && row.price === bestAsk;
-              const imbalanceGlow =
-                row.bidQty > 0 && row.askQty > 0
-                  ? row.bidQty >= row.askQty * 2
-                    ? "shadow-[inset_0_0_18px_rgba(59,130,246,0.18)]"
-                    : row.askQty >= row.bidQty * 2
-                      ? "shadow-[inset_0_0_18px_rgba(248,113,113,0.18)]"
-                      : ""
-                  : row.bidQty > row.askQty * 2
-                    ? "shadow-[inset_0_0_18px_rgba(59,130,246,0.18)]"
-                    : row.askQty > row.bidQty * 2
-                      ? "shadow-[inset_0_0_18px_rgba(248,113,113,0.18)]"
-                      : "";
-
-              return (
-                <div
-                  key={row.price}
-                  ref={isLastTrade ? lastPriceRowRef : null}
-                  className={`grid grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] gap-2 border-b border-terminal-border/40 px-3 py-1 font-mono text-xs transition-colors duration-200 ${
-                    isLastTrade
-                      ? "bg-terminal-accent/20 font-semibold text-terminal-text"
-                      : isSpreadRow
-                        ? "bg-terminal-bg/50 text-terminal-muted"
-                        : "text-terminal-text"
-                  } ${imbalanceGlow}`}
-                  data-testid="dom-row"
-                  data-price={row.price}
-                >
-                  <div className="relative flex min-h-[22px] items-center justify-end overflow-hidden" data-testid="dom-bid-cell">
-                    <div
-                      className={`absolute right-0 top-1/2 h-[70%] -translate-y-1/2 rounded-l-sm transition-all duration-200 ${
-                        isBestBid ? "bg-blue-500/50" : "bg-blue-500/30"
-                      } ${row.bidFlash === "up" ? "ring-1 ring-emerald-400/60" : row.bidFlash === "down" ? "ring-1 ring-red-400/60" : ""}`}
-                      style={{ width: `${bidPct}%` }}
-                    />
-                    <span className="relative z-10 px-2 text-right" data-testid="dom-bid-qty">
-                      {formatCompact(bidValue)}
-                    </span>
-                  </div>
-                  <div className="relative flex min-h-[22px] items-center justify-center overflow-hidden text-center" data-testid="dom-price-cell">
-                    <div
-                      className="absolute left-0 top-1/2 h-[62%] -translate-y-1/2 rounded-sm bg-amber-300/8"
-                      style={{ width: `${volumePct}%` }}
-                    />
-                    <span className="relative z-10">{formatPrice(row.price, decimals)}</span>
-                  </div>
-                  <div className="relative flex min-h-[22px] items-center justify-start overflow-hidden" data-testid="dom-ask-cell">
-                    <div
-                      className={`absolute left-0 top-1/2 h-[70%] -translate-y-1/2 rounded-r-sm transition-all duration-200 ${
-                        isBestAsk ? "bg-red-500/50" : "bg-red-500/30"
-                      } ${row.askFlash === "up" ? "ring-1 ring-emerald-400/60" : row.askFlash === "down" ? "ring-1 ring-red-400/60" : ""}`}
-                      style={{ width: `${askPct}%` }}
-                    />
-                    <span className="relative z-10 px-2" data-testid="dom-ask-qty">
-                      {formatCompact(askValue)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </TerminalPanel>
-  );
+export function DOMLadder({ symbol,market,className = "",onSnapshot }: Props) {
+ const normalizedSymbol = String(symbol || "").trim().toUpperCase() || "AAPL",normalizedMarket = normalizeMarket(market);
+ const [autoCenter,setAutoCenter] = useState(true),[showCumulative,setShowCumulative] = useState(false),[levels,setLevels] = useState<number>(20),[refreshMs,setRefreshMs] = useState<number>(2000);
+ const scope = JSON.stringify([normalizedSymbol,normalizedMarket,levels]);
+ const [comparison,setComparison] = useState<{ scope: string; value: DepthSnapshotResponse | null }>({ scope: "",value: null });
+ const previous = useRef<{ scope: string; value: DepthSnapshotResponse } | null>(null),scrollRef = useRef<HTMLDivElement>(null),lastPriceRowRef = useRef<HTMLDivElement>(null),inspecting = useRef(false);
+ const depthQuery = useQuery({ queryKey: ["dom-depth",normalizedMarket,normalizedSymbol,levels],queryFn: () => fetchDepth(normalizedSymbol,normalizedMarket,levels),refetchInterval: refreshMs,staleTime: Math.max(500,refreshMs-100),retry: false });
+ const snapshot = !depthQuery.isError ? depthQuery.data ?? null : null;
+ useEffect(() => { if (!snapshot) return; const last = previous.current; setComparison({ scope,value: last?.scope === scope ? last.value : null }); previous.current = { scope,value: snapshot }; }, [snapshot,scope]);
+ useEffect(() => { onSnapshot?.(snapshot); }, [snapshot,onSnapshot]);
+ const hasBook = Boolean(snapshot && ((snapshot.bids?.length || 0)+(snapshot.asks?.length || 0) > 0));
+ const anchorValue = snapshot?.last_price || snapshot?.mid_price;
+ const canProject = hasBook && finite(anchorValue) && anchorValue > 0;
+ const tickSize = snapshot?.tick_size || .01,decimals = decimalsFromTick(tickSize),anchorPrice = canProject ? roundToTick(anchorValue!,tickSize,decimals) : null;
+ const rows = useMemo(() => snapshot && canProject ? buildRows(snapshot,levels,comparison.scope === scope ? comparison.value : null) : [], [snapshot,canProject,levels,comparison,scope]);
+ const maxDisplayedQty = useMemo(() => rows.reduce((max,row) => Math.max(max,showCumulative ? row.bidCumulative : row.bidQty,showCumulative ? row.askCumulative : row.askQty,row.volumeAtPrice),0),[rows,showCumulative]);
+ const bestBid = snapshot?.bids?.[0]?.price,bestAsk = snapshot?.asks?.[0]?.price;
+ const total = hasBook && finite(snapshot?.total_bid_qty) && finite(snapshot?.total_ask_qty) ? snapshot.total_bid_qty+snapshot.total_ask_qty : null;
+ const bidShare = total && total > 0 ? snapshot!.total_bid_qty/total*100 : null;
+ const spreadBps = hasBook && finite(snapshot?.spread) && finite(snapshot?.last_price) && snapshot.last_price > 0 ? snapshot.spread/snapshot.last_price*10000 : null;
+ useEffect(() => { if (!autoCenter || inspecting.current) return; const area = scrollRef.current,row = lastPriceRowRef.current; if (!area || !row) return; area.scrollTo({ top: area.scrollTop+row.getBoundingClientRect().top-area.getBoundingClientRect().top-(area.clientHeight-row.clientHeight)/2,behavior: "auto" }); },[autoCenter,snapshot,levels]);
+ return <section aria-label="Depth workspace" aria-busy={depthQuery.isLoading} className={`min-w-0 ${className}`}><TerminalPanel title="DOM Ladder" subtitle={`${normalizedSymbol} · request context ${normalizedMarket}`} className="min-w-0" bodyClassName="min-w-0 space-y-3">
+  <div className="flex min-w-0 flex-wrap items-end gap-3"><TerminalButton type="button" variant={autoCenter ? "accent" : "default"} aria-pressed={autoCenter} onClick={() => setAutoCenter(value => !value)} className="normal-case tracking-normal">Auto-center</TerminalButton><TerminalButton type="button" variant={showCumulative ? "accent" : "default"} aria-pressed={showCumulative} onClick={() => setShowCumulative(value => !value)} className="normal-case tracking-normal">Cumulative</TerminalButton><label className="min-w-0 flex-1 basis-28 space-y-2 text-xs">Depth levels<TerminalInput as="select" className="block text-sm" value={levels} onChange={event => setLevels(Number(event.target.value))}>{DEPTH_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</TerminalInput></label><label className="min-w-0 flex-1 basis-36 space-y-2 text-xs">Depth refresh<TerminalInput as="select" className="block text-sm" value={refreshMs} onChange={event => setRefreshMs(Number(event.target.value))}>{REFRESH_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</TerminalInput></label><TerminalButton type="button" disabled={depthQuery.isFetching} onClick={() => void depthQuery.refetch()} className="normal-case tracking-normal">Refresh depth</TerminalButton></div>
+  <p role="status" className="min-h-4 text-xs text-terminal-muted">{depthQuery.isFetching ? "Depth request in progress…" : depthQuery.isError ? "Depth request failed." : "Depth request complete."}</p>
+  {depthQuery.isError ? <p role="alert" className="text-sm text-terminal-neg">Could not retrieve depth. Refresh depth to retry; no previous book is shown.</p> : snapshot ? <><p className="break-words text-xs text-terminal-muted">Reported symbol: {snapshot.symbol || "Unavailable"} · {snapshot.provider_key || "Unavailable"} · snapshot {observationTime(snapshot.as_of)}.</p><CoverageNotice name="Depth" info={snapshot.degraded} />{!hasBook && <p role="status" className="text-sm text-terminal-muted">No depth available for this symbol. No price ladder is shown.</p>}</> : null}
+  {hasBook && snapshot && <><p className="break-words text-sm tabular-nums">Book reference: {marketNumber(snapshot.last_price)} · Spread: {marketNumber(snapshot.spread)}</p><details className="min-w-0"><summary className="cursor-pointer text-sm">Snapshot metrics</summary><div className="mt-3 space-y-3"><MarketMetrics items={[["Book reference",marketNumber(snapshot.last_price)],["Spread",marketNumber(snapshot.spread)],["Spread basis points",finite(spreadBps) ? `${spreadBps.toFixed(1)} bps` : "Unavailable"],["Imbalance",finite(snapshot.imbalance) ? `${formatSigned(snapshot.imbalance*100)}%` : "Unavailable"]]} />
+   {finite(bidShare) ? <div className="space-y-2"><p className="break-words text-xs text-terminal-muted">Reported bid / ask quantities: {marketNumber(snapshot.total_bid_qty)} / {marketNumber(snapshot.total_ask_qty)}</p><div aria-hidden="true" className="flex h-2 overflow-hidden rounded border border-terminal-border"><div className="bg-blue-500/60" style={{ width: `${Math.max(0,Math.min(100,bidShare))}%` }} /><div className="bg-red-500/60" style={{ width: `${Math.max(0,Math.min(100,100-bidShare))}%` }} /></div></div> : <p className="text-xs text-terminal-muted">Bid / ask shares unavailable.</p>}
+   </div></details><p className="text-xs text-terminal-muted">{snapshot.tick_size > 0 ? `Display grid uses tick ${marketNumber(snapshot.tick_size)}.` : "Tick size not supplied: the display grid assumes 0.01."} Exact provider levels are below.</p>
+   {canProject ? <div ref={scrollRef} role="region" aria-label="Depth ladder values" tabIndex={0} data-testid="dom-scroll-region" className="relative h-[28rem] min-w-0 overflow-auto rounded border border-terminal-border focus-visible:outline focus-visible:outline-terminal-accent" onMouseEnter={() => { inspecting.current = true; }} onMouseLeave={event => { inspecting.current = event.currentTarget.contains(document.activeElement); }} onFocus={() => { inspecting.current = true; }} onBlur={event => { inspecting.current = event.currentTarget.matches(":hover"); }}><div role="table" aria-label="Depth price grid" className="min-w-[480px]"><div role="row" className="sticky top-0 z-20 grid grid-cols-[minmax(120px,1fr)_144px_minmax(120px,1fr)] gap-2 border-b border-terminal-border bg-terminal-panel px-3 py-3 text-xs text-terminal-muted"><span role="columnheader" className="text-right">{showCumulative ? "Cumulative bid" : "Bid quantity"}</span><span role="columnheader" className="text-center">Price grid</span><span role="columnheader">{showCumulative ? "Cumulative ask" : "Ask quantity"}</span></div>
+    {rows.map(row => { const bid = showCumulative ? row.bidCumulative : row.bidQty,ask = showCumulative ? row.askCumulative : row.askQty,isReference = anchorPrice !== null && Math.abs(row.price-anchorPrice) < tickSize/2; return <div key={row.price} role="row" ref={isReference ? lastPriceRowRef : null} data-testid="dom-row" data-price={row.price} className={`grid min-h-10 grid-cols-[minmax(120px,1fr)_144px_minmax(120px,1fr)] gap-2 border-b border-terminal-border/40 px-3 py-2 text-sm tabular-nums ${isReference ? "bg-terminal-accent/15" : ""}`}><div role="cell" data-testid="dom-bid-cell" className="relative min-w-0 overflow-hidden text-right"><div aria-hidden="true" className={`absolute inset-y-0 right-0 ${row.price === bestBid ? "bg-blue-500/50" : "bg-blue-500/25"} ${row.bidFlash === "up" ? "ring-1 ring-emerald-400/60" : row.bidFlash === "down" ? "ring-1 ring-red-400/60" : ""}`} style={{ width: `${maxDisplayedQty > 0 ? Math.max(0,Math.min(100,bid/maxDisplayedQty*100)) : 0}%` }} /><span className="relative z-10" data-testid="dom-bid-qty">{formatCompact(bid)}</span></div><div role="rowheader" data-testid="dom-price-cell" className="text-center">{formatPrice(row.price,decimals)}</div><div role="cell" data-testid="dom-ask-cell" className="relative min-w-0 overflow-hidden"><div aria-hidden="true" className={`absolute inset-y-0 left-0 ${row.price === bestAsk ? "bg-red-500/50" : "bg-red-500/25"} ${row.askFlash === "up" ? "ring-1 ring-emerald-400/60" : row.askFlash === "down" ? "ring-1 ring-red-400/60" : ""}`} style={{ width: `${maxDisplayedQty > 0 ? Math.max(0,Math.min(100,ask/maxDisplayedQty*100)) : 0}%` }} /><span className="relative z-10" data-testid="dom-ask-qty">{formatCompact(ask)}</span></div></div>; })}</div></div> : <p role="status" className="text-sm text-terminal-muted">A usable reference price was not supplied. Inspect returned levels below.</p>}
+   <details className="min-w-0"><summary className="cursor-pointer text-sm">Returned bid / ask levels</summary><div className="mt-3"><AnalyticsTable name="Returned depth levels" headers={["Side","Price","Quantity","Orders","Cumulative quantity"]} rows={[...snapshot.bids.map(row => ["Bid",row]),...snapshot.asks.map(row => ["Ask",row])] .map(([side,value]) => { const row = value as DepthSnapshotResponse["bids"][number]; return [side as string,marketNumber(row.price),marketNumber(row.quantity ?? row.size),marketNumber(row.orders,0),marketNumber(row.cumulative_qty)]; })} /></div></details>
+  </>}
+ </TerminalPanel></section>;
 }

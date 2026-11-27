@@ -52,7 +52,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/settings` | [SettingsPage](../../../frontend/src/pages/Settings.tsx) | supported | 0 |
 | `/equity/chart-workstation` | [ChartWorkstationPage](../../../frontend/src/pages/ChartWorkstationPage.tsx) | supported | 0 |
 | `/equity/mta` | [MultiTimeframePage](../../../frontend/src/pages/MultiTimeframePage.tsx) | supported | 0 |
-| `/equity/dom` | [DOMPage](../../../frontend/src/pages/DOMPage.tsx) | configuration-gated | 6 |
+| `/equity/dom` | [DOMPage](../../../frontend/src/pages/DOMPage.tsx) | configuration-gated | 0 |
 | `/equity/tape` | [TimeAndSalesPage](../../../frontend/src/pages/TimeAndSalesPage.tsx) | Hidden compatibility | 3 |
 | `/equity/launchpad` | [LaunchpadPage](../../../frontend/src/pages/Launchpad.tsx) | supported | 0 |
 | `/equity/launchpad/popout` | [LaunchpadPopoutPage](../../../frontend/src/pages/LaunchpadPopout.tsx) | Other direct | 0 |

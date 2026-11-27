@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable DOM and tape** — applied instrument scope, bounded local depth/tape
+  inspection, labelled controls, exact provider levels and explicit degraded,
+  empty and failed reads. Empty books no longer draw zero-centred ladders;
+  auto-follow is separate from polling and tape sides have text labels. Quotes
+  are independently scoped; shared tape callers retain the same endpoints.
 - **MTA discovery from Home** — a Multi-Timeframe Analysis card under Research in
   the Launch Matrix opens the existing MTA workspace.
 - **Readable Multi-Timeframe Analysis** — four plots with reliable height, readable

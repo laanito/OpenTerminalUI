@@ -1050,9 +1050,11 @@ The [Pair Trading review](../design/v3/PAIR_TRADING_REVIEW.md) adds four explici
 captured-run workflows, readable plots and exact values (#325 merged). The
 [MTA review](../design/v3/MTA_REVIEW.md) adds readable four-chart contexts, exact
 observations and independent scoped reads (#326 maintainer-accepted). Home’s
-Launch Matrix links to it under Research. Dedicated
-work covers 36 render entries, including 29 tools and three shell-menu extras.
-Four ordinary menu destinations remain: DOM, Backtesting, About and Account.
+Launch Matrix links to it under Research (#327 merged). The
+[DOM review](../design/v3/DOM_REVIEW.md) adds readable book/tape inspection,
+scoped quotes and explicit retrieval/coverage states; host acceptance is open.
+Dedicated work covers 37 render entries, including 30 tools and three shell-menu
+extras. Three ordinary menu destinations remain: Backtesting, About and Account.
 Auth/direct and secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
@@ -2046,6 +2048,13 @@ Real but unscheduled; pull into a milestone when it fits.
   Metadata/warnings are not consumed by the page; v3 is not indicator certification.
   DOM’s later source/provenance review must also inspect inferred volume-at-price
   bars, market fallback and missing/stale quote/depth presentation.
+  The DOM slice suppresses empty projected rows, clears failed reads and surfaces
+  returned levels/coverage without provider repair. Audit missing tick metadata,
+  0.01/four-decimal grid assumptions, midpoint/reference semantics, relative bars,
+  US/EU L2 coverage and market mapping. Tape needs independent routing, integer
+  quantity/two-decimal price coercion, inferred sides/timestamps, local dedup/order,
+  buffered versus summary windows and currency/freshness review. The frontend
+  adds no live or paper order authority.
   Correlation also needs provider/native-identity and omitted-symbol coverage,
   adjusted-price/return and currency basis, complete-case date alignment, backend
   undefined-correlation zero filling, cache order/freshness and rolling/regime/
