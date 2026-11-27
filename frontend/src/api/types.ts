@@ -453,6 +453,7 @@ export type DepthSnapshotResponse = {
   imbalance: number;
   bids: DepthLevel[];
   asks: DepthLevel[];
+  degraded?: DegradedInfo | null;
 };
 
 export interface Notification {

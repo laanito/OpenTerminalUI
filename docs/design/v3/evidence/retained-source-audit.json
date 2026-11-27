@@ -853,32 +853,7 @@
       },
       "shell_menu_extra": null,
       "hidden_compatibility_reason": null,
-      "source_hints": [
-        {
-          "line": 53,
-          "text": "<div className=\"text-[11px] uppercase tracking-[0.22em] text-terminal-muted\">Depth Of Market</div>"
-        },
-        {
-          "line": 56,
-          "text": "<label className=\"flex flex-col gap-1 text-[10px] uppercase tracking-[0.18em] text-terminal-muted\">"
-        },
-        {
-          "line": 72,
-          "text": "className=\"rounded-sm border border-terminal-accent bg-terminal-accent/10 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-terminal-accent\""
-        },
-        {
-          "line": 81,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.18em] text-terminal-muted\">Last</div>"
-        },
-        {
-          "line": 85,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.18em] text-terminal-muted\">Change</div>"
-        },
-        {
-          "line": 91,
-          "text": "<div className=\"text-[10px] uppercase tracking-[0.18em] text-terminal-muted\">Spread</div>"
-        }
-      ]
+      "source_hints": []
     },
     {
       "path": "/equity/tape",

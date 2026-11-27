@@ -40,6 +40,8 @@ const depthPayload = {
 };
 
 test("dom ladder renders and supports cumulative and auto-center controls", async ({ page }) => {
+  await page.context().routeWebSocket("**/*", socket => socket.close());
+  await page.context().route("**/api/**", route => route.fulfill({ json: { items: [], results: [], alerts: [] } }));
   await page.context().route(new RegExp(String.raw`http://127\.0\.0\.1:\d+/api/depth/RELIANCE(?:\?.*)?$`), async (route) => {
     await route.fulfill({ json: depthPayload });
   });
@@ -59,8 +61,8 @@ test("dom ladder renders and supports cumulative and auto-center controls", asyn
     await route.fulfill({
       json: {
         trades: [
-          { timestamp: "2026-04-05T12:00:01Z", price: 100.0, quantity: 200, side: "buy" },
-          { timestamp: "2026-04-05T12:00:00Z", price: 99.95, quantity: 125, side: "sell" },
+          { timestamp: "2026-04-05T12:00:01Z", price: 100.0, quantity: 200, value: 20000, side: "buy" },
+          { timestamp: "2026-04-05T12:00:00Z", price: 99.95, quantity: 125, value: 12493.75, side: "sell" },
         ],
       },
     });
@@ -82,12 +84,15 @@ test("dom ladder renders and supports cumulative and auto-center controls", asyn
 
   await page.goto("/equity/dom", { waitUntil: "domcontentloaded" });
 
+  await page.getByRole("textbox", { name: "DOM symbol", exact: true }).fill("RELIANCE");
+  await page.getByRole("button", { name: "Load symbol", exact: true }).click();
   await expect(page.getByText("DOM Ladder", { exact: true })).toBeVisible();
   await expect(page.locator('[data-testid="dom-row"]').first()).toBeVisible();
 
   await expect(page.locator('[data-price="99.95"]').getByTestId("dom-bid-qty")).toHaveText("120");
   await expect(page.locator('[data-price="100.05"]').getByTestId("dom-ask-qty")).toHaveText("110");
 
+  await page.getByText("Snapshot metrics", { exact: true, selector: "summary" }).click();
   await expect(page.getByText("10.0 bps", { exact: true })).toBeVisible();
 
   const bidBefore = page.locator('[data-price="99.9"]').getByTestId("dom-bid-qty");

@@ -51,7 +51,10 @@ and exact-value inspection; #324 is merged and maintainer-tested. The
 workflows, readable plots and exact tables (#325 merged). The
 [MTA review](MTA_REVIEW.md) gives its four contexts real plot height, readable
 controls, exact observations and independently scoped read states; #326 is merged
-and maintainer-confirmed working. Home’s Launch Matrix now links to MTA under Research. Four ordinary menu destinations remain, starting with DOM.
+and maintainer-confirmed working. Home’s Launch Matrix links to MTA under Research
+(#327 merged). The [DOM review](DOM_REVIEW.md) adds readable depth/tape inspection
+and explicit retrieval/coverage states; host acceptance is open. Three ordinary
+menu destinations remain, starting with Backtesting.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

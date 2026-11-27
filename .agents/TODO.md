@@ -12,9 +12,8 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-#326 is merged and the maintainer confirms MTA works. Current small follow-up:
-Home Launch Matrix → Research → Multi-Timeframe Analysis for better discovery.
-See `docs/design/v3/MTA_REVIEW.md`. DOM follows as the next separate slice.
+#327 is merged; MTA's Home discovery follow-up is complete. Current slice: DOM;
+see `docs/design/v3/DOM_REVIEW.md`. Backtesting is the next ordinary menu review.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -27,7 +26,9 @@ now has four explicit captured-run workflows, labelled effective inputs, readabl
 plots/tables and retained failed drafts. Pair Trading host acceptance is open.
 MTA now has readable chart scope/controls, reliable real plot height, exact tables
 and independent scoped reads; #326 is maintainer-accepted. Four ordinary menu
-destinations remain, starting with DOM;
+destinations remained before DOM. Its readable book/tape implementation brings
+coverage to 37 render entries, 30 tools and three shell-menu extras, with host
+acceptance open. Three ordinary destinations remain, starting with Backtesting;
 provider/calculation repair stays on v5's audit track.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
@@ -2341,8 +2342,13 @@ ordered v1.7 milestone above.
             now has a full-name launcher card for the existing workspace. Dedicated work
             covers 36 render entries, 29 tools and three shell-menu extras.
             Four ordinary menu destinations remain, starting with DOM.
-      - [ ] DOM: useful depth space, readable instrument/refresh controls and
-            configured/unavailable market scope without provider expansion.
+      - [x] DOM: readable applied symbol/context, local ladder centering, scoped
+            quote context, empty/degraded/failed book states, exact returned
+            levels and readable virtual tape with explicit auto-follow and
+            independent summary. See `docs/design/v3/DOM_REVIEW.md`; host
+            acceptance open. Shared tape callers receive the component update;
+            their wrapper pages remain separate direct-route review work.
+            Three ordinary menu destinations remain after this implementation.
       - [ ] Backtesting and direct governance/algorithm/optimizer subpages:
             setup, populated runs/results, bounded inspection and async states.
       - [ ] Account, About and login/register/forgot-access: labelled/wrapping
@@ -2496,6 +2502,18 @@ ordered v1.7 milestone above.
       DOM source observations for its later audit: inferred volume-at-price bars,
       market fallback and missing/stale quote/depth presentation need provenance
       review. No DOM fixes or provider validation are included in the MTA slice.
+      DOM follow-up: empty books now suppress projected rows, failed reads hide
+      old books/tape/summary values and backend degraded markers are visible.
+      Inspect tick metadata (wire tick_size may be zero), the legacy 0.01/four-
+      decimal grid assumption, centering around a book midpoint labelled as a
+      last price by the service, relative bar normalization and unmatched levels.
+      The inferred yellow price shading is removed; returned levels are exposed.
+      Audit US/EU L2 availability, selector→IN/CRYPTO/US mapping, tape's independent
+      default-exchange routing, integer quantity coercion/two-decimal prices,
+      inferred sides and timestamp fallback. Verify local deduplication identity,
+      ISO-string ordering, buffered versus separately fetched summary windows,
+      currency and freshness/provenance. No provider/calculation repair or live
+      order authority is inferred from synthetic frontend acceptance.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
