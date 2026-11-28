@@ -38,8 +38,8 @@ export function WalkForwardTimeline({ windows }: Props) {
         <ResponsiveContainer>
           <LineChart data={windows} margin={{ top: 10, right: 14, left: 0, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3a" />
-            <XAxis dataKey="window" tick={{ fill: "#8e98a8", fontSize: 10 }} />
-            <YAxis tick={{ fill: "#8e98a8", fontSize: 10 }} />
+            <XAxis dataKey="window" tick={{ fill: "#8e98a8", fontSize: 12 }} />
+            <YAxis tick={{ fill: "#8e98a8", fontSize: 12 }} />
             <Tooltip
               contentStyle={{ background: "#0c0f14", border: "1px solid #2a2f3a", fontSize: 12 }}
               formatter={(v, name) => {
@@ -57,8 +57,8 @@ export function WalkForwardTimeline({ windows }: Props) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="max-h-56 overflow-auto rounded border border-terminal-border/40">
-        <table className="min-w-full text-[11px]">
+      <div role="region" aria-label="Walk-forward values" tabIndex={0} className="max-h-56 min-w-0 overflow-auto rounded border border-terminal-border/40">
+        <table className="min-w-[720px] w-full text-xs">
           <thead className="sticky top-0 bg-terminal-panel text-terminal-muted">
             <tr>
               <th className="px-2 py-1 text-left">Window</th>

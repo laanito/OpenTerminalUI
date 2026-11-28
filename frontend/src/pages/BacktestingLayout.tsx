@@ -31,13 +31,13 @@ function BacktestingRightRail() {
       <div className="flex-1 space-y-2 overflow-auto p-2">
         <TerminalPanel
           title="Workspace"
-          subtitle="Preset + Asset"
+          subtitle="Shared workspace context"
           actions={<TerminalBadge variant="accent">{preset.toUpperCase()}</TerminalBadge>}
           bodyClassName="space-y-2"
         >
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
-              <div className="text-terminal-muted">Symbol</div>
+              <div className="text-terminal-muted">Shared symbol</div>
               <div>{(ticker || "AAPL").toUpperCase()}</div>
             </div>
             <div className="rounded border border-terminal-border bg-terminal-bg px-2 py-1">
@@ -69,10 +69,10 @@ function BacktestingRightRail() {
           </div>
         </TerminalPanel>
 
-        <TerminalPanel title="Quant Hints" subtitle="Panel workflow" bodyClassName="space-y-1 text-[11px] text-terminal-muted">
-          <div>Backtesting Mosaic now uses a split-pane foundation with keyboard/pointer resizing.</div>
-          <div>Panel chrome is standardized for future migration of report/workspace panels.</div>
-          <div>Use workspace presets to prepare role-based layouts (Quant / PM / Risk).</div>
+        <TerminalPanel title="Quant Hints" subtitle="Panel workflow" bodyClassName="space-y-1 text-xs text-terminal-muted">
+          <div>Set the symbol, dates and strategy in Run setup before submitting.</div>
+          <div>Results describe the submitted run; editing setup prepares the next one.</div>
+          <div>Historical simulations are research, not orders or guarantees of future returns.</div>
         </TerminalPanel>
       </div>
     </aside>
@@ -80,8 +80,10 @@ function BacktestingRightRail() {
 }
 
 export function BacktestingLayout() {
+  const { pathname } = useLocation();
   return (
     <TerminalShell
+      hideTickerLoader={pathname === "/backtesting" || pathname === "/backtesting/"}
       workspacePresetStorageKey="ot:shell:backtesting:preset"
       rightRailStorageKey="ot:shell:backtesting:right-rail"
       rightRailContent={<BacktestingRightRail />}

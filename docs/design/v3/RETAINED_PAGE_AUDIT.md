@@ -36,8 +36,11 @@ acceptance remains open; #325 is merged. The [MTA review](MTA_REVIEW.md) brings
 dedicated work to 36 render entries, including 29 tools and three shell-menu extras.
 MTA is accepted through #326, with its Home Research card merged as #327. The
 [DOM review](DOM_REVIEW.md) brings dedicated work to 37 render entries, including
-30 tools and three shell-menu extras; host acceptance is open. Three ordinary
-menu destinations remain, starting with Backtesting.
+30 tools and three shell-menu extras; #328/#329 are merged, host acceptance open.
+The [Backtesting console review](BACKTESTING_REVIEW.md) brings dedicated work to
+38 render entries, including 31 tools and three shell-menu extras. About and
+Account are the two ordinary destinations left. The direct governance, algorithm
+and optimizer subpages remain next; auth/secondary/hidden routes still need review.
 The counts and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.
@@ -131,8 +134,9 @@ when the existing components, fixtures or review size warrant it. Paper/Sizer,
 implementation. The [Risk](RISK_REVIEW.md), [Correlation](CORRELATION_REVIEW.md),
 [Stat Lab](STATLAB_REVIEW.md) and [Pair Trading](PAIR_TRADING_REVIEW.md) passes
 follow. The [MTA review](MTA_REVIEW.md) then covers the four-chart workspace;
-the [DOM review](DOM_REVIEW.md) follows. Continue with Backtesting, preserving
-existing analytics rather than expanding provider or calculation scope.
+the [DOM review](DOM_REVIEW.md) follows. The [Backtesting console review](BACKTESTING_REVIEW.md)
+now covers its main workflow. Continue with its direct governance/algorithm/
+optimizer subpages, preserving analytics rather than expanding provider/calculation scope.
 
 | Order | Retained area/routes | Acceptance focus |
 |---|---|---|
@@ -141,7 +145,7 @@ existing analytics rather than expanding provider or calculation scope.
 | 3 · implemented | Market Heatmap, Rotation, Crypto, ETF Analytics | Heatmap, Rotation and ETF Analytics (#317 accepted) followed by the separate Crypto review. Responsive plots/tiles, readable filters/legends and actual existing context; populated/failure states. Provider breadth stays unchanged. |
 | 4 · implemented | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
 | 5 · implemented | MTA `/equity/mta`; DOM `/equity/dom` | Useful chart/depth space, readable instrument/interval controls, keyboard/zoom and configured versus unavailable markets. Preserve existing route/provider contracts. |
-| 6 | Backtesting `/backtesting`; direct Model governance, Algorithm framework, Portfolio optimizer | Readable setup and dated run/results, bounded inspection, busy/error/draft states. Include direct subpages without expanding their capabilities or promoting experimental tools. |
+| 6 · console implemented, direct subpages pending | Backtesting `/backtesting`; direct Model governance, Algorithm framework, Portfolio optimizer | Readable setup and dated run/results, bounded inspection, busy/error/draft states. Include direct subpages without expanding their capabilities or promoting experimental tools. |
 | 7 | Account, About, Login/Register/Forgot access | Shared auth/account fields, long names, status/error text and keyboard/zoom. No broker/account/security-feature redesign. |
 | 8 | Remaining secondary/direct and hidden compatibility routes | Confirm visibility classification, readable retained content or configuration/unavailable notices and bookmarks. Do not restore retired product promises. |
 

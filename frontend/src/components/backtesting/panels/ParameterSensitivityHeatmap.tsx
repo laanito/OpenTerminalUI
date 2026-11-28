@@ -35,6 +35,7 @@ export function ParameterSensitivityHeatmap({
       <div className="h-80 w-full">
         <ResponsiveHeatMap
           data={rows as any}
+          theme={{ fontSize: 12, axis: { ticks: { text: { fontSize: 12 } } }, labels: { text: { fontSize: 12 } } }}
           margin={{ top: 40, right: 90, bottom: 40, left: 90 }}
           valueFormat=">-.3f"
           axisTop={{ tickSize: 3, tickPadding: 4, tickRotation: -25 }}

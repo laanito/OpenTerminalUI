@@ -1,5 +1,25 @@
 # External-agent project context
 
+#329 is merged. Current v3 slice: the Backtesting console's readable setup,
+submitted-run identity/currency and bounded result inspection. See
+`docs/design/v3/BACKTESTING_REVIEW.md`. The direct governance/algorithm/optimizer
+pages remain next; they are not counted as reviewed by shared shell changes.
+Dedicated work covers 38 render entries, including 31 tools and three shell-menu
+extras. About and Account are the two ordinary destinations left; direct/auth/
+secondary/hidden presentation and broader host acceptance remain. Backtesting
+host acceptance is open; no release preparation. Retained financial helpers,
+strategy defaults and persisted saved-view format remain. Synthetic/inferred
+chart provenance and model-validation findings are recorded for v5; no provider,
+backend/schema, dependency, persistence or execution expansion. Earlier handoffs
+below are historical. All 969 frontend tests / 158 files and production build
+pass. Full Chrome regression passed 212 journeys before final Saved View/chart
+refinements; all seven affected journeys pass on final source, including a new
+Saved View restoration case (available matrix now 213). API-reference/surface/
+mock/source/whitespace guards and review links/JSON pass. Fourteen synthetic
+captures cover setup/results, local inspection, failure and native 200% zoom.
+No live provider/LLM/private corpus, production DB, deployment or execution;
+unchanged backend suite not rerun. User-owned workspace dirt is untouched.
+
 #328 is merged. Current small follow-up: Home → Launch Matrix → Markets →
 Depth of Market opens `/equity/dom`, using the existing responsive/keyboard
 launcher. Menu → Markets → DOM remains available. No route/provider/calculation
