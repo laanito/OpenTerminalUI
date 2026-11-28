@@ -1,5 +1,12 @@
 # Current project state and backlog
 
+- [ ] **Urgent auth recovery verification hardening.** A source-review finding
+      has been reported directly to the maintainer. Address the server recovery
+      trust/ownership boundary in a separate security change before routine
+      remaining-route work; do not bury it in the general v5 audit or treat
+      frontend acceptance as a security clearance. Current frontend work keeps
+      auth transport/server contracts unchanged.
+
 Maintainer sequencing update (2026-11-25): **v3 frontend overhaul; v4 LLM
 interface through a curated OTUI MCP; v5 retained-functionality audit and repair;
 new capabilities from v6 onward.** Prefer intentional agent tools over ad hoc
@@ -13,9 +20,9 @@ non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
 #328/#329 are merged, including Home's Markets → Depth of Market shortcut.
-#330 is merged. Current v3 slice: direct Backtesting governance/algorithm/
-optimizer workflows; see `docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`.
-The console review remains `docs/design/v3/BACKTESTING_REVIEW.md`.
+#331 is merged. Current v3 slice: Account, both About variants and the three auth
+forms; see `docs/design/v3/ACCOUNT_AUTH_REVIEW.md`. The direct Backtesting review
+remains `docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -34,9 +41,11 @@ acceptance open. The Backtesting console brings dedicated work to 38 render
 entries, 31 tools and three shell-menu extras. Two ordinary destinations remain:
 About and Account; direct/auth/secondary/hidden presentation remains open.
 The direct Backtesting review brings coverage to 41 render entries, with the
-same 31 tools and three shell-menu extras. Continue with About/Account/auth;
-other direct/secondary/hidden presentation remains open. Backtesting host
-acceptance is open. Provider/calculation repair stays on v5.
+same 31 tools and three shell-menu extras. Account/About/auth brings this to
+47 render entries, all 32 tools and four shell-menu extras. Ordinary menu
+destinations are covered; other direct/secondary/hidden presentation, optional
+Mosaic and broader acceptance remain open. Prioritize the recovery hardening
+follow-up, then continue remaining routes. Provider/calculation repair stays on v5.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2368,8 +2377,13 @@ ordered v1.7 milestone above.
             visible; fixed staging/metadata replacement semantics are explicit.
             See `docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`; host acceptance
             open. Dedicated work covers 41 entries, 31 tools/three shell extras.
-      - [ ] Account, About and login/register/forgot-access: labelled/wrapping
-            forms and existing status/error/keyboard flows; no auth redesign.
+      - [x] Account, both About variants and login/register/forgot-access:
+            readable local profile, disclosed secondary controls, real build
+            identity/documentation and labelled shared auth forms. Failed drafts,
+            partial registration, Viewer-only provisioning and native zoom are
+            covered. Existing storage/formats and auth transport remain; urgent
+            recovery hardening is tracked separately above. See
+            `docs/design/v3/ACCOUNT_AUTH_REVIEW.md`; host acceptance open.
       - [ ] Secondary/direct/F&O and hidden compatibility presentation pass:
             preserve classifications/bookmarks, readable retained controls and
             configuration/unavailable notices; do not build dormant features.

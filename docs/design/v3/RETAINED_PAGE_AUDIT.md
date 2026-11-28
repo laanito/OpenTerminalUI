@@ -40,10 +40,13 @@ MTA is accepted through #326, with its Home Research card merged as #327. The
 The [Backtesting console review](BACKTESTING_REVIEW.md) brings dedicated work to
 38 render entries, including 31 tools and three shell-menu extras (#330 merged).
 The [direct research review](BACKTESTING_RESEARCH_REVIEW.md) adds governance,
-algorithm composition and portfolio optimization, bringing dedicated work to
-41 render entries with the same 31 tools/three shell-menu extras. About and
-Account are the two ordinary destinations left; continue with them and auth forms.
-Other direct/secondary/hidden routes and broader acceptance remain open.
+algorithm composition and optimization (#331 merged), reaching 41 render entries.
+The [Account/About/auth review](ACCOUNT_AUTH_REVIEW.md) adds Account, both About
+variants and the three auth forms. Dedicated work covers 47 render entries, all
+32 primary tools and four shell-menu extras. Ordinary menu destinations are
+covered. Other direct/secondary/hidden presentation, optional Mosaic and wider
+acceptance remain. Prioritize the separately recorded recovery hardening follow-up
+before routine remaining-route work.
 The counts and examples below describe the original audit baseline unless stated otherwise.
 The source ledger tracks current entry files; the 39 original browser probes and
 baseline screenshots stay unchanged.
@@ -140,8 +143,9 @@ follow. The [MTA review](MTA_REVIEW.md) then covers the four-chart workspace;
 the [DOM review](DOM_REVIEW.md) follows. The [Backtesting console review](BACKTESTING_REVIEW.md)
 now covers its main workflow (#330 merged), followed by the
 [direct research review](BACKTESTING_RESEARCH_REVIEW.md) for governance/algorithm/
-optimizer subpages. Continue with About/Account/auth, preserving behavior rather
-than expanding provider/calculation scope.
+optimizer subpages. The [Account/About/auth review](ACCOUNT_AUTH_REVIEW.md) covers
+row 7, including F&O About. Prioritize the separate recovery-hardening follow-up,
+then review the remaining direct/secondary/hidden presentation.
 
 | Order | Retained area/routes | Acceptance focus |
 |---|---|---|
@@ -151,7 +155,7 @@ than expanding provider/calculation scope.
 | 4 · implemented | Dividends, Risk, Correlation, Stat Lab, Pair Trading | Group scope/setup, readable long labels and local numerical scrolling; review existing outputs and unavailable states without altering analytics. |
 | 5 · implemented | MTA `/equity/mta`; DOM `/equity/dom` | Useful chart/depth space, readable instrument/interval controls, keyboard/zoom and configured versus unavailable markets. Preserve existing route/provider contracts. |
 | 6 · implemented | Backtesting `/backtesting`; direct Model governance, Algorithm framework, Portfolio optimizer | Readable setup and dated run/results, bounded inspection, busy/error/draft states. Include direct subpages without expanding their capabilities or promoting experimental tools. |
-| 7 | Account, About, Login/Register/Forgot access | Shared auth/account fields, long names, status/error text and keyboard/zoom. No broker/account/security-feature redesign. |
+| 7 · implemented | Account, About, Login/Register/Forgot access | Shared auth/account fields, long names, status/error text and keyboard/zoom. No broker/account/security-feature redesign. |
 | 8 | Remaining secondary/direct and hidden compatibility routes | Confirm visibility classification, readable retained content or configuration/unavailable notices and bookmarks. Do not restore retired product promises. |
 
 Rows 1–7 cover the 19 unreconciled `PRIMARY_NAV_ITEMS` entries plus Account.
@@ -159,11 +163,11 @@ The complete list of those 19 is: Commodities, Forex, About, Heatmap, Dividends,
 Paper, Position Sizer, Risk, Correlation, Stat Lab, Pair Trading, MTA, DOM,
 Yield Curve, Economics, Rotation, Crypto, ETF Analytics and Backtesting.
 
-Outside the 36 ordinary menu destinations, the 23 unreviewed non-hidden direct
+At the original baseline, outside the 36 ordinary menu destinations, 23 unreviewed non-hidden direct
 entries comprise auth (3), F&O modules (10), additional Backtesting pages (3),
 Dashboard/Data quality/Factors/Intelligence timeline/Mutual funds (5), and Bond
 analytics/Option Greeks calculators (2). Auth and additional Backtesting routes
-are covered in rows 6–7. Row 8 includes the remaining direct tools and F&O module
+are now covered in rows 6–7; F&O About is also covered through its shared variant. Row 8 includes the remaining direct tools and F&O module
 pass, including its explicit market/provider notices. The other 17 entries are
 already hidden compatibility routes listed with reasons in the ledger/JSON;
 reviewing their presentation does not change that classification.

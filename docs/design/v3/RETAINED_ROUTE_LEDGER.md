@@ -18,7 +18,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/equity/forex` | [ForexPage](../../../frontend/src/pages/Forex.tsx) | supported | 0 |
 | `/equity/hotlists` | [HotlistsPage](../../../frontend/src/pages/Hotlists.tsx) | Hidden compatibility | 3 |
 | `/equity/insider` | [InsiderActivityPage](../../../frontend/src/pages/InsiderActivityPage.tsx) | Hidden compatibility | 3 |
-| `/equity/stocks/about` | [AboutPage](../../../frontend/src/pages/About.tsx) | supported | 26 |
+| `/equity/stocks/about` | [AboutPage](../../../frontend/src/pages/About.tsx) | supported | 0 |
 | `/equity/dashboard` | [DashboardPage](../../../frontend/src/pages/Dashboard.tsx) | Other direct | 0 |
 | `/equity/heatmap` | [MarketHeatmapPage](../../../frontend/src/pages/MarketHeatmapPage.tsx) | supported | 0 |
 | `/equity/dividends` | [DividendDashboardPage](../../../frontend/src/pages/DividendDashboardPage.tsx) | supported | 2 |
@@ -85,6 +85,6 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/backtesting/model-governance` | [ModelGovernancePage](../../../frontend/src/pages/ModelGovernance.tsx) | Other direct | 0 |
 | `/backtesting/algorithm-framework` | [AlgorithmFrameworkLab](../../../frontend/src/pages/AlgorithmFrameworkLab.tsx) | Other direct | 0 |
 | `/backtesting/portfolio-optimizer` | [PortfolioOptimizer](../../../frontend/src/pages/PortfolioOptimizer.tsx) | Other direct | 0 |
-| `/account` | [AccountPage](../../../frontend/src/pages/Account.tsx) | Shell menu extra | 14 |
+| `/account` | [AccountPage](../../../frontend/src/pages/Account.tsx) | Shell menu extra | 0 |
 
 Shells: `/equity`, `/fno`, `/backtesting`, `/account`. Redirects and source-line hints are listed in [the JSON inventory](evidence/retained-source-audit.json).

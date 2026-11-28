@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 import { ProfileCompletionRing } from "../components/home/ProfileCompletionRing";
 import { CountryFlag } from "../components/common/CountryFlag";
-import { TerminalBadge } from "../components/terminal/TerminalBadge";
 import { TerminalButton } from "../components/terminal/TerminalButton";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { useAuth } from "../contexts/AuthContext";
@@ -27,7 +26,7 @@ const CONNECTED_STORAGE_KEY = "ot.account.connected";
 const AGGREGATORS_STORAGE_KEY = "ot.account.aggregators";
 
 const INPUT_CLASS_NAME =
-  "mt-1 w-full rounded-sm border border-terminal-border bg-terminal-bg px-2 py-1.5 text-xs text-terminal-text outline-none transition-colors focus:border-terminal-accent";
+  "mt-1 min-h-11 min-w-0 w-full rounded-sm border border-terminal-border bg-terminal-bg px-3 py-2 text-sm text-terminal-text outline-none transition-colors focus:border-terminal-accent";
 
 const COUNTRY_NAME: Record<CountryCode, string> = {
   IN: "India",
@@ -154,22 +153,6 @@ function loadLocalState<T>(key: string, fallback: T): T {
   } catch {
     return fallback;
   }
-}
-
-function toneBadgeVariant(
-  tone: AccountSessionActivityItem["tone"],
-): "success" | "info" | "warn" | "danger" {
-  if (tone === "success") return "success";
-  if (tone === "warn") return "warn";
-  if (tone === "danger") return "danger";
-  return "info";
-}
-
-function tonePanelClass(tone: AccountSessionActivityItem["tone"]): string {
-  if (tone === "success") return "border-terminal-pos/50 bg-terminal-pos/10";
-  if (tone === "warn") return "border-terminal-warn/50 bg-terminal-warn/10";
-  if (tone === "danger") return "border-terminal-neg/50 bg-terminal-neg/10";
-  return "border-terminal-border/70 bg-terminal-bg/45";
 }
 
 function shortcutToneClass(tone: AccountShortcutTone): string {
@@ -334,44 +317,10 @@ export function AccountPage() {
     Boolean(localStorage.getItem(key)),
   ).length;
   const sessionActivityItems: AccountSessionActivityItem[] = [
-    {
-      id: "auth",
-      label: "Auth session",
-      value: user.email,
-      detail: `Role ${user.role.toUpperCase()} | Timezone ${profile.timezone}`,
-      tone: "success",
-    },
-    {
-      id: "desk",
-      label: "Desk route",
-      value: `${COUNTRY_NAME[connected.preferredCountry]} / ${connected.preferredExchange}`,
-      detail: `${connected.defaultCurrency} settlement | ${connected.accountAlias || "Alias pending"}`,
-      tone: "info",
-    },
-    {
-      id: "security",
-      label: "Security posture",
-      value: `${profile.securityTier.toUpperCase()} | ${profile.notificationMode.toUpperCase()}`,
-      detail: `${profile.tradingStyle.toUpperCase()} flow | ${profile.riskProfile.toUpperCase()} risk`,
-      tone: profile.securityTier === "standard" ? "warn" : "success",
-    },
-    {
-      id: "integrations",
-      label: "Integrations",
-      value: `${integrationCount}/4 online`,
-      detail: aggregators.webhookUrl.trim() ? "Webhook armed for export flows" : "Webhook pending",
-      tone: integrationCount >= 2 ? "success" : "warn",
-    },
-    {
-      id: "activity",
-      label: "Latest action",
-      value: deriveLatestAction(activity),
-      detail:
-        persistedSlots > 0
-          ? `${persistedSlots}/3 browser vault slots populated | Last save ${formatTimestamp(activity.savedAt)}`
-          : "No browser snapshot saved yet",
-      tone: activity.resetAt && (!activity.savedAt || activity.resetAt > activity.savedAt) ? "warn" : "info",
-    },
+    { id: "auth", label: "Authenticated identity", value: user.email, detail: `Role ${user.role} · ${profile.timezone}`, tone: "info" },
+    { id: "desk", label: "Draft market preferences", value: `${COUNTRY_NAME[connected.preferredCountry]} / ${connected.preferredExchange}`, detail: `${connected.defaultCurrency} display preference · ${connected.accountAlias}`, tone: "info" },
+    { id: "integrations", label: "Local integration fields", value: `${integrationCount}/4 filled`, detail: "Stored values are not a connection or permission check.", tone: "info" },
+    { id: "activity", label: "Latest action in this session", value: deriveLatestAction(activity), detail: `${persistedSlots}/3 saved browser records · last save ${formatTimestamp(activity.savedAt)}`, tone: "info" },
   ];
 
   const onAvatarUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -387,6 +336,7 @@ export function AccountPage() {
 
   const onSave = (event: FormEvent) => {
     event.preventDefault();
+    try {
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
     localStorage.setItem(CONNECTED_STORAGE_KEY, JSON.stringify(connected));
     localStorage.setItem(AGGREGATORS_STORAGE_KEY, JSON.stringify(aggregators));
@@ -397,6 +347,8 @@ export function AccountPage() {
 
     setActivity((current) => ({ ...current, savedAt: Date.now() }));
     setFlashMessage("Account details saved.", "success");
+    } catch { setFlashMessage("Could not save account details in this browser. Your draft is retained.", "warn"); }
+
   };
 
   const onExport = () => {
@@ -433,148 +385,21 @@ export function AccountPage() {
   };
 
   return (
-    <form className="space-y-3 p-3 font-mono" onSubmit={onSave}>
-      <header className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-terminal-border bg-terminal-panel px-3 py-2">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-terminal-muted">
-          <span>Account | Identity HQ</span>
-          <TerminalBadge variant="accent">{connected.preferredExchange}</TerminalBadge>
-          <TerminalBadge variant="info">{themeVariant}</TerminalBadge>
-          <TerminalBadge variant={hudOverlayEnabled ? "live" : "neutral"}>
-            {hudOverlayEnabled ? "HUD On" : "HUD Off"}
-          </TerminalBadge>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {message ? (
-            <TerminalBadge variant={message.tone === "success" ? "success" : "warn"}>{message.text}</TerminalBadge>
-          ) : null}
-          <TerminalButton type="button" size="sm" onClick={() => navigate(-1)} aria-label="Go back">
-            Back
-          </TerminalButton>
-          <TerminalButton type="submit" size="sm" variant="accent" aria-label="Save profile">
-            Save Profile
-          </TerminalButton>
-        </div>
+    <main aria-label="Account workspace" className="min-w-0 space-y-3 p-3 text-sm [overflow-wrap:anywhere]">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div><h1 className="text-xl font-semibold text-terminal-text">Account</h1><p className="mt-1 text-sm text-terminal-muted">Your signed-in identity and browser-local profile.</p></div>
+        <TerminalButton type="button" onClick={() => navigate(-1)} aria-label="Go back">Back</TerminalButton>
       </header>
-      <div className="grid gap-3 xl:grid-cols-[1.18fr_0.82fr]">
-        <TerminalPanel
-          title="Identity HQ"
-          subtitle="Identity, completion, and current market posture"
-          actions={<TerminalBadge variant="live">Online</TerminalBadge>}
-        >
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-            <div className="grid gap-4 md:grid-cols-[108px_minmax(0,1fr)]">
-              <div className="flex items-start justify-center">
-                {profile.avatarDataUrl ? (
-                  <img
-                    src={profile.avatarDataUrl}
-                    alt="Profile"
-                    className="h-24 w-24 rounded-full border border-terminal-border object-cover"
-                  />
-                ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full border border-terminal-border bg-terminal-bg text-3xl text-terminal-accent">
-                    {userInitials}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <TerminalBadge variant="accent">{user.role.toUpperCase()}</TerminalBadge>
-                    <TerminalBadge variant="info">{connected.defaultCurrency}</TerminalBadge>
-                    <TerminalBadge variant={realtimeMode === "ws" ? "live" : "neutral"}>
-                      {realtimeMode.toUpperCase()}
-                    </TerminalBadge>
-                  </div>
-                  <h1 className="text-2xl uppercase tracking-[0.12em] text-terminal-accent">{identityName}</h1>
-                  <div className="text-sm text-terminal-text">{user.email}</div>
-                  <div className="text-xs text-terminal-muted">
-                    {profile.location.trim() || "Location pending"} | {profile.deskFocus.trim() || "Desk focus pending"}
-                  </div>
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.14em] text-terminal-muted">Broker Alias</div>
-                    <div className="mt-1 text-xs text-terminal-text">{connected.accountAlias}</div>
-                  </div>
-                  <div className="rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.14em] text-terminal-muted">Country Route</div>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-terminal-text">
-                      <CountryFlag countryCode={connected.preferredCountry} size="lg" />
-                      <span>{COUNTRY_NAME[connected.preferredCountry]}</span>
-                    </div>
-                  </div>
-                  <div className="rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.14em] text-terminal-muted">Risk Posture</div>
-                    <div className="mt-1 text-xs text-terminal-text">{profile.riskProfile.toUpperCase()}</div>
-                  </div>
-                  <div className="rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.14em] text-terminal-muted">Local Vault</div>
-                    <div className="mt-1 text-xs text-terminal-text">
-                      {persistedSlots}/3 slots | {integrationCount}/4 connectors
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-sm border border-terminal-border/70 bg-terminal-bg/45 p-3">
-              <ProfileCompletionRing
-                value={completionSummary.value}
-                size={96}
-                strokeWidth={6}
-                label="Identity completion"
-                missingFields={completionSummary.missingFields}
-              />
-              <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] uppercase tracking-[0.14em] text-terminal-muted">
-                <div className="rounded-sm border border-terminal-border/60 bg-terminal-panel px-2 py-2">
-                  <div>Completed</div>
-                  <div className="mt-1 text-sm text-terminal-text">{completionSummary.completed}</div>
-                </div>
-                <div className="rounded-sm border border-terminal-border/60 bg-terminal-panel px-2 py-2">
-                  <div>Missing</div>
-                  <div className="mt-1 text-sm text-terminal-text">
-                    {completionSummary.total - completionSummary.completed}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 text-[11px] text-terminal-muted">
-                Completion tracks identity fields only. Desk routing and integrations continue to use the existing save
-                flow.
-              </div>
-            </div>
-          </div>
-        </TerminalPanel>
-
-        <TerminalPanel
-          title="Session Activity"
-          subtitle="Active browser session, routing, and latest account actions"
-          actions={<TerminalBadge variant="info">Local session</TerminalBadge>}
-        >
-          <div className="space-y-2">
-            {sessionActivityItems.map((item) => (
-              <article key={item.id} className={`rounded-sm border p-3 ${tonePanelClass(item.tone)}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-terminal-muted">{item.label}</div>
-                  <TerminalBadge variant={toneBadgeVariant(item.tone)}>{item.tone.toUpperCase()}</TerminalBadge>
-                </div>
-                <div className="mt-2 text-sm text-terminal-text">{item.value}</div>
-                <div className="mt-1 text-[11px] leading-5 text-terminal-muted">{item.detail}</div>
-              </article>
-            ))}
-          </div>
-        </TerminalPanel>
-      </div>
-
-      <div className="grid gap-3 xl:grid-cols-[1.08fr_0.92fr]">
-        <TerminalPanel
-          title="Profile Dossier"
-          subtitle="Personal details, desk defaults, and security posture"
-          actions={<TerminalBadge variant="accent">Editable</TerminalBadge>}
-        >
-          <div className="grid grid-cols-1 gap-3 text-xs md:grid-cols-2">
-            <label>
+      <section aria-label="Signed-in identity" className="flex min-w-0 flex-wrap items-center gap-4 rounded border border-terminal-border bg-terminal-panel p-3">
+        {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="Profile" className="h-16 w-16 rounded-full object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-terminal-border text-xl text-terminal-accent">{userInitials}</span>}
+        <div className="min-w-0 flex-1"><h2 className="break-words text-lg text-terminal-text">{identityName}</h2><p className="break-words text-sm text-terminal-muted">{user.email}</p><p className="mt-1 text-xs text-terminal-muted">Authenticated role: {user.role} · theme {themeVariant} · retrieval preference {realtimeMode} · HUD {hudOverlayEnabled ? "on" : "off"}</p></div>
+      </section>
+      <form onSubmit={onSave} className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-center gap-2"><TerminalButton type="submit" variant="accent" aria-label="Save account details">Save account details</TerminalButton><span className="text-xs text-terminal-muted">Saved in this browser; market preferences also update the terminal selectors.</span></div>
+        {message && <p role={message.tone === "success" ? "status" : "alert"} className={`rounded border border-terminal-border p-3 text-sm ${message.tone === "success" ? "text-terminal-pos" : "text-terminal-warning"}`}>{message.text}</p>}
+        <TerminalPanel title="Profile Dossier" subtitle="Optional local details; profile preferences do not change account permissions or enforce risk controls">
+          <div className="grid min-w-0 grid-cols-1 gap-3 text-sm md:grid-cols-2 lg:grid-cols-3">
+            <label className="block min-w-0">
               First Name
               <input
                 className={INPUT_CLASS_NAME}
@@ -582,7 +407,7 @@ export function AccountPage() {
                 onChange={(event) => updateProfile("firstName", event.target.value)}
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Last Name
               <input
                 className={INPUT_CLASS_NAME}
@@ -590,7 +415,7 @@ export function AccountPage() {
                 onChange={(event) => updateProfile("lastName", event.target.value)}
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Display Name
               <input
                 className={INPUT_CLASS_NAME}
@@ -599,7 +424,7 @@ export function AccountPage() {
                 placeholder="Desk-visible identity"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Date of Birth
               <input
                 type="date"
@@ -608,7 +433,7 @@ export function AccountPage() {
                 onChange={(event) => updateProfile("dateOfBirth", event.target.value)}
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Phone
               <input
                 className={INPUT_CLASS_NAME}
@@ -617,7 +442,7 @@ export function AccountPage() {
                 placeholder="+1 555 123 9876"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Timezone
               <input
                 className={INPUT_CLASS_NAME}
@@ -625,7 +450,7 @@ export function AccountPage() {
                 onChange={(event) => updateProfile("timezone", event.target.value)}
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Location
               <input
                 className={INPUT_CLASS_NAME}
@@ -634,7 +459,7 @@ export function AccountPage() {
                 placeholder="San Francisco, CA"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Desk Focus
               <input
                 className={INPUT_CLASS_NAME}
@@ -643,7 +468,7 @@ export function AccountPage() {
                 placeholder="Macro, growth, event-driven"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Risk Profile
               <select
                 className={INPUT_CLASS_NAME}
@@ -655,7 +480,7 @@ export function AccountPage() {
                 <option value="aggressive">Aggressive</option>
               </select>
             </label>
-            <label>
+            <label className="block min-w-0">
               Trading Style
               <select
                 className={INPUT_CLASS_NAME}
@@ -667,7 +492,7 @@ export function AccountPage() {
                 <option value="hybrid">Hybrid</option>
               </select>
             </label>
-            <label>
+            <label className="block min-w-0">
               Notification Mode
               <select
                 className={INPUT_CLASS_NAME}
@@ -681,7 +506,7 @@ export function AccountPage() {
                 <option value="priority">Priority</option>
               </select>
             </label>
-            <label>
+            <label className="block min-w-0">
               Security Tier
               <select
                 className={INPUT_CLASS_NAME}
@@ -693,18 +518,19 @@ export function AccountPage() {
                 <option value="restricted">Restricted</option>
               </select>
             </label>
-            <label className="md:col-span-2">
+            <label className="md:col-span-2 lg:col-span-3">
               Profile Image
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <input
                   type="file"
+                  aria-label="Profile Image"
                   accept="image/*"
                   className={`${INPUT_CLASS_NAME} max-w-full`}
                   onChange={onAvatarUpload}
                 />
                 <TerminalButton
                   type="button"
-                  size="sm"
+                  size="lg"
                   onClick={() => updateProfile("avatarDataUrl", "")}
                   aria-label="Remove profile image"
                 >
@@ -712,7 +538,7 @@ export function AccountPage() {
                 </TerminalButton>
               </div>
             </label>
-            <label className="md:col-span-2">
+            <label className="md:col-span-2 lg:col-span-3">
               Bio
               <textarea
                 className={`${INPUT_CLASS_NAME} h-24 resize-none`}
@@ -722,78 +548,11 @@ export function AccountPage() {
               />
             </label>
           </div>
+
         </TerminalPanel>
-
-        <div className="space-y-3">
-          <TerminalPanel
-            title="Shortcut Panel"
-            subtitle="Fast route jumps for the desks most likely to follow profile edits"
-            actions={<TerminalBadge variant="accent">Prompt map</TerminalBadge>}
-          >
-            <div className="grid gap-2">
-              {SHORTCUTS.map((shortcut) => (
-                <button
-                  key={shortcut.id}
-                  type="button"
-                  className={`flex items-center justify-between rounded-sm border bg-terminal-bg/45 px-3 py-2 text-left transition-colors ${shortcutToneClass(shortcut.tone)}`}
-                  onClick={() => navigate(shortcut.to)}
-                  aria-label={`Open ${shortcut.label}`}
-                >
-                  <div>
-                    <div className="text-xs text-terminal-text">{shortcut.label}</div>
-                    <div className="mt-1 text-[11px] text-terminal-muted">{shortcut.detail}</div>
-                  </div>
-                  <span className="rounded-sm border border-terminal-border bg-terminal-panel px-1.5 py-0.5 text-[10px] uppercase tracking-[0.14em] text-terminal-accent">
-                    {shortcut.keycap}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </TerminalPanel>
-
-          <TerminalPanel
-            title="Action Deck"
-            subtitle="Save, export, reset, or close the authenticated session"
-            actions={<TerminalBadge variant="warn">Manual controls</TerminalBadge>}
-          >
-            <div className="grid gap-2 sm:grid-cols-2">
-              <TerminalButton type="submit" variant="accent" aria-label="Save account details">
-                Save Account Details
-              </TerminalButton>
-              <TerminalButton type="button" variant="success" onClick={onExport} aria-label="Export profile bundle">
-                Export Bundle
-              </TerminalButton>
-              <TerminalButton type="button" variant="default" onClick={onResetDraft} aria-label="Reset account draft">
-                Reset Draft
-              </TerminalButton>
-              <TerminalButton
-                type="button"
-                variant="danger"
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
-                aria-label="Logout"
-              >
-                Logout
-              </TerminalButton>
-            </div>
-            <div className="mt-3 rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-2 text-[11px] leading-5 text-terminal-muted">
-              Export includes the current in-browser profile, connection routing, and integration settings. Reset clears only the
-              three Account localStorage slots and restores the typed defaults already used by this page.
-            </div>
-          </TerminalPanel>
-        </div>
-      </div>
-
-      <div className="grid gap-3 xl:grid-cols-[0.96fr_1.04fr]">
-        <TerminalPanel
-          title="Connection Dashboard"
-          subtitle="Broker alias, market route, and settlement defaults"
-          actions={<TerminalBadge variant="info">Desk routing</TerminalBadge>}
-        >
+        <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Market preferences and broker labels</summary><p className="my-3 text-xs text-terminal-muted">Broker names and aliases are local labels, not linked brokerage accounts. Save applies the market and display-currency preferences.</p>
           <div className="space-y-3 text-xs">
-            <label>
+            <label className="block min-w-0">
               Broker Name
               <input
                 className={INPUT_CLASS_NAME}
@@ -801,7 +560,7 @@ export function AccountPage() {
                 onChange={(event) => updateConnected("brokerName", event.target.value)}
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Account Alias
               <input
                 className={INPUT_CLASS_NAME}
@@ -809,7 +568,7 @@ export function AccountPage() {
                 onChange={(event) => updateConnected("accountAlias", event.target.value)}
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Preferred Country
               <select
                 className={INPUT_CLASS_NAME}
@@ -818,9 +577,10 @@ export function AccountPage() {
               >
                 <option value="IN">IN - India</option>
                 <option value="US">US - United States</option>
+                <option value="EU">EU - Europe</option><option value="CRYPTO">Crypto</option>
               </select>
             </label>
-            <label>
+            <label className="block min-w-0">
               Preferred Exchange
               <select
                 className={INPUT_CLASS_NAME}
@@ -834,7 +594,7 @@ export function AccountPage() {
                 ))}
               </select>
             </label>
-            <label>
+            <label className="block min-w-0">
               Default Currency
               <select
                 className={INPUT_CLASS_NAME}
@@ -844,12 +604,12 @@ export function AccountPage() {
                 }
               >
                 <option value="INR">INR</option>
-                <option value="USD">USD</option>
+                <option value="USD">USD</option><option value="EUR">EUR</option>
               </select>
             </label>
 
             <div className="rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-3">
-              <div className="text-[10px] uppercase tracking-[0.14em] text-terminal-muted">Selected market profile</div>
+              <div className="text-xs uppercase tracking-[0.14em] text-terminal-muted">Selected market profile</div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-terminal-text">
                 <CountryFlag countryCode={connected.preferredCountry} size="lg" />
                 <span>{COUNTRY_NAME[connected.preferredCountry]}</span>
@@ -860,17 +620,11 @@ export function AccountPage() {
               </div>
             </div>
           </div>
-        </TerminalPanel>
 
-        <TerminalPanel
-          title="Integrations & Recovery"
-          subtitle="API keys, webhook routing, and export readiness"
-          actions={
-            <TerminalBadge variant={integrationCount >= 2 ? "success" : "warn"}>{integrationCount}/4 online</TerminalBadge>
-          }
-        >
+        </details>
+        <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Legacy local integration fields · {integrationCount}/4 filled</summary><p className="my-3 text-xs text-terminal-muted">These fields are browser-local records. Entering a key does not configure a provider, execution connection or automation access. Use terminal Settings for supported configuration. Exports include these values.</p>
           <div className="grid grid-cols-1 gap-3 text-xs md:grid-cols-2">
-            <label>
+            <label className="block min-w-0">
               Market Data API Key
               <input
                 type="password"
@@ -880,7 +634,7 @@ export function AccountPage() {
                 placeholder="Enter market data key"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Execution API Key
               <input
                 type="password"
@@ -890,7 +644,7 @@ export function AccountPage() {
                 placeholder="Enter execution key"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               News API Key
               <input
                 type="password"
@@ -900,7 +654,7 @@ export function AccountPage() {
                 placeholder="Enter news key"
               />
             </label>
-            <label>
+            <label className="block min-w-0">
               Webhook URL
               <input
                 className={INPUT_CLASS_NAME}
@@ -911,12 +665,32 @@ export function AccountPage() {
             </label>
           </div>
 
-          <div className="mt-3 rounded-sm border border-terminal-border/70 bg-terminal-bg/45 px-3 py-3 text-[11px] leading-5 text-terminal-muted">
-            Browser persistence is unchanged: values stay in memory until you press save, then the page writes the same three
-            Account localStorage keys and syncs the country, market, and currency selectors back into the settings store.
-          </div>
-        </TerminalPanel>
-      </div>
-    </form>
+        </details>
+        <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Profile completion and session activity</summary><div className="mt-3 grid min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-[220px_minmax(0,1fr)]"><div><ProfileCompletionRing value={completionSummary.value} size={96} strokeWidth={6} label="Identity completion" missingFields={completionSummary.missingFields} /><p className="mt-2 text-xs text-terminal-muted">{completionSummary.completed}/{completionSummary.total} optional identity fields filled.</p></div><section aria-label="Session Activity" className="space-y-3"><h2 className="text-sm">Session Activity</h2>{sessionActivityItems.map(item => <div key={item.id} className="min-w-0 rounded border border-terminal-border p-3"><h3 className="text-xs text-terminal-muted">{item.label}</h3><p className="mt-1 text-sm">{item.value}</p><p className="mt-1 text-xs text-terminal-muted">{item.detail}</p></div>)}</section></div></details>
+        <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Export, reset and sign out</summary><p className="my-3 text-xs text-terminal-muted">Export downloads the current profile, routing labels and integration values. Reset clears the three Account browser records and restores defaults; it does not delete your server account.</p><div className="flex flex-wrap gap-2"><TerminalButton type="button" onClick={onExport} aria-label="Export profile bundle">Export profile bundle</TerminalButton><TerminalButton type="button" onClick={onResetDraft} aria-label="Reset account draft">Reset local profile</TerminalButton><TerminalButton type="button" variant="danger" onClick={() => { logout(); navigate("/login"); }} aria-label="Logout">Logout</TerminalButton></div></details>
+      </form>
+      <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Shortcut Panel</summary><div className="mt-3">
+            <div className="grid gap-2">
+              {SHORTCUTS.map((shortcut) => (
+                <button
+                  key={shortcut.id}
+                  type="button"
+                  className={`flex items-center justify-between rounded-sm border bg-terminal-bg/45 px-3 py-2 text-left transition-colors ${shortcutToneClass(shortcut.tone)}`}
+                  onClick={() => navigate(shortcut.to)}
+                  aria-label={`Open ${shortcut.label}`}
+                >
+                  <div>
+                    <div className="text-xs text-terminal-text">{shortcut.label}</div>
+                    <div className="mt-1 text-xs text-terminal-muted">{shortcut.detail}</div>
+                  </div>
+                  <span className="rounded-sm border border-terminal-border bg-terminal-panel px-1.5 py-0.5 text-xs uppercase tracking-[0.14em] text-terminal-accent">
+                    {shortcut.keycap}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+      </div></details>
+    </main>
   );
 }

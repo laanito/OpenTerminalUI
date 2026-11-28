@@ -1056,10 +1056,13 @@ scoped quotes and explicit retrieval/coverage states (#328 merged; Home shortcut
 #329 merged); host acceptance is open. The [Backtesting console review](../design/v3/BACKTESTING_REVIEW.md)
 adds readable setup, captured run identity and bounded result inspection (#330
 merged). The [direct research review](../design/v3/BACKTESTING_RESEARCH_REVIEW.md)
-adds Model Governance, Algorithm Framework and Portfolio Optimizer. Dedicated
-work covers 41 render entries, including 31 tools and three shell-menu extras.
-Two ordinary menu destinations remain: About and Account; continue with them and
-auth forms. Other direct/secondary/hidden presentation remains open.
+adds Model Governance, Algorithm Framework and Portfolio Optimizer (#331 merged).
+The [Account/About/auth review](../design/v3/ACCOUNT_AUTH_REVIEW.md) brings dedicated
+work to 47 render entries, all 32 primary tools and four shell-menu extras.
+Both About variants and three auth forms are included. Ordinary menu coverage
+is complete; other direct/secondary/hidden presentation, optional Mosaic and
+broader host acceptance remain. A separately recorded recovery-hardening
+follow-up takes priority over routine remaining-route work.
 Auth/direct and secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
@@ -2071,6 +2074,13 @@ Real but unscheduled; pull into a milestone when it fits.
   Monte Carlo is unseeded. Compare's legacy request omits timeframe. Audit
   lookahead, date alignment and mathematical validity independently of this
   frontend review; no live provider/model or execution certification is implied.
+  Account needs a later audit of browser-wide rather than per-user local records,
+  credential retention/export semantics, sequential saves and the legacy broker/
+  integration/security-preference fields. They are local metadata, not active
+  connections or enforced policy. Registration now reflects server-enforced
+  Viewer provisioning; no permissions/API/session redesign is included. Auth
+  recovery verification has a separate urgent hardening follow-up; do not defer
+  it to the ordinary v5 functionality queue or infer safety from frontend tests.
   Direct research workflows also need independent service/model verification:
   framework model/parameter bounds, fraction-labelled risk thresholds, simulation
   accounting currency, benchmark alignment and alpha's no-benchmark fallback.

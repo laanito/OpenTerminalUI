@@ -57,10 +57,13 @@ and explicit retrieval/coverage states; #328 is merged, with the Home Markets
 shortcut merged as #329. Host acceptance is open. The [Backtesting console review](BACKTESTING_REVIEW.md)
 adds readable setup, captured runs and bounded result inspection (#330 merged).
 The [direct research review](BACKTESTING_RESEARCH_REVIEW.md) adds Model Governance,
-Algorithm Framework and Portfolio Optimizer. Dedicated work covers 41 render
-entries, including 31 tools and three shell-menu extras. About and Account are
-the two ordinary destinations left; continue with them and auth forms.
-Other direct/secondary/hidden presentation and broader acceptance remain open.
+Algorithm Framework and Portfolio Optimizer (#331 merged). The
+[Account/About/auth review](ACCOUNT_AUTH_REVIEW.md) adds six render entries,
+including both About variants and three auth forms. Dedicated work covers 47
+render entries, all 32 primary tools and four shell-menu extras. Ordinary menu
+coverage is complete; other direct/secondary/hidden presentation, optional Mosaic
+and wider acceptance remain. Prioritize the separately recorded recovery
+hardening follow-up, then continue the remaining route review.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because

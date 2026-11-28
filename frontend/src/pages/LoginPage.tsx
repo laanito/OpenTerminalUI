@@ -1,11 +1,8 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { MarketTicker } from "../components/MarketTicker";
-import { StatusBar } from "../components/StatusBar";
+import { AuthFrame, AUTH_BUTTON_CLASS, AUTH_INPUT_CLASS } from "../components/auth/AuthFrame";
 import { useAuth } from "../contexts/AuthContext";
-import logo from "../assets/logo.png";
-import { getAppVersion, REPOSITORY_LABEL, REPOSITORY_URL } from "../utils/constants";
 
 const TRANSITION_FLAG_KEY = "ot-terminal-transition";
 
@@ -18,6 +15,9 @@ export function LoginPage() {
   const location = useLocation();
   const { login, isLoading } = useAuth();
 
+  const mounted = useRef(true);
+  const busy = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [rememberTerminal, setRememberTerminal] = useState(false);
@@ -25,7 +25,6 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [authenticating, setAuthenticating] = useState(false);
   const [dotIndex, setDotIndex] = useState(1);
-  const [inputErrorFlash, setInputErrorFlash] = useState(false);
 
   useEffect(() => {
     const remembered = localStorage.getItem("ot-login-user");
@@ -45,37 +44,34 @@ export function LoginPage() {
 
   const authText = useMemo(() => `AUTHENTICATING${".".repeat(dotIndex)}`, [dotIndex]);
 
-  const triggerInputFlash = () => {
-    setInputErrorFlash(true);
-    window.setTimeout(() => setInputErrorFlash(false), 420);
-  };
-
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy.current || authenticating || isLoading) return;
     setError(null);
 
     if (!userId.trim() || !password) {
       setError("CREDENTIALS REQUIRED");
-      triggerInputFlash();
       return;
     }
 
     if (!userId.includes("@")) {
       setError("USER ID MUST BE A REGISTERED EMAIL");
-      triggerInputFlash();
       return;
     }
 
     try {
+      busy.current = true;
       setAuthenticating(true);
       const startedAt = Date.now();
       await login(userId.trim(), password);
+      if (!mounted.current) return;
 
       const elapsedMs = Date.now() - startedAt;
       if (elapsedMs < 2000) {
         await delay(2000 - elapsedMs);
       }
 
+      if (!mounted.current) return;
       if (rememberTerminal) {
         localStorage.setItem("ot-login-user", userId.trim());
       } else {
@@ -86,148 +82,30 @@ export function LoginPage() {
       window.dispatchEvent(new CustomEvent("ot-terminal-transition"));
       await delay(800);
 
+      if (!mounted.current) return;
       const redirectParam = new URLSearchParams(location.search).get("redirect");
       const fallback = (location.state as { from?: string } | undefined)?.from || "/home";
       navigate(redirectParam || fallback, { replace: true });
     } catch {
+      if (!mounted.current) return;
       setError("AUTHENTICATION FAILED");
-      triggerInputFlash();
     } finally {
-      setAuthenticating(false);
+      busy.current = false;
+      if (mounted.current) setAuthenticating(false);
     }
   };
 
-  return (
-    <div className="ot-login-layout">
-      <StatusBar left="OPENTERMINALUI" center="SYSTEM STATUS: ONLINE" centerDotColor="green" />
-
-      <section className="ot-login-hero">
-        <div className="ot-login-ticker-wrap">
-          <MarketTicker />
-        </div>
-
-        <div className="ot-login-metrics">
-          <span className="ot-value-up">UPTIME 99.97%</span>
-          <span className="ot-muted">|</span>
-          <span className="ot-value-cyan">LATENCY 2ms</span>
-          <span className="ot-muted">|</span>
-          <span className="ot-value-amber">SESSIONS 1,247</span>
-        </div>
-
-        <div className="ot-brand-block">
-          <div className="ot-brand-logo-row">
-            <img src={logo} alt="OpenTerminalUI" className="ot-brand-logo" />
-            <span className="ot-brand-kicker">OPEN-SOURCE TRADING TERMINAL</span>
-          </div>
-          <h1 className="ot-brand-title">
-            <span className="ot-brand-title-open">OPENTERMINALUI</span>
-          </h1>
-          <p className="ot-brand-subtitle">Analyze. Trade. Optimize.</p>
-        </div>
-      </section>
-
-      <section className="ot-login-panel">
-        <div className="ot-login-panel-inner">
-          <header className="ot-stagger" style={{ ["--stagger-index" as string]: 1 }}>
-            <div className="ot-panel-logo-wrap">
-              <img src={logo} alt="OpenTerminalUI logo" className="ot-panel-logo" />
-            </div>
-            <p className="ot-panel-kicker">SECURE ACCESS</p>
-            <h2 className="ot-panel-title">AUTHENTICATE</h2>
-            <p className="ot-panel-subtitle">Enter credentials to access terminal</p>
-            <span className="ot-panel-divider" />
-          </header>
-
-          <form className="ot-login-form" onSubmit={onSubmit}>
-            <label className="ot-field-label ot-stagger" style={{ ["--stagger-index" as string]: 2 }} htmlFor="ot-user-id">
-              USER ID
-            </label>
-            <div className={`ot-input-wrap ot-stagger ${inputErrorFlash ? "ot-input-flash" : ""}`} style={{ ["--stagger-index" as string]: 3 }}>
-              <span className="ot-input-prompt">&gt;</span>
-              <input
-                id="ot-user-id"
-                className="ot-input"
-                placeholder="Enter user ID..."
-                value={userId}
-                onChange={(event) => setUserId(event.target.value)}
-                autoComplete="username"
-                disabled={authenticating || isLoading}
-              />
-            </div>
-
-            <label className="ot-field-label ot-stagger" style={{ ["--stagger-index" as string]: 4 }} htmlFor="ot-password">
-              PASSWORD
-            </label>
-            <div className={`ot-input-wrap ot-input-password-wrap ot-stagger ${inputErrorFlash ? "ot-input-flash" : ""}`} style={{ ["--stagger-index" as string]: 5 }}>
-              <span className="ot-input-prompt">&gt;</span>
-              <input
-                id="ot-password"
-                className="ot-input ot-password-input"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter password..."
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                disabled={authenticating || isLoading}
-              />
-              <button
-                type="button"
-                className="ot-password-toggle"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? "?" : "?"}
-              </button>
-            </div>
-
-            <div className="ot-options-row ot-stagger" style={{ ["--stagger-index" as string]: 6 }}>
-              <label className="ot-checkbox">
-                <input type="checkbox" checked={rememberTerminal} onChange={(event) => setRememberTerminal(event.target.checked)} />
-                <span className="ot-checkbox-mark" />
-                <span>Remember terminal</span>
-              </label>
-              <Link to="/forgot-access" className="ot-forgot-link">Forgot access?</Link>
-            </div>
-
-            <button type="submit" className="ot-login-submit ot-stagger" style={{ ["--stagger-index" as string]: 7 }} disabled={authenticating || isLoading}>
-              {authenticating || isLoading ? authText : "ACCESS TERMINAL ?"}
-            </button>
-
-            {error ? <p className="ot-auth-error">{error}</p> : null}
-
-            <div className="ot-or-divider ot-stagger" style={{ ["--stagger-index" as string]: 8 }}>
-              <span />
-              <p>OR</p>
-              <span />
-            </div>
-
-            <button
-              type="button"
-              className="ot-demo-button ot-stagger"
-              style={{ ["--stagger-index" as string]: 9 }}
-              onClick={() => {
-                setUserId("demo@openterminal.dev");
-                setPassword("demo12345");
-                setError(null);
-              }}
-            >
-              <span>&gt;</span> DEMO ACCESS
-            </button>
-          </form>
-
-          <footer className="ot-login-footer ot-stagger" style={{ ["--stagger-index" as string]: 10 }}>
-            <p>
-              New to OpenTerminal? <Link to="/register">Request access</Link>
-            </p>
-            <p className="ot-login-meta">
-              v{getAppVersion()} | MIT LICENSE |{" "}
-              <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">
-                {REPOSITORY_LABEL}
-              </a>
-            </p>
-          </footer>
-        </div>
-      </section>
-    </div>
-  );
+  return <AuthFrame title="Authenticate" description="Sign in with the email and password registered on this terminal.">
+    <form onSubmit={onSubmit} className="min-w-0 space-y-4" aria-busy={authenticating || isLoading}>
+      <label className="block space-y-1"><span className="text-sm">USER ID</span><input id="ot-user-id" className={AUTH_INPUT_CLASS} placeholder="Enter user ID..." inputMode="email" autoCapitalize="none" spellCheck={false} value={userId} onChange={event => setUserId(event.target.value)} autoComplete="username" disabled={authenticating || isLoading} /></label>
+      <label className="block space-y-1"><span className="text-sm">PASSWORD</span><input id="ot-password" className={AUTH_INPUT_CLASS} type={showPassword ? "text" : "password"} placeholder="Enter password..." value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" disabled={authenticating || isLoading} /></label>
+      <button type="button" className="min-h-11 rounded border border-terminal-border px-3 py-2 text-sm" aria-pressed={showPassword} aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(previous => !previous)}>{showPassword ? "Hide password" : "Show password"}</button>
+      <div className="flex flex-wrap items-center justify-between gap-3"><label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" disabled={authenticating || isLoading} checked={rememberTerminal} onChange={event => setRememberTerminal(event.target.checked)} /><span>Remember terminal</span></label><Link to="/forgot-access" className="text-sm text-terminal-accent underline">Forgot access?</Link></div>
+      <p className="text-xs text-terminal-muted">Remember terminal stores your email on this browser.</p>
+      {error && <p role="alert" className="rounded border border-terminal-neg p-3 text-sm text-terminal-neg">{error}. Your entries are retained.</p>}
+      <button type="submit" className={`${AUTH_BUTTON_CLASS} w-full`} disabled={authenticating || isLoading}>{authenticating || isLoading ? authText : "Access terminal"}</button>
+      <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Demo credentials</summary><p className="my-3 text-xs text-terminal-muted">Fill the existing demo credentials. This requires a demo account provisioned on your host.</p><button type="button" disabled={authenticating || isLoading} className={AUTH_BUTTON_CLASS} onClick={() => { setUserId("demo@openterminal.dev"); setPassword("demo12345"); setError(null); }}>&gt; DEMO ACCESS</button></details>
+      <p className="text-sm text-terminal-muted">New to OpenTerminalUI? <Link to="/register" className="text-terminal-accent underline">Request access</Link></p>
+    </form>
+  </AuthFrame>;
 }

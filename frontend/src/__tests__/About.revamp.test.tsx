@@ -58,9 +58,9 @@ describe("AboutPage dossier revamp", () => {
     expect(screen.getByRole("region", { name: "Module Registry" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Command Surfaces" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Repository Intelligence" })).toBeInTheDocument();
-    expect(screen.getByText("79")).toBeInTheDocument();
-    expect(screen.getByText(/Routes Indexed/i)).toBeInTheDocument();
-    expect(screen.getByText(/Language Breakdown/i)).toBeInTheDocument();
+    expect(screen.queryByText("79")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Language Breakdown/i)).not.toBeInTheDocument();
+    expect(screen.getByText("1.0.0")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Breakout Scanner/i })).toHaveAttribute("href", "/equity/screener");
     expect(screen.getByRole("link", { name: "Open GitHub" })).toHaveAttribute(
       "href",
@@ -89,9 +89,13 @@ describe("AboutPage dossier revamp", () => {
   it("preserves escape-key navigation for the F&O variant", () => {
     renderPage("fno");
 
-    expect(screen.getAllByText("Derivatives Desk").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Derivatives Desk/).length).toBeGreaterThan(0);
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(navigateSpy).toHaveBeenCalledWith(-1);
   });
+});
+
+it("reports clipboard failure without claiming success", async () => {
+  writeTextMock.mockRejectedValueOnce(new Error("Denied")); renderPage(); fireEvent.click(screen.getByRole("button", { name: "Copy repository URL" })); expect(await screen.findByRole("alert")).toHaveTextContent("Could not copy"); expect(screen.queryByText("Copied")).not.toBeInTheDocument();
 });
