@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import type { Bar } from "oakscriptjs";
@@ -16,6 +16,7 @@ import {
 import { AiInsightCard } from "../components/terminal/AiInsightCard";
 import type { Surface3DPoint } from "../components/backtesting/panels/Backtesting3D";
 import type { PanelRendererMap } from "../components/backtesting/workspace/PanelRegistry";
+import { AnalyticsTable } from "../components/terminal/AnalyticsRead";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
 import { SavedViewsControl } from "../components/savedViews/SavedViewsControl";
 import { cloneIndicatorConfig, makeIndicatorInstanceId } from "../shared/chart/indicatorCatalog";
@@ -351,14 +352,7 @@ function mapTradeMarkersToTimeframe(
 }
 
 function emptyState(icon: string, text: string) {
-  return (
-    <div className="flex h-[56vh] min-h-[360px] items-center justify-center rounded border border-terminal-border/40 bg-terminal-bg/50 text-center">
-      <div>
-        <div className="text-3xl">{icon}</div>
-        <div className="mt-2 text-xs text-terminal-muted">{text}</div>
-      </div>
-    </div>
-  );
+  return <div className="rounded border border-terminal-border/40 bg-terminal-bg/50 p-4 text-sm text-terminal-muted"><span aria-hidden="true">{icon} </span>{text}</div>;
 }
 
 function buildPolylinePoints(values: number[]): string {
@@ -398,6 +392,11 @@ export function BacktestingPage() {
   const storeTicker = useStockStore((s) => s.ticker);
   const selectedMarket = useSettingsStore((s) => s.selectedMarket);
 
+  const [submitted, setSubmitted] = useState<null | { symbol: string; market: BacktestMarket; start: string; end: string; dataTimeframe: string; strategyMode: string; label: string; capital: number }>(null);
+  const analyticsGeneration = useRef(0);
+  const [showExtended, setShowExtended] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [analyticsFailed, setAnalyticsFailed] = useState(false);
   const [asset, setAsset] = useState((storeTicker || "AAPL").toUpperCase());
   const [assetSuggestions, setAssetSuggestions] = useState<SearchSymbolItem[]>([]);
   const [showAssetSuggestions, setShowAssetSuggestions] = useState(false);
@@ -419,12 +418,12 @@ export function BacktestingPage() {
   const [timeframe, setTimeframe] = useState<BacktestTimeframe>("1D");
   const [showVolume, setShowVolume] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
-  const [showIndicators, setShowIndicators] = useState(true);
+  const [showIndicators, setShowIndicators] = useState(false);
   const [activeIndicators, setActiveIndicators] = useState<IndicatorConfig[]>(cloneStrategyIndicators(STRATEGY_INDICATORS.sma_crossover || []));
   const [activeTab, setActiveTab] = useState<VizTab>("chart");
 
   useEffect(() => {
-    const payload = consumePendingSavedView(window.location.pathname);
+    const payload = consumePendingSavedView(location.pathname);
     if (!payload) return;
     const filters = payload.filters ?? {};
     const tabs = payload.activeTabs ?? {};
@@ -436,6 +435,7 @@ export function BacktestingPage() {
     if (typeof filters.strategyMode === "string") setStrategyMode(filters.strategyMode);
     if (tabs.activeTab === "chart" || tabs.activeTab === "equity" || tabs.activeTab === "drawdown" || tabs.activeTab === "monthly" || tabs.activeTab === "rolling" || tabs.activeTab === "trades" || tabs.activeTab === "compare" || tabs.activeTab === "surface3d") setActiveTab(tabs.activeTab);
   }, []);
+  const [comparisonScope, setComparisonScope] = useState<null | { label: string; currency: ReturnType<typeof nativeCurrencyForSymbol> }>(null);
   const [compareStrategies, setCompareStrategies] = useState<string[]>([]);
   const [compareResults, setCompareResults] = useState<Map<string, CompareState>>(new Map());
   const [compareRunning, setCompareRunning] = useState(false);
@@ -454,12 +454,20 @@ export function BacktestingPage() {
   });
   const proWorkspaceEnabled = import.meta.env.VITE_BACKTEST_PRO_WORKSPACE === "1";
 
-  useEffect(() => { if (storeTicker) setAsset(storeTicker.toUpperCase()); }, [storeTicker]);
+  // Initial values already seed the form. Only later shared-context changes
+  // should update it; mount effects must not overwrite a restored Saved View.
+  const previousTicker = useRef(storeTicker);
+  const previousMarket = useRef(selectedMarket);
+  useEffect(() => {
+    if (previousTicker.current !== storeTicker && storeTicker) setAsset(storeTicker.toUpperCase());
+    previousTicker.current = storeTicker;
+  }, [storeTicker]);
   useEffect(() => {
     // EU/CRYPTO selector contexts aren't backtestable markets; ignore them here.
-    if (selectedMarket && KNOWN_MARKETS.includes(selectedMarket as BacktestMarket)) {
+    if (previousMarket.current !== selectedMarket && selectedMarket && KNOWN_MARKETS.includes(selectedMarket as BacktestMarket)) {
       setMarket(selectedMarket as BacktestMarket);
     }
+    previousMarket.current = selectedMarket;
   }, [selectedMarket]);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -509,6 +517,7 @@ export function BacktestingPage() {
   }, [asset, market]);
 
   useEffect(() => {
+    if (result?.result) return;
     if (strategyMode === CUSTOM_STRATEGY_VALUE) {
       setActiveIndicators([]);
       return;
@@ -517,7 +526,7 @@ export function BacktestingPage() {
   }, [strategyMode]);
 
   const symbol = useMemo(() => asset.trim().toUpperCase(), [asset]);
-  const currencyCode = useMemo(() => nativeCurrencyForSymbol(symbol, market), [market, symbol]);
+  const currencyCode = useMemo(() => nativeCurrencyForSymbol(submitted?.symbol ?? symbol, submitted?.market ?? market), [submitted, market, symbol]);
   const fmtMoney = useCallback(
     (value: number): string => formatMoneyIn(value, currencyCode),
     [currencyCode],
@@ -526,17 +535,30 @@ export function BacktestingPage() {
   const modelAllocation = useMemo(() => (strategyMode === CUSTOM_STRATEGY_VALUE ? 1 : (activePreset?.default_allocation ?? 1)), [activePreset, strategyMode]);
 
   const canSubmit = useMemo(() => {
-    if (!asset.trim()) return false;
+    if (!asset.trim() || !start || !end) return false;
+    if (Object.entries(executionProfile).some(([key, value]) => key !== "slippage_model" && (typeof value !== "number" || !Number.isFinite(value) || value < 0))) return false;
+    if (executionProfile.volume_cap_pct < 0.1 || executionProfile.volume_cap_pct > 100) return false;
     if (!Number.isFinite(tradeCapital) || tradeCapital <= 0) return false;
     if (start && end && start > end) return false;
     if (strategyMode === CUSTOM_STRATEGY_VALUE && !script.trim()) return false;
-    return !submitInFlight && jobState !== "queued" && jobState !== "running";
-  }, [asset, end, jobState, script, start, strategyMode, submitInFlight, tradeCapital]);
+    return !compareRunning && !submitInFlight && jobState !== "queued" && jobState !== "running";
+  }, [asset, end, jobState, script, start, strategyMode, submitInFlight, tradeCapital, executionProfile, compareRunning]);
 
   const submit = async () => {
     if (!canSubmit) return;
     setError(null);
+    setRunId(null);
+    setJobState("idle");
+    setShowExtended(false);
+    setShowValidation(false);
+    analyticsGeneration.current++;
+    setAnalyticsFailed(false);
+    setAnalyticsLoading(false);
+    setWalkForwardWindows([]);
+    setSensitivityRows([]);
+    setSubmitted({ symbol, market, start, end, dataTimeframe, strategyMode, label: strategyMode === CUSTOM_STRATEGY_VALUE ? "Custom Python Script" : activePreset.label, capital: tradeCapital });
     setResult(null);
+    setActiveIndicators(cloneStrategyIndicators(STRATEGY_INDICATORS[strategyMode] || []));
     setAnalytics(null);
     const strategy = strategyMode === CUSTOM_STRATEGY_VALUE ? script : `example:${strategyMode}`;
     const context = strategyMode === CUSTOM_STRATEGY_VALUE ? {} : (activePreset?.default_context ?? {});
@@ -609,28 +631,31 @@ export function BacktestingPage() {
     return () => { active = false; window.clearInterval(timer); };
   }, [jobState, runId]);
 
-  const fetchAnalytics = useCallback(async () => {
+  const [analyticsAttempt, setAnalyticsAttempt] = useState(0);
+  useEffect(() => {
     if (!runId || jobState !== "done") return;
+    const generation = ++analyticsGeneration.current;
+    let active = true;
     setAnalyticsLoading(true);
-    try {
-      const resp = await fetch(`/api/backtests/${runId}/analytics`);
-      if (resp.ok) {
-        const data = (await resp.json()) as { analytics: Analytics };
-        setAnalytics(data.analytics);
+    setAnalyticsFailed(false);
+    void (async () => {
+      try {
+        const response = await fetch(`/api/backtests/${runId}/analytics`);
+        if (!response.ok) throw new Error("Analytics unavailable");
+        const data = await response.json() as { analytics: Analytics };
+        if (!data.analytics) throw new Error("Analytics unavailable");
+        if (active && generation === analyticsGeneration.current) setAnalytics(data.analytics);
+      } catch {
+        if (active && generation === analyticsGeneration.current) setAnalyticsFailed(true);
+      } finally {
+        if (active && generation === analyticsGeneration.current) setAnalyticsLoading(false);
       }
-    } catch {
-      // no-op fallback
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  }, [runId, jobState]);
+    })();
+    return () => { active = false; };
+  }, [jobState, runId, analyticsAttempt]);
 
   useEffect(() => {
-    if (jobState === "done") void fetchAnalytics();
-  }, [jobState, fetchAnalytics]);
-
-  useEffect(() => {
-    if (jobState !== "done" || !runId) return;
+    if (jobState !== "done" || !runId || !submitted) return;
     let active = true;
     void (async () => {
       try {
@@ -651,11 +676,11 @@ export function BacktestingPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            symbol,
-            market,
-            strategy: strategyMode,
-            start,
-            end,
+            symbol: submitted.symbol,
+            market: submitted.market,
+            strategy: submitted.strategyMode,
+            start: submitted.start,
+            end: submitted.end,
             limit: 500,
             max_trials: 12,
             param_space: { p1: [0.8, 1.0, 1.2], p2: [0.8, 1.0, 1.2] },
@@ -690,7 +715,7 @@ export function BacktestingPage() {
     return () => {
       active = false;
     };
-  }, [jobState, runId, symbol, market, strategyMode, start, end, result?.result?.sharpe]);
+  }, [jobState, runId, submitted, result?.result?.sharpe]);
 
   const equityData = result?.result?.equity_curve || [];
   const trades = result?.result?.trades || [];
@@ -737,15 +762,15 @@ export function BacktestingPage() {
     [displayedBars, timeframe, tradeMarkers],
   );
   const chartReferenceLines = useMemo(() => {
-    if (strategyMode === "premarket_orb_breakout") {
-      return computePremarketOrbLines(displayedBars, activePreset?.default_context ?? {});
+    if (submitted?.strategyMode === "premarket_orb_breakout") {
+      return computePremarketOrbLines(displayedBars, STRATEGY_CATALOG.find(preset => preset.key === submitted.strategyMode)?.default_context ?? {});
     }
     return [];
-  }, [activePreset, displayedBars, strategyMode]);
+  }, [displayedBars, submitted]);
 
   const returnClass = (result?.result?.total_return || 0) >= 0 ? "text-terminal-pos" : "text-terminal-neg";
   const tradedAsset = result?.result?.asset || symbol;
-  const initialCapital = result?.result?.initial_cash ?? tradeCapital;
+  const initialCapital = result?.result?.initial_cash ?? submitted?.capital ?? tradeCapital;
   const finalEquity = result?.result?.final_equity ?? (equityData.length ? Number(equityData[equityData.length - 1].equity) : initialCapital);
   const pnlAmount = result?.result?.pnl_amount ?? (finalEquity - initialCapital);
   const endingCash = result?.result?.ending_cash ?? (equityData.length ? Number(equityData[equityData.length - 1].cash) : initialCapital);
@@ -1219,7 +1244,8 @@ export function BacktestingPage() {
   }, [dailyReturnsPct, initialCapital, result]);
 
   const runComparison = async () => {
-    if (!compareStrategies.length || compareStrategies.length > 6 || compareRunning) return;
+    if (!canSubmit || !compareStrategies.length || compareStrategies.length > 6 || compareRunning) return;
+    setComparisonScope({ label: `${symbol} · ${market} · ${start} to ${end}`, currency: nativeCurrencyForSymbol(symbol, market) });
     setCompareRunning(true);
     setCompareActiveStrategy(compareStrategies[0] ?? null);
     const nextMap = new Map<string, CompareState>();
@@ -1352,7 +1378,7 @@ export function BacktestingPage() {
       typedTradeMarkers={typedTradeMarkers}
       activeIndicators={activeIndicators}
       referenceLines={chartReferenceLines}
-      symbol={symbol}
+      symbol={submitted?.symbol ?? symbol}
       setActiveIndicators={setActiveIndicators}
     />
   );
@@ -1373,7 +1399,7 @@ export function BacktestingPage() {
     <DistributionPanel
       distribution={resolvedAnalytics?.return_distribution || null}
       distributionShift={distributionShift}
-      strategyLabel={strategyMode === CUSTOM_STRATEGY_VALUE ? "Custom Model" : activePreset.label}
+      strategyLabel={submitted?.label ?? activePreset.label}
     />
   );
 
@@ -1386,11 +1412,14 @@ export function BacktestingPage() {
   );
 
   const renderCompareTab = () => (
+    <div className="space-y-3">
+    <p className="text-sm text-terminal-muted">{comparisonScope ? `Comparison submitted: ${comparisonScope.label}` : "Comparison uses the current run setup. Select strategies and submit separately."}</p>
     <ComparePanel
       strategyCatalog={STRATEGY_CATALOG}
       compareStrategies={compareStrategies}
       setCompareStrategies={setCompareStrategies}
       compareRunning={compareRunning}
+      canRun={canSubmit}
       runComparison={runComparison}
       compareReadyStrategies={compareReadyStrategies}
       compareActiveStrategy={compareActiveStrategy}
@@ -1405,8 +1434,9 @@ export function BacktestingPage() {
       compareCurves={compareCurves}
       compareResults={compareResults}
       fmtPct={fmtPct}
-      fmtMoney={fmtMoney}
+      fmtMoney={value => formatMoneyIn(value, comparisonScope?.currency ?? nativeCurrencyForSymbol(symbol, market))}
     />
+    </div>
   );
 
   const renderSurface3DTab = () => (
@@ -1514,48 +1544,40 @@ export function BacktestingPage() {
   };
 
   return (
-    <div className="h-full space-y-3 overflow-y-auto px-3 py-2 pb-4">
-      <TerminalPanel
-        title="Research Suites"
-        subtitle="Backtesting control deck"
-        actions={
-          <SavedViewsControl
-            pageLabel="Backtesting"
-            capture={() => ({
-              filters: { asset, market, dataTimeframe, start, end, strategyMode },
-              activeTabs: { activeTab },
-              chartLayout: { activeTab },
-              selectedTicker: asset,
-            })}
-          />
-        }
-      >
-        <div className="flex flex-wrap gap-2 text-xs">
-          <Link className={`rounded border px-2 py-1 ${location.pathname.startsWith("/backtesting/model-lab") ? "border-terminal-border text-terminal-muted hover:text-terminal-text" : "border-terminal-accent bg-terminal-accent/10 text-terminal-accent"}`} to="/backtesting">
-            Backtesting Console
-          </Link>
-        </div>
-      </TerminalPanel>
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_320px]">
-        <TerminalPanel title="Backtesting Control Deck" subtitle="Compact controls for chart-first workflow">
-          <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-8">
-            <label className="md:col-span-1"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Asset (Ticker)</span><div className="relative"><input className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs uppercase" value={asset} onChange={(e) => { const raw = e.target.value.toUpperCase().trim(); const prefixed = raw.match(/^(NSE|BSE|NYSE|NASDAQ|AMEX):([A-Z0-9._-]+)$/); if (prefixed) { const ex = prefixed[1] as BacktestMarket; setMarket(ex); setAsset(prefixed[2]); } else { if (raw.endsWith(".NS")) setMarket("NSE"); if (raw.endsWith(".BO")) setMarket("BSE"); setAsset(raw); } setShowAssetSuggestions(true); }} onFocus={() => setShowAssetSuggestions(true)} onBlur={() => window.setTimeout(() => setShowAssetSuggestions(false), 150)} />{showAssetSuggestions && assetSuggestions.length > 0 && <div className="absolute left-0 right-0 top-[calc(100%+2px)] z-20 max-h-48 overflow-auto rounded border border-terminal-border bg-terminal-panel shadow-lg">{assetSuggestions.map((item) => (<button key={`${item.ticker}:${item.name}`} type="button" className="flex w-full items-center justify-between border-b border-terminal-border/40 px-2 py-1 text-left text-xs hover:bg-terminal-bg" onMouseDown={(e) => e.preventDefault()} onClick={() => { setAsset((item.ticker || "").toUpperCase()); const ex = (item.exchange || "").toUpperCase(); if (KNOWN_MARKETS.includes(ex as BacktestMarket)) setMarket(ex as BacktestMarket); setShowAssetSuggestions(false); }}><span>{item.ticker}</span><span className="ml-2 truncate text-[10px] text-terminal-muted">{item.name}</span></button>))}</div>}</div></label>
-            <label className="md:col-span-1"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Market</span><select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs uppercase" value={market} onChange={(e) => setMarket(e.target.value as BacktestMarket)}><option value="NSE">NSE</option><option value="BSE">BSE</option><option value="NYSE">NYSE</option><option value="NASDAQ">NASDAQ</option><option value="AMEX">AMEX</option></select></label>
-            <label className="md:col-span-1"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Data TF</span><select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={dataTimeframe} onChange={(e) => setDataTimeframe(e.target.value as any)}><option value="1d">Daily</option><option value="1h">1 Hour</option><option value="15m">15 Min</option><option value="5m">5 Min</option><option value="1m">1 Min</option></select></label>
-            <label className="md:col-span-1"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Start</span><input type="date" className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={start} onChange={(e) => setStart(e.target.value)} min={dataTimeframe !== "1d" ? new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : undefined} /></label>
-            <label className="md:col-span-1"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">End</span><input type="date" className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={end} onChange={(e) => setEnd(e.target.value)} /></label>
-            <label className="md:col-span-2"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Model</span><select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={strategyMode} onChange={(e) => setStrategyMode(e.target.value)}>{STRATEGY_CATALOG.map((opt) => <option key={opt.key} value={opt.key}>[{opt.category.toUpperCase()}] {opt.label}</option>)}<option value={CUSTOM_STRATEGY_VALUE}>Custom Python Script</option></select></label>
-            <label className="md:col-span-1"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Trade Capital</span><input type="number" min={1} step={100} className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={tradeCapital} onChange={(e) => setTradeCapital(Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0)} /></label>
+    <main aria-label="Backtesting workspace" className="h-full min-w-0 space-y-3 overflow-y-auto px-3 py-3 pb-6 text-sm [overflow-wrap:anywhere]">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div><h1 className="text-xl font-semibold text-terminal-text">Backtesting</h1><p className="mt-1 text-sm text-terminal-muted">Set up a historical strategy run, then inspect its results.</p></div>
+        <SavedViewsControl pageLabel="Backtesting" capture={() => ({ filters: { asset, market, dataTimeframe, start, end, strategyMode }, activeTabs: { activeTab }, chartLayout: { activeTab }, selectedTicker: asset })} />
+      </header>
+      <nav aria-label="Backtesting tools" className="flex flex-wrap gap-2 text-xs">
+        <Link className="rounded border border-terminal-accent px-3 py-2 text-terminal-accent" aria-current="page" to="/backtesting">Console</Link>
+        <Link className="rounded border border-terminal-border px-3 py-2" to="/backtesting/model-governance">Model Governance</Link>
+        <Link className="rounded border border-terminal-border px-3 py-2" to="/backtesting/algorithm-framework">Algorithm Framework</Link>
+        <Link className="rounded border border-terminal-border px-3 py-2" to="/backtesting/portfolio-optimizer">Portfolio Optimizer</Link>
+      </nav>
+      <section aria-label="Backtest setup">
+        <TerminalPanel title="Run setup" subtitle="Symbol, history and strategy">
+          <div className="grid min-w-0 grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Asset (Ticker)</span><div className="relative"><input className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm uppercase" value={asset} onChange={(e) => { const raw = e.target.value.toUpperCase().trim(); const prefixed = raw.match(/^(NSE|BSE|NYSE|NASDAQ|AMEX):([A-Z0-9._-]+)$/); if (prefixed) { const ex = prefixed[1] as BacktestMarket; setMarket(ex); setAsset(prefixed[2]); } else { if (raw.endsWith(".NS")) setMarket("NSE"); if (raw.endsWith(".BO")) setMarket("BSE"); setAsset(raw); } setShowAssetSuggestions(true); }} onFocus={() => setShowAssetSuggestions(true)} onBlur={() => window.setTimeout(() => setShowAssetSuggestions(false), 150)} />{showAssetSuggestions && assetSuggestions.length > 0 && <div role="listbox" aria-label="Backtest symbol suggestions" className="absolute left-0 right-0 top-[calc(100%+2px)] z-20 max-h-48 overflow-auto rounded border border-terminal-border bg-terminal-panel shadow-lg">{assetSuggestions.map((item) => (<button key={`${item.ticker}:${item.name}`} role="option" aria-selected={false} type="button" className="flex w-full items-center justify-between border-b border-terminal-border/40 px-2 py-1 text-left text-xs hover:bg-terminal-bg" onMouseDown={(e) => e.preventDefault()} onClick={() => { setAsset((item.ticker || "").toUpperCase()); const ex = (item.exchange || "").toUpperCase(); if (KNOWN_MARKETS.includes(ex as BacktestMarket)) setMarket(ex as BacktestMarket); setShowAssetSuggestions(false); }}><span>{item.ticker}</span><span className="ml-2 whitespace-normal text-xs text-terminal-muted">{item.name}</span></button>))}</div>}</div></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Market</span><select className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm uppercase" value={market} onChange={(e) => setMarket(e.target.value as BacktestMarket)}><option value="NSE">NSE</option><option value="BSE">BSE</option><option value="NYSE">NYSE</option><option value="NASDAQ">NASDAQ</option><option value="AMEX">AMEX</option></select></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Data interval</span><select className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={dataTimeframe} onChange={(e) => setDataTimeframe(e.target.value as any)}><option value="1d">Daily</option><option value="1h">1 Hour</option><option value="15m">15 Min</option><option value="5m">5 Min</option><option value="1m">1 Min</option></select></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Start</span><input type="date" className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={start} onChange={(e) => setStart(e.target.value)} min={dataTimeframe !== "1d" ? new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : undefined} /></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">End</span><input type="date" className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={end} onChange={(e) => setEnd(e.target.value)} /></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Model</span><select className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={strategyMode} onChange={(e) => setStrategyMode(e.target.value)}>{STRATEGY_CATALOG.map((opt) => <option key={opt.key} value={opt.key}>[{opt.category.toUpperCase()}] {opt.label}</option>)}<option value={CUSTOM_STRATEGY_VALUE}>Custom Python Script</option></select></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Initial capital (native currency)</span><input type="number" min={1} step={100} className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={tradeCapital} onChange={(e) => setTradeCapital(Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0)} /></label>
           </div>
-          {dataTimeframe !== "1d" && <div className="mt-2 text-[10px] text-terminal-warning">Intraday data is heavy. Start date is limited to the last 6 months. Fetching may take longer.</div>}
-          <div className="mt-2 grid grid-cols-1 gap-2 text-xs md:grid-cols-7">
-            <label className="md:col-span-2">
-              <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Data Version ID</span>
-              <input className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={dataVersionId} onChange={(e) => setDataVersionId(e.target.value)} />
+          {dataTimeframe !== "1d" && <div className="mt-2 text-xs text-terminal-warning">Intraday data is heavy. Start date is limited to the last 6 months. Fetching may take longer.</div>}
+          <details className="mt-3 rounded border border-terminal-border p-3">
+            <summary className="cursor-pointer text-sm text-terminal-text">Data and execution settings</summary>
+            <p className="my-3 text-xs text-terminal-muted">Costs are in basis points (1 bp = 0.01%). These settings apply to the next run.</p>
+          <div className="mt-2 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Data Version ID</span>
+              <input className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={dataVersionId} onChange={(e) => setDataVersionId(e.target.value)} />
             </label>
-            <label className="md:col-span-1">
-              <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Series</span>
-              <select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={adjustedSeries ? "adjusted" : "raw"} onChange={(e) => setAdjustedSeries(e.target.value === "adjusted")}>
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Series</span>
+              <select className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={adjustedSeries ? "adjusted" : "raw"} onChange={(e) => setAdjustedSeries(e.target.value === "adjusted")}>
                 <option value="adjusted">Adjusted</option>
                 <option value="raw">Unadjusted</option>
               </select>
@@ -1564,56 +1586,128 @@ export function BacktestingPage() {
           <div className="mt-2 rounded border border-terminal-border/60 bg-terminal-bg/60 p-2">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-terminal-accent">Execution Profile</div>
-                <div className="text-[10px] text-terminal-muted">Slippage, spread, market impact, and market-volume participation cap.</div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-terminal-accent">Execution Profile</div>
+                <div className="text-xs text-terminal-muted">Slippage, spread, market impact, and market-volume participation cap.</div>
               </div>
-              <span className="rounded border border-terminal-border px-2 py-0.5 text-[10px] uppercase text-terminal-muted">{market}</span>
             </div>
-            <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-6">
+            <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
               <label>
-                <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Slippage Model</span>
-                <select className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={executionProfile.slippage_model} onChange={(e) => setExecutionProfile((s) => ({ ...s, slippage_model: e.target.value as ExecutionSlippageModel }))}>
+                <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Slippage Model</span>
+                <select className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={executionProfile.slippage_model} onChange={(e) => setExecutionProfile((s) => ({ ...s, slippage_model: e.target.value as ExecutionSlippageModel }))}>
                   <option value="fixed_bps">Fixed BPS</option>
                   <option value="volume_weighted">Volume-weighted</option>
                   <option value="impact_curve">Impact curve</option>
                 </select>
               </label>
               <label>
-                <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Comm bps</span>
-                <input type="number" min={0} step={0.25} className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={executionProfile.commission_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, commission_bps: Number(e.target.value) }))} />
+                <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Commission (bps)</span>
+                <input type="number" min={0} step={0.25} className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={executionProfile.commission_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, commission_bps: Number(e.target.value) }))} />
               </label>
               <label>
-                <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Slip bps</span>
-                <input type="number" min={0} step={0.25} className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={executionProfile.slippage_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, slippage_bps: Number(e.target.value) }))} />
+                <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Slippage (bps)</span>
+                <input type="number" min={0} step={0.25} className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={executionProfile.slippage_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, slippage_bps: Number(e.target.value) }))} />
               </label>
               <label>
-                <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Spread bps</span>
-                <input type="number" min={0} step={0.25} className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={executionProfile.spread_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, spread_bps: Number(e.target.value) }))} />
+                <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Spread (bps)</span>
+                <input type="number" min={0} step={0.25} className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={executionProfile.spread_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, spread_bps: Number(e.target.value) }))} />
               </label>
               <label>
-                <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Impact bps</span>
-                <input type="number" min={0} step={0.25} className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={executionProfile.market_impact_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, market_impact_bps: Number(e.target.value) }))} />
+                <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Market impact (bps)</span>
+                <input type="number" min={0} step={0.25} className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={executionProfile.market_impact_bps} onChange={(e) => setExecutionProfile((s) => ({ ...s, market_impact_bps: Number(e.target.value) }))} />
               </label>
               <label>
-                <span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">% Volume Cap</span>
-                <input type="number" min={0.1} max={100} step={0.5} className="w-full rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs" value={executionProfile.volume_cap_pct} onChange={(e) => setExecutionProfile((s) => ({ ...s, volume_cap_pct: Number(e.target.value) }))} />
+                <span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Volume cap (%)</span>
+                <input type="number" min={0.1} max={100} step={0.5} className="min-h-11 min-w-0 w-full rounded border border-terminal-border bg-terminal-bg px-3 py-2 text-sm" value={executionProfile.volume_cap_pct} onChange={(e) => setExecutionProfile((s) => ({ ...s, volume_cap_pct: Number(e.target.value) }))} />
               </label>
             </div>
           </div>
-          {strategyMode !== CUSTOM_STRATEGY_VALUE && activePreset && <div className="mt-2"><span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase" style={{ backgroundColor: `${CATEGORY_COLORS[activePreset.category] ?? terminalColors.accent}22`, color: CATEGORY_COLORS[activePreset.category] ?? terminalColors.accent, border: `1px solid ${CATEGORY_COLORS[activePreset.category] ?? terminalColors.accent}44` }}>{activePreset.category}</span></div>}
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]"><div className="rounded border border-terminal-border/60 bg-terminal-bg px-2 py-1 text-terminal-muted">{strategyMode === CUSTOM_STRATEGY_VALUE ? "Custom script mode: define generate_signals(df, context)." : activePreset?.description}</div><div className="rounded border border-terminal-border/60 bg-terminal-bg px-2 py-1 text-terminal-muted">Model allocation: {(modelAllocation * 100).toFixed(0)}%</div><div className="flex items-center gap-2"><span className="text-terminal-muted">Run ID: {runId || "-"}</span><span className="text-terminal-muted">Status: {jobState.toUpperCase()}</span><button type="button" className="rounded border border-terminal-accent bg-terminal-accent/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-terminal-accent disabled:opacity-50" onClick={() => void submit()} disabled={!canSubmit}>{submitInFlight ? "Submitting..." : (jobState === "queued" || jobState === "running" ? "Running..." : "Run")}</button></div></div>
-          {strategyMode === CUSTOM_STRATEGY_VALUE && <label className="mt-2 block"><span className="mb-1 block text-[11px] uppercase tracking-wide text-terminal-muted">Python Strategy Script</span><textarea className="h-36 w-full resize-none rounded border border-terminal-border bg-terminal-bg px-2 py-1 font-mono text-[11px] text-terminal-text" value={script} onChange={(e) => setScript(e.target.value)} /></label>}
-          {error && <div className="mt-2 rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">{error}</div>}
+          </details>
+          <p className="mt-3 text-sm text-terminal-text">Selected model: {strategyMode === CUSTOM_STRATEGY_VALUE ? "Custom Python Script" : activePreset.label}</p>
+          {strategyMode !== CUSTOM_STRATEGY_VALUE && activePreset && <div className="mt-2"><span className="rounded-full px-2 py-0.5 text-xs font-semibold uppercase" style={{ backgroundColor: `${CATEGORY_COLORS[activePreset.category] ?? terminalColors.accent}22`, color: CATEGORY_COLORS[activePreset.category] ?? terminalColors.accent, border: `1px solid ${CATEGORY_COLORS[activePreset.category] ?? terminalColors.accent}44` }}>{activePreset.category}</span></div>}
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs"><div className="rounded border border-terminal-border/60 bg-terminal-bg px-2 py-1 text-terminal-muted">{strategyMode === CUSTOM_STRATEGY_VALUE ? "Custom script mode: define generate_signals(df, context)." : activePreset?.description}</div><div className="rounded border border-terminal-border/60 bg-terminal-bg px-2 py-1 text-terminal-muted">Model allocation: {(modelAllocation * 100).toFixed(0)}%</div><div className="flex items-center gap-2"><span className="text-terminal-muted">Run ID: {runId || "Not submitted"}</span><span role="status" className="text-terminal-muted">Status: {jobState.toUpperCase()}</span><button type="button" className="rounded border border-terminal-accent bg-terminal-accent/15 min-h-11 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-terminal-accent disabled:opacity-50" onClick={() => void submit()} disabled={!canSubmit}>{submitInFlight ? "Submitting..." : (jobState === "queued" || jobState === "running" ? "Running..." : "Run")}</button></div></div>
+          {strategyMode === CUSTOM_STRATEGY_VALUE && <label className="mt-2 block"><span className="mb-1 block text-xs uppercase tracking-wide text-terminal-muted">Python Strategy Script</span><textarea className="h-36 w-full resize-none rounded border border-terminal-border bg-terminal-bg px-2 py-1 font-mono text-xs text-terminal-text" value={script} onChange={(e) => setScript(e.target.value)} /></label>}
+          {!canSubmit && !submitInFlight && jobState !== "queued" && jobState !== "running" && !compareRunning && <p className="mt-2 text-xs text-terminal-warning">Enter a symbol, positive capital and ordered dates. Execution costs must be finite and nonnegative; volume cap must be 0.1–100%.</p>}
+          {error && <div role="alert" className="mt-2 rounded border border-terminal-neg bg-terminal-neg/10 p-2 text-xs text-terminal-neg">{error}</div>}
         </TerminalPanel>
-        <TerminalPanel title="Backtest Performance" subtitle="Model result summary"><div className="space-y-2"><div className={`text-5xl font-bold tracking-tight ${returnClass}`}>{result?.result ? fmtPct(result.result.total_return) : "-"}</div><div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-terminal-text"><div className="text-terminal-muted">Initial Capital</div><div>{fmtMoney(initialCapital)}</div><div className="text-terminal-muted">Final Equity</div><div>{fmtMoney(finalEquity)}</div><div className="text-terminal-muted">Net P/L</div><div className={pnlAmount >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>{fmtMoney(pnlAmount)}</div><div className="text-terminal-muted">Cash Left</div><div>{fmtMoney(endingCash)}</div><div className="text-terminal-muted">Sharpe</div><div>{result?.result ? result.result.sharpe.toFixed(2) : "-"}</div><div className="text-terminal-muted">Max Drawdown</div><div>{result?.result ? fmtPct(result.result.max_drawdown) : "-"}</div><div className="text-terminal-muted">Trades</div><div>{trades.length}</div><div className="text-terminal-muted">Total Qty</div><div>{totalTradeQty.toFixed(2)}</div></div><div className="border-t border-terminal-border/40 pt-2"><div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-terminal-text"><div className="text-terminal-muted">Win Rate</div><div>{(Number(analyticsSummary.win_rate) || 0).toFixed(2)}%</div><div className="text-terminal-muted">Profit Factor</div><div>{(Number(analyticsSummary.profit_factor) || 0).toFixed(2)}</div><div className="text-terminal-muted">Expectancy</div><div>{fmtMoney(Number(analyticsSummary.expectancy) || 0)}</div>{result?.result && (result.result.max_intraday_drawdown ?? 0) < 0 && (<><div className="text-terminal-muted">Max Intraday DD</div><div>{fmtPct(result.result.max_intraday_drawdown ?? 0)}</div><div className="text-terminal-muted">Avg Hold (Min)</div><div>{(result.result.average_hold_time_minutes || 0).toFixed(1)}m</div><div className="text-terminal-muted">Trades / Day</div><div>{(result.result.trades_per_day || 0).toFixed(1)}</div><div className="text-terminal-muted">Win Rate (AM/PM)</div><div>{(result.result.win_rate_morning || 0).toFixed(1)}% / {(result.result.win_rate_afternoon || 0).toFixed(1)}%</div></>)}</div></div></div></TerminalPanel>
-      </div>
+      </section>
+      {submitted && <section aria-label="Submitted backtest" className="rounded border border-terminal-border bg-terminal-panel p-3 text-sm">
+        <p className="font-medium text-terminal-text">Submitted: {submitted.symbol} · {submitted.market} · {submitted.label}</p>
+        <p className="mt-1 text-xs text-terminal-muted">{submitted.start} to {submitted.end} · {submitted.dataTimeframe} data · initial capital {fmtMoney(submitted.capital)}</p>
+        <p className="mt-1 text-xs text-terminal-muted">Editing setup prepares the next run; the result below belongs to this submission.</p>
+      </section>}
+      {result?.result && <>
+        <TerminalPanel title="Backtest Performance" subtitle={`${submitted?.symbol} · ${submitted?.market} · ${submitted?.label}`}>
+          <dl className="grid min-w-0 grid-cols-2 gap-3 text-sm lg:grid-cols-4 2xl:grid-cols-6">
+            {[
+              ["Total return", fmtPct(result.result.total_return)], ["Initial capital", fmtMoney(initialCapital)],
+              ["Final equity", fmtMoney(finalEquity)], ["Net P/L", fmtMoney(pnlAmount)], ["Cash left", fmtMoney(endingCash)],
+              ["Sharpe", result.result.sharpe.toFixed(2)], ["Max drawdown", fmtPct(result.result.max_drawdown)],
+              ["Trades", trades.length], ["Total quantity (units)", totalTradeQty.toFixed(2)],
+              ["Win rate", `${(Number(analyticsSummary.win_rate) || 0).toFixed(2)}%`],
+              ["Profit factor", (Number(analyticsSummary.profit_factor) || 0).toFixed(2)], ["Expectancy", fmtMoney(Number(analyticsSummary.expectancy) || 0)],
+            ].map(([label, value]) => <div key={label} className="min-w-0 rounded border border-terminal-border/50 p-3"><dt className="text-xs text-terminal-muted">{label}</dt><dd className={`mt-1 break-words text-base tabular-nums ${label === "Total return" ? returnClass : "text-terminal-text"}`}>{value}</dd></div>)}
+          </dl>
+          {(result.result.max_intraday_drawdown ?? 0) < 0 && <dl className="mt-3 grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
+            <div><dt className="text-xs text-terminal-muted">Max intraday drawdown</dt><dd>{fmtPct(result.result.max_intraday_drawdown ?? 0)}</dd></div>
+            <div><dt className="text-xs text-terminal-muted">Average hold (minutes)</dt><dd>{(result.result.average_hold_time_minutes || 0).toFixed(1)}</dd></div>
+            <div><dt className="text-xs text-terminal-muted">Trades / day</dt><dd>{(result.result.trades_per_day || 0).toFixed(1)}</dd></div>
+            <div><dt className="text-xs text-terminal-muted">Win rate (AM / PM)</dt><dd>{(result.result.win_rate_morning || 0).toFixed(1)}% / {(result.result.win_rate_afternoon || 0).toFixed(1)}%</dd></div>
+          </dl>}
+        </TerminalPanel>
+      </>}
 
+
+      {result?.result ? (
+        <Suspense
+          fallback={
+            <TerminalPanel title="Backtest Visualizations">
+              <div className="p-3 text-xs text-terminal-muted">Loading result workspace...</div>
+            </TerminalPanel>
+          }
+        >
+          {proWorkspaceEnabled ? (
+            <TerminalPanel title="Backtest Pro Workspace" subtitle="Mosaic terminal mode (Cmd/Ctrl+K)">
+              <MosaicWorkspace renderers={proRenderers} onCommand={handleWorkspaceCommand} />
+            </TerminalPanel>
+          ) : (
+            <TerminalPanel title="Backtest Visualizations" subtitle={`${tradedAsset} · ${submitted?.market} · run ${runId}`}>
+              <div className="mb-3 flex flex-wrap gap-2">
+                {VIZ_TABS.map((tab) => {
+                  const active = tab.key === activeTab;
+                  return (
+                    <button
+                      key={tab.key}
+                      aria-pressed={active}
+                      className={`rounded border px-2 py-1 text-xs ${active ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`}
+                      onClick={() => setActiveTab(tab.key)}
+                    >
+                      <span className="mr-1">{tab.icon}</span>
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {renderActiveTab()}
+              <details className="mt-3 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Exact run observations</summary><div className="mt-3 space-y-3"><AnalyticsTable name="Backtest chart observations" headers={["Date / time (UTC)", "Open", "High", "Low", "Close", "Inferred volume"]} rows={displayedBars.map(bar => [new Date(Number(bar.time) * 1000).toISOString(), bar.open, bar.high, bar.low, bar.close, bar.volume])} /><AnalyticsTable name="Backtest equity observations" headers={["Date", `Equity (${currencyCode})`, `Cash (${currencyCode})`]} rows={equityData.map(row => [row.date, fmtMoney(Number(row.equity)), typeof row.cash === "number" && Number.isFinite(row.cash) ? fmtMoney(row.cash) : "Unavailable"])} /></div></details>
+            </TerminalPanel>
+          )}
+        </Suspense>
+      ) : (
+        <TerminalPanel title="Backtest Visualizations" subtitle="Result workspace loads on demand">
+          <div role="status" className="p-3 text-sm text-terminal-muted">{submitInFlight || jobState === "queued" || jobState === "running" ? "Backtest in progress. Results will appear here when the run completes." : jobState === "failed" ? "No completed result is shown. Review the error and run again when ready; your setup is retained." : "Run a backtest to load charts and result analytics."}</div>
+        </TerminalPanel>
+      )}
+
+      {result?.result && <>
+      <p role="status" className="text-xs text-terminal-muted">{analyticsLoading ? "Loading run analytics…" : analytics ? "Analytics returned for this run." : "Analytics derived locally from this run's equity curve and trades."}</p>
+      {analyticsFailed && <div className="flex flex-wrap items-center gap-2 text-xs text-terminal-warning"><span>Server analytics unavailable; showing local calculations.</span><button type="button" className="rounded border border-terminal-border px-3 py-2" onClick={() => setAnalyticsAttempt(value => value + 1)}>Retry analytics</button></div>}
       {result?.result && (
         <AiInsightCard
           title="AI Backtest Analysis"
-          description={`${activePreset?.label || strategyMode} · Gemma assessment of return, risk, and overfitting`}
+          key={runId}
+          description={`${submitted?.label} · Review return, risk and overfitting`}
           fetcher={(_, options) =>
-            explainBacktest(activePreset?.label || String(strategyMode), {
+            explainBacktest(submitted?.label || String(strategyMode), {
               total_return: result?.result?.total_return,
               sharpe: result?.result?.sharpe,
               max_drawdown: result?.result?.max_drawdown,
@@ -1630,47 +1724,10 @@ export function BacktestingPage() {
         />
       )}
 
-      {result?.result ? (
-        <Suspense
-          fallback={
-            <TerminalPanel title="Backtest Visualizations">
-              <div className="p-3 text-xs text-terminal-muted">Loading result workspace...</div>
-            </TerminalPanel>
-          }
-        >
-          {proWorkspaceEnabled ? (
-            <TerminalPanel title="Backtest Pro Workspace" subtitle="Mosaic terminal mode (Cmd/Ctrl+K)">
-              <MosaicWorkspace renderers={proRenderers} onCommand={handleWorkspaceCommand} />
-            </TerminalPanel>
-          ) : (
-            <TerminalPanel title="Backtest Visualizations" subtitle={`${tradedAsset} ${market}`}>
-              <div className="mb-3 flex flex-wrap gap-2">
-                {VIZ_TABS.map((tab) => {
-                  const active = tab.key === activeTab;
-                  return (
-                    <button
-                      key={tab.key}
-                      className={`rounded border px-2 py-1 text-[11px] ${active ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`}
-                      onClick={() => setActiveTab(tab.key)}
-                    >
-                      <span className="mr-1">{tab.icon}</span>
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {renderActiveTab()}
-            </TerminalPanel>
-          )}
-        </Suspense>
-      ) : (
-        <TerminalPanel title="Backtest Visualizations" subtitle="Result workspace loads on demand">
-          <div className="p-3 text-xs text-terminal-muted">Run a backtest to load charts and result analytics.</div>
-        </TerminalPanel>
-      )}
-
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <TerminalPanel title="Transaction Costs + Data Integrity" subtitle="Execution friction and data quality checks">
+      <details onToggle={event => setShowValidation(event.currentTarget.open)} className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Costs, data checks and validation</summary>
+      {showValidation && <>
+      <div className="mt-3 grid grid-cols-1 items-start gap-3 2xl:grid-cols-2">
+        <TerminalPanel title="Transaction Costs + Data Integrity" subtitle="Display estimate uses a fixed 10 bps; separate from submitted execution settings">
           <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-2">
             <div className="rounded border border-terminal-border/40 p-2">Txn Cost Model: {transactionCostBps} bps</div>
             <div className="rounded border border-terminal-border/40 p-2">Estimated Cost: {fmtMoney(estimatedTxnCost)}</div>
@@ -1679,7 +1736,7 @@ export function BacktestingPage() {
             <div className="rounded border border-terminal-border/40 p-2">Return Outliers: {integrity.outliers}</div>
           </div>
         </TerminalPanel>
-        <TerminalPanel title="Walk-Forward + Sensitivity" subtitle="Validation timeline and parameter response">
+        <TerminalPanel title="Walk-Forward + Sensitivity" subtitle="Auxiliary validation; an empty optimizer response uses an illustrative sensitivity grid">
           <div className="space-y-3">
             <Suspense fallback={<div className="p-3 text-xs text-terminal-muted">Loading validation charts...</div>}>
               {walkForwardWindows.length ? (
@@ -1697,9 +1754,14 @@ export function BacktestingPage() {
         </TerminalPanel>
       </div>
 
-      <div className={`grid grid-cols-1 gap-3 ${result?.result ? "2xl:grid-cols-[1.6fr_1fr]" : ""}`}>
+      </>}
+      </details>
+      <details onToggle={event => setShowExtended(event.currentTarget.open)} className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Extended charts and projections</summary>
+      {showExtended && <>
+        <p className="my-3 text-xs text-terminal-warning">Exploratory projections from the run. Order-book depth and implied volatility are synthetic, not observed market data. Monte Carlo paths are unseeded and can change between mounts.</p>
+      <div className="grid min-w-0 grid-cols-1 gap-3">
         {result?.result ? (
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          <div className="grid min-w-0 grid-cols-1 items-start gap-3 2xl:grid-cols-2">
             <Suspense fallback={<div className="p-3 text-xs text-terminal-muted">Loading extended analytics...</div>}>
               <TerminalPanel title="Return Distribution" subtitle="Standalone distribution plot">{renderDistributionTab()}</TerminalPanel>
               <TerminalPanel title="3D Terrain" subtitle="Standalone drawdown terrain">{renderTerrain3DTab()}</TerminalPanel>
@@ -1711,17 +1773,21 @@ export function BacktestingPage() {
             </Suspense>
           </div>
         ) : null}
-        <div className="grid grid-cols-1 gap-3 h-[44vh] min-h-[300px] sticky top-3">
-          <TerminalPanel title="Trade Blotter" subtitle="Execution ledger" className="h-1/2" bodyClassName="flex h-full min-h-0 flex-col overflow-hidden">
-            <div className="mb-2 grid grid-cols-2 gap-2 rounded border border-terminal-border/40 bg-terminal-bg px-2 py-1 text-[11px] md:grid-cols-2">
+      </div></>}
+      </details>
+      <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Trade blotter and execution logs</summary>
+        <div className="mt-3 grid min-w-0 grid-cols-1 items-start gap-3 2xl:grid-cols-2">
+          <TerminalPanel title="Trade Blotter" subtitle="Execution ledger" bodyClassName="min-w-0">
+            <div className="mb-2 grid grid-cols-2 gap-2 rounded border border-terminal-border/40 bg-terminal-bg px-2 py-1 text-xs md:grid-cols-2">
               <div className="text-terminal-muted">Executed trades: <span className="text-terminal-text">{trades.length}</span></div>
               <div className="text-terminal-muted text-right">Total quantity: <span className="text-terminal-text">{totalTradeQty.toFixed(2)}</span></div>
             </div>
-            <div className="min-h-0 flex-1 overflow-auto"><table className="min-w-full text-[11px]"><thead className="text-terminal-muted"><tr className="border-b border-terminal-border"><th className="px-1 py-1 text-left">Date</th><th className="px-1 py-1 text-left">Asset</th><th className="px-1 py-1 text-left">Side</th><th className="px-1 py-1 text-right">Quantity</th><th className="px-1 py-1 text-right">Price</th></tr></thead><tbody>{trades.map((trade, idx) => { const isBuy = trade.action.toUpperCase() === "BUY"; return <tr key={`${trade.date}-${idx}`} className={`border-t border-terminal-border/40 ${isBuy ? "text-terminal-pos" : "text-terminal-neg"}`}><td className="px-1 py-1 text-terminal-text">{trade.date}</td><td className="px-1 py-1 text-terminal-text">{tradedAsset}</td><td className={`px-1 py-1 font-semibold ${isBuy ? "text-terminal-pos" : "text-terminal-neg"}`}>{trade.action.toUpperCase()}</td><td className="px-1 py-1 text-right">{trade.quantity.toFixed(2)}</td><td className="px-1 py-1 text-right">{fmtMoney(trade.price)}</td></tr>; })}</tbody></table></div>
+            <AnalyticsTable name="Backtest trade ledger" headers={["Date", "Asset", "Side", "Quantity (units)", `Price (${currencyCode})`]} rows={trades.map(trade => [trade.date, tradedAsset, trade.action.toUpperCase(), trade.quantity, fmtMoney(trade.price)])} />
           </TerminalPanel>
-          <TerminalPanel title="Execution Logs" subtitle="Strategy stdout/stderr" className="h-1/2" bodyClassName="flex h-full min-h-0 flex-col overflow-hidden"><pre className="min-h-0 flex-1 overflow-auto whitespace-pre-wrap bg-terminal-bg p-2 font-mono text-[11px] text-terminal-muted">{result?.logs || "No logs"}</pre></TerminalPanel>
+          <TerminalPanel title="Execution Logs" subtitle="Strategy stdout/stderr" bodyClassName="min-w-0"><pre tabIndex={0} aria-label="Strategy execution logs" className="max-h-96 overflow-auto whitespace-pre-wrap break-words bg-terminal-bg p-3 font-mono text-xs text-terminal-muted">{result?.logs || "No logs"}</pre></TerminalPanel>
         </div>
-      </div>
-    </div>
+      </details>
+      </>}
+    </main>
   );
 }

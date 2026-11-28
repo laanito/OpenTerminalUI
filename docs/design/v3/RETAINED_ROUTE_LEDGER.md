@@ -77,7 +77,7 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/fno/heatmap` | [HeatmapPage](../../../frontend/src/fno/pages/HeatmapPage.tsx) | Other direct | 0 |
 | `/fno/expiry` | [ExpiryPage](../../../frontend/src/fno/pages/ExpiryPage.tsx) | Other direct | 13 |
 | `/fno/about` | [FnoAboutPage](../../../frontend/src/fno/pages/AboutPage.tsx) | Other direct | 0 |
-| `/backtesting` | [BacktestingPage](../../../frontend/src/pages/Backtesting.tsx) | supported | 29 |
+| `/backtesting` | [BacktestingPage](../../../frontend/src/pages/Backtesting.tsx) | supported | 1 |
 | `/backtesting/model-lab` | [ModelLabPage](../../../frontend/src/pages/ModelLab.tsx) | Hidden compatibility | 8 |
 | `/backtesting/model-lab/experiments/:id` | [ModelLabExperimentDetailPage](../../../frontend/src/pages/ModelLabExperimentDetail.tsx) | Hidden compatibility | 2 |
 | `/backtesting/model-lab/runs/:runId` | [ModelLabRunReportPage](../../../frontend/src/pages/ModelLabRunReport.tsx) | Hidden compatibility | 4 |

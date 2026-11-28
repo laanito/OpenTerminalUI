@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Backtesting console** — labelled setup and disclosed execution settings,
+  submitted-run identity/currency, wrapping performance metrics and chart-first
+  result reading. Exact equity/trade inspection, retained failed drafts and
+  independent analytics retry accompany explicit limits on inferred/synthetic
+  charts. Direct governance/algorithm/optimizer reviews remain separate v3 work.
 - **DOM discovery from Home** — a Depth of Market card under Markets in the
   Launch Matrix opens the existing depth and tape workspace.
 - **Readable DOM and tape** — applied instrument scope, bounded local depth/tape

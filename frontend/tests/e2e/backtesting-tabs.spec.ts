@@ -86,6 +86,7 @@ test("@smoke backtesting submits a deterministic job and loads result analytics"
 
   await vizPanel.getByRole("button", { name: /^Trade Analysis$/ }).click();
   await expect(vizPanel.getByText("Win Rate: 100.00%", { exact: true })).toBeVisible();
+  await page.locator("summary").filter({ hasText: "Extended charts and projections" }).click();
   await expect(page.getByText("Return Distribution", { exact: true })).toBeVisible();
   await expect(page.getByText("Run a backtest to load charts and result analytics.")).toHaveCount(0);
 });

@@ -19,7 +19,7 @@ function safeIsoDateFromUnixSeconds(ts: number): string | null {
 
 function emptyState(icon: string, text: string) {
   return (
-    <div className="flex h-[56vh] min-h-[360px] items-center justify-center rounded border border-terminal-border/40 bg-terminal-bg/50 text-center">
+    <div className="flex min-h-24 items-center justify-center p-4 rounded border border-terminal-border/40 bg-terminal-bg/50 text-center">
       <div>
         <div className="text-3xl">{icon}</div>
         <div className="mt-2 text-xs text-terminal-muted">{text}</div>
@@ -107,20 +107,21 @@ export function ChartTabPanel(props: ChartTabProps) {
   }, [previewBrushRange, displayedBars]);
 
   return (
-    <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_300px]">
-      <div>
-        <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px]">
-          <select value={timeframe} onChange={(e) => setTimeframe(e.target.value as BacktestTimeframe)} className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-[11px] text-terminal-text">
+    <div className="min-w-0 space-y-3">
+      <p className="text-xs text-terminal-muted">Chart uses the returned run rows. Where OHLC is absent, equity supplies the displayed price. Volume is inferred from position, not observed market volume.</p>
+      <div className="min-w-0">
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+          <select aria-label="Chart aggregation" value={timeframe} onChange={(e) => setTimeframe(e.target.value as BacktestTimeframe)} className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text">
             <option value="1D">1D</option><option value="1W">1W</option><option value="1M">1M</option>
           </select>
-          <select value={chartType} onChange={(e) => setChartType(e.target.value as ChartKind)} className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-[11px] text-terminal-text">
+          <select aria-label="Chart style" value={chartType} onChange={(e) => setChartType(e.target.value as ChartKind)} className="rounded border border-terminal-border bg-terminal-bg px-2 py-1 text-xs text-terminal-text">
             <option value="candle">Candles</option><option value="line">Line</option><option value="area">Area</option>
           </select>
-          <button className={`rounded border px-2 py-1 ${showVolume ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setShowVolume((v) => !v)}>Volume</button>
-          <button className={`rounded border px-2 py-1 ${showIndicators ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setShowIndicators((v) => !v)}>Indicators</button>
-          <button className={`rounded border px-2 py-1 ${showMarkers ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setShowMarkers((v) => !v)}>Markers</button>
+          <button aria-pressed={showVolume} className={`min-h-10 rounded border px-3 py-2 ${showVolume ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setShowVolume((v) => !v)}>Volume</button>
+          <button aria-pressed={showIndicators} className={`min-h-10 rounded border px-3 py-2 ${showIndicators ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setShowIndicators((v) => !v)}>Indicator manager</button>
+          <button aria-pressed={showMarkers} className={`min-h-10 rounded border px-3 py-2 ${showMarkers ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setShowMarkers((v) => !v)}>Markers</button>
         </div>
-        <div className="h-[62vh] min-h-[420px]">
+        <div className="h-[420px] min-w-0">
           <BacktestingTradingChart
             bars={displayedBars}
             trades={typedTradeMarkers}
@@ -143,7 +144,7 @@ export function ChartTabPanel(props: ChartTabProps) {
           />
         </div>
         <div className="mt-3 rounded border border-terminal-border/40 bg-terminal-bg/50 p-2">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="text-terminal-muted">{selectionLabel ? `Selection: ${selectionLabel}` : "Selection idle"}{previewSelectionLabel ? ` | Dragging: ${previewSelectionLabel}` : ""}</div>
             <div className="flex items-center gap-2">
               <button className={`rounded border px-2 py-1 ${brushMode ? "border-terminal-accent text-terminal-accent" : "border-terminal-border text-terminal-muted"}`} onClick={() => setBrushMode((v) => !v)}>{brushMode ? "Selecting..." : "Brush Select"}</button>
@@ -160,7 +161,7 @@ export function ChartTabPanel(props: ChartTabProps) {
           </div>
         </div>
       </div>
-      <div>{showIndicators ? <IndicatorPanel symbol={symbol} activeIndicators={activeIndicators} onChange={setActiveIndicators} /> : <div className="rounded border border-terminal-border/40 p-3 text-[11px] text-terminal-muted">Indicators hidden. Use the chart toolbar toggle to show.</div>}</div>
+      <details open={showIndicators} onToggle={event => setShowIndicators(event.currentTarget.open)} className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Manage chart indicators</summary><div className="mt-3">{showIndicators ? <IndicatorPanel symbol={symbol} activeIndicators={activeIndicators} onChange={setActiveIndicators} /> : <div className="rounded border border-terminal-border/40 p-3 text-xs text-terminal-muted">Indicators hidden. Use the chart toolbar toggle to show.</div>}</div></details>
     </div>
   );
 }
@@ -173,8 +174,8 @@ export function EquityCurvePanel({ equityData, fmtMoney }: { equityData: Array<{
   const max = Math.max(...values);
   return (
     <div className="space-y-2">
-      <div className="h-[56vh] min-h-[360px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full"><defs><linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={terminalColors.positive} stopOpacity="0.4" /><stop offset="100%" stopColor={terminalColors.positive} stopOpacity="0.05" /></linearGradient></defs><polyline fill="none" stroke={terminalColors.positive} strokeWidth="1.5" points={points} /><polygon points={`0,95 ${points} 100,95`} fill="url(#equityFill)" /></svg></div>
-      <div className="grid grid-cols-3 gap-2 text-[11px] text-terminal-muted"><div>Max {fmtMoney(max)}</div><div className="text-center">Mid {fmtMoney((min + max) / 2)}</div><div className="text-right">Min {fmtMoney(min)}</div></div>
+      <div className="h-[360px] min-w-0 rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full"><defs><linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={terminalColors.positive} stopOpacity="0.4" /><stop offset="100%" stopColor={terminalColors.positive} stopOpacity="0.05" /></linearGradient></defs><polyline fill="none" stroke={terminalColors.positive} strokeWidth="1.5" points={points} /><polygon points={`0,95 ${points} 100,95`} fill="url(#equityFill)" /></svg></div>
+      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3 text-terminal-muted"><div>Max {fmtMoney(max)}</div><div className="text-center">Mid {fmtMoney((min + max) / 2)}</div><div className="text-right">Min {fmtMoney(min)}</div></div>
     </div>
   );
 }
@@ -187,8 +188,8 @@ export function DrawdownPanel({ rows }: { rows: Array<{ drawdown_pct: number }> 
   const points = values.map((v, i) => `${((i / Math.max(values.length - 1, 1)) * 100).toFixed(2)},${(5 + ((0 - v) / span) * 90).toFixed(2)}`).join(" ");
   return (
     <div className="space-y-2">
-      <div className="h-[56vh] min-h-[360px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full"><defs><linearGradient id="ddFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={terminalColors.negative} stopOpacity="0.45" /><stop offset="100%" stopColor={terminalColors.negative} stopOpacity="0.08" /></linearGradient></defs><polyline fill="none" stroke={terminalColors.negative} strokeWidth="1.5" points={points} /><polygon points={`0,95 ${points} 100,95`} fill="url(#ddFill)" /></svg></div>
-      <div className="grid grid-cols-3 gap-2 text-[11px] text-terminal-muted"><div>0.00%</div><div className="text-center">{(min / 2).toFixed(2)}%</div><div className="text-right">{min.toFixed(2)}%</div></div>
+      <div className="h-[360px] min-w-0 rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full"><defs><linearGradient id="ddFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={terminalColors.negative} stopOpacity="0.45" /><stop offset="100%" stopColor={terminalColors.negative} stopOpacity="0.08" /></linearGradient></defs><polyline fill="none" stroke={terminalColors.negative} strokeWidth="1.5" points={points} /><polygon points={`0,95 ${points} 100,95`} fill="url(#ddFill)" /></svg></div>
+      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3 text-terminal-muted"><div>0.00%</div><div className="text-center">{(min / 2).toFixed(2)}%</div><div className="text-right">{min.toFixed(2)}%</div></div>
     </div>
   );
 }
@@ -207,8 +208,8 @@ export function MonthlyHeatmapPanel({ monthlyGrid }: { monthlyGrid: { years: num
     return "bg-terminal-border/20 text-terminal-muted";
   };
   return (
-    <div className="overflow-auto rounded border border-terminal-border/40 p-2">
-      <table className="min-w-full text-[10px] font-mono"><thead className="text-terminal-muted"><tr><th className="px-1 py-1 text-left">Year</th>{months.map((m) => <th key={m} className="px-1 py-1 text-center">{m}</th>)}<th className="px-1 py-1 text-center">Annual</th></tr></thead><tbody>{monthlyGrid.years.map((year) => { const vals = months.map((_, idx) => monthlyGrid.map.get(`${year}-${idx + 1}`)); const annual = vals.filter((v): v is number => v != null).reduce((a, b) => a + b, 0); return <tr key={year} className="border-t border-terminal-border/30"><td className="px-1 py-1 text-terminal-text">{year}</td>{vals.map((val, idx) => <td key={`${year}-${idx}`} className="px-1 py-1 text-center"><div className={`rounded px-1 py-0.5 ${colorFor(val)}`}>{val == null ? "-" : `${val >= 0 ? "+" : ""}${val.toFixed(1)}`}</div></td>)}<td className="px-1 py-1 text-center"><div className={`rounded px-1 py-0.5 ${colorFor(annual)}`}>{annual >= 0 ? "+" : ""}{annual.toFixed(1)}</div></td></tr>; })}</tbody></table>
+    <div role="region" aria-label="Monthly return values" tabIndex={0} className="min-w-0 overflow-auto rounded border border-terminal-border/40 p-2">
+      <table className="min-w-[900px] w-full text-xs font-mono"><thead className="text-terminal-muted"><tr><th className="px-1 py-1 text-left">Year</th>{months.map((m) => <th key={m} className="px-1 py-1 text-center">{m}</th>)}<th className="px-1 py-1 text-center">Annual</th></tr></thead><tbody>{monthlyGrid.years.map((year) => { const vals = months.map((_, idx) => monthlyGrid.map.get(`${year}-${idx + 1}`)); const annual = vals.filter((v): v is number => v != null).reduce((a, b) => a + b, 0); return <tr key={year} className="border-t border-terminal-border/30"><td className="px-1 py-1 text-terminal-text">{year}</td>{vals.map((val, idx) => <td key={`${year}-${idx}`} className="px-1 py-1 text-center"><div className={`rounded px-1 py-0.5 ${colorFor(val)}`}>{val == null ? "-" : `${val >= 0 ? "+" : ""}${val.toFixed(1)}`}</div></td>)}<td className="px-1 py-1 text-center"><div className={`rounded px-1 py-0.5 ${colorFor(annual)}`}>{annual >= 0 ? "+" : ""}{annual.toFixed(1)}</div></td></tr>; })}</tbody></table>
     </div>
   );
 }
@@ -224,18 +225,18 @@ export function DistributionPanel(props: {
   return (
     <div className="space-y-3">
       <div className="h-[36vh] min-h-[220px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">{distribution.counts.map((count, i) => { const w = 100 / distribution.counts.length; const h = (count / maxCount) * 88; const x = i * w; const y = 94 - h; const bin = distribution.bins[i] ?? 0; const color = bin >= 0 ? terminalColors.positive : terminalColors.negative; return <rect key={`bin-${i}`} x={x.toFixed(2)} y={y.toFixed(2)} width={(w * 0.9).toFixed(2)} height={h.toFixed(2)} fill={color} opacity="0.75" />; })}</svg></div>
-      <div className="grid grid-cols-2 gap-2 text-[11px] md:grid-cols-5"><div className="rounded border border-terminal-border/40 p-2">Mean: {(distribution.stats.mean ?? 0).toFixed(3)}%</div><div className="rounded border border-terminal-border/40 p-2">Std Dev: {(distribution.stats.std ?? 0).toFixed(3)}%</div><div className="rounded border border-terminal-border/40 p-2">Skewness: {(distribution.stats.skewness ?? 0).toFixed(3)}</div><div className="rounded border border-terminal-border/40 p-2">Kurtosis: {(distribution.stats.kurtosis ?? 0).toFixed(3)}</div><div className="rounded border border-terminal-border/40 p-2">VaR 95%: {(distribution.stats.var_95 ?? 0).toFixed(3)}%</div></div>
+      <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-5"><div className="rounded border border-terminal-border/40 p-2">Mean: {(distribution.stats.mean ?? 0).toFixed(3)}%</div><div className="rounded border border-terminal-border/40 p-2">Std Dev: {(distribution.stats.std ?? 0).toFixed(3)}%</div><div className="rounded border border-terminal-border/40 p-2">Skewness: {(distribution.stats.skewness ?? 0).toFixed(3)}</div><div className="rounded border border-terminal-border/40 p-2">Kurtosis: {(distribution.stats.kurtosis ?? 0).toFixed(3)}</div><div className="rounded border border-terminal-border/40 p-2">VaR 95%: {(distribution.stats.var_95 ?? 0).toFixed(3)}%</div></div>
       <div className="rounded border border-terminal-border/40 bg-terminal-bg/50 p-2">
-        <div className="mb-1 text-[11px] text-terminal-muted">Distribution Shift ({strategyLabel})</div>
+        <div className="mb-1 text-xs text-terminal-muted">Distribution Shift ({strategyLabel})</div>
         {!distributionShift ? (
-          <div className="text-[11px] text-terminal-muted">Need more bars to compute early vs recent shift.</div>
+          <div className="text-xs text-terminal-muted">Need more bars to compute early vs recent shift.</div>
         ) : (
           <div className="h-[26vh] min-h-[170px]">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
               <polyline fill="none" stroke={terminalColors.info} strokeWidth="1.2" points={distributionShift.earlyCounts.map((v, i) => `${((i / Math.max(distributionShift.earlyCounts.length - 1, 1)) * 100).toFixed(2)},${(95 - (v / distributionShift.maxCount) * 90).toFixed(2)}`).join(" ")} />
               <polyline fill="none" stroke={terminalColors.warning} strokeWidth="1.2" points={distributionShift.recentCounts.map((v, i) => `${((i / Math.max(distributionShift.recentCounts.length - 1, 1)) * 100).toFixed(2)},${(95 - (v / distributionShift.maxCount) * 90).toFixed(2)}`).join(" ")} />
             </svg>
-            <div className="mt-1 flex items-center gap-3 text-[10px]">
+            <div className="mt-1 flex items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1 text-terminal-info"><span className="inline-block h-2 w-2 rounded-full bg-terminal-info" />Early</span>
               <span className="inline-flex items-center gap-1 text-terminal-warning"><span className="inline-block h-2 w-2 rounded-full bg-terminal-warning" />Recent</span>
             </div>
@@ -258,8 +259,8 @@ export function RollingMetricsPanel({ rows }: { rows: Array<{ rolling_sharpe: nu
   const zeroY = (95 - ((0 - min) / span) * 90).toFixed(2);
   return (
     <div className="space-y-3">
-      <div className="h-[28vh] min-h-[180px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><div className="mb-1 text-[11px] text-terminal-muted">Rolling Sharpe</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[calc(100%-14px)] w-full"><line x1="0" y1={zeroY} x2="100" y2={zeroY} stroke={terminalColors.border} strokeDasharray="1 1" /><polyline fill="none" stroke="#a78bfa" strokeWidth="1.5" points={sharpePoints} /></svg></div>
-      <div className="h-[28vh] min-h-[180px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><div className="mb-1 text-[11px] text-terminal-muted">Rolling Annualized Volatility (%)</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[calc(100%-14px)] w-full"><polyline fill="none" stroke="#fb923c" strokeWidth="1.5" points={volPoints} /></svg></div>
+      <div className="h-[28vh] min-h-[180px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><div className="mb-1 text-xs text-terminal-muted">Rolling Sharpe</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[calc(100%-14px)] w-full"><line x1="0" y1={zeroY} x2="100" y2={zeroY} stroke={terminalColors.border} strokeDasharray="1 1" /><polyline fill="none" stroke="#a78bfa" strokeWidth="1.5" points={sharpePoints} /></svg></div>
+      <div className="h-[28vh] min-h-[180px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><div className="mb-1 text-xs text-terminal-muted">Rolling Annualized Volatility (%)</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[calc(100%-14px)] w-full"><polyline fill="none" stroke="#fb923c" strokeWidth="1.5" points={volPoints} /></svg></div>
     </div>
   );
 }
@@ -280,9 +281,9 @@ export function TradesPanel(props: {
   const streaks = tradeAnalytics.streaks || { max_win_streak: 0, max_loss_streak: 0, current_streak: 0, current_streak_type: "none" };
   return (
     <div className="space-y-3">
-      <div className="h-[34vh] min-h-[220px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><div className="mb-1 text-[11px] text-terminal-muted">PnL vs Holding Days</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[calc(100%-14px)] w-full"><line x1="0" y1={zeroY.toFixed(2)} x2="100" y2={zeroY.toFixed(2)} stroke={terminalColors.border} strokeDasharray="1 1" />{scatter.map((pt, idx) => { const x = 5 + (Number(pt.holding_days) / xMax) * 90; const y = 95 - ((Number(pt.pnl) - yMin) / ySpan) * 90; const fill = Number(pt.pnl) >= 0 ? terminalColors.positive : terminalColors.negative; return <circle key={`sc-${idx}`} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.2" fill={fill} opacity="0.85" />; })}</svg></div>
-      <div className="grid grid-cols-2 gap-2 text-[11px] md:grid-cols-4"><div className="rounded border border-terminal-border/40 p-2 text-terminal-pos">Win Rate: {(Number(s.win_rate) || 0).toFixed(2)}%</div><div className="rounded border border-terminal-border/40 p-2 text-terminal-info">Profit Factor: {(Number(s.profit_factor) || 0).toFixed(2)}</div><div className="rounded border border-terminal-border/40 p-2 text-terminal-accent">Expectancy: {fmtMoney(Number(s.expectancy) || 0)}</div><div className="rounded border border-terminal-border/40 p-2 text-terminal-warning">Avg Hold: {(Number(s.avg_holding_days) || 0).toFixed(1)}d</div></div>
-      <div className="grid grid-cols-1 gap-2 text-[11px] md:grid-cols-3"><div className="rounded border border-terminal-border/40 p-2">Max Win Streak: {streaks.max_win_streak}</div><div className="rounded border border-terminal-border/40 p-2">Max Loss Streak: {streaks.max_loss_streak}</div><div className="rounded border border-terminal-border/40 p-2">Current: {streaks.current_streak_type} ({streaks.current_streak})</div></div>
+      <div className="h-[34vh] min-h-[220px] rounded border border-terminal-border/40 bg-terminal-bg/50 p-2"><div className="mb-1 text-xs text-terminal-muted">PnL vs Holding Days</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-[calc(100%-14px)] w-full"><line x1="0" y1={zeroY.toFixed(2)} x2="100" y2={zeroY.toFixed(2)} stroke={terminalColors.border} strokeDasharray="1 1" />{scatter.map((pt, idx) => { const x = 5 + (Number(pt.holding_days) / xMax) * 90; const y = 95 - ((Number(pt.pnl) - yMin) / ySpan) * 90; const fill = Number(pt.pnl) >= 0 ? terminalColors.positive : terminalColors.negative; return <circle key={`sc-${idx}`} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.2" fill={fill} opacity="0.85" />; })}</svg></div>
+      <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-4"><div className="rounded border border-terminal-border/40 p-2 text-terminal-pos">Win Rate: {(Number(s.win_rate) || 0).toFixed(2)}%</div><div className="rounded border border-terminal-border/40 p-2 text-terminal-info">Profit Factor: {(Number(s.profit_factor) || 0).toFixed(2)}</div><div className="rounded border border-terminal-border/40 p-2 text-terminal-accent">Expectancy: {fmtMoney(Number(s.expectancy) || 0)}</div><div className="rounded border border-terminal-border/40 p-2 text-terminal-warning">Avg Hold: {(Number(s.avg_holding_days) || 0).toFixed(1)}d</div></div>
+      <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-3"><div className="rounded border border-terminal-border/40 p-2">Max Win Streak: {streaks.max_win_streak}</div><div className="rounded border border-terminal-border/40 p-2">Max Loss Streak: {streaks.max_loss_streak}</div><div className="rounded border border-terminal-border/40 p-2">Current: {streaks.current_streak_type} ({streaks.current_streak})</div></div>
     </div>
   );
 }
@@ -292,6 +293,7 @@ export function ComparePanel(props: {
   compareStrategies: string[];
   setCompareStrategies: Dispatch<SetStateAction<string[]>>;
   compareRunning: boolean;
+  canRun: boolean;
   runComparison: () => Promise<void>;
   compareReadyStrategies: string[];
   compareActiveStrategy: string | null;
@@ -313,6 +315,7 @@ export function ComparePanel(props: {
     compareStrategies,
     setCompareStrategies,
     compareRunning,
+    canRun,
     runComparison,
     compareReadyStrategies,
     compareActiveStrategy,
@@ -332,14 +335,16 @@ export function ComparePanel(props: {
   return (
     <div className="space-y-3">
       <div className="rounded border border-terminal-border/40 p-2">
-        <div className="mb-2 text-[11px] uppercase tracking-wide text-terminal-muted">Select up to 6 strategies</div>
+        <div className="mb-2 text-xs uppercase tracking-wide text-terminal-muted">Select up to 6 strategies</div>
         <div className="flex flex-wrap gap-2">
           {strategyCatalog.map((s) => {
             const selected = compareStrategies.includes(s.key);
             return (
               <button
                 key={s.key}
-                className={`rounded border px-2 py-1 text-[11px] ${selected ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`}
+                disabled={compareRunning}
+                aria-pressed={selected}
+                className={`rounded border px-2 py-1 text-xs ${selected ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`}
                 onClick={() =>
                   setCompareStrategies((prev) =>
                     prev.includes(s.key) ? prev.filter((k) => k !== s.key) : (prev.length >= 6 ? prev : [...prev, s.key]))
@@ -351,8 +356,8 @@ export function ComparePanel(props: {
           })}
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <div className="text-[11px] text-terminal-muted">Selected: {compareStrategies.length}/6</div>
-          <button className="rounded border border-terminal-accent bg-terminal-accent/10 px-3 py-1 text-xs font-semibold text-terminal-accent disabled:opacity-50" disabled={!compareStrategies.length || compareRunning} onClick={() => void runComparison()}>
+          <div className="text-xs text-terminal-muted">Selected: {compareStrategies.length}/6</div>
+          <button className="rounded border border-terminal-accent bg-terminal-accent/10 px-3 py-1 text-xs font-semibold text-terminal-accent disabled:opacity-50" disabled={!canRun || !compareStrategies.length || compareRunning} onClick={() => void runComparison()}>
             {compareRunning ? "Running..." : "Run Comparison"}
           </button>
         </div>
@@ -360,7 +365,7 @@ export function ComparePanel(props: {
 
       {!!compareReadyStrategies.length && (
         <div className="rounded border border-terminal-border/40 p-2">
-          <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px]">
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
             <span className="text-terminal-muted">Compare chart:</span>
             {compareReadyStrategies.map((key) => (
               <button key={`cmp-active-${key}`} className={`rounded border px-2 py-1 ${compareActiveStrategy === key ? "border-terminal-accent bg-terminal-accent/10 text-terminal-accent" : "border-terminal-border text-terminal-muted hover:bg-terminal-border/20"}`} onClick={() => setCompareActiveStrategy(key)}>
@@ -368,7 +373,7 @@ export function ComparePanel(props: {
               </button>
             ))}
           </div>
-          <div className="h-[56vh] min-h-[360px]">
+          <div className="h-[360px] min-w-0">
             <BacktestingTradingChart
               bars={compareActiveBars}
               trades={compareActiveMarkers}
@@ -384,13 +389,13 @@ export function ComparePanel(props: {
 
       {!!compareCurves.length && (
         <div className="rounded border border-terminal-border/40 p-2">
-          <div className="mb-2 text-[11px] text-terminal-muted">Overlaid Equity Curves</div>
+          <div className="mb-2 text-xs text-terminal-muted">Overlaid Equity Curves</div>
           <div className="h-[30vh] min-h-[200px] bg-terminal-bg/50 p-2">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
               {compareCurves.map((c) => <polyline key={c.key} fill="none" stroke={c.color} strokeWidth="1.2" points={c.points} />)}
             </svg>
           </div>
-          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
             {compareCurves.map((c) => (
               <div key={`lg-${c.key}`} className="flex items-center gap-1 rounded border border-terminal-border/40 px-2 py-1">
                 <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
@@ -402,9 +407,9 @@ export function ComparePanel(props: {
       )}
 
       <div className="rounded border border-terminal-border/40 p-2">
-        <div className="mb-2 text-[11px] text-terminal-muted">Comparison Results</div>
-        <div className="max-h-64 overflow-auto">
-          <table className="min-w-full text-[11px]">
+        <div className="mb-2 text-xs text-terminal-muted">Comparison Results</div>
+        <div role="region" aria-label="Strategy comparison values" tabIndex={0} className="max-h-64 min-w-0 overflow-auto">
+          <table className="w-full min-w-[760px] text-xs">
             <thead className="text-terminal-muted">
               <tr className="border-b border-terminal-border/40">
                 <th className="px-1 py-1 text-left">Strategy</th>
@@ -448,7 +453,7 @@ export function ParameterSurface3DPanel(props: {
   return (
     <div className="space-y-2">
       <ThreeDSurface points={points} emptyText="Run a backtest to render parameter efficacy surface." />
-      <div className="grid grid-cols-3 gap-2 text-[11px]">
+      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
         <div className="rounded border border-terminal-border/40 p-2">Sharpe: {summary.sharpe.toFixed(2)}</div>
         <div className="rounded border border-terminal-border/40 p-2">Max DD: {(summary.drawdown * 100).toFixed(2)}%</div>
         <div className="rounded border border-terminal-border/40 p-2">Profit Factor: {summary.profitFactor.toFixed(2)}</div>
@@ -465,7 +470,7 @@ export function DrawdownTerrain3DPanel(props: {
   return (
     <div className="space-y-2">
       <ThreeDSurface points={points} emptyText="Run a backtest to render drawdown terrain." />
-      <div className="rounded border border-terminal-border/40 p-2 text-[11px] text-terminal-muted">
+      <div className="rounded border border-terminal-border/40 p-2 text-xs text-terminal-muted">
         Worst observed drawdown: {worstDrawdownPct.toFixed(2)}%
       </div>
     </div>
@@ -480,7 +485,7 @@ export function RegimeEfficacy3DPanel(props: {
   return (
     <div className="space-y-2">
       <ThreeDSurface points={points} emptyText="Need enough bars to estimate regime efficacy cube." />
-      <div className="rounded border border-terminal-border/40 p-2 text-[11px] text-terminal-muted">
+      <div className="rounded border border-terminal-border/40 p-2 text-xs text-terminal-muted">
         Regime states: {regimeCount} | Color: green=positive expectancy, red=negative expectancy
       </div>
     </div>
@@ -496,7 +501,7 @@ export function OrderbookLiquidity3DPanel(props: {
   return (
     <div className="space-y-2">
       <ThreeDSurface points={points} emptyText="Run a backtest to build liquidity depth map." />
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
+      <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded border border-terminal-border/40 p-2">Avg Depth: {avgDepth.toFixed(2)}</div>
         <div className="rounded border border-terminal-border/40 p-2">Est. Spread: {estimatedSpreadBps.toFixed(2)} bps</div>
       </div>
@@ -513,7 +518,7 @@ export function ImpliedVolatilitySurface3DPanel(props: {
   return (
     <div className="space-y-2">
       <ThreeDSurface points={points} emptyText="Run a backtest to estimate implied volatility surface." />
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
+      <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded border border-terminal-border/40 p-2">ATM IV: {atmIvPct.toFixed(2)}%</div>
         <div className="rounded border border-terminal-border/40 p-2">IV Skew: {ivSkew.toFixed(2)}</div>
       </div>
@@ -530,7 +535,7 @@ export function VolatilitySurface3DPanel(props: {
   return (
     <div className="space-y-2">
       <ThreeDSurface points={points} emptyText="Run a backtest to estimate realized volatility surface." />
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
+      <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded border border-terminal-border/40 p-2">Realized Vol: {realizedVolPct.toFixed(2)}%</div>
         <div className="rounded border border-terminal-border/40 p-2">Term Slope: {termSlope.toFixed(2)}</div>
       </div>
@@ -559,7 +564,7 @@ export function MonteCarloSimulationPanel(props: {
   if (!hasData) {
     return (
       <div className="space-y-2">
-        <div className="flex h-[32vh] min-h-[220px] items-center justify-center rounded border border-terminal-border/40 bg-terminal-bg/50 text-[11px] text-terminal-muted">
+        <div className="flex min-h-24 items-center justify-center p-4 rounded border border-terminal-border/40 bg-terminal-bg/50 text-xs text-terminal-muted">
           Not enough data to run Monte Carlo simulation.
         </div>
       </div>
@@ -590,7 +595,7 @@ export function MonteCarloSimulationPanel(props: {
           <polyline fill="none" stroke={terminalColors.warning} strokeWidth="1.8" points={medianPoints} />
         </svg>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
+      <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded border border-terminal-border/40 p-2">Start: {fmt(startValue)}</div>
         <div className="rounded border border-terminal-border/40 p-2">Median End: {fmt(endMedian)}</div>
       </div>

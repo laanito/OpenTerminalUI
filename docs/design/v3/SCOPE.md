@@ -33,8 +33,12 @@ readable plots and exact tables (#325 merged). The [MTA implementation](MTA_REVI
 adds four real plots, readable controls and exact observations (#326 accepted).
 Home’s Research Launch Matrix card makes the existing MTA workspace discoverable
 (#327 merged). The [DOM implementation](DOM_REVIEW.md) adds readable depth/tape
-inspection and coverage states; host acceptance is open. Three ordinary
-destinations remain, starting with Backtesting.
+inspection and coverage states (#328 merged; Home shortcut #329 merged).
+Host acceptance is open. The [Backtesting console implementation](BACKTESTING_REVIEW.md)
+adds readable setup, submitted-run identity and bounded result inspection.
+Dedicated work covers 38 render entries, including 31 tools and three shell-menu
+extras. Two ordinary destinations remain: About and Account. Direct Backtesting
+subpages are next, with auth/secondary/hidden routes still open.
 Initial probes and source hints do not replace the
 populated, keyboard/zoom and maintainer checks below. Hidden compatibility and
 configuration classifications remain unchanged; no new features are added.

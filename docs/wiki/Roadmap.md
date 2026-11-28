@@ -1052,9 +1052,12 @@ captured-run workflows, readable plots and exact values (#325 merged). The
 observations and independent scoped reads (#326 maintainer-accepted). Home’s
 Launch Matrix links to it under Research (#327 merged). The
 [DOM review](../design/v3/DOM_REVIEW.md) adds readable book/tape inspection,
-scoped quotes and explicit retrieval/coverage states; host acceptance is open.
-Dedicated work covers 37 render entries, including 30 tools and three shell-menu
-extras. Three ordinary menu destinations remain: Backtesting, About and Account.
+scoped quotes and explicit retrieval/coverage states (#328 merged; Home shortcut
+#329 merged); host acceptance is open. The [Backtesting console review](../design/v3/BACKTESTING_REVIEW.md)
+adds readable setup, captured run identity and bounded result inspection.
+Dedicated work covers 38 render entries, including 31 tools and three shell-menu
+extras. Two ordinary menu destinations remain: About and Account. Direct
+Backtesting governance/algorithm/optimizer subpages are next and remain open.
 Auth/direct and secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
@@ -2055,6 +2058,17 @@ Real but unscheduled; pull into a milestone when it fits.
   quantity/two-decimal price coercion, inferred sides/timestamps, local dedup/order,
   buffered versus summary windows and currency/freshness review. The frontend
   adds no live or paper order authority.
+  Backtesting requires a separate model/provenance audit: equity-curve rows can
+  substitute equity for missing OHLC and infer volume from position. Verify native
+  identity/currency and market/interval coverage, adjustments/data versions,
+  strategy defaults/custom-script behavior, execution-cost consistency, local
+  fallback analytics and validation semantics. The fixed 10-bps display estimate
+  differs from submitted execution settings. Empty optimizer trials currently
+  produce an illustrative sensitivity grid; 3D liquidity/IV and parameter/regime
+  surfaces are projections, not observed order books/options or fitted models.
+  Monte Carlo is unseeded. Compare's legacy request omits timeframe. Audit
+  lookahead, date alignment and mathematical validity independently of this
+  frontend review; no live provider/model or execution certification is implied.
   Correlation also needs provider/native-identity and omitted-symbol coverage,
   adjusted-price/return and currency basis, complete-case date alignment, backend
   undefined-correlation zero filling, cache order/freshness and rolling/regime/

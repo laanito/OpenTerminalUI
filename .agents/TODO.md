@@ -12,9 +12,10 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-#328 is merged. Current small follow-up: a Depth of Market card under Home's
-Launch Matrix → Markets for better discovery of `/equity/dom`. See
-`docs/design/v3/DOM_REVIEW.md`. Backtesting remains the next ordinary menu review.
+#328/#329 are merged, including Home's Markets → Depth of Market shortcut.
+Current v3 slice: the Backtesting console's readable setup, submitted-run scope
+and bounded result inspection; see `docs/design/v3/BACKTESTING_REVIEW.md`.
+Its direct governance/algorithm/optimizer subpages remain next and unreviewed.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -29,8 +30,10 @@ MTA now has readable chart scope/controls, reliable real plot height, exact tabl
 and independent scoped reads; #326 is maintainer-accepted. Four ordinary menu
 destinations remained before DOM. Its readable book/tape implementation brings
 coverage to 37 render entries, 30 tools and three shell-menu extras, with host
-acceptance open. Three ordinary destinations remain, starting with Backtesting;
-provider/calculation repair stays on v5's audit track.
+acceptance open. The Backtesting console brings dedicated work to 38 render
+entries, 31 tools and three shell-menu extras. Two ordinary destinations remain:
+About and Account; direct/auth/secondary/hidden presentation remains open.
+Backtesting host acceptance is open. Provider/calculation repair stays on v5.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2350,7 +2353,12 @@ ordered v1.7 milestone above.
             acceptance open. Shared tape callers receive the component update;
             their wrapper pages remain separate direct-route review work.
             Three ordinary menu destinations remain after this implementation.
-      - [ ] Backtesting and direct governance/algorithm/optimizer subpages:
+      - [x] Backtesting console: readable labelled setup/disclosed execution,
+            submitted-run identity/currency, wrapping performance metrics,
+            chart-first results and bounded exact equity/trade/log inspection.
+            Analytics retry and late-read guards preserve completed-run scope.
+            See `docs/design/v3/BACKTESTING_REVIEW.md`; host acceptance open.
+      - [ ] Direct Backtesting governance/algorithm/optimizer subpages:
             setup, populated runs/results, bounded inspection and async states.
       - [ ] Account, About and login/register/forgot-access: labelled/wrapping
             forms and existing status/error/keyboard flows; no auth redesign.
@@ -2515,6 +2523,15 @@ ordered v1.7 milestone above.
       ISO-string ordering, buffered versus separately fetched summary windows,
       currency and freshness/provenance. No provider/calculation repair or live
       order authority is inferred from synthetic frontend acceptance.
+      Backtesting: audit equity→OHLC fallback and inferred position-based volume,
+      native identity/currency/market/interval coverage, adjustments/data-version
+      handling, strategy/custom-script contracts, execution-cost consistency and
+      locally derived fallback analytics. Fixed 10-bps display estimates differ
+      from submitted execution profiles. Empty optimizer trials synthesize an
+      illustrative sensitivity grid; 3D liquidity/IV and parameter/regime surfaces
+      are projections. Monte Carlo is unseeded and comparison omits timeframe.
+      Verify mathematical/validation/lookahead/date semantics independently of
+      frontend acceptance; no live provider/model or execution certification.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

@@ -432,11 +432,11 @@ export function BacktestingTradingChart({
 
   return (
     <div className="relative h-full w-full rounded border border-terminal-border">
-      <div className="pointer-events-none absolute left-2 top-2 z-10 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[11px] text-terminal-text">
+      <div className="pointer-events-none absolute left-2 top-2 z-10 max-w-[calc(100%-5rem)] break-words rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-xs text-terminal-text">
         {crosshair ? (
           <div>
             <div>T: {safeIsoDateFromUnixSeconds(crosshair.time) ?? "-"}</div>
-            <div>O:{crosshair.open.toFixed(2)} H:{crosshair.high.toFixed(2)} L:{crosshair.low.toFixed(2)} C:{crosshair.close.toFixed(2)}</div>
+            <div className="flex flex-wrap gap-x-2"><span>O:{crosshair.open.toFixed(2)}</span><span>H:{crosshair.high.toFixed(2)}</span><span>L:{crosshair.low.toFixed(2)}</span><span>C:{crosshair.close.toFixed(2)}</span></div>
             {activeExecution && (
               <div className={activeExecution.pnl >= 0 ? "text-terminal-pos" : "text-terminal-neg"}>
                 Exec: {safeIsoDateFromUnixSeconds(activeExecution.entryTime) ?? "-"} to {safeIsoDateFromUnixSeconds(activeExecution.exitTime) ?? "-"} ({activeExecution.pnl >= 0 ? "+" : ""}{activeExecution.pnl.toFixed(2)})
@@ -464,25 +464,27 @@ export function BacktestingTradingChart({
       </div>
       <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
         <button
-          className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-[11px] text-terminal-muted hover:text-terminal-text"
+          className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs text-terminal-muted hover:text-terminal-text"
           onClick={() => handleZoom(0.8)}
           title="Zoom in"
+          aria-label="Zoom in"
         >
           +
         </button>
         <button
-          className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-[11px] text-terminal-muted hover:text-terminal-text"
+          className="rounded border border-terminal-border bg-terminal-panel px-2 py-1 text-xs text-terminal-muted hover:text-terminal-text"
           onClick={() => handleZoom(1.25)}
           title="Zoom out"
+          aria-label="Zoom out"
         >
           -
         </button>
       </div>
-      <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[11px] text-terminal-muted">
+      <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-xs text-terminal-muted">
         Trade windows: {executionWindows.length}
       </div>
       {!!referenceLines.length && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-10 rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-[10px] text-terminal-muted">
+        <div className="pointer-events-none absolute bottom-10 right-2 z-10 max-w-[calc(100%-1rem)] break-words rounded border border-terminal-border bg-terminal-panel/95 px-2 py-1 text-xs text-terminal-muted">
           {referenceLines.map((line) => `${line.label}: ${line.price.toFixed(2)}`).join(" | ")}
         </div>
       )}

@@ -119,7 +119,7 @@ export function ThreeDSurface({ points, emptyText }: ThreeDSurfaceProps) {
 
   if (!points.length) {
     return (
-      <div className="flex h-[44vh] min-h-[280px] items-center justify-center rounded border border-terminal-border/40 bg-terminal-bg/50 text-center">
+      <div className="flex min-h-24 items-center justify-center p-4 rounded border border-terminal-border/40 bg-terminal-bg/50 text-center">
         <div className="text-xs text-terminal-muted">{emptyText}</div>
       </div>
     );
