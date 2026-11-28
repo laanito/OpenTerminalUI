@@ -1,5 +1,27 @@
 # External-agent project context
 
+#331 is merged. Current v3 slice: Account, both About variants and the three
+auth forms; see `docs/design/v3/ACCOUNT_AUTH_REVIEW.md`. Browser-local profile,
+storage/export/reset formats and auth transport remain. Labels/layout and
+failure/pending/partial-success presentation improve; invented repository/host
+health and local-integration connectivity claims are removed. Registration now
+reflects the server's existing Viewer-only provisioning. Dedicated work covers
+47 render entries, all 32 primary tools and four shell-menu extras. Ordinary
+menu coverage is complete; other direct/secondary/hidden presentation, optional
+Mosaic and wider host acceptance remain. Host acceptance for this slice is open;
+no release preparation. An urgent recovery-verification hardening follow-up was
+reported to the maintainer and is prioritized in TODO ahead of routine route
+work; frontend tests do not certify server auth security. No backend/schema,
+provider, dependency or auth-permission expansion. Older handoffs below are
+historical. All 992 frontend tests / 160 files, build and 239 Chrome smoke
+journeys pass. After final icon/pending-control/field-label refinements, 19
+affected unit cases and 14 browser journeys pass again. API-reference/surface/
+mock/source/whitespace guards and review links/JSON pass. Eighteen synthetic
+captures cover six render routes and native zoom. Backend/API/auth-provider
+source is unchanged; unrelated backend tests not rerun. No live provider,
+private corpus, production DB, deployment or real auth/account mutation.
+User-owned workspace dirt remains untouched.
+
 #330 is merged. Current v3 slice: direct Backtesting research workflows—Model
 Governance, Algorithm Framework and Portfolio Optimizer. See
 `docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`. Readable labelled/collapsible

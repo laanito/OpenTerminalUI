@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Account, About and auth** — labelled local profile/settings, honest
+  integration status, compact build/documentation context and shared responsive
+  sign-in/registration/recovery forms. Failed drafts remain, registration reflects
+  Viewer-only provisioning, and partial registration success is explicit. Auth
+  transport and server behavior are unchanged; security hardening remains separate.
 - **Readable Backtesting research workflows** — Model Governance, Algorithm
   Framework and Portfolio Optimizer now have labelled setup, captured submissions,
   independent failure/receipt states and bounded exact-value inspection. Setup

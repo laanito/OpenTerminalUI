@@ -160,11 +160,12 @@ describe("AccountPage revamp", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: "Taylor Vega" })).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Profile completion and session activity", { exact: true }));
     expect(screen.getByText("Session Activity")).toBeInTheDocument();
     expect(screen.getByText("Shortcut Panel")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Momentum Desk")).toBeInTheDocument();
     expect(screen.getByRole("progressbar", { name: "Identity completion" })).toHaveAttribute("aria-valuenow", "100");
-    expect(screen.getAllByText("4/4 online").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("4/4 filled").length).toBeGreaterThan(0);
   });
 
   it("saves typed profile and routing changes back to localStorage and settings store", async () => {
@@ -224,9 +225,11 @@ describe("AccountPage revamp", () => {
 
     renderPage();
 
+    fireEvent.click(screen.getByText("Shortcut Panel", { exact: true }));
     fireEvent.click(screen.getByRole("button", { name: "Open Workstation" }));
     expect(navigateSpy).toHaveBeenCalledWith("/equity/chart-workstation");
 
+    fireEvent.click(screen.getByText("Export, reset and sign out", { exact: true }));
     fireEvent.click(screen.getByRole("button", { name: "Export profile bundle" }));
 
     expect(createObjectURLSpy).toHaveBeenCalledTimes(1);
@@ -254,4 +257,14 @@ describe("AccountPage revamp", () => {
     expect(logoutSpy).toHaveBeenCalledTimes(1);
     expect(navigateSpy).toHaveBeenCalledWith("/login");
   });
+});
+
+it("reports failed browser saves and retains edited fields", () => {
+  renderPage(); fireEvent.change(screen.getByLabelText("Display Name"), { target: { value: "Draft retained" } });
+  const storage = vi.spyOn(localStorage, "setItem").mockImplementation(() => { throw new Error("Quota"); });
+  fireEvent.click(screen.getByRole("button", { name: "Save account details" })); expect(screen.getByRole("alert")).toHaveTextContent("Could not save"); expect(screen.getByLabelText("Display Name")).toHaveValue("Draft retained"); storage.mockRestore();
+});
+it("hydrates existing European preferences without hiding their selected values", () => {
+  localStorage.setItem("ot.account.connected", JSON.stringify({ preferredCountry: "EU", preferredExchange: "EU", defaultCurrency: "EUR" })); renderPage();
+  expect(screen.getByLabelText("Preferred Country")).toHaveValue("EU"); expect(screen.getByLabelText("Default Currency")).toHaveValue("EUR"); expect(screen.queryByText(/online/)).not.toBeInTheDocument();
 });
