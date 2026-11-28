@@ -83,8 +83,8 @@ Direct entry-file hints identify small text, truncation, fixed widths or dense g
 | `/backtesting/model-lab/runs/:runId` | [ModelLabRunReportPage](../../../frontend/src/pages/ModelLabRunReport.tsx) | Hidden compatibility | 4 |
 | `/backtesting/model-lab/compare` | [ModelLabComparePage](../../../frontend/src/pages/ModelLabCompare.tsx) | Hidden compatibility | 3 |
 | `/backtesting/model-governance` | [ModelGovernancePage](../../../frontend/src/pages/ModelGovernance.tsx) | Other direct | 0 |
-| `/backtesting/algorithm-framework` | [AlgorithmFrameworkLab](../../../frontend/src/pages/AlgorithmFrameworkLab.tsx) | Other direct | 16 |
-| `/backtesting/portfolio-optimizer` | [PortfolioOptimizer](../../../frontend/src/pages/PortfolioOptimizer.tsx) | Other direct | 22 |
+| `/backtesting/algorithm-framework` | [AlgorithmFrameworkLab](../../../frontend/src/pages/AlgorithmFrameworkLab.tsx) | Other direct | 0 |
+| `/backtesting/portfolio-optimizer` | [PortfolioOptimizer](../../../frontend/src/pages/PortfolioOptimizer.tsx) | Other direct | 0 |
 | `/account` | [AccountPage](../../../frontend/src/pages/Account.tsx) | Shell menu extra | 14 |
 
 Shells: `/equity`, `/fno`, `/backtesting`, `/account`. Redirects and source-line hints are listed in [the JSON inventory](evidence/retained-source-audit.json).

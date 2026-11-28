@@ -1054,10 +1054,12 @@ Launch Matrix links to it under Research (#327 merged). The
 [DOM review](../design/v3/DOM_REVIEW.md) adds readable book/tape inspection,
 scoped quotes and explicit retrieval/coverage states (#328 merged; Home shortcut
 #329 merged); host acceptance is open. The [Backtesting console review](../design/v3/BACKTESTING_REVIEW.md)
-adds readable setup, captured run identity and bounded result inspection.
-Dedicated work covers 38 render entries, including 31 tools and three shell-menu
-extras. Two ordinary menu destinations remain: About and Account. Direct
-Backtesting governance/algorithm/optimizer subpages are next and remain open.
+adds readable setup, captured run identity and bounded result inspection (#330
+merged). The [direct research review](../design/v3/BACKTESTING_RESEARCH_REVIEW.md)
+adds Model Governance, Algorithm Framework and Portfolio Optimizer. Dedicated
+work covers 41 render entries, including 31 tools and three shell-menu extras.
+Two ordinary menu destinations remain: About and Account; continue with them and
+auth forms. Other direct/secondary/hidden presentation remains open.
 Auth/direct and secondary/hidden
 routes keep their existing classifications and receive bounded presentation
 checks. Populated, keyboard/zoom and maintainer acceptance remain open.
@@ -2069,6 +2071,15 @@ Real but unscheduled; pull into a milestone when it fits.
   Monte Carlo is unseeded. Compare's legacy request omits timeframe. Audit
   lookahead, date alignment and mathematical validity independently of this
   frontend review; no live provider/model or execution certification is implied.
+  Direct research workflows also need independent service/model verification:
+  framework model/parameter bounds, fraction-labelled risk thresholds, simulation
+  accounting currency, benchmark alignment and alpha's no-benchmark fallback.
+  Audit optimizer feasibility, covariance/expected-return assumptions, frontier
+  versus selected-model consistency, annualization, risk-contribution units and
+  complete signed weights. Governance requires run/registry permissions and
+  ownership review, metadata/execution-profile overwrite semantics, audit records
+  and staging meaning. The UI preserves its fixed default-model/staging target;
+  no model deployment, production promotion or execution authority is added.
   Correlation also needs provider/native-identity and omitted-symbol coverage,
   adjusted-price/return and currency basis, complete-case date alignment, backend
   undefined-correlation zero filling, cache order/freshness and rolling/regime/

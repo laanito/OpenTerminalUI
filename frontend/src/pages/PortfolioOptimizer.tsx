@@ -1,35 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import {
-  PieChart,
-  Play,
-  Loader2,
-  AlertCircle,
-  TrendingUp,
-} from "lucide-react";
-import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ZAxis,
-} from "recharts";
-
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
+import { fetchOptimizerMethods, runOptimize, type OptimizeRequest } from "../api/portfolioOptimizer";
+import { CatalogueStatus, ResearchChoice, ResearchField, ResearchMetrics, ResearchNumber, ResearchStatus, ResearchWorkspace, researchNumber, useResearchRun } from "../components/backtesting/ResearchWorkflow";
+import { AnalyticsTable } from "../components/terminal/AnalyticsRead";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
-import { extractApiErrorMessage } from "../api/base";
-import {
-  fetchOptimizerMethods,
-  runOptimize,
-  OptimizeRequest,
-  OptimizeResult,
-} from "../api/portfolioOptimizer";
+import { TerminalInput } from "../components/terminal/TerminalInput";
+import { TerminalButton } from "../components/terminal/TerminalButton";
 
 export function PortfolioOptimizer() {
-  // --- Form State ---
   const [tickers, setTickers] = useState("AAPL,MSFT,GOOGL,AMZN,NVDA,META");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -38,454 +17,81 @@ export function PortfolioOptimizer() {
   const [riskMeasure, setRiskMeasure] = useState("");
   const [covMethod, setCovMethod] = useState("sample");
   const [confidence, setConfidence] = useState(0.95);
-  const [riskFreeRate, setRiskFreeRate] = useState(0.0);
+  const [riskFreeRate, setRiskFreeRate] = useState(0);
   const [riskAversion, setRiskAversion] = useState(2);
   const [minWeight, setMinWeight] = useState(0);
   const [maxWeight, setMaxWeight] = useState(1);
-
-  // --- Data Fetching ---
-  const { data: methods, isPending: isPendingMethods } = useQuery({
-    queryKey: ["optimizer-methods"],
-    queryFn: fetchOptimizerMethods,
-  });
-
-  const optimizeMutation = useMutation({
-    mutationFn: (req: OptimizeRequest) => runOptimize(req),
-  });
-
-  // --- Initialize Defaults ---
+  const catalogue = useQuery({ queryKey: ["optimizer-methods"], queryFn: fetchOptimizerMethods, retry: false });
+  const methods = catalogue.data;
+  const run = useResearchRun(runOptimize, "Optimization failed.");
   useEffect(() => {
-    if (methods) {
-      if (!model && methods.models.length > 0) setModel(methods.models[0].id);
-      if (!objective && methods.objectives.length > 0) setObjective(methods.objectives[0].id);
-      if (!riskMeasure && methods.risk_measures.length > 0) setRiskMeasure(methods.risk_measures[0].id);
-      if (!covMethod && methods.covariance_methods.length > 0) setCovMethod(methods.covariance_methods[0].id);
-    }
+    if (!methods) return;
+    if (!model && methods.models?.length) setModel(methods.models[0].id);
+    if (!objective && methods.objectives?.length) setObjective(methods.objectives[0].id);
+    if (!riskMeasure && methods.risk_measures?.length) setRiskMeasure(methods.risk_measures[0].id);
+    if (!covMethod && methods.covariance_methods?.length) setCovMethod(methods.covariance_methods[0].id);
   }, [methods, model, objective, riskMeasure, covMethod]);
-
-  const handleRunOptimize = () => {
-    const req: OptimizeRequest = {
-      tickers: tickers.split(",").map((s) => s.trim()).filter(Boolean),
-      start: startDate || null,
-      end: endDate || null,
-      model,
-      objective,
-      risk_measure: riskMeasure,
-      cov_method: covMethod,
-      confidence,
-      risk_free_rate: riskFreeRate,
-      risk_aversion: riskAversion,
-      min_weight: minWeight,
-      max_weight: maxWeight,
-    };
-    optimizeMutation.mutate(req);
+  const symbols = tickers.split(",").map(symbol => symbol.trim()).filter(Boolean);
+  const managedObjective = model === "HRP" || model === "HERC" || model === "RP";
+  const available = Boolean(methods?.models?.some(item => item.id === model) && methods?.objectives?.some(item => item.id === objective) && methods?.risk_measures?.some(item => item.id === riskMeasure) && methods?.covariance_methods?.some(item => item.id === covMethod));
+  const valid = available && symbols.length >= 2 && (!startDate || !endDate || startDate <= endDate) && [confidence, riskFreeRate, riskAversion, minWeight, maxWeight].every(Number.isFinite) && confidence >= 0.5 && confidence <= 0.999 && minWeight <= maxWeight;
+  const submit = () => {
+    if (!valid || run.pending) return;
+    const request: OptimizeRequest = { tickers: symbols, start: startDate || null, end: endDate || null, model, objective, risk_measure: riskMeasure, cov_method: covMethod, confidence, risk_free_rate: riskFreeRate, risk_aversion: riskAversion, min_weight: minWeight, max_weight: maxWeight };
+    void run.run(request);
   };
-
-  if (isPendingMethods) {
-    return (
-      <div className="flex h-full items-center justify-center bg-terminal-bg text-terminal-accent">
-        <Loader2 className="animate-spin mr-2" />
-        <span className="ot-type-label uppercase tracking-widest">Initializing Optimizer...</span>
+  const result = run.data, submitted = run.input;
+  const emptyCatalogue = !methods?.models?.length || !methods?.objectives?.length || !methods?.risk_measures?.length || !methods?.covariance_methods?.length;
+  return <ResearchWorkspace title="Portfolio Optimizer" path="/backtesting/portfolio-optimizer" description="Explore historical portfolio weights, risk contributions and the returned efficient frontier.">
+    <CatalogueStatus pending={catalogue.isPending} failed={catalogue.isError} empty={emptyCatalogue} retry={() => void catalogue.refetch()} />
+    {methods && !catalogue.isError && <details open className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Optimization setup</summary><form onSubmit={event => { event.preventDefault(); submit(); }} className="mt-3 min-w-0 space-y-3">
+      <TerminalPanel title="Universe" subtitle="At least two comma-separated tickers; blank dates use service defaults">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
+          <ResearchField label="Universe (Tickers)"><TerminalInput className="min-w-0 text-sm" value={tickers} onChange={event => setTickers(event.target.value)} /></ResearchField>
+          <ResearchField label="Start date"><TerminalInput className="min-w-0 text-sm" type="date" value={startDate} onChange={event => setStartDate(event.target.value)} /></ResearchField>
+          <ResearchField label="End date"><TerminalInput className="min-w-0 text-sm" type="date" value={endDate} onChange={event => setEndDate(event.target.value)} /></ResearchField>
+        </div>
+      </TerminalPanel>
+      <TerminalPanel title="Model & Objective" subtitle="Available service models; selected names stay readable below each control">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ResearchChoice label="Model" value={model} onChange={setModel} items={methods.models || []} />
+          <ResearchChoice label="Covariance estimator" value={covMethod} onChange={setCovMethod} items={methods.covariance_methods || []} />
+          <ResearchChoice label="Objective" value={objective} onChange={setObjective} items={methods.objectives || []} disabled={managedObjective} />
+          <ResearchChoice label="Risk measure" value={riskMeasure} onChange={setRiskMeasure} items={methods.risk_measures || []} disabled={managedObjective} />
+        </div>
+        {managedObjective && <p className="mt-2 text-xs text-terminal-muted">{model} manages objective and risk measure internally. The disabled selections are retained when this model is submitted.</p>}
+      </TerminalPanel>
+      <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Constraints and risk settings</summary><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ResearchNumber label="Minimum weight (fraction)" value={minWeight} onChange={setMinWeight} />
+        <ResearchNumber label="Maximum weight (fraction)" value={maxWeight} onChange={setMaxWeight} />
+        <ResearchNumber label="Confidence (fraction)" value={confidence} min={0.5} max={0.999} onChange={setConfidence} />
+        <ResearchNumber label="Risk-free rate (fraction)" value={riskFreeRate} onChange={setRiskFreeRate} />
+        <ResearchNumber label="Risk aversion" value={riskAversion} onChange={setRiskAversion} />
+      </div><p className="mt-2 text-xs text-terminal-muted">A fraction of 0.25 is 25%. Confidence must be 0.5–0.999; weights must be ordered. Feasibility is checked by the optimization service.</p></details>
+      <TerminalButton type="submit" variant="accent" disabled={!valid} loading={run.pending}>{run.pending ? "Optimizing…" : "Run Optimize"}</TerminalButton>
+      {!valid && <p className="text-xs text-terminal-warning">Choose available methods and at least two tickers. Check date order, finite numeric settings, confidence and weight bounds.</p>}
+    </form></details>}
+    {submitted && <section aria-label="Submitted optimizer setup" className="space-y-1 rounded border border-terminal-border p-3 text-xs text-terminal-muted"><p className="text-sm text-terminal-text">Submitted universe: {submitted.tickers.join(", ")}</p><p>{submitted.start || "Service default start"} to {submitted.end || "Service default end"} · model {submitted.model} · objective {submitted.objective} · risk {submitted.risk_measure} · covariance {submitted.cov_method}</p><p>Weights {submitted.min_weight} to {submitted.max_weight} · confidence {researchNumber(submitted.confidence, 1, true)} · risk-free rate {submitted.risk_free_rate} · risk aversion {submitted.risk_aversion}</p><p>Editing setup prepares the next run; results belong to this submission.</p></section>}
+    <ResearchStatus phase={run.phase} error={run.error} idle="Configure a universe and methods, then run an optimization to inspect its output." pending="Optimizing the submitted universe and constraints…" />
+    {result && <>
+      <p className="text-xs text-terminal-muted">Returned model: {result.model || "Not supplied"} · objective: {result.objective || "Not supplied"} · risk measure: {result.risk_measure || "Not supplied"}. These are research weights, not changes to your portfolios.</p>
+      <ResearchMetrics items={[
+        { label: "Expected return", value: result.metrics.expected_return, percent: true }, { label: "Volatility", value: result.metrics.volatility, percent: true },
+        { label: "Sharpe ratio", value: result.metrics.sharpe }, { label: "Sortino ratio", value: result.metrics.sortino },
+        { label: "Max drawdown", value: result.metrics.max_drawdown, percent: true }, { label: `CVaR · submitted confidence ${researchNumber(submitted?.confidence, 1, true)}`, value: result.metrics.cvar, percent: true },
+        { label: "Ulcer index", value: result.metrics.ulcer_index }, { label: "CDaR", value: result.metrics.cdar, percent: true },
+      ]} />
+      <TerminalPanel title="Efficient Frontier" subtitle="Horizontal: volatility · vertical: return · both in percent">
+        {result.frontier.length ? <div role="img" aria-label="Optimizer efficient frontier" className="h-80 min-w-0"><ResponsiveContainer><ScatterChart margin={{ top: 12, right: 16, left: 0, bottom: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis tick={{ fill: "#9ca3af" }} type="number" dataKey="risk" name="Volatility" fontSize={12} tickFormatter={value => `${(value * 100).toFixed(0)}%`} /><YAxis tick={{ fill: "#9ca3af" }} type="number" dataKey="return" name="Return" width={60} fontSize={12} tickFormatter={value => `${(value * 100).toFixed(0)}%`} /><ZAxis type="number" range={[50, 400]} /><Tooltip contentStyle={{ backgroundColor: "#111827", borderColor: "#4b5563", fontSize: 12 }} formatter={value => researchNumber(value, 2, true)} /><Scatter isAnimationActive={false} name="Frontier" data={result.frontier} fill="#9ca3af" line shape="circle" /><Scatter isAnimationActive={false} name="Selected" data={result.selected_point ? [result.selected_point] : []} fill="#3b82f6"><Cell fill="#3b82f6" stroke="#fff" strokeWidth={2} /></Scatter></ScatterChart></ResponsiveContainer></div> : <p className="p-3 text-sm text-terminal-muted">No frontier points returned.</p>}
+        <p className="mt-2 text-xs text-terminal-muted">Selected point · volatility {researchNumber(result.selected_point?.risk, 2, true)} · return {researchNumber(result.selected_point?.return, 2, true)}.</p>
+        <details className="mt-3"><summary className="cursor-pointer text-sm">Exact frontier values</summary><div className="mt-3"><AnalyticsTable name="Optimizer frontier values" headers={["Point", "Volatility", "Return", "Sharpe"]} rows={result.frontier.map((point, index) => [index + 1, researchNumber(point.risk, 6, true), researchNumber(point.return, 6, true), researchNumber(point.sharpe, 6)])} /></div></details>
+      </TerminalPanel>
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 2xl:grid-cols-2">
+        <TerminalPanel title="Optimal Allocation" subtitle="All returned weights, including zero, small and negative values"><AnalyticsTable name="Optimizer allocation values" headers={["Symbol", "Weight"]} rows={Object.entries(result.weights).sort((a, b) => b[1] - a[1]).map(([symbol, weight]) => [symbol, researchNumber(weight, 6, true)])} /></TerminalPanel>
+        <TerminalPanel title="Risk Contribution" subtitle="Returned component risk shares"><AnalyticsTable name="Optimizer risk contributions" headers={["Symbol", "Risk contribution"]} rows={Object.entries(result.risk_contributions).sort((a, b) => b[1] - a[1]).map(([symbol, share]) => [symbol, researchNumber(share, 6, true)])} /></TerminalPanel>
       </div>
-    );
-  }
-
-  const result = optimizeMutation.data;
-  const isHRP = model === "HRP" || model === "HERC";
-  const isRP = model === "RP";
-
-  return (
-    <div className="flex h-full flex-col overflow-auto bg-terminal-bg text-terminal-text p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-terminal-border pb-4 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-terminal-accent/10 p-2 rounded border border-terminal-accent/30">
-            <PieChart className="text-terminal-accent" size={24} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-terminal-accent uppercase tracking-wider">Portfolio Optimizer</h1>
-            <p className="text-xs text-terminal-muted">Mean-Risk · HRP · Black-Litterman optimization</p>
-          </div>
-        </div>
-
-        <button
-          onClick={handleRunOptimize}
-          disabled={optimizeMutation.isPending}
-          className="flex items-center gap-2 bg-terminal-accent text-terminal-bg px-4 py-2 rounded font-bold text-sm hover:bg-terminal-accent-bright disabled:opacity-50 transition-colors"
-        >
-          {optimizeMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
-          RUN OPTIMIZE
-        </button>
-      </div>
-
-      {optimizeMutation.isError && (
-        <div className="mb-4 p-3 bg-terminal-neg/10 border border-terminal-neg/30 rounded flex items-center gap-2 text-terminal-neg text-xs">
-          <AlertCircle size={14} />
-          {extractApiErrorMessage(optimizeMutation.error, "Optimization failed")}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
-        {/* Left Column: Config */}
-        <div className="lg:col-span-1 space-y-4">
-          <TerminalPanel title="Universe" subtitle="Assets & Timeframe">
-            <div className="space-y-3 p-1">
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Universe (Tickers)</label>
-                <textarea
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none min-h-[80px]"
-                  value={tickers}
-                  onChange={(e) => setTickers(e.target.value)}
-                  placeholder="AAPL,MSFT,..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Start Date</label>
-                  <input
-                    type="date"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">End Date</label>
-                  <input
-                    type="date"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </TerminalPanel>
-
-          <TerminalPanel title="Model & Objective" subtitle="Optimization Logic">
-            <div className="space-y-3 p-1">
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Model</label>
-                <select
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                >
-                  {methods?.models.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Covariance Estimator</label>
-                <select
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                  value={covMethod}
-                  onChange={(e) => setCovMethod(e.target.value)}
-                >
-                  {methods?.covariance_methods.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Objective</label>
-                <select
-                  disabled={isHRP || isRP}
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none disabled:opacity-50"
-                  value={objective}
-                  onChange={(e) => setObjective(e.target.value)}
-                >
-                  {methods?.objectives.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Risk Measure</label>
-                <select
-                  disabled={isHRP || isRP}
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none disabled:opacity-50"
-                  value={riskMeasure}
-                  onChange={(e) => setRiskMeasure(e.target.value)}
-                >
-                  {methods?.risk_measures.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {isHRP && (
-                <div className="text-[10px] text-terminal-accent italic">
-                  * Objective & Risk Measure are auto-managed by {model}
-                </div>
-              )}
-              {isRP && (
-                <div className="text-[10px] text-terminal-accent italic">
-                  * Risk Parity equalizes risk contributions across assets.
-                </div>
-              )}
-            </div>
-          </TerminalPanel>
-
-          <TerminalPanel title="Constraints" subtitle="Risk & Weights">
-            <div className="space-y-3 p-1">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Min Weight</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={minWeight}
-                    onChange={(e) => setMinWeight(parseFloat(e.target.value))}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Max Weight</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={maxWeight}
-                    onChange={(e) => setMaxWeight(parseFloat(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Confidence</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={confidence}
-                    onChange={(e) => setConfidence(parseFloat(e.target.value))}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Risk-Free Rate</label>
-                  <input
-                    type="number"
-                    step="0.001"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={riskFreeRate}
-                    onChange={(e) => setRiskFreeRate(parseFloat(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Risk Aversion</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                  value={riskAversion}
-                  onChange={(e) => setRiskAversion(parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-          </TerminalPanel>
-        </div>
-
-        {/* Right Column: Results */}
-        <div className="lg:col-span-2 space-y-4">
-          {!result && !optimizeMutation.isPending && (
-            <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-terminal-border rounded-lg p-12 text-terminal-muted text-center">
-              <TrendingUp size={48} className="mb-4 opacity-20" />
-              <div className="text-lg font-bold mb-1 uppercase tracking-tighter">No Optimization Data</div>
-              <div className="text-xs max-w-xs">Configure and click RUN OPTIMIZE to generate efficient frontier and weights.</div>
-            </div>
-          )}
-
-          {optimizeMutation.isPending && (
-            <div className="h-full flex flex-col items-center justify-center bg-terminal-panel/30 rounded-lg p-12 text-terminal-accent text-center">
-              <Loader2 size={48} className="mb-4 animate-spin" />
-              <div className="text-lg font-bold mb-1 uppercase tracking-tighter">Optimizing...</div>
-              <div className="text-xs animate-pulse">Computing covariance matrices and solving convex objective</div>
-            </div>
-          )}
-
-          {result && (
-            <>
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {[
-                  { label: "Expected Return", val: result.metrics.expected_return, fmt: "%", color: "text-terminal-accent" },
-                  { label: "Volatility", val: result.metrics.volatility, fmt: "%" },
-                  { label: "Sharpe Ratio", val: result.metrics.sharpe, fmt: "" },
-                  { label: "Sortino Ratio", val: result.metrics.sortino, fmt: "" },
-                  { label: "Max Drawdown", val: result.metrics.max_drawdown, fmt: "%", color: "text-terminal-neg" },
-                  { label: "CVaR (95%)", val: result.metrics.cvar, fmt: "%", color: "text-terminal-neg" },
-                  { label: "Ulcer Index", val: result.metrics.ulcer_index, fmt: "" },
-                  { label: "CDaR", val: result.metrics.cdar, fmt: "%" },
-                ].map((m, i) => (
-                  <div key={i} className="bg-terminal-panel border border-terminal-border p-2 rounded">
-                    <div className="text-[10px] text-terminal-muted uppercase">{m.label}</div>
-                    <div className={`text-sm font-mono font-bold ${m.color || "text-terminal-text"}`}>
-                      {m.val != null ? (m.fmt === "%" ? (m.val * 100).toFixed(2) : m.val.toFixed(2)) : "N/A"}{m.fmt}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Efficient Frontier */}
-              <TerminalPanel title="Efficient Frontier" subtitle="Risk vs Return">
-                <div className="h-[300px] w-full mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
-                      <XAxis
-                        type="number"
-                        dataKey="risk"
-                        name="Volatility"
-                        stroke="#4B5563"
-                        fontSize={10}
-                        tickFormatter={(v) => (v * 100).toFixed(0) + "%"}
-                      />
-                      <YAxis
-                        type="number"
-                        dataKey="return"
-                        name="Return"
-                        stroke="#4B5563"
-                        fontSize={10}
-                        tickFormatter={(v) => (v * 100).toFixed(0) + "%"}
-                      />
-                      <ZAxis type="number" range={[50, 400]} />
-                      <Tooltip
-                        cursor={{ strokeDasharray: "3 3" }}
-                        contentStyle={{ backgroundColor: "#000", borderColor: "#374151", fontSize: "10px" }}
-                      />
-                      <Scatter name="Frontier" data={result.frontier} fill="#4B5563" line shape="circle" />
-                      <Scatter name="Optimal" data={[result.selected_point]} fill="#3B82F6">
-                        <Cell fill="#3B82F6" stroke="#fff" strokeWidth={2} />
-                      </Scatter>
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
-              </TerminalPanel>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Optimal Allocation */}
-                <TerminalPanel title="Optimal Allocation" subtitle="Portfolio Weights">
-                  <div className="space-y-2 p-1 overflow-auto max-h-[300px]">
-                    {Object.entries(result.weights)
-                      .filter(([_, w]) => w > 0.0001)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([sym, w]) => (
-                        <div key={sym} className="flex items-center gap-2">
-                          <div className="w-16 font-bold text-[10px]">{sym}</div>
-                          <div className="flex-1 h-2 bg-terminal-bg border border-terminal-border rounded-full overflow-hidden">
-                            <div className="h-full bg-terminal-accent" style={{ width: `${w * 100}%` }} />
-                          </div>
-                          <div className="w-12 text-right font-mono text-[10px]">{(w * 100).toFixed(1)}%</div>
-                        </div>
-                      ))}
-                  </div>
-                </TerminalPanel>
-
-                {/* Risk Contribution */}
-                <TerminalPanel title="Risk Contribution" subtitle="Component Risk">
-                  <div className="space-y-2 p-1 overflow-auto max-h-[300px]">
-                    {Object.entries(result.risk_contributions)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([sym, r]) => (
-                        <div key={sym} className="flex items-center gap-2">
-                          <div className="w-16 font-bold text-[10px]">{sym}</div>
-                          <div className="flex-1 h-2 bg-terminal-bg border border-terminal-border rounded-full overflow-hidden">
-                            <div className="h-full bg-orange-500" style={{ width: `${r * 100}%` }} />
-                          </div>
-                          <div className="w-12 text-right font-mono text-[10px]">{(r * 100).toFixed(1)}%</div>
-                        </div>
-                      ))}
-                  </div>
-                </TerminalPanel>
-              </div>
-
-              {/* Cluster Structure */}
-              {!!result?.clusters?.groups?.length && (
-                <TerminalPanel title="Cluster Structure" subtitle="Hierarchical asset grouping">
-                  <div className="space-y-3 p-1">
-                    {result.clusters.groups.map((group, i) => {
-                      const accents = [
-                        "text-terminal-accent border-terminal-accent",
-                        "text-orange-500 border-orange-500",
-                        "text-terminal-pos border-terminal-pos",
-                        "text-terminal-neg border-terminal-neg",
-                      ];
-                      const accentClass = accents[i % accents.length];
-                      
-                      const sortedSymbols = [...group.symbols].sort((a, b) => {
-                        const idxA = result.clusters?.leaf_order.indexOf(a) ?? 0;
-                        const idxB = result.clusters?.leaf_order.indexOf(b) ?? 0;
-                        return idxA - idxB;
-                      });
-
-                      return (
-                        <div key={group.id} className="flex items-center gap-3">
-                          <div className={`w-8 font-bold text-[10px] uppercase ${accentClass.split(' ')[0]}`}>C{group.id}</div>
-                          <div className="flex flex-wrap gap-1">
-                            {sortedSymbols.map((sym) => (
-                              <span
-                                key={sym}
-                                className="px-2 py-0.5 border border-terminal-border rounded text-[10px] bg-terminal-bg text-terminal-text"
-                              >
-                                {sym}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </TerminalPanel>
-              )}
-
-              {/* Asset Metrics Table */}
-              <TerminalPanel title="Per-Asset Metrics" subtitle="Individual Performance">
-                <div className="overflow-auto -m-1">
-                  <table className="w-full text-[10px] text-left">
-                    <thead className="sticky top-0 bg-terminal-bg text-terminal-muted border-b border-terminal-border">
-                      <tr>
-                        <th className="p-2 uppercase">Symbol</th>
-                        <th className="p-2 uppercase text-right">Ann. Return</th>
-                        <th className="p-2 uppercase text-right">Ann. Vol</th>
-                        <th className="p-2 uppercase text-right">Weight</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-terminal-border/40">
-                      {result.asset_metrics.map((row, i) => (
-                        <tr key={i} className="hover:bg-terminal-accent/5">
-                          <td className="p-2 font-bold">{row.symbol}</td>
-                          <td className="p-2 text-right font-mono">{(row.annual_return * 100).toFixed(2)}%</td>
-                          <td className="p-2 text-right font-mono">{(row.annual_vol * 100).toFixed(2)}%</td>
-                          <td className="p-2 text-right font-mono font-bold text-terminal-accent">
-                            {(row.weight * 100).toFixed(2)}%
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TerminalPanel>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+      {!!result.clusters?.groups?.length && <TerminalPanel title="Cluster Structure" subtitle="Returned hierarchical groups in service leaf order"><div className="space-y-3">{result.clusters.groups.map(group => <section key={group.id} aria-label={`Cluster ${group.id}`} className="rounded border border-terminal-border p-3"><h2 className="text-sm text-terminal-accent">Cluster {group.id}</h2><ul className="mt-2 flex flex-wrap gap-2 text-sm">{[...group.symbols].sort((a, b) => (result.clusters?.leaf_order.indexOf(a) ?? 0) - (result.clusters?.leaf_order.indexOf(b) ?? 0)).map(symbol => <li key={symbol} className="max-w-full break-words rounded border border-terminal-border px-2 py-1">{symbol}</li>)}</ul></section>)}</div></TerminalPanel>}
+      <TerminalPanel title="Per-Asset Metrics" subtitle="Individual returned performance"><AnalyticsTable name="Optimizer asset metrics" headers={["Symbol", "Annual return", "Annual volatility", "Weight"]} rows={result.asset_metrics.map(row => [row.symbol, researchNumber(row.annual_return, 4, true), researchNumber(row.annual_vol, 4, true), researchNumber(row.weight, 6, true)])} /></TerminalPanel>
+    </>}
+  </ResearchWorkspace>;
 }

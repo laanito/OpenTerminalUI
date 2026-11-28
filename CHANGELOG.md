@@ -32,6 +32,11 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **Readable Backtesting research workflows** — Model Governance, Algorithm
+  Framework and Portfolio Optimizer now have labelled setup, captured submissions,
+  independent failure/receipt states and bounded exact-value inspection. Setup
+  can collapse around real plots; model names, fractional settings, complete
+  weights and staging/metadata write semantics remain readable.
 - **Readable Backtesting console** — labelled setup and disclosed execution settings,
   submitted-run identity/currency, wrapping performance metrics and chart-first
   result reading. Exact equity/trade inspection, retained failed drafts and
