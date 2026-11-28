@@ -12,8 +12,9 @@ without live execution authority. See `docs/wiki/Roadmap.md` Product generations
 non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
-#327 is merged; MTA's Home discovery follow-up is complete. Current slice: DOM;
-see `docs/design/v3/DOM_REVIEW.md`. Backtesting is the next ordinary menu review.
+#328 is merged. Current small follow-up: a Depth of Market card under Home's
+Launch Matrix → Markets for better discovery of `/equity/dom`. See
+`docs/design/v3/DOM_REVIEW.md`. Backtesting remains the next ordinary menu review.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation

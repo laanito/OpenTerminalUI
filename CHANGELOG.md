@@ -32,6 +32,8 @@ adopt [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from `1.0.0`.
   widens stored quantities without truncating existing records.
 
 ### Added
+- **DOM discovery from Home** — a Depth of Market card under Markets in the
+  Launch Matrix opens the existing depth and tape workspace.
 - **Readable DOM and tape** — applied instrument scope, bounded local depth/tape
   inspection, labelled controls, exact provider levels and explicit degraded,
   empty and failed reads. Empty books no longer draw zero-centred ladders;
