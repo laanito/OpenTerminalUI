@@ -1,40 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import {
-  Workflow,
-  Boxes,
-  Play,
-  Loader2,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-  CheckCircle2,
-  AlertCircle
-} from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
-} from "recharts";
-
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { fetchFrameworkModels, runFrameworkBacktest, type FrameworkBacktestRequest, type ModelDef } from "../api/framework";
+import { CatalogueStatus, ResearchChoice, ResearchField, ResearchMetrics, ResearchNumber, ResearchStatus, ResearchWorkspace, researchNumber, useResearchRun } from "../components/backtesting/ResearchWorkflow";
+import { AnalyticsTable } from "../components/terminal/AnalyticsRead";
 import { TerminalPanel } from "../components/terminal/TerminalPanel";
-import { extractApiErrorMessage } from "../api/base";
-import {
-  fetchFrameworkModels,
-  runFrameworkBacktest,
-  FrameworkBacktestRequest,
-  ModelDef
-} from "../api/framework";
+import { TerminalInput } from "../components/terminal/TerminalInput";
+import { TerminalButton } from "../components/terminal/TerminalButton";
 
+const defaults = (model: ModelDef) => Object.fromEntries(model.params.map(param => [param.key, param.default]));
 export function AlgorithmFrameworkLab() {
-  // --- Form State ---
   const [tickers, setTickers] = useState("AAPL,MSFT,GOOGL,AMZN,NVDA");
   const [benchmark, setBenchmark] = useState("^GSPC");
   const [startDate, setStartDate] = useState("");
@@ -44,503 +19,79 @@ export function AlgorithmFrameworkLab() {
   const [transactionCostBps, setTransactionCostBps] = useState(10);
   const [topN, setTopN] = useState(10);
   const [longOnly, setLongOnly] = useState(true);
-
   const [selectedAlphaId, setSelectedAlphaId] = useState("");
   const [alphaParams, setAlphaParams] = useState<Record<string, number>>({});
-
   const [selectedPCId, setSelectedPCId] = useState("");
   const [pcParams, setPcParams] = useState<Record<string, number>>({});
-
   const [enabledRiskModelIds, setEnabledRiskModelIds] = useState<Set<string>>(new Set());
   const [riskParams, setRiskParams] = useState<Record<string, Record<string, number>>>({});
-
-  // --- Data Fetching ---
-  const { data: models, isPending: isPendingModels } = useQuery({
-    queryKey: ["framework-models"],
-    queryFn: fetchFrameworkModels,
-  });
-
-  const backtestMutation = useMutation({
-    mutationFn: (req: FrameworkBacktestRequest) => runFrameworkBacktest(req),
-  });
-
-  // --- Effects to initialize defaults ---
+  const catalogue = useQuery({ queryKey: ["framework-models"], queryFn: fetchFrameworkModels, retry: false });
+  const models = catalogue.data;
+  const run = useResearchRun(runFrameworkBacktest, "Failed to run backtest.");
   useEffect(() => {
-    if (models?.alpha?.length && !selectedAlphaId) {
-      const first = models.alpha[0];
-      setSelectedAlphaId(first.id);
-      const defaults: Record<string, number> = {};
-      first.params.forEach(p => defaults[p.key] = p.default);
-      setAlphaParams(defaults);
-    }
-    if (models?.portfolio_construction?.length && !selectedPCId) {
-      const first = models.portfolio_construction[0];
-      setSelectedPCId(first.id);
-      const defaults: Record<string, number> = {};
-      first.params.forEach(p => defaults[p.key] = p.default);
-      setPcParams(defaults);
-    }
+    if (models?.alpha?.length && !selectedAlphaId) { setSelectedAlphaId(models.alpha[0].id); setAlphaParams(defaults(models.alpha[0])); }
+    if (models?.portfolio_construction?.length && !selectedPCId) { setSelectedPCId(models.portfolio_construction[0].id); setPcParams(defaults(models.portfolio_construction[0])); }
   }, [models, selectedAlphaId, selectedPCId]);
-
-  // --- Handlers ---
-  const handleAlphaChange = (id: string) => {
-    setSelectedAlphaId(id);
-    const model = models?.alpha.find(m => m.id === id);
-    if (model) {
-      const defaults: Record<string, number> = {};
-      model.params.forEach(p => defaults[p.key] = p.default);
-      setAlphaParams(defaults);
-    }
+  const alpha = models?.alpha?.find(model => model.id === selectedAlphaId);
+  const construction = models?.portfolio_construction?.find(model => model.id === selectedPCId);
+  const riskModels = (models?.risk || []).filter(model => enabledRiskModelIds.has(model.id));
+  const symbols = tickers.split(",").map(symbol => symbol.trim()).filter(Boolean);
+  const validParams = (model: ModelDef | undefined, values: Record<string, number>) => Boolean(model) && model!.params.every(param => Number.isFinite(values[param.key] ?? param.default) && (param.type !== "int" || Number.isInteger(values[param.key] ?? param.default)));
+  const valid = Boolean(symbols.length && (!startDate || !endDate || startDate <= endDate) && Number.isFinite(initialCash) && initialCash > 0 && Number.isFinite(transactionCostBps) && transactionCostBps >= 0 && Number.isInteger(topN) && topN >= 1 && validParams(alpha, alphaParams) && validParams(construction, pcParams) && riskModels.every(model => validParams(model, riskParams[model.id] || {})));
+  const parameters = (model: ModelDef | undefined, values: Record<string, number>, update: (key: string, value: number) => void) => model?.params.length ? <details className="mt-3 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Parameters · {model.label}</summary><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{model.params.map(param => <ResearchNumber key={param.key} label={`${model.label} · ${["max_drawdown", "max_weight", "stop_pct"].includes(param.key) ? `${param.label.replace(/%/g, "").trim()} (fraction)` : param.label}`} value={values[param.key] ?? param.default} step={param.type === "int" ? 1 : "any"} onChange={value => update(param.key, value)} />)}</div></details> : <p className="mt-2 text-xs text-terminal-muted">No configurable parameters for this model.</p>;
+  const submit = () => {
+    if (!valid || run.pending) return;
+    const request: FrameworkBacktestRequest = { tickers: symbols, start: startDate || null, end: endDate || null, benchmark: benchmark || null, rebalance_freq: rebalanceFreq, initial_cash: initialCash, transaction_cost_bps: transactionCostBps, top_n: topN, long_only: longOnly, alpha: { id: selectedAlphaId, params: alphaParams }, portfolio_construction: { id: selectedPCId, params: pcParams }, risk: Array.from(enabledRiskModelIds).map(id => ({ id, params: riskParams[id] || {} })) };
+    void run.run(request);
   };
-
-  const handlePCChange = (id: string) => {
-    setSelectedPCId(id);
-    const model = models?.portfolio_construction.find(m => m.id === id);
-    if (model) {
-      const defaults: Record<string, number> = {};
-      model.params.forEach(p => defaults[p.key] = p.default);
-      setPcParams(defaults);
-    }
-  };
-
-  const toggleRiskModel = (id: string) => {
-    setEnabledRiskModelIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-        // Initialize params if not already set
-        if (!riskParams[id]) {
-          const model = models?.risk.find(m => m.id === id);
-          if (model) {
-            const defaults: Record<string, number> = {};
-            model.params.forEach(p => defaults[p.key] = p.default);
-            setRiskParams(prevRisk => ({ ...prevRisk, [id]: defaults }));
-          }
-        }
-      }
-      return next;
-    });
-  };
-
-  const handleRunBacktest = () => {
-    const req: FrameworkBacktestRequest = {
-      tickers: tickers.split(",").map(s => s.trim()).filter(Boolean),
-      start: startDate || null,
-      end: endDate || null,
-      benchmark: benchmark || null,
-      rebalance_freq: rebalanceFreq,
-      initial_cash: initialCash,
-      transaction_cost_bps: transactionCostBps,
-      top_n: topN,
-      long_only: longOnly,
-      alpha: { id: selectedAlphaId, params: alphaParams },
-      portfolio_construction: { id: selectedPCId, params: pcParams },
-      risk: Array.from(enabledRiskModelIds).map(id => ({
-        id,
-        params: riskParams[id] || {}
-      }))
-    };
-    backtestMutation.mutate(req);
-  };
-
-  // --- Rendering Helpers ---
-  const renderParamInputs = (
-    model: ModelDef | undefined,
-    currentParams: Record<string, number>,
-    updateFn: (key: string, val: number) => void
-  ) => {
-    if (!model) return null;
-    return (
-      <div className="grid grid-cols-2 gap-2 mt-2">
-        {model.params.map(p => (
-          <div key={p.key} className="flex flex-col">
-            <label className="text-[10px] text-terminal-muted uppercase">{p.label}</label>
-            <input
-              type="number"
-              step={p.type === "float" ? "0.01" : "1"}
-              className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-              value={currentParams[p.key] ?? p.default}
-              onChange={(e) => updateFn(p.key, parseFloat(e.target.value))}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  if (isPendingModels) {
-    return (
-      <div className="flex h-full items-center justify-center bg-terminal-bg text-terminal-accent">
-        <Loader2 className="animate-spin mr-2" />
-        <span className="ot-type-label">INITIALIZING FRAMEWORK...</span>
-      </div>
-    );
-  }
-
-  const result = backtestMutation.data;
-
-  return (
-    <div className="flex h-full flex-col overflow-auto bg-terminal-bg text-terminal-text p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-terminal-border pb-4 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-terminal-accent/10 p-2 rounded border border-terminal-accent/30">
-            <Boxes className="text-terminal-accent" size={24} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-terminal-accent uppercase tracking-wider">Algorithm Framework Lab</h1>
-            <p className="text-xs text-terminal-muted">Compose Alpha → Portfolio Construction → Risk → Execution</p>
-          </div>
+  const result = run.data;
+  const latest = result?.holdings[result.holdings.length - 1];
+  const submitted = run.input;
+  return <ResearchWorkspace title="Algorithm Framework Lab" path="/backtesting/algorithm-framework" description="Compose an alpha model, portfolio construction and optional risk overlays for a historical simulation.">
+    <CatalogueStatus pending={catalogue.isPending} failed={catalogue.isError} empty={!models?.alpha?.length || !models?.portfolio_construction?.length} retry={() => void catalogue.refetch()} />
+    {models && !catalogue.isError && <details open className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Simulation setup</summary><form onSubmit={event => { event.preventDefault(); submit(); }} className="mt-3 min-w-0 space-y-3">
+      <TerminalPanel title="Universe & Parameters" subtitle="Blank dates use service defaults; tickers are comma-separated">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ResearchField label="Universe (Tickers)"><TerminalInput className="min-w-0 text-sm" value={tickers} onChange={event => setTickers(event.target.value)} /></ResearchField>
+          <ResearchField label="Benchmark"><TerminalInput className="min-w-0 text-sm" value={benchmark} onChange={event => setBenchmark(event.target.value)} /></ResearchField>
+          <ResearchField label="Start date"><TerminalInput className="min-w-0 text-sm" type="date" value={startDate} onChange={event => setStartDate(event.target.value)} /></ResearchField>
+          <ResearchField label="End date"><TerminalInput className="min-w-0 text-sm" type="date" value={endDate} onChange={event => setEndDate(event.target.value)} /></ResearchField>
         </div>
-
-        <button
-          onClick={handleRunBacktest}
-          disabled={backtestMutation.isPending}
-          className="flex items-center gap-2 bg-terminal-accent text-terminal-bg px-4 py-2 rounded font-bold text-sm hover:bg-terminal-accent-bright disabled:opacity-50 transition-colors"
-        >
-          {backtestMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
-          RUN BACKTEST
-        </button>
+        <details className="mt-3 rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Simulation settings</summary><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ResearchChoice label="Rebalance frequency" value={rebalanceFreq} onChange={setRebalanceFreq} items={[{ id: "W", label: "Weekly" }, { id: "ME", label: "Monthly (End)" }, { id: "QE", label: "Quarterly (End)" }]} />
+          <ResearchNumber label="Initial cash (currency not supplied)" value={initialCash} min={0} onChange={setInitialCash} />
+          <ResearchNumber label="Transaction costs (bps)" value={transactionCostBps} min={0} onChange={setTransactionCostBps} />
+          <ResearchNumber label="Top N assets" value={topN} min={1} step={1} onChange={setTopN} />
+          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={longOnly} onChange={event => setLongOnly(event.target.checked)} />Long only</label>
+        </div><p className="mt-2 text-xs text-terminal-muted">1 basis point = 0.01%. The response supplies no accounting currency.</p></details>
+      </TerminalPanel>
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-2">
+        <TerminalPanel title="Alpha Strategy" subtitle="Signal generation"><ResearchChoice label="Alpha model" value={selectedAlphaId} items={models.alpha || []} onChange={id => { setSelectedAlphaId(id); const model = models.alpha.find(item => item.id === id); if (model) setAlphaParams(defaults(model)); }} />{parameters(alpha, alphaParams, (key, value) => setAlphaParams(previous => ({ ...previous, [key]: value })))}</TerminalPanel>
+        <TerminalPanel title="Portfolio Construction" subtitle="Weighting logic"><ResearchChoice label="Construction model" value={selectedPCId} items={models.portfolio_construction || []} onChange={id => { setSelectedPCId(id); const model = models.portfolio_construction.find(item => item.id === id); if (model) setPcParams(defaults(model)); }} />{parameters(construction, pcParams, (key, value) => setPcParams(previous => ({ ...previous, [key]: value })))}</TerminalPanel>
       </div>
-
-      {backtestMutation.isError && (
-        <div className="mb-4 p-3 bg-terminal-neg/10 border border-terminal-neg/30 rounded flex items-center gap-2 text-terminal-neg text-xs">
-          <AlertCircle size={14} />
-          {extractApiErrorMessage(backtestMutation.error, "Failed to run backtest")}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
-        {/* Left Column: Config */}
-        <div className="lg:col-span-1 space-y-4">
-          <TerminalPanel title="Universe & Parameters" subtitle="Core settings">
-            <div className="space-y-3 p-1">
-              <div className="flex flex-col">
-                <label className="text-[10px] text-terminal-muted uppercase">Universe (Tickers)</label>
-                <textarea
-                  className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none min-h-[60px]"
-                  value={tickers}
-                  onChange={(e) => setTickers(e.target.value)}
-                  placeholder="AAPL,MSFT,..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Benchmark</label>
-                  <input
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={benchmark}
-                    onChange={(e) => setBenchmark(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Rebalance</label>
-                  <select
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={rebalanceFreq}
-                    onChange={(e) => setRebalanceFreq(e.target.value)}
-                  >
-                    <option value="W">Weekly</option>
-                    <option value="ME">Monthly (End)</option>
-                    <option value="QE">Quarterly (End)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Start Date</label>
-                  <input
-                    type="date"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">End Date</label>
-                  <input
-                    type="date"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Initial Cash</label>
-                  <input
-                    type="number"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={initialCash}
-                    onChange={(e) => setInitialCash(parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-[10px] text-terminal-muted uppercase">Costs (bps)</label>
-                  <input
-                    type="number"
-                    className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                    value={transactionCostBps}
-                    onChange={(e) => setTransactionCostBps(parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <label className="text-[10px] text-terminal-muted uppercase">Top N</label>
-                    <input
-                      type="number"
-                      className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none w-20"
-                      value={topN}
-                      onChange={(e) => setTopN(parseInt(e.target.value))}
-                    />
-                  </div>
-                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={longOnly}
-                      onChange={(e) => setLongOnly(e.target.checked)}
-                      className="accent-terminal-accent"
-                    />
-                    Long Only
-                  </label>
-                </div>
-              </div>
-            </div>
-          </TerminalPanel>
-
-          <TerminalPanel title="Alpha Strategy" subtitle="Generation model">
-            <div className="space-y-3">
-              <select
-                className="w-full bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                value={selectedAlphaId}
-                onChange={(e) => handleAlphaChange(e.target.value)}
-              >
-                {models?.alpha.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-              </select>
-
-              {renderParamInputs(
-                models?.alpha.find(m => m.id === selectedAlphaId),
-                alphaParams,
-                (key, val) => setAlphaParams(prev => ({ ...prev, [key]: val }))
-              )}
-            </div>
-          </TerminalPanel>
-
-          <TerminalPanel title="Portfolio Construction" subtitle="Weighting logic">
-            <div className="space-y-3">
-              <select
-                className="w-full bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs text-terminal-text focus:border-terminal-accent outline-none"
-                value={selectedPCId}
-                onChange={(e) => handlePCChange(e.target.value)}
-              >
-                {models?.portfolio_construction.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-              </select>
-
-              {renderParamInputs(
-                models?.portfolio_construction.find(m => m.id === selectedPCId),
-                pcParams,
-                (key, val) => setPcParams(prev => ({ ...prev, [key]: val }))
-              )}
-            </div>
-          </TerminalPanel>
-
-          <TerminalPanel title="Risk Overlay" subtitle="Constraint models">
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {models?.risk.map(m => (
-                  <button
-                    key={m.id}
-                    onClick={() => toggleRiskModel(m.id)}
-                    className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${
-                      enabledRiskModelIds.has(m.id)
-                        ? "bg-terminal-accent/20 border-terminal-accent text-terminal-accent"
-                        : "bg-terminal-bg border-terminal-border text-terminal-muted hover:border-terminal-muted"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-
-              {Array.from(enabledRiskModelIds).map(id => {
-                const model = models?.risk.find(m => m.id === id);
-                if (!model || model.params.length === 0) return null;
-                return (
-                  <div key={id} className="border-t border-terminal-border pt-2">
-                    <div className="text-[10px] font-bold text-terminal-accent uppercase mb-1">{model.label} Params</div>
-                    {renderParamInputs(
-                      model,
-                      riskParams[id] || {},
-                      (key, val) => setRiskParams(prev => ({
-                        ...prev,
-                        [id]: { ...(prev[id] || {}), [key]: val }
-                      }))
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </TerminalPanel>
-        </div>
-
-        {/* Right Column: Results */}
-        <div className="lg:col-span-2 space-y-4">
-          {!result && !backtestMutation.isPending && (
-            <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-terminal-border rounded-lg p-12 text-terminal-muted text-center">
-              <Workflow size={48} className="mb-4 opacity-20" />
-              <div className="text-lg font-bold mb-1">NO SIMULATION DATA</div>
-              <div className="text-xs max-w-xs">Configure your framework components and click "RUN BACKTEST" to begin simulation.</div>
-            </div>
-          )}
-
-          {backtestMutation.isPending && (
-            <div className="h-full flex flex-col items-center justify-center bg-terminal-panel/30 rounded-lg p-12 text-terminal-accent text-center">
-              <Loader2 size={48} className="mb-4 animate-spin" />
-              <div className="text-lg font-bold mb-1 uppercase tracking-tighter">Running Engine...</div>
-              <div className="text-xs animate-pulse">Calculating path dependencies and risk overlays</div>
-            </div>
-          )}
-
-          {result && (
-            <>
-              {/* Summary Metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {[
-                  { label: "Total Return", val: result.summary.strategy.total_return, fmt: "%", color: "text-terminal-accent" },
-                  { label: "CAGR", val: result.summary.strategy.cagr, fmt: "%" },
-                  { label: "Sharpe Ratio", val: result.summary.strategy.sharpe, fmt: "" },
-                  { label: "Alpha Total", val: result.summary.alpha_total_return, fmt: "%", color: "text-terminal-pos" },
-                  { label: "Volatility", val: result.summary.strategy.volatility, fmt: "%" },
-                  { label: "Max Drawdown", val: result.summary.strategy.max_drawdown, fmt: "%", color: "text-terminal-neg" },
-                  { label: "Benchmark Ret", val: result.summary.benchmark?.total_return, fmt: "%", color: "text-terminal-muted" },
-                  { label: "Holdings Count", val: Object.keys(result.holdings[result.holdings.length - 1]?.weights || {}).length, fmt: "" },
-                ].map((m, i) => (
-                  <div key={i} className="bg-terminal-panel border border-terminal-border p-2 rounded">
-                    <div className="text-[10px] text-terminal-muted uppercase">{m.label}</div>
-                    <div className={`text-sm font-mono font-bold ${m.color || "text-terminal-text"}`}>
-                      {m.val != null ? (typeof m.val === 'number' ? (m.fmt === "%" ? (m.val * 100).toFixed(2) : m.val.toFixed(2)) : m.val) : "N/A"}{m.fmt}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Equity Curve */}
-              <TerminalPanel title="Equity Curve Simulation" subtitle="Strategy vs Benchmark">
-                <div className="h-[300px] w-full mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={result.equity_curve} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        stroke="#4B5563"
-                        fontSize={8}
-                        tickFormatter={(v) => v.split('-')[0]} // Just year for brevity
-                      />
-                      <YAxis stroke="#4B5563" fontSize={10} domain={['auto', 'auto']} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#000', borderColor: '#374151', fontSize: '10px' }}
-                        itemStyle={{ padding: '0px' }}
-                      />
-                      <Legend iconType="rect" wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="strategy"
-                        stroke="#3B82F6"
-                        strokeWidth={2}
-                        dot={false}
-                        name="Strategy"
-                      />
-                      {result.equity_curve[0]?.benchmark !== null && (
-                        <Line
-                          type="monotone"
-                          dataKey="benchmark"
-                          stroke="#6B7280"
-                          strokeWidth={1}
-                          strokeDasharray="4 4"
-                          dot={false}
-                          name="Benchmark"
-                        />
-                      )}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </TerminalPanel>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Insights Table */}
-                <TerminalPanel title="Strategy Insights" subtitle="Recent signals">
-                  <div className="overflow-auto max-h-[300px] -m-1">
-                    <table className="w-full text-[10px] text-left">
-                      <thead className="sticky top-0 bg-terminal-bg text-terminal-muted border-b border-terminal-border">
-                        <tr>
-                          <th className="p-2 uppercase">Date</th>
-                          <th className="p-2 uppercase">Symbol</th>
-                          <th className="p-2 uppercase">Dir</th>
-                          <th className="p-2 uppercase text-right">Conf</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-terminal-border/40">
-                        {result.insights.slice(0, 200).map((row, i) => (
-                          <tr key={i} className="hover:bg-terminal-accent/5">
-                            <td className="p-2 text-terminal-muted">{row.date}</td>
-                            <td className="p-2 font-bold">{row.symbol}</td>
-                            <td className="p-2">
-                              {row.direction > 0 ? <ArrowUpRight size={12} className="text-terminal-pos" /> :
-                               row.direction < 0 ? <ArrowDownRight size={12} className="text-terminal-neg" /> :
-                               <Minus size={12} className="text-terminal-muted" />}
-                            </td>
-                            <td className="p-2 text-right font-mono">{(row.confidence * 100).toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </TerminalPanel>
-
-                {/* Latest Holdings */}
-                <TerminalPanel title="Current Portfolio" subtitle="Latest rebalance weights">
-                  <div className="space-y-2 p-1">
-                    {result.holdings.length > 0 ? (
-                      (() => {
-                        const latest = result.holdings[result.holdings.length - 1];
-                        const weights = Object.entries(latest.weights).sort((a, b) => b[1] - a[1]);
-                        return (
-                          <div className="space-y-1">
-                            <div className="text-[9px] text-terminal-muted mb-2 italic">Rebalanced on {latest.rebalance_date} (Turnover: {(latest.turnover * 100).toFixed(1)}%)</div>
-                            {weights.map(([sym, w]) => (
-                              <div key={sym} className="flex items-center gap-2">
-                                <div className="w-16 font-bold text-[10px]">{sym}</div>
-                                <div className="flex-1 h-2 bg-terminal-bg border border-terminal-border rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-terminal-accent"
-                                    style={{ width: `${w * 100}%` }}
-                                  />
-                                </div>
-                                <div className="w-10 text-right font-mono text-[10px]">{(w * 100).toFixed(1)}%</div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()
-                    ) : (
-                      <div className="text-center py-8 text-terminal-muted italic text-xs">No holdings data</div>
-                    )}
-                  </div>
-                </TerminalPanel>
-              </div>
-            </>
-          )}
-        </div>
+      <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">Risk overlays · {enabledRiskModelIds.size} selected</summary><p className="mt-2 text-xs text-terminal-muted">Drawdown, position-weight and stop thresholds are fractions: 0.2 means 20%.</p><div className="mt-3 flex flex-wrap gap-2">{(models.risk || []).map(model => <TerminalButton key={model.id} type="button" aria-pressed={enabledRiskModelIds.has(model.id)} variant={enabledRiskModelIds.has(model.id) ? "accent" : "default"} onClick={() => { const next = new Set(enabledRiskModelIds); if (next.has(model.id)) next.delete(model.id); else { next.add(model.id); if (!riskParams[model.id]) setRiskParams(previous => ({ ...previous, [model.id]: defaults(model) })); } setEnabledRiskModelIds(next); }}>{model.label}</TerminalButton>)}{!models.risk?.length && <p className="text-sm text-terminal-muted">No risk overlays returned.</p>}</div>{riskModels.map(model => <div key={model.id}>{parameters(model, riskParams[model.id] || {}, (key, value) => setRiskParams(previous => ({ ...previous, [model.id]: { ...previous[model.id], [key]: value } })))}</div>)}</details>
+      <div className="flex flex-wrap items-center gap-3"><TerminalButton variant="accent" type="submit" disabled={!valid} loading={run.pending}>{run.pending ? "Running backtest…" : "Run Backtest"}</TerminalButton><p className="text-xs text-terminal-muted">Historical research simulation.</p></div>
+      {!valid && <p className="text-xs text-terminal-warning">Choose available models, enter at least one ticker, ordered dates, positive cash, nonnegative costs and finite parameters. Top N and integer parameters require whole numbers.</p>}
+    </form></details>}
+    {submitted && <section aria-label="Submitted framework setup" className="space-y-1 rounded border border-terminal-border p-3 text-xs text-terminal-muted"><p className="text-sm text-terminal-text">Submitted universe: {submitted.tickers.join(", ")}</p><p>{submitted.start || "Service default start"} to {submitted.end || "Service default end"} · benchmark {submitted.benchmark || "None"} · alpha {submitted.alpha.id} · construction {submitted.portfolio_construction.id}</p><p>Cash {researchNumber(submitted.initial_cash)} · costs {submitted.transaction_cost_bps} bps · top {submitted.top_n} · {submitted.long_only ? "Long only" : "Long/short"} · rebalance {submitted.rebalance_freq} · risk {submitted.risk.map(model => model.id).join(", ") || "None"}</p><details><summary className="cursor-pointer">Submitted model parameters</summary><pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-words">{JSON.stringify({ alpha: submitted.alpha, construction: submitted.portfolio_construction, risk: submitted.risk }, null, 2)}</pre></details><p>Editing setup prepares the next run; results belong to this submission.</p></section>}
+    <ResearchStatus phase={run.phase} error={run.error} idle="Configure the universe and models, then run a backtest to inspect results." pending="Running the submitted framework simulation…" />
+    {result && <>
+      {!result.summary.benchmark && <p className="text-xs text-terminal-muted">Benchmark metrics are unavailable. Without a benchmark, the service reports strategy return in the alpha field.</p>}
+      <ResearchMetrics items={[
+        { label: "Total return", value: result.summary.strategy.total_return, percent: true }, { label: "CAGR", value: result.summary.strategy.cagr, percent: true },
+        { label: "Sharpe ratio", value: result.summary.strategy.sharpe }, { label: "Reported alpha total", value: result.summary.alpha_total_return, percent: true },
+        { label: "Volatility", value: result.summary.strategy.volatility, percent: true }, { label: "Max drawdown", value: result.summary.strategy.max_drawdown, percent: true },
+        { label: "Benchmark return", value: result.summary.benchmark?.total_return, percent: true }, { label: "Latest rebalance assets", value: latest ? Object.keys(latest.weights).length : null, digits: 0 },
+      ]} />
+      <TerminalPanel title="Equity Curve Simulation" subtitle="Returned strategy and benchmark indices; initial capital is normalized to 1">
+        {result.equity_curve.length ? <div role="img" aria-label="Framework equity curve" className="h-80 min-w-0"><ResponsiveContainer><LineChart data={result.equity_curve} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis tick={{ fill: "#9ca3af" }} dataKey="date" fontSize={12} minTickGap={40} /><YAxis tick={{ fill: "#9ca3af" }} fontSize={12} width={56} domain={["auto", "auto"]} /><Tooltip contentStyle={{ backgroundColor: "#111827", borderColor: "#4b5563", fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line isAnimationActive={false} strokeWidth={2} type="monotone" dataKey="strategy" name="Strategy" stroke="#3b82f6" dot={false} />{result.equity_curve.some(point => point.benchmark != null) && <Line isAnimationActive={false} type="monotone" dataKey="benchmark" name="Benchmark" stroke="#9ca3af" strokeDasharray="4 4" dot={false} />}</LineChart></ResponsiveContainer></div> : <p className="p-3 text-sm text-terminal-muted">No equity observations returned.</p>}
+        <details className="mt-3"><summary className="cursor-pointer text-sm">Exact equity observations</summary><div className="mt-3"><AnalyticsTable name="Framework equity values" headers={["Date", "Strategy index", "Benchmark index"]} rows={result.equity_curve.map(point => [point.date, researchNumber(point.strategy, 6), researchNumber(point.benchmark, 6)])} /></div></details>
+      </TerminalPanel>
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 2xl:grid-cols-2">
+        <TerminalPanel title="Latest simulated holdings" subtitle={latest ? `Rebalanced ${latest.rebalance_date} · turnover ${researchNumber(latest.turnover, 1, true)}` : "No rebalance returned"}><AnalyticsTable name="Framework latest holdings" headers={["Symbol", "Weight"]} rows={Object.entries(latest?.weights || {}).sort((a, b) => b[1] - a[1]).map(([symbol, weight]) => [symbol, researchNumber(weight, 4, true)])} /></TerminalPanel>
+        <TerminalPanel title="Strategy Insights" subtitle={`Latest response · first ${Math.min(result.insights.length, 200)} of ${result.insights.length} signals`}><AnalyticsTable name="Framework signal values" headers={["Date", "Symbol", "Direction", "Confidence", "Magnitude"]} rows={result.insights.slice(0, 200).map(row => [row.date, row.symbol, typeof row.direction !== "number" || !Number.isFinite(row.direction) ? "Unavailable" : row.direction > 0 ? "Up" : row.direction < 0 ? "Down" : "Flat", researchNumber(row.confidence, 1, true), researchNumber(row.magnitude, 6)])} /></TerminalPanel>
       </div>
-    </div>
-  );
+      <details className="rounded border border-terminal-border p-3"><summary className="cursor-pointer text-sm">All returned rebalances</summary><div className="mt-3"><AnalyticsTable name="Framework rebalance values" headers={["Rebalance date", "Symbol", "Weight", "Turnover"]} rows={result.holdings.flatMap(holding => Object.entries(holding.weights).map(([symbol, weight]) => [holding.rebalance_date, symbol, researchNumber(weight, 4, true), researchNumber(holding.turnover, 2, true)]))} /></div></details>
+    </>}
+  </ResearchWorkspace>;
 }

@@ -13,9 +13,9 @@ non-live Crypto derivatives; audit configured provider coverage/provenance in v5
 without assuming a cause. #319/#320 are merged, including the pre-existing
 Portfolio Income finding. #321 is merged and Risk is maintainer-accepted.
 #328/#329 are merged, including Home's Markets → Depth of Market shortcut.
-Current v3 slice: the Backtesting console's readable setup, submitted-run scope
-and bounded result inspection; see `docs/design/v3/BACKTESTING_REVIEW.md`.
-Its direct governance/algorithm/optimizer subpages remain next and unreviewed.
+#330 is merged. Current v3 slice: direct Backtesting governance/algorithm/
+optimizer workflows; see `docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`.
+The console review remains `docs/design/v3/BACKTESTING_REVIEW.md`.
 After merged #322, host feedback exposed mixed-market daily joins failing on
 different session timestamps plus crypto calendar lookups trying .NS/.BO. A
 focused backend correction normalizes UTC date labels, preserves observation
@@ -33,7 +33,10 @@ coverage to 37 render entries, 30 tools and three shell-menu extras, with host
 acceptance open. The Backtesting console brings dedicated work to 38 render
 entries, 31 tools and three shell-menu extras. Two ordinary destinations remain:
 About and Account; direct/auth/secondary/hidden presentation remains open.
-Backtesting host acceptance is open. Provider/calculation repair stays on v5.
+The direct Backtesting review brings coverage to 41 render entries, with the
+same 31 tools and three shell-menu extras. Continue with About/Account/auth;
+other direct/secondary/hidden presentation remains open. Backtesting host
+acceptance is open. Provider/calculation repair stays on v5.
 
 Maintainer confirmed #294 merged and working. The v3 release north star is
 **no wasted blank spaces and no unreadable labels**, with the accepted Equity
@@ -2358,8 +2361,13 @@ ordered v1.7 milestone above.
             chart-first results and bounded exact equity/trade/log inspection.
             Analytics retry and late-read guards preserve completed-run scope.
             See `docs/design/v3/BACKTESTING_REVIEW.md`; host acceptance open.
-      - [ ] Direct Backtesting governance/algorithm/optimizer subpages:
-            setup, populated runs/results, bounded inspection and async states.
+      - [x] Direct Backtesting governance/algorithm/optimizer subpages:
+            labelled/collapsible setup, captured inputs/receipts, independent
+            action states, explicit catalogue retry and bounded exact values.
+            Complete signed weights and unavailable-versus-zero metrics remain
+            visible; fixed staging/metadata replacement semantics are explicit.
+            See `docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`; host acceptance
+            open. Dedicated work covers 41 entries, 31 tools/three shell extras.
       - [ ] Account, About and login/register/forgot-access: labelled/wrapping
             forms and existing status/error/keyboard flows; no auth redesign.
       - [ ] Secondary/direct/F&O and hidden compatibility presentation pass:
@@ -2532,6 +2540,15 @@ ordered v1.7 milestone above.
       are projections. Monte Carlo is unseeded and comparison omits timeframe.
       Verify mathematical/validation/lookahead/date semantics independently of
       frontend acceptance; no live provider/model or execution certification.
+      Direct research: audit framework model/parameter bounds, provider/history
+      alignment, risk-threshold fraction conventions, accounting currency and
+      benchmark/alpha fallback semantics. Verify optimizer feasibility, return/
+      covariance/annualization assumptions, frontier versus selected-model
+      consistency, signed weights and risk-contribution units. Governance needs
+      run/registry ownership/permissions, audit/overwrite semantics and staging
+      meaning reviewed. v3 preserves fixed default-model/staging and the empty
+      execution-profile registration payload; no model deployment or execution
+      authority is added, and frontend acceptance does not certify these models.
 - [ ] **Evaluate local decision models for bounded sentiment.** The maintainer
       highlighted Ollama's native `/v1/systemone` support (0.35+, nimble/tev1):
       https://ollama.com/blog/ollama-now-supports-jev-style-decision-models

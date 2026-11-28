@@ -57,7 +57,7 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("PortfolioOptimizer", () => {
   it("renders the optimizer page with title", async () => {
     renderWithProviders(<PortfolioOptimizer />);
-    expect(await screen.findByText("Portfolio Optimizer")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Portfolio Optimizer", exact: true, level: 1 })).toBeTruthy();
     expect(await screen.findByText("Universe")).toBeTruthy();
     expect(await screen.findByText("Model & Objective")).toBeTruthy();
   });

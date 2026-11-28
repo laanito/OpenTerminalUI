@@ -23,7 +23,7 @@ function BacktestingRightRail() {
   })();
 
   return (
-    <aside className="hidden xl:flex h-full w-72 shrink-0 flex-col border-l border-terminal-border bg-terminal-panel">
+    <aside className="hidden xl:flex h-full w-72 [overflow-wrap:anywhere] shrink-0 flex-col border-l border-terminal-border bg-terminal-panel">
       <div className="border-b border-terminal-border px-3 py-2">
         <div className="ot-type-panel-title text-terminal-accent">Quant Context</div>
         <div className="ot-type-panel-subtitle text-terminal-muted">{routeLabel}</div>
@@ -70,7 +70,7 @@ function BacktestingRightRail() {
         </TerminalPanel>
 
         <TerminalPanel title="Quant Hints" subtitle="Panel workflow" bodyClassName="space-y-1 text-xs text-terminal-muted">
-          <div>Set the symbol, dates and strategy in Run setup before submitting.</div>
+          <div>Each page defines its own submitted run or universe; the shared symbol is workspace context.</div>
           <div>Results describe the submitted run; editing setup prepares the next one.</div>
           <div>Historical simulations are research, not orders or guarantees of future returns.</div>
         </TerminalPanel>
@@ -83,7 +83,7 @@ export function BacktestingLayout() {
   const { pathname } = useLocation();
   return (
     <TerminalShell
-      hideTickerLoader={pathname === "/backtesting" || pathname === "/backtesting/"}
+      hideTickerLoader={["/backtesting", "/backtesting/model-governance", "/backtesting/algorithm-framework", "/backtesting/portfolio-optimizer"].includes(pathname.replace(/\/$/, ""))}
       workspacePresetStorageKey="ot:shell:backtesting:preset"
       rightRailStorageKey="ot:shell:backtesting:right-rail"
       rightRailContent={<BacktestingRightRail />}

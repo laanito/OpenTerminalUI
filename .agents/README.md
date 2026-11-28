@@ -1,5 +1,25 @@
 # External-agent project context
 
+#330 is merged. Current v3 slice: direct Backtesting research workflows—Model
+Governance, Algorithm Framework and Portfolio Optimizer. See
+`docs/design/v3/BACKTESTING_RESEARCH_REVIEW.md`. Readable labelled/collapsible
+setup, captured submissions/receipts, independent failures and bounded exact
+tables retain the existing APIs/defaults/model behavior. No backend/schema,
+provider, dependency, persistence or execution expansion. Dedicated work covers
+41 render entries, including 31 tools and three shell-menu extras. About and
+Account are the two ordinary destinations left; continue with them and auth
+forms. Other direct/secondary/hidden presentation, optional Mosaic/hidden Model
+Lab and wider host acceptance remain open. This slice's host acceptance is open;
+no release preparation. Prior handoffs below are historical. All 981 frontend
+tests / 159 files, production build and 226 Chrome smoke journeys pass. After
+final chart/axis and draft-target copy refinements, 13 affected unit cases and
+13 browser journeys pass again. API-reference/surface/mock/source/whitespace
+guards and review links/JSON pass. Eighteen synthetic captures cover the three
+workflows, narrow/zoom inspection and unavailable/failed states. Backend/API
+source is unchanged; unrelated backend tests were not rerun. No live provider/
+model/private corpus, production DB, deployment or execution. User-owned dirt
+remains untouched.
+
 #329 is merged. Current v3 slice: the Backtesting console's readable setup,
 submitted-run identity/currency and bounded result inspection. See
 `docs/design/v3/BACKTESTING_REVIEW.md`. The direct governance/algorithm/optimizer

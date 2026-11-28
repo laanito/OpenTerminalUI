@@ -55,10 +55,12 @@ and maintainer-confirmed working. Home’s Launch Matrix links to MTA under Rese
 (#327 merged). The [DOM review](DOM_REVIEW.md) adds readable depth/tape inspection
 and explicit retrieval/coverage states; #328 is merged, with the Home Markets
 shortcut merged as #329. Host acceptance is open. The [Backtesting console review](BACKTESTING_REVIEW.md)
-adds readable setup, captured runs and bounded result inspection. Dedicated work
-covers 38 render entries, including 31 tools and three shell-menu extras.
-About and Account are the two ordinary destinations left. Direct Backtesting
-subpages are next; they and auth/secondary/hidden routes remain open.
+adds readable setup, captured runs and bounded result inspection (#330 merged).
+The [direct research review](BACKTESTING_RESEARCH_REVIEW.md) adds Model Governance,
+Algorithm Framework and Portfolio Optimizer. Dedicated work covers 41 render
+entries, including 31 tools and three shell-menu extras. About and Account are
+the two ordinary destinations left; continue with them and auth forms.
+Other direct/secondary/hidden presentation and broader acceptance remain open.
 Broader populated/keyboard/zoom and maintainer acceptance
 remain open; the icon-rail pass does not cover the entire tool menu.
 See [current scope](SCOPE.md); do not propose release prep merely because
